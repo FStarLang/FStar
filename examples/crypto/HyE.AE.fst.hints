@@ -1,5 +1,5 @@
 [
-  "Ü∫Å\u0014º∆í\u0011É \u0014ÅBù\u0003=",
+  "ÎÊ\u000e£tFë\u000fØÁ˚µ\füg∞",
   [
     [
       "HyE.AE.aes_key",
@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0eb77018bc698356aa04a8c4114c9c1a"
+      "907e7da51bb2c0369af5515f64f95114"
     ],
     [
       "HyE.AE.__proj__Key__item__region",
@@ -22,7 +22,7 @@
       1,
       [ "@query" ],
       0,
-      "a56b15cd9d2c310a5cef7b63c4afb2d1"
+      "59d23001de7ca671ed86f44ac4bfb46f"
     ],
     [
       "HyE.AE.__proj__Key__item__raw",
@@ -31,7 +31,7 @@
       1,
       [ "@query" ],
       0,
-      "776b672120fa0f72299adb5506a268c9"
+      "22e8e59cabb3bdd25974ad8498c664c0"
     ],
     [
       "HyE.AE.__proj__Key__item__log",
@@ -43,7 +43,7 @@
         "projection_inverse_HyE.AE.Key_region"
       ],
       0,
-      "6aa6d2960d31cae2a9fd9b464739c206"
+      "ffda1a03f8847a16e8353c614b8e2eb1"
     ],
     [
       "HyE.AE.genPost",
@@ -52,7 +52,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "670ce9dd3bcd2ea970064df8069dfa05"
+      "27bffece14d0ff10155f530b859ac5bf"
     ],
     [
       "HyE.AE.keygen",
@@ -78,6 +78,7 @@
         "equation_FStar.Monotonic.HyperStack.hh",
         "equation_FStar.Monotonic.HyperStack.is_eternal_region",
         "equation_FStar.Monotonic.HyperStack.is_in",
+        "equation_FStar.Monotonic.HyperStack.is_mm",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Monotonic.HyperStack.mref",
@@ -86,10 +87,11 @@
         "equation_FStar.Monotonic.RRef.m_rref",
         "equation_FStar.Monotonic.RRef.m_sel",
         "equation_FStar.Monotonic.RRef.rid", "equation_FStar.Set.eqtype",
-        "equation_FStar.Set.subset", "equation_HyE.AE.cipher",
-        "equation_HyE.AE.genPost", "equation_HyE.AE.keysize",
-        "equation_HyE.AE.msg", "equation_Prims.eqtype",
+        "equation_HyE.AE.cipher", "equation_HyE.AE.genPost",
+        "equation_HyE.AE.keysize", "equation_HyE.AE.msg",
+        "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mreference",
         "function_token_typing_FStar.Monotonic.Heap.emp",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
@@ -110,19 +112,21 @@
         "lemma_FStar.Monotonic.HyperHeap.lemma_extends_only_parent",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_FStar.Monotonic.HyperStack.lemma_equal_stack_domains_trans",
-        "lemma_FStar.Set.lemma_equal_elim", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar",
+        "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_subset",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
         "proj_equation_FStar.Monotonic.HyperStack.HS_rid_ctr",
         "proj_equation_FStar.Monotonic.HyperStack.MkRef_id",
         "proj_equation_FStar.Monotonic.HyperStack.MkRef_ref",
         "proj_equation_HyE.AE.Key_log", "proj_equation_HyE.AE.Key_region",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Monotonic.HyperStack.HS_h",
         "projection_inverse_HyE.AE.Key_log",
         "projection_inverse_HyE.AE.Key_region",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_01182b1cd5bb491d94f19e7b166104da",
-        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_a5cea97e8b7491191e66254a1994ff7f",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
         "refinement_interpretation_FStar.Monotonic.HyperHeap_Tm_refine_b4ddecfc36eb649aced773e3e29ae4e3",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_30795607330a547b7d04fef9756b3d11",
@@ -135,20 +139,21 @@
         "token_correspondence_FStar.Seq.Base.seq", "typing_FStar.Map.concat",
         "typing_FStar.Map.contains", "typing_FStar.Map.domain",
         "typing_FStar.Map.restrict", "typing_FStar.Map.sel",
-        "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.upd",
+        "typing_FStar.Monotonic.Heap.upd",
         "typing_FStar.Monotonic.HyperHeap.as_ref",
         "typing_FStar.Monotonic.HyperHeap.extends",
         "typing_FStar.Monotonic.HyperHeap.includes",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h",
         "typing_FStar.Monotonic.HyperStack.__proj__MkRef__item__ref",
         "typing_FStar.Monotonic.HyperStack.is_eternal_region",
+        "typing_FStar.Monotonic.HyperStack.is_mm",
         "typing_FStar.Monotonic.Seq.grows",
         "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Set.complement",
-        "typing_FStar.Set.empty", "typing_FStar.Set.singleton",
-        "typing_FStar.Set.union"
+        "typing_FStar.Set.empty", "typing_FStar.Set.mem",
+        "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "1fa37a82b4e301bdcfb0b0c4fe9af099"
+      "37240e418b855bcd265a0d39a76948a8"
     ],
     [
       "HyE.AE.encrypt",
@@ -209,7 +214,7 @@
         "typing_tok_CoreCrypto.AES_128_GCM@tok"
       ],
       0,
-      "60df1c8391e513272bdf419c53ac9a4f"
+      "9571805c300fc2db205aedd29ec786ad"
     ],
     [
       "HyE.AE.decrypt",
@@ -229,7 +234,7 @@
         "haseqHyE.AE_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "92b4c1cb8765e26d6427278d288e526b"
+      "2178225dfa9b1af00bbd955ec3222508"
     ],
     [
       "HyE.AE.decrypt",
@@ -238,7 +243,7 @@
       1,
       [ "@query" ],
       0,
-      "a946cb10ab2261eea0fa3c7d386940c6"
+      "e531b73d95fb4f0091671558ae074784"
     ],
     [
       "HyE.AE.decrypt",
@@ -363,7 +368,7 @@
         "typing_HyE.Ideal.int_ctxt", "typing_Platform.Bytes.length"
       ],
       0,
-      "be0519347baaf984d721d2ee0b968cbb"
+      "3764f9d5540d4632f6fbbed431130e2e"
     ]
   ]
 ]

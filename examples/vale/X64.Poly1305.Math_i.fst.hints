@@ -29,7 +29,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bb1270ebd9f30dcc891c648941a340ba"
+      "681de6be38490245774328eed8dcad8b"
     ],
     [
       "X64.Poly1305.Math_i.in_mem",
@@ -38,7 +38,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d17f04051344791ca08fb40a260afa7e"
+      "9759e720d3159acc651f1916913e08f0"
     ],
     [
       "X64.Poly1305.Math_i.validSrcAddrs",
@@ -47,7 +47,25 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a1fb84f17c4b9ff62adca28162ac2c44"
+      "2de7eb3048f157ee324d5f81ffe87452"
+    ],
+    [
+      "X64.Poly1305.Math_i.validSrcAddrs",
+      2,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "503a07fef17df93a81e0cd149299b29e"
+    ],
+    [
+      "X64.Poly1305.Math_i.validSrcAddrs",
+      3,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "773247f9e4f190470764ea91a4779ef9"
     ],
     [
       "X64.Poly1305.Math_i.memModified",
@@ -56,7 +74,61 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "80337f1468f25e08b116dbe2a4088051"
+      "15a22c1e9f784840920a2484587e914d"
+    ],
+    [
+      "X64.Poly1305.Math_i.memModified",
+      2,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "a557361ead3d30aaad7802ab7a607ef0"
+    ],
+    [
+      "X64.Poly1305.Math_i.memModified",
+      3,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7478d6db2b1e694cd8ecacddbf290c0f"
+    ],
+    [
+      "X64.Poly1305.Math_i.memModified",
+      4,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6801d905d47f2c2c506f5c3b584f3972"
+    ],
+    [
+      "X64.Poly1305.Math_i.memModified",
+      5,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "e6f4ddfc2934b094d39ea814f40f51c2"
+    ],
+    [
+      "X64.Poly1305.Math_i.memModified",
+      6,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "fa3e96ca68a5264c7f7039e99df8c52f"
+    ],
+    [
+      "X64.Poly1305.Math_i.memModified",
+      7,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8c13838efac336ef39be3c533e90735d"
     ],
     [
       "X64.Poly1305.Math_i.heapletTo128",
@@ -81,7 +153,34 @@
         "typing_X64.Poly1305.Spec_s.op_String_Access"
       ],
       0,
-      "a46f57fe02d12656cb141d342add0cd3"
+      "4429adf4f2b10bef53a35f29fafa3785"
+    ],
+    [
+      "X64.Poly1305.Math_i.heapletTo128",
+      2,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "28e6818c5d4d7012a83b12633f0a2e04"
+    ],
+    [
+      "X64.Poly1305.Math_i.heapletTo128",
+      3,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "2d580b95f1ad81d85073c8912692d93f"
+    ],
+    [
+      "X64.Poly1305.Math_i.heapletTo128",
+      4,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "009e18a42c9175d7692fbd019866ab10"
     ],
     [
       "X64.Poly1305.Math_i.heapletTo128_all_preserved",
@@ -93,7 +192,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "7fc487001c77bec76611b9d44c2e979b"
+      "1cd888f1a3c3fbfbcec8a4bc816dd549"
     ],
     [
       "X64.Poly1305.Math_i.heapletTo128_all_preserved",
@@ -125,7 +224,19 @@
         "typing_X64.Poly1305.Math_i.heapletTo128"
       ],
       0,
-      "f909673c150a31cdff0aa703a7a3e2b8"
+      "f9cc5a09ede4c7efcc7b5f9785d1318e"
+    ],
+    [
+      "X64.Poly1305.Math_i.heapletTo128_all_preserved",
+      3,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
+      ],
+      0,
+      "ce3d223b8a899f791d46e00b59fe4590"
     ],
     [
       "X64.Poly1305.Math_i.poly1305_heap_blocks'",
@@ -148,7 +259,34 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "04c8e5bf83c9e35271f898dffb744efb"
+      "ab948ce43c26405370b0e161d9dcd05d"
+    ],
+    [
+      "X64.Poly1305.Math_i.poly1305_heap_blocks'",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "916baaf1b48a705024170705c07c26ef"
+    ],
+    [
+      "X64.Poly1305.Math_i.poly1305_heap_blocks'",
+      3,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8d58ce6eb85bab26df2fad96cad893b8"
+    ],
+    [
+      "X64.Poly1305.Math_i.poly1305_heap_blocks'",
+      4,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6a61ee0519378892675cb0b9d8095524"
     ],
     [
       "X64.Poly1305.Math_i.reveal_poly1305_heap_blocks",
@@ -157,7 +295,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "95a5ab5f6ae3ab9bb153498137f6499a"
+      "5b6678503c85c42be09bf542e8ce9abe"
     ],
     [
       "X64.Poly1305.Math_i.reveal_poly1305_heap_blocks",
@@ -166,7 +304,7 @@
       0,
       [ "@query" ],
       0,
-      "a082319b77d499e5a8254d5eaddee469"
+      "dc1b0d03300089feab94a6e954e78793"
     ],
     [
       "X64.Poly1305.Math_i.reveal_poly1305_heap_blocks",
@@ -175,7 +313,7 @@
       0,
       [ "@query", "equation_X64.Poly1305.Math_i.poly1305_heap_blocks" ],
       0,
-      "950cd101d80c396074b4c4b22377f8dc"
+      "58ffd9ddf70167f1f11b4ad0a204fd13"
     ],
     [
       "X64.Poly1305.Math_i.lemma_heap_blocks_preserved",
@@ -184,7 +322,7 @@
       0,
       [ "@query" ],
       0,
-      "a39120390c5034c24fe2d984c1c081d2"
+      "00fccd873c10d2ae54c209662fe08b68"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_comm",
@@ -193,7 +331,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3de5c050d4b74c921902df6666ef65d5"
+      "2b82748ca9839c1a193391c9a69efe37"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_comm",
@@ -202,7 +340,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c5d2509732ed90975d916d0eb4ad1f50"
+      "aa44582677224c69aa42d7e63f419bb1"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_comm",
@@ -215,7 +353,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "853136a1ca69d1695c26daedb73034ac"
+      "3a603d56e48478ed7dd8742cac34a15d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_comm",
@@ -227,7 +365,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "c1ad2fcc3322c540f4a96204e9248033"
+      "20cfd3cac4c96242289568f13976b8a9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_exact_mul",
@@ -236,7 +374,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2d8d7df04530f5426130ba92e7be7a4f"
+      "e6582abbb2498672be3049fb298ed60c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_exact_mul",
@@ -245,7 +383,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "39fc01d2ba124c63af8c4a0f301af6bf"
+      "fcb1b1e089f767780fb502001f27eb96"
     ],
     [
       "X64.Poly1305.Math_i.lemma_exact_mul",
@@ -258,7 +396,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "e169aa22aab4cacaebab973786580498"
+      "b2226643618ea613d7181474fb41003e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_exact_mul",
@@ -270,7 +408,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "01c62b6abb70445636f5aac6fca1cdbd"
+      "32eaf0a8f0ad005adfc9236c87d4cd1d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_sep",
@@ -279,7 +417,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "95817fc2ee431684e242bfca4804ef72"
+      "7e0eb83f96ceb6a9f741ce76142f38d7"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_sep",
@@ -288,7 +426,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7dd2c34bb3e7590b80dc343ecf011716"
+      "7a0ef3a3364eeece785224aa41722910"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_sep",
@@ -302,7 +440,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "0be5ac8578ac7d1c1b418497e965a866"
+      "35dce542168d77df73bb89424f03aaed"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_div_sep",
@@ -314,7 +452,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "62374c13905ced511160a38c0770b593"
+      "ebddccbf5a3f89ffc57776cdd855f896"
     ],
     [
       "X64.Poly1305.Math_i.swap_add",
@@ -323,7 +461,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1b5762ab12c89652f1077c8ae0814bc4"
+      "c7e6d089e2121000c9c541cae0bee480"
     ],
     [
       "X64.Poly1305.Math_i.swap_add",
@@ -332,7 +470,7 @@
       0,
       [ "@query" ],
       0,
-      "8b1d3672c1c95339f900d9784a587446"
+      "7ee9a2c7dd0ff58fbb7a35ea16457583"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -345,7 +483,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "f9f3fe1f1c91ec69a5247ce350cba8d0"
+      "91b72fb8258e90ebc1771df0a901e98f"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -363,13 +501,13 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad",
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d",
         "refinement_interpretation_X64.Poly1305.Math_i_Tm_refine_19daeea0cf58ff15feced1d6da17c69b",
-        "refinement_interpretation_X64.Poly1305.Math_i_Tm_refine_8b17fad411e6e44eb12fed13052eda5f",
+        "refinement_interpretation_X64.Poly1305.Math_i_Tm_refine_e2409136e5c77e46de40137527958784",
         "refinement_interpretation_X64.Poly1305.Math_i_Tm_refine_e73e0ac19773cb080ffbe59a5396524c",
         "refinement_interpretation_X64.Poly1305.Math_i_Tm_refine_f4ee8bec3e359ba0b2ba29cbf071b7f1",
         "unit_typing"
       ],
       0,
-      "3fc3b97ef27e5ba4793afa24ae00ef52"
+      "6e183dfbc6a05819862874c75863bfce"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -378,7 +516,7 @@
       0,
       [ "@query" ],
       0,
-      "8053b40b671fac694059f9941724e578"
+      "e71aa7b4c989dab191a0abc783ca6c10"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -387,7 +525,7 @@
       0,
       [ "@query" ],
       0,
-      "b179fe29804a52907c94c48dc68932fc"
+      "f85f44b853a382302918ae47d924f343"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -396,7 +534,7 @@
       0,
       [ "@query" ],
       0,
-      "1e9be42fc9042553684d7d1b3b44d1c0"
+      "fd740ec67344cea6381a85061284e83d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -405,7 +543,7 @@
       0,
       [ "@query" ],
       0,
-      "c139ff905d3272e39ae99905080f77ee"
+      "41b0b6dab5b5228e18ffd198b988f909"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -414,7 +552,7 @@
       0,
       [ "@query" ],
       0,
-      "3206f12a89fcda375c93aaf4b111ac7c"
+      "f366100074ef3c27af17cc78b6ae8f31"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -423,7 +561,7 @@
       0,
       [ "@query" ],
       0,
-      "d258de63046960578e78f1962dbd9bce"
+      "0a94d4dba0ca9aae293b437a944c3b50"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -432,7 +570,7 @@
       0,
       [ "@query" ],
       0,
-      "28a09cf361b622401838d4511e4ed84e"
+      "13b0fb95b98d86bd9feba0e3c3e73d71"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -441,7 +579,7 @@
       0,
       [ "@query" ],
       0,
-      "f616ba58d653a8a279fccecb9d0e972a"
+      "60713b14de28a3f495fce4c608a10fb7"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -450,7 +588,7 @@
       0,
       [ "@query" ],
       0,
-      "84041a54d9ebec4431cf2bc2b65e43f2"
+      "6e6dc824a43f753d936ac697c5c189b9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -459,7 +597,7 @@
       0,
       [ "@query" ],
       0,
-      "29d277023f834c19d64e97baf9dff64b"
+      "088acc47d29acbd160c2f403b7042f1d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -468,7 +606,7 @@
       0,
       [ "@query" ],
       0,
-      "a886a0bd51afbfb23d817160a3d3af74"
+      "100da88631b3c4b7c9574eafcb3f4b90"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -477,7 +615,7 @@
       0,
       [ "@query" ],
       0,
-      "19fc69a9579e13e09e085b38486f6e34"
+      "0f85db75d87e8e1fbf2965f47cc7f283"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -486,7 +624,7 @@
       0,
       [ "@query" ],
       0,
-      "b7e4fbf42dcf5d6da74aea100353bd2e"
+      "e374e20af3d031f38f25a18f43565e6d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -495,7 +633,7 @@
       0,
       [ "@query" ],
       0,
-      "d63746359aa2c396764ca0b93fe4b0cb"
+      "94f40b96fba32411e5f7cbca1857a4b1"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -504,7 +642,7 @@
       0,
       [ "@query" ],
       0,
-      "4c1c001ee8b9c95bba339cebdcdd589a"
+      "a7ff31989095cb82fd299e47aa7efa9c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -513,7 +651,7 @@
       0,
       [ "@query" ],
       0,
-      "ee97efdda25cda95b355f42d817d18a7"
+      "8ccabede3402bdabdcf822b2ca93b075"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -522,7 +660,7 @@
       0,
       [ "@query" ],
       0,
-      "d7a248d79bae428d47f939c6ae26605d"
+      "d0d79f16b798afec59124ebfd5f99ebc"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -531,7 +669,7 @@
       0,
       [ "@query" ],
       0,
-      "2e14427dc22200f4d3c683b1dac98c6c"
+      "92bb81b550069e7d6dc29f448776ab12"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -540,7 +678,7 @@
       0,
       [ "@query" ],
       0,
-      "74f9fa6bbe09455ac9b43f1ac464df42"
+      "5cf3863a6728bb04d5df4d504df39ff2"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -549,7 +687,7 @@
       0,
       [ "@query" ],
       0,
-      "db694fa5fbb6991690c40016cab65d3e"
+      "1324113c9e18b7f96161bcac9c501260"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -558,7 +696,7 @@
       0,
       [ "@query" ],
       0,
-      "9c2de6c7207b7ac561ebba4eb86b67ef"
+      "b90e7cede7d953d46eafc697a644a46a"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -567,7 +705,7 @@
       0,
       [ "@query" ],
       0,
-      "2e72006dc09170c7c449ea3ad19ebfa4"
+      "2d0b06a24c4256743a6a8b8ac583d9c0"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -576,7 +714,7 @@
       0,
       [ "@query" ],
       0,
-      "24ad1f4e9a6eff78d0a7d61c85c0d01d"
+      "ccae723aae4526bd8df6afdf3227723e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -585,7 +723,7 @@
       0,
       [ "@query" ],
       0,
-      "7c73f7926fad82a7307d2b3452d290a2"
+      "6087e7b15af44af3edabc88bbd6c88a8"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -594,7 +732,7 @@
       0,
       [ "@query" ],
       0,
-      "79c5ef0732de3275abc2e11f3a7b3f66"
+      "e849b48e6cea1746df3609d4cd0f9390"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -603,7 +741,7 @@
       0,
       [ "@query" ],
       0,
-      "c8b44d07319d4ef935468383adad2a1f"
+      "404d31515a8f908bd6220679776f0874"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -612,7 +750,7 @@
       0,
       [ "@query" ],
       0,
-      "627196055a65e733f93d310ab707089f"
+      "2d336a18d91f71de2ff7d991adf55c8c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -621,7 +759,7 @@
       0,
       [ "@query" ],
       0,
-      "2bf9669260b2119fb37a0531f5422acc"
+      "7c9d89a7c48e58095e138eb69b0b7d0e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -630,7 +768,7 @@
       0,
       [ "@query" ],
       0,
-      "dac378f04977deb538b6206372cd615f"
+      "006fa786d2b7cc2cd438de6c00cc965d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -639,7 +777,7 @@
       0,
       [ "@query" ],
       0,
-      "817b486d048d3301c248d620ced3d5c5"
+      "729219c689c783eba3531521c09bc4e9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -648,7 +786,7 @@
       0,
       [ "@query" ],
       0,
-      "76b83f72708e18dcfb0cff04c188f739"
+      "d27f6d4a5270f9e6a6f8076dccc34efa"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -657,7 +795,7 @@
       0,
       [ "@query" ],
       0,
-      "b55927a5b217973279faa7c601433f9d"
+      "58f4ea24c99fa6e27c2eec1162f4dc95"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -666,7 +804,7 @@
       0,
       [ "@query" ],
       0,
-      "aaf9f0c780de70465da581a81f763993"
+      "df15eed0ca3e5c04559ec7c61c65114f"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -675,7 +813,7 @@
       0,
       [ "@query" ],
       0,
-      "97c61e703073f0a778d9889ad7cefa91"
+      "03f1fbc18aff9c188a10fd30f967cc3b"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -684,7 +822,7 @@
       0,
       [ "@query" ],
       0,
-      "069d3b18dd9b2190ccbc151decbe8494"
+      "ef3e8a46f6a8db48ad2eef8f03e2220f"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -693,7 +831,7 @@
       0,
       [ "@query" ],
       0,
-      "2e20e25b7103f929aefb1c6cdf832098"
+      "8a86c0ff5d12e124c0eb19f3ce320a8e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -702,7 +840,7 @@
       0,
       [ "@query" ],
       0,
-      "1cb5c1e9dcce284794b2cf126cad1438"
+      "c9345c5cb0babb473df8885d1f18d7f4"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -711,7 +849,7 @@
       0,
       [ "@query" ],
       0,
-      "5982e109df420884d791959afc05b558"
+      "5e6f0e25310bf141d8e7459db5365ee9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -720,7 +858,7 @@
       0,
       [ "@query" ],
       0,
-      "9f19ea6550af399fcb158184a7c20e82"
+      "baa2984be559f750794aa5bbd934e6a4"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -729,7 +867,7 @@
       0,
       [ "@query" ],
       0,
-      "dd5cf7a88ac08c6dccb2567cade0c9e1"
+      "fdf68e53cd7b3a4887e22e233c12f3ed"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -738,7 +876,7 @@
       0,
       [ "@query" ],
       0,
-      "6c3c1dd613af7cf8251a69e2d2d5f87b"
+      "e754c4cbd8a82380041bde16cfff1ec3"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -747,7 +885,7 @@
       0,
       [ "@query" ],
       0,
-      "c49b3fc7302ed6ca1359c2931f1780bd"
+      "9391e2ef9aefac06294ecaff80f3a596"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -756,7 +894,7 @@
       0,
       [ "@query" ],
       0,
-      "668bea321dc9c9c84d211c5fceb1eaf4"
+      "12e5095da4abc7c9a8750b32201e89fd"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -765,7 +903,7 @@
       0,
       [ "@query" ],
       0,
-      "6805c9bdae09ea15e31cf76209fad4b3"
+      "e9b6d6572122677abea88eb68739f1c1"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -774,7 +912,7 @@
       0,
       [ "@query" ],
       0,
-      "50c893c3517ce81e84c9b71713d4780c"
+      "21739880000d92feb4f284a77a695903"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -783,7 +921,7 @@
       0,
       [ "@query" ],
       0,
-      "465cfa8f1ba3c1d695d9dbe77a448df1"
+      "a28966ee07863a926036d74059f0f84f"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -792,7 +930,7 @@
       0,
       [ "@query" ],
       0,
-      "b353fd42a3d600b79e70cd98198f2eab"
+      "9c040149784000b38a2489735d294d40"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -801,7 +939,7 @@
       0,
       [ "@query" ],
       0,
-      "b9005169d79a103cf7c00442b0fd376c"
+      "6a243f3797d2b6ff2a2d14f42c4a851a"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -810,7 +948,7 @@
       0,
       [ "@query" ],
       0,
-      "0906af2ba69e56f449368fbea0e7ddc1"
+      "598d9a64ddfecd4d7829a8d3ae4402de"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -819,7 +957,7 @@
       0,
       [ "@query" ],
       0,
-      "372a1cfca149fd1f54e290da6f34197e"
+      "1f101c9eebd26c5646f8a676829c1802"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -828,7 +966,7 @@
       0,
       [ "@query" ],
       0,
-      "3d6a9e0dcc3281cd5e90dd174294b250"
+      "dcb2c4ca23148ef2271f8e9255f100a8"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -837,7 +975,7 @@
       0,
       [ "@query" ],
       0,
-      "e107ba190d735c191cb7c6080a669568"
+      "3396b75b939633a576896394f282bf0a"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -846,7 +984,7 @@
       0,
       [ "@query" ],
       0,
-      "b9594867ea8e287ad4d92084394b8943"
+      "857ea257a4b2fdf98a1c617a7c2bf8d4"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -855,7 +993,7 @@
       0,
       [ "@query" ],
       0,
-      "efc841b575dcd338baa737fab632021b"
+      "53b2a4a797cb39100eb845bd7a0a6ce1"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -864,7 +1002,7 @@
       0,
       [ "@query" ],
       0,
-      "807b0d1b47456c3d354faf6b628892f4"
+      "2093f2cc6d8ccdaede922cbabe19c389"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -873,7 +1011,7 @@
       0,
       [ "@query" ],
       0,
-      "04e6a64729363973f00e938d3717c340"
+      "f13716199d2a731fdf3c839c8cad6633"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -882,7 +1020,7 @@
       0,
       [ "@query" ],
       0,
-      "b846252b4bab107d3098a6017c09ce21"
+      "af13469e44117c8527825babd294754e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -891,7 +1029,7 @@
       0,
       [ "@query" ],
       0,
-      "96c00f3488fc745f41391e29282cdbed"
+      "42064a4886c5000180e7689308e85304"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -900,7 +1038,7 @@
       0,
       [ "@query" ],
       0,
-      "972d6f8469e4bcc1b90ec6fc62f341af"
+      "0536ce008face1c5e71e423fd0650b48"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -909,7 +1047,7 @@
       0,
       [ "@query" ],
       0,
-      "49fc79bae26956c143b5b35ddf6eeea9"
+      "8080b5dc7425223ec0d5827750ae0816"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -918,7 +1056,7 @@
       0,
       [ "@query" ],
       0,
-      "f529b2ee69b881d53eef2694542ba5e8"
+      "df3bc52e36edecb0ab1ffe79d65a20bc"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -927,7 +1065,7 @@
       0,
       [ "@query" ],
       0,
-      "7c2a84dbbd1dbf9a56865d7324166f85"
+      "8dbf2698caf0f40d27b9fc7037a57ef1"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -936,7 +1074,7 @@
       0,
       [ "@query" ],
       0,
-      "36e03836531698ce60d35f8d8a278bef"
+      "28365a2d30cb5f9efe322a7faddff47c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -945,7 +1083,7 @@
       0,
       [ "@query" ],
       0,
-      "0c713507cfa307b6affb61cf6ce72077"
+      "590f6c20c0047fbf980c49933fac27c4"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -954,7 +1092,7 @@
       0,
       [ "@query" ],
       0,
-      "605d8129cf70d40784de52bbaaf91e92"
+      "4f9ef7dc3776f6f2ebdd9addfd2c9b54"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -963,7 +1101,7 @@
       0,
       [ "@query" ],
       0,
-      "ef6fb2f8d20e3a13f5f615304c710d1a"
+      "f2a74c5b8fa1e76cb0cb2d0d83e45ec1"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -972,7 +1110,7 @@
       0,
       [ "@query" ],
       0,
-      "6b7e094494eca199d8dd9ed49ab365f5"
+      "dd53ca4536cd8a15e38dd6786b0b6006"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -981,7 +1119,7 @@
       0,
       [ "@query" ],
       0,
-      "95c66e880c53cb1fc641402d0695bf58"
+      "be0b2aae109715af2d5ed8235e5e5d9c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -990,7 +1128,7 @@
       0,
       [ "@query" ],
       0,
-      "4749e2500aacef8abaa082a8b6ea23c6"
+      "953565b73ef7d09b993222720c915e36"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -999,7 +1137,7 @@
       0,
       [ "@query" ],
       0,
-      "90607122c3aa423fc0e8b116aae97328"
+      "d0c5daa19e37fe91c1933dfbff4f0320"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1008,7 +1146,7 @@
       0,
       [ "@query" ],
       0,
-      "36d2a4cbd288e062ee94e812a169cf76"
+      "16f6bbde36711f9e98bdc507c8b605bb"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1017,7 +1155,7 @@
       0,
       [ "@query" ],
       0,
-      "a7771f871c2a9e868be99319fc35318a"
+      "0cf73029be78ced2c3620e06be7e79af"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1026,7 +1164,7 @@
       0,
       [ "@query" ],
       0,
-      "20c141d17481d07b93147884eeca70d5"
+      "2fdd71f41bd216ce4d4f30d8273d6ef0"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1035,7 +1173,7 @@
       0,
       [ "@query" ],
       0,
-      "794332bba880aaedeaf0d3c6c1fcc65f"
+      "cc8d0333d9a28ff4f5efb5981187542d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1044,7 +1182,7 @@
       0,
       [ "@query" ],
       0,
-      "4462f3a7fd7e3950619d845ad4af8e9d"
+      "7197cc5d2b0b92b4e52e6f04d3097b1a"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1053,7 +1191,7 @@
       0,
       [ "@query" ],
       0,
-      "8123044d9fd3a220c83d2e9b61520d37"
+      "809a496cc7ca37f4424f719c42edaa89"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1062,7 +1200,7 @@
       0,
       [ "@query" ],
       0,
-      "386e7737cfa80bbcb4bf3c064da5ade6"
+      "3c5ee279574b29594ec739cc3feabbbc"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1071,7 +1209,7 @@
       0,
       [ "@query" ],
       0,
-      "c7f6f87f18c7f655456f2eb13651e86b"
+      "225f7427cafe2b35c8d4cf180253e12d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1080,7 +1218,7 @@
       0,
       [ "@query" ],
       0,
-      "03b79bdbc4ba1d245ab07aa728960e3d"
+      "7e75e6a50da39cd322e94dada6feefbe"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1089,7 +1227,7 @@
       0,
       [ "@query" ],
       0,
-      "a2e1c38b7d52c1437c25d6cd25006e1a"
+      "b4fd4116b68d3e1c6bd9888bbd6feef2"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1098,7 +1236,7 @@
       0,
       [ "@query" ],
       0,
-      "d76ac66e61e32eb02ca7144237d16ae9"
+      "d300dd4813b6f9f174f5643f86577cc8"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1107,7 +1245,7 @@
       0,
       [ "@query" ],
       0,
-      "5bf0127a711186b7b15b28ebe99dfa5b"
+      "e8e1bf4df340ca173026c5e21c80ba94"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1116,7 +1254,7 @@
       0,
       [ "@query" ],
       0,
-      "3d4d7490be40f8df7c862b646842f282"
+      "07408f29e327ed3d2b80c70205c6bf38"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1125,7 +1263,7 @@
       0,
       [ "@query" ],
       0,
-      "8e681213b27dc3171a9f1710b3a35b59"
+      "c0a9350643fc82c48f31d2a68955d9cc"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1134,7 +1272,7 @@
       0,
       [ "@query" ],
       0,
-      "6f754d2741114c17f8b8e7d07327fb01"
+      "3fd3bb35685e34270561444083c31d37"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1143,7 +1281,7 @@
       0,
       [ "@query" ],
       0,
-      "8305a64d5c7521ceb009e61f8fc2c1d2"
+      "dfdde41947723a8a9f77d7b4a46e4858"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1152,7 +1290,7 @@
       0,
       [ "@query" ],
       0,
-      "09103dc88dbdeba23b9569cbd25ad960"
+      "8010f7b454e366407f4ffba0d2511986"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1161,7 +1299,7 @@
       0,
       [ "@query" ],
       0,
-      "d6112a3a737da886631546c773862928"
+      "58bbb8b683d9b0906df311ce415c414e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1170,7 +1308,7 @@
       0,
       [ "@query" ],
       0,
-      "eb65113db62b0c2dcb81bd459d43031d"
+      "15378fe32023664d1ec1ec29a07ba704"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1179,7 +1317,7 @@
       0,
       [ "@query" ],
       0,
-      "9ca94c18f425a60d81d0ee9e03f595f6"
+      "e03f064a41f427c7c9395a1b54674a45"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1188,7 +1326,7 @@
       0,
       [ "@query" ],
       0,
-      "3c3899e485f4f295c579e5ad0b088fe5"
+      "af5916795f790ecf8bdcaab4a3ae007f"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1197,7 +1335,7 @@
       0,
       [ "@query" ],
       0,
-      "cc535daa2d63cc12f3ad650a00a219c4"
+      "0667e6f7955dfdb3e227151583c77c1a"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1206,7 +1344,7 @@
       0,
       [ "@query" ],
       0,
-      "21ae2475102a6d02ed17b4b6cff0bd5e"
+      "9bf61c83a81281f629318990c4767be8"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1215,7 +1353,7 @@
       0,
       [ "@query" ],
       0,
-      "8732aae3bb67392510472390e30d014c"
+      "331b976c8d232f08c5100900d8732c28"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1224,7 +1362,7 @@
       0,
       [ "@query" ],
       0,
-      "80a9b86d38e3082f6c6ef25825d546d0"
+      "9f9e247a427a90cfaef7b7ab80763b24"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1233,7 +1371,7 @@
       0,
       [ "@query" ],
       0,
-      "e54c764182a442cd9f8436bbe701c551"
+      "ef4e304ce935a9ddc90c53d9aa61205b"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1242,7 +1380,7 @@
       0,
       [ "@query" ],
       0,
-      "48559f653d48102c151668cb60ad7aa6"
+      "a2df51ff48dec72e93ae7df7cb02eb69"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1251,7 +1389,7 @@
       0,
       [ "@query" ],
       0,
-      "dd0262df1cfc7e3d544f037cca5d472c"
+      "88c2ac33a75264c1612bb59a45c09546"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1260,7 +1398,7 @@
       0,
       [ "@query" ],
       0,
-      "6bc2e285fe5dd04f850ec617ff75e908"
+      "3eceeb547f48fe0a7d2a938d2a2c6a1c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1269,7 +1407,7 @@
       0,
       [ "@query" ],
       0,
-      "bd9f22f44fc3a0293b865192347f09b6"
+      "35c66733e41443d2a96fe59ef49598fb"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1278,7 +1416,7 @@
       0,
       [ "@query" ],
       0,
-      "6cf6c5cf60a486fc5890cadea9d26f44"
+      "fcb5082af0fc2d738f780c29df3a60c9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1287,7 +1425,7 @@
       0,
       [ "@query" ],
       0,
-      "464748fb0c6c8d48bf83567a36faf55f"
+      "d8fe6b2ad56103cf138ab8b89d9176c3"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1296,7 +1434,7 @@
       0,
       [ "@query" ],
       0,
-      "c4345ea0379b4df5f074bac1aa0f0274"
+      "e89b6abda2837c1e6cf911ac08ebebe9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1305,7 +1443,7 @@
       0,
       [ "@query" ],
       0,
-      "595e8c99bb845f792619f27d53caf56a"
+      "95a8b2d7788c1ecac86654619f8765af"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1314,7 +1452,7 @@
       0,
       [ "@query" ],
       0,
-      "de9b097b71c4c334edf715ab8425dcd4"
+      "ccff98d57f4caaae909a14aee0903042"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1323,7 +1461,7 @@
       0,
       [ "@query" ],
       0,
-      "faca752d809982ecce3d43a2989b6a12"
+      "0947bf9a93b316682fe572a93556fd44"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1332,7 +1470,7 @@
       0,
       [ "@query" ],
       0,
-      "4eb6030fe71d377c6ab5e17af4a64247"
+      "e03dca0630bf40808dbb580daca29d7c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1341,7 +1479,7 @@
       0,
       [ "@query" ],
       0,
-      "df2d3eefb63ff5c4c53de0f7d8a15b82"
+      "8f2f1eaef4ee34b0f56712662a3f1839"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1350,7 +1488,7 @@
       0,
       [ "@query" ],
       0,
-      "1834dcc5f545071c62923425e2aa052a"
+      "989b25e0b2a35c655ce078277cf8697e"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1359,7 +1497,7 @@
       0,
       [ "@query" ],
       0,
-      "8eec0d0845d92d26bb21628daba5098a"
+      "1d97a8955eec004083a99f36baf253c0"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1368,7 +1506,7 @@
       0,
       [ "@query" ],
       0,
-      "cdf703191b81f067b904f67c2c7905bc"
+      "8773803c0fc8c4eaa437992ec992e41c"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1377,7 +1515,7 @@
       0,
       [ "@query" ],
       0,
-      "8327876f107e499a34c5806fee5d8bd2"
+      "85c68bd44b4fa5e50168aab83afd0bee"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1386,7 +1524,7 @@
       0,
       [ "@query" ],
       0,
-      "790c1ffc5379586a9b0ea93ef798a940"
+      "0effbb700f185982bf77537262aa477d"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1395,7 +1533,7 @@
       0,
       [ "@query" ],
       0,
-      "57fc10ac9e1d683d49236f23ea68a8d3"
+      "9cd4efdadbd66cc088bc72524fafedbc"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1404,7 +1542,7 @@
       0,
       [ "@query" ],
       0,
-      "83486c17b09ae20ec0f12b1352cfefd8"
+      "6c31028791f50859758f76761f5d70d3"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1413,7 +1551,7 @@
       0,
       [ "@query" ],
       0,
-      "5b24a18ca18b63220c3844efa64cb1ae"
+      "21754fcc7d2ec97fc629afb29afc3faf"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1422,7 +1560,7 @@
       0,
       [ "@query" ],
       0,
-      "c31db069233e849659d48f59c75c277b"
+      "f5efd626293eceff29238bff1036fd69"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1431,7 +1569,7 @@
       0,
       [ "@query" ],
       0,
-      "9d3b838fcfca86f83f774116c2726649"
+      "643ab94867495f2f5f593480ab51ba46"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1440,7 +1578,7 @@
       0,
       [ "@query" ],
       0,
-      "34f62a2e152de2586c730adaa00d1510"
+      "30ca4218121737bfacad8e75cc80bdd8"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1449,7 +1587,7 @@
       0,
       [ "@query" ],
       0,
-      "9b66a0b087f00e2a7f467012bc506e47"
+      "9ed3e767b907b0eb8f93eef6ce24bdcc"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_multiply",
@@ -1458,7 +1596,7 @@
       0,
       [ "@query" ],
       0,
-      "782e06bec96abcbfa6653ede9181b00e"
+      "67bdd602879c77a3488fe0f53d3a2fe5"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_reduce",
@@ -1471,7 +1609,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "590d3269e5bcbbb14c79efb5d53c145c"
+      "079b07efc393918e308b686c6e0b127b"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_reduce",
@@ -1480,7 +1618,7 @@
       0,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "cc9e6b0e7c2706df2f0b45098f04aa5e"
+      "7e6abc0b14c2a17e1f44c813c2709a35"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_strict_upper_bound",
@@ -1496,7 +1634,43 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "7371553d7206ac431344ae747b8160f3"
+      "fac4703d10d41d75d53dab69226268ea"
+    ],
+    [
+      "X64.Poly1305.Math_i.lemma_mul_strict_upper_bound",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6fbceadfdb78699da18e886f2f566ca3"
+    ],
+    [
+      "X64.Poly1305.Math_i.lemma_mul_strict_upper_bound",
+      3,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "589b276443f744900fe2da175b7bccd4"
+    ],
+    [
+      "X64.Poly1305.Math_i.lemma_mul_strict_upper_bound",
+      4,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "73f527d193c3cfb52fd760b843dff92b"
+    ],
+    [
+      "X64.Poly1305.Math_i.lemma_mul_strict_upper_bound",
+      5,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "2404213ed9ba3a6d419f3aea0a284aba"
     ],
     [
       "X64.Poly1305.Math_i.lemma_bytes_and_mod",
@@ -1505,7 +1679,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2fbc3b492413b906c9bcd4ac3a047ba7"
+      "cf9795a70f09270d13844bc38a4cecae"
     ],
     [
       "X64.Poly1305.Math_i.lemma_bytes_and_mod",
@@ -1521,7 +1695,7 @@
         "typing_X64.Vale.Decls.shift_left64"
       ],
       0,
-      "303c149c1f67ec261df578cd4d139932"
+      "8bc7b467ff80dd1ef7ccd3738c562320"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_factors",
@@ -1534,7 +1708,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "9c9fda3095bc490ba22a05d58ae35f00"
+      "900b078e02d5b08f7ba9819210673ab0"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mul_pos_pos_is_pos_inverse",
@@ -1548,7 +1722,16 @@
         "projection_inverse_BoxInt_proj_0", "unit_inversion", "unit_typing"
       ],
       0,
-      "18b1186b566da8a86f7f3210e6a6f367"
+      "4f180b2a7ad73726a302502e83e812fe"
+    ],
+    [
+      "X64.Poly1305.Math_i.lemma_mul_pos_pos_is_pos_inverse",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7fb74a96be71f35f79e7e8975f396008"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_factor_lo",
@@ -1563,7 +1746,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "f346d8956733c97134f62f2062a83d95"
+      "e5dd1014f85e13134c2f1dc2670d75c9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_power2_lo",
@@ -1572,7 +1755,7 @@
       0,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "98a97326444bb1cee1c4b316928f8e39"
+      "f6f182b906587cba4e6e524205d919ce"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_power2_lo",
@@ -1588,7 +1771,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "a2852d34d140e9f2d86b06184edf1f90"
+      "d55726fa1882913a1c7233c597c88236"
     ],
     [
       "X64.Poly1305.Math_i.lemma_power2_add64",
@@ -1600,7 +1783,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "ee45e5f59d2036dae3a947405cc8ee60"
+      "dd017fb26a845fa26a40e7b9a9c608c6"
     ],
     [
       "X64.Poly1305.Math_i.lemma_power2_add64",
@@ -1609,7 +1792,7 @@
       0,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "ac3c914531b5c203621bda4be9b3f8d3"
+      "504fa9ad5d58707976b54aa37b0a96bf"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_breakdown",
@@ -1622,7 +1805,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "8220cd75417326c7d2cb09c34d851e6d"
+      "7ae8659d9155e06dec0b2c852a0714d9"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_hi",
@@ -1631,7 +1814,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "922e78d967f176f5eb2e307c3e7550f1"
+      "ff21b2fe173ccf21b83acb471a55694f"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_hi",
@@ -1640,7 +1823,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fd35e6fe716b06e23c9295e3f420b4d1"
+      "85d2ac547daca4cfe5b2a6287848bb32"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_hi",
@@ -1649,7 +1832,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ef8bd8ef7b11dd20feb82b13f204cc77"
+      "6cdc565d5b6a738a4b020ebf8ed775ad"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_hi",
@@ -1664,7 +1847,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "ecf58d4a27b0f254f996d967adccdc22"
+      "1e022b4a2f614673e2aa8342d9557bf4"
     ],
     [
       "X64.Poly1305.Math_i.lemma_mod_hi",
@@ -1681,7 +1864,16 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "e49c9994ec888f6250c9796ac395da9c"
+      "498fed65984d459b6beb87b73033d17f"
+    ],
+    [
+      "X64.Poly1305.Math_i.lemma_mod_hi",
+      6,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "bd65856b2d804a297862efb1430e1133"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly_demod",
@@ -1694,7 +1886,7 @@
         "refinement_interpretation_Prims_Tm_refine_c42d7927e44e0f393ec040dac09bfa8d"
       ],
       0,
-      "b08d6bee391392e5bbaf99790ac266f6"
+      "3189d94dd0dcb083a12c3d1eafeacb31"
     ],
     [
       "X64.Poly1305.Math_i.lemma_add_key",
@@ -1703,7 +1895,7 @@
       0,
       [ "@query" ],
       0,
-      "cc3ea428b1073f2f78e6e6a2ec29cf8b"
+      "e4d596bc0238e46cb8d44fd26c2b93a5"
     ],
     [
       "X64.Poly1305.Math_i.lemma_lowerUpper128_and",
@@ -1720,7 +1912,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "7d185e80dd19bff08aa87c2dca42b6a4"
+      "131eaf298e455764d4c0ae5d03e0c419"
     ],
     [
       "X64.Poly1305.Math_i.lemma_poly1305_heap_hash_blocks",
@@ -1742,7 +1934,7 @@
         "unit_typing"
       ],
       0,
-      "73401fe1581a6d589cdb73efd43d1875"
+      "43737f28ab74dd741800b259ed1a363b"
     ],
     [
       "X64.Poly1305.Math_i.lemma_add_mod128",
@@ -1759,7 +1951,7 @@
         "token_correspondence_X64.Poly1305.Math_i.mod2_128_"
       ],
       0,
-      "a48f0223c5291783bdb69ff71c00f315"
+      "fda6d2e789b33afabe9b0d839d906e35"
     ]
   ]
 ]

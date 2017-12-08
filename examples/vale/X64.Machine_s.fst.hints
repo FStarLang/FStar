@@ -8,7 +8,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ed44d5dbc5ed6bcc58b1ab626a6f461c"
+      "a5262d9c2fa24f03b1953a7b9441df10"
+    ],
+    [
+      "X64.Machine_s.uu___9",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "eb18d45cf0586c69f47f90eee4861419"
     ],
     [
       "X64.Machine_s.uu___10",
@@ -17,7 +26,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "328a1a71e4aceee2891cfc7891442489"
+      "35402a7af531a311b14f972232490e8c"
+    ],
+    [
+      "X64.Machine_s.uu___10",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "05f2860542743f3e649bcf4d1397c16e"
     ],
     [
       "X64.Machine_s.uu___11",
@@ -26,7 +44,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d27ad8c7370b3e988bb52dab464b79c0"
+      "bbf3ad0b9c82338c0961cb76dd2f6d50"
+    ],
+    [
+      "X64.Machine_s.uu___11",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "f84ab1374fe7bcec631152972e2042b1"
     ],
     [
       "X64.Machine_s.uu___is_Rax",

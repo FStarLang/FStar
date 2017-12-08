@@ -196,7 +196,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "34bc6046d1399edd76bae83bafdc967d"
+      "fdda5c5b8c75d074e832eda06e3cfc3f"
     ],
     [
       "StatefulLens.test2",
@@ -239,7 +239,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "7fa9dbba187935dbdd63dd4a14581581"
+      "84aee498eb113c6fdc83c70658c31176"
     ],
     [
       "StatefulLens.test4",
@@ -282,7 +282,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "4ad9cc2b2cf318540babcfcebd950ad1"
+      "78432de1893967e0d4d9ae99d9c3027d"
     ]
   ]
 ]
