@@ -3,6 +3,7 @@ module FStar.TypeChecker.NBE
 open FStar.All
 open FStar
 open FStar.TypeChecker
+open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 
@@ -46,9 +47,9 @@ type atom = //JUST FSHARP
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t) * aqual
-  | Accu of atom * list<t * aqual>
+  | Accu of atom * list<(t * aqual)>
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<t * aqual> (* Zoe: This is used for both type and data constructors*)
+  | Construct of fv * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
 
@@ -165,9 +166,9 @@ and iapp (f:t) (args:list<(t * aqual)>) =
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
-    | Tm_delayed _ -> failwith "Tm_delayed: Impossible"
+    | Tm_delayed (_, _) -> failwith "Tm_delayed: Impossible"
 
-    | Tm_unknown _ -> failwith "Tm_unknown: Impossible"
+    | Tm_unknown -> failwith "Tm_unknown: Impossible"
 
     | Tm_constant (FStar.Const.Const_unit) ->
       Unit
