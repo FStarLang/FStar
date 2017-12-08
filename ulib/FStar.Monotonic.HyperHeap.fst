@@ -310,8 +310,8 @@ let root_is_root (s:rid)
   = ()
 
 (*
-//  * AR: we can prove this lemma only if both the mreferences have same preorder
-//  *)
+* AR: we can prove this lemma only if both the mreferences have same preorder
+*)
 let lemma_sel_same_addr (#i: rid) (#a:Type0) (#rel:preorder a) (h:t) (r1:mrref i a rel) (r2:mrref i a rel)
   :Lemma (requires (contains_ref r1 h /\ addr_of r1 = addr_of r2))
          (ensures  (contains_ref r2 h /\ sel h r1 == sel h r2))

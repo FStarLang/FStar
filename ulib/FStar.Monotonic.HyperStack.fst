@@ -142,6 +142,10 @@ let as_addr #a #rel (x:mreference a rel)
 let is_mm (#a:Type) (#rel:preorder a) (r:mreference a rel) : GTot bool =
   HH.is_mm (mrref_of r)
 
+// Warning: all of the type aliases below get special support for KreMLin
+// extraction. If you rename or add to this list,
+// src/extraction/FStar.Extraction.Kremlin.fs needs to be updated.
+
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
 let mstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }

@@ -513,13 +513,25 @@ and translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
-  | MLTY_Named ([arg; _], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref") ->
+
+  | MLTY_Named ([_; arg; _], p) when (
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"
+  ) ->
+      TBuf (translate_type env arg)
+  | MLTY_Named ([arg; _], p) when (
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mreference" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mstackref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmstackref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref"
+  ) ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ->
       TBuf (translate_type env arg)
+
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named ([], (path, type_name)) ->
