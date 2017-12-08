@@ -8,22 +8,16 @@
       1,
       [ "@query" ],
       0,
-      "fce9091ad9930bcbb9d7c5eab5268afe"
+      "bcfb287e7106b6b3941372f4874262c2"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.introA_injective",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
-      ],
+      [ "@query" ],
       0,
-      "727f118a594c961377226d6cc9652dcb"
+      "23ec1d0fef354df7931826b18398d3ab"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj",
@@ -38,7 +32,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1eccce77aad73886b517df203d3ec1df"
+      "5df342c81429824fbb273d14591cf793"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj_injective",
@@ -53,7 +47,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
       ],
       0,
-      "be5d0f199eccd25ce9de10dd51e4d30f"
+      "9982bceb4b67e2e80681d41184f74156"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.f_injective",
@@ -66,7 +60,7 @@
         "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0"
       ],
       0,
-      "89d601036b1e9f6e1d21c2f26f480537"
+      "de83183269222bcfcab25a934ae6ca35"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.p0",
@@ -81,7 +75,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "44028910e68c667d4a9be71e79dc0831"
+      "7b30fd5dff352b82c2f1df7a474c6e68"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad1",
@@ -96,7 +90,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.p0"
       ],
       0,
-      "776eb3d855300b782cd02452a86ca996"
+      "f9b71c718f786a4f691be6ed23a1358b"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad2",
@@ -117,7 +111,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.p0"
       ],
       0,
-      "defcec5dda0bef7208e142c408aa281a"
+      "6272b349519b8f4619218454a7d64be3"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad",
@@ -126,7 +120,7 @@
       1,
       [ "@query" ],
       0,
-      "2061f73e5b38a2712ad9b0ca75e5892d"
+      "061877d8d97059a8f600c07efc4a76fd"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.worse",
@@ -135,7 +129,7 @@
       1,
       [ "@query" ],
       0,
-      "6aa37e5fb835fcaffb342ced6bfb0ba4"
+      "fe92fd24a13d0813612ed6e49a0805b6"
     ]
   ]
 ]

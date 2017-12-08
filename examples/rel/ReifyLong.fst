@@ -15,7 +15,6 @@ type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
  *)
 
-#set-options "--use_two_phase_tc false"  //AR: seems like 1123
  let p1 x =
   if read x = 0 then write x 0 else write x 0;
   write x (read x);

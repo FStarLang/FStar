@@ -1,5 +1,5 @@
 [
-  "∫¢\u0003]b˛Jä6\u0003¿ﬂ( \u000b‰",
+  "çØÂrRJG\bÊêŸª\u0007]ÓW",
   [
     [
       "Map.OpaqueToSMT.Test.imap",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f351c0247e51ceb34ab12d3426014f08"
+      "97c52e1f268da5a94ba5a657399791af"
     ],
     [
       "Map.OpaqueToSMT.Test.upd",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "87be01a94c8d6d83f906bf0608910325"
+      "23efeb54480da75edbf5ef748ca64a68"
     ],
     [
       "Map.OpaqueToSMT.Test.sel",
@@ -26,25 +26,25 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "149c82de195db05ddb013a8470b0c8cd"
+      "31c074c1fe7367f806b1b2e9fafec1c1"
     ],
     [
       "Map.OpaqueToSMT.Test.test1",
       1,
       0,
       0,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b12ac41ae41114b45bde3f6c8c6b2e61"
+      "8fdb4462a27bdd8a809f27e77415cff3"
     ],
     [
       "Map.OpaqueToSMT.Test.test2",
       1,
       0,
       0,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "78b59daef7c3c9c45d96f943c8c0f93c"
+      "884e1b1383d9050cb259192e4abfcd0a"
     ]
   ]
 ]

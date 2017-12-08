@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.list_haseq", "kinding_Bug279.t@tok" ],
       0,
-      "86db4afc2dcfc2e708f5f669292abcd4"
+      "8a55bfcda8956333509647be44f1945a"
     ],
     [
       "Bug279.__proj__T__item___0",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "69f77cb2dc8db1d21501e5e309b5e998"
+      "5594ee733282f6411da2c3d0b8bc67ca"
     ],
     [
       "Bug279.f",
@@ -30,7 +30,7 @@
         "subterm_ordering_Bug279.T"
       ],
       0,
-      "8be11a99a1f60972efa0ac5f48084e84"
+      "c04af70be01f763d6c090525af7c1434"
     ]
   ]
 ]

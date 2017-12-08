@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c92b6fe526bc974aaacc6f7f84f79f8b"
+      "0375eb775a2abdaf64aae27c068c45c0"
     ],
     [
       "Bug579.__proj__SBeta__item__e1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "71bcd7dec4c5f44ded13842cf68f0bf6"
+      "52596bb707378bc6b497909b29707c7e"
     ],
     [
       "Bug579.__proj__SBeta__item__e2",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "e033752913999186eb5a7ad50b7a4701"
+      "8f5be3b926f4a165fe19a709997a9743"
     ],
     [
       "Bug579.typing",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e2ef300cbcdbded0c7beeb366cfd82a8"
+      "9040d8cf8429bcac108ae6a79ead82ec"
     ],
     [
       "Bug579.__proj__TyEqu__item__e",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "89606ed82b6e5c35e6bf427ed7ea61a3"
+      "f7b82a373f97b2f1a71ef3e7b29ad9bc"
     ],
     [
       "Bug579.__proj__TyEqu__item__t1",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "f844a3d4347c77a607b19d26a3591897"
+      "3acc973de8fc446836a108405e975f63"
     ],
     [
       "Bug579.__proj__TyEqu__item__t2",
@@ -62,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "86b9d250c567c391e36978a0a63525c8"
+      "59f68e3692f62c695a58921392c481b5"
     ],
     [
       "Bug579.__proj__TyEqu__item__ht",
@@ -75,7 +75,7 @@
         "projection_inverse_Bug579.TyEqu_t1"
       ],
       0,
-      "ef07bfc461a165337c086e43b4608bab"
+      "bfb1d14e3b86f9f6062ab825e26bcde2"
     ],
     [
       "Bug579.progress'",
@@ -89,7 +89,7 @@
         "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "dbc3cd16c9fe69b92e482f626d790967"
+      "b4f255e695202d176fa6a1fe126e00e3"
     ],
     [
       "Bug579.progress",
@@ -98,15 +98,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_e4f13f20c6a154a4a71672b0064d098a_2",
         "data_elim_Bug579.TyEqu", "equality_tok_Prims.LexTop@tok",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "subterm_ordering_Bug579.TyEqu", "unit_typing"
+        "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "95c0f859acfbcb07a11a450d83322649"
+      "5b0e2287c36a0fe092eb65fef5d3be9c"
     ]
   ]
 ]

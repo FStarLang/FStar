@@ -468,7 +468,7 @@ let rec term_to_string: FStar_Syntax_Syntax.term -> Prims.string =
            let uu____1318 = db_to_string x3 in
            let uu____1319 =
              let uu____1320 =
-               let uu____1321 = term_to_string x3.FStar_Syntax_Syntax.sort in
+               let uu____1321 = tag_of_term x3.FStar_Syntax_Syntax.sort in
                Prims.strcat uu____1321 ")" in
              Prims.strcat ":(" uu____1320 in
            Prims.strcat uu____1318 uu____1319

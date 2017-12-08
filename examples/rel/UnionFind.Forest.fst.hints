@@ -18,7 +18,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "f46a326a497f2d01a6c43a2839be5f7c"
+      "67c56eade51a9869b6e97ffc8adfa689"
     ],
     [
       "UnionFind.Forest.set_n",
@@ -40,7 +40,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "577701c2158bf64bf04eb981371d8a0a"
+      "3393bbf227f2510935a5b1b6014f1e13"
     ],
     [
       "UnionFind.Forest.uf_forest",
@@ -52,7 +52,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "17c6fd0d925ec5e42cb6b3e802df2023"
+      "ca19a2d8e89a5a9f99d15a612a665f04"
     ],
     [
       "UnionFind.Forest.live",
@@ -73,7 +73,7 @@
         "refinement_interpretation_UnionFind.Forest_Tm_refine_b9e11f705ac7edee3fdb554505ed9f50"
       ],
       0,
-      "e999069f27c11f535db12776f11e4e9e"
+      "271939d57d659a51cfb3946be9286088"
     ],
     [
       "UnionFind.Forest.get",
@@ -81,10 +81,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "equation_UnionFind.Forest.elt",
-        "equation_UnionFind.Forest.id", "equation_UnionFind.Forest.live",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_UnionFind.Forest.elt", "equation_UnionFind.Forest.id",
+        "equation_UnionFind.Forest.live",
         "equation_UnionFind.Forest.uf_forest", "int_inversion",
         "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_33c56d04cd2b4870da0423961c379a8a",
@@ -95,7 +94,7 @@
         "typing_UnionFind.Forest.elt"
       ],
       0,
-      "f2f5fcdd9c023053dac0ff9765666322"
+      "7578bf564851017c4a5ad21d6715864c"
     ],
     [
       "UnionFind.Forest.set",
@@ -103,10 +102,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "equation_UnionFind.Forest.elt",
-        "equation_UnionFind.Forest.id", "equation_UnionFind.Forest.live",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_UnionFind.Forest.elt", "equation_UnionFind.Forest.id",
+        "equation_UnionFind.Forest.live",
         "equation_UnionFind.Forest.uf_forest",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple3",
         "int_inversion",
@@ -119,7 +117,7 @@
         "typing_UnionFind.Forest.elt", "unit_typing"
       ],
       0,
-      "b217ad1bf927d9424a1a7d7737142a65"
+      "28a7e3cda2c2f30ef4d75abfd9e91cbf"
     ]
   ]
 ]

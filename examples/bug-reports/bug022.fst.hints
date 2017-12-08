@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e76e07038b7a1100defa4e9e8f54d15a"
+      "b18bd6cbd5d4f369e6ef7a3f6472cdb0"
     ],
     [
       "Bug022.uu___is_EAbs",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2c7dc98bcfc3d17bf3210849f3ca5a4d"
+      "dd3962bbdde01fb785f59fa851e1b474"
     ],
     [
       "Bug022.__proj__EAbs__item___0",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Bug022_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
       ],
       0,
-      "5c21852aa3752548f748c2cdfd02a181"
+      "1d00b6459664cddbe5918406d4a0a2ab"
     ],
     [
       "Bug022.uu___is_EFalse",
@@ -39,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "e0a4795fab22a621c1302e5e33c635ab"
+      "ac8485b6ce1e04daaa3bc1f7d7ed6be6"
     ],
     [
       "Bug022.subst",
@@ -54,7 +54,16 @@
         "projection_inverse_Bug022.EAbs__0"
       ],
       0,
-      "cd193781c618cd16541a2ea506a799e9"
+      "52dcd294aed427625b6c9980e1126a6f"
+    ],
+    [
+      "Bug022.subst",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "de1b8bf40678598fedf04c2eb4473f5c"
     ]
   ]
 ]

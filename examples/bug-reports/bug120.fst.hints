@@ -12,7 +12,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "34da1a3090232d6987cf267184ec137d"
+      "4e2e081dd39ac3e0bee43e9b76a78f11"
     ],
     [
       "Bug120.uu___is_EVar",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "41dd6196e8f77cf783a59baa0e7e3340"
+      "ce1b62aea2ca5189258a599d1fd613bc"
     ],
     [
       "Bug120.__proj__EVar__item___0",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Bug120_Tm_refine_3d608774a59a6a8de561bf79f54add50"
       ],
       0,
-      "2581e8bde031af1b44e3448c3e5b53ec"
+      "dd2c2a47b15e559b022cfa9763d64cc0"
     ],
     [
       "Bug120.uu___is_EAbs",
@@ -43,7 +43,7 @@
       1,
       [ "@query" ],
       0,
-      "d25155fea4b12e04b56de40b00bd2013"
+      "b1c97498752650f0f67576d5ea60858c"
     ],
     [
       "Bug120.__proj__EAbs__item___0",
@@ -56,7 +56,16 @@
         "refinement_interpretation_Bug120_Tm_refine_b130c893a7c00b8fa4c55e9d2d914c50"
       ],
       0,
-      "d0769b6631b72ef053d7d3351b9f1efb"
+      "47462f7a48ecb2e2874d423e03af31d4"
+    ],
+    [
+      "Bug120.subst",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "30cc888233d5200ebe994276de145c4a"
     ]
   ]
 ]

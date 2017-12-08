@@ -13,7 +13,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a7048910cd04584e91d2b2cf658b45e3"
+      "243b0e6dbe9fd38dea280ebc62f90d0e"
     ],
     [
       "Bug254.bar",
@@ -21,18 +21,28 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
-        "equation_Prims.nat", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list_haseq", "equation_Prims.nat",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Bug254_Tm_refine_7e815a1593c688052ab1b25a0d825aa9",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "refinement_interpretation_Bug254_Tm_refine_7e815a1593c688052ab1b25a0d825aa9"
       ],
       0,
-      "f9cb4bb0ead50774e0e0297ab0098f60"
+      "e2bf00eb13c1788f5dd4a93c96bf4cd9"
+    ],
+    [
+      "Bug254.bar",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list_haseq", "equation_Prims.nat",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "8e8ded1c771b105f795bf38e9583ef4f"
     ]
   ]
 ]

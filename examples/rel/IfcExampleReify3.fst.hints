@@ -1,5 +1,5 @@
 [
-  "IÄ˘ç]c(Î®îÔÆ\t\\{°",
+  "vÕ5≠¿Ÿx\u0017[¬æo÷ﬁ”\u001f",
   [
     [
       "IfcExampleReify3.uu___is_Low",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "3849a44eb04d37f7f7f90ecba26672b2"
+      "ee08244a37211824ee30a090cab276bd"
     ],
     [
       "IfcExampleReify3.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "a3855bfd9a1a722aaf3120801d59baea"
+      "783e5768303039d5c07ef04e4e22eb13"
     ],
     [
       "IfcExampleReify3.low_equiv",
@@ -26,25 +26,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b2b7bc8795e015b5d79058f6ea96a7e1"
-    ],
-    [
-      "IfcExampleReify3.p1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a7a93efea2a941b3386273e0eeb03b2f"
+      "80d10f2368893ae66feab9cad56e2276"
     ],
     [
       "IfcExampleReify3.p1_r",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "47cee8d3a6b7592d4451493a845290df"
+      "6af981744c559a5d515eb9dbce79098f"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -53,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "cecab15413df6e446a80b121ba0eef0a"
+      "931f192411e0ebca4d73639dc6b453b0"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -62,7 +53,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e6bc4099a8d617b901025409962dfd2a"
+      "8a114b8aa1f758afb4f87f58cbd0a1f9"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -71,7 +62,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "43f4b95bd36e755311c15c9e9e8531a7"
+      "23656fda725a3e77af567b60b5a35eb4"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -117,7 +108,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "34c61c9c197f0eddd0cda4edd464e4c5"
+      "348fd7d619ec3feddd5761b254d87849"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -166,7 +157,7 @@
         "unit_typing"
       ],
       0,
-      "3c1cacdb2d389d17d16054a4b0f6acbe"
+      "1463ed362ec5ced1ea4fad6a7cc071f5"
     ]
   ]
 ]

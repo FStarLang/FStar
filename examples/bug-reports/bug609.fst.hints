@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "76dd943c3fc4f9948720ae3e1ec41284"
+      "bcf00cf91cd0fefdc0fcf314d1710344"
     ],
     [
       "Bug609.add''",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "875a06100a266ca62972b07b4fca172d"
+      "7b321a9885d7e47e345b981fec55b5a8"
     ],
     [
       "Bug609.test",
@@ -37,7 +37,32 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "02e727e4dca4d05251e09b9572d03a0e"
+      "dbca33abe59538e3107c678431847ca3"
+    ],
+    [
+      "Bug609.test",
+      2,
+      8,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_left.fuel_instrumented",
+        "@query",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_3bc48e9e0ae71786e958e3e19e27d674",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_left.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "token_correspondence_Prims.op_Addition",
+        "typing_FStar.List.Tot.Base.fold_left"
+      ],
+      0,
+      "1d8932a41906e68edd9a45840368bdc8"
     ]
   ]
 ]

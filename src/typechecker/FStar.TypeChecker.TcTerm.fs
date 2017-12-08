@@ -1409,7 +1409,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let g = Rel.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
-            let xterm = S.as_arg (S.bv_to_name x) in
+            let xterm = (fst (S.as_arg (S.bv_to_name x)), aq) in  //AR: fix for #1123, we were dropping the qualifiers
             if U.is_tot_or_gtot_lcomp c //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
             || TcUtil.is_pure_or_ghost_effect env c.eff_name
             then let subst = maybe_extend_subst subst (List.hd bs) e in
@@ -1432,7 +1432,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                "Potentially redundant explicit currying of a function type";
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
-                        aux true (N.unfold_whnf env tres)
+                      let rec norm_tres (tres:term) :term =
+                        let tres = N.unfold_whnf env tres in
+                        match (SS.compress tres).n with
+                        | Tm_refine ( { sort = tres }, _) -> norm_tres tres
+                        | _                               -> tres
+                      in
+                      aux true (norm_tres tres)
                     | _ -> raise (Error(BU.format2 "Too many arguments to function of type %s; got %s arguments"
                                             (N.term_to_string env thead) (BU.string_of_int n_args), argpos arg)) in
             aux false chead.res_typ

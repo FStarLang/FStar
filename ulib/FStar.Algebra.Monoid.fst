@@ -46,7 +46,7 @@ let int_plus_monoid : monoid int =
 (*   intro_monoid int 1 op_Multiply *)
 
 let conjunction_monoid : monoid prop =
-  let u : prop = True in
+  let u : prop = singleton True in
   let mult (p q : prop) : prop = p /\ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
@@ -74,7 +74,7 @@ let conjunction_monoid : monoid prop =
 
 
 let disjunction_monoid : monoid prop =
-  let u : prop = False in
+  let u : prop = singleton False in
   let mult (p q : prop) : prop = p \/ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
