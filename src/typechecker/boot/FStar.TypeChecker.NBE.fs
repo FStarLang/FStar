@@ -66,7 +66,6 @@ let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
 let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
 let mkAccTyp (u:universe) = Accu(Type u, [])
-//let mkAccUniv (u:universe) = Accu(Univ u, [])
 
 let isAccu (trm:t) =
   match trm with
@@ -125,23 +124,6 @@ let rec count_abstractions (t : term) : int =
     | Tm_ascribed (t, _, _) -> count_abstractions t
 
 
-let rec t_to_string (x:t) =
-    match x with
-    | Lam _ -> "Lam"
-    | Accu (a, l) -> "Accu (" ^ (atom_to_string a) ^ ") (" ^ (String.concat ", " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
-    | Construct (fv, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") (" ^ (String.concat ", " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
-    | Unit -> "Unit"
-    | Bool b -> if b then "Bool true" else "Bool false"
-
-and atom_to_string (a: atom) =
-    match a with
-    | Var v -> "Var " ^ (P.bv_to_string v)
-    | Type u -> "Type " ^ (P.univ_to_string u)
-    // | Univ u -> "Univ " ^ (P.univ_to_string u)
-    | Match (t, _) -> "Match " ^ (t_to_string t)
-    | Rec (_, l) -> "Rec (" ^ (String.concat ", " (List.map t_to_string l)) ^ ")"
-
-
 (* XXX unused *)
 // let rec mkBranches branches cont =
 //   match branches with
@@ -163,13 +145,12 @@ let find_sigelt_in_gamma (env: Env.env) (lid:lident): option<sigelt> =
   let mapper (lr, rng) =
     match lr with
     | BU.Inr (elt, None) -> Some elt
-    | BU.Inr (elt, Some us) -> BU.print1 "Universes in local declaration: %s\n" (P.univs_to_string us); Some elt
+    | BU.Inr (elt, Some us) -> Some elt
     | _ -> None in
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
 (* We are not targeting tagless normalization at this point *)
 let rec app (f:t) (x:t) (q:aqual) =
-  BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x);
   match f with
   | Lam (f, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
@@ -183,10 +164,6 @@ and iapp (f:t) (args:list<(t * aqual)>) =
   | _ -> iapp (app f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
-    BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e));
-    BU.print1 "BS list: %s\n" (String.concat ", " (List.map (fun x -> t_to_string x) bs));
-    // BU.print1 "%s" "\n";
-
     match (SS.compress e).n with
     | Tm_delayed _ -> failwith "Tm_delayed: Impossible"
 
@@ -206,8 +183,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       List.nth bs db.index
 
     | Tm_uinst (t, [u]) ->
-      BU.print2 "Term with univs: %s - %s\n" (P.tag_of_term t) (P.term_to_string t);
-      BU.print1 "Univ %s\n" (P.univ_to_string u);
       let tr = translate env bs t in
       (match tr with
        | Lam _ ->
@@ -218,9 +193,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
            app tr (mkAccTyp (SS.compress_univ u)) None )
 
     | Tm_uinst (t, _) ->
-      BU.print1 "Term with univs: %s\n" (P.term_to_string t);
-      // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (SS.compress_univ x))) u;
-      // translate ((map_rev (fun x -> mkAccuUniv (SS.compress_univ x)) u) @ bs) t
       debug_term e; failwith "Not yet implemented Tm_uinst"
 
     | Tm_type u -> mkAccTyp u
@@ -240,7 +212,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       mkAccuVar x
 
     | Tm_abs ([x], body, _) ->
-      BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body);
       Lam ((fun (y:t) -> translate env (y::bs) body), snd x)
 
     | Tm_abs (x::xs, body, _) ->
@@ -258,35 +229,29 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
             if is_rec then
               mkAccuRec lb []
             else
-              begin
-                 BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp));
-                 BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef));
-                 translate env [] lb.lbdef
-              end
+              translate env [] lb.lbdef
           | Some { sigel = Sig_datacon(_, _, _, _, _, []) } ->
               mkConstruct fvar []
           // VD: This was a stopgap for definitions not found in environment:
           // | Some { sigel = Sig_declare_typ(lid, univs, ty) } ->
           //     (match (SS.compress ty).n with
-          //      | Tm_type u -> mkAccTyp u
+          //      | Tm_type u -> mkConstruct fvar []
           //      | _ -> failwith "impossible?")
           | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
               mkConstruct fvar []
-          | None ->
+          |  None ->
               mkConstruct fvar [] (* Zoe : Treat all other cases as type/data constructors for now. *)
           | Some s ->
-              BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
-            (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
+              BU.format1 "Sig %s" (P.sigelt_to_string s) |> failwith
          )
-       | None -> failwith "fvar not found"
+       | None ->
+           mkConstruct fvar [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
        )
 
     | Tm_app (e, [arg]) ->
-      BU.print2 "!!!! %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg));
       app (translate env bs e) (translate env bs (fst arg)) (snd arg)
 
     | Tm_app(head, arg::args) ->
-      BU.print2 "!!! %s / %s\n" (P.term_to_string head) (P.term_to_string (fst arg));
       let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
       let tm = S.mk (Tm_app(first, args)) None e.pos in
       translate env bs tm
@@ -323,7 +288,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (env:Env.env) (x:t) : term =
-    BU.print1 "Readback: %s\n" (t_to_string x);
     match x with
     | Unit -> S.unit_const
 
@@ -331,14 +295,12 @@ and readback (env:Env.env) (x:t) : term =
     | Bool false -> U.exp_false_bool
 
     | Lam (f, q) ->
-      BU.print1 "I'm in Lam readback %s" "\n";
       let x = S.new_bv None S.tun in
       let body = readback env (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
     | Construct (fv, args) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) args in
-      ignore (List.iter (fun (x, _) -> BU.print2 "Arg in Construct: %s - %s\n" (P.tag_of_term x) (P.term_to_string x)) args);
       (match args with
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
        | h::hs ->
