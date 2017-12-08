@@ -16,6 +16,13 @@ module Seq = FStar.Seq
 
 ////////////////////////////////////////////////////////////////////////////////
 
+(*
+ * 12/08
+ * AR: writing this in terms of length and index
+ *     earlier it was written in terms of an exists s3. Seq.equal (append s1 s3) s2
+ *     that meant going through many hoops to prove simple things like transitivity of grows
+ *     so far this seems to work better.
+ *)
 abstract let grows (#a:Type) :Preorder.preorder (seq a)
   = fun (s1:seq a) (s2:seq a) ->
     length s1 <= length s2 /\
@@ -291,32 +298,41 @@ let collect_snoc f s a =
 
 #reset-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 
-val collect_append: f:('a -> Tot (seq 'b)) -> s1:seq 'a -> s2:seq 'a -> Lemma
-  (requires True)
-  (ensures (collect f (s1@s2) == (collect f s1 @ collect f s2)))
-  (decreases (Seq.length s2))
-let rec collect_append f s_1 s_2 =
-  if Seq.length s_2 = 0
-  then (cut (Seq.equal (s_1@s_2) s_1);
-        cut (Seq.equal (collect f s_1 @ collect f s_2) (collect f s_1)))
-  else (let prefix_2, last = un_snoc s_2 in
-        let m_s_1 = collect f s_1 in
-  	let m_p_2 = collect f prefix_2 in
-  	let flast = f last in
-  	cut (Seq.equal (s_1@s_2) (Seq.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
-  	collect_snoc f (Seq.append s_1 prefix_2) last;                       //              = snoc (map f (s1@p)) (f last)
-        collect_append f s_1 prefix_2;                                       //              = snoc (map f s_1 @ map f p) (f last)
-  	cut (Seq.equal ((m_s_1 @ m_p_2) @ flast)
-  		       (m_s_1 @ (m_p_2 @ flast)));                 //              = map f s1 @ (snoc (map f p) (f last))
-        collect_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
+// val collect_append: f:('a -> Tot (seq 'b)) -> s1:seq 'a -> s2:seq 'a -> Lemma
+//   (requires True)
+//   (ensures (collect f (s1@s2) == (collect f s1 @ collect f s2)))
+//   (decreases (Seq.length s2))
+// let rec collect_append f s_1 s_2 =
+//   if Seq.length s_2 = 0
+//   then (cut (Seq.equal (s_1@s_2) s_1);
+//         cut (Seq.equal (collect f s_1 @ collect f s_2) (collect f s_1)))
+//   else (let prefix_2, last = un_snoc s_2 in
+//         let m_s_1 = collect f s_1 in
+//   	let m_p_2 = collect f prefix_2 in
+//   	let flast = f last in
+//   	cut (Seq.equal (s_1@s_2) (Seq.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
+//   	collect_snoc f (Seq.append s_1 prefix_2) last;                       //              = snoc (map f (s1@p)) (f last)
+//         collect_append f s_1 prefix_2;                                       //              = snoc (map f s_1 @ map f p) (f last)
+//   	cut (Seq.equal ((m_s_1 @ m_p_2) @ flast)
+//   		       (m_s_1 @ (m_p_2 @ flast)));                 //              = map f s1 @ (snoc (map f p) (f last))
+//         collect_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
 
 //17-01-05 all the stuff above should go to Seq.Properties! 
 
-#set-options "--z3rlimit 15"
 let collect_grows (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s2:seq 'a)
   : Lemma (grows s1 s2 ==> grows (collect f s1) (collect f s2))
-  = admit ()
+  = let rec collect_grows_aux (f:'a -> Tot (seq 'b)) (s1:seq 'a) (s2:seq 'a)
+      :Lemma (requires (grows s1 s2)) (ensures (grows (collect f s1) (collect f s2)))
+             (decreases (Seq.length s2))
+      = if length s1 = length s2 then assert (Seq.equal s1 s2)
+        else
+          let s2_prefix, s2_last = un_snoc s2 in
+          collect_grows_aux f s1 s2_prefix
+    in
+    //AR: wanted to use move_requires here, but that gives an error, probably because of decreases clause?
+    if StrongExcludedMiddle.strong_excluded_middle (grows s1 s2) then collect_grows_aux f s1 s2
+    else ()
   
 let collect_prefix (#a:Type) (#b:Type) (#i:rid)
 		   (r:m_rref i (seq a) grows)
@@ -351,13 +367,7 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 				(r:m_rref i (seq a) grows)
 				(f:a -> Tot (seq b)) (n:nat) (v:b)
   : Lemma (MR.stable_on_t r (collect_has_at_index r f n v))
-  = let aux : h0:mem -> h1:mem -> Lemma
-      (collect_has_at_index r f n v h0
-       /\ grows (HS.sel h0 r) (HS.sel h1 r)
-       ==> collect_has_at_index r f n v h1) = admit ()
-    in
-    forall_intro_2 aux
-
+  = Classical.forall_intro_2 (collect_grows f)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Monotonic sequence numbers, bounded by the length of a log
