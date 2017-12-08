@@ -199,9 +199,12 @@ sub_effect
  * (c) Similar thing happens with mem, there is a refinement that we attach to mem, but that could
  *     probably be moved to HyperStack mem itself.
  *)
-type rid = r:HH.rid{r == HH.root                \/
-                    (not (is_eternal_region r)) \/
-		    witnessed (region_contains_pred r)}
+// unfold let rid_refinement (r:HH.rid)
+//   = r == HH.root                \/
+//     (not (is_eternal_region r)) \/
+//     witnessed (region_contains_pred r)
+// type rid = r:HH.rid{rid_refinement r}
+type rid = HH.rid
 
 type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
                                                                   witnessed (region_contains_pred r.id)}
@@ -221,6 +224,68 @@ type ref (a:Type) = mref a (Heap.trivial_preorder a)
 type mmstackref (a:Type) = mmmstackref a (Heap.trivial_preorder a)
 type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
+
+(*
+ * AR: The change to using ST.rid may not be that bad itself,
+ *     since subtyping should take care of most instances in the client usage.
+ *     However, one case where it could be an issue is modifies clauses that use
+ *     Set.set rid.
+ *)
+
+
+// assume val rid_set_to_hh_rid_set (r:Set.set rid)
+//    :Tot (s:Set.set HH.rid{(forall (x:rid).{:pattern (Set.mem x r) \/ (Set.mem x s)} Set.mem x r <==> Set.mem x s) /\
+//                           (forall (y:HH.rid).{:pattern (Set.mem y s) \/ (Set.mem y r)} Set.mem y s <==> (rid_refinement y /\ Set.mem y r))})
+
+// let lemma_rid_set_to_hh_rid_set_union (r1:Set.set rid) (r2:Set.set rid)
+//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.union r1 r2) ==
+//                                 Set.union (rid_set_to_hh_rid_set r1) (rid_set_to_hh_rid_set r2)))
+// 	 [SMTPatOr [[SMTPat (rid_set_to_hh_rid_set (Set.union r1 r2))];
+// 	            [SMTPat (Set.union (rid_set_to_hh_rid_set r1) (rid_set_to_hh_rid_set r2))]]]
+//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.union r1 r2)) (Set.union (rid_set_to_hh_rid_set r1) (rid_set_to_hh_rid_set r2)))
+
+// let lemma_rid_set_to_hh_rid_set_complement (r:Set.set rid)
+//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.complement r) ==
+//                                 Set.complement (rid_set_to_hh_rid_set r)))
+// 	 [SMTPatOr [[SMTPat (rid_set_to_hh_rid_set (Set.complement r))];
+// 	            [SMTPat (Set.complement (rid_set_to_hh_rid_set r))]]]
+//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.complement r)) (Set.complement (rid_set_to_hh_rid_set r)))
+
+// let lemma_rid_set_to_hh_rid_set_singleton (r:rid)
+//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.singleton r) ==
+//                                 Set.singleton #HH.rid r))
+// 	 [SMTPat (rid_set_to_hh_rid_set (Set.singleton r))]
+//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.singleton r)) (Set.singleton #HH.rid r))
+
+// let lemma_rid_set_to_hh_rid_set_empty ()
+//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.empty #rid) == Set.empty #HH.rid))
+//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.empty #rid)) (Set.empty #(HH.rid)))
+
+// assume Lemma_rid_set_hh_rid_set_empty: rid_set_to_hh_rid_set (Set.empty #rid) == Set.empty #HH.rid
+
+// let modifies (s:Set.set rid) (m0:mem) (m1:mem)
+//   = HyperStack.modifies (rid_set_to_hh_rid_set s) m0 m1
+
+// let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem)
+//   = HyperStack.modifies_transitively (rid_set_to_hh_rid_set s) m0 m1
+
+// let hh_modifies (s:Set.set rid) (m0:mem) (m1:mem)
+//   = HH.modifies (rid_set_to_hh_rid_set s) m0.h m1.h
+
+// let lemma_modifies_trans (m1:mem) (m2:mem) (m3:mem) (s1:Set.set rid) (s2:Set.set rid)
+//   :Lemma (requires (modifies s1 m1 m2 /\
+//                     modifies s2 m2 m3))
+// 	 (ensures  (modifies (Set.union s1 s2) m1 m3))
+// 	 [SMTPat (modifies s1 m1 m2); SMTPat (modifies s2 m2 m3)]
+//   = ()
+
+// #set-options "--z3rlimit 20"
+// let lemma_hh_modifies_trans (m1:mem) (m2:mem) (m3:mem) (s1:Set.set rid) (s2:Set.set rid)
+//   :Lemma (requires (hh_modifies s1 m1 m2 /\
+//                     hh_modifies s2 m2 m3))
+// 	 (ensures  (hh_modifies (Set.union s1 s2) m1 m3))
+// 	 [SMTPat (hh_modifies s1 m1 m2); SMTPat (hh_modifies s2 m2 m3)]
+//   = ()
 
 (**
    Pushes a new empty frame on the stack
@@ -312,16 +377,18 @@ let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
  *     potentially heavy change in the clients, but mechanical, hopefully.
  *     even on the return type
  *)
+#set-options "--z3rlimit 10"
 let new_region (r0:rid)
   :ST rid
-      (requires (fun m        -> is_eternal_region r0))
+      (requires (fun m        -> is_eternal_region r0 /\
+                              (r0 == HH.root \/ witnessed (region_contains_pred r0))))
       (ensures  (fun m0 r1 m1 ->
-                           r1 `HH.extends` r0
-                        /\ HH.fresh_region r1 m0.h m1.h
-			/\ HH.color r1 = HH.color r0
-			/\ m1.h == Map.upd m0.h r1 Heap.emp
-			/\ m1.tip = m0.tip
-			))
+                 r1 `HH.extends` r0                  /\
+                 HH.fresh_region r1 m0.h m1.h        /\
+		 HH.color r1 = HH.color r0           /\
+		 witnessed (region_contains_pred r1) /\
+		 m1.h == Map.upd m0.h r1 Heap.emp    /\
+		 m1.tip = m0.tip))
   = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
     let m0 = gst_get () in
     let new_rid = HH.extend_monochrome r0 m0.rid_ctr in
@@ -334,14 +401,15 @@ let is_eternal_color = HS.is_eternal_color
 
 let new_colored_region (r0:rid) (c:int)
   :ST rid
-      (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0))
+      (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0 /\
+                             (r0 == HH.root \/ witnessed (region_contains_pred r0))))
       (ensures (fun m0 r1 m1 ->
-                           r1 `HH.extends` r0
-                        /\ HH.fresh_region r1 m0.h m1.h
-			/\ HH.color r1 = c
-			/\ m1.h == Map.upd m0.h r1 Heap.emp
-			/\ m1.tip = m0.tip
-			))
+                r1 `HH.extends` r0                  /\
+                HH.fresh_region r1 m0.h m1.h        /\
+	        HH.color r1 = c                     /\
+		witnessed (region_contains_pred r1) /\
+	        m1.h == Map.upd m0.h r1 Heap.emp    /\
+		m1.tip = m0.tip))
   = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
     let m0 = gst_get () in
     let new_rid = HH.extend r0 m0.rid_ctr c in
@@ -358,10 +426,9 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
      i = x.id                                   /\
      m1 == upd m0 x init                      
 
-#set-options "--z3rlimit 10"
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
-      (requires (fun m       -> is_eternal_region i))
+      (requires (fun m       -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
       (ensures  (fun m0 r m1 -> is_eternal_region r.id /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
   = if i <> HH.root then gst_recall (region_contains_pred i);
     let m0 = gst_get () in
@@ -377,13 +444,13 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
-      (requires (fun m -> is_eternal_region i))
+      (requires (fun m -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
       (ensures (ralloc_post i init))
   = ralloc_common i init false
   
 let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mmmref a rel)
-      (requires (fun _ -> is_eternal_region i))
+      (requires (fun m -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
@@ -458,8 +525,14 @@ let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
    We can only recall eternal regions, not stack regions
    *)
 let recall_region (i:rid{is_eternal_region i})
-  :Stack unit (requires (fun m -> True)) (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
+  :Stack unit (requires (fun m -> i == HH.root \/ witnessed (region_contains_pred i)))
+              (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
   = if i <> HH.root then gst_recall (region_contains_pred i)
+
+let witness_region (i:rid{is_eternal_region i})
+  :Stack unit (requires (fun m0      -> i `is_in` m0.h))
+              (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
+  = gst_witness (region_contains_pred i)
 
 (* Tests *)
 val test_do_nothing: int -> Stack int
