@@ -58,3 +58,4 @@ val action_to_string  : action -> string
 
 // VD: just for testing
 val univ_names_to_string : list<ident> -> string
+val univs_to_string: universes -> string

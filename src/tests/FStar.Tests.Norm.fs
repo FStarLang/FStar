@@ -85,7 +85,7 @@ let tests =
                                          match x with \
                                           | [] -> []  \
                                           | hd::tl -> hd::copy tl" in
-  let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
+  let _ = Pars.pars_and_tc_fragment "let recons (x:list 'a) : Tot (list 'a) = \
                                          match x with \
                                           | [] -> []  \
                                           | hd::tl -> hd::tl" in
@@ -103,8 +103,13 @@ let tests =
                                        | B y x -> y - x" in
   let _ = Pars.pars_and_tc_fragment "type tb = | T | F" in
   let _ = Pars.pars_and_tc_fragment "let idd (x: 'a) = x" in
+  let _ = Pars.pars_and_tc_fragment "let revtb (x: tb) = match x with | T -> F | F -> T" in
+  let _ = Pars.pars_and_tc_fragment "let id_tb (x: tb) = x" in
+  let _ = Pars.pars_and_tc_fragment "let fst_a (x: 'a) (y: 'a) = x" in
+  let _ = Pars.pars_and_tc_fragment "let id_list (x: list 'a) = x" in
   [ (0, (app apply [one; id; nm n]), (nm n))
-  ; (1, (app apply [tt; nm n; nm m]), (nm n))
+  ; (1, (app id [nm x]), (nm x))
+  // ; (1, (app apply [tt; nm n; nm m]), (nm n))
   // ; (2, (app apply [ff; nm n; nm m]), (nm m))
   // ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
   // ; (4, (app twice [apply; ff; nm n; nm m]), (nm m))
@@ -137,14 +142,25 @@ let tests =
   // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
   //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   // The following do not work for NBE because of type allications.
-  //; (24, (tc "recons [0;1]"), (tc "[0;1]"))
-  //; (25, (tc "copy [0;1]"), (tc "[0;1]"))
-  //; (26, (tc "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc "[10;9;8;7;6;5;4;3;2;1;0]"))
-  //; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
+    // Prims.Int not found
+  // ; (24, (tc "recons [0;1]"), (tc "[0;1]"))
+  // ; (25, (tc "copy [0;1]"), (tc "[0;1]"))
+  // ; (26, (tc "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc "[10;9;8;7;6;5;4;3;2;1;0]"))
+  // ; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
   // Type defs not yet implemented for NBE
-  //; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
-  //; (28, (tc "rev [T; F]"), (tc "[F; T]"))
-    ; (29, (tc "idd T"), (tc "T"))
+  // ; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  ; (28, (tc "(fun x y z q -> z) T T F T"), (tc "F"))
+  ; (29, (tc "[T; F]"), (tc "[T; F]"))
+  ; (31, (tc "id_tb T"), (tc "T"))
+  ; (32, (tc "(fun #a x -> x) #tb T"), (tc "T"))
+  ; (33, (tc "revtb T"), (tc "F"))
+  ; (34, (tc "(fun x y -> x) T F"), (tc "T"))
+  ; (35, (tc "fst_a T F"), (tc "T"))
+  ; (36, (tc "idd T"), (tc "T"))
+
+  ; (301,(tc "id_list [T; F]"), (tc "[T; F]"))
+  ; (302,(tc "recons [T]"), (tc "[T]"))
+  ; (30, (tc "rev [T]"), (tc "[T]")) // failure of universe variable unification
   ]
 
 
@@ -302,6 +318,7 @@ let compare_times l_int l_nbe =
 
 let run_all () =
     let l_int = run_all_interpreter_with_time () in
-    let l_nbe = run_all_nbe_with_time () in 
+    let l_nbe = run_all_nbe_with_time () in
     //compare_times l_int l_nbe
-    run_nbe_tac ()
+    // run_nbe_tac ()
+    ()
