@@ -46,7 +46,7 @@ let lemma_snoc_extends (s:seq 'a) (x:'a)
 
 let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
-       (requires (fun _ -> True))
+       (requires (fun _ -> HST.witnessed (region_contains_pred r)))
        (ensures (fun h0 m h1 ->
 	 HS.contains h1 m /\
 	 HS.sel h1 m == init /\
@@ -94,7 +94,7 @@ let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) (grows_p 
 
 let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
   : ST (i_seq r a p)
-       (requires (fun _ -> True))
+       (requires (fun _ -> HST.witnessed (region_contains_pred r)))
        (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 m h1))
   = FStar.Monotonic.RRef.m_alloc r init
 
@@ -172,7 +172,7 @@ let itest r a k =
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
 private let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
-               : ST unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True)) =
+               : ST unit (requires (fun _ -> HST.witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
   let is = alloc_mref_iseq p r init in
   let h = get () in
   assert (i_sel h is == init)
@@ -405,6 +405,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
   	     (i:rid) (init:nat) (log:log_t l a)
   : ST (seqn i log max)
        (requires (fun h ->
+           HST.witnessed (region_contains_pred i) /\
 	   init <= max /\
 	   init <= Seq.length (HS.sel h log)))
        (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 

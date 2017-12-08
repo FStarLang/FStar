@@ -78,7 +78,7 @@ let m_upd #r #a #b h m v = HS.upd h (as_hsref m) v
 inline_for_extraction
 val m_alloc (#a:Type) (#b:reln a) (r:rid) (init:a)
   :ST (m_rref r a b)
-      (requires (fun _ -> True))
+      (requires (fun _ -> witnessed (region_contains_pred r)))
       (ensures  (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 m h1))
 inline_for_extraction
 let m_alloc #a #b r init = HST.ralloc r init

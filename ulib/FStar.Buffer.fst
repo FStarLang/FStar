@@ -827,7 +827,7 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemm
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
 val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
-  (requires (fun h -> is_eternal_region r))
+  (requires (fun h -> is_eternal_region r /\ witnessed (region_contains_pred r)))
   (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
     /\ live h1 b /\ idx b == 0 /\ length b == v len
     /\ Map.domain h1.h == Map.domain h0.h

@@ -154,7 +154,7 @@ val defined_stable
 val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
     (_:unit{inv (repr empty)})
   : ST (t r a b inv)
-       (requires (fun h -> True))
+       (requires (fun h -> HyperStack.ST.witnessed (region_contains_pred r)))
        (ensures (fun h0 x h1 ->
          ralloc_post r empty h0 x h1))
 
@@ -228,7 +228,11 @@ val map_f (#a:eqtype) (#b #c:a -> Type)
 	  (#r #r':MR.rid)
           (m:t r a b inv) (f: (x:a) -> b x -> c x)
 	  :ST (t r' a c inv')
-	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m)))))
+	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\ witnessed (region_contains_pred r')))
 	      (ensures  (fun h0 m' h1 ->
 	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
 	                 ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))
+
+
+
+

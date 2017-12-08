@@ -53,7 +53,7 @@ type rid = MR.rid
 
 let alloc (#r:rid) #a #b #inv
   : ST (t r a b inv)
-       (requires (fun h -> inv (empty_map a b)))
+       (requires (fun h -> inv (empty_map a b) /\ witnessed (region_contains_pred r)))
        (ensures (fun h0 x h1 ->
     inv (empty_map a b) /\
     ralloc_post r (empty_map a b) h0 x h1))

@@ -238,7 +238,7 @@ let invert_invariant (h:mem) (k:key) (c:cipher) (p:Plain.plain)
 ///         its ae log is initially empty
 let keygen (parent:rid)
   : ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (fun h0 k h1 ->
     modifies Set.empty h0 h1 /\
     extends k.region parent /\
