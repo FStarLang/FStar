@@ -478,11 +478,30 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
                             (Tm_meta (t', m), gs)
 
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
-               // ==> is specialized to U_zero -----v
+               // ==> is specialized to U_zero
                let x = S.new_bv None (U.mk_squash U_zero p) in
                let (p', gs1) = traverse f (flip pol)  e                p in
                let (q', gs2) = traverse f       pol  (Env.push_bv e x) q in
                ((U.mk_imp p' q').n, gs1@gs2)
+
+        (* <==> is special, each side is bipolar *)
+        (* When we reach p <==> q we traverse both, and get
+           p = (p', gs_p)
+           q = (q', gs_q)
+           *)
+        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
+               // <==> is specialized to U_zero
+               let xp = S.new_bv None (U.mk_squash U_zero p) in
+               let xq = S.new_bv None (U.mk_squash U_zero q) in
+               let (pp, gs1) = traverse f Pos (Env.push_bv e xq) p in
+               let (qp, gs2) = traverse f Pos (Env.push_bv e xp) q in
+               let (pn, gs3) = traverse f Neg e p in
+               let (qn, gs4) = traverse f Neg e q in
+               let gs = gs1@gs2@gs3@gs4 in
+               if List.isEmpty gs
+               then ((U.mk_iff p q).n, [])
+               else let t = U.mk_conj (U.mk_imp pn qp) (U.mk_imp qn pp) in
+                    (t.n, gs)
 
         | Tm_app (hd, args) ->
                 let (hd', gs1) = traverse f pol e hd in
