@@ -440,99 +440,180 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         raise (Err.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 // Polarity
-type pol = | Pos | Neg
+type pol =
+    | Pos
+    | Neg
+    | Both // traversing both polarities at once
 
-let flip p = match p with | Pos -> Neg | Neg -> Pos
+// Result of traversal
+type tres_m<'a> =
+    | Unchanged of 'a
+    | Simplified of 'a * list<goal>
+    | Dual of 'a * 'a * list<goal>
 
-let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
+type tres = tres_m<term>
+
+let tpure x = Unchanged x
+
+let flip p = match p with
+    | Pos -> Neg
+    | Neg -> Pos
+    | Both -> Both
+
+let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
     // by_tactic marker
     | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
-        if pol = Pos then
+        begin match pol with
+        | Pos ->
             let gs, _ = run_tactic_on_typ tactic e assertion in
-            (FStar.Syntax.Util.t_true, gs)
-        else
-            (assertion, []) // Peel away tactics in negative positions, they're assumptions!
+            Simplified (FStar.Syntax.Util.t_true, gs)
+
+        | Both ->
+            let gs, _ = run_tactic_on_typ tactic e assertion in
+            Dual (assertion, FStar.Syntax.Util.t_true, gs)
+
+        | Neg ->
+            // Peel away tactics in negative positions, they're assumptions!
+            Simplified (assertion, [])
+        end
 
     // spinoff marker: simply spin off a query independently.
     // So, equivalent to `by_tactic idtac` without importing the (somewhat heavy) tactics module
     | Tm_fvar fv, [(assertion, None)]
             when S.fv_eq_lid fv PC.spinoff_lid ->
-        if pol = Pos then
-            (FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e assertion])
-        else
-            (assertion, [])
+        begin  match pol with
+        | Pos ->
+            Simplified (FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e assertion])
+
+        | Both ->
+            Dual (assertion, FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e assertion])
+
+        | Neg ->
+            Simplified (assertion, [])
+        end
 
     | _ ->
-        (t, [])
+        Unchanged t
 
-let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
-    let (tn', gs) =
+let explode (t : tres_m<'a>) : 'a * 'a * list<goal> =
+    match t with
+    | Unchanged t -> (t, t, [])
+    | Simplified (t, gs) -> (t, t, gs)
+    | Dual (tn, tp, gs) -> (tn, tp, gs)
+
+let comb1 (f : 'a -> 'b) : tres_m<'a> -> tres_m<'b> = function
+    | Unchanged t -> Unchanged (f t)
+    | Simplified (t, gs) -> Simplified (f t, gs)
+    | Dual (tn, tp, gs) -> Dual (f tn, f tp, gs)
+
+let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m<'a>) (y : tres_m<'b>) : tres_m<'c> =
+    match x, y with
+    | Unchanged t1, Unchanged t2 ->
+        Unchanged (f t1 t2)
+
+    | Unchanged t1, Simplified (t2, gs)
+    | Simplified (t1, gs), Unchanged t2 ->
+        Simplified (f t1 t2, gs)
+
+    | Simplified (t1, gs1), Simplified (t2, gs2) ->
+        Simplified (f t1 t2, gs1@gs2)
+
+    | _ ->
+        let (n1, p1, gs1) = explode x in
+        let (n2, p2, gs2) = explode y in
+        Dual (f n1 n2, f p1 p2, gs1@gs2)
+
+let comb_list (rs : list<tres_m<'a>>) : tres_m<list<'a>> =
+    let rec aux rs acc =
+        match rs with
+        | [] -> acc
+        | hd::tl -> aux tl (comb2 (fun l r -> l::r) hd acc)
+    in
+    aux (List.rev rs) (tpure [])
+
+let emit (gs : list<goal>) (m : tres_m<'a>) : tres_m<'a> =
+    comb2 (fun () x -> x) (Simplified ((), gs)) m
+
+let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:term) : tres =
+    let r =
         match (SS.compress t).n with
-        | Tm_uinst (t,us) -> let (t',gs) = traverse f pol e t in
-                             (Tm_uinst (t', us), gs)
-        | Tm_meta (t, m) -> let (t', gs) = traverse f pol e t in
-                            (Tm_meta (t', m), gs)
+        | Tm_uinst (t,us) -> let tr = traverse f pol e t in
+                             comb1 (fun t' -> Tm_uinst (t', us)) tr
+
+        | Tm_meta (t, m) -> let tr = traverse f pol e t in
+                            comb1 (fun t' -> Tm_meta (t', m)) tr
 
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
                let x = S.new_bv None (U.mk_squash p) in
-               let (p', gs1) = traverse f (flip pol)  e                p in
-               let (q', gs2) = traverse f       pol  (Env.push_bv e x) q in
-               ((U.mk_imp p' q').n, gs1@gs2)
+               let r1 = traverse f (flip pol)  e                p in
+               let r2 = traverse f       pol  (Env.push_bv e x) q in
+               comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-        (* <==> is special, each side is bipolar *)
-        (* When we reach p <==> q we traverse both, and get
-           p = (p', gs_p)
-           q = (q', gs_q)
-           *)
+        (* p <==> q is special, each side is bipolar *)
+        (* So we traverse its arguments with pol = Both, and negative and positive versions *)
+        (* of p and q *)
+        (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
+        (* But if neither side ran tactics, we just keep p <==> q *)
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
                let xp = S.new_bv None (U.mk_squash p) in
                let xq = S.new_bv None (U.mk_squash q) in
-               let (pp, gs1) = traverse f Pos (Env.push_bv e xq) p in
-               let (qp, gs2) = traverse f Pos (Env.push_bv e xp) q in
-               let (pn, gs3) = traverse f Neg e p in
-               let (qn, gs4) = traverse f Neg e q in
-               let gs = gs1@gs2@gs3@gs4 in
-               if List.isEmpty gs
-               then ((U.mk_iff p q).n, [])
-               else let t = U.mk_conj (U.mk_imp pn qp) (U.mk_imp qn pp) in
-                    (t.n, gs)
+               let r1 = traverse f Both (Env.push_bv e xq) p in
+               let r2 = traverse f Both (Env.push_bv e xp) q in
+               // Should be flipping the tres, I think
+               begin match r1, r2 with
+               | Unchanged _, Unchanged _ ->
+                  comb2 (fun l r -> (U.mk_iff l r).n) r1 r2
+               | _ ->
+                  let (pn, pp, gs1) = explode r1 in
+                  let (qn, qp, gs2) = explode r2 in
+                  let t = U.mk_conj (U.mk_imp pn qp) (U.mk_imp qn pp) in
+                  Simplified (t.n, gs1@gs2)
+               end
 
         | Tm_app (hd, args) ->
-                let (hd', gs1) = traverse f pol e hd in
-                let (as', gs2) = List.fold_right (fun (a,q) (as',gs) ->
-                                                      let (a', gs') = traverse f pol e a in
-                                                      ((a',q)::as', gs@gs'))
-                                                 args ([], []) in
-                (Tm_app (hd', as'), gs1@gs2)
+                let r0 = traverse f pol e hd in
+                let r1 = List.fold_right (fun (a, q) r ->
+                                              let r' = traverse f pol e a in
+                                              comb2 (fun a args -> (a, q)::args) r' r)
+                                                 args (tpure []) in
+                comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
+
         | Tm_abs (bs, t, k) ->
                 // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
-                let bs, gs1 = List.unzip <| List.map (fun (bv, aq) ->
-                                                   let (s', gs) = traverse f (flip pol) e bv.sort
-                                                   in (({bv with sort = s'}, aq), gs)
-                                                ) bs
+                let r0 = List.map (fun (bv, aq) ->
+                                     let r = traverse f (flip pol) e bv.sort in
+                                     comb1 (fun s' -> ({ bv with sort = s' }, aq)) r
+                                  ) bs
                 in
-                let gs1 = List.flatten gs1 in
-                let (topen', gs2) = traverse f pol e' topen in
-                ((U.abs bs topen' k).n, gs1@gs2)
+                let rbs = comb_list r0 in
+                let rt = traverse f pol e' topen in
+                comb2 (fun bs t -> (U.abs bs t k).n) rbs rt
 
         | Tm_ascribed (t, asc, ef) ->
             // TODO: traverse the types?
-            let (t, gs1) = traverse f pol e t in
-            (Tm_ascribed (t, asc, ef), gs1)
+            comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
         | x ->
-            (x, []) in
-    let t' = { t with n = tn' } in
-    let t', gs' = f pol e t' in
-    (t', gs@gs')
+            tpure x in
+    match r with
+    | Unchanged tn' ->
+        f pol e ({ t with n = tn' })
+
+    | Simplified (tn', gs) ->
+        emit gs (f pol e ({ t with n = tn' }))
+
+    | Dual (tn, tp, gs) ->
+        let rp = f pol e ({ t with n = tp }) in
+        let (_, p', gs') = explode rp in
+        Dual ({t with n = tn}, p', gs@gs')
 
 let getprop (e:env) (t:term) : option<term> =
     let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil Delta_constant] e t in
@@ -545,7 +626,13 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                         (Env.all_binders env |> Print.binders_to_string ",")
                         (Print.term_to_string goal);
     let initial = (1, []) in
-    let (t', gs) = traverse by_tactic_interp Pos env goal in
+    // This match should never fail
+    let (t', gs) =
+        match traverse by_tactic_interp Pos env goal with
+        | Unchanged t' -> (t', [])
+        | Simplified (t', gs) -> (t', gs)
+        | _ -> failwith "no"
+    in
     if !tacdbg then
         BU.print2 "Main goal simplified to: %s |- %s\n"
                 (Env.all_binders env |> Print.binders_to_string ", ")
