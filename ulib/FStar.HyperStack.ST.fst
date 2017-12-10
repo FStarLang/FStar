@@ -12,12 +12,12 @@ open FStar.Preorder
 (* Starting the predicates that constitute the preorder *)
 
 (* Eternal regions remain contained *)
-private let eternal_region_pred (m1 m2:mem) :Type0
+private abstract let eternal_region_pred (m1 m2:mem) :Type0
   = forall (r:HH.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
                  (HS.is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
 (* rid counter increases monotonically *)
-private let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
+private abstract let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
 
 (*
  * A region r, that is:
@@ -26,13 +26,13 @@ private let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
  * 
  * remains not contained in m2
  *)
-private let rid_last_component_pred (m1 m2:mem) :Type0
+private abstract let rid_last_component_pred (m1 m2:mem) :Type0
   = forall (r:HH.rid).{:pattern (m1.h `Map.contains` r)}
                  ((~ (m1.h `Map.contains` r)) /\ rid_last_component r < m1.rid_ctr) ==>
 		 (~ (m2.h `Map.contains` r))
 
 (* Predicate for refs *)
-private let eternal_refs_pred (m1 m2:mem) :Type0
+private abstract let eternal_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
       {:pattern (HH.contains_ref r.ref m1.h)}
       if is_mm r then True
@@ -44,14 +44,14 @@ private let eternal_refs_pred (m1 m2:mem) :Type0
 	else True
 
 (* The preorder is the conjunction of above predicates *)
-let mem_rel :relation mem
+private abstract let mem_rel :relation mem
   = fun (m1 m2:mem) ->
-      eternal_region_pred m1 m2 /\ rid_ctr_pred m1 m2 /\ rid_last_component_pred m1 m2 /\ eternal_refs_pred m1 m2
-let mem_pre :preorder mem = mem_rel
+    eternal_region_pred m1 m2 /\ rid_ctr_pred m1 m2 /\ rid_last_component_pred m1 m2 /\ eternal_refs_pred m1 m2
+private abstract let mem_pre :preorder mem = mem_rel
 
 type mem_predicate = mem -> Type0
 
-let stable (p:mem_predicate) =
+abstract let stable (p:mem_predicate) =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
 let stable_predicate = p:mem_predicate{stable p}
@@ -59,10 +59,10 @@ let stable_predicate = p:mem_predicate{stable p}
 assume type witnessed: stable_predicate -> Type0
 
 (* Predicates that we will witness with regions and refs *)
-let region_contains_pred (r:HH.rid) :stable_predicate
+abstract let region_contains_pred (r:HH.rid) :stable_predicate
   = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
 
-let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stable_predicate
+abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stable_predicate
   = fun m -> rid_last_component r.id < m.rid_ctr /\ (HS.is_mm r \/ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h))
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
@@ -293,7 +293,8 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
-    let m1 = HS (m0.rid_ctr + 1) (Map.upd m0.h new_tip_rid Heap.emp) new_tip_rid in
+    let h1 = Map.upd m0.h new_tip_rid Heap.emp in
+    let m1 = HS (m0.rid_ctr + 1) h1 new_tip_rid in
     gst_put m1
 
 (**
@@ -533,6 +534,46 @@ let witness_region (i:rid{is_eternal_region i})
   :Stack unit (requires (fun m0      -> i `is_in` m0.h))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
   = gst_witness (region_contains_pred i)
+
+
+(** MR witness etc. **)
+
+(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
+*)
+unfold type stable_on_t (#i:rid) (#a:Type) (#b:preorder a)
+                        (r:mref a b{is_eternal_region i /\ r.id == i})(p:(mem -> Tot Type0))
+  = forall h0 h1. (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
+
+private let p_pred (#i:rid) (#a:Type) (#b:preorder a)
+                   (r:mref a b{is_eternal_region i /\ r.id == i}) (p:(mem -> Tot Type0))
+  = fun (m:mem) -> m `HS.contains` r /\ p m
+
+abstract type mr_witnessed (#i:rid) (#a:Type) (#b:preorder a)
+                           (r:mref a b{is_eternal_region i /\ r.id == i}) (p:(mem -> Tot Type0))
+  = stable (p_pred #i #a #b r p) /\ witnessed (p_pred #i #a #b r p)
+
+let mr_witness (#r:rid{is_eternal_region r}) (#a:Type) (#b:preorder a)
+               (m:mref a b{m.id == r}) (p:(mem -> Type0))
+  :ST unit (requires (fun h0      -> p h0   /\ stable_on_t #r #a #b m p))
+           (ensures  (fun h0 _ h1 -> h0==h1 /\ mr_witnessed #r #a #b m p))
+  = recall m;
+    gst_witness (p_pred #r #a #b m p)
+
+let mr_weaken_witness (#r:rid{is_eternal_region r}) (#a:Type) (#b:preorder a)
+  (m:mref a b{m.id == r}) 
+  (p:(mem -> GTot Type0){stable_on_t #r #a #b m p})
+  (q:(mem -> GTot Type0){stable_on_t #r #a #b m q})
+  :Lemma ((forall h. p h ==> q h) /\ mr_witnessed #r #a #b m p ==> mr_witnessed #r #a #b m q)
+  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ mr_witnessed #r #a #b m p)) (ensures (mr_witnessed #r #a #b m q))
+      = lemma_functoriality (p_pred #r #a #b  m p) (p_pred #r #a #b m q)
+    in
+    FStar.Classical.move_requires aux ()
+
+let mr_testify (#r:rid{is_eternal_region r}) (#a:Type) (#b:preorder a) 
+               (m:mref a b{m.id == r}) (p:(mem -> Type0))
+  :ST unit (requires (fun _      ->  mr_witnessed #r #a #b m p))
+           (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
+  = gst_recall (p_pred #r #a #b m p)
 
 (* Tests *)
 val test_do_nothing: int -> Stack int

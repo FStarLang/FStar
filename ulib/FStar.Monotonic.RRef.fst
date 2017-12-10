@@ -97,36 +97,26 @@ val m_write (#r:rid) (#a:Type) (#b:reln a) (x:m_rref r a b) (v:a)
 inline_for_extraction
 let m_write #r #a #b x v = x := v
 
-(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
-*)
-unfold type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem -> Tot Type0)) =
-  forall h0 h1. (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
-
-private let p_pred (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem -> Tot Type0))
-  = fun (m:mem) -> m `HS.contains` r /\ p m
+unfold type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem -> Tot Type0))
+  = HST.stable_on_t #i #a #b r p
 
 abstract type witnessed (#i:rid) (#a:Type) (#b:reln a)
                         (r:m_rref i a b) (p:(mem -> Tot Type0))
-  = stable (p_pred r p) /\ witnessed (p_pred r p)
+  = HST.mr_witnessed #i #a #b r p
 
 (* witnesses a property stable by all updates on p; once we have a witness, there is no need to record that it was obtained using m's monotonicity. *) 
 val witness (#r:rid) (#a:Type) (#b:reln a) (m:m_rref r a b) (p:(mem -> Tot Type0))
   :ST unit
       (requires (fun h0      -> p h0   /\ stable_on_t m p))
       (ensures  (fun h0 _ h1 -> h0==h1 /\ witnessed m p))
-let witness #r #a #b m p =
-  HST.recall m;
-  gst_witness (p_pred m p)
+let witness #r #a #b m p = HST.mr_witness #r #a #b m p
 
 let weaken_witness (#r:rid) (#a:Type) (#b:reln a)
   (m:m_rref r a b) 
   (p:(mem -> GTot Type0){stable_on_t m p})
   (q:(mem -> GTot Type0){stable_on_t m q})
   :Lemma ((forall h. p h ==> q h) /\ witnessed m p ==> witnessed m q)
-  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ witnessed m p)) (ensures (witnessed m q))
-      = lemma_functoriality (p_pred m p) (p_pred m q)
-    in
-    FStar.Classical.move_requires aux ()
+  = HST.mr_weaken_witness #r #a #b m p q
 
 (* claims a witnessed property holds in the current state *)
 val testify (#r:rid) (#a:Type) (#b:reln a)
@@ -134,7 +124,7 @@ val testify (#r:rid) (#a:Type) (#b:reln a)
   (p:(mem -> GTot Type0))
   :ST unit (requires (fun _      ->  witnessed m p))
            (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
-let testify #r #a #b m p = gst_recall (p_pred m p)
+let testify #r #a #b m p = HST.mr_testify #r #a #b m p
 
 (* 17-01-05 can we prove it from testify? *) 
 val testify_forall (#r:rid) (#a:Type) (#b:reln a) (#p:(a -> mem -> Type0))
