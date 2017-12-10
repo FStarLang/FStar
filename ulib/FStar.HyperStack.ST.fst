@@ -530,10 +530,15 @@ let recall_region (i:rid{is_eternal_region i})
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
   = if i <> HH.root then gst_recall (region_contains_pred i)
 
-let witness_region (i:rid{is_eternal_region i})
-  :Stack unit (requires (fun m0      -> i `is_in` m0.h))
+let witness_region (i:rid)
+  :Stack unit (requires (fun m0      -> is_eternal_region i ==> i `is_in` m0.h))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
   = gst_witness (region_contains_pred i)
+
+let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
+  :ST unit (fun h0      -> HH.contains_ref r.ref h0.h)
+           (fun h0 _ h1 -> h0 == h1 /\ witnessed (ref_contains_pred r))
+  = gst_witness (ref_contains_pred r)
 
 (* Tests *)
 val test_do_nothing: int -> Stack int
@@ -778,6 +783,8 @@ let mm_tests _ =
   //this fails because recall of mm refs is not allowed
   //let _ = recall r3 in
   ()
+
+
 
 (** MR witness etc. **)
 

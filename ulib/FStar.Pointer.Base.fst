@@ -4459,8 +4459,8 @@ let read
  (p: pointer value)
 = let h = HST.get () in
   let r = reference_of h p in
-  HST.gst_witness (HST.ref_contains_pred r);
-  HST.gst_witness (HST.region_contains_pred r.HS.id);
+  HST.witness_region r.HS.id;
+  HST.witness_hsref r;
   let (| _ , c |) = !r in
   value_of_ovalue value (path_sel c (Pointer?.p p))
 
@@ -4487,8 +4487,8 @@ let owrite
   )))
 = let h0 = HST.get () in
   let r = reference_of h0 b in
-  HST.gst_witness (HST.ref_contains_pred r);
-  HST.gst_witness (HST.region_contains_pred r.HS.id);
+  HST.witness_region r.HS.id;
+  HST.witness_hsref r;
   let v0 = !r in
   let (| t , c0 |) = v0 in
   let c1 = path_upd c0 (Pointer?.p b) z in
@@ -4496,7 +4496,7 @@ let owrite
   r := v1;
   let h1 = HST.get () in
   let e () : Lemma (
-    let gref = greference_of b in (
+   let gref = greference_of b in (
     HS.frameOf r == HS.frameOf gref /\
     HS.as_addr r == HS.as_addr gref /\
     HS.sel h0 gref == v0 /\
