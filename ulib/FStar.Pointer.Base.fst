@@ -4471,6 +4471,7 @@ let is_null
   | NullPtr -> true
   | _ -> false
 
+#set-options "--z3rlimit 100"
 let owrite
   (#a: typ)
   (b: pointer a)
@@ -4526,6 +4527,7 @@ let owrite
     path_sel_upd_other' (Pointer?.p b) c0 z (Pointer?.p p)
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+#set-options "--z3rlimit 40"
 
 let write #a b z =
   owrite b (ovalue_of_value a z)
