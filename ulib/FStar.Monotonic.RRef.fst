@@ -26,7 +26,7 @@ type rid = r:rid{is_eternal_region r}
 (*
  * AR: 12/07: now reln is a preorder, but we should already be using it as such
  *)
-type m_rref (r:rid) (a:Type) (b:reln a) = x:mref a b{x.id = r}
+type m_rref (r:rid) (a:Type) (b:reln a) = HST.m_rref r a b
 
 (* let haseq_m_rref (r:rid) (a:Type) (b:reln a)  *)
 (*     : Lemma (requires True) *)
@@ -102,21 +102,21 @@ unfold type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem 
 
 abstract type witnessed (#i:rid) (#a:Type) (#b:reln a)
                         (r:m_rref i a b) (p:(mem -> Tot Type0))
-  = HST.mr_witnessed #i #a #b r p
+  = HST.mr_witnessed r p
 
 (* witnesses a property stable by all updates on p; once we have a witness, there is no need to record that it was obtained using m's monotonicity. *) 
 val witness (#r:rid) (#a:Type) (#b:reln a) (m:m_rref r a b) (p:(mem -> Tot Type0))
   :ST unit
       (requires (fun h0      -> p h0   /\ stable_on_t m p))
       (ensures  (fun h0 _ h1 -> h0==h1 /\ witnessed m p))
-let witness #r #a #b m p = HST.mr_witness #r #a #b m p
+let witness #r #a #b m p = HST.mr_witness m p
 
 let weaken_witness (#r:rid) (#a:Type) (#b:reln a)
   (m:m_rref r a b) 
   (p:(mem -> GTot Type0){stable_on_t m p})
   (q:(mem -> GTot Type0){stable_on_t m q})
   :Lemma ((forall h. p h ==> q h) /\ witnessed m p ==> witnessed m q)
-  = HST.mr_weaken_witness #r #a #b m p q
+  = HST.mr_weaken_witness m p q
 
 (* claims a witnessed property holds in the current state *)
 val testify (#r:rid) (#a:Type) (#b:reln a)
@@ -124,7 +124,7 @@ val testify (#r:rid) (#a:Type) (#b:reln a)
   (p:(mem -> GTot Type0))
   :ST unit (requires (fun _      ->  witnessed m p))
            (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
-let testify #r #a #b m p = HST.mr_testify #r #a #b m p
+let testify #r #a #b m p = HST.mr_testify m p
 
 (* 17-01-05 can we prove it from testify? *) 
 val testify_forall (#r:rid) (#a:Type) (#b:reln a) (#p:(a -> mem -> Type0))

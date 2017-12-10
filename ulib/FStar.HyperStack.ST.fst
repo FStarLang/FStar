@@ -535,46 +535,6 @@ let witness_region (i:rid{is_eternal_region i})
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
   = gst_witness (region_contains_pred i)
 
-
-(** MR witness etc. **)
-
-(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
-*)
-unfold type stable_on_t (#i:rid) (#a:Type) (#b:preorder a)
-                        (r:mref a b{is_eternal_region i /\ r.id == i})(p:(mem -> Tot Type0))
-  = forall h0 h1. (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
-
-private let p_pred (#i:rid) (#a:Type) (#b:preorder a)
-                   (r:mref a b{is_eternal_region i /\ r.id == i}) (p:(mem -> Tot Type0))
-  = fun (m:mem) -> m `HS.contains` r /\ p m
-
-abstract type mr_witnessed (#i:rid) (#a:Type) (#b:preorder a)
-                           (r:mref a b{is_eternal_region i /\ r.id == i}) (p:(mem -> Tot Type0))
-  = stable (p_pred #i #a #b r p) /\ witnessed (p_pred #i #a #b r p)
-
-let mr_witness (#r:rid{is_eternal_region r}) (#a:Type) (#b:preorder a)
-               (m:mref a b{m.id == r}) (p:(mem -> Type0))
-  :ST unit (requires (fun h0      -> p h0   /\ stable_on_t #r #a #b m p))
-           (ensures  (fun h0 _ h1 -> h0==h1 /\ mr_witnessed #r #a #b m p))
-  = recall m;
-    gst_witness (p_pred #r #a #b m p)
-
-let mr_weaken_witness (#r:rid{is_eternal_region r}) (#a:Type) (#b:preorder a)
-  (m:mref a b{m.id == r}) 
-  (p:(mem -> GTot Type0){stable_on_t #r #a #b m p})
-  (q:(mem -> GTot Type0){stable_on_t #r #a #b m q})
-  :Lemma ((forall h. p h ==> q h) /\ mr_witnessed #r #a #b m p ==> mr_witnessed #r #a #b m q)
-  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ mr_witnessed #r #a #b m p)) (ensures (mr_witnessed #r #a #b m q))
-      = lemma_functoriality (p_pred #r #a #b  m p) (p_pred #r #a #b m q)
-    in
-    FStar.Classical.move_requires aux ()
-
-let mr_testify (#r:rid{is_eternal_region r}) (#a:Type) (#b:preorder a) 
-               (m:mref a b{m.id == r}) (p:(mem -> Type0))
-  :ST unit (requires (fun _      ->  mr_witnessed #r #a #b m p))
-           (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
-  = gst_recall (p_pred #r #a #b m p)
-
 (* Tests *)
 val test_do_nothing: int -> Stack int
   (requires (fun h -> True))
@@ -818,3 +778,48 @@ let mm_tests _ =
   //this fails because recall of mm refs is not allowed
   //let _ = recall r3 in
   ()
+
+(** MR witness etc. **)
+
+(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
+*)
+
+type erid = r:rid{is_eternal_region r}
+
+type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{x.id = r}
+
+unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
+                        (r:m_rref i a b)(p:(mem -> Tot Type0))
+  = forall h0 h1. (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
+
+private let p_pred (#i:erid) (#a:Type) (#b:preorder a)
+                   (r:m_rref i a b) (p:(mem -> Tot Type0))
+  = fun (m:mem) -> m `HS.contains` r /\ p m
+
+abstract type mr_witnessed (#i:erid) (#a:Type) (#b:preorder a)
+                           (r:m_rref i a b) (p:(mem -> Tot Type0))
+  = stable (p_pred r p) /\ witnessed (p_pred r p)
+
+let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
+               (m:m_rref r a b) (p:(mem -> Type0))
+  :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
+           (ensures  (fun h0 _ h1 -> h0==h1 /\ mr_witnessed m p))
+  = recall m;
+    gst_witness (p_pred #r #a #b m p)
+
+let mr_weaken_witness (#r:erid) (#a:Type) (#b:preorder a)
+  (m:m_rref r a b) 
+  (p:(mem -> GTot Type0){stable_on_t m p})
+  (q:(mem -> GTot Type0){stable_on_t m q})
+  :Lemma ((forall h. p h ==> q h) /\ mr_witnessed m p ==> mr_witnessed m q)
+  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ mr_witnessed m p)) (ensures (mr_witnessed m q))
+      = lemma_functoriality (p_pred m p) (p_pred m q)
+    in
+    FStar.Classical.move_requires aux ()
+
+let mr_testify (#r:erid) (#a:Type) (#b:preorder a) 
+               (m:m_rref r a b) (p:(mem -> Type0))
+  :ST unit (requires (fun _      ->  mr_witnessed m p))
+           (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
+  = gst_recall (p_pred m p)
+
