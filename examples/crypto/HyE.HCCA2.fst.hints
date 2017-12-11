@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1877aec81f47ba5eef0381a76cd6499f"
+      "e16d3fe373c6c38d199f9d12d79285c7"
     ],
     [
       "HyE.HCCA2.__proj__PKey__item__rawpk",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "1e5d09033a3aede65f5b38de0c28555b"
+      "654602407594efb0e9485c79b3c3d0dc"
     ],
     [
       "HyE.HCCA2.__proj__PKey__item__cca_pk",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "cf42e092ba3b091ba15e4650b5058c41"
+      "0e47a25b10ea81ce426cb3d1c02c2de7"
     ],
     [
       "HyE.HCCA2.__proj__SKey__item__cca_sk",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "91116264c4f1acc519c59e3357e15b08"
+      "487f1f8d4b2074d82b5b4983d3937dd0"
     ],
     [
       "HyE.HCCA2.__proj__SKey__item__pk",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "a2ad473ec8af4febb9b77b8f221918fd"
+      "651b6bff904c1cd5aa55772bc13a59dd"
     ],
     [
       "HyE.HCCA2.keygen",
@@ -52,8 +52,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pervasives.E",
-        "data_elim_FStar.Pervasives.Err",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.E",
+        "data_elim_FStar.Pervasives.E", "data_elim_FStar.Pervasives.Err",
         "data_typing_intro_FStar.Pervasives.E@tok",
         "data_typing_intro_FStar.Pervasives.Err@tok",
         "data_typing_intro_FStar.Pervasives.V@tok",
@@ -66,11 +67,11 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_HyE.HCCA2.pkey@tok", "kinding_HyE.HCCA2.skey@tok",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
-        "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
+        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
         "refinement_interpretation_HyE.HCCA2_Tm_refine_88cdf982f29494978cb456b377825f78"
       ],
       0,
-      "e922228670f078c9c51e81933c60e3fb"
+      "87283c8da64af5c00393a382932f51d6"
     ],
     [
       "HyE.HCCA2.encrypt",
@@ -84,7 +85,6 @@
         "data_typing_intro_FStar.Pervasives.Err@tok",
         "data_typing_intro_FStar.Pervasives.V@tok",
         "equation_FStar.HyperStack.ST.rid",
-        "equation_FStar.Monotonic.HyperStack.is_eternal_color",
         "equation_FStar.Monotonic.HyperStack.is_eternal_region",
         "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HCCA2.c",
@@ -93,15 +93,13 @@
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "fuel_guarded_inversion_HyE.HCCA2.pkey",
         "function_token_typing_HyE.HCCA2.c",
-        "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_HyE.HCCA2.PKey_region",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
-        "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
+        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
         "refinement_interpretation_HyE.HCCA2_Tm_refine_88cdf982f29494978cb456b377825f78"
       ],
       0,
-      "47cc8c7261266baa4e001a3007952ea7"
+      "6fc25976169fc00880e434eaba65bbd2"
     ],
     [
       "HyE.HCCA2.decrypt",
@@ -129,7 +127,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "8328dbb4f303531074570ea31a9757e1"
+      "2e5eea57a40fa1f077313c7644561797"
     ]
   ]
 ]
