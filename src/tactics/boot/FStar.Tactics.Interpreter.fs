@@ -453,7 +453,7 @@ type tres_m<'a> =
 
 type tres = tres_m<term>
 
-let tpure x = Simplified (x, [])
+let tpure x = Unchanged x
 
 let flip p = match p with
     | Pos -> Neg
