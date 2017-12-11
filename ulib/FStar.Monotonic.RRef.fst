@@ -52,7 +52,7 @@ let as_hsref #r #a #b x = x
 
 let m_contains (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.contains m mr
 
-// let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.unused_in (as_hsref mr) m
+let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.unused_in mr m
 
 (* let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:t) (m1:t) : GTot Type0 = *)
 (*   HyperHeap.fresh_rref (as_rref mr) m0 m1 *)
@@ -127,11 +127,11 @@ val testify (#r:rid) (#a:Type) (#b:reln a)
 let testify #r #a #b m p = HST.mr_testify m p
 
 (* 17-01-05 can we prove it from testify? *) 
-val testify_forall (#r:rid) (#a:Type) (#b:reln a) (#p:(a -> mem -> Type0))
+val testify_forall (#r:rid) (#a:Type) (#b:reln a) (#c:Type) (#p:(c -> mem -> Type0))
   (m:m_rref r a b) 
-  ($s:squash (forall (x:a). witnessed m (p x)))
+  ($s:squash (forall (x:c). witnessed m (p x)))
   :ST unit (requires (fun h      -> True))
-           (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:a). p x h1)))
+           (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
 let testify_forall #r #a #b #p $s = admit ()
 
 (*
@@ -146,10 +146,11 @@ let m_recall #r #a #b m = recall m
  * AR: 12/07: rid_exists is simply region_contains_pred from HyperStack.sT
  * and ex_rid is simply HyperStack.ST.rid
  *)
-// let rid_exists (r:rid) (h:mem) = region_contains_pred r h
-// // ex_rid: The type of a region id that is known to exist now and for ever more
-// type ex_rid = rid
+(* another instance of monotonic property, this time on the global map of regions; not used much? *)
+let rid_exists (r:rid) (h:mem) = region_contains_pred r h
+// ex_rid: The type of a region id that is known to exist now and for ever more
+type ex_rid = r:rid{HST.witnessed (region_contains_pred r)}
 
-// let ex_rid_of_rid (r:rid)
-//   :ST ex_rid (fun h -> True) (fun h0 r' h1 -> r=r' /\ h0==h1)
-//   = r
+assume val ex_rid_of_rid: r:rid -> ST ex_rid
+  (fun h -> True)
+(fun h0 r' h1 -> r=r' /\ h0==h1)
