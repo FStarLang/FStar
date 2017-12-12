@@ -32,7 +32,9 @@ let pow2_values x =
 
 (* Necessary mathematical functions. Note: should these go into [prims.fst] or something else? *)
 
-// 'flooring' division
+// division that rounds towards zero
+// i.e., for a non-negative quotient, this is just the floor of the real quotient
+//       for a negative quotient, truncate the non-integral part
 let op_Slash (a:int) (b:int{b <> 0}) : Tot int = 
   if (a >= 0 && b < 0) || (a < 0 && b >= 0) then - (abs a / abs b)
   else abs a / abs b
