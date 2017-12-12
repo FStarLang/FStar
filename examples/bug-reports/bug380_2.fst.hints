@@ -16,18 +16,6 @@
       ],
       0,
       "fd7df6289255c597a9c069ca075e6a41"
-    ],
-    [
-      "Bug380_2.falso",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_Bug380_2.single_inhabitant",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "650bd0ae90310bf7924cc6a32e00bebb"
     ]
   ]
 ]
