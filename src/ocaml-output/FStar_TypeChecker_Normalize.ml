@@ -1632,7 +1632,7 @@ let built_in_primitive_steps: primitive_step Prims.list =
         let uu____6811 =
           let uu____6812 = div1 a b in FStar_BigInt.mult_big_int uu____6812 b in
         FStar_BigInt.sub_big_int a uu____6811 in
-      FStar_All.pipe_right bounded_unsigned_int_types
+      FStar_All.pipe_right bounded_signed_int_types
         (FStar_List.collect
            (fun m  ->
               let uu____6845 =

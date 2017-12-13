@@ -690,7 +690,7 @@ let built_in_primitive_steps : list<primitive_step> =
           let rem (a:Z.t) (b:Z.t) =
             Z.sub_big_int a (Z.mult_big_int (div a b) b)
           in
-          bounded_unsigned_int_types
+          bounded_signed_int_types
           |> List.collect (fun m ->
             [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (div x y)));
              (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (rem x y)))])
