@@ -1800,6 +1800,32 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "eq2-interp",
+        "eq3-interp", "equation_FStar.Pervasives.Native.fst",
+        "equation_MonotonicArray.as_seq",
+        "equation_MonotonicArray.disjoint_sibling", "equation_Prims.eq2",
+        "equation_Prims.l_and", "equation_Prims.nat",
+        "equation_Prims.squash", "fuel_guarded_inversion_MonotonicArray.t",
+        "l_and-interp", "l_or-interp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_MonotonicArray.A_a",
+        "projection_inverse_MonotonicArray.A_m",
+        "projection_inverse_MonotonicArray.A_offset",
+        "projection_inverse_MonotonicArray.A_s_ref",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "4040b6570b2a1236b24374944a74e93f"
+    ],
+    [
+      "MonotonicArray.fill_common",
+      3,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "bool_typing", "eq2-interp", "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.ST.mref", "equation_MonotonicArray.repr",
@@ -1820,45 +1846,19 @@
         "projection_inverse_MonotonicArray.A_a",
         "projection_inverse_MonotonicArray.A_m",
         "projection_inverse_MonotonicArray.A_n",
+        "refinement_interpretation_ArrayUtils_Tm_refine_242c07654787cb751ca14fcf2abd63da",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
         "refinement_interpretation_MonotonicArray_Tm_refine_1c06f03ca080cc620e1f3b84e7e08d8b",
         "refinement_interpretation_MonotonicArray_Tm_refine_d872c5fb83c0bb7ff4e5b2fa63b8aca0",
+        "refinement_interpretation_MonotonicArray_Tm_refine_e4af4cfc8344f8e7a30fd6c0b28da8a1",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "typing_FStar.Monotonic.Heap.sel", "typing_MonotonicArray.repr",
-        "typing_MonotonicArray.seq_pre"
+        "typing_ArrayUtils.copy_seq", "typing_FStar.Monotonic.Heap.sel",
+        "typing_MonotonicArray.repr", "typing_MonotonicArray.seq_pre"
       ],
       0,
-      "f11132406b0b1358370c5a203595bee0"
-    ],
-    [
-      "MonotonicArray.fill_common",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "eq2-interp",
-        "eq3-interp", "equation_FStar.Pervasives.Native.fst",
-        "equation_MonotonicArray.as_seq",
-        "equation_MonotonicArray.disjoint_sibling", "equation_Prims.eq2",
-        "equation_Prims.l_and", "equation_Prims.nat",
-        "equation_Prims.squash",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_MonotonicArray.t", "l_and-interp",
-        "l_or-interp", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_MonotonicArray.A_a",
-        "projection_inverse_MonotonicArray.A_m",
-        "projection_inverse_MonotonicArray.A_offset",
-        "projection_inverse_MonotonicArray.A_s_ref",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
-      ],
-      0,
-      "cfbfa25ca3f9aca38fdb769e6ad8e910"
+      "c08e7cf9b184e85d673330433d349ac9"
     ],
     [
       "MonotonicArray.fill",

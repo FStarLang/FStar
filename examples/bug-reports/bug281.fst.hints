@@ -99,7 +99,7 @@
       1,
       [ "@query" ],
       0,
-      "6e2d7961064ca7c874f1f52809823557"
+      "1e880b7d8f73a5014d38e71d835a023f"
     ],
     [
       "Bug281.is_evar",
@@ -158,7 +158,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6623eb00e7e7ed072daa0aa2fda5ea27"
+      "b52125d58529817c19cbfed0e88d750a"
     ],
     [
       "Bug281.sub_elam",
@@ -194,16 +194,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1081fc6fb2f438334e8dfd2667c50545"
-    ],
-    [
-      "Bug281.sub_elam",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4566b24a6d07ce64b459656f16984953"
+      "806826002fa5d5455e593ad645556436"
     ],
     [
       "Bug281.lemma",
@@ -245,16 +236,7 @@
         "token_correspondence_Bug281.sub_einc"
       ],
       0,
-      "d64bc631ac53d9d8523369b6d9715d69"
-    ],
-    [
-      "Bug281.plouf0",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Bug281.exp_haseq" ],
-      0,
-      "7db101215f6a5c20e8f70fc85aaa098d"
+      "fcc5f20489e8a5fb534930d2040673c4"
     ],
     [
       "Bug281.plouf1",
@@ -284,16 +266,7 @@
         "token_correspondence_Bug281.sub_einc"
       ],
       0,
-      "9be87704ad291b640fbb0b5aead4aa24"
-    ],
-    [
-      "Bug281.plouf1",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Bug281.exp_haseq" ],
-      0,
-      "3d33cd8936d0bd5df5b8e226cac044c5"
+      "0ce4287d3dc4ff760e73f4254ce5bd06"
     ],
     [
       "Bug281.plouf2",

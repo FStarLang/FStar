@@ -21,17 +21,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "binder_x_4d2d744b8724c39db8f9c7512f6ca58a_1",
+        "binder_x_43977d3a299ccb3d0fc3efcaad937593_2",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_Bug590_Tm_refine_cea6bfe0766401bd9c9ab61140e114ad",
+        "refinement_interpretation_Bug590_Tm_refine_89abfbf1dd7254ec2f6bfc654aa43591",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "45421da5a238f15c8bdd089891b511fd"
+      "81c184acf7d7605e39b278fc5deaf9cb"
     ],
     [
       "Bug590.blah2",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "0c98404b20b6d27a8f1caea859527428"
+      "70e7ae57d415790be644cb22e69ec51e"
     ],
     [
       "Bug590.flatten_lemma",
@@ -68,7 +68,7 @@
         "typing_Bug590.coerce", "typing_FStar.List.Tot.Base.flatten"
       ],
       0,
-      "d016668a212332d9505cfd964b03cd18"
+      "903301e4ffa89ffd86fb5c521e88567e"
     ]
   ]
 ]
