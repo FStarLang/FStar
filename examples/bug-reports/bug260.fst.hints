@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ad896375a3e9316205c2a075dc6faeb3"
+      "0806bd0e96d1ed0df769af039b8db9de"
     ],
     [
       "Bug260.uu___is_O",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "4fb0b0038cc785b80a1fa996fba7818b"
+      "bc9cbf216585e55fd361def9915812bb"
     ],
     [
       "Bug260.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "0e098ef3d348931034f96c02feb3f0d2"
+      "840cc9ae7ab0dd3138d983f97afa1776"
     ],
     [
       "Bug260.__proj__S__item___0",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
       ],
       0,
-      "ba67346918c032845b7795b8d9439fa0"
+      "3362517b82794096d04bd2ea584df613"
     ],
     [
       "Bug260.validity",
@@ -48,7 +48,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat_haseq" ],
       0,
-      "a114dc60d210ba2ba01a4d8fcacf1184"
+      "d0ebd5060f6cc32566a96eae4eb36a87"
     ],
     [
       "Bug260.__proj__VSucc__item__n",
@@ -57,7 +57,7 @@
       1,
       [ "@query" ],
       0,
-      "bb9b154eff49a7ce4cbd20e1807470c0"
+      "312219456005be8de569038d3f17be40"
     ],
     [
       "Bug260.validity'",
@@ -66,7 +66,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat_haseq" ],
       0,
-      "429e11e9a8593521c53bd67ad35b83a3"
+      "d34fc5edf4ac08391a02aec6a67b6e0b"
     ],
     [
       "Bug260.__proj__VSucc'__item__n",
@@ -75,7 +75,7 @@
       1,
       [ "@query" ],
       0,
-      "4729070184a6d75ba58eee9813922683"
+      "944ef4cc5915c5bab1da9b2d23eaa8ff"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",
@@ -87,7 +87,7 @@
         "projection_inverse_Bug260.VSucc__n"
       ],
       0,
-      "f30fe131d589b7dc0783b2c9f8a101ed"
+      "a710698ad3c58943179fbf5773dbb964"
     ],
     [
       "Bug260.validity'_empty",
@@ -102,7 +102,7 @@
         "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
       ],
       0,
-      "ad282b1a26f046bb2fec1ed285f4fe4f"
+      "d2240df16d294af9791ff223f8590ab8"
     ]
   ]
 ]
