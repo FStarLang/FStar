@@ -102,13 +102,20 @@ let tests =
                                        | A x y \
                                        | B y x -> y - x" in
   let _ = Pars.pars_and_tc_fragment "type tb = | T | F" in
+
+  let _ = Pars.pars_and_tc_fragment "let recons_m (x:list tb) = \
+                                         match x with \
+                                          | [] -> []  \
+                                          | hd::tl -> hd::tl" in
+
   let _ = Pars.pars_and_tc_fragment "let idd (x: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let revtb (x: tb) = match x with | T -> F | F -> T" in
   let _ = Pars.pars_and_tc_fragment "let id_tb (x: tb) = x" in
   let _ = Pars.pars_and_tc_fragment "let fst_a (x: 'a) (y: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let id_list (x: list 'a) = x" in
-  [ (0, (app apply [one; id; nm n]), (nm n))
-  ; (1, (app id [nm x]), (nm x))
+  let _ = Pars.pars_and_tc_fragment "let id_list_m (x: list tb) = x" in //same as recons_m, but no pattern matching
+  [// (0, (app apply [one; id; nm n]), (nm n))
+  // ; (1, (app id [nm x]), (nm x))
   // ; (1, (app apply [tt; nm n; nm m]), (nm n))
   // ; (2, (app apply [ff; nm n; nm m]), (nm m))
   // ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
@@ -140,7 +147,7 @@ let tests =
   // ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
   // ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
   // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
-  //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
+  // ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   // The following do not work for NBE because of type allications.
     // Prims.Int not found
   // ; (24, (tc "recons [0;1]"), (tc "[0;1]"))
@@ -149,31 +156,35 @@ let tests =
   // ; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
   // Type defs not yet implemented for NBE
   // ; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
-  ; (28, (tc "(fun x y z q -> z) T T F T"), (tc "F"))
-  ; (29, (tc "[T; F]"), (tc "[T; F]"))
-  ; (31, (tc "id_tb T"), (tc "T"))
-  ; (32, (tc "(fun #a x -> x) #tb T"), (tc "T"))
-  ; (33, (tc "revtb T"), (tc "F"))
-  ; (34, (tc "(fun x y -> x) T F"), (tc "T"))
-  ; (35, (tc "fst_a T F"), (tc "T"))
-  ; (36, (tc "idd T"), (tc "T"))
 
-  ; (301,(tc "id_list [T; F]"), (tc "[T; F]"))
-  ; (302,(tc "recons [T]"), (tc "[T]"))
-  ; (30, (tc "rev [T]"), (tc "[T]")) // failure of universe variable unification
+  // ; (28, (tc "(fun x y z q -> z) T T F T"), (tc "F"))
+  // ; (29, (tc "[T; F]"), (tc "[T; F]"))
+  // ; (31, (tc "id_tb T"), (tc "T"))
+  // ; (32, (tc "(fun #a x -> x) #tb T"), (tc "T"))
+  // ; (33, (tc "revtb T"), (tc "F"))
+  // ; (34, (tc "(fun x y -> x) T F"), (tc "T"))
+  // ; (35, (tc "fst_a T F"), (tc "T"))
+  // ; (36, (tc "idd T"), (tc "T"))
+
+  // ; (301, (tc "id_list [T]"), (tc "[T]"))
+  // ; (3012, (tc "id_list_m [T]"), (tc "[T]"))
+  // ; (302, (tc "recons_m [T]"), (tc "[T]"))
+  (303, (tc "recons [T; F]"), (tc "[T; F]"))
+  // ; (304, (tc "rev [T; F; F]"), (tc "[F; F; T]"))
+  // ; (305, (tc "rev [[T]; [F; T]]"), (tc "[[F; T]; [T]]"))
   ]
 
 
 let run_either i r expected normalizer =
 //    force_term r;
-    BU.print1 "%s: ... \n" (BU.string_of_int i);
+    BU.print1 "%s: ... \n\n" (BU.string_of_int i);
     let tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
-    ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm");
+    ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
 //    BU.print1 "result = %s\n" (P.term_to_string x);
 //    BU.print1 "expected = %s\n\n" (P.term_to_string expected);
     always i (term_eq (U.unascribe x) expected)
@@ -319,6 +330,5 @@ let compare_times l_int l_nbe =
 let run_all () =
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in
-    //compare_times l_int l_nbe
+    compare_times l_int l_nbe
     // run_nbe_tac ()
-    ()
