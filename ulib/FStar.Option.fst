@@ -32,7 +32,7 @@ let isSome = function
   | None -> false
 
 inline_for_extraction
-val map: ('a -> 'b) -> option 'a -> option 'b
+val map: ('a -> ML 'b) -> option 'a -> ML (option 'b)
 inline_for_extraction
 let map f = function
   | Some x -> Some (f x)
