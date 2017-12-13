@@ -129,6 +129,15 @@ let mrref_frameOf_mk_mreference_inverse
                      [SMTPat (frameOf r)]]]
   = ()
 
+let mreference_injectivity
+    (#a:Type) (#p:preorder a) (x:mreference a p)
+    (#b:Type) (#q:preorder b) (y:mreference b q)
+  : Lemma (requires (x === y))
+          (ensures (a == b /\ p === q))
+          [SMTPat (has_type x (mreference a p));
+           SMTPat (has_type y (mreference b q))]
+  = ()
+
 //Hopefully we can get rid of this one
 let as_ref #a #rel (x:mreference a rel)
   : GTot (Heap.mref a rel)

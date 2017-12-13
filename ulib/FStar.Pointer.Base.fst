@@ -4359,11 +4359,11 @@ let screate
   p
 
 // TODO: move to HyperStack?
-let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h x.HS.id}) (v:a) : Lemma
+let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h (HS.frameOf x)}) (v:a) : Lemma
   (requires True)
   (ensures  (Map.domain h.HS.h == Map.domain (HS.upd h x v).HS.h))
   = let m = h.HS.h in
-    let m' = Map.upd m x.HS.id (Heap.upd (Map.sel m x.HS.id) (HH.as_ref x.HS.ref) v) in
+    let m' = Map.upd m (HS.frameOf x) (Heap.upd (Map.sel m (HS.frameOf x)) (HS.as_ref x) v) in
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
 let ecreate
