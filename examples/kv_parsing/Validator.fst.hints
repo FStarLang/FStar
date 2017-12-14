@@ -282,7 +282,7 @@
         "typing_Slice.u32_add_overflows", "unit_typing"
       ],
       0,
-      "a29caf3a8d11e823a0f5ad84c278ee48"
+      "537eebc78c5a62aac3a872d205bbad5e"
     ],
     [
       "Validator.validate_store_st",

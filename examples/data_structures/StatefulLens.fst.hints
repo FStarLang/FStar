@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "06e3fdf6e290bbe3a1b8904e0247879d"
+      "dd2c4d35b5361014cf96f180ddfb24ff"
     ],
     [
       "StatefulLens.__proj__Mkhlens__item__put",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c79fbfa3d6d727c38d4fab341ba634f8"
+      "f5e76593f0fd66365cd8a125c25ae3d4"
     ],
     [
       "StatefulLens.as_hlens",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "e168c0034323ab4e5a6b7e957f593744"
+      "1fa74db0b36679f0c70a2fe393a6784e"
     ],
     [
       "StatefulLens.compose_hlens",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "97b25bf7c4eeb51355ce5def72078540"
+      "7235514b022f093a6141ed06b7c6a61c"
     ],
     [
       "StatefulLens.__proj__Mkstlens__item__st_get",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "663573272ced8b2bc059d020e4f3c8de"
+      "785a212b1ca998ad68f972dc59724d1f"
     ],
     [
       "StatefulLens.__proj__Mkstlens__item__st_put",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "784350d7a1e5534a739502b0eac86c8a"
+      "df624b888a347c74feba988d38b12c30"
     ],
     [
       "StatefulLens.compose_stlens",
@@ -76,7 +76,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "8096da7bc31e66e93357ac91a711e5e6"
+      "3001e6c663fd096cbb16b7766d65a7d0"
     ],
     [
       "StatefulLens.as_stlens",
@@ -100,7 +100,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "42ff6348eeb0bdcff1b04b2d4cfcc2aa"
+      "f5a454b353c6571051120740a4f59db8"
     ],
     [
       "StatefulLens.hlens_ref",
@@ -109,7 +109,7 @@
       1,
       [ "@query" ],
       0,
-      "9735c6305dc8fa4b7acc8ae3525f40ca"
+      "f243327123d30b01d5f3c5843c8d172e"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -134,7 +134,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "419ddd68ca863fcb29e3ca1ee63c955e"
+      "9ee84a6d0b09906f335e2d2a4d4132ce"
     ],
     [
       "StatefulLens.test0",
@@ -154,7 +154,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "dba1bf61ccc6d3e8f3a06a2a866c8a93"
+      "a555097afd5f9b31914a73c4f32ce852"
     ],
     [
       "StatefulLens.test1",
@@ -201,7 +201,7 @@
         "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "a1d0a4bbdc05f22e929e67ca0b09bf39"
+      "3fd34011e6c0d4a4c3f0b141be3e40c3"
     ],
     [
       "StatefulLens.test2",
@@ -249,7 +249,7 @@
         "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "2dcea436a4f69ebce20626b8b178abbc"
+      "fb5fb2d880a45f38fcbfc037a8f8af76"
     ],
     [
       "StatefulLens.test4",
@@ -297,7 +297,7 @@
         "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "da1b389c8d24b75dcf4924634335274d"
+      "bb940c14bd0c2ca5ec74742b3b796b43"
     ]
   ]
 ]

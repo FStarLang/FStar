@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f02abd9c44ac96b207557cf7e9a14538"
+      "3a96d38ead49a8b541d933a3a1379c4c"
     ],
     [
       "Ex03a.factorial",
@@ -25,7 +25,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e7ca155fc7fee5fc703e09044141e568"
+      "79d5bdffc738540844cedeb3f82d94e6"
     ]
   ]
 ]
