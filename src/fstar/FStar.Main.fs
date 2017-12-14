@@ -82,7 +82,12 @@ let codegen (umods, env) =
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
-        save_value_to_file (Options.prepend_output_dir "out.krml") bin
+        begin match programs with
+        | [ name, _ ] ->
+            save_value_to_file (Options.prepend_output_dir (name ^ ".krml")) bin
+        | _ ->
+            save_value_to_file (Options.prepend_output_dir "out.krml") bin
+        end
    | _ -> failwith "Unrecognized option"
 
 let gen_native_tactics (umods, env) out_dir =
