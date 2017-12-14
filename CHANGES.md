@@ -281,10 +281,10 @@ Expected changes in the near future:
   reports now look like this:
 
 ```
-.\test.fst(2,22-2,23): (Error) (19) Subtyping check failed; expected type Prims.nat; got type Prims.int (see also D:\workspace\everest\FStar\ulib\prims.fst(316,17-316,23))
+.\test.fst(2,22-2,23): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int (see also D:\workspace\everest\FStar\ulib\prims.fst(316,17-316,23))
 ```
 
-  Notice the `(19)`: that's the unique error number.
+  Notice the `19`: that's the unique error number.
   
   Warnings can be silenced or turned into errors using the new
   `--warn_error` option.

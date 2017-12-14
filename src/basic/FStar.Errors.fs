@@ -615,9 +615,9 @@ type error_handler = {
 let format_issue issue =
     let level_header =
         match issue.issue_level with
-        | EInfo -> "(Info) "
-        | EWarning -> "(Warning) "
-        | EError -> "(Error) "
+        | EInfo -> "Info"
+        | EWarning -> "Warning"
+        | EError -> "Error"
         | ENotImplemented -> "Feature not yet implemented: " in
     let range_str, see_also_str =
         match issue.issue_range with
@@ -629,8 +629,8 @@ let format_issue issue =
     let issue_number =
         match issue.issue_number with
         | None -> ""
-        | Some n -> BU.format1 "(%s) " (string_of_int n) in
-    BU.format5 "%s%s%s%s%s\n" range_str level_header issue_number issue.issue_message see_also_str
+        | Some n -> BU.format1 " %s" (string_of_int n) in
+    BU.format5 "%s(%s%s) %s%s\n" range_str level_header issue_number issue.issue_message see_also_str
 
 let print_issue issue =
     let printer =
@@ -732,8 +732,12 @@ let log_issue r (e, msg) =
   | CWarning ->
      add_one (mk_issue EWarning (Some r) msg (Some errno))
   | CSilent -> ()
-  // Needs review: Should we allow using log_issue to set a Fatal error as CError?
-  | CFatal -> failwith ("don't use log_issue to report fatal error, should use raise_error")
+  // We allow using log_issue to report a Fatal error in interactive mode
+  | CFatal ->
+    let i = mk_issue EError (Some r) msg (Some errno) in
+    if Options.ide()
+    then add_one i
+    else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^format_issue i)
 
 let add_errors errs =
     atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefix msg))) errs)
