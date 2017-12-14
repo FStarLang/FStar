@@ -2673,7 +2673,11 @@ let try_teq smt_ok env t1 t2 : option<guard_t> =
 
 let teq env t1 t2 : guard_t =
  match try_teq true env t1 t2 with
-    | None -> raise_error (Err.basic_type_error env None t2 t1) (Env.get_range env)
+    | None ->
+      FStar.Errors.log_issue
+            (Env.get_range env)
+            (Err.basic_type_error env None t2 t1);
+      trivial_guard
     | Some g ->
       if debug env <| Options.Other "Rel"
       then BU.print3 "teq of %s and %s succeeded with guard %s\n"
