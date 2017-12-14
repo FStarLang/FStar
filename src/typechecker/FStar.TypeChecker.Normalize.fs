@@ -1514,7 +1514,12 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
 
     | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
         let lifted = reify_lift cfg e msrc mtgt (closure_as_term cfg env t') in
+        log cfg (fun () -> BU.print1 "Reified lift to (2): %s\n" (Print.term_to_string lifted));
         norm cfg env (List.tl stack) lifted
+
+    // Ignore all other metas
+    | Tm_meta(e, _) ->
+        do_reify_monadic fallback cfg env stack e m t
 
     | Tm_match(e, branches) ->
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
@@ -1715,17 +1720,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
   | App(env, head, aq, r)::stack' when should_reify cfg stack ->
     let t0 = t in
-    let fallback () =
-       log cfg (fun () -> BU.print1 "Not reifying: %s\n" (Print.term_to_string t));
+    let fallback msg () =
+       log cfg (fun () -> BU.print2 "Not reifying%s: %s\n" msg (Print.term_to_string t));
        let t = S.extend_app head (t, aq) None r in
        rebuild cfg env stack' t
     in
     begin match (SS.compress t).n with
     | Tm_meta (t, Meta_monadic (m, ty)) ->
-       do_reify_monadic fallback cfg env stack t m ty
+       do_reify_monadic (fallback " (1)") cfg env stack t m ty
 
-    | Tm_meta (t, Meta_monadic_lift (m, m', ty)) ->
-       norm cfg env stack (reify_lift cfg t m m' (closure_as_term cfg env ty))
+    | Tm_meta (t, Meta_monadic_lift (msrc, mtgt, ty)) ->
+       let lifted = reify_lift cfg t msrc mtgt (closure_as_term cfg env ty) in
+       log cfg (fun () -> BU.print1 "Reified lift to (1): %s\n" (Print.term_to_string lifted));
+       norm cfg env (List.tl stack) lifted
 
     | Tm_app ({n = Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
        // reify (reflect e) ~> e
@@ -1733,7 +1740,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
        norm cfg env stack' e
 
     | _ ->
-        fallback ()
+        fallback " (2)" ()
     end
 
   | App(env, head, aq, r)::stack ->
