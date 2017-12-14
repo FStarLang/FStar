@@ -92,51 +92,24 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   HS h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
+private
 noeq
-abstract
 type mreference (a:Type) (rel:preorder a) =
   | MkRef : frame:rid -> mrref:HH.mrref frame a rel -> mreference a rel
 
 //TODO: rename to frame_of, avoiding the inconsistent use of camelCase
-abstract
 let frameOf (#a:Type) (#rel:preorder a) (r:mreference a rel)
   : Tot rid
   = r.frame
 
-abstract
 let mrref_of (#a:Type) (#rel:preorder a) (r:mreference a rel)
   : Tot (HH.mrref (frameOf r) a rel)
   = r.mrref
 
-abstract
 let mk_mreference (#id:rid) (#a:Type) (#rel:preorder a)
                   (r:HH.mrref id a rel)
   : Tot (mreference a rel)
   = MkRef id r
-
-let mk_mreference_mrref_frameOf_inverse
-    (#id:rid) (#a:Type) (#rel:preorder a)
-    (r:HH.mrref id a rel)
-  : Lemma (mrref_of  (mk_mreference r) == r /\
-           frameOf (mk_mreference r) == id)
-  = ()
-
-let mrref_frameOf_mk_mreference_inverse
-    (#a:Type) (#rel:preorder a)
-    (r:mreference a rel)
-  : Lemma (mk_mreference (mrref_of r) == r)
-          [SMTPatOr [[SMTPat (mrref_of r)];
-                     [SMTPat (frameOf r)]]]
-  = ()
-
-let mreference_injectivity
-    (#a:Type) (#p:preorder a) (x:mreference a p)
-    (#b:Type) (#q:preorder b) (y:mreference b q)
-  : Lemma (requires (x === y))
-          (ensures (a == b /\ p === q))
-          [SMTPat (has_type x (mreference a p));
-           SMTPat (has_type y (mreference b q))]
-  = ()
 
 //Hopefully we can get rid of this one
 let as_ref #a #rel (x:mreference a rel)

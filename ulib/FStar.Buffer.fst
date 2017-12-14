@@ -51,9 +51,7 @@ let content #a (b:buffer a) :
 let as_ref #a (b:buffer a) = as_ref (content b)
 let as_addr #a (b:buffer a) = as_addr (content b)
 
-abstract
-let frameOf #a (b:buffer a) : GTot (r:HH.rid{r == HS.frameOf (content b)}) =
-    HS.frameOf (content b)
+let frameOf #a (b:buffer a) : GTot HH.rid = HS.frameOf (content b)
 
 (* Liveliness condition, necessary for any computation on the buffer *)
 let live #a (h:mem) (b:buffer a) : GTot Type0 = HS.contains h b.content
