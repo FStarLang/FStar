@@ -1580,7 +1580,7 @@ and desugar_machine_integer:
                       FStar_Util.format2
                         "%s is not in the expected range for %s" repr tnm in
                     (FStar_Errors.Error_OutOfRange, uu____4378) in
-                  FStar_Errors.raise_error uu____4373 range
+                  FStar_Errors.log_issue range uu____4373
                 else ());
                (let private_intro_nm =
                   Prims.strcat tnm
