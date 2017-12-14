@@ -300,7 +300,7 @@
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "4cd20fcbd9a7587a60831334832bbe2b"
+      "2cca06bf74b8373e3753e06acc5c5a79"
     ],
     [
       "FStar.Printf.parse_format",
@@ -404,7 +404,7 @@
         "typing_tok_FStar.Printf.I32@tok"
       ],
       0,
-      "470b9bd2bd7016d985fc0688ffe180c2"
+      "b76fb49f24138a910e2c99b7cf69bf75"
     ],
     [
       "FStar.Printf.test",

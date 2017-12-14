@@ -2308,7 +2308,7 @@
     [
       "FStar.List.Tot.Properties.precedes_append_cons_prod_r",
       1,
-      4,
+      2,
       2,
       [
         "@MaxIFuel_assumption", "@query",
@@ -2316,7 +2316,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "163da8edd66f5403552a6cf564d7aed8"
+      "081844d543512347ae0740258f480c2f"
     ],
     [
       "FStar.List.Tot.Properties.memP_precedes",
