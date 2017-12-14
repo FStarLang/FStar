@@ -114,12 +114,12 @@ assume val pop_frame: unit -> Unsafe unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
-let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
+let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region (frameOf s)}) (m1:mem) =
       is_stack_region m0.tip
     /\ Map.domain m0.h == Map.domain m1.h
     /\ m0.tip = m1.tip
-    /\ s.id   = m1.tip
-    /\ HH.fresh_rref s.ref m0.h m1.h         //it's a fresh reference in the top frame
+    /\ frameOf s   = m1.tip
+    /\ HH.fresh_rref (mrref_of s) m0.h m1.h         //it's a fresh reference in the top frame
     /\ m1==HyperStack.upd m0 s init          //and it's been initialized
 
 (**
@@ -134,12 +134,12 @@ assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
   (ensures salloc_post init)
 
 let remove_reference (#a:Type) (r:reference a) (m:mem{m `contains` r /\ is_mm r}) :GTot mem =
-  let h_0 = Map.sel m.h r.id in
-  let h_1 = Heap.free_mm h_0 (HH.as_ref r.ref) in
-  HS (Map.upd m.h r.id h_1) m.tip
+  let h_0 = Map.sel m.h (frameOf r) in
+  let h_1 = Heap.free_mm h_0 (as_ref r) in
+  HS (Map.upd m.h (frameOf r) h_1) m.tip
 
 assume val sfree: #a:Type -> r:mmstackref a -> StackInline unit
-    (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
+    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
@@ -176,11 +176,11 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
+unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region (frameOf x)}) (m1:mem) =
     let region_i = Map.sel m0.h i in
-    (HH.as_ref x.ref) `Heap.unused_in` region_i 
+    as_ref x `Heap.unused_in` region_i 
   /\ i `is_in` m0.h
-  /\ i = x.id
+  /\ i = frameOf x
   /\ m1 == upd m0 x init
 
 assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
@@ -304,7 +304,7 @@ let test_stack x =
 val test_stack_with_long_lived: s:reference int -> Stack unit
   (requires (fun h -> contains h s))
   (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
-    /\ modifies (Set.singleton s.id) h0 h1))
+    /\ modifies (Set.singleton (frameOf s)) h0 h1))
 let test_stack_with_long_lived s =
   push_frame();
   let _ = test_stack !s in
@@ -427,7 +427,7 @@ let with_frame #a #pre #post f =
 
 let test_with_frame (x:stackref int) (v:int)
   : Stack unit (requires (fun m -> contains m x))
-	     (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
+	     (ensures (fun m0 _ m1 -> modifies (Set.singleton (frameOf x)) m0 m1 /\ sel m1 x = v))
  = with_frame (fun _ -> x := v)
 
 
@@ -449,7 +449,7 @@ let mm_tests _ =
   //check that the heap contains the reference
   let m = get () in
   let h = Map.sel m.h m.tip in
-  let _ = assert (Heap.contains h (HH.as_ref r1.ref)) in
+  let _ = assert (Heap.contains h (as_ref r1)) in
 
   let _ = !r1 in
 
@@ -461,7 +461,7 @@ let mm_tests _ =
   //check that the heap does not contain the reference
   let m = get () in
   let h = Map.sel m.h m.tip in
-  let _ = assert (~ (Heap.contains h (HH.as_ref r1.ref))) in
+  let _ = assert (~ (Heap.contains h (as_ref r1))) in
 
   let r2 = salloc_mm 2 in
   let _ = pop_frame () in
@@ -478,7 +478,7 @@ let mm_tests _ =
   //check that the heap does not contain the reference
   let m = get () in
   let h = Map.sel m.h id in
-  let _ = assert (~ (Heap.contains h (HH.as_ref r3.ref))) in
+  let _ = assert (~ (Heap.contains h (as_ref r3))) in
 
   //this fails because the reference is no longer live
   //let _ = !r3 in

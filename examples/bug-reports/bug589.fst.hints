@@ -2,15 +2,6 @@
   "¦Oò\u0003ÞC}§*Üƒûdt·Ø",
   [
     [
-      "Bug589.f",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6601d38f98420be4c3b39f2e07402ce8"
-    ],
-    [
       "Bug589.h",
       1,
       2,
@@ -21,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3221ee4aeb89f1a649cacc5b1313b559"
+      "17b32e49a9afe6cd3cc25f84a41e3054"
     ]
   ]
 ]

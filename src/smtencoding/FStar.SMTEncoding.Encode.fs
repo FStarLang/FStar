@@ -655,8 +655,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
-	 (Const.bv_add_lid, bv_add);
-	 (Const.bv_sub_lid, bv_sub);
+         (Const.bv_add_lid, bv_add);
+         (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
@@ -1256,7 +1256,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let vars, guards, env, decls, _ = encode_binders None binders env in
 
     let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun t ->  encode_term t env) |> List.unzip in
+        let pats, decls = branch |> List.map (fun t ->  encode_smt_pattern t env) |> List.unzip in
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
@@ -1269,6 +1269,18 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let post, decls''' = encode_formula (U.unmeta post) env in
     let decls = decls@(List.flatten decls')@decls''@decls''' in
     mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
+
+and encode_smt_pattern t env =
+    let head, args = U.head_and_args t in
+    let head = U.un_uinst head in
+    match head.n, args with
+    | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
+      let x, decls = encode_term x env in
+      let t, decls' = encode_term t env in
+      mk_HasType x t, decls@decls'
+
+    | _ ->
+      encode_term t env
 
 and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
     let debug phi =
@@ -1375,7 +1387,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                   fallback phi
               end
 
-            | Tm_fvar fv, [(t, _)] 
+            | Tm_fvar fv, [(t, _)]
               when S.fv_eq_lid fv Const.squash_lid
                  || S.fv_eq_lid fv Const.auto_squash_lid ->
               encode_formula t env
@@ -1395,7 +1407,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (fun p ->
-          let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
+          let p, decls = p |> List.map (fun (t, _) -> encode_smt_pattern t ({env with use_zfuel_name=true})) |> List.unzip in
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
     let guards = match pats with

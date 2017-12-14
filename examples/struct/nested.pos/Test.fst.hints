@@ -57,7 +57,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt.fits"
       ],
       0,
-      "02f58d3514ebf77e552188b47dfc8b14"
+      "ec65816269e5795a00d75e8e8313647b"
     ],
     [
       "Test.ty",
@@ -119,13 +119,13 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt.fits"
       ],
       0,
-      "04f3cd55ea5ff111f51a54bca4ea6ffa"
+      "f60021826da61858ea9e0af1c49121c4"
     ],
     [
       "Test.f",
       1,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.assoc.fuel_instrumented",
@@ -134,6 +134,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@fuel_correspondence_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.map.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
@@ -149,7 +150,7 @@
         "data_elim_FStar.Monotonic.HyperStack.HS",
         "data_elim_FStar.Pointer.Base.TStruct", "data_elim_Prims.Cons",
         "data_typing_intro_FStar.Pointer.Base.TBase@tok",
-        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Cons",
         "equality_tok_FStar.Pointer.Base.TUInt32@tok",
         "equation_FStar.HyperStack.ST.inline_stack_inv",
         "equation_FStar.Monotonic.Heap.equal_dom",
@@ -183,7 +184,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "function_token_typing_FStar.Monotonic.Heap.emp",
         "function_token_typing_FStar.Monotonic.Heap.heap",
@@ -193,7 +193,7 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.string",
         "function_token_typing_Test.nested_st",
-        "function_token_typing_Test.ty", "int_inversion", "int_typing",
+        "function_token_typing_Test.ty", "int_typing",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
@@ -220,8 +220,8 @@
         "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Negation",
-        "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
         "proj_equation_FStar.Monotonic.HyperStack.HS_tip",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -260,16 +260,17 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__tip",
         "typing_FStar.Monotonic.HyperStack.is_in",
+        "typing_FStar.Monotonic.HyperStack.remove_elt",
         "typing_FStar.Pointer.Base.gpointer_of_buffer_cell",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Set.complement", "typing_FStar.Set.intersect",
-        "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
-        "typing_FStar.Set.union", "typing_FStar.UInt.fits",
-        "typing_FStar.UInt32.add", "typing_FStar.UInt32.uint_to_t",
+        "typing_FStar.Set.complement", "typing_FStar.Set.mem",
+        "typing_FStar.Set.singleton", "typing_FStar.Set.union",
+        "typing_FStar.UInt.fits", "typing_FStar.UInt32.add",
+        "typing_FStar.UInt32.uint_to_t",
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "edfe9f609995d53c029d407ac715626e"
+      "1df3b7992c3e3f993c1d7dddc1ebf5c1"
     ]
   ]
 ]

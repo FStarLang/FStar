@@ -404,8 +404,9 @@ and translate_let env flavor flags lb: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
-      let flags = match eff with
-        | E_GHOST -> MustDisappear :: translate_flags flags
+      let flags = match eff, t with
+        | E_GHOST, _ 
+        | E_PURE, TUnit -> MustDisappear :: translate_flags flags
         | _ -> translate_flags flags
       in
       if assumed then
@@ -512,13 +513,25 @@ and translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
-  | MLTY_Named ([arg; _], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref") ->
+
+  | MLTY_Named ([_; arg; _], p) when (
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"
+  ) ->
+      TBuf (translate_type env arg)
+  | MLTY_Named ([arg; _], p) when (
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mreference" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mstackref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmstackref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
+    Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref"
+  ) ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ->
       TBuf (translate_type env arg)
+
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named ([], (path, type_name)) ->
@@ -593,6 +606,8 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _) when (string_of_mlpath p = "Prims.admit") ->
+      EAbort
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v } ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" && is_mutable env v) ->
       EBound (find env v)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v }; e ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" && is_mutable env v) ->
@@ -606,7 +621,7 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ]) when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
-      EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "0"))
+      EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
