@@ -33,12 +33,14 @@ abstract val singleton  : #a:eqtype -> a -> Tot (set a)
 abstract val union      : #a:eqtype -> set a -> set a -> Tot (set a)
 abstract val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
 abstract val complement : #a:eqtype -> set a -> Tot (set a)
+abstract val intension  : #a:eqtype -> (a -> bool) -> Tot (set a)
 
 let empty              = fun #a x -> false
 let singleton #a x     = fun y -> y = x
 let union #a s1 s2     = fun x -> s1 x || s2 x
 let intersect #a s1 s2 = fun x -> s1 x && s2 x
 let complement #a s    = fun x -> not (s x)
+let intension #a f     = f
 
 (* a property about sets *)
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
@@ -74,6 +76,11 @@ abstract val mem_complement: #a:eqtype -> x:a -> s:set a -> Lemma
    (ensures (mem x (complement s) = not (mem x s)))
    [SMTPat (mem x (complement s))]
 
+abstract val mem_intension: #a:eqtype -> x:a -> f:(a -> bool) -> Lemma
+  (requires True)
+  (ensures (mem x (intension f) = f x))
+  [SMTPat (mem x (intension f))]
+
 abstract val mem_subset: #a:eqtype -> s1:set a -> s2:set a -> Lemma
    (requires (forall x. mem x s1 ==> mem x s2))
    (ensures (subset s1 s2))
@@ -89,6 +96,7 @@ let mem_singleton  #a x y     = ()
 let mem_union      #a x s1 s2 = ()
 let mem_intersect  #a x s1 s2 = ()
 let mem_complement #a x s     = ()
+let mem_intension  #a x f     = ()
 let subset_mem     #a s1 s2   = ()
 let mem_subset     #a s1 s2   = ()
 
