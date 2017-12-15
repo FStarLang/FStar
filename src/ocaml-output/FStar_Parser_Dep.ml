@@ -1406,8 +1406,7 @@ let print_full : deps -> Prims.unit =
             FStar_All.pipe_right uu____4669
               (FStar_Util.sort_with FStar_String.compare)
              in
-          let all_krml_files = FStar_List.map output_krml_file all_fst_files
-             in
+          let all_krml_files = FStar_List.map output_krml_file keys  in
           (let uu____4694 =
              FStar_All.pipe_right all_fst_files
                (FStar_String.concat " \\\n\t")
@@ -1419,7 +1418,9 @@ let print_full : deps -> Prims.unit =
               in
            FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n" uu____4698);
           (let uu____4701 =
-             FStar_All.pipe_right keys (FStar_String.concat " \\\n\t")  in
+             FStar_All.pipe_right all_krml_files
+               (FStar_String.concat " \\\n\t")
+              in
            FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____4701)))
   
 let print : deps -> Prims.unit =
