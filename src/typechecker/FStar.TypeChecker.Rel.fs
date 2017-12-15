@@ -1582,9 +1582,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     match (SS.compress head).n with
                     | Tm_name _
                     | Tm_match _ -> true
-                    | Tm_fvar ({fv_delta=Delta_equational})
+                    | Tm_fvar ({fv_delta=Delta_equational}) ->
+                      true
                     | Tm_fvar ({fv_delta=Delta_abstract _}) ->
-                      true //these may be relatable via a logical theory
+                      //these may be relatable via a logical theory
+                      //which may provide **equations** among abstract symbols
+                      //Note, this is specifically not applicable for subtyping queries: see issue #1359
+                      problem.relation = EQ
                     | Tm_ascribed (t, _, _)
                     | Tm_uinst (t, _)
                     | Tm_meta (t, _) -> may_relate t
