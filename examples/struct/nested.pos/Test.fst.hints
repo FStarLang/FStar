@@ -57,7 +57,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt.fits"
       ],
       0,
-      "ec65816269e5795a00d75e8e8313647b"
+      "fa8dfb818b24914e1937ea9e4e8bb6b4"
     ],
     [
       "Test.ty",
@@ -119,13 +119,13 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt.fits"
       ],
       0,
-      "f60021826da61858ea9e0af1c49121c4"
+      "4c923a01c9526e8055e280970334a5b3"
     ],
     [
       "Test.f",
       1,
       2,
-      2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.assoc.fuel_instrumented",
@@ -184,6 +184,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "function_token_typing_FStar.Monotonic.Heap.emp",
         "function_token_typing_FStar.Monotonic.Heap.heap",
@@ -193,18 +194,20 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.string",
         "function_token_typing_Test.nested_st",
-        "function_token_typing_Test.ty", "int_typing",
+        "function_token_typing_Test.ty", "int_inversion", "int_typing",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
-        "lemma_FStar.Map.lemma_InDomUpd2",
+        "lemma_FStar.Map.lemma_InDomRestrict",
         "lemma_FStar.Map.lemma_SelRestrict", "lemma_FStar.Map.lemma_SelUpd2",
         "lemma_FStar.Map.lemma_UpdDomain",
-        "lemma_FStar.Monotonic.HyperStack.lemma_equal_domains_trans",
         "lemma_FStar.Pointer.Base.buffer_length_gbuffer_of_array_pointer",
         "lemma_FStar.Pointer.Base.buffer_length_gsub_buffer",
         "lemma_FStar.Pointer.Base.buffer_live_gbuffer_of_array_pointer",
         "lemma_FStar.Pointer.Base.buffer_live_gsub_buffer_equiv",
+        "lemma_FStar.Pointer.Base.buffer_live_gsub_buffer_intro",
+        "lemma_FStar.Pointer.Base.frameOf_gcell",
+        "lemma_FStar.Pointer.Base.frameOf_gfield",
         "lemma_FStar.Pointer.Base.gpointer_of_buffer_cell_gbuffer_of_array_pointer",
         "lemma_FStar.Pointer.Base.gpointer_of_buffer_cell_gsub_buffer_",
         "lemma_FStar.Pointer.Base.index_buffer_as_seq",
@@ -220,8 +223,8 @@
         "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
-        "primitive_Prims.op_disEquality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
         "proj_equation_FStar.Monotonic.HyperStack.HS_tip",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -270,7 +273,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "1df3b7992c3e3f993c1d7dddc1ebf5c1"
+      "7297926503353bee65ff96eab5dc104a"
     ]
   ]
 ]
