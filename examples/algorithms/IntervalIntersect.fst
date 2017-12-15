@@ -58,13 +58,13 @@ let intersect (is1 is2:intervals) = go is1 is2
 let rec print_intervals is: ML unit =
   match is with
   | [] -> stdout <| "."
-  | (i::is) ->
+  | i::is ->
     stdout <| sprintf "[%d, %d] " i.from i.to;
     print_intervals is
 
 let main = print_intervals (intersect [I 3 10; I 11 15] [I 1 4; I 10 14])
 
-let range (f:int) (t:int): Set.set int =
+let range (f t:int): Set.set int =
   Set.intension (fun z -> f <= z && z < t)
 
 let semI (i : interval) : Set.set int =
@@ -94,23 +94,20 @@ let lemma_intersection_range_range_empty (f1 t1 f2 t2:int)
     (ensures Set.intersect (range f1 t1) (range f2 t2) == Set.empty)
   = Set.lemma_equal_elim ( Set.intersect (range f1 t1) (range f2 t2) ) Set.empty
 
-val lemma_intersection_range_semLIs_empty: f:int -> t:int -> is:intervals -> lb:int -> Lemma
-  (requires goodLIs is lb /\ t <= lb)
-  (ensures Set.intersect (range f t) (sem is) == Set.empty)
-
-let rec lemma_intersection_range_semLIs_empty f t is lb =
+let rec lemma_intersection_range_semLIs_empty (f t:int) (is:intervals) (lb:int)
+  : Lemma 
+    (requires goodLIs is lb /\ t <= lb)
+    (ensures Set.intersect (range f t) (sem is) == Set.empty)
+  =
   if (Cons? is) then
-    begin
       lemma_intersection_range_semLIs_empty f t (tl is) (hd is).to
-    end
   else ();
-  Set.lemma_equal_elim (Set.intersect (range f t) (sem is)) Set.empty;
-  ()
+  Set.lemma_equal_elim (Set.intersect (range f t) (sem is)) Set.empty
 
-val lemma_intervals_disjoint: is:intervals{Cons? is} -> Lemma
-  (requires True)
-  (ensures (Set.disjoint (semI (hd is)) (sem (tl is))))
-let lemma_intervals_disjoint is =
+let lemma_intervals_disjoint (is:intervals{Cons? is})
+  : Lemma
+    (ensures (Set.disjoint (semI (hd is)) (sem (tl is))))
+  =
   if (Cons? (tl is)) then
     begin
       let h::t = is in
@@ -118,33 +115,34 @@ let lemma_intervals_disjoint is =
     end
   else ()
 
-val lemma_disjoint_prefix: is1:intervals{Cons? is1} -> is2:intervals{Cons? is2} -> Lemma
-  (requires (hd is1).from >= (hd is2).to )
-  (ensures (Set.intersect (sem is1) (sem is2) == Set.intersect (sem (is1)) (sem (tl is2))))
 
-let lemma_disjoint_prefix is1 is2 =
+let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
+  : Lemma 
+    (requires (hd is1).from >= (hd is2).to )
+    (ensures (Set.intersect (sem is1) (sem is2) == Set.intersect (sem (is1)) (sem (tl is2))))
+  =
   let h2 = (hd is2) in
   lemma_intervals_disjoint (h2::is1);
   assert(Set.disjoint (semI (h2)) (sem (is1)));
   Set.lemma_equal_elim (Set.intersect (sem is1) (sem is2)) (Set.intersect (sem (is1)) (sem (tl is2)))
 
-val lemma_subset_prefix: is1:intervals{Cons? is1} -> is2:intervals{Cons? is2} -> Lemma
-  (requires (hd is1).to = (hd is2).to /\ (hd is1).from < (hd is2).to )
-  (ensures (let f' = max (hd is1).from (hd is2).from in Set.equal  (Set.intersect (sem is1) (sem is2)) (Set.union (semI (I f' (hd is1).to)) (Set.intersect (sem (is1)) (sem (tl is2))) )))
+let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2}) 
+  : Lemma
+    (requires (hd is1).to = (hd is2).to /\ (hd is1).from < (hd is2).to )
+    (ensures (let f' = max (hd is1).from (hd is2).from in Set.equal  (Set.intersect (sem is1) (sem is2)) (Set.union (semI (I f' (hd is1).to)) (Set.intersect (sem (is1)) (sem (tl is2))) )))
+  =
+  admit()
 
-let lemma_subset_prefix is1 is2 = admit()
-
-val lemma_intersection_spec: is1:intervals -> is2 : intervals -> Lemma
-  (requires True)
-  (ensures (Set.equal ( sem (intersect is1 is2) ) (Set.intersect (sem is1) (sem is2))))
-  (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2])
-
-let rec lemma_intersection_spec is1 is2 =
+let rec lemma_intersection_spec (is1:intervals) (is2:intervals)  
+  : Lemma
+    (ensures (Set.equal ( sem (intersect is1 is2) ) (Set.intersect (sem is1) (sem is2))))
+    (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2])
+  =
   match is1, is2 with
   | [], [] -> ()
   | _, [] -> ()
   | [], _ -> ()
-  | (i1::is1), (i2::is2) ->
+  | i1::is1, i2::is2 ->
     begin
        let f_max = max (i1.from) (i2.from) in
        let f_min = min (i1.from) (i2.from) in
