@@ -1419,9 +1419,7 @@ let print_full : deps -> Prims.unit =
               in
            FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n" uu____4698);
           (let uu____4701 =
-             FStar_All.pipe_right all_krml_files
-               (FStar_String.concat " \\\n\t")
-              in
+             FStar_All.pipe_right keys (FStar_String.concat " \\\n\t")  in
            FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____4701)))
   
 let print : deps -> Prims.unit =

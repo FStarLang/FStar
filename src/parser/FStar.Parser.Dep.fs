@@ -882,7 +882,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let all_krml_files = List.map output_krml_file all_fst_files in
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t");
-    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" (all_krml_files |> String.concat " \\\n\t")
+    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" (keys |> String.concat " \\\n\t")
 
 let print deps =
   match Options.dep() with
