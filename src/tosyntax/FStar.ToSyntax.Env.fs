@@ -1028,7 +1028,7 @@ let finish env modul =
                   then //it's only abstract; add it back to the environment as an abstract type
                        let sigel = Sig_declare_typ(lid, univ_names, S.mk (Tm_arrow(binders, S.mk_Total typ)) None (Ident.range_of_lid lid)) in
                        let se = {se with sigel=sigel; sigquals=Assumption::quals} in
-                       BU.smap_add (sigmap env) lid.str (se, false);
+                       BU.smap_add (sigmap env) lid.str (se, false)
                 | _ -> ())
 
     | Sig_declare_typ(lid, _, _) ->
