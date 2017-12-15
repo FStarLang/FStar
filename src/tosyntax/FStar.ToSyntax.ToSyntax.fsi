@@ -35,7 +35,9 @@ val as_interface: AST.modul -> AST.modul
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
 val desugar_partial_modul: option<S.modul> -> env -> AST.modul -> env * Syntax.modul
 val desugar_term: env -> term -> S.term
-
+val desugar_machine_integer: env -> repr:string
+                           -> (FStar.Const.signedness * FStar.Const.width)
+                           -> Range.range -> Syntax.term
 val desugar_modul : env -> AST.modul -> env * Syntax.modul
 val close : env -> term -> term
 
