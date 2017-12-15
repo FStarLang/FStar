@@ -92,10 +92,14 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   HS h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
+//Mark it private so that clients can't use its projectors etc.
+//enabling extraction of mreference to just a reference in ML and pointer in C
 private
 noeq
-type mreference (a:Type) (rel:preorder a) =
-  | MkRef : frame:rid -> mrref:HH.mrref frame a rel -> mreference a rel
+type mreference' (a:Type) (rel:preorder a) =
+  | MkRef : frame:rid -> mrref:HH.mrref frame a rel -> mreference' a rel
+
+let mreference a rel = mreference' a rel
 
 //TODO: rename to frame_of, avoiding the inconsistent use of camelCase
 let frameOf (#a:Type) (#rel:preorder a) (r:mreference a rel)
