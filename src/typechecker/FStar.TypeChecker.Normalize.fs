@@ -1436,6 +1436,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                   as_arg S.tun; as_arg body]))
                 None rng
               in
+              log cfg (fun () -> BU.print1 "Reified to %s\n"  (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
       end
@@ -1536,7 +1537,8 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
 and reify_lift cfg e msrc mtgt t : term =
   let env = cfg.tcenv in
-  log cfg (fun () -> BU.print1 "Reifying lift: %s\n" (Print.term_to_string e));
+  log cfg (fun () -> BU.print3 "Reifying lift %s -> %s: %s\n"
+        (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
   if U.is_pure_effect msrc
