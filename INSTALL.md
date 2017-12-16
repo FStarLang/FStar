@@ -225,7 +225,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 5.0.0.x) and fsharp (version 4.0.1.x-4.1.18)
+  - Install mono (any version from 4.0.3.0 to 5.0.0.x), fsharp (version 4.0.1.x-4.1.18), and msbuild (version 14.1.x-15.2.x)
 
     - On Debian/Ubuntu
 
@@ -234,20 +234,15 @@ Read on for the more complete solution involving Visual Studio itself.
     - On Arch
 
             $ pacman -S mono
-            $ aura -A fsharp
+            $ aura -A fsharp msbuild-bin
 
     - For other Linux distributions check out these links:
       - http://www.mono-project.com/download/#download-lin
       - http://fsharp.org/use/linux/
+      - https://github.com/Microsoft/msbuild
 
     - For Mac OS X use HomeBrew or install the MRE:
       - http://www.mono-project.com/download/#download-mac
-
-  - Depending on your distribution, you might need to manually import
-    certificates for Mono (you don't need to do this on Arch if you
-    use the default `mono` package)
-
-          $ mozroots --import --sync
 
   - Compile F\* from sources
 
