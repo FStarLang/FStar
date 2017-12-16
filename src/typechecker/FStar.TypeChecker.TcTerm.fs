@@ -2012,8 +2012,15 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let termination_check_enabled lbname lbdef lbtyp =
      if Options.ml_ish () then false else
      let t = N.unfold_whnf env lbtyp in
-     match (SS.compress t).n, (SS.compress lbdef).n with
-     | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->
+     let formals, c = arrow_formals_comp t in
+     let actuals, _, _ = abs_formals lbdef in
+     if List.length formals < 1
+        || List.length actuals < 1
+     then
+       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+                               (Print.term_to_string lbdef)
+                               (Print.term_to_string lbtyp))) lbtyp.pos
+     else (
        //add implicit binders, in case, for instance
        //lbtyp is of the form x:'a -> t
        //lbdef is of the form (fun x -> t)
@@ -2046,10 +2053,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
        end;
        let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
        quals |> List.contains TotalEffect
-     | _ ->
-       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
-                               (Print.term_to_string lbdef)
-                               (Print.term_to_string lbtyp))) lbtyp.pos
+     )
    in
    let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
