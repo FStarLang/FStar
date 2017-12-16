@@ -8,6 +8,8 @@
 
 module PatternMatching
 
+#set-options "--use_two_phase_tc false"
+
 /// Contents
 /// ========
 ///
