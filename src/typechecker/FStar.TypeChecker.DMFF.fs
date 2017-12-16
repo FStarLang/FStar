@@ -715,6 +715,10 @@ and star_type' env t =
       (*raise (Err (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (Print.term_to_string t)))*)
 
+  | Tm_ascribed (e, _, _) ->
+      raise (Err (BU.format1 "Tm_ascribed (with tactics) is outside of the definition language: %s"
+        (Print.term_to_string t)))
+
   | Tm_refine _ ->
       raise (Err (BU.format1 "Tm_refine is outside of the definition language: %s"
         (Print.term_to_string t)))
