@@ -479,7 +479,7 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__content"
       ],
       0,
-      "866084edf94e07e3073cdd7a9845e86d"
+      "7cddce73341d86f9980a17e41ae49028"
     ],
     [
       "FStar.Buffer.includes_as_seq",
@@ -514,7 +514,7 @@
         "typing_FStar.Monotonic.HyperStack.sel"
       ],
       0,
-      "a1e1378cb397c91bbefd43b07954d981"
+      "efb428440cb60c323285abf85cd7765b"
     ],
     [
       "FStar.Buffer.includes_trans",
@@ -564,7 +564,7 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__content"
       ],
       0,
-      "7f0cbbcf9ec901d1ba6b99cff1eda66f"
+      "a219790d5a9a7d3a56da9c381c709cc4"
     ],
     [
       "FStar.Buffer.lemma_disjoint_sub'",
@@ -4045,7 +4045,7 @@
         "typing_FStar.UInt.fits", "typing_FStar.UInt32.v"
       ],
       0,
-      "696dbd01431ade439308c89b2218d4a4"
+      "b0079a2dddc737e397e7ea32594e700b"
     ],
     [
       "FStar.Buffer.createL",
@@ -4221,7 +4221,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "47ea2882a7587d558b5902d1877f569e"
+      "962c44e5f57abd5d0d22809d2b11c0a8"
     ],
     [
       "FStar.Buffer.lemma_upd",
@@ -4493,7 +4493,7 @@
         "typing_FStar.UInt.fits", "typing_FStar.UInt32.v"
       ],
       0,
-      "bf75e21d7f310cdff795a917dc149b24"
+      "05c7add979fcd09f447b7a6099109f9c"
     ],
     [
       "FStar.Buffer.to_seq",
@@ -5325,7 +5325,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "d836fc70c1e3fc54784d2f3ab4aa3944"
+      "13a7a6dd2892a90e9129ce27c7affae9"
     ],
     [
       "FStar.Buffer.lemma_sub_spec'",
@@ -5457,7 +5457,7 @@
         "typing_FStar.UInt32.sub", "typing_FStar.UInt32.v"
       ],
       0,
-      "5f9b2af73fd7e8fced67ab4bc1228ce4"
+      "f4b567ff23ecc6af4c8354cae6b8f099"
     ],
     [
       "FStar.Buffer.eq_lemma1",
@@ -5548,7 +5548,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "6969da6f5e334f3306a444833328fd19"
+      "d9579d4c8c3d708a78386476a4322075"
     ],
     [
       "FStar.Buffer.eq_lemma2",
@@ -5648,7 +5648,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "f1355c29cc1500b9d87567d170c98cd0"
+      "a7d1db89982d3b5c40f4c627e855f20d"
     ],
     [
       "FStar.Buffer.eqb",
@@ -6956,7 +6956,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "b59850fc384f012a194dba0a0ba06f53"
+      "5b6204d4ffc91f7e0dfec746261ce6aa"
     ],
     [
       "FStar.Buffer.modifies_subbuffer_2",
@@ -7036,7 +7036,7 @@
         "unit_typing"
       ],
       0,
-      "b5f2633de9f039e96dd0fd60df65da0a"
+      "7487e62eb371143f66bfcd479a2ec518"
     ],
     [
       "FStar.Buffer.modifies_subbuffer_2'",
@@ -7130,7 +7130,7 @@
         "unit_typing"
       ],
       0,
-      "035eb9b8ace0517e96bafe74e6fa037b"
+      "6461c330e6aa2342e2972ee2d6f9b43a"
     ],
     [
       "FStar.Buffer.modifies_subbuffer_2_prime",

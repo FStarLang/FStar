@@ -549,7 +549,7 @@
         "typing_FStar.Monotonic.HyperStack.mrref_of"
       ],
       0,
-      "f08ca24307477bbd75872d826cf7f507"
+      "1096c19881fc80a9ba9cd0be4211ca51"
     ],
     [
       "FStar.Monotonic.HyperStack.equal_domains",
@@ -1601,7 +1601,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "7da9248ee97565727af9ae1abaa43353"
+      "fc7beabdb6c7b352e8a96917be3a5ab0"
     ],
     [
       "FStar.Monotonic.HyperStack.reference_of",
@@ -1628,7 +1628,7 @@
         "projection_inverse_FStar.Monotonic.HyperStack.MkRef_mrref"
       ],
       0,
-      "f56741b0fe0f8a8e8065098caf027cb8"
+      "9ba5b8758065060e671ed4da637f1b8b"
     ],
     [
       "FStar.Monotonic.HyperStack.aref_live_at_aref_of",
@@ -1663,7 +1663,7 @@
         "typing_FStar.Monotonic.HyperStack.mrref_of"
       ],
       0,
-      "3a776867d793fc26ec3d00edbc9ca8f9"
+      "31e2682d592ddac96f5508b0edb2e469"
     ],
     [
       "FStar.Monotonic.HyperStack.contains_greference_of",
