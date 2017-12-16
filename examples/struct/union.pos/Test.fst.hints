@@ -37,7 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "9ace4dd69f2c72cb90e729f937dc37b9"
+      "4551273ba0cc236996819d3e31689e88"
     ],
     [
       "Test.u",
@@ -83,21 +83,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "3a72f5d79acc7949a0e0333e3567d816"
-    ],
-    [
-      "Test.t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.union_typ", "equation_Test.u",
-        "function_token_typing_Test.u",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "76a01547a2e42f48556a741f4e917fad"
+      "7a8cd3401558a9f5ab55eda948352444"
     ],
     [
       "Test.f",
@@ -223,86 +209,7 @@
         "typing_tok_FStar.Pointer.Base.TUnit@tok"
       ],
       0,
-      "307171c35686b9133e9fc3f0f45a0604"
-    ],
-    [
-      "Test.f",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pointer.Base.union_typ", "equation_Test.u",
-        "equation_with_fuel_FStar.List.Tot.Base.map.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "function_token_typing_Test.u", "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "token_correspondence_FStar.Pervasives.Native.fst"
-      ],
-      0,
-      "09df556755c03430b8d4878499abe138"
-    ],
-    [
-      "Test.f",
-      3,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pointer.Base.struct_typ", "equation_Test.s",
-        "equation_with_fuel_FStar.List.Tot.Base.map.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "function_token_typing_Test.s", "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "token_correspondence_FStar.Pervasives.Native.fst"
-      ],
-      0,
-      "798256f0764ebe833ab7bf37d8653afc"
-    ],
-    [
-      "Test.f",
-      4,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.map.fuel_instrumented",
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pointer.Base.struct_typ", "equation_Test.s",
-        "equation_with_fuel_FStar.List.Tot.Base.map.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "function_token_typing_Test.s", "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "token_correspondence_FStar.Pervasives.Native.fst"
-      ],
-      0,
-      "58fe60921d155a2f7d2164c014f2c87e"
+      "db53d5deab6d4306b22fafd9ba6f2910"
     ]
   ]
 ]

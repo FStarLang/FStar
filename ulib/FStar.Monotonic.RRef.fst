@@ -25,7 +25,7 @@ type rid = r:HH.rid{is_eternal_region r}
  * AR: HS.ref, means it is not mm.
  * This along with rid above is essential to justify recall.
  *)
-abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
+abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{HS.frameOf x = r}
 
 (* let haseq_m_rref (r:rid) (a:Type) (b:reln a)  *)
 (*     : Lemma (requires True) *)
@@ -40,7 +40,7 @@ abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
 (*
  * AR: the refinement is important here, for as_rref rid was part of the type index
  *)
-val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:HS.ref a{x.id = r})
+val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:HS.ref a{HS.frameOf x = r})
 let as_hsref #r #a #b x = x
 
 (* val m_contains : #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> m:t -> GTot bool *)
@@ -55,7 +55,7 @@ let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.un
 
 let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:mem) (m1:mem) : GTot Type0 =
   let hsref = as_hsref mr in
-  HyperHeap.fresh_rref hsref.ref m0.h m1.h
+  HyperHeap.fresh_rref (HS.mrref_of hsref) m0.h m1.h
 
 (* val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> GTot a *)
 (* let m_sel #r #a #b h m = HyperHeap.sel h (as_rref m) *)

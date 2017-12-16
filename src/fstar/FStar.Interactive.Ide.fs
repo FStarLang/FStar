@@ -64,18 +64,17 @@ let with_captured_errors' env f =
               "F* may be in an inconsistent state.\n" ^
               "Please file a bug report, ideally with a " ^
               "minimized version of the program that triggered the error." in
-    TcErr.add_errors env [(msg, TcEnv.get_range env)];
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Util.print_error msg;
+    Errors.log_issue (TcEnv.get_range env) (Errors.Error_IDEAssertionFailure, msg);
     None
 
-  | Error(msg, r) ->
-    TcErr.add_errors env [(msg, r)];
+  | Error(e, msg, r) ->
+    TcErr.add_errors env [(e, msg, r)];
     None
 
-  | Err msg ->
-    TcErr.add_errors env [(msg, TcEnv.get_range env)];
+  | Err (e, msg) ->
+    TcErr.add_errors env [(e, msg, TcEnv.get_range env)];
     None
 
   | Stop ->
@@ -314,16 +313,16 @@ let deps_and_repl_ld_tasks_of_our_file filename
     match same_name with
     | [intf; impl] ->
       if not (Parser.Dep.is_interface intf) then
-         raise (Err (Util.format1 "Expecting an interface, got %s" intf));
+         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
       if not (Parser.Dep.is_implementation impl) then
-         raise (Err (Util.format1 "Expecting an implementation, got %s" impl));
+         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
       [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
     | [impl] ->
       []
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise (Err (Util.format2 message our_mod_name mods_str));
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
       [] in
 
   let tasks =
@@ -1406,7 +1405,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Option.isSome (Options.codegen ()) then
-    Util.print_warning "--ide: ignoring --codegen";
+    Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces

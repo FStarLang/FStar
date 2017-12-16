@@ -10,7 +10,7 @@
         "@query", "equation_Sig.sigsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a12101b67f86468bfe229bc61f59d41c"
+      "d79a447efe5fecd74b03dabf6a492bb8"
     ],
     [
       "Sig.pk",
@@ -19,7 +19,7 @@
       1,
       [ "@query", "equation_Sig.pksize", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "875a75c6ae11f9d2857bbf6dc22b9008"
+      "a47a1252e2711110fb7a4ed71b0d2c49"
     ],
     [
       "Sig.sk",
@@ -28,7 +28,7 @@
       1,
       [ "@query", "equation_Sig.sksize", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "d8caa2ff1d1e4d2dcecb5c6b92ce5056"
+      "da1a2fe9ceec6bbe866c71d8e252d3f0"
     ],
     [
       "Sig.entry",
@@ -44,7 +44,7 @@
         "haseqSig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
       0,
-      "139f898b22dcdf700934b681b96b39cc"
+      "2d952d4b78ded030a589d94b6b292033"
     ],
     [
       "Sig.__proj__Entry__item__k",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "764bcc08f117babd385728825a35e68b"
+      "e85b7d564b399b737b38260086904f4f"
     ],
     [
       "Sig.__proj__Entry__item__t",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
       0,
-      "237d1c463faa9a3f62c48c67e9217d49"
+      "e6d979835f6d602f5ba1c8cecef62fbf"
     ],
     [
       "Sig.__proj__Entry__item__m",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "16a28bb1e545011b05907e9afc9ec707"
+      "1d28816c76ad941793fbbe8f794d18c9"
     ],
     [
       "Sig.sign",
@@ -90,7 +90,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "4f1ef8b3f9fd512c3ee5a60b00e57bc6"
+      "71388da58dfb6b50a2c49738ecff99f1"
     ],
     [
       "Sig.verify",
@@ -99,58 +99,20 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_Platform.Bytes.HasEq_bytes",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Sig.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Platform.Bytes.bytes", "equation_Sig.pk",
-        "equation_Sig.pksize", "equation_Sig.sigsize", "equation_Sig.text",
-        "fuel_guarded_inversion_Sig.entry", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "equation_Sig.text", "fuel_guarded_inversion_Sig.entry",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d",
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
       0,
-      "addb1a0aba1f5f30e60a9392ca231d02"
-    ],
-    [
-      "Sig.verify",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "7b16e0c2179970bad24a93b65de825a9"
-    ],
-    [
-      "Sig.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Sig.text"
-      ],
-      0,
-      "d722d94b461902448510572ce10d87ce"
-    ],
-    [
-      "Sig.verify",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "equation_Sig.text",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "b5af4cb2d1fc5f2fa23deddbf73e57ca"
+      "4767d31b30e2f3d3d9d36d52d0a9c3af"
     ]
   ]
 ]

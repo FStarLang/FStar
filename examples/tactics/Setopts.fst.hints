@@ -6,22 +6,21 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "079816264014007a5531777f3c732b41"
+      "d1e280122409d4093fa952a4de9188fb"
     ],
     [
       "Setopts.mult_ass",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
       0,
-      "1e73cb91a5fe03d91e91cb455f9d562e"
+      "dd888f2deb1c152e38a6abffc0b3ea2c"
     ]
   ]
 ]

@@ -34,4 +34,5 @@ val empty_deps : deps
 val collect: list<string> -> list<string> * deps
 val deps_of : deps -> string -> list<string>
 val print : deps -> unit
-val hash_dependences: deps -> string -> option<(list<string>)>
+val hash_dependences: deps -> string -> option<(list<(string*string)>)>
+val print_digest: list<(string * string)> -> string

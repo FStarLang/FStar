@@ -156,3 +156,5 @@ let iota    : norm_step = Iota
 let delta_only (s:string list) : norm_step = UnfoldOnly s
 
 type ('a, 'b) admit = unit
+
+let singleton x = x

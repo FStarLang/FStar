@@ -92,7 +92,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 	               m_contains r h1
 		     /\ modifies_one i h0 h1
 		     (* AR: before merge: /\ modifies_rref i (Set.singleton (addr_of (as_rref r))) h0 h1 *)
-		     /\ modifies_rref i (Set.singleton (addr_of r_ashsref.ref)) h0.h h1.h
+		     /\ modifies_rref i (Set.singleton (HS.as_addr r_ashsref)) h0.h h1.h
 		     /\ m_sel h1 r == Seq.snoc (m_sel h0 r) x
 		     /\ witnessed (at_least (Seq.length (m_sel h0 r)) x r)))
   =
@@ -154,7 +154,7 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
 		     (* AR: before merge: /\ modifies_rref rgn (Set.singleton (addr_of (as_rref r))) h0 h1 *)
-		     /\ modifies_rref rgn (Set.singleton (addr_of r_ashsref.ref)) h0.h h1.h
+		     /\ modifies_rref rgn (Set.singleton (HS.as_addr r_ashsref)) h0.h h1.h
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
 		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
@@ -471,7 +471,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
           let c_ashsref = MR.as_hsref c in
 	  modifies_one i h0 h1 /\
 	  (* AR: before merge: modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\ *)
-	  modifies_rref i (Set.singleton (addr_of c_ashsref.ref)) h0.h h1.h /\
+	  modifies_rref i (Set.singleton (HS.as_addr c_ashsref)) h0.h h1.h /\
 	  m_sel h1 c = m_sel h0 c + 1))
   = m_recall c; m_recall log;
     let n = m_read c + 1 in
@@ -491,8 +491,8 @@ private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
   = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
     let r_ashsref = MR.as_hsref r in
-    assert (m_sel h r = HyperHeap.sel h.h r_ashsref.ref);
-    assert (m_sel #_ #(seqn_val i log 8) #_ h r = HyperHeap.sel h.h r_ashsref.ref)
+    assert (m_sel h r = HyperHeap.sel h.h (HS.mrref_of r_ashsref));
+    assert (m_sel #_ #(seqn_val i log 8) #_ h r = HyperHeap.sel h.h (HS.mrref_of r_ashsref))
 
 
 (* TODO: this fails with a silly inconsistent qualifier error *)

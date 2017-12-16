@@ -41,6 +41,7 @@ type token =
   | RBRACE
   | RARROW
   | RANGE_OF
+  | RANGE of (string)
   | QMARK_DOT
   | QMARK
   | PRIVATE
@@ -178,6 +179,7 @@ type tokenId =
     | TOKEN_RBRACE
     | TOKEN_RARROW
     | TOKEN_RANGE_OF
+    | TOKEN_RANGE
     | TOKEN_QMARK_DOT
     | TOKEN_QMARK
     | TOKEN_PRIVATE
@@ -278,6 +280,7 @@ type tokenId =
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
+    | NONTERM__startwarn_error_list
     | NONTERM__startterm
     | NONTERM__startinputFragment
     | NONTERM_option_FSDOC_
@@ -408,6 +411,10 @@ type nonTerminalId =
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
+    | NONTERM_warn_error_list
+    | NONTERM_warn_error
+    | NONTERM_flag
+    | NONTERM_range
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
@@ -427,5 +434,6 @@ val prodIdxToNonTerminal: int -> nonTerminalId
 
 /// This function gets the name of a token as a string
 val token_to_string: token -> string
+val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((flag * string) list) 
 val term : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (term) 
 val inputFragment : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (inputFragment) 

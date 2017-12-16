@@ -15,7 +15,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "60074dc12973dbcc7d204d407f4b2c1c"
+      "0752b0d8436613be43b05b09030dca3c"
     ],
     [
       "MAC.__proj__Entry__item__k",
@@ -24,7 +24,7 @@
       1,
       [ "@query" ],
       0,
-      "7586b5665176df6b230c193ef33a8cc0"
+      "c2f9c9d0eb9c8ea61da8cc55f075288c"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -38,7 +38,7 @@
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
       ],
       0,
-      "58efe03a138a6a422d8bc701e7cd33a5"
+      "52474398b83fe7f1810fc1d67daefab3"
     ],
     [
       "MAC.__proj__Entry__item__m",
@@ -47,7 +47,7 @@
       1,
       [ "@query" ],
       0,
-      "9cfe397cb1d6df85caa41add78a65c78"
+      "81abbc2af6e9827647345078296f3861"
     ],
     [
       "MAC.mac",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "3a7a45323a8aaf4aca6e2c89215439eb"
+      "537496fc1520573c379e4627fba9c716"
     ],
     [
       "MAC.mac",
@@ -65,7 +65,7 @@
       1,
       [ "@query" ],
       0,
-      "ef19a96f23216b7c782cb72baff90f45"
+      "1656623f7ca7ddff8c68767bb5a1cd1f"
     ],
     [
       "MAC.verify",
@@ -74,7 +74,7 @@
       1,
       [ "@query" ],
       0,
-      "a7135d5ae66210b99fe6194450cf1272"
+      "7abb3fd2d9578da3c854111d205525e1"
     ],
     [
       "MAC.verify",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "d4053bc82bd713084e47f506bc948218"
+      "5127a1fef1bcb72f08e1d961572888dc"
     ],
     [
       "MAC.keygen",
@@ -97,7 +97,7 @@
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
       ],
       0,
-      "c320ede5e4ebf5f7fe9d15f63a0efa6c"
+      "9e8bb84f970a3a31cd6a690108819659"
     ],
     [
       "MAC.mac",
@@ -137,7 +137,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "0308e3d833e9338d53c059a967dc71b6"
+      "4040cfe5d10f7eb15fbcbfe0eec23934"
     ],
     [
       "MAC.verify",
@@ -147,6 +147,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Platform.Bytes.HasEq_bytes",
+        "assumption_Prims.HasEq_bool",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
@@ -155,6 +157,7 @@
         "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
+        "refinement_interpretation_MAC_Tm_refine_4cefda6bf17327b4dcad5e57c7501d5c",
         "refinement_interpretation_MAC_Tm_refine_61aeee88c37953ca4933a44381e61e4a",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
@@ -162,16 +165,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "1110a3ee764fe1df794cb78e980de6ab"
-    ],
-    [
-      "MAC.verify",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c36b18cb22f3eb3d328c1721d0f2d5ee"
+      "aaf098cc2690b3c54d37ccf8e71d9a11"
     ]
   ]
 ]

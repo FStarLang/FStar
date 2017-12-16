@@ -1,5 +1,6 @@
 FSTAR_HOME=../..
 include ../Makefile.include
+
 all: uall
 
 uall: BinaryTrees.uver bst RBTree.uver vector BinaryTreesEnumeration.uver MerkleTree.uver Lens.uver StatefulLens.uver

@@ -34,7 +34,7 @@ type mynat =
     | Z
     | S of mynat
 
-let rec tick_last ns =
+let rec tick_last (ns:list string) =
   match ns with
   | [] -> []
   | [x] -> [x ^ "'"] // forgetting braces gave me a uvar explosion

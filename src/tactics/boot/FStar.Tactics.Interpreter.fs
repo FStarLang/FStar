@@ -373,7 +373,7 @@ and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<
         bind (set ps) (fun _ -> fail msg)
 
     | None ->
-        raise (Err.Error (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result), proof_state.main_context.range))
+        Errors.raise_error (Errors.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 //IN F*: and unembed_tactic_0' (#b:Type) (unembed_b:unembedder b) (embedded_tac_b:term) : option (tac b) =
 and unembed_tactic_0'<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : option<(tac<'b>)> = //JUST FSHARP
@@ -381,16 +381,16 @@ and unembed_tactic_0'<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : opt
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun (r, _, uv, _, ty, rng) ->
-                (BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+                (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string uv) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with
     | [] -> ()
-    | hd::tl -> begin
+    | (e, msg, r)::tl -> begin
         dump_proofstate ps "failing due to uninstantiated implicits";
         // A trick to print each error exactly once.
         Err.add_errors tl;
-        raise (Err.Error hd)
+        Err.raise_error (e, msg) r
     end
 
 let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals
@@ -437,7 +437,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
 
     | Failed (s, ps) ->
         dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
-        raise (Err.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
+        Errors.raise_error (Errors.Fatal_ArgumentLengthMismatch, (BU.format1 "user tactic failed: %s" s)) typ.pos
 
 // Polarity
 type pol =
@@ -549,7 +549,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
 
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
-               let x = S.new_bv None (U.mk_squash p) in
+               let x = S.new_bv None (U.mk_squash U_zero p) in
                let r1 = traverse f (flip pol)  e                p in
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
@@ -561,8 +561,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         (* But if neither side ran tactics, we just keep p <==> q *)
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
-               let xp = S.new_bv None (U.mk_squash p) in
-               let xq = S.new_bv None (U.mk_squash q) in
+               let xp = S.new_bv None (U.mk_squash U_zero p) in
+               let xq = S.new_bv None (U.mk_squash U_zero q) in
                let r1 = traverse f Both (Env.push_bv e xq) p in
                let r2 = traverse f Both (Env.push_bv e xp) q in
                // Should be flipping the tres, I think
@@ -661,5 +661,5 @@ let synth (env:Env.env) (typ:typ) (tau:term) : term =
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
-    then raise (Err.Error ("synthesis left open goals", typ.pos))
+    then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("synthesis left open goals")) typ.pos
     else w

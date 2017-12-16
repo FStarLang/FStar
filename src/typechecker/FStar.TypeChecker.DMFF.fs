@@ -613,7 +613,7 @@ and star_type' env t =
                 BU.string_builder_append strb "}" ;
                 BU.string_of_string_builder strb
         in
-        BU.print2_warning "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)
+        Errors.log_issue t.pos (Errors.Warning_DependencyFound, (BU.format2 "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)))
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
@@ -639,7 +639,7 @@ and star_type' env t =
                     with Not_found -> false
             end
         | _ ->
-            BU.print1_warning "Not a dependent arrow : %s" (Print.term_to_string ty) ;
+            Errors.log_issue ty.pos (Errors.Warning_NotDependentArrow, (BU.format1 "Not a dependent arrow : %s" (Print.term_to_string ty))) ;
             false
       in
       let rec is_valid_application head =
@@ -661,7 +661,7 @@ and star_type' env t =
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
-                    BU.print1_warning "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head) ;
+                    Errors.log_issue head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head))) ;
                     false
                 end
              else false
@@ -676,7 +676,7 @@ and star_type' env t =
       if is_valid_application head then
         mk (Tm_app (head, List.map (fun (t, qual) -> star_type' env t, qual) args))
       else
-        raise (Err (BU.format1 "For now, only [either], [option] and [eq2] are \
+        raise_err (Errors.Fatal_WrongTerm, (BU.format1 "For now, only [either], [option] and [eq2] are \
           supported in the definition language (got: %s)"
             (Print.term_to_string t)))
 
@@ -712,34 +712,34 @@ and star_type' env t =
 
   | Tm_ascribed (e, (Inr c, None), something) ->
       mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
-      (*raise (Err (BU.format1 "Tm_ascribed is outside of the definition language: %s"
+      (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (Print.term_to_string t)))*)
 
   | Tm_ascribed (e, _, _) ->
-      raise (Err (BU.format1 "Tm_ascribed (with tactics) is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed (with tactics) is outside of the definition language: %s"
         (Print.term_to_string t)))
 
   | Tm_refine _ ->
-      raise (Err (BU.format1 "Tm_refine is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_refine is outside of the definition language: %s"
         (Print.term_to_string t)))
 
   | Tm_uinst _ ->
-      raise (Err (BU.format1 "Tm_uinst is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uinst is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_constant _ ->
-      raise (Err (BU.format1 "Tm_constant is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_constant is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_match _ ->
-      raise (Err (BU.format1 "Tm_match is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_match is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_let _ ->
-      raise (Err (BU.format1 "Tm_let is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_let is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_uvar _ ->
-      raise (Err (BU.format1 "Tm_uvar is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uvar is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_unknown ->
-      raise (Err (BU.format1 "Tm_unknown is outside of the definition language: %s"
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_unknown is outside of the definition language: %s"
         (Print.term_to_string t)))
 
   | Tm_delayed _ ->
@@ -816,7 +816,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
-        raise (Err (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
+        raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
           (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in
     match rec_nm, context_nm with
@@ -829,7 +829,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
         // no need to wrap [u_e] in an explicit [return]; F* will infer it later on
         M t1, mk_return env t1 s_e, u_e
     | M t1,  N t2 ->
-        raise (Err (BU.format3
+        raise_err (Errors.Fatal_EffectfulAndPureComputationMismatch, (BU.format3
           "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
           (Print.term_to_string e)
           (Print.term_to_string t1)
@@ -843,8 +843,8 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
       | _ -> failwith "impossible"
     in
     match context_nm with
-    | N t -> raise (Error ("let-bound monadic body has a non-monadic continuation \
-        or a branch of a match is monadic and the others aren't : "  ^ Print.term_to_string t, e2.pos))
+    | N t -> raise_error (Errors.Fatal_LetBoundMonadicMismatch, "let-bound monadic body has a non-monadic continuation \
+        or a branch of a match is monadic and the others aren't : "  ^ Print.term_to_string t) e2.pos
     | M _ -> strip_m (check env e2 context_nm)
   in
 
@@ -1035,7 +1035,7 @@ and infer (env: env) (e: term): nm * term * term =
 
   | Tm_app({n=Tm_constant Const_range_of}, _)
   | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
-    raise (Error(BU.format1 "DMFF: Ill-applied constant %s" (Print.term_to_string e), e.pos))
+    raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "DMFF: Ill-applied constant %s" (Print.term_to_string e)) e.pos
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
@@ -1050,7 +1050,7 @@ and infer (env: env) (e: term): nm * term * term =
         | Tm_ascribed (e, _, _) ->
             flatten e
         | _ ->
-            raise (Err (BU.format1 "%s: not a function type" (Print.term_to_string t_head)))
+            raise_err (Errors.Fatal_NotFunctionType, (BU.format1 "%s: not a function type" (Print.term_to_string t_head)))
       in
       let binders, comp = flatten t_head in
       // BU.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
@@ -1060,7 +1060,7 @@ and infer (env: env) (e: term): nm * term * term =
       let n = List.length binders in
       let n' = List.length args in
       if List.length binders < List.length args then
-        raise (Err (BU.format3 "The head of this application, after being applied to %s \
+        raise_err (Errors.Fatal_BinderAndArgsLengthMismatch, (BU.format3 "The head of this application, after being applied to %s \
           arguments, is an effectful computation (leaving %s arguments to be \
           applied). Please let-bind the head applied to the %s first \
           arguments." (string_of_int n) (string_of_int (n' - n)) (string_of_int n)));
@@ -1148,7 +1148,7 @@ and mk_match env e0 branches f =
         let nm, s_body, u_body = f env body in
         nm, (pat, None, (s_body, u_body, body))
     | _ ->
-        raise (Err ("No when clauses in the definition language"))
+        raise_err (Errors.Fatal_WhenClauseNotSupported, ("No when clauses in the definition language"))
   ) branches) in
   let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
@@ -1289,7 +1289,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
-        if q <> q' then BU.print2_warning "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q') ;
+        if q <> q' then Errors.log_issue head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q'))) ;
         trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->

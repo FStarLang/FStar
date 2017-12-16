@@ -42,8 +42,8 @@ let parse_fragment (frag: ParseIt.input_frag) : fragment =
         Empty
     | ASTFragment (Inr decls, _) -> //interactive mode: more decls
         Decls decls
-    | ParseError (msg,r) ->
-        raise (Error(msg, r))
+    | ParseError (e, msg, r) ->
+        raise_error (e, msg) r
     | Term _ ->
         failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
@@ -55,8 +55,9 @@ let parse_file fn =
     | ASTFragment (Inr _ , _) ->
         let msg = Util.format1 "%s: expected a module\n" fn in
         let r = Range.dummyRange in
-        raise (Error(msg, r))
-    | ParseError (msg, r) ->
-        raise (Error(msg, r))
+        raise_error (Errors.Fatal_ModuleExpected, msg) r
+    | ParseError (e, msg, r) ->
+        raise_error (e, msg) r
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
+

@@ -19,14 +19,14 @@ let is_below r1 r2      = r2 `is_above` r1
 let is_strictly_below r1 r2 = r1 `is_below` r2 && r1<>r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
 
-let downward_closed (h:HH.t) = 
+let downward_closed (h:HH.t) =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=HH.root    //either is the root
-	    \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
-			  /\ s `is_in` h   //that is also in the memory
-		     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
+            \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
+                          /\ s `is_in` h   //that is also in the memory
+                     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-let is_tip (tip:HH.rid) (h:HH.t) = 
+let is_tip (tip:HH.rid) (h:HH.t) =
   (is_stack_region tip \/ tip=HH.root)                                  //the tip is a stack region, or the root
   /\ tip `is_in` h                                                      //the tip is active
   /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
@@ -38,24 +38,24 @@ noeq type mem =
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
 
-let empty_mem (m:HH.t) = 
-  let empty_map = Map.restrict (Set.empty) m in 
-  let h = Map.upd empty_map HH.root Heap.emp in 
-  let tip = HH.root in 
+let empty_mem (m:HH.t) =
+  let empty_map = Map.restrict (Set.empty) m in
+  let h = Map.upd empty_map HH.root Heap.emp in
+  let tip = HH.root in
   HS h tip
- 
-let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
+
+let test0 (m:mem) (r:rid{r `is_above` m.tip}) =
     assert (r `is_in` m.h)
 
-let test1 (m:mem) (r:rid{r `is_above` m.tip}) = 
+let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
     assert (r=HH.root \/ is_stack_region r)
 
-let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =  
+let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =
    assert (~ (r `is_in` m.h))
 
 let dc_elim (h:HH.t{downward_closed h}) (r:rid{r `is_in` h /\ r <> HH.root}) (s:rid)
   : Lemma (r `is_above` s /\ s `is_in` h ==> is_stack_region r = is_stack_region s)
-  = ()	  
+  = ()
 
 let test3 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
   : Lemma (~ (r `is_in` m.h))
@@ -67,7 +67,7 @@ let test4 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ r `is_above` m.t
 
 let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (HH.disjoint r m.tip) /\ r<>HH.root /\ is_stack_region m.tip})
   : Lemma (requires True)
-	  (ensures (~ (r `is_in` m.h)))
+          (ensures (~ (r `is_in` m.h)))
   = root_has_color_zero()
 
 let poppable m = m.tip <> HH.root
@@ -88,21 +88,65 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   let tip0 = m0.tip in
   let tip1 = HH.parent tip0 in
   assert (forall (r:sid). Map.contains h1 r ==>
-  	    (forall (s:sid). includes s r ==> Map.contains h1 s));
+            (forall (s:sid). includes s r ==> Map.contains h1 s));
   HS h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
-noeq type mreference (a:Type) (rel:preorder a) =
-  | MkRef : id:rid -> ref:HH.mrref id a rel -> mreference a rel
+//Mark it private so that clients can't use its projectors etc.
+//enabling extraction of mreference to just a reference in ML and pointer in C
+private
+noeq
+type mreference' (a:Type) (rel:preorder a) =
+  | MkRef : frame:rid -> mrref:HH.mrref frame a rel -> mreference' a rel
 
-let is_mm (#a:Type) (#rel:preorder a) (r:mreference a rel) :GTot bool = HH.is_mm r.ref
+let mreference a rel = mreference' a rel
+
+//TODO: rename to frame_of, avoiding the inconsistent use of camelCase
+let frameOf (#a:Type) (#rel:preorder a) (r:mreference a rel)
+  : Tot rid
+  = r.frame
+
+let mrref_of (#a:Type) (#rel:preorder a) (r:mreference a rel)
+  : Tot (HH.mrref (frameOf r) a rel)
+  = r.mrref
+
+let mk_mreference (#id:rid) (#a:Type) (#rel:preorder a)
+                  (r:HH.mrref id a rel)
+  : Tot (mreference a rel)
+  = MkRef id r
+
+//Hopefully we can get rid of this one
+let as_ref #a #rel (x:mreference a rel)
+  : GTot (Heap.mref a rel)
+  = HH.as_ref (mrref_of x)
+
+//And make this one abstract
+let as_addr #a #rel (x:mreference a rel)
+  : GTot nat
+  = Heap.addr_of (as_ref x)
+
+let is_mm (#a:Type) (#rel:preorder a) (r:mreference a rel) : GTot bool =
+  HH.is_mm (mrref_of r)
+
+// Warning: all of the type aliases below get special support for KreMLin
+// extraction. If you rename or add to this list,
+// src/extraction/FStar.Extraction.Kremlin.fs needs to be updated.
 
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
-let mstackref (a:Type) (rel:preorder a) = s:mreference a rel{ is_stack_region s.id && not (is_mm s) }
-let mref (a:Type) (rel:preorder a) = s:mreference a rel{is_eternal_region s.id && not (is_mm s)}
+let mstackref (a:Type) (rel:preorder a) =
+  s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }
 
-let mmmstackref (a:Type) (rel:preorder a) = s:mreference a rel{is_stack_region s.id && is_mm s }
-let mmmref (a:Type) (rel:preorder a) = s:mreference a rel{is_eternal_region s.id && is_mm s}
+let mref (a:Type) (rel:preorder a) =
+  s:mreference a rel{ is_eternal_region (frameOf s) && not (is_mm s) }
+
+let mmmstackref (a:Type) (rel:preorder a) =
+  s:mreference a rel{ is_stack_region (frameOf s) && is_mm s }
+
+let mmmref (a:Type) (rel:preorder a) =
+  s:mreference a rel{ is_eternal_region (frameOf s) && is_mm s }
+
+//NS: Why do we need this one?
+let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
 
 (*
  * The Map.contains conjunct is necessary to prove that upd
@@ -122,12 +166,12 @@ let weak_live_region (m:mem) (i:rid) =
   is_eternal_region i \/ i `is_above` m.tip
 
 let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) =
-  live_region m s.id
-  /\ HH.contains_ref s.ref m.h
+  live_region m (frameOf s)
+  /\ HH.contains_ref (mrref_of s) m.h
 
 let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
-  ~ (live_region h r.id) \/
-  HH.unused_in r.ref h.h
+  ~ (live_region h (frameOf r)) \/
+  HH.unused_in (mrref_of r) h.h
 
 private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
   (requires (weak_live_region m r))
@@ -141,19 +185,19 @@ let weak_live_region_implies_eternal_or_in_map r m = ()
  * before reading the ref.
  *)
 let weak_contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) =
-  weak_live_region m s.id /\
-  (if is_mm s then HH.weak_contains_ref s.ref m.h else True)
+  weak_live_region m (frameOf s) /\
+  (if is_mm s then HH.weak_contains_ref (mrref_of s) m.h else True)
 
 (*
  * AR: why is this not enforcing live_region ?
  *)
 let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
   : GTot a
-  = m.h.[s.ref]
+  = m.h.[mrref_of s]
 
-let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.id}) (v:a)
+let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (frameOf s)}) (v:a)
   : GTot mem
-  = HS (m.h.[s.ref] <- v) m.tip
+  = HS (m.h.[mrref_of s] <- v) m.tip
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
@@ -168,7 +212,8 @@ let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
 
 let equal_stack_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
-  /\ (forall r. (is_stack_region r /\ r `is_above` m0.tip) ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
+  /\ (forall r. (is_stack_region r /\ r `is_above` m0.tip) ==>
+           Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
 
 let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   (requires (equal_stack_domains m0 m1 /\ equal_stack_domains m1 m2))
@@ -188,7 +233,7 @@ let heap_only (m0:mem) =
   m0.tip = HH.root
 
 let top_frame (m:mem) = Map.sel m.h m.tip
-  
+
 let fresh_frame (m0:mem) (m1:mem) =
   not (Map.contains m0.h m1.tip)
   /\ HH.parent m1.tip = m0.tip
@@ -196,8 +241,8 @@ let fresh_frame (m0:mem) (m1:mem) =
 
 let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
     : Lemma (fresh_frame m0 m1 /\
-	     modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==> 
-	     modifies_transitively s m0 (pop m2))
+             modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==>
+             modifies_transitively s m0 (pop m2))
     = ()
 
 let lemma_pop_is_popped (m0:mem{poppable m0})
@@ -205,12 +250,6 @@ let lemma_pop_is_popped (m0:mem{poppable m0})
   = let m1 = pop m0 in
     assert (Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip))
 
-type s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{s.id = i}
-
-let frameOf #a #rel (s:mreference a rel) = s.id
-
-let as_ref #a #rel (x:mreference a rel)  : GTot (Heap.mref a rel) = HH.as_ref #a #x.id x.ref
-let as_addr #a #rel (x:mreference a rel) : GTot nat = Heap.addr_of (HH.as_ref #a #x.id x.ref)
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
   HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip
@@ -218,65 +257,70 @@ let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
 let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (contains h x))
   (ensures (contains h x
-	    /\ modifies_one (frameOf x) h (upd h x v)
-	    /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
-	    /\ sel (upd h x v) x == v ))
+            /\ modifies_one (frameOf x) h (upd h x v)
+            /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
+            /\ sel (upd h x v) x == v ))
   [SMTPat (upd h x v); SMTPat (contains h x)]
   = ()
 
 let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (frameOf x = h.tip /\ x `unused_in` h))
   (ensures (frameOf x = h.tip
-	    /\ modifies_one h.tip h (upd h x v)
-	    /\ modifies_ref h.tip Set.empty h (upd h x v)
-	    /\ sel (upd h x v) x == v ))
+            /\ modifies_one h.tip h (upd h x v)
+            /\ modifies_ref h.tip Set.empty h (upd h x v)
+            /\ sel (upd h x v) x == v ))
   [SMTPat (upd h x v); SMTPat (x `unused_in` h)]
   = ()
 
 val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
                   -> h:mem -> x:mreference a rel -> x':mreference a' rel' -> Lemma
   (requires (contains h x /\ x' `unused_in` h))
-  (ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x')))
+  (ensures  (frameOf x <> frameOf x' \/ ~ (as_ref x === as_ref x')))
   [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
 let lemma_live_1 #a #a' #rel #rel' h x x' = ()
 
 let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) : Lemma
-  (requires (x.id `is_above` m.tip))
-  (ensures (x.id `is_in` m.h))
+  (requires (frameOf x `is_above` m.tip))
+  (ensures (frameOf x `is_in` m.h))
   = ()
+
+let coerce_mrref (#id1:rid) (#id2:rid) (#a:Type) (#rel:preorder a)
+                 (r:mrref id1 a rel{id1 == id2})
+    : mrref id2 a rel
+    = r
 
 (*
  * AR: we can prove this lemma only if both the mreferences have same preorder
  *)
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-= lemma_sel_same_addr #(frameOf r1) #a #rel h.h r1.ref r2.ref
+  : Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
+          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
+  = lemma_sel_same_addr h.h (mrref_of r1) (coerce_mrref (mrref_of r2))
 
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
+  : Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-   [SMTPat (sel h r1); SMTPat (sel h r2)]
-= lemma_sel_same_addr h r1 r2
+    [SMTPat (sel h r1); SMTPat (sel h r2)]
+  = lemma_sel_same_addr h r1 r2
 
 #set-options "--z3rlimit 16"
 
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-= Classical.or_elim
-    #(h `contains` r1)
-    #(h `contains` r2)
-    #(fun _ -> h `contains` r1 /\ h `contains` r2)
-    (fun _ -> lemma_sel_same_addr h r1 r2)
-    (fun _ -> lemma_sel_same_addr h r2 r1);
-  lemma_upd_same_addr h.h (MkRef?.ref r1) (MkRef?.ref r2) x
+   : Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
+           (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+   = Classical.or_elim
+           #(h `contains` r1)
+           #(h `contains` r2)
+           #(fun _ -> h `contains` r1 /\ h `contains` r2)
+           (fun _ -> lemma_sel_same_addr h r1 r2)
+           (fun _ -> lemma_sel_same_addr h r2 r1);
+     HH.lemma_upd_same_addr h.h (mrref_of r1) (coerce_mrref (mrref_of r2)) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
-= lemma_upd_same_addr h r1 r2 x
+   : Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
+           (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+           [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
+   = lemma_upd_same_addr h r1 r2 x
 
 (*
  * AR: relating contains and weak_contains.
@@ -288,21 +332,21 @@ let contains_implies_weak_contains (#a:Type) (#rel:preorder a) (h:mem) (x:mrefer
   = ()
 
 noeq type some_ref =
-| Ref : #a:Type0 -> #rel:preorder a -> mreference a rel -> some_ref
+  | Ref : #a:Type0 -> #rel:preorder a -> mreference a rel -> some_ref
 
 let some_refs = list some_ref
 
-let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) = 
+let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) =
   match rs with
   | [] -> Set.empty
-  | (Ref r)::tl -> Set.union (Set.singleton r.id) (regions_of_some_refs tl)
+  | (Ref r)::tl -> Set.union (Set.singleton (frameOf r)) (regions_of_some_refs tl)
 
 let rec refs_in_region (r:rid) (rs:some_refs) : GTot (Set.set nat) =
   match rs with
   | []         -> Set.empty
   | (Ref x)::tl ->
-    Set.union (if x.id=r then Set.singleton (as_addr x) else Set.empty)
-               (refs_in_region r tl)
+    Set.union (if frameOf x=r then Set.singleton (as_addr x) else Set.empty)
+              (refs_in_region r tl)
 
 unfold let mods (rs:some_refs) h0 h1 =
     modifies (normalize_term (regions_of_some_refs rs)) h0 h1
@@ -310,34 +354,34 @@ unfold let mods (rs:some_refs) h0 h1 =
 
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
-			      (r:rid{is_eternal_region r /\
-				     r<>HH.root /\
-				     r `is_in` h.h})
+                              (r:rid{is_eternal_region r /\
+                                     r<>HH.root /\
+                                     r `is_in` h.h})
    : Lemma (HH.disjoint h.tip r)
    = ()
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 #set-options "--initial_fuel 0 --max_fuel 0"
 let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
-                          (x:mreference a rel_a) (x':mreference a rel_a) 
-			  (y:mreference b rel_b) (z:mreference nat rel_n) 
-			  (h0:mem) (h1:mem) = 
+                          (x:mreference a rel_a) (x':mreference a rel_a)
+                          (y:mreference b rel_b) (z:mreference nat rel_n)
+                          (h0:mem) (h1:mem) =
   assume (h0 `contains` x);
-  assume (h0 `contains` x');  
+  assume (h0 `contains` x');
   assume (as_addr x <> as_addr x');
-  assume (x.id == x'.id);
-  assume (x.id <> y.id);
-  assume (x.id <> z.id);
+  assume (frameOf x == frameOf x');
+  assume (frameOf x <> frameOf y);
+  assume (frameOf x <> frameOf z);
   //assert (Set.equal (normalize_term (refs_in_region x.id [Ref x])) (normalize_term (Set.singleton (as_addr x))))
   assume (mods [Ref x; Ref y; Ref z] h0 h1);
   //AR: TODO: this used to be an assert, but this no longer goers through
   //since now we have set of nats, which plays badly with normalize_term
   //on one side it remains nat, on the other side the normalizer normalizes it to a refinement type
   //see for example the assertion above that doesn't succeed
-  assume (modifies_ref x.id (Set.singleton (as_addr x)) h0 h1);
-  assert (modifies (Set.union (Set.singleton x.id)
-  			      (Set.union (Set.singleton y.id)
-  					 (Set.singleton z.id))) h0 h1);
+  assume (modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1);
+  assert (modifies (Set.union (Set.singleton (frameOf x))
+                              (Set.union (Set.singleton (frameOf y))
+                                         (Set.singleton (frameOf z)))) h0 h1);
   ()
 
 
@@ -345,7 +389,7 @@ let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder 
   //assert (sel h0 x' == sel h1 x')
 
 (* let f2 (a:Type0) (b:Type0) (x:reference a) (y:reference b) *)
-(* 			   (h0:mem) (h1:mem) =  *)
+(*                         (h0:mem) (h1:mem) =  *)
 (*   assume (HH.disjoint (frameOf x) (frameOf y)); *)
 (*   assume (mods [Ref x; Ref y] h0 h1); *)
 (*  //-------------------------------------------------------------------------------- *)
@@ -366,7 +410,7 @@ let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder 
 (* #reset-options "--log_queries --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
 (* #set-options "--debug FStar.HyperStack --debug_level print_normalized_terms" *)
 (* let f3 (a:Type0) (b:Type0) (x:reference a) *)
-(* 			   (h0:mem) (h1:mem) =  *)
+(*                         (h0:mem) (h1:mem) =  *)
 (*   assume (mods_2 [Ref x] h0 h1); *)
 (*  //-------------------------------------------------------------------------------- *)
 (*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
@@ -398,7 +442,7 @@ abstract let aref_of
   (#rel: preorder t)
   (r: mreference t rel)
 : Tot aref
-= ARef r.id (HH.aref_of r.ref)
+= ARef (frameOf r) (HH.aref_of (mrref_of r))
 
 (* Operators lifted from reference *)
 
@@ -428,7 +472,7 @@ abstract let aref_as_addr_aref_of
 : Lemma
   (aref_as_addr (aref_of r) == as_addr r)
   [SMTPat (aref_as_addr (aref_of r))]
-= HH.addr_of_aref_of r.ref
+= HH.addr_of_aref_of (mrref_of r)
 
 abstract let aref_is_mm
   (r: aref)
@@ -442,7 +486,7 @@ abstract let is_mm_aref_of
 : Lemma
   (aref_is_mm (aref_of r) == is_mm r)
   [SMTPat (aref_is_mm (aref_of r))]
-= HH.is_mm_aref_of r.ref
+= HH.is_mm_aref_of (mrref_of r)
 
 abstract let aref_unused_in
   (a: aref)
@@ -459,7 +503,7 @@ abstract let unused_in_aref_of
 : Lemma
   (aref_unused_in (aref_of r) h <==> unused_in r h)
   [SMTPat (aref_unused_in (aref_of r) h)]
-= HH.unused_in_aref_of r.ref h.h
+= HH.unused_in_aref_of (mrref_of r) h.h
 
 abstract
 val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:mem -> x:mreference a rel -> y:aref -> Lemma
@@ -468,7 +512,7 @@ val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:mem -> x:mreferenc
   [SMTPat (contains h x); SMTPat (aref_unused_in y h)]
 let contains_aref_unused_in #a #rel h x y =
   if frameOf x = frameOf_aref y
-  then HH.contains_ref_aref_unused_in h.h x.ref y.aref_aref
+  then HH.contains_ref_aref_unused_in h.h (mrref_of x) y.aref_aref
   else ()
 
 (* Elimination rule *)
@@ -573,7 +617,7 @@ let is_mm_greference_of
   (requires (exists h . aref_live_at h a t rel))
   (ensures ((exists h . aref_live_at h a t rel) /\ is_mm (greference_of a t rel) == aref_is_mm a))
   [SMTPat (is_mm (greference_of a t rel))]
-= ()  
+= ()
 
 abstract
 let unused_in_greference_of

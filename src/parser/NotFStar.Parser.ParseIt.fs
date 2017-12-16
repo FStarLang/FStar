@@ -47,7 +47,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise (Err(Util.format1 "Unable to find file: %s\n" filename))
+      raise_err (Errors.Fatal_ModuleOrFileNotFound, (Util.format1 "Unable to find file: %s\n" filename))
 
 let vfs_entries : Util.smap<(time * string)> = Util.smap_create 1
 
@@ -75,7 +75,7 @@ let read_file (filename:string) =
       let fs = new System.IO.StreamReader(filename) in
       filename, fs.ReadToEnd ()
     with _ ->
-      raise (Err (Util.format1 "Unable to read file %s" filename))
+      raise_err (Errors.Fatal_UnableToReadFile, (Util.format1 "Unable to read file %s" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -90,7 +90,7 @@ let has_extension file extensions =
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
     let message = format1 "Unrecognized extension '%s'" fn in
-    raise (Err (if has_extension fn fs_extensions then
+    raise_err (Errors.Fatal_UnrecognizedExtension, (if has_extension fn fs_extensions then
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message))
 
@@ -102,15 +102,9 @@ type parse_frag =
 type parse_result =
     | ASTFragment of (AST.inputFragment * list<(string * Range.range)>)
     | Term of AST.term
-    | ParseError of (string * Range.range)
+    | ParseError of (Errors.raw_error * string * Range.range)
 
 let parse fn =
-  Parser.Util.warningHandler := (function
-    | e -> let msg = Printf.sprintf "%A\n" e in
-          Util.print_warning msg);
-  Parser.Util.errorHandler := (function
-    | e -> raise e);
-
   let filename,sr,fs,line,col = match fn with
     | Filename (filename:string) ->
         check_extension filename;
@@ -163,14 +157,27 @@ let parse fn =
   with
     | Empty_frag ->
         ASTFragment (Inr [], [])
-    | Error(msg, r) ->
-        ParseError(msg, r)
+    | Error(e, msg, r) ->
+        ParseError(e, msg, r)
     | e ->
         let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =
             Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol) in
         let p0 = pos_of_lexpos lexbuf.StartPos in
         let p1 = pos_of_lexpos lexbuf.EndPos in
         let r = Range.mk_range filename p0 p1 in
-        ParseError ((if Options.trace_error ()
+        ParseError (Errors.Fatal_SyntaxError, (if Options.trace_error ()
                      then sprintf "Syntax error (%A)" e
                      else sprintf "Syntax error (%s)" e.Message), r)
+
+(** Parsing of command-line error/warning/silent flags. *)
+let parse_warn_error s =
+  let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromString s in
+  let lexer lexbuf = LexFStar.token (Lexhelp.mkLexargs ((fun () -> "."), "","")) lexbuf in
+  let user_flags =
+    try
+      Parse.warn_error_list lexer lexbuf 
+    with e ->
+      FStar.Errors.log_issue Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
+      []
+  in
+  FStar.Errors.update_flags user_flags 

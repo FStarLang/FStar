@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "afe48da63099e4ef2c46fac0cbf9d0ca"
+      "1a16ca7c6a34cd345ff542f933b0a418"
     ],
     [
       "MAC.key",
@@ -22,7 +22,7 @@
         "@query", "equation_MAC.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d628829779eb191f8b9f485ec24cb090"
+      "746050970d0ccdd5b644d92540cbf0ff"
     ],
     [
       "MAC.tag",
@@ -33,7 +33,7 @@
         "@query", "equation_MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0774c2bee4cf3a8271f68072daf86c94"
+      "e04199ec221211dab991bf7cf41c6d5c"
     ],
     [
       "MAC.sha1verify",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "8e3fb569e4678fbef319ea5332c3ab66"
+      "69e867fa2e0f937f1b62c3e533fea3f0"
     ],
     [
       "MAC.__proj__Entry__item__k",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "a95927b970604f09aea8ad194e80e743"
+      "08c3c471a88b8fba0123ce4a91f6c20c"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -65,7 +65,7 @@
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
       ],
       0,
-      "64de2c189c60dfeab32bafaff5c6af73"
+      "c43e2eef948ca3f6d87334902ed416ce"
     ],
     [
       "MAC.__proj__Entry__item__m",
@@ -74,7 +74,7 @@
       1,
       [ "@query" ],
       0,
-      "da610b38f59eb4e9e08f8e50d60ac74e"
+      "3ef63170d2fbbcef235e327ecb071288"
     ],
     [
       "MAC.mac",
@@ -88,7 +88,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "15b254fee573e747a1f2cfc36713c794"
+      "f77c09a9babededb7b242d0095c7ec8d"
     ],
     [
       "MAC.verify",
@@ -118,34 +118,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "f1f03a3f1511a64ca9bc7d3b0a6630d6"
-    ],
-    [
-      "MAC.verify",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
-      0,
-      "89203ce88a669180cdaf55151b43cf31"
-    ],
-    [
-      "MAC.verify",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
-      0,
-      "a82c62c192fca8333dc96e88b09ff7f4"
-    ],
-    [
-      "MAC.verify",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
-      0,
-      "0aea3c7f8b97d3b8510bce790d3d6b2c"
+      "e02a6e512296c2fd6dac6598de3f4301"
     ]
   ]
 ]

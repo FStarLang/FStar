@@ -655,8 +655,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
-	 (Const.bv_add_lid, bv_add);
-	 (Const.bv_sub_lid, bv_sub);
+         (Const.bv_add_lid, bv_add);
+         (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
@@ -1027,9 +1027,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           begin match lopt with
             | None ->
               //we don't even know if this is a pure function, so give up
-              Errors.warn t0.pos (BU.format1
+              Errors.log_issue t0.pos (Errors.Warning_FunctionLiteralPrecisionLoss, (BU.format1
                 "Losing precision when encoding a function literal: %s\n\
-                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0));
+                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0)));
               fallback ()
 
             | Some rc ->
@@ -1215,7 +1215,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let list_elements (e:S.term) : list<S.term> =
       match U.list_elements e with
       | Some l -> l
-      | None -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
+      | None -> Errors.log_issue e.pos (Errors.Warning_NonListLiteralSMTPattern, "SMT pattern is not a list literal; ignoring the pattern"); [] in
 
     let one_pat p =
         let head, args = U.unmeta p |> U.head_and_args in
@@ -1256,7 +1256,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let vars, guards, env, decls, _ = encode_binders None binders env in
 
     let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun t ->  encode_term t env) |> List.unzip in
+        let pats, decls = branch |> List.map (fun t ->  encode_smt_pattern t env) |> List.unzip in
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
@@ -1269,6 +1269,18 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let post, decls''' = encode_formula (U.unmeta post) env in
     let decls = decls@(List.flatten decls')@decls''@decls''' in
     mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
+
+and encode_smt_pattern t env =
+    let head, args = U.head_and_args t in
+    let head = U.un_uinst head in
+    match head.n, args with
+    | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
+      let x, decls = encode_term x env in
+      let t, decls' = encode_term t env in
+      mk_HasType x t, decls@decls'
+
+    | _ ->
+      encode_term t env
 
 and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
     let debug phi =
@@ -1375,6 +1387,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                   fallback phi
               end
 
+            | Tm_fvar fv, [(t, _)]
+              when S.fv_eq_lid fv Const.squash_lid
+                 || S.fv_eq_lid fv Const.auto_squash_lid ->
+              encode_formula t env
+
             | _ when head_redex env head ->
               encode_formula (whnf env phi) env
 
@@ -1390,7 +1407,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (fun p ->
-          let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
+          let p, decls = p |> List.map (fun (t, _) -> encode_smt_pattern t ({env with use_zfuel_name=true})) |> List.unzip in
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
     let guards = match pats with
@@ -1411,7 +1428,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           | None -> ()
           | Some (x,_) ->
             let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-            Errors.warn pos (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x))
+            Errors.log_issue pos (Errors.Warning_SMTPatternMissingBoundVar, (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
         end
     in
     match U.destruct_typ_as_formula phi with
@@ -2478,12 +2495,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
-                         raise (FStar.Errors.Error (
+                         Errors.raise_error (Errors.Fatal_NonVaribleInductiveTypeParameter,
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
-                                      (FStar.Syntax.Print.term_to_string orig_arg),
-                           orig_arg.pos
-                           ))
+                                      (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
                     in
                     let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
@@ -2541,8 +2556,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Errors.warn se.sigrng (BU.format2 "Constructor %s builds an unexpected type %s\n"
-                        (Print.lid_to_string d) (Print.term_to_string head));
+                  Errors.log_issue se.sigrng (Errors.Warning_ConstructorBuildsUnexpectedType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
+                        (Print.lid_to_string d) (Print.term_to_string head)));
                   [], [] in
         let decls2, elim = encode_elim () in
         let g = binder_decls

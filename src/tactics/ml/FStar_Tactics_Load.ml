@@ -58,7 +58,7 @@ let load_tactics tacs =
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0
-     then raise (E.Err (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
+     then E.raise_err (E.Fatal_FailToCompileNativeTactic, (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
                                   cmd (string_of_int rc)))
      else ()
    in ms

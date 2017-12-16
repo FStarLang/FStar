@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8d12ea48d1262b82e7ef346540903fc4"
+      "8192b549cbcc4d7fc39dc87fe91e38f8"
     ],
     [
       "Unit1.WPsAndTriples.h",
@@ -17,16 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "0f9ed89156825611e14672acc9fbdcf0"
-    ],
-    [
-      "Unit1.WPsAndTriples.g",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8ca02eb016f8acedb3563e4e626bb40d"
+      "8c58bb1cf9e5817fc64543b5eaef425e"
     ]
   ]
 ]

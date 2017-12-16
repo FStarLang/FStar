@@ -525,6 +525,24 @@ let built_in_primitive_steps : list<primitive_step> =
     let binary_string_op (f : string -> string -> string) =
         binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
     in
+    let mixed_binary_op
+           :  (arg -> option<'a>)
+           -> (arg -> option<'b>)
+           -> (Range.range -> 'c -> term)
+           -> (Range.range -> 'a -> 'b -> 'c)
+           -> psc
+           -> args
+           -> option<term>
+           = fun as_a as_b embed_c f res args ->
+                 match args with
+                 | [a;b] ->
+                    begin
+                    match as_a a, as_b b with
+                    | Some a, Some b -> Some (embed_c res.psc_range (f res.psc_range a b))
+                    | _ -> None
+                    end
+                 | _ -> None
+    in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
         let char_t = name PC.char_lid in
@@ -612,6 +630,8 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
+             (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char EMB.embed_string
+                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare');
@@ -772,15 +792,38 @@ let reduce_equality cfg tm =
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
-let maybe_simplify cfg env stack tm =
+let maybe_simplify_aux cfg env stack tm =
     let tm = reduce_primops cfg env stack tm in
     if not <| List.contains Simplify cfg.steps then tm
     else
     let w t = {t with pos=tm.pos} in
-    let simp_t t = match t.n with
+    let simp_t t =
+        match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
-        | _ -> None in
+        | _ -> None
+    in
+    let maybe_auto_squash t =
+        if U.is_sub_singleton t
+        then t
+        else U.mk_auto_squash U_zero t
+    in
+    let squashed_head_un_auto_squash_args t =
+        //The head of t is already a squashed operator, e.g. /\ etc.
+        //no point also squashing its arguments if they're already in U_zero
+        let maybe_un_auto_squash_arg (t,q) =
+            match U.is_auto_squash t with
+            | Some (U_zero, t) ->
+             //if we're squashing from U_zero to U_zero
+             // then just remove it
+              t, q
+            | _ ->
+              t,q
+        in
+        let head, args = U.head_and_args t in
+        let args = List.map maybe_un_auto_squash_arg args in
+        S.mk_Tm_app head args None t.pos
+    in
     let simplify arg = (simp_t (fst arg), arg) in
     match tm.n with
     | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
@@ -788,32 +831,32 @@ let maybe_simplify cfg env stack tm =
       if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> arg
+           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
            | [(Some false, _); _]
            | [_; (Some false, _)] -> w U.t_false
-           | _ -> tm
+           | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.or_lid
       then match args |> List.map simplify with
            | [(Some true, _); _]
            | [_; (Some true, _)] -> w U.t_true
            | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> arg
-           | _ -> tm
+           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
+           | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.imp_lid
       then match args |> List.map simplify with
            | [_; (Some true, _)]
            | [(Some false, _); _] -> w U.t_true
-           | [(Some true, _); (_, (arg, _))] -> arg
+           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
              then w U.t_true
-             else tm
-           | _ -> tm
+             else squashed_head_un_auto_squash_args tm
+           | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.not_lid
       then match args |> List.map simplify with
            | [(Some true, _)] ->  w U.t_false
            | [(Some false, _)] -> w U.t_true
-           | _ -> tm
+           | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.forall_lid
       then match args with
            | [(t, _)]
@@ -821,7 +864,7 @@ let maybe_simplify cfg env stack tm =
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
-                     | Some true ->  w U.t_true
+                     | Some true -> w U.t_true
                      | _ -> tm)
                    | _ -> tm
              end
@@ -842,9 +885,25 @@ let maybe_simplify cfg env stack tm =
       then match args with
            | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
            | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
-           | _ -> tm
-      else reduce_equality cfg env stack tm
+           | _ -> tm //its arg is a bool, can't unsquash
+      else begin
+           match U.is_auto_squash tm with
+           | Some (U_zero, t)
+             when U.is_sub_singleton t ->
+             //remove redundant auto_squashes
+             t
+           | _ ->
+             reduce_equality cfg env stack tm
+      end
     | _ -> tm
+
+let maybe_simplify cfg env stack tm =
+    let tm' = maybe_simplify_aux cfg env stack tm in
+    if Env.debug cfg.tcenv <| Options.Other "380"
+    then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
+                   (if List.contains Simplify cfg.steps then "" else "NOT ")
+                   (Print.term_to_string tm) (Print.term_to_string tm');
+    tm'
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -998,6 +1057,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.squash_lid
                    || S.fv_eq_lid f PC.exists_lid
                    || S.fv_eq_lid f PC.eq2_lid
+                   || S.fv_eq_lid f PC.eq3_lid
                    || S.fv_eq_lid f PC.true_lid
                    || S.fv_eq_lid f PC.false_lid)
                 then false
@@ -1142,13 +1202,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl t -> Inl (norm cfg env [] t)
                     | Inr c -> Inr (norm_comp cfg env c) in
                 let tacopt = BU.map_opt tacopt (norm cfg env []) in
-                rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
+                match stack with
+                | Cfg cfg :: stack ->
+                  let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
+                  norm cfg env stack t
+                | _ ->
+                  rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
             end
 
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, t.pos)::stack in
             norm cfg env stack head
-          
+
           | Tm_let((b, lbs), lbody) when is_top_level lbs && List.contains CompressUvars cfg.steps ->
             let lbs = lbs |> List.map (fun lb ->
               let openings, lbunivs = Subst.univ_var_opening lb.lbunivs in
@@ -1563,7 +1628,7 @@ and reify_lift cfg e msrc mtgt t : term =
       (* We don't have any reasonable wp to provide so we just pass unknow *)
       (* Usually the wp is only necessary to typecheck, so this should not *)
       (* create a big issue. *)
-      lift t S.tun (U.mk_reify e)
+      lift (env.universe_of env t) t S.tun (U.mk_reify e)
       (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
       (* let cfg = *)
       (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
@@ -1926,14 +1991,14 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
 let term_to_string env t =
   let t =
     try normalize [AllowUnboundUniverses] env t
-    with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; t
+    with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
   Print.term_to_string t
 
 let comp_to_string env c =
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
-    with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; c
+    with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
   in
   Print.comp_to_string c
 

@@ -13,16 +13,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "728223b4881a7d22895885df3e7050e6"
-    ],
-    [
-      "FStar.IndefiniteDescription.aux",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "b99e2bfe4d1d69def796d6b58782eecc"
+      "dd3d233a2a4439ea47306878e3f05e24"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -31,7 +22,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "38081280c7e7dd3db40ac1cbceebbd5a"
+      "e9d11b93878f3bc3df1c5b2d542d5869"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -40,16 +31,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "8ed016baf3ebf293c38388913b4ffc7e"
-    ],
-    [
-      "FStar.IndefiniteDescription.strong_excluded_middle",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "ff30c5ee4b90bd0cbe17ae9002fbbffd"
+      "f0b34865546e0578007fd06543a90c1c"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -62,7 +44,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e2050430d943bc4a6e7b5cf099eb9e64"
+      "ce292f4f6a6640d47fac30dbdb780957"
     ]
   ]
 ]

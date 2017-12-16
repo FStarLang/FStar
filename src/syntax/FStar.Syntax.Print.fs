@@ -278,7 +278,7 @@ and term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
-      | Tm_bvar x ->        db_to_string x ^ ":" ^ (tag_of_term x.sort)
+      | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
       | Tm_uvar (u, _) ->   uvar_to_string u
@@ -603,58 +603,64 @@ let rec sigelt_to_string (x: sigelt) =
     | _ -> ""
     end
  else
-  begin match x.sigel with
-  | Sig_pragma(LightOff) -> "#light \"off\""
-  | Sig_pragma(ResetOptions None) -> "#reset-options"
-  | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
-  | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
-  | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
-    U.format4 "%stype %s %s : %s"
-             (quals_to_string' x.sigquals)
-             lid.str
-             (binders_to_string " " tps)
-             (term_to_string k)
-  | Sig_datacon(lid, univs, t, _, _, _) ->
-    if (Options.print_universes())
-    then let univs, t = Subst.open_univ_vars univs t in
-         U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
-    else U.format2 "datacon %s : %s" lid.str (term_to_string t)
-  | Sig_declare_typ(lid, univs, t) ->
-    let univs, t = Subst.open_univ_vars univs t in
-    U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
-        (if (Options.print_universes())
-         then U.format1 "<%s>" (univ_names_to_string univs)
-         else "")
-        (term_to_string t)
-  | Sig_assume(lid, _, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
-  | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
-  | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
-  | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
-  | Sig_sub_effect (se) ->
-    let lift_wp = match se.lift_wp, se.lift with
-      // TODO pretty-print this better
-      | None, None ->
-          failwith "impossible"
-      | Some lift_wp, _ ->
-          lift_wp
-      | _, Some lift ->
-          lift
-    in
-    let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
-    U.format4 "sub_effect %s ~> %s : <%s> %s"
-        (lid_to_string se.source) (lid_to_string se.target)
-        (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, univs, tps, c, flags) ->
-    if (Options.print_universes())
-    then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
-         let tps, c = match (Subst.compress t).n with
-            | Tm_arrow(bs, c) -> bs, c
-            | _ -> failwith "impossible" in
-         U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
-    else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
-  end
+   let basic =
+      match x.sigel with
+      | Sig_pragma(LightOff) -> "#light \"off\""
+      | Sig_pragma(ResetOptions None) -> "#reset-options"
+      | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
+      | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
+      | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
+        U.format4 "%stype %s %s : %s"
+                 (quals_to_string' x.sigquals)
+                 lid.str
+                 (binders_to_string " " tps)
+                 (term_to_string k)
+      | Sig_datacon(lid, univs, t, _, _, _) ->
+        if (Options.print_universes())
+        then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
+             U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
+        else U.format2 "datacon %s : %s" lid.str (term_to_string t)
+      | Sig_declare_typ(lid, univs, t) ->
+        let univs, t = Subst.open_univ_vars univs t in
+        U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
+            (if (Options.print_universes())
+             then U.format1 "<%s>" (univ_names_to_string univs)
+             else "")
+            (term_to_string t)
+      | Sig_assume(lid, _, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
+      | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
+      | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
+      | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+      | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
+      | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
+      | Sig_sub_effect (se) ->
+        let lift_wp = match se.lift_wp, se.lift with
+          // TODO pretty-print this better
+          | None, None ->
+              failwith "impossible"
+          | Some lift_wp, _ ->
+              lift_wp
+          | _, Some lift ->
+              lift
+        in
+        let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
+        U.format4 "sub_effect %s ~> %s : <%s> %s"
+            (lid_to_string se.source) (lid_to_string se.target)
+            (univ_names_to_string us) (term_to_string t)
+      | Sig_effect_abbrev(l, univs, tps, c, flags) ->
+        if (Options.print_universes())
+        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
+             let tps, c = match (Subst.compress t).n with
+                | Tm_arrow(bs, c) -> bs, c
+                | _ -> failwith "impossible" in
+             U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
+        else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+      in
+      match x.sigattrs with
+      | [] -> basic
+      | _ ->
+        let attrs = x.sigattrs |> List.map term_to_string in
+        U.format2 "[@%s]\n%s" (attrs |> String.concat " ") basic
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
