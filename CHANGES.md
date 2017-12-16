@@ -277,6 +277,18 @@ Expected changes in the near future:
   should provide a faster workflow than using --detail_hint_replay
   (which still exists)
 
+* Every error or warning is now assigned a unique number. Error
+  reports now look like this:
+
+```
+.\test.fst(2,22-2,23): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int (see also D:\workspace\everest\FStar\ulib\prims.fst(316,17-316,23))
+```
+
+  Notice the `19`: that's the unique error number.
+  
+  Warnings can be silenced or turned into errors using the new
+  `--warn_error` option.
+   
 ## Miscellaneous
 
 * A file can now contain at most one module or interface

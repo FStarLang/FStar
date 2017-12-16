@@ -423,7 +423,7 @@ and translate_let env flavor flags lb: option<decl> =
         with e ->
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
-          BU.print2_warning "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg;
+          Errors. log_issue Range.dummyRange (Errors.Warning_FunctionNotExtacted, (BU.format2 "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg));
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
@@ -442,13 +442,13 @@ and translate_let env flavor flags lb: option<decl> =
         let expr = translate_expr env expr in
         Some (DGlobal (flags, name, List.length tvars, t, expr))
       with e ->
-        BU.print2_warning "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e);
+        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
         Some (DGlobal (flags, name, List.length tvars, t, EAny))
       end
 
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
-      BU.print1_warning "Not translating definition for %s\n" name;
+      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not translating definition for %s\n" name));
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -491,7 +491,7 @@ and translate_type_decl env ty: option<decl> =
 
   | (_, name, _mangled_name, _, _, _) ->
       // JP: TODO: figure out why and how this happens
-      BU.print1_warning "Not translating type definition for %s\n" name;
+      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not translating type definition for %s\n" name));
       None
 
 and translate_type env t: typ =

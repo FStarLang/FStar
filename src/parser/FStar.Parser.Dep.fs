@@ -90,7 +90,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
+      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s\n" f))
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
@@ -178,7 +178,7 @@ let file_of_dep_aux
       (match interface_of file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
-         raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
+         raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
          if use_checked_file then f ^ ".source" else f)
 
@@ -188,11 +188,11 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_add_suffix (Option.get (implementation_of file_system_map key))
-           else raise (Err(BU.format2 "Invoking fstar with %s on the command line breaks \
+           else raise_err (Errors.Fatal_MissingExposeInterfacesOption, BU.format2 "Invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
                                        if you really want this behavior add the option '--expose_interfaces'"
                                        (Option.get (implementation_of file_system_map key))
-                                       (Option.get (interface_of file_system_map key))))
+                                       (Option.get (interface_of file_system_map key)))
       else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
@@ -204,7 +204,7 @@ let file_of_dep_aux
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
           assert false; //unreachable
-          raise (Err (BU.format1 "Expected an implementation of module %s, but couldn't find one" key))
+          raise_err (Errors.Fatal_MissingImplementation, BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_add_suffix f
 
 let file_of_dep = file_of_dep_aux false
@@ -273,7 +273,7 @@ let build_inclusion_candidates_list (): list<(string * string)> =
               (longname, full_path))
       ) files
     else
-      raise (Err (Util.format1 "not a valid include directory: %s\n" d))
+      raise_err (Errors.Fatal_NotValidIncludeDirectory, (Util.format1 "not a valid include directory: %s\n" d))
   ) include_directories
 
 (** List the contents of all include directories, then build a map from long
@@ -341,10 +341,10 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    FStar.Errors.err (range_of_lid lid)
-      (Util.format2 "The module declaration \"module %s\" \
+    FStar.Errors.log_issue (range_of_lid lid)
+      (Errors.Error_ModuleFileNameMismatch, (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
-         incorrect and the module will not be verified.\n" (string_of_lid lid true) filename)
+         incorrect and the module will not be verified.\n" (string_of_lid lid true) filename))
 
 exception Exit
 
@@ -409,8 +409,8 @@ let collect_one
       then true
       else begin
         if let_open then
-           FStar.Errors.warn (range_of_lid lid)
-                             (Util.format1 "Module not found: %s" (string_of_lid lid true));
+           FStar.Errors.log_issue (range_of_lid lid)
+            (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
         false
       end
   in
@@ -419,9 +419,9 @@ let collect_one
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key in
     if not r then
-        FStar.Errors.warn (range_of_lid lid)
-          (Util.format1 "No modules in namespace %s and no file with \
-            that name either" (string_of_lid lid true))
+        FStar.Errors.log_issue (range_of_lid lid)
+          (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
+            that name either" (string_of_lid lid true)))
   in
 
   let record_open let_open lid =
@@ -429,7 +429,7 @@ let collect_one
     then ()
     else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
     then record_open_namespace lid
-  in
+in
 
   let record_open_module_or_namespace (lid, kind) =
     match kind with
@@ -446,7 +446,8 @@ let collect_one
         smap_add working_map key deps_of_aliased_module;
         true
     | None ->
-        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias);
+        FStar.Errors.log_issue (range_of_lid lid)
+          (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
         false
   in
 
@@ -461,9 +462,9 @@ let collect_one
       if add_dependence_edge working_map module_name
       then ()
       else if Options.debug_any () then
-            FStar.Errors.warn (range_of_lid lid)
-                (BU.format1 "Unbound module reference %s"
-                                (Ident.string_of_lid module_name))
+            FStar.Errors.log_issue (range_of_lid lid)
+                (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
+                                (Ident.string_of_lid module_name)))
   in
 
   let auto_open = hard_coded_dependencies filename in
@@ -513,10 +514,8 @@ let collect_one
     | TopLevelModule lid ->
         incr num_of_toplevelmods;
         if (!num_of_toplevelmods > 1) then
-            raise (Errors.Error (Util.format1 "Automatic dependency analysis demands one \
-              module per file (module %s not supported)" (string_of_lid lid true),
-                                 range_of_lid lid))
-
+            raise_error (Errors.Fatal_OneModulePerFile, Util.format1 "Automatic dependency analysis demands one \
+              module per file (module %s not supported)" (string_of_lid lid true)) (range_of_lid lid)
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->
         collect_binders binders;
@@ -741,7 +740,7 @@ let collect (all_cmd_line_files: list<file_name>)
         let direct_deps, color = must (deps_try_find dep_graph filename) in
         match color with
         | Gray ->
-            Util.print1_warning "Recursive dependency on module %s\n" filename;
+            Errors. log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
             Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
             print_graph dep_graph;
             print_string "\n";
@@ -847,11 +846,13 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
   *)
 let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
-    let output_ml_file fst_file =
+    let output_file ext fst_file =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
         let dir= match Options.output_dir() with None -> "" | Some x -> x ^ "/" in
-        dir ^ ml_base_name ^ ".ml"
+        dir ^ ml_base_name ^ ext
     in
+    let output_ml_file = output_file ".ml" in
+    let output_krml_file = output_file ".krml" in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
@@ -868,8 +869,9 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then
-            let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename f))) '.' "_" in
-            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f)
+            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f);
+          // .krml files for fst AND fsti
+          Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
@@ -877,9 +879,10 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
         then [output_ml_file fst_file]
         else []
       ) |> Util.sort_with String.compare in
+    let all_krml_files = List.map output_krml_file keys in
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
-    Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t")
-
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t");
+    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" (all_krml_files |> String.concat " \\\n\t")
 
 let print deps =
   match Options.dep() with
@@ -891,6 +894,6 @@ let print deps =
       let (Mk(deps, _, _)) = deps in
       print_graph deps
   | Some _ ->
-      raise (Err "unknown tool for --dep\n")
+      raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false

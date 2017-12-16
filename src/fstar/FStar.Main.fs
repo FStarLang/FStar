@@ -82,7 +82,12 @@ let codegen (umods, env) =
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
-        save_value_to_file (Options.prepend_output_dir "out.krml") bin
+        begin match programs with
+        | [ name, _ ] ->
+            save_value_to_file (Options.prepend_output_dir (name ^ ".krml")) bin
+        | _ ->
+            save_value_to_file (Options.prepend_output_dir "out.krml") bin
+        end
    | _ -> failwith "Unrecognized option"
 
 let gen_native_tactics (umods, env) out_dir =
@@ -104,6 +109,12 @@ let init_native_tactics () =
       Tactics.Load.load_tactics_dir dir
   | None -> ()
 
+let init_warn_error() =
+  Errors.init_warn_error_flags;
+  let s = Options.warn_error() in
+  if s <> "" then 
+    FStar.Parser.ParseIt.parse_warn_error s
+
 (****************************************************************************)
 (* Main function                                                            *)
 (****************************************************************************)
@@ -116,6 +127,7 @@ let go _ =
         Util.print_string msg; exit 1
     | Success ->
         init_native_tactics ();
+        init_warn_error();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then let _, deps = Parser.Dep.collect filenames in
@@ -123,9 +135,9 @@ let go _ =
         else if Options.interactive () then begin
           match filenames with
           | [] ->
-            Util.print_error "--ide: Name of current file missing in command line invocation\n"; exit 1
+            Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName, "--ide: Name of current file missing in command line invocation\n"); exit 1
           | _ :: _ :: _ ->
-            Util.print_error "--ide: Too many files in command line invocation\n"; exit 1
+            Errors. log_issue Range.dummyRange (Errors.Error_TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
           | [filename] ->
             if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
@@ -157,7 +169,7 @@ let go _ =
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
-          Util.print_error "no file provided\n"
+          Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
 
 
 let main () =

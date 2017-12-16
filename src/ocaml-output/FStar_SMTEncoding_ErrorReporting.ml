@@ -664,36 +664,40 @@ let detail_errors:
                 if success
                 then
                   let uu____2058 = FStar_Range.string_of_range r in
-                  FStar_Util.print1_error
-                    "OK: proof obligation at %s was proven\n" uu____2058
+                  FStar_Util.print1 "OK: proof obligation at %s was proven\n"
+                    uu____2058
                 else
                   if hint_replay
                   then
-                    FStar_Errors.warn r
-                      (Prims.strcat "Hint failed to replay this sub-proof: "
-                         msg)
+                    FStar_Errors.log_issue r
+                      (FStar_Errors.Warning_HintFailedToReplayProof,
+                        (Prims.strcat
+                           "Hint failed to replay this sub-proof: " msg))
                   else
-                    ((let uu____2062 = FStar_Range.string_of_range r in
-                      FStar_Util.print2_error
-                        "XX: proof obligation at %s failed\n\t%s\n"
-                        uu____2062 msg);
-                     FStar_Errors.err r msg) in
+                    (let uu____2061 =
+                       let uu____2066 =
+                         let uu____2067 = FStar_Range.string_of_range r in
+                         FStar_Util.format2
+                           "XX: proof obligation at %s failed\n\t%s\n"
+                           uu____2067 msg in
+                       (FStar_Errors.Error_ProofObligationFailed, uu____2066) in
+                     FStar_Errors.log_issue r uu____2061) in
           let elim labs =
             FStar_All.pipe_right labs
               (FStar_List.map
-                 (fun uu____2122  ->
-                    match uu____2122 with
-                    | (l,uu____2134,uu____2135) ->
+                 (fun uu____2127  ->
+                    match uu____2127 with
+                    | (l,uu____2139,uu____2140) ->
                         let a =
-                          let uu____2145 =
-                            let uu____2146 =
-                              let uu____2151 =
+                          let uu____2150 =
+                            let uu____2151 =
+                              let uu____2156 =
                                 FStar_SMTEncoding_Util.mkFreeV l in
-                              (uu____2151, FStar_SMTEncoding_Util.mkTrue) in
-                            FStar_SMTEncoding_Util.mkEq uu____2146 in
+                              (uu____2156, FStar_SMTEncoding_Util.mkTrue) in
+                            FStar_SMTEncoding_Util.mkEq uu____2151 in
                           {
                             FStar_SMTEncoding_Term.assumption_term =
-                              uu____2145;
+                              uu____2150;
                             FStar_SMTEncoding_Term.assumption_caption =
                               (FStar_Pervasives_Native.Some "Disabling label");
                             FStar_SMTEncoding_Term.assumption_name =
@@ -707,25 +711,25 @@ let detail_errors:
             (match active with
              | [] ->
                  let results =
-                   let uu____2206 =
+                   let uu____2211 =
                      FStar_List.map (fun x  -> (x, true)) eliminated in
-                   let uu____2219 =
+                   let uu____2224 =
                      FStar_List.map (fun x  -> (x, false)) errors in
-                   FStar_List.append uu____2206 uu____2219 in
+                   FStar_List.append uu____2211 uu____2224 in
                  sort_labels results
              | hd1::tl1 ->
-                 ((let uu____2241 =
+                 ((let uu____2246 =
                      FStar_Util.string_of_int (FStar_List.length active) in
-                   FStar_Util.print1 "%s, " uu____2241);
+                   FStar_Util.print1 "%s, " uu____2246);
                   (let decls =
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
                           (FStar_List.append errors tl1)) in
                    let result = askZ3 decls in
                    match result.FStar_SMTEncoding_Z3.z3result_status with
-                   | FStar_SMTEncoding_Z3.UNSAT uu____2272 ->
+                   | FStar_SMTEncoding_Z3.UNSAT uu____2277 ->
                        linear_check (hd1 :: eliminated) errors tl1
-                   | uu____2273 ->
+                   | uu____2278 ->
                        linear_check eliminated (hd1 :: errors) tl1))) in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
