@@ -126,12 +126,35 @@ let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
   assert(Set.disjoint (semI (h2)) (sem (is1)));
   Set.lemma_equal_elim (Set.intersect (sem is1) (sem is2)) (Set.intersect (sem (is1)) (sem (tl is2)))
 
-let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2}) 
+
+let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).to = (hd is2).to /\ (hd is1).from < (hd is2).to )
-    (ensures (let f' = max (hd is1).from (hd is2).from in Set.equal  (Set.intersect (sem is1) (sem is2)) (Set.union (semI (I f' (hd is1).to)) (Set.intersect (sem (is1)) (sem (tl is2))) )))
+    (requires (hd is1).to > (hd is2).to /\ (hd is1).from < (hd is2).to)
+    (ensures (
+        let h1::t1 = is1 in
+        let h2::t2 = is2 in
+        let f_max = max h1.from h2.from in
+        Set.equal  (Set.intersect (sem is1) (sem is2))
+                   (Set.union (semI (I f_max h2.to))
+                              (Set.intersect (Set.union (range (h2.to) (h1.to)) (sem t1)) 
+                                             (sem t2)) )))
   =
-  admit()
+  let h1::t1 = is1 in
+  let h2::t2 = is2 in
+  let f_max = max h1.from h2.from in
+/// (i1 u is1) n (i2 u is2) = (i1 n (i2 u is2)) u (is1 n (i2 u is2)) 
+///                         = (i1 n i2) u (i1 n is2) u (is1 n i2) u (is1 n is2)
+  assert (Set.equal (Set.intersect (sem is1) (sem is2))
+                    (Set.union
+                      (Set.union (Set.intersect (semI h1) (semI h2)) (Set.intersect (semI h1) (sem t2)))
+                      (Set.union (Set.intersect (semI h2) (sem t1)) (Set.intersect (sem t1) (sem t2)))
+                    ));
+  assert (Set.equal (Set.intersect (semI h1) (semI h2)) (semI (I f_max h2.to)));
+  lemma_intersection_range_semLIs_empty h1.from h2.to t2 h2.to;
+  assert (Set.disjoint (range h1.from h2.to) (sem t2));
+  assert (Set.equal (range h1.from h1.to) (Set.union (range h1.from h2.to) (range h2.to h1.to)));
+  assert (Set.equal (Set.intersect (range h1.from h1.to) (sem t2)) (Set.intersect (range h2.to h1.to) (sem t2)));
+  lemma_intervals_disjoint (h2::t1)
 
 let rec lemma_intersection_spec (is1:intervals) (is2:intervals)  
   : Lemma
@@ -165,10 +188,12 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
        )
        // overlapping
        else  (
-         ignore (I f_max (i2.to));
-         assert (Set.equal (Set.intersect (semI i1) (semI i2)) (semI (I f_max i2.to)));
-         lemma_intervals_disjoint (i2::is1);
-         lemma_intersection_spec (I (i2.to) (i1.to) :: is1) is2;
-         admit()
+         lemma_overlapping_prefix (i1::is1) (i2::is2);
+         lemma_intersection_spec (I (i2.to) (i1.to) :: is1) is2
        )
     end
+
+
+
+
+
