@@ -242,6 +242,10 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
       let precedes = TcUtil.fvar_const env Const.precedes_lid in
 
       let decreases_clause bs c =
+          if debug env Options.Low
+          then BU.print2 "Building a decreases clause over (%s) and %s\n"
+                (Print.binders_to_string ", " bs) (Print.comp_to_string c);
+
           //exclude types and function-typed arguments from the decreases clause
           let filter_types_and_functions (bs:binders)  =
             bs |> List.collect (fun (b, _) ->
@@ -262,6 +266,8 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                     let xs = bs |> filter_types_and_functions in
                     match xs with
                         | [x] -> x //NS: why no promotion here?
+                                   //GM: To simplify 1-argument functions
+                                   //    and get (x << x0) instead of (x :: LexTop) << (x0 :: LexTop)
                         | _ -> mk_lex_list xs in
 
         let previous_dec = decreases_clause actuals expected_c in
@@ -2085,11 +2091,13 @@ and check_let_recs env lbs =
         (* here we set the expected type in the environment to the annotated expected type
          * and use it in order to type check the body of the lb
          * *)
-        let _ = //see issue #1017
-           match (SS.compress lb.lbdef).n with
-            | Tm_abs _ -> ()
-            | _ -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
-        in
+        let bs, t, lcomp = abs_formals lb.lbdef in
+        //see issue #1017
+        match bs with
+        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
+        | _ -> ();
+        // By using abs_formals and then rebuilding, we collect all of the binders
+        let lb = { lb with lbdef = U.abs bs t lcomp } in
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (U.is_total_lcomp c)
         then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
