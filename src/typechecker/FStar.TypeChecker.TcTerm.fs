@@ -242,6 +242,10 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
       let precedes = TcUtil.fvar_const env Const.precedes_lid in
 
       let decreases_clause bs c =
+          if debug env Options.Low
+          then BU.print2 "Building a decreases clause over (%s) and %s\n"
+                (Print.binders_to_string ", " bs) (Print.comp_to_string c);
+
           //exclude types and function-typed arguments from the decreases clause
           let filter_types_and_functions (bs:binders)  =
             bs |> List.collect (fun (b, _) ->
@@ -262,6 +266,8 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                     let xs = bs |> filter_types_and_functions in
                     match xs with
                         | [x] -> x //NS: why no promotion here?
+                                   //GM: To simplify 1-argument functions
+                                   //    and get (x << x0) instead of (x :: LexTop) << (x0 :: LexTop)
                         | _ -> mk_lex_list xs in
 
         let previous_dec = decreases_clause actuals expected_c in
@@ -2017,8 +2023,15 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let termination_check_enabled lbname lbdef lbtyp =
      if Options.ml_ish () then false else
      let t = N.unfold_whnf env lbtyp in
-     match (SS.compress t).n, (SS.compress lbdef).n with
-     | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->
+     let formals, c = arrow_formals_comp t in
+     let actuals, _, _ = abs_formals lbdef in
+     if List.length formals < 1
+        || List.length actuals < 1
+     then
+       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+                               (Print.term_to_string lbdef)
+                               (Print.term_to_string lbtyp))) lbtyp.pos
+     else (
        //add implicit binders, in case, for instance
        //lbtyp is of the form x:'a -> t
        //lbdef is of the form (fun x -> t)
@@ -2051,10 +2064,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
        end;
        let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
        quals |> List.contains TotalEffect
-     | _ ->
-       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
-                               (Print.term_to_string lbdef)
-                               (Print.term_to_string lbtyp))) lbtyp.pos
+     )
    in
    let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
@@ -2086,11 +2096,13 @@ and check_let_recs env lbs =
         (* here we set the expected type in the environment to the annotated expected type
          * and use it in order to type check the body of the lb
          * *)
-        let _ = //see issue #1017
-           match (SS.compress lb.lbdef).n with
-            | Tm_abs _ -> ()
-            | _ -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
-        in
+        let bs, t, lcomp = abs_formals lb.lbdef in
+        //see issue #1017
+        match bs with
+        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
+        | _ -> ();
+        // By using abs_formals and then rebuilding, we collect all of the binders
+        let lb = { lb with lbdef = U.abs bs t lcomp } in
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (U.is_total_lcomp c)
         then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
