@@ -44,7 +44,7 @@ SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
-SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug607.fst bug812.fst bug853.fst bug1042.fst
+SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug607.fst bug812.fst bug853.fst bug1042.fst bug1360.fst
 
 # These examples cannot be verified with the current version of F* because of problems unrelated to those
 # described in their corresponding GitHub issue.
