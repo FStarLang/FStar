@@ -863,33 +863,41 @@ let revert_hd (x : name) : tac<unit> =
                               (Print.bv_to_string y)
         else revert)
 
+let free_in bv t =
+    Util.set_mem bv (SF.names t)
+
+let rec clear (b : binder) : tac<unit> =
+    let bv = fst b in
+    bind cur_goal (fun goal ->
+    mlog (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
+                        (Print.binder_to_string b)
+                        (Env.all_binders goal.context |> List.length |> string_of_int)) (fun () ->
+    match split_env bv goal.context with
+    | None -> fail "Cannot clear; binder not in environment"
+    | Some (e', bvs) ->
+        let rec check bvs =
+            match bvs with
+            | [] -> ret ()
+            | bv'::bvs ->
+                if free_in bv bv'.sort
+                then fail (BU.format1 "Cannot clear; binder present in the type of %s"
+                                    (Print.bv_to_string bv'))
+                else check bvs
+        in
+        if free_in bv goal.goal_ty then
+            fail "Cannot clear; binder present in goal"
+        else bind (check bvs) (fun () ->
+        let env' = push_bvs e' bvs in
+        bind (new_uvar "clear.witness" env' goal.goal_ty) (fun ut ->
+        if do_unify goal.context goal.witness ut
+        then replace_cur ({ goal with context = env'; witness = ut })
+        else fail "Cannot clear; binder appears in witness"))))
+
 let clear_top : tac<unit> =
     bind cur_goal (fun goal ->
     match Env.pop_bv goal.context with
     | None -> fail "Cannot clear; empty context"
-    | Some (x, env') ->
-        let fns_ty = FStar.Syntax.Free.names goal.goal_ty in
-        (* let fns_tm = FStar.Syntax.Free.names goal.witness in *)
-        if Util.set_mem x fns_ty (* || Util.set_mem x fns_tm *)
-        then fail "Cannot clear; variable appears in goal"
-        else bind (new_uvar "clear_top" env' goal.goal_ty) (fun u ->
-             if not (trysolve goal u)
-             then fail "clear: unification failed"
-             else let new_goal = {goal with context = env'; witness = bnorm env' u} in
-                  bind dismiss (fun _ ->
-                  add_goals [new_goal])))
-
-let rec clear (b : binder) : tac<unit> =
-    bind cur_goal (fun goal ->
-    match Env.pop_bv goal.context with
-    | None -> fail "Cannot clear; empty context"
-    | Some (b', env') ->
-        if S.bv_eq (fst b) b'
-        then clear_top
-        else bind revert (fun _ ->
-             bind (clear b) (fun _ ->
-             bind intro (fun _ ->
-             ret ()))))
+    | Some (x, _) -> clear (S.mk_binder x)) // we ignore the qualifier anyway
 
 let prune (s:string) : tac<unit> =
     bind cur_goal (fun g ->
