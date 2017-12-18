@@ -65,7 +65,7 @@
   let rec send s b =
       try (
           let n = sock_send s b in 
-          let m = length b in 
+          let m = String.length b in 
           if n < m
           then 
               (* send s (String.sub str n (m - n) *)

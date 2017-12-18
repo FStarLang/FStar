@@ -12,7 +12,7 @@ type byte = u8
 type bytes = string
 type cbytes = string (* not in FStar.Bytes *)
 
-let length (b:bytes) = String.length b
+let length (b:bytes) = Z.of_int (String.length b)
 
 let reveal (b:bytes) = ()
 let length_reveal (x:bytes) = ()
@@ -61,7 +61,7 @@ let sub (b:bytes) (s:u32) (l:u32) =
 
 let split (b:bytes) (k:u32) =
     sub b 0 k,
-    sub b k (length b - k)
+    sub b k (String.length b - k)
 let split_ (b:bytes) (k:Z.t) =
     split b (Z.to_int k)
 
@@ -189,10 +189,11 @@ let hex_of_string s =
 let hex_of_bytes b = hex_of_string b
 
 let print_bytes (s:bytes) : string =
-  let res = ref "" in
-  for i = 0 to String.length s - 1 do
-    res := !res ^ (Printf.sprintf "%02X" (int_of_char s.[i]));
-  done; !res
+  let b = Buffer.create 1024 in
+  for i = 0 to Bytes.length s - 1 do
+    Buffer.add_string b (Printf.sprintf "%02X" (int_of_char s.[i]));
+  done;
+  Buffer.contents b
 
 let string_of_bytes b = b
 let bytes_of_string s = s

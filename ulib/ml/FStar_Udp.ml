@@ -48,7 +48,7 @@
   let send s b =
     try
       (let n = sock_send s b in
-       if n < length b then
+       if n < String.length b then
          Error(Printf.sprintf "Network error, wrote %d bytes" n)
        else Correct())
     with Unix_error (e,s1,s2) ->
