@@ -34,12 +34,12 @@ private abstract let rid_last_component_pred (m1 m2:mem) :Type0
 (* Predicate for refs *)
 private abstract let eternal_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
-      {:pattern (HH.contains_ref r.ref m1.h)}
+      {:pattern (HH.contains_ref (HS.mrref_of r) m1.h)}
       if is_mm r then True
       else
-        if HH.contains_ref r.ref m1.h then
-	  if is_eternal_region r.id then HH.contains_ref r.ref m2.h /\ rel (HS.sel m1 r) (HS.sel m2 r)
-	  else if m2.h `Map.contains` r.id then HH.contains_ref r.ref m2.h /\ rel (HS.sel m1 r) (HS.sel m2 r)
+        if HH.contains_ref (HS.mrref_of r) m1.h then
+	  if is_eternal_region (HS.frameOf r) then HH.contains_ref (HS.mrref_of r) m2.h /\ rel (HS.sel m1 r) (HS.sel m2 r)
+	  else if m2.h `Map.contains` (HS.frameOf r) then HH.contains_ref (HS.mrref_of r) m2.h /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else True
 	else True
 
@@ -63,7 +63,8 @@ abstract let region_contains_pred (r:HH.rid) :stable_predicate
   = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
 
 abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stable_predicate
-  = fun m -> rid_last_component r.id < m.rid_ctr /\ (HS.is_mm r \/ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h))
+  = fun m -> rid_last_component (HS.frameOf r) < m.rid_ctr /\
+          (HS.is_mm r \/ (not (m.h `Map.contains` (HS.frameOf r)) \/ HH.contains_ref (HS.mrref_of r) m.h))
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
@@ -206,18 +207,24 @@ sub_effect
 // type rid = r:HH.rid{rid_refinement r}
 type rid = HH.rid
 
-type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
-                                                                  witnessed (region_contains_pred r.id)}
-type mstackref (a:Type) (rel:preorder a) = r:HS.mstackref a rel{witnessed (ref_contains_pred r) /\
-                                                                witnessed (region_contains_pred r.id)}
-type mref (a:Type) (rel:preorder a) = r:HS.mref a rel{witnessed (ref_contains_pred r) /\
-                                                      witnessed (region_contains_pred r.id)}
-type mmmstackref (a:Type) (rel:preorder a) = r:HS.mmmstackref a rel{witnessed (ref_contains_pred r) /\
-                                                                    witnessed (region_contains_pred r.id)}
-type mmmref (a:Type) (rel:preorder a) = r:HS.mmmref a rel{witnessed (ref_contains_pred r) /\
-                                                          witnessed (region_contains_pred r.id)}
-type s_mref (i:rid) (a:Type) (rel:preorder a) = r:HS.s_mref i a rel{witnessed (ref_contains_pred r) /\
-                                                                    witnessed (region_contains_pred r.id)}
+type mreference (a:Type) (rel:preorder a) =
+  r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
+                        witnessed (region_contains_pred (HS.frameOf r))}
+type mstackref (a:Type) (rel:preorder a) =
+  r:HS.mstackref a rel{witnessed (ref_contains_pred r) /\
+                       witnessed (region_contains_pred (HS.frameOf r))}
+type mref (a:Type) (rel:preorder a) =
+  r:HS.mref a rel{witnessed (ref_contains_pred r) /\
+                  witnessed (region_contains_pred (HS.frameOf r))}
+type mmmstackref (a:Type) (rel:preorder a) =
+  r:HS.mmmstackref a rel{witnessed (ref_contains_pred r) /\
+                         witnessed (region_contains_pred (HS.frameOf r))}
+type mmmref (a:Type) (rel:preorder a) =
+  r:HS.mmmref a rel{witnessed (ref_contains_pred r) /\
+                    witnessed (region_contains_pred (HS.frameOf r))}
+type s_mref (i:rid) (a:Type) (rel:preorder a) =
+  r:HS.s_mref i a rel{witnessed (ref_contains_pred r) /\
+                      witnessed (region_contains_pred (HS.frameOf r))}
 type reference (a:Type) = mreference a (Heap.trivial_preorder a)
 type stackref (a:Type) = mstackref a (Heap.trivial_preorder a)
 type ref (a:Type) = mref a (Heap.trivial_preorder a)
@@ -319,15 +326,15 @@ let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
 private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
   :StackInline (mreference a rel)
   (requires (fun m       -> is_stack_region m.tip))
-  (ensures  (fun m0 s m1 -> is_stack_region s.id /\ salloc_post init m0 s m1 /\ is_mm s == mm))
+  (ensures  (fun m0 s m1 -> is_stack_region (HS.frameOf s) /\ salloc_post init m0 s m1 /\ is_mm s == mm))
   = let m0 = gst_get () in
     let r, h = HH.alloc rel m0.tip init mm m0.h in
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
-    let r = MkRef m0.tip r in
+    let r = HS.mk_mreference r in
     gst_witness (ref_contains_pred r);
-    gst_witness (region_contains_pred r.id);
+    gst_witness (region_contains_pred (HS.frameOf r));
     r
 
 (**
@@ -356,7 +363,7 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
-    let h = HH.free (as_ref r) m0.h in
+    let h = HH.free (HS.mrref_of r) m0.h in
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
     gst_put m1
@@ -373,11 +380,6 @@ let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
    (forall j. HH.includes r j ==> not (j `is_in` m0.h)) /\
    r `is_in` m1.h
 
-(*
- * AR: caveat: this used to be HH.rid, but that means we can't recall,
- *     potentially heavy change in the clients, but mechanical, hopefully.
- *     even on the return type
- *)
 #set-options "--z3rlimit 10"
 let new_region (r0:rid)
   :ST rid
@@ -437,7 +439,7 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
-    let r = MkRef i r in
+    let r = mk_mreference r in
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred i);
     r
@@ -460,7 +462,7 @@ let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
       (requires (fun m0 -> m0 `contains` r))
       (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
-    let h = HH.free r.ref m0.h in
+    let h = HH.free (HS.mrref_of r) m0.h in
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
     gst_put m1
@@ -477,7 +479,7 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
        (requires (fun m -> m `contains` r /\ rel (HS.sel m r) v))
        (ensures (assign_post r v))
   = let m0 = gst_get () in
-    let h = HH.upd_tot m0.h r.ref v in
+    let h = HH.upd_tot m0.h (HS.mrref_of r) v in
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1
 
@@ -495,9 +497,9 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   :Stack a (requires (fun m -> m `weak_contains` r))
            (ensures (deref_post r))
   = let m0 = gst_get () in
-    gst_recall (region_contains_pred r.id);
+    gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
-    HH.sel_tot m0.h r.ref
+    HH.sel_tot m0.h (HS.mrref_of r)
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 
@@ -520,7 +522,7 @@ let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
   :Stack unit (requires (fun m -> True))
               (ensures (fun m0 _ m1 -> m0==m1 /\ m1 `contains` r))
   = gst_recall (ref_contains_pred r);
-    gst_recall (region_contains_pred r.id)
+    gst_recall (region_contains_pred (HS.frameOf r))
 
 (**
    We can only recall eternal regions, not stack regions
@@ -536,7 +538,7 @@ let witness_region (i:rid)
   = gst_witness (region_contains_pred i)
 
 let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
-  :ST unit (fun h0      -> HH.contains_ref r.ref h0.h)
+  :ST unit (fun h0      -> HH.contains_ref (HS.mrref_of r) h0.h)
            (fun h0 _ h1 -> h0 == h1 /\ witnessed (ref_contains_pred r))
   = gst_witness (ref_contains_pred r)
 
@@ -599,7 +601,7 @@ val test_stack_with_long_lived: #rel:preorder int -> s:mreference int rel -> Sta
   (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1 /\
                          modifies (Set.singleton (frameOf s)) h0 h1))
 #set-options "--z3rlimit 10"
-let test_stack_with_long_lived s =
+let test_stack_with_long_lived #rel s =
   push_frame();
   let _ = test_stack !s in
   s := !s + 1;
@@ -793,7 +795,7 @@ let mm_tests _ =
 
 type erid = r:rid{is_eternal_region r}
 
-type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{x.id = r}
+type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
 
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b)(p:(mem -> Tot Type0))
