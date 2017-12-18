@@ -6304,7 +6304,9 @@ and build_let_rec_env:
                                 "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
                                 uu____15042 uu____15043 formals_msg
                                 actuals_msg in
-                            FStar_Util.print1 "%s\n" msg)
+                            FStar_Errors.raise_error
+                              (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                                msg) lbdef.FStar_Syntax_Syntax.pos)
                          else ();
                          (let quals =
                             FStar_TypeChecker_Env.lookup_effect_quals env

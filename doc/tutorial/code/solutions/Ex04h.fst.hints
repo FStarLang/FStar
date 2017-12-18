@@ -28,6 +28,7 @@
         "@fuel_correspondence_Ex04h.length.fuel_instrumented",
         "@fuel_irrelevance_Ex04h.length.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_2204d3c8fa2da81b2aec3d0853792e9d_3",
         "disc_equation_Prims.Cons", "equation_Prims.nat",
@@ -42,16 +43,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "390207b2b602bed20fa286d44c2dc555"
-    ],
-    [
-      "Ex04h.nth",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "be986e9bf67b99e5eca5bef82d7231a3"
+      "c5346d39499e2edada890a82f762d0df"
     ]
   ]
 ]

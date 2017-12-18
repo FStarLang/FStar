@@ -2058,9 +2058,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                             (Print.lbname_to_string lbname)
                             formals_msg
                             actuals_msg in
-            //raise_error (Errors.Fatal_LetRecArgumentMismatch, msg) lbdef.pos  //AR: this check does not consider an lbdef of the form (fun x -> fun y -> ...), also the checks seems misplaced in this function?
-                                                                          //Thigs like this don't typecheck with this: let rec foo :int -> int -> int = fun x -> let z = 3 in fun y -> x + y + z
-            BU.print1 "%s\n" msg
+            raise_error (Errors.Fatal_LetRecArgumentMismatch, msg) lbdef.pos
        end;
        let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
        quals |> List.contains TotalEffect
