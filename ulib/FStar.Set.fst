@@ -79,7 +79,7 @@ abstract val mem_complement: #a:eqtype -> x:a -> s:set a -> Lemma
    (ensures (mem x (complement s) = not (mem x s)))
    [SMTPat (mem x (complement s))]
 
-abstract val mem_intension: #a:eqtype -> x:a -> f:(a -> bool) -> Lemma
+abstract val mem_intension: #a:eqtype -> x:a -> f:(a -> Tot bool) -> Lemma
   (requires True)
   (ensures (mem x (intension f) = f x))
   [SMTPat (mem x (intension f))]
