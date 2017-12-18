@@ -869,10 +869,14 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           Util.print3 "%s: %s \\\n\t%s\n\n" (cache_file_name f) f (String.concat " \\\n\t" files);
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
-          if is_implementation f then
+          if is_implementation f then (
             Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f);
-          // .krml files for fst AND fsti
-          Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
+            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
+          ) else if not(has_implementation file_system_map (module_name_of_file f))
+                 && is_interface f then (
+            // .krml files can be produced using just an interface, unlike .ml files
+            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f);
+            Util.print1 "#%s has no implementation\n" (module_name_of_file f))
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
