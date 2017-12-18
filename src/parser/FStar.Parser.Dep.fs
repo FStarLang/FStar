@@ -387,6 +387,7 @@ let collect_one
       add_dep deps (PreferInterface module_name);
       if has_interface original_or_working_map module_name
       && has_implementation original_or_working_map module_name
+      && FStar.Options.dep() = Some "full"
       then add_dep mo_roots (UseImplementation module_name);
       true
     | _ ->
