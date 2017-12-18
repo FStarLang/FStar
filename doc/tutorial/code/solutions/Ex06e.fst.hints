@@ -36,7 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "62a84b70d9c34dca7ecf795d7ef9675e"
+      "8ce29337d3e4aea056f88ff6773b3b77"
     ],
     [
       "Ex06e.sorted_smaller",
@@ -69,7 +69,7 @@
         "typing_Ex06e.mem", "unit_inversion", "unit_typing"
       ],
       0,
-      "8d3af1eff98ebde4cf5827d7e35ba143"
+      "c7a99cb8bbbf1f70ab23ac966dd0b3dc"
     ],
     [
       "Ex06e.insert",

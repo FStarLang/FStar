@@ -315,7 +315,7 @@
         "subterm_ordering_Ex07c.ELet"
       ],
       0,
-      "c8d6c2d0a5e12ccd074cdf529ea10356"
+      "b1a34c57d6173eb580efb2ce7b6b385e"
     ],
     [
       "Ex07c.step",
@@ -346,7 +346,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3908f0e1191b64850065506f1a9a2f4f"
+      "f78da073bdd118817a5931893aa90998"
     ],
     [
       "Ex07c.typing",
@@ -377,7 +377,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "c5e2aad39f0640e19a5e3e9a608135b2"
+      "93e7f1c70c615fb5d03a14bd2f99a923"
     ],
     [
       "Ex07c.progress",
@@ -478,7 +478,7 @@
         "subterm_ordering_Ex07c.ELet"
       ],
       0,
-      "4bf9adfb6c44c4645b2407656b6b0cbf"
+      "b13752fb6e3dddb21741c1d5454b2dfb"
     ],
     [
       "Ex07c.free_in_context",
@@ -771,7 +771,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "778e191c3cf7ba2c5d86d02ddb681b5c"
+      "fe1a68753100ce6f33c45de6016cbc16"
     ],
     [
       "Ex07c.preservation",

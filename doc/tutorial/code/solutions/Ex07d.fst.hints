@@ -263,7 +263,7 @@
         "subterm_ordering_Ex07d.EIf"
       ],
       0,
-      "e4d4cb1a1d450c13308662112f475d22"
+      "5ce4bf87a87888e162648eddb4ad4762"
     ],
     [
       "Ex07d.step",
@@ -292,7 +292,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d50b0e283ca9f0a79ab5054c43f72117"
+      "fecb4c74a719b631131330a04877a5ba"
     ],
     [
       "Ex07d.typing",
@@ -319,7 +319,7 @@
         "typing_tok_Ex07d.TBool@tok"
       ],
       0,
-      "c92289269cb00c175fedacda2070613a"
+      "8276f10be251afe9437b53a91fc4be0c"
     ],
     [
       "Ex07d.progress",
@@ -411,7 +411,7 @@
         "subterm_ordering_Ex07d.EApp", "subterm_ordering_Ex07d.EIf"
       ],
       0,
-      "7d15707dc17cff15465539f88673d414"
+      "746d08d862c78acf89358026ab6a3cb7"
     ],
     [
       "Ex07d.free_in_context",
@@ -674,7 +674,7 @@
         "typing_tok_Ex07d.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "bedf3150ca525476972332c14bc2f60b"
+      "0082abfcde6a87b25ff1d0de5e1dfc4a"
     ],
     [
       "Ex07d.preservation",
@@ -815,7 +815,7 @@
         "typing_Ex07d.is_value", "typing_tok_Ex07d.TBool@tok"
       ],
       0,
-      "251dd6605036def80db9e23ba4ec153a"
+      "1d37d9a66c9583cd4578fea165592dc3"
     ],
     [
       "Ex07d.eval'",
@@ -890,7 +890,7 @@
         "unit_typing"
       ],
       0,
-      "b1df7a8d39a591397dbbf3a9b3ceec82"
+      "e73c97d45f2d0a7277db5fa728870c6c"
     ]
   ]
 ]
