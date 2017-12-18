@@ -4459,7 +4459,7 @@ let read
  (p: pointer value)
 = let h = HST.get () in
   let r = reference_of h p in
-  HST.witness_region r.HS.id;
+  HST.witness_region (HS.frameOf r);
   HST.witness_hsref r;
   let (| _ , c |) = !r in
   value_of_ovalue value (path_sel c (Pointer?.p p))
@@ -4488,7 +4488,7 @@ let owrite
   )))
 = let h0 = HST.get () in
   let r = reference_of h0 b in
-  HST.witness_region r.HS.id;
+  HST.witness_region (HS.frameOf r);
   HST.witness_hsref r;
   let v0 = !r in
   let (| t , c0 |) = v0 in
