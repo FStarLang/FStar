@@ -2185,8 +2185,8 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
       Without a way to do this maintaining this document and keeping it consistent
       will be a nightmare.) -->
 
-[sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
-[sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
+[sf-stlc]: https://softwarefoundations.cis.upenn.edu/plf-current/Stlc.html
+[sf-stlc-prop]: https://softwarefoundations.cis.upenn.edu/plf-current/StlcProp.html
 
 We now look at a larger case study: proving the soundness of a type-checker
 for the simply-typed $\lambda$-calculus (STLC). If you're not familiar with

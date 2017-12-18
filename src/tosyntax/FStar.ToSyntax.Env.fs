@@ -411,7 +411,7 @@ let fail_if_curmodule env ns_original ns_resolved =
   then
     if lid_equals ns_resolved Const.prims_lid
     then () // disable this check for Prims, because of Prims.unit, etc.
-    else raise (Error (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str, range_of_lid ns_original))
+    else raise_error (Errors.Fatal_ForbiddenReferenceToCurrentModule, (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str)) (range_of_lid ns_original)
   else ()
 
 let fail_if_qualified_by_curmodule env lid =
@@ -869,7 +869,7 @@ let push_top_level_rec_binding env (x:ident) dd =
   let l = qualify env x in
   if unique false true env l || Options.interactive ()
   then push_scope_mod env (Rec_binding (x,l,dd))
-  else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
+  else raise_error (Errors.Fatal_DuplicateTopLevelNames, ("Duplicate top-level names " ^ l.str)) (range_of_lid l)
 
 let push_sigelt env s =
   let err l =
@@ -881,7 +881,7 @@ let push_sigelt env s =
           | None -> "<unknown>"
         end
       | None -> "<unknown>" in
-    raise (Error (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r, range_of_lid l)) in
+    raise_error (Errors.Fatal_DuplicateTopLevelNames, (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r)) (range_of_lid l) in
   let globals = BU.mk_ref env.scope_mods in
   let env =
       let any_val, exclude_interface = match s.sigel with
@@ -926,7 +926,7 @@ let push_namespace env ns =
      if modules |> BU.for_some (fun (m, _) ->
       BU.starts_with (Ident.text_of_lid m ^ ".") (Ident.text_of_lid ns ^ "."))
      then (ns, Open_namespace)
-     else raise (Error(BU.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns), Ident.range_of_lid ns))
+     else raise_error (Errors.Fatal_NameSpaceNotFound, (BU.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns))) ( Ident.range_of_lid ns)
   | Some ns' ->
      let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
@@ -970,10 +970,10 @@ let push_include env ns =
         env
       | None ->
         (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStar.ST, etc. *)
-        raise (Error (BU.format1 "include: Module %s was not prepared" ns.str, Ident.range_of_lid ns))
+        raise_error (Errors.Fatal_IncludeModuleNotPrepared, (BU.format1 "include: Module %s was not prepared" ns.str)) (Ident.range_of_lid ns)
       end
     | _ ->
-      raise (Error (BU.format1 "include: Module %s cannot be found" ns.str, Ident.range_of_lid ns))
+      raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "include: Module %s cannot be found" ns.str)) (Ident.range_of_lid ns)
 
 let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
@@ -982,7 +982,7 @@ let push_module_abbrev env x l =
   then let _ = fail_if_curmodule env l l in
        env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
-  else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
+  else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.text_of_lid l))) (Ident.range_of_lid l)
 
 let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
   match doc_opt with
@@ -990,10 +990,10 @@ let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
   | Some doc ->
     (match BU.smap_try_find env.docs l.str with
      | None -> ()
-     | Some old_doc -> FStar.Errors.warn (range_of_lid l)
-                        (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
+     | Some old_doc -> FStar.Errors.log_issue (range_of_lid l)
+                        (Errors.Warning_DocOverwrite, (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
                            (Ident.string_of_lid l) (Parser.AST.string_of_fsdoc old_doc)
-                           (Parser.AST.string_of_fsdoc doc)));
+                           (Parser.AST.string_of_fsdoc doc))));
     BU.smap_add env.docs l.str doc;
     env
 
@@ -1003,8 +1003,8 @@ let check_admits env =
       begin match try_lookup_lid env l with
         | None ->
           if not (Options.interactive ()) then
-            FStar.Errors.warn (range_of_lid l)
-              (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l));
+            FStar.Errors.log_issue (range_of_lid l)
+              (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)
@@ -1020,7 +1020,15 @@ let finish env modul =
       if List.contains Private quals
       || List.contains Abstract quals
       then ses |> List.iter (fun se -> match se.sigel with
-                | Sig_datacon(lid, _, _, _, _, _) -> BU.smap_remove (sigmap env) lid.str
+                | Sig_datacon(lid, _, _, _, _, _) ->
+                  BU.smap_remove (sigmap env) lid.str
+                | Sig_inductive_typ(lid, univ_names, binders, typ, _, _) ->
+                  BU.smap_remove (sigmap env) lid.str;
+                  if not (List.contains Private quals)
+                  then //it's only abstract; add it back to the environment as an abstract type
+                       let sigel = Sig_declare_typ(lid, univ_names, S.mk (Tm_arrow(binders, S.mk_Total typ)) None (Ident.range_of_lid lid)) in
+                       let se = {se with sigel=sigel; sigquals=Assumption::quals} in
+                       BU.smap_add (sigmap env) lid.str (se, false)
                 | _ -> ())
 
     | Sig_declare_typ(lid, _, _) ->
@@ -1193,13 +1201,13 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
         prep env, false
     | Some (_, m) ->
         if not (Options.interactive ()) && (not m.is_interface || intf)
-        then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
+        then raise_error (Errors.Fatal_DuplicateModuleOrInterface, (BU.format1 "Duplicate module or interface name: %s" mname.str)) (range_of_lid mname);
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
         prep (push env), true //push a context so that we can pop it when we're done
 
 let enter_monad_scope env mname =
   match env.curmonad with
-  | Some mname' -> raise (Error ("Trying to define monad " ^ mname.idText ^ ", but already in monad scope " ^ mname'.idText, mname.idRange))
+  | Some mname' -> raise_error (Errors.Fatal_MonadAlreadyDefined, ("Trying to define monad " ^ mname.idText ^ ", but already in monad scope " ^ mname'.idText)) mname.idRange
   | None -> {env with curmonad = Some mname}
 
 let fail_or env lookup lid = match lookup lid with
@@ -1236,9 +1244,9 @@ let fail_or env lookup lid = match lookup lid with
            modul'.str
            lid.ident.idText
     in
-    raise (Error (msg, range_of_lid lid))
+    raise_error (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
   | Some r -> r
 
 let fail_or2 lookup id = match lookup id with
-  | None -> raise (Error ("Identifier not found [" ^id.idText^"]", id.idRange))
+  | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^id.idText^"]")) id.idRange
   | Some r -> r

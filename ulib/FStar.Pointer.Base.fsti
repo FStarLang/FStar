@@ -4,7 +4,7 @@ module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-open HST // for := , !
+open FStar.HyperStack.ST // for := , !
 
 (*** Definitions *)
 

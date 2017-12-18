@@ -39,9 +39,6 @@ let f2 x = ()
 
 let rec xxx (x:int) (y:int) :unit = f2 (xxx y)
 
-(* A #formals = #actuals check in build_let_rec_env did not allow this to verify *)
-let rec f3 :int -> int -> int = fun x -> let z = 3 in fun y -> x + y + z
-
 (*
  * Following are test cases for universe instantiations of let recs.
  * We now add recursive binding with universe instantiations to Gamma.

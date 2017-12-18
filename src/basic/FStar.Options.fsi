@@ -170,6 +170,7 @@ val smtencoding_nl_arith_native : unit    -> bool
 val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
 val split_cases                 : unit    -> int
+val tactic_raw_binders          : unit    -> bool
 val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
 val timing                      : unit    -> bool
@@ -194,6 +195,7 @@ val z3_seed                     : unit    -> int
 val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
+val warn_error                  : unit    -> string
 
 val codegen_fsharp              : unit    -> bool
 

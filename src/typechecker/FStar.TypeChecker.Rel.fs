@@ -74,18 +74,18 @@ let check_guard msg env g =
     let s = guard_unbound_vars env g in
     if BU.set_is_empty s
     then ()
-    else raise (Err (BU.format2 "Guard has free variables (%s): %s"
+    else raise_err (Errors.Fatal_FreeVariables, BU.format2 "Guard has free variables (%s): %s"
                                 msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", ")))
+                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
 
 let check_term msg env t =
     let s = unbound_vars env t in
     if BU.set_is_empty s
     then ()
-    else raise (Err (BU.format3 "Term <%s> has free variables (%s): %s"
+    else raise_err (Errors.Fatal_FreeVariables, BU.format3 "Term <%s> has free variables (%s): %s"
                                 (Print.term_to_string t)
                                 msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", ")))
+                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
@@ -1582,9 +1582,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     match (SS.compress head).n with
                     | Tm_name _
                     | Tm_match _ -> true
-                    | Tm_fvar ({fv_delta=Delta_equational})
+                    | Tm_fvar ({fv_delta=Delta_equational}) ->
+                      true
                     | Tm_fvar ({fv_delta=Delta_abstract _}) ->
-                      true //these may be relatable via a logical theory
+                      //these may be relatable via a logical theory
+                      //which may provide **equations** among abstract symbols
+                      //Note, this is specifically not applicable for subtyping queries: see issue #1359
+                      problem.relation = EQ
                     | Tm_ascribed (t, _, _)
                     | Tm_uinst (t, _)
                     | Tm_meta (t, _) -> may_relate t
@@ -1879,10 +1883,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             let xs, rest = BU.first_N n_args xs in
                             let t = mk (Tm_arrow(rest, c)) None k.pos in
                             SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> raise (Error (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+                     | _ -> raise_error (Errors.Fatal_IllTyped, (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
                                          (Print.uvar_to_string uv)
                                          (Print.term_to_string k)
-                                         (Print.term_to_string k_uv), t1.pos)) in
+                                         (Print.term_to_string k_uv))) t1.pos in
                 BU.bind_opt
                     (elim k_uv ps)
                     (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
@@ -2467,9 +2471,9 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
               | _ ->
-                raise (Error (BU.format2 "Got effects %s and %s, expected normalized effects"
+                raise_error (Errors.Fatal_ExpectNormalizedEffect, (BU.format2 "Got effects %s and %s, expected normalized effects"
                                           (Print.lid_to_string c1.effect_name)
-                                          (Print.lid_to_string c2.effect_name), env.range))
+                                          (Print.lid_to_string c2.effect_name))) env.range
              in
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
@@ -2673,7 +2677,11 @@ let try_teq smt_ok env t1 t2 : option<guard_t> =
 
 let teq env t1 t2 : guard_t =
  match try_teq true env t1 t2 with
-    | None -> raise (Error(Err.basic_type_error env None t2 t1, Env.get_range env))
+    | None ->
+      FStar.Errors.log_issue
+            (Env.get_range env)
+            (Err.basic_type_error env None t2 t1);
+      trivial_guard
     | Some g ->
       if debug env <| Options.Other "Rel"
       then BU.print3 "teq of %s and %s succeeded with guard %s\n"
@@ -2683,7 +2691,7 @@ let teq env t1 t2 : guard_t =
       g
 
 let subtype_fail env e t1 t2 =
-    Errors.err (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+    Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 let sub_comp env c1 c2 =
   if debug env <| Options.Other "Rel"
@@ -2702,10 +2710,9 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
    //This ensures, e.g., that we don't needlessly generalize types, avoid issues lik #806
    let fail u1 u2 =
         UF.rollback tx;
-        raise (Error (BU.format2 "Universe %s and %s are incompatible"
+        raise_error (Errors.Fatal_IncompatibleUniverse, (BU.format2 "Universe %s and %s are incompatible"
                                 (Print.univ_to_string u1)
-                                (Print.univ_to_string u2),
-                      Env.get_range env))
+                                (Print.univ_to_string u2))) (Env.get_range env)
    in
    let equiv v v' =
        match SS.compress_univ v, SS.compress_univ v' with
@@ -2764,8 +2771,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
          then (BU.print1 "Partially solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs));
                UF.rollback tx;
                BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs)));
-         raise (Error ("Failed to solve universe inequalities for inductives",
-                      Env.get_range env)))
+         raise_error (Errors.Fatal_FailToSolveUniverseInEquality, ("Failed to solve universe inequalities for inductives")) (Env.get_range env))
 
 let solve_universe_inequalities env ineqs =
     let tx = UF.new_transaction () in
@@ -2775,7 +2781,7 @@ let solve_universe_inequalities env ineqs =
 let rec solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
-      raise (Error(msg, p_loc d)) in
+      raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d) in
    let wl = wl_of_guard env g.deferred in
    if Env.debug env <| Options.Other "RelCheck"
    then BU.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n"  (wl_to_string wl) (string_of_int (List.length g.implicits));
@@ -2872,7 +2878,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
 let discharge_guard_no_smt env g =
   match discharge_guard' None env g false with
   | Some g -> g
-  | None  -> raise (Error("Expected a trivial pre-condition", Env.get_range env))
+  | None  -> raise_error (Errors.Fatal_ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
 
 let discharge_guard env g =
   match discharge_guard' None env g true with
@@ -2920,9 +2926,9 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           raise (Error(BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
+           raise_error (Errors.Fatal_FailToResolveImplicitArgument, (BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
                                     (Print.term_to_string t)
-                                    (Print.term_to_string e), r))
+                                    (Print.term_to_string e))) r
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

@@ -344,34 +344,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "2034f87ab31587915dae8eb4ec75a151"
-    ],
-    [
-      "Ex06b.sort",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "5f75b9268fd7d6bf8a6867a7e0777d24"
-    ],
-    [
-      "Ex06b.sort",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0fa45b19bfd1e2773c7072bb5ee9fe08"
-    ],
-    [
-      "Ex06b.sort",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "59e2921cfda4cc3af5e193754cfa55c1"
+      "fe7837ffcd809597ee1da233b54a9ae8"
     ]
   ]
 ]

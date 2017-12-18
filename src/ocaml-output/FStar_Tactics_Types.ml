@@ -39,7 +39,7 @@ let __proj__Mkgoal__item__is_guard: goal -> Prims.bool =
 let subst_goal: FStar_Syntax_Syntax.subst_t -> goal -> goal =
   fun subst1  ->
     fun goal  ->
-      let uu___188_67 = goal in
+      let uu___194_67 = goal in
       let uu____68 = FStar_TypeChecker_Env.rename_env subst1 goal.context in
       let uu____69 = FStar_Syntax_Subst.subst subst1 goal.witness in
       let uu____70 = FStar_Syntax_Subst.subst subst1 goal.goal_ty in
@@ -47,8 +47,8 @@ let subst_goal: FStar_Syntax_Syntax.subst_t -> goal -> goal =
         context = uu____68;
         witness = uu____69;
         goal_ty = uu____70;
-        opts = (uu___188_67.opts);
-        is_guard = (uu___188_67.is_guard)
+        opts = (uu___194_67.opts);
+        is_guard = (uu___194_67.is_guard)
       }
 type proofstate =
   {
@@ -142,89 +142,93 @@ let subst_proof_state:
   FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate =
   fun subst1  ->
     fun ps  ->
-      let uu___189_321 = ps in
-      let uu____322 = subst_goal subst1 ps.main_goal in
-      let uu____323 = FStar_List.map (subst_goal subst1) ps.goals in
-      {
-        main_context = (uu___189_321.main_context);
-        main_goal = uu____322;
-        all_implicits = (uu___189_321.all_implicits);
-        goals = uu____323;
-        smt_goals = (uu___189_321.smt_goals);
-        depth = (uu___189_321.depth);
-        __dump = (uu___189_321.__dump);
-        psc = (uu___189_321.psc);
-        entry_range = (uu___189_321.entry_range)
-      }
+      let uu____321 = FStar_Options.tactic_raw_binders () in
+      if uu____321
+      then ps
+      else
+        (let uu___195_323 = ps in
+         let uu____324 = subst_goal subst1 ps.main_goal in
+         let uu____325 = FStar_List.map (subst_goal subst1) ps.goals in
+         {
+           main_context = (uu___195_323.main_context);
+           main_goal = uu____324;
+           all_implicits = (uu___195_323.all_implicits);
+           goals = uu____325;
+           smt_goals = (uu___195_323.smt_goals);
+           depth = (uu___195_323.depth);
+           __dump = (uu___195_323.__dump);
+           psc = (uu___195_323.psc);
+           entry_range = (uu___195_323.entry_range)
+         })
 let decr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___190_329 = ps in
+    let uu___196_331 = ps in
     {
-      main_context = (uu___190_329.main_context);
-      main_goal = (uu___190_329.main_goal);
-      all_implicits = (uu___190_329.all_implicits);
-      goals = (uu___190_329.goals);
-      smt_goals = (uu___190_329.smt_goals);
+      main_context = (uu___196_331.main_context);
+      main_goal = (uu___196_331.main_goal);
+      all_implicits = (uu___196_331.all_implicits);
+      goals = (uu___196_331.goals);
+      smt_goals = (uu___196_331.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___190_329.__dump);
-      psc = (uu___190_329.psc);
-      entry_range = (uu___190_329.entry_range)
+      __dump = (uu___196_331.__dump);
+      psc = (uu___196_331.psc);
+      entry_range = (uu___196_331.entry_range)
     }
 let incr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___191_333 = ps in
+    let uu___197_335 = ps in
     {
-      main_context = (uu___191_333.main_context);
-      main_goal = (uu___191_333.main_goal);
-      all_implicits = (uu___191_333.all_implicits);
-      goals = (uu___191_333.goals);
-      smt_goals = (uu___191_333.smt_goals);
+      main_context = (uu___197_335.main_context);
+      main_goal = (uu___197_335.main_goal);
+      all_implicits = (uu___197_335.all_implicits);
+      goals = (uu___197_335.goals);
+      smt_goals = (uu___197_335.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___191_333.__dump);
-      psc = (uu___191_333.psc);
-      entry_range = (uu___191_333.entry_range)
+      __dump = (uu___197_335.__dump);
+      psc = (uu___197_335.psc);
+      entry_range = (uu___197_335.entry_range)
     }
 let tracepoint: proofstate -> Prims.unit =
   fun ps  ->
-    let uu____337 =
+    let uu____339 =
       (FStar_Options.tactic_trace ()) ||
-        (let uu____339 = FStar_Options.tactic_trace_d () in
-         ps.depth <= uu____339) in
-    if uu____337
+        (let uu____341 = FStar_Options.tactic_trace_d () in
+         ps.depth <= uu____341) in
+    if uu____339
     then
-      let uu____340 =
-        let uu____341 = FStar_TypeChecker_Normalize.psc_subst ps.psc in
-        subst_proof_state uu____341 ps in
-      ps.__dump uu____340 "TRACE"
+      let uu____342 =
+        let uu____343 = FStar_TypeChecker_Normalize.psc_subst ps.psc in
+        subst_proof_state uu____343 ps in
+      ps.__dump uu____342 "TRACE"
     else ()
 let set_ps_psc: FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate =
   fun psc  ->
     fun ps  ->
-      let uu___192_349 = ps in
+      let uu___198_351 = ps in
       {
-        main_context = (uu___192_349.main_context);
-        main_goal = (uu___192_349.main_goal);
-        all_implicits = (uu___192_349.all_implicits);
-        goals = (uu___192_349.goals);
-        smt_goals = (uu___192_349.smt_goals);
-        depth = (uu___192_349.depth);
-        __dump = (uu___192_349.__dump);
+        main_context = (uu___198_351.main_context);
+        main_goal = (uu___198_351.main_goal);
+        all_implicits = (uu___198_351.all_implicits);
+        goals = (uu___198_351.goals);
+        smt_goals = (uu___198_351.smt_goals);
+        depth = (uu___198_351.depth);
+        __dump = (uu___198_351.__dump);
         psc;
-        entry_range = (uu___192_349.entry_range)
+        entry_range = (uu___198_351.entry_range)
       }
 let set_proofstate_range: proofstate -> FStar_Range.range -> proofstate =
   fun ps  ->
     fun r  ->
-      let uu___193_356 = ps in
+      let uu___199_358 = ps in
       {
-        main_context = (uu___193_356.main_context);
-        main_goal = (uu___193_356.main_goal);
-        all_implicits = (uu___193_356.all_implicits);
-        goals = (uu___193_356.goals);
-        smt_goals = (uu___193_356.smt_goals);
-        depth = (uu___193_356.depth);
-        __dump = (uu___193_356.__dump);
-        psc = (uu___193_356.psc);
+        main_context = (uu___199_358.main_context);
+        main_goal = (uu___199_358.main_goal);
+        all_implicits = (uu___199_358.all_implicits);
+        goals = (uu___199_358.goals);
+        smt_goals = (uu___199_358.smt_goals);
+        depth = (uu___199_358.depth);
+        __dump = (uu___199_358.__dump);
+        psc = (uu___199_358.psc);
         entry_range = r
       }
 type direction =
@@ -232,7 +236,7 @@ type direction =
   | BottomUp[@@deriving show]
 let uu___is_TopDown: direction -> Prims.bool =
   fun projectee  ->
-    match projectee with | TopDown  -> true | uu____360 -> false
+    match projectee with | TopDown  -> true | uu____362 -> false
 let uu___is_BottomUp: direction -> Prims.bool =
   fun projectee  ->
-    match projectee with | BottomUp  -> true | uu____364 -> false
+    match projectee with | BottomUp  -> true | uu____366 -> false

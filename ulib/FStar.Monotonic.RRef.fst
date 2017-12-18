@@ -44,7 +44,7 @@ type m_rref (r:rid) (a:Type) (b:reln a) = HST.m_rref r a b
 (*
  * AR: commenting out as_hsref, m_contains, m_unused_in, m_fresh, m_sel as we can now use their HS counterparts
  *)
-val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:mref a b{x.id = r})
+val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:mref a b{HS.frameOf x = r})
 let as_hsref #r #a #b x = x
 
 // (* val m_contains : #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> m:t -> GTot bool *)
@@ -58,7 +58,7 @@ let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.un
 (*   HyperHeap.fresh_rref (as_rref mr) m0 m1 *)
 
 let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:mem) (m1:mem) : GTot Type0 =
-  HyperHeap.fresh_rref mr.ref m0.h m1.h
+  HyperHeap.fresh_rref (HS.mrref_of mr) m0.h m1.h
 
 // (* val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> GTot a *)
 // (* let m_sel #r #a #b h m = HyperHeap.sel h (as_rref m) *)

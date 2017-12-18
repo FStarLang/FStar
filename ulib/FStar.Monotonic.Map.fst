@@ -93,10 +93,10 @@ let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r
       let hsref = m in
             HS.contains h1 m
             /\ modifies (Set.singleton r) h0 h1
-            /\ modifies_rref r (Set.singleton (Heap.addr_of (HH.as_ref (HS.MkRef?.ref hsref)))) h0.h h1.h
-            /\ HS.sel h1 m == upd cur x y
-            /\ MR.witnessed m (defined m x)
-            /\ MR.witnessed m (contains m x y)))
+            /\ modifies_rref r (Set.singleton (HS.as_addr hsref)) h0.h h1.h
+            /\ m_sel h1 m == upd cur x y
+            /\ MR.witnessed (defined m x)
+            /\ MR.witnessed (contains m x y)))
   = recall m;
     let cur = m_read m in
     m_write m (upd cur x y);

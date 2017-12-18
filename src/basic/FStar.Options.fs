@@ -174,6 +174,7 @@ let defaults =
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("split_cases"                  , Int 0);
+      ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
       ("timing"                       , Bool false);
@@ -195,7 +196,8 @@ let defaults =
       ("z3cliopt"                     , List []);
       ("use_two_phase_tc"             , Bool false);
       ("__no_positivity"              , Bool false);
-      ("__ml_no_eta_expand_coertions" , Bool false)]
+      ("__ml_no_eta_expand_coertions" , Bool false);
+      ("warn_error"                   , String "")]
 
 let init () =
    let o = peek () in
@@ -277,6 +279,7 @@ let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
+let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
@@ -301,6 +304,7 @@ let get_z3seed                  ()      = lookup_opt "z3seed"                   
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
+let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
 
 let dlevel = function
    | "Low" -> Low
@@ -765,6 +769,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Partition VC of a match into groups of <positive_integer> cases");
 
        ( noshort,
+        "tactic_raw_binders",
+        Const (mk_bool true),
+        "Do not use the lexical scope of tactics to improve binder names");
+
+       ( noshort,
         "tactic_trace",
         Const (mk_bool true),
         "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
@@ -894,6 +903,15 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Const (mk_bool true),
         "Do not eta-expand coertions in generated OCaml");
 
+        ( noshort,
+        "warn_error",
+        SimpleStr (""),
+        "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
+         - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
+         - [-r] silences range [r]\n\t\t\
+         - [+r] enables range [r]\n\t\t\
+         - [@r] makes range [r] fatal.");
+   
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),
@@ -945,10 +963,12 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "no_tactics"
+    | "tactic_raw_binders"
     | "tactic_trace"
     | "tactic_trace_d"
     | "__temp_no_proj"
     | "reuse_hint_for"
+    | "warn_error"
     | "z3rlimit_factor"
     | "z3rlimit"
     | "z3refresh"
@@ -1153,6 +1173,7 @@ let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwra
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let split_cases                  () = get_split_cases                 ()
+let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
 let timing                       () = get_timing                      ()
@@ -1191,6 +1212,7 @@ let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
+let warn_error                   () = get_warn_error                  ()
 
 let should_extract_namespace m =
     match get_extract_namespace () with
@@ -1211,3 +1233,4 @@ let should_extract m =
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"
+

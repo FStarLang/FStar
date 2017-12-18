@@ -308,12 +308,12 @@ let pop_frame (_:unit)
     gst_put m1
 
 let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
-                (s:mreference a rel{is_stack_region s.id}) (m1:mem)
-  = is_stack_region m0.tip             /\
-    Map.domain m0.h == Map.domain m1.h /\
-    m0.tip = m1.tip                    /\
-    s.id   = m1.tip                    /\
-    HH.fresh_rref s.ref m0.h m1.h      /\  //it's a fresh reference in the top frame
+                (s:mreference a rel{is_stack_region (frameOf s)}) (m1:mem)
+  = is_stack_region m0.tip                /\
+    Map.domain m0.h == Map.domain m1.h    /\
+    m0.tip = m1.tip                       /\
+    frameOf s   = m1.tip                  /\
+    HH.fresh_rref (mrref_of s) m0.h m1.h  /\  //it's a fresh reference in the top frame
     m1==HyperStack.upd m0 s init  //and it's been initialized
 
 private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
@@ -345,18 +345,18 @@ let salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   (ensures salloc_post init)
   = salloc_common init true
 
-let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel{is_mm r}) (m:mem{m `contains` r})
+let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem{m `contains` r /\ is_mm r})
   :GTot mem
-  = let h_0 = Map.sel m.h r.id in
-    let h_1 = Heap.free_mm h_0 (HH.as_ref r.ref) in
-    HS m.rid_ctr (Map.upd m.h r.id h_1) m.tip
+  = let h_0 = Map.sel m.h (frameOf r) in
+    let h_1 = Heap.free_mm h_0 (as_ref r) in
+    HS m.rid_ctr (Map.upd m.h (frameOf r) h_1) m.tip
 
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit
-   (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
+   (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
-    let h = HH.free r.ref m0.h in
+    let h = HH.free (as_ref r) m0.h in
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
     gst_put m1
@@ -420,17 +420,17 @@ let new_colored_region (r0:rid) (c:int)
     new_rid
 
 unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
-                       (x:mreference a rel{is_eternal_region x.id}) (m1:mem) =
+                       (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
     let region_i = Map.sel m0.h i in
-    (HH.as_ref x.ref) `Heap.unused_in` region_i /\
-     i `is_in` m0.h                             /\
-     i = x.id                                   /\
+    as_ref x `Heap.unused_in` region_i /\
+     i `is_in` m0.h                    /\
+     i = frameOf x                     /\
      m1 == upd m0 x init                      
 
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
       (requires (fun m       -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
-      (ensures  (fun m0 r m1 -> is_eternal_region r.id /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
+      (ensures  (fun m0 r m1 -> is_eternal_region (frameOf r) /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
   = if i <> HH.root then gst_recall (region_contains_pred i);
     let m0 = gst_get () in
     let r, h = HH.alloc rel i init mm m0.h in
@@ -596,10 +596,10 @@ let test_stack x =
 
 val test_stack_with_long_lived: #rel:preorder int -> s:mreference int rel -> Stack unit
   (requires (fun h -> contains h s /\ rel (HS.sel h s) (HS.sel h s + 1)))
-  (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
-    /\ modifies (Set.singleton s.id) h0 h1))
+  (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1 /\
+                         modifies (Set.singleton (frameOf s)) h0 h1))
 #set-options "--z3rlimit 10"
-let test_stack_with_long_lived #rel s =
+let test_stack_with_long_lived s =
   push_frame();
   let _ = test_stack !s in
   s := !s + 1;
@@ -724,8 +724,8 @@ let with_frame #a #pre #post f =
 
 let test_with_frame (x:stackref int) (v:int)
   : Stack unit (requires (fun m -> contains m x))
-	     (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
- = admit() //with_frame (fun _ -> x := v)
+	       (ensures (fun m0 _ m1 -> modifies (Set.singleton (frameOf x)) m0 m1 /\ sel m1 x = v))
+ = admit () //with_frame (fun _ -> x := v)
 
 
 let as_requires (#a:Type) (wp:st_wp a) = wp (fun x s -> True)
@@ -746,7 +746,7 @@ let mm_tests _ =
   //check that the heap contains the reference
   let m = get () in
   let h = Map.sel m.h m.tip in
-  let _ = assert (Heap.contains h (HH.as_ref r1.ref)) in
+  let _ = assert (Heap.contains h (as_ref r1)) in
 
   let _ = !r1 in
 
@@ -758,7 +758,7 @@ let mm_tests _ =
   //check that the heap does not contain the reference
   let m = get () in
   let h = Map.sel m.h m.tip in
-  let _ = assert (~ (Heap.contains h (HH.as_ref r1.ref))) in
+  let _ = assert (~ (Heap.contains h (as_ref r1))) in
 
   let r2 :mmstackref int = salloc_mm 2 in
   let _ = pop_frame () in
@@ -775,7 +775,7 @@ let mm_tests _ =
   //check that the heap does not contain the reference
   let m = get () in
   let h = Map.sel m.h id in
-  let _ = assert (~ (Heap.contains h (HH.as_ref r3.ref))) in
+  let _ = assert (~ (Heap.contains h (as_ref r3))) in
 
   //this fails because the reference is no longer live
   //let _ = !r3 in

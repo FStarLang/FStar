@@ -25,15 +25,15 @@ type distinct (r:rid) (s:set rid) =
 // BEGIN: Types
 noeq type point =
   | Point : r:rid
-          -> x:ref int{x.id = r}
-          -> y:ref int{y.id = r}
-          -> z:ref int{z.id = r /\ as_addr x <> as_addr y /\ as_addr y <> as_addr z /\ as_addr x <> as_addr z}
+          -> x:ref int{frameOf x = r}
+          -> y:ref int{frameOf y = r}
+          -> z:ref int{frameOf z = r /\ as_addr x <> as_addr y /\ as_addr y <> as_addr z /\ as_addr x <> as_addr z}
           -> point
 
 noeq type arm =
   | Arm : r:rid
-       -> polar:ref int{polar.id = r}
-       -> azim:ref int{azim.id = r /\ as_addr polar <> as_addr azim}
+       -> polar:ref int{frameOf polar = r}
+       -> azim:ref int{frameOf azim = r /\ as_addr polar <> as_addr azim}
        -> arm
 
 noeq type bot =

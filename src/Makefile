@@ -88,6 +88,7 @@ boot_dir:
 boot: $(ALL_BOOT)
 
 clean_boot:
+	rm -f .depend
 	rm -rf boot
 
 # --------------------------------------------------------------------------------
@@ -151,7 +152,7 @@ uregressions: fstarlib ulib tutorial uexamples interactive-test
 uregressions-ulong: uregressions ulib-extra
 
 ulib-extra:
-	+$(MAKE) -C ../ulib extra
+	+$(MAKE) -C ../ulib -f Makefile.verify extra
 
 fstarlib:
 	+$(MAKE) -C ../ulib/ml

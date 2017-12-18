@@ -71,7 +71,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
        (ensures (fun h0 _ h1 ->
 	               contains h1 r
 		     /\ modifies_one i h0 h1
-		     /\ modifies_rref i (Set.singleton (addr_of r.ref)) h0.h h1.h
+		     /\ modifies_rref i (Set.singleton (HS.as_addr r)) h0.h h1.h
 		     /\ HS.sel h1 r == Seq.snoc (HS.sel h0 r) x
 		     /\ witnessed r (at_least (Seq.length (HS.sel h0 r)) x r)))
   =
@@ -133,7 +133,7 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
        (ensures (fun h0 _ h1 ->
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
-		     /\ modifies_rref rgn (Set.singleton (addr_of r.ref)) h0.h h1.h
+		     /\ modifies_rref rgn (Set.singleton (HS.as_addr r)) h0.h h1.h
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
 		     /\ witnessed r (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
@@ -430,7 +430,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
        (ensures (fun h0 _ h1 ->
 	  modifies_one i h0 h1 /\
 	  (* AR: before merge: modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\ *)
-	  modifies_rref i (Set.singleton (addr_of c.ref)) h0.h h1.h /\
+	  modifies_rref i (Set.singleton (HS.as_addr c)) h0.h h1.h /\
 	  HS.sel h1 c = HS.sel h0 c + 1))
   = recall c; recall log;
     let n = m_read c + 1 in
@@ -449,8 +449,8 @@ let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:s
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
   = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
-    assert (HS.sel h r = HyperHeap.sel h.h r.ref);
-    assert (HS.sel h r = HyperHeap.sel h.h r.ref)
+    assert (HS.sel h r = HyperHeap.sel h.h (HS.mrref_of r));
+    assert (HS.sel h r = HyperHeap.sel h.h (HS.mrref_of r))
 
 
 (* TODO: this fails with a silly inconsistent qualifier error *)

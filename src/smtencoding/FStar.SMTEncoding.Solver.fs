@@ -164,7 +164,7 @@ type errors = {
     error_fuel: int;
     error_ifuel: int;
     error_hint: option<(list<string>)>;
-    error_messages: list<(string * Range.range)>
+    error_messages: list<(Errors.raw_error * string * Range.range)>
 }
 
 let error_to_short_string err =
@@ -234,7 +234,7 @@ let query_errors settings z3result =
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
-            error_messages = List.map (fun (_, x, y) -> x,y) error_labels
+            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,x,y) error_labels
         }
      in
      Some err
@@ -288,7 +288,6 @@ let report_errors settings : unit =
           settings.query_errors |> List.iter (fun e ->
           FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
           FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
-
         | None ->
           let err_detail =
             settings.query_errors |>
@@ -296,7 +295,7 @@ let report_errors settings : unit =
             String.concat "; " in
           FStar.TypeChecker.Err.add_errors
                    settings.query_env
-                   [(BU.format1 "Unknown assertion failed (%s)" err_detail,
+                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
     end
 
@@ -328,9 +327,8 @@ let query_info settings z3result =
                 BU.string_of_int settings.query_rlimit;
                 stats ];
         errs |> List.iter (fun (_, msg, range) ->
-            let e = FStar.Errors.mk_issue FStar.Errors.EInfo (Some range) msg in
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
-            BU.print2 "\t\t%s%s\n" tag (FStar.Errors.format_issue e))
+            FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
 let record_hint settings z3result =
