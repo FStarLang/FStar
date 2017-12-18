@@ -209,7 +209,7 @@ let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
 
 let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (frameOf s)}) (v:a)
   : GTot mem
-  = HS m.rid_ctr (m.h.[s.ref] <- v) m.tip
+  = HS m.rid_ctr (m.h.[mrref_of s] <- v) m.tip
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
@@ -307,7 +307,7 @@ let coerce_mrref (#id1:rid) (#id2:rid) (#a:Type) (#rel:preorder a)
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-= lemma_sel_same_addr #(frameOf r1) #a #rel h.h (mrred_of r1) (coerce_mrref (mrref_of r2))
+= lemma_sel_same_addr #(frameOf r1) #a #rel h.h (mrref_of r1) (mrref_of r2)
 
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
@@ -326,7 +326,7 @@ let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreferen
     #(fun _ -> h `contains` r1 /\ h `contains` r2)
     (fun _ -> lemma_sel_same_addr h r1 r2)
     (fun _ -> lemma_sel_same_addr h r2 r1);
-  HH.lemma_upd_same_addr h.h (mrref_of r1) (coerce_mrref (mrref_of r2)) x
+  HH.lemma_upd_same_addr h.h (mrref_of r1) (mrref_of r2) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
