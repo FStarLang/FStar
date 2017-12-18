@@ -329,7 +329,7 @@
         "typing_Ex06c.sorted"
       ],
       0,
-      "7a41a9a11b28803994491b979c5fbab6"
+      "6400f8f07260d7ae5cf6e5a4cdbe2835"
     ],
     [
       "Ex06c.sort",
@@ -419,7 +419,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "d1d919327deda7062cab5b64bd06028b"
+      "503090dd0035e744537313c78dee2ac4"
     ]
   ]
 ]

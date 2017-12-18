@@ -98,7 +98,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "58d03b36daecec3972a6a888e17df04c"
+      "9ecb4bcc952ca70205f068ed656ed6f1"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -185,7 +185,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "1176994b65148a45a0775e80451d4eeb"
+      "79e5b308ea2d53f5bef28a7c41858880"
     ]
   ]
 ]
