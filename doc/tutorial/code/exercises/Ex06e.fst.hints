@@ -36,16 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d0ef1954d4b5c39f2f4ae83b2343b751"
-    ],
-    [
-      "Ex06e.mem",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4365f9da637740e2ad93d579198987d5"
+      "8ce29337d3e4aea056f88ff6773b3b77"
     ]
   ]
 ]
