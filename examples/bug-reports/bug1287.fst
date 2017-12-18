@@ -179,8 +179,8 @@ let string_of_bindings (bindings: bindings) =
 (** Match a pattern against a term.
 `cur_bindings` is a list of bindings collected while matching previous parts of
 the pattern.  Returns a result in the exception monad. **)
-let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
-    : term -> match_res bindings =
+let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
+    : match_res bindings =
   let interp_any () cur_bindings tm =
     return [] in
   let interp_var (v: varname) cur_bindings tm =
@@ -205,7 +205,6 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
       with_arg <-- interp_pattern_aux p_arg with_hd arg;
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
-  fun (tm: term) ->
     match pat with
     | PAny -> interp_any () cur_bindings tm
     | PVar var -> interp_var var cur_bindings tm
