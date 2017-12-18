@@ -99,7 +99,7 @@ val set_byte:
   -> byte
   -> bytes
 
-unfold let op_String_Assigment = set_byte
+unfold let op_String_Assignment = set_byte
 
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
 
@@ -282,9 +282,9 @@ val iutf8_opt:
   -> (option (s:string{Str.length s < pow2 30 /\ utf8_encode s = m}))
 
 // No definition for these: they're only meant for backwards compatibility with Platform.Bytes
-val bytes_of_hex: string -> Tot bytes
-val hex_of_bytes: bytes -> Tot string
 val string_of_hex: string -> Tot string
+val bytes_of_hex: string -> Tot bytes
 val hex_of_string: string -> Tot string
+val hex_of_bytes: bytes -> Tot string
 val print_bytes: bytes -> Tot string
 val bytes_of_string: string -> bytes //abytes
