@@ -41,11 +41,11 @@ noeq type key =
 (** Accessors for the three logs **)
 /// ae log
 let get_log (h:mem) (k:key) =
-  m_sel h k.log
+  sel h k.log
 
 /// mac log
 let get_mac_log (h:mem) (k:key) =
-  m_sel h (MAC.Key?.log k.km)
+  sel h (MAC.Key?.log k.km)
 
 /// cpa log
 let get_cpa_log (h:mem) (k:key) =
@@ -256,7 +256,7 @@ let keygen (parent:rid)
 /// encrypt:
 ///       We return a cipher, preserve the invariant,
 ///       and extend the log by exactly one entry
-#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --z3rlimit 20"
 let encrypt (k:key) (plain:Plain.plain)
   : ST cipher
   (requires (fun h0 -> invariant h0 k))
@@ -271,6 +271,7 @@ let encrypt (k:key) (plain:Plain.plain)
   let t = MAC.mac k.km c in
   write_at_end k.log (plain, (c, t));
   let h1 = FStar.HyperStack.ST.get () in
+  assert (sel h1 k.log == snoc (sel h0 k.log) (plain, (c, t)));
   assert (EtM.CPA.invariant (Key?.ke k) h1);
   mac_and_cpa_refine_ae_snoc (get_log h0 k) (get_mac_log h0 k) (get_cpa_log h0 k)
                              (plain, (c,t)) (c,t) (CPA.Entry plain c);

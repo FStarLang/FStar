@@ -223,8 +223,6 @@ let rec fly_robot_army #rs bs =
     let h2 = HST.get () in
     lemma_frame_robot_inv_and_flying b rs' h1 h2
 
-#reset-options "--max_fuel 1 --initial_fuel 1 --max_ifuel 1 --initial_ifuel 1"
-
 val main: unit -> ST unit
     (requires (fun _ -> True))
     (ensures (fun m0 _ m1 -> modifies_transitively Set.empty m0 m1))
