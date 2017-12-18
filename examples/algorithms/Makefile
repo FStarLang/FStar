@@ -25,9 +25,9 @@ huffman-ocaml-repl: out Huffman.fst
 	utop -I out -I $(ULIB_ML) Huffman.repl
 
 intersect-ocaml: out IntervalIntersect.fst
-#	$(MAKE) -C $(ULIB_ML)
-	$(FSTAR) --odir out --codegen OCaml IntervalIntersect.fst
-	ocamlfind opt -package fstarlib -linkpkg -g out/IntervalIntersect.ml -o Intersect.exe
+	#$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml IntervalIntersect.fst
+	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt -package fstarlib -linkpkg -g out/IntervalIntersect.ml -o Intersect.exe
 	./Intersect.exe
 
 out:

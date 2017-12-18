@@ -14,13 +14,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(** Computatiional sets (on eqtypes): membership is a boolean function *)
+(** Computational sets (on eqtypes): membership is a boolean function *)
 module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
 
 abstract type set (a:eqtype) = a -> Tot bool
 abstract type equal (#a:eqtype) (s1:set a) (s2:set a) = feq s1 s2
+
+val hasEq_set: a:eqtype -> Lemma (requires (True)) (ensures (hasEq (set a))) [SMTPat (hasEq (set a))]
+let hasEq_set a = admit()
 
 (* destructors *)
 
@@ -33,7 +36,7 @@ abstract val singleton  : #a:eqtype -> a -> Tot (set a)
 abstract val union      : #a:eqtype -> set a -> set a -> Tot (set a)
 abstract val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
 abstract val complement : #a:eqtype -> set a -> Tot (set a)
-abstract val intension  : #a:eqtype -> (a -> bool) -> Tot (set a)
+abstract val intension  : #a:eqtype -> (a -> Tot bool) -> GTot (set a)
 
 let empty              = fun #a x -> false
 let singleton #a x     = fun y -> y = x
