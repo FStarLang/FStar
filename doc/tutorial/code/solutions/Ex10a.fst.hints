@@ -59,18 +59,9 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "46a7b8ddca54ec156bdda15628ba7db8"
-    ],
-    [
-      "Ex10a.canWrite",
-      2,
-      2,
-      1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "20b7c6444c49f0fb3528a3667e1d109a"
+      "7a75cafc270e73238238a50309baa2de"
     ],
     [
       "Ex10a.canRead",
@@ -78,29 +69,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
-        "disc_equation_Ex10a.Writable", "fuel_guarded_inversion_Ex10a.entry"
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "disc_equation_Ex10a.Readable", "disc_equation_Ex10a.Writable",
+        "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "cc5fc3f617c7c802f67fee4e4a82753e"
-    ],
-    [
-      "Ex10a.canRead",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "f05697bbede90b6b9ad60cf2bde6e8b9"
-    ],
-    [
-      "Ex10a.canRead",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "33df54bde23fae2dddfab1a9aa3991bc"
+      "11be9c5cbef3ad5619e08a5708bbf138"
     ],
     [
       "Ex10a.revoke",
@@ -150,16 +124,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "7886c5ced643f166bc924f9abf1d7c1b"
-    ],
-    [
-      "Ex10a.revoke",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
-      0,
-      "233bb1f7703f370a969a504f132dbad0"
+      "ef8057fee0a5d6ad360020519f84eb5b"
     ],
     [
       "Ex10a.safe_delete",
@@ -181,7 +146,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "77bd96330d6f10c708e5bb9fd19b7761"
+      "ed0db70318b6c51048a9dfdce08b2a05"
     ],
     [
       "Ex10a.test_acls",
@@ -210,7 +175,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "e655bdd0fe60fc6db39e1a170cdcd77b"
+      "5550f7862722463a3a423945c3b450d9"
     ]
   ]
 ]

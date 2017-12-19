@@ -59,18 +59,9 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "46a7b8ddca54ec156bdda15628ba7db8"
-    ],
-    [
-      "Ex10a.canWrite",
-      2,
-      2,
-      1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "20b7c6444c49f0fb3528a3667e1d109a"
+      "7a75cafc270e73238238a50309baa2de"
     ],
     [
       "Ex10a.canRead",
@@ -78,38 +69,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
-        "disc_equation_Ex10a.Writable", "fuel_guarded_inversion_Ex10a.entry"
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "disc_equation_Ex10a.Readable", "disc_equation_Ex10a.Writable",
+        "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "cc5fc3f617c7c802f67fee4e4a82753e"
-    ],
-    [
-      "Ex10a.canRead",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "f05697bbede90b6b9ad60cf2bde6e8b9"
-    ],
-    [
-      "Ex10a.canRead",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "33df54bde23fae2dddfab1a9aa3991bc"
-    ],
-    [
-      "Ex10a.revoke",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
-      0,
-      "714458c7d2ebf16108495b7759f0f69d"
+      "11be9c5cbef3ad5619e08a5708bbf138"
     ],
     [
       "Ex10a.safe_delete",
@@ -131,7 +96,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "162582b776d93c4100cb2aa618d042d3"
+      "ad95a1ee13503a3e0b679feec552e220"
     ],
     [
       "Ex10a.test_acls",
@@ -142,7 +107,8 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Ex10a.entry_haseq", "bool_typing",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
@@ -160,7 +126,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "6861fdec83df834cc61a0422919c2529"
+      "b1a7aae59b5e04ac60c41b6f6d120e1a"
     ]
   ]
 ]
