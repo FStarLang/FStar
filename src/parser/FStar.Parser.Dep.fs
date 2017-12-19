@@ -872,11 +872,10 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           if is_implementation f then (
             Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f);
             Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
-          ) else if not(has_implementation file_system_map (module_name_of_file f))
+          ) else if not(has_implementation file_system_map (lowercase_module_name f))
                  && is_interface f then (
             // .krml files can be produced using just an interface, unlike .ml files
-            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f);
-            Util.print1 "#%s has no implementation\n" (module_name_of_file f))
+            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f))
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files = all_fst_files |> List.collect (fun fst_file ->

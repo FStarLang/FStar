@@ -1265,64 +1265,61 @@ let print_full: deps -> Prims.unit =
                        else
                          (let uu____4659 =
                             (let uu____4662 =
-                               let uu____4663 = module_name_of_file f in
+                               let uu____4663 = lowercase_module_name f in
                                has_implementation file_system_map uu____4663 in
                              Prims.op_Negation uu____4662) &&
                               (is_interface f) in
                           if uu____4659
                           then
-                            ((let uu____4665 = output_krml_file f in
-                              let uu____4666 = cache_file_name f in
-                              FStar_Util.print2 "%s: %s\n\n" uu____4665
-                                uu____4666);
-                             (let uu____4667 = module_name_of_file f in
-                              FStar_Util.print1 "#%s has no implementation\n"
-                                uu____4667))
+                            let uu____4664 = output_krml_file f in
+                            let uu____4665 = cache_file_name f in
+                            FStar_Util.print2 "%s: %s\n\n" uu____4664
+                              uu____4665
                           else ())))));
          (let all_fst_files =
-            let uu____4672 =
+            let uu____4670 =
               FStar_All.pipe_right keys (FStar_List.filter is_implementation) in
-            FStar_All.pipe_right uu____4672
+            FStar_All.pipe_right uu____4670
               (FStar_Util.sort_with FStar_String.compare) in
           let all_ml_files =
-            let uu____4686 =
+            let uu____4684 =
               FStar_All.pipe_right all_fst_files
                 (FStar_List.collect
                    (fun fst_file  ->
-                      let uu____4697 =
-                        let uu____4698 = lowercase_module_name fst_file in
-                        FStar_Options.should_extract uu____4698 in
-                      if uu____4697
+                      let uu____4695 =
+                        let uu____4696 = lowercase_module_name fst_file in
+                        FStar_Options.should_extract uu____4696 in
+                      if uu____4695
                       then
-                        let uu____4701 = output_ml_file fst_file in
-                        [uu____4701]
+                        let uu____4699 = output_ml_file fst_file in
+                        [uu____4699]
                       else [])) in
-            FStar_All.pipe_right uu____4686
+            FStar_All.pipe_right uu____4684
               (FStar_Util.sort_with FStar_String.compare) in
           let all_krml_files = FStar_List.map output_krml_file keys in
-          (let uu____4711 =
+          (let uu____4709 =
              FStar_All.pipe_right all_fst_files
                (FStar_String.concat " \\\n\t") in
-           FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n" uu____4711);
-          (let uu____4715 =
+           FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n" uu____4709);
+          (let uu____4713 =
              FStar_All.pipe_right all_ml_files
                (FStar_String.concat " \\\n\t") in
-           FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n" uu____4715);
-          (let uu____4718 =
+           FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n" uu____4713);
+          (let uu____4716 =
              FStar_All.pipe_right all_krml_files
                (FStar_String.concat " \\\n\t") in
-           FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____4718)))
+           FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____4716)))
 let print: deps -> Prims.unit =
   fun deps  ->
-    let uu____4724 = FStar_Options.dep () in
-    match uu____4724 with
+    let uu____4722 = FStar_Options.dep () in
+    match uu____4722 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps
     | FStar_Pervasives_Native.Some "full" -> print_full deps
     | FStar_Pervasives_Native.Some "graph" ->
-        let uu____4727 = deps in
-        (match uu____4727 with
-         | Mk (deps1,uu____4729,uu____4730) -> print_graph deps1)
-    | FStar_Pervasives_Native.Some uu____4735 ->
+        let uu____4725 = deps in
+        (match uu____4725 with
+         | Mk (deps1,uu____4727,uu____4728) -> print_graph deps1)
+    | FStar_Pervasives_Native.Some uu____4733 ->
         FStar_Errors.raise_err
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
