@@ -26,23 +26,25 @@ module IntervalIntersect
 /// someone like me curious about Haskell and Coq in theory---without a lot of
 /// exposure to them in practice. What is nice about these two languages is that
 /// general knowledge of mathematical notation and functional programming goes
-/// some way with understanding the gist of the code. Moreover, the style to
-/// program was written was a good fir for dusting off my F* skills. So
-/// instead of parsing all of the Haskell and Coq code in detail, I decided to rewrite
-/// it the example in F* to expore the example.
+/// some way with understanding the gist of the code. Its concise and engaging
+/// programming style motivated me to dust off my F* skills. So instead of
+/// parsing all of the Haskell and Coq code in detail, I decided to rewrite
+/// the example in F* to expore the example.
 ///
 /// Most of the code is about lists of integers. Luckily there is already good
-/// library support for both in F*. As explained by Joachim, verification loves
-/// termination. We use a list library of pure and total operations that
-/// can be used in specifications. In particular list operations are provably
-/// terminating.
+/// library support for both integers and lists in F*. As explained by Joachim,
+/// verification loves termination. Se we use a list library of pure and total
+/// operations that can be used in specifications. In particular list operations
+/// are provably terminating.
 
 open FStar.List.Tot
 open FStar.Math.Lib
 
+type offset = int
+
 /// As in its Haskell version, I represent intervals as a datatype constructor.
-///  Note that [from] is inclusive and [to] is not inclusive. 
-type interval = | I: from:int -> to:int -> interval
+///  Note that [from] is inclusive and [to] is not inclusive.
+type interval = | I: from:offset -> to:offset -> interval
 /// F* automatically generates accessor functions for the named arguments of the
 /// dependently typed constructor. Given [i:interval], [I?.from i] returns the
 /// start of the interval. Datatypes with a single constructor, also allow for
@@ -50,12 +52,12 @@ type interval = | I: from:int -> to:int -> interval
 /// alternative to records.
 ///
 /// We define the goodness of [interval list]s in the same way as Joachim did in
-/// Coq. A [good interval list] is orderd and consists of non-empty intervals.
+/// Coq. A [good interval list] is ordered and consists of non-empty intervals.
 /// 
-let rec goodLIs (is:list interval) (lb:int) =
+let rec goodLIs (is:list interval) (lb:offset) =
   match is with
   | [] -> true
-  | I f t :: is -> lb <= f && f< t && goodLIs is t
+  | I f t :: is -> lb <= f && f < t && goodLIs is t
 
 let good is =
   match is with
@@ -137,16 +139,35 @@ let intersect (is1 is2:intervals) =
 /// to convince oneself that this invariant holds, but why is it sufficient for
 /// Z3 to complete the proof? As Arthur C. Clark famously said: Any sufficiently
 /// advanced technology is indistinguishable from magic.
+///
+/// Proof by induction. good is
 
 (**** Proving functional correctness *)
 
-/// I could have stopped here and declare victory.
+/// I could have stopped here and declare victory, 1:0 for FStar. Arguable there
+/// are few blemishes, like the F* bug with local functions that I discovered, or
+/// the low priority given to a weakes precondition calculus supporting [when]
+/// clauses, but overall I was positively surprised by the speed at which I
+/// could translate the Haskell and Coq code to F* and with how little I had to
+/// do in terms of proofs.
 
-let rangeGT (f t:int): GTot (Set.set int)
+/// Mindful of Clarke's second law that the only way of discovering the limits
+/// of the possible is to venture a little way past them into the impossible, we
+/// wont stop when its easy. The second property that Joachim proved about the
+/// [intersect] function is that it corresponds to its corresponding function.
+/// This sounds a bit tautological. What is meant here is that it corresponds to
+/// another way of representing intervals and implementing intersection, that
+/// ideally is in some sense more pure and mathematical.
+///
+/// The natural way to represent intervals is of course as sets, and interval
+/// intersection then simply becomes set intersection. The FStar.Set module provides pure and total 
+
+let rangeGT (f t:offset): GTot (Set.set offset)
   =
   Set.intension (fun z -> f <= z && z < t)
 
-let rec range (f:int) (t:int): Tot (r:Set.set int{r==rangeGT f t})
+
+let rec range (f t:offset): Tot (r:Set.set offset{r==rangeGT f t})
   (decreases %[t-f])
   =
   if f>=t then (
@@ -157,12 +178,12 @@ let rec range (f:int) (t:int): Tot (r:Set.set int{r==rangeGT f t})
     Set.union (Set.singleton f) ( range (f+1) t )
   )
 
-let semI (i : interval) : Set.set int =
+let semI (i : interval) : Set.set offset =
   range i.from i.to
 
-let rec sem (is : intervals) : Set.set int =
+let rec sem (is : intervals) : Set.set offset =
   match is with
-  | [] -> Set.empty #int
+  | [] -> Set.empty
   | (i :: is) -> Set.union (semI i) (sem is)
 
 let lemma_disjoint_intro (#a:eqtype) (s1 s2:Set.set a)
@@ -172,23 +193,29 @@ let lemma_disjoint_intro (#a:eqtype) (s1 s2:Set.set a)
     [SMTPat (Set.disjoint s1 s2)]
  = ()
 
-let rec lemma_intersection_range_semLIs_empty (f t:int) (is:intervals) (lb:int)
+/// The following lemma is inspired by Joachim's
+/// `Intersection_range_semLIs_empty` lemma. It expresses the same idea and is
+/// proven by induction on an increasing lower bound.
+let rec lemma_semI_sem_disjoint (i:interval) (is:intervals) (lb:offset)
   : Lemma
-    (requires goodLIs is lb /\ t <= lb)
-    (ensures Set.intersect (range f t) (sem is) == Set.empty)
+    (requires goodLIs is lb /\ i.to <= lb)
+    (ensures Set.disjoint (semI i) (sem is))
   =
   if (Cons? is) then
-      lemma_intersection_range_semLIs_empty f t (tl is) (hd is).to
+      lemma_semI_sem_disjoint i (tl is) (hd is).to
   else ();
-  Set.lemma_equal_elim (Set.intersect (range f t) (sem is)) Set.empty
+  Set.lemma_equal_elim (Set.intersect (semI i) (sem is)) Set.empty
+
+/// I use the lemma to prove that the head of an interval list is disjoint from
+/// the tail of the interval list.
 
 let lemma_intervals_disjoint (is:intervals{Cons? is})
   : Lemma
     (ensures (Set.disjoint (semI (hd is)) (sem (tl is))))
   =
-  if (Cons? (tl is)) then (
-    let h::t = is in
-    lemma_intersection_range_semLIs_empty h.from h.to t h.to
+  let h::t = is in
+  if (Cons? t) then (
+    lemma_semI_sem_disjoint h t h.to
   ) else ()
 
 
@@ -197,7 +224,7 @@ let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
     (requires (hd is1).from >= (hd is2).to )
     (ensures (Set.intersect (sem is1) (sem is2) == Set.intersect (sem (is1)) (sem (tl is2))))
   =
-  let h2 = (hd is2) in
+  let h2 = hd is2 in
   lemma_intervals_disjoint (h2::is1);
   Set.lemma_equal_elim (Set.intersect (sem is1) (sem is2)) (Set.intersect (sem (is1)) (sem (tl is2)))
 
@@ -227,7 +254,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 ///  h1 n h2 = [f', h2.to]
   assert (Set.equal (Set.intersect (semI h1) (semI h2)) (semI (I f' h2.to)));
 ///  h1 n t2 = [h2.to h1.to] n t2
-  lemma_intersection_range_semLIs_empty h1.from h2.to t2 h2.to;
+  lemma_semI_sem_disjoint (I h1.from h2.to) t2 h2.to;
   Set.lemma_equal_elim (range h1.from h1.to)
                        (Set.union (range h1.from h2.to) (range h2.to h1.to));
   Set.lemma_equal_elim (Set.intersect (range h1.from h1.to) (sem t2))
@@ -287,7 +314,12 @@ let rec print_intervals is: ML unit =
     stdout <| sprintf "[%d, %d] " i.from i.to;
     print_intervals is
 
-let main = print_intervals (intersect [I 3 10; I 11 15] [I 1 4; I 10 14])
+let ppInterval (I f t) = sprintf "0x%d-0x%d" f t
+
+let ppIntervals is = FStar.List.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
+let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
+
+/// sorted, non-empty, disjoint and non-adjacent
 
 (***** Why functional programming and types *)
 
@@ -307,4 +339,7 @@ let main = print_intervals (intersect [I 3 10; I 11 15] [I 1 4; I 10 14])
 /// result in a large trusted computing base. The established wisdom here is to
 /// have a core calculus that is as small as possible, and to translate the more
 /// complex human readable code to that calculus.
-///
+
+(***** Efforts and gains *)
+
+/// test
