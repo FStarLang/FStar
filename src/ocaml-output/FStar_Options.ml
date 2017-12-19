@@ -1788,7 +1788,7 @@ let rec specs_with_types:
                     uu____2984 :: uu____2995 in
                   (FStar_Getopt.noshort, "dep",
                     (EnumStr ["make"; "graph"; "full"]),
-                    "Output the transitive closure of the full dependency graph in three formats:\n\t 'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t 'full': a format suitable for 'make', including dependences for producing .ml files\n\t 'make': (deprecated) a format suitable for 'make', including only dependences among source files")
+                    "Output the transitive closure of the full dependency graph in three formats:\n\t 'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t 'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t 'make': (deprecated) a format suitable for 'make', including only dependences among source files")
                     :: uu____2973 in
                 (FStar_Getopt.noshort, "debug_level",
                   (Accumulated
