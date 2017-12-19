@@ -1,7 +1,7 @@
 module IntervalIntersect
 
 (*** Can F* replace Haskell and Coq? *)
-/// Is F* ready for its first "F* vs 'pick your favorite language or proof
+/// Is F\* ready for its first "F* vs 'pick your favourite language or proof
 /// assistant'" flame war? Can it take on heavyweights such as Haskell and Coq?
 ///
 /// Its list of supported features is full of fancy words such as polymorphism,
@@ -9,16 +9,16 @@ module IntervalIntersect
 /// precondition calculus, predicative hierarchy of universes with universe
 /// polymorphism, rich type-level computation, proofs by reification ..., but
 /// does F* solve real world problems and do you need a PhD in type theory to
-/// use it? Is F* ready for prime time?
+/// use it? Is F\* ready for prime time?
 ///
 /// Of course the answer to this question will always depend on who you are and
 /// what you want to do? I will talk a bit more about what I am doing and how I
-/// got to work on F* in the first place, but let it suffice to say that my PhD
+/// got to work on F\* in the first place, but let it suffice to say that my PhD
 /// is in cryptography, not type theory and involved models and proofs mostly
 /// done on paper. Which means that my programming skills usually are a bit
 /// [Rust|https://www.rust-lang.org]y, no pun intended.
 ///
-/// As to the 'what'. About a week ago I came accross [Joachim Breitner's nice
+/// As to the 'what'. About a week ago I came across [Joachim Breitner's nice
 /// blog
 /// post|https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it]
 /// on finding bugs in Haskell code by proving it. It is an excellent post.
@@ -26,10 +26,10 @@ module IntervalIntersect
 /// someone like me curious about Haskell and Coq in theory---without a lot of
 /// exposure to them in practice. What is nice about these two languages is that
 /// general knowledge of mathematical notation and functional programming goes
-/// some way with understanding the gist of the code. Its concise and engaging
+/// some way towards understanding the gist of the code. Its concise and engaging
 /// programming style motivated me to dust off my F* skills. So instead of
 /// parsing all of the Haskell and Coq code in detail, I decided to rewrite
-/// the example in F* to expore the example.
+/// the example in F* to explore the example.
 ///
 /// Most of the code is about lists of integers. Luckily there is already good
 /// library support for both integers and lists in F*. As explained by Joachim,
@@ -44,6 +44,7 @@ type offset = int
 
 /// As in its Haskell version, I represent intervals as a datatype constructor.
 ///  Note that [from] is inclusive and [to] is not inclusive.
+
 type interval = | I: from:offset -> to:offset -> interval
 
 /// F* automatically generates accessor functions for the named arguments of the
@@ -51,9 +52,9 @@ type interval = | I: from:offset -> to:offset -> interval
 /// start of the interval. Datatypes with a single constructor, also allow for
 /// the usual '.' notation, e.g., [i.from], which makes them a convenient
 /// alternative to records.
-///
+
 (**** Part 1: Proving the intervals invariant *)
-///
+
 /// We define the goodness of [interval list]s in the same way as Joachim did in
 /// Coq. A [good interval list] is ordered and consists of non-empty disjoint
 /// intervals.
@@ -79,6 +80,7 @@ let good is =
 /// list]s is itself a [good interval list]. Upon investigation, this invariant
 /// should in fact hold at all times, so I make good use of F^*'s refinement
 /// types, to add the requirement to the [intervals].
+
 let intervals = is:list interval{good is}
 
 /// This is a first example for F*'s closely intertwines programming and
@@ -87,6 +89,7 @@ let intervals = is:list interval{good is}
 
 /// The following function is needed in the termination argument for the
 /// [intersect] function. I will get back to it in a bit.
+
 let needs_reorder (is1 is2:intervals) : nat =
  match is1, is2 with
   | I f1 t1 :: _, I f2 t2 :: _ -> if t1 < t2 then 1 else 0
@@ -120,6 +123,7 @@ private let rec go (is1 is2:intervals)
 /// necessary. To prove that the function terminates, at every
 /// recursive call either the first value decrease or the second value decreases
 /// while the first stays equal.
+
   match is1, is2 with
   | _, [] -> []
   | [], _ -> []
@@ -176,9 +180,9 @@ let intersect (is1 is2:intervals) =
 /// another way of representing intervals and another way of implementing
 /// intersection in that representation. Ideally this alternative way should in
 /// some sense be more pure and mathematical.
-///
+
 (***** The mathematical representation of intervals *)
-///
+
 /// In traditional mathematics intervals are of course represented as sets, and
 /// interval intersection then simply becomes set intersection. Luckily, the
 /// [FStar.Set] module already provides us with set operations proven to be pure
@@ -207,6 +211,7 @@ let intersect (is1 is2:intervals) =
 /// extensional description of integer ranges, but make the intensional
 /// definition ghost. This means that it never has to be extracted to [BatSet]
 /// based OCaml code.
+
 let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <= z &&
   z < t)
 
@@ -234,6 +239,7 @@ let rec range (f t:offset): Tot (r:Set.set offset{r==rangeGT f t})
 /// Using [range] and following the Coq code, the [semI] and [sem] functions
 /// define the semantic of bounds based interval representations in terms of
 /// integer sets.
+
 let semI (i : interval) : Set.set offset =
   range i.from i.to
 
@@ -249,6 +255,7 @@ let rec sem (is : intervals) : Set.set offset =
 /// the intersection of two sets is empty. Below I commented out two invocations
 /// of the lemma where the lemma is now automatically applied because of the
 /// pattern.
+
 let lemma_disjoint_intro (#a:eqtype) (s1 s2:Set.set a)
   : Lemma
     (requires Set.equal (Set.intersect s1 s2) Set.empty)
@@ -259,6 +266,7 @@ let lemma_disjoint_intro (#a:eqtype) (s1 s2:Set.set a)
 
 /// I use the lemma to prove that an interval is disjoint from an interval list
 /// whenever their concatenaton is [good].
+
 let lemma_semI_sem_disjoint (i:interval) (is:intervals)
   : Lemma
     (requires good (i::is))
@@ -267,6 +275,7 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
 ///  The following local lemma is inspired by Joachim's
 ///  `Intersection_range_semLIs_empty` lemma. It expresses the same idea and is
 ///  proven by induction on an increasing lower bound.
+
   let rec lemma_semI_sem_lb_disjoint (i:interval) (is:intervals) (lb:offset)
     : Lemma
       (requires goodLIs is lb /\ i.to <= lb)
@@ -276,7 +285,9 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
        lemma_semI_sem_lb_disjoint i (tl is) (hd is).to
     else ();
     Set.lemma_equal_elim (Set.intersect (semI i) (sem is)) Set.empty in
-///
+
+/// .. fst::
+
   lemma_semI_sem_lb_disjoint i is i.to
   // ; lemma_disjoint_intro (semI h) (sem t) //needed if SMTPat is removed
 
@@ -290,6 +301,7 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
 
 /// The first lemma states that if the heads are disjoint, then the head with
 /// the smaller [to] can be dropped from the [intersect] computation.
+
 let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
   : Lemma
     (requires (hd is1).from >= (hd is2).to )
@@ -302,6 +314,7 @@ let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
 /// The second lemma states that if the second head is a subset of the first,
 /// then the result of [intersect] is the union of that subset and the
 /// [intersect] computation with both heads dropped.
+
 let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
     (requires (hd is1).to = (hd is2).to /\ (hd is1).from < (hd is2).to)
@@ -324,6 +337,7 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 
 /// This is the hardest of the three cases and we ramp up the SMT solvers
 /// timeout to prove it.
+
 #set-options "--z3rlimit 15"
 
 /// No, unfortunately this is not a panacea. Rather, it is a proven recipe for
@@ -338,6 +352,7 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 /// One was the equivalent of the [lemma_semI_sem_lb_disjoint] lemma and its
 /// proof. The other was the importance of set operation distributivity for the
 /// proof.
+
 let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
     (requires (hd is1).to > (hd is2).to /\ (hd is1).from < (hd is2).to)
@@ -357,27 +372,31 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 ///
 /// (h1 u t1) n (h2 u t2) = (h1 n (h2 u t2)) u (t1 n (h2 u t2))
 ///                       = (h1 n h2) u (h1 n t2) u (t1 n h2) u (t1 n t2)
-///
+
   let is1_n_is2 = Set.intersect (sem is1) (sem is2) in
   assert (Set.equal is1_n_is2
                     (Set.union (Set.union (Set.intersect (semI h1) (semI h2))
                                           (Set.intersect (semI h1) (sem t2)))
                                (Set.union (Set.intersect (semI h2) (sem t1))
                                           (Set.intersect (sem t1) (sem t2)))));
-///
+
 ///  The rest of the proof simplifies the first three of the four intersects:
 ///  1. h1 n h2 = [f', h2.to]
+
   assert (Set.equal (Set.intersect (semI h1) (semI h2)) (semI (I f' h2.to)));
 ///  2. h1 n t2 = [h2.to h1.to] n t2
+
   lemma_semI_sem_disjoint (I h1.from h2.to) t2;
   assert (Set.equal (range h1.from h1.to)
                     (Set.union (range h1.from h2.to) (range h2.to h1.to)));
   assert (Set.equal (Set.intersect (range h1.from h1.to) (sem t2))
                     (Set.intersect (range h2.to h1.to) (sem t2)));
 ///  3. h2 n t1 = empty
+
   lemma_semI_sem_disjoint h2 t1;
-///
+
 /// The proof now applies the distributive law in the other direction to combine the 3rd and 4th intersect:
+
   Set.lemma_equal_elim is1_n_is2
                        (Set.union (semI (I f' h2.to))
                                   (Set.intersect (Set.union (range (h2.to) (h1.to))
@@ -385,11 +404,13 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
                                                  (sem t2)) )
 
 /// The following pragma resets the SMT solver to its original resource limit (roughly 5 seconds):
+
 #reset-options
 
 /// The final proof is by case analysis, in each step relying on the induction
 /// hypothesis and one of the lemmas. Again the [assert]s document document the
 /// proof.
+
 let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
   : Lemma
     (ensures (Set.equal ( sem (intersect is1 is2) ) (Set.intersect (sem is1) (sem is2))))
@@ -447,6 +468,7 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
 /// I claim that the F* code is easier to maintain and adapt.
 
 /// A simple print and test function confirm the code can be executed.
+
 open FStar.All
 open FStar.IO
 open FStar.Printf
@@ -488,3 +510,4 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// I am not a big fan of filling in time sheets. I might try Joachim's tool one day to do a self study on the effects of (self)-surveillance on my productivity.
 ///
 /// When a distinguished but elderly scientist states that something is possible, they are almost certainly right. When they state that something is impossible, they are very probably wrong.
+/// 
