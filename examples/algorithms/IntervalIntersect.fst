@@ -52,6 +52,8 @@ type interval = | I: from:offset -> to:offset -> interval
 /// the usual '.' notation, e.g., [i.from], which makes them a convenient
 /// alternative to records.
 ///
+(**** Part 1: Proving the intervals invariant *)
+///
 /// We define the goodness of [interval list]s in the same way as Joachim did in
 /// Coq. A [good interval list] is ordered and consists of non-empty disjoint
 /// intervals.
@@ -157,7 +159,7 @@ let intersect (is1 is2:intervals) =
 /// is that together they are ordered. That is where knowing that the [from] of
 /// the first result intervals is the [max] saves the day.
 
-(**** Proving functional correctness *)
+(**** Part 2: Proving functional correctness *)
 
 /// I could have stopped here and declare victory, 1:0 for FStar. Arguable there
 /// are few blemishes, like the F* bug with local functions that I discovered, or
@@ -197,7 +199,9 @@ let intersect (is1 is2:intervals) =
 /// The declarative definition of a set using a predicate that all set members
 /// need to satisfy is known in mathematics as an intensional definition.
 /// Certain sets, for example the set of even numbers can only be defined
-/// intensionally. My intuition is that intensional definitions are more concise and better suited for proof, conversely, extensional definitions are more explicit guaranteeing that sets are finite.
+/// intensionally. My intuition is that intensional definitions are more concise
+/// and better suited for proof, conversely, extensional definitions are more
+/// explicit guaranteeing that sets are finite.
 ///
 /// To get the best of both worlds, I give both an intensional and an
 /// extensional description of integer ranges, but make the intensional
@@ -206,8 +210,12 @@ let intersect (is1 is2:intervals) =
 let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <= z &&
   z < t)
 
-/// I use the ghostly intensional definition to specify the logical properties
-/// of the extensional definition.
+/// The fact that I had to extend the [FStar.Set] library, rather than extend in
+/// a separate file as in the Coq development stems from the immayturity of F*
+/// and the need for abstraction to simultaneously support verification and
+/// extraction. I use the ghostly intensional definition to specify the logical
+/// properties of the extensional definition.
+
 let rec range (f t:offset): Tot (r:Set.set offset{r==rangeGT f t})
   (decreases %[t-f])
   =
@@ -328,7 +336,7 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 /// and the ability to see the proof state, it revealed some crucial hints.
 ///
 /// One was the equivalent of the [lemma_semI_sem_lb_disjoint] lemma and its
-/// proof. The other was the importance of set operatoin distributivity for the
+/// proof. The other was the importance of set operation distributivity for the
 /// proof.
 let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
@@ -415,16 +423,30 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
        )
     end
 
-(***** Taking stock *)
+(**** Taking stock: intrinsic vs. extrinsic, intensional vs extensional *)
 
-/// Clearly this second part of the verification of [intersect] was much harder.
+/// Clearly the second second part of verifying [intersect] was much harder.
 /// While in the first part we used F* essentially as a programming language
 /// with stronger types and great automation, here we relied in a fundamental
 /// way on hand written lemmas and proofs.
 ///
-/// 
+/// The two parts are also great examples of what in F* jargon are called
+/// intrinsic and extrinsic verification styles. In the intrinsic verification
+/// style, the property is expressed as part of the function definition itself,
+/// e.g., by refining types, while in the extrinsic verification style, the
+/// property is expressed as a lemma and proved separately.
+///
+/// While the code/definition to proof ratio is larger in part 2, it is still
+/// substantially smaller than the Coq development. In addition to the proof
+/// scripts, Joachim's development relied on about 160 lines of lemma code about
+/// Coq ensembles, while the extension of [FStar.Set] supporting intensional
+/// set definitions are 10 lines of code. Arguably this is not
+/// what Jachim optimised for. True to the title of the blog his priority was to
+/// prove the code and find bugs, rather than find the most elegant proof.
 
-/// A simple print and test function confirme the code can be executed.
+/// I claim that the F* code is easier to maintain and adapt.
+
+/// A simple print and test function confirm the code can be executed.
 open FStar.All
 open FStar.IO
 open FStar.Printf
