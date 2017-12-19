@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6b607a7b4cd3355efef0dc7dcf1790f9"
+      "92dbe9533d60d70f6015c4cc629cc32a"
     ],
     [
       "ImmutableSTwHeaps.3767",
@@ -21,7 +21,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "4955ae4b19346e5efe3d799f4abbe2ce"
+      "84247759f57af22eec8c97b5f6b4af0e"
     ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
@@ -34,7 +34,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "df526f69cd3b6b8bd5fcc8dde43c6f06"
+      "cc0109c1329f9c308c614f0a965e5a49"
     ],
     [
       "ImmutableSTwHeaps.ist_witness",
@@ -47,7 +47,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "d8aed7358dcc25d9ca40ed53b3e98055"
+      "ead28206b8614d34d52678be0323900c"
     ],
     [
       "ImmutableSTwHeaps.ist_recall",
@@ -60,7 +60,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "24e9194cafdd07a5203fc0fe329a7f27"
+      "00ab8864fa404dc5d9e0bbba37a54c37"
     ],
     [
       "ImmutableSTwHeaps.alloc",
@@ -90,7 +90,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "5daada5444baea35eb594dad0b5e5b1e"
+      "6f56c29e6a8a50e8d5b76ec58e3478ac"
     ],
     [
       "ImmutableSTwHeaps.read",
@@ -102,7 +102,7 @@
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda"
       ],
       0,
-      "cc1993ee2fb9229ed69d6cc10c57862d"
+      "db03e6f885d2bf194cdbf483406d8e9a"
     ],
     [
       "ImmutableSTwHeaps.write",
@@ -112,26 +112,23 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "equation_ImmutableSTwHeaps.heap_rel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_ImmutableSTwHeaps.heap_rel",
         "lemma_FStar.Monotonic.Heap.lemma_contains_upd_modifies",
+        "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_distinct_mm",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_distinct_types",
         "lemma_FStar.Monotonic.Heap.lemma_sel_same_addr",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
-        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_a51928430ff7628816c2d836c4b2574e",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
-        "true_interp", "typing_FStar.Heap.trivial_preorder",
-        "typing_ImmutableSTwHeaps.sel", "typing_ImmutableSTwHeaps.upd"
+        "typing_FStar.Heap.trivial_preorder", "typing_ImmutableSTwHeaps.sel",
+        "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "b34d89c6cd60b2cd8056352000094802"
+      "b23b3af2800cde471cb43224c79f4512"
     ]
   ]
 ]

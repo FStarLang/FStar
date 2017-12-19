@@ -37,7 +37,7 @@ let genPost parent m0 (k:key) m1 =
 
 
 val keygen: parent:rid -> ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (genPost parent))
 
 
@@ -60,7 +60,7 @@ val encrypt: k:key -> m:msg -> ST cipher
       modifies_one k.region h0 h1 /\
       m_contains k.log h1
      /\ log1 == snoc log0 (m, c)
-     /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
+     /\ witnessed k.log (at_least (Seq.length log0) (m, c) k.log))))
 
 let encrypt k m =
   m_recall k.log;

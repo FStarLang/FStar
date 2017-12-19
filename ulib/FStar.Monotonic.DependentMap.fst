@@ -50,7 +50,7 @@ let alloc #a #b #inv #r _ = MR.m_alloc r []
 
 let extend #a #b #inv #r t x y =
     let open MR in
-    m_recall t;
+    recall t;
     let cur = m_read t in
     m_write t (upd cur x y);
     witness t (contains t x y)

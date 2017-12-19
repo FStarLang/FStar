@@ -171,6 +171,51 @@ Guidelines for the changelog:
   functionality is now moved to FStar.Bytes, FStar.Error, FStar.Tcp,
   FStar.Udp, and FStar.Date.
 
+* Implentation of the HyperStack memory model and monotonic libraries
+  (refs, sequences, and maps)
+
+
+  1. `Monotonic.RRef` is now transparently defined as `HyperStack`
+     reference. As a result, the coercion `as_hsref` is no longer
+     required, and one can simply use `HyperStack` functions `sel,
+     upd, ralloc, ...` etc. instead of `m_sel, m_upd, m_alloc,
+     ...`. The latter functions are still there in `Monotonic.RRef`
+     for backward compatibility, and they are just wrappers over the
+     underlying `HyperStack` functions.
+
+     `type m_rref (r:rid) (a:Type) (b:reln a) = HST.m_rref r a b`
+
+  2. The `witnessed` predicate in `Monotonic.RRef` now takes as
+     argument the underlying refererence, in addition to the memory
+     predicate. Client changes for this should be rather syntactic,
+     since the predicate is already proven stable w.r.t. some ref. For
+     example, see this commit:
+
+     https://github.com/mitls/mitls-fstar/commit/558502ab5fa1d6859dba1a5d0cedea666514e7cb#diff-bab768cdd95c27702f121b17411de9aaR62
+
+  3. `HyperStack` references (`reference, mref, stackref, ...` etc.)
+     are now defined in `FStar.HyperStack.ST`. So, the clients must
+     `open` `FStar.HyperStack.ST` after `FStar.HyperStack` so that the
+     correct ref types are in the context. If the clients also open
+     `FStar.Monotonic.RRef`, then it can be opened after
+     `FStar.HyperStack.ST`, since it defines its own ref type.
+
+  4. When allocating a new region or a reference, the caller has to
+     now satisfy a precondition `witnessed (region_contains_pred r)`,
+     where `r` is the parent region. If `r` is an eternal region, this
+     predicate can be obtained using the
+     `HyperStack.ST.witness_region` function (by showing that the
+     region is contained in the memory). See for example:
+
+     https://github.com/FStarLang/FStar/commit/29c542301e2589d76869b4663b9b21884ea9fcfa#diff-eaa8cd4efc632ac485423c4eae117fedR208
+
+     Further, in some cases ref allocation may need some annotation
+     about the default, trivial preorder (see the change regarding
+     implicit generalization of types above). For example:
+
+     https://github.com/FStarLang/FStar/commit/f531ce82a19aa7073856cea8dd14fa424bbdd5dd#diff-86e8502a719a3b2f58786f2bdabc4e75R491
+
+
 ## C Extraction
 
 * [PR #1176](https://github.com/FStarLang/FStar/pull/1176)

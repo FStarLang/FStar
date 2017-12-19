@@ -1,10 +1,10 @@
 module EtM.CPA
 
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open EtM.Ideal
@@ -14,6 +14,8 @@ open Platform.Bytes
 open CoreCrypto
 
 module B = Platform.Bytes
+
+module HST = FStar.HyperStack.ST
 
 open EtM.Plain
 
@@ -40,12 +42,12 @@ noeq type key =
 let genPost parent m0 (k:key) m1 =
     modifies Set.empty m0 m1
   /\ extends k.region parent
-  /\ fresh_region k.region m0.h m1.h
+  /\ HyperHeap.fresh_region k.region m0.h m1.h
   /\ m_contains k.log m1
   /\ m_sel m1 k.log == createEmpty
 
 val keygen: parent:rid -> ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
   (ensures  (genPost parent))
 
 let keygen parent =
@@ -63,7 +65,7 @@ val encrypt: k:key -> m:msg -> ST cipher
       modifies_one k.region h0 h1 /\
       m_contains k.log h1
      /\ log1 == snoc log0 (m, c)
-     /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
+     /\ witnessed k.log (at_least (Seq.length log0) (m, c) k.log))))
 
 
 // BEGIN: EtMCPAEncrypt

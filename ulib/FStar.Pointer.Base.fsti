@@ -4,7 +4,7 @@ module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-open HST // for := , !
+open FStar.HyperStack.ST // for := , !
 
 (*** Definitions *)
 
@@ -2059,10 +2059,10 @@ val screate
 
 val ecreate
   (t:typ)
-  (r:HH.rid)
+  (r:HST.rid)
   (s: option (type_of_typ t))
 : HST.ST (pointer t)
-  (requires (fun h -> HS.is_eternal_region r))
+  (requires (fun h -> HS.is_eternal_region r /\ HST.witnessed (region_contains_pred r)))
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
     /\ frameOf b == r

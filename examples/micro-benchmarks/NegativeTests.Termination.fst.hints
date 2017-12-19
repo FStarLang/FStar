@@ -1,5 +1,5 @@
 [
-  "\u000e\u0005QŒv|FÃÍ+ ‚´?Æ(",
+  "t;×\u001aúä”\u0006\bÎù\u0015bsêf",
   [
     [
       "NegativeTests.Termination.sumto",
@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "10c6fbb0c0509147dc973601b081d682"
+      "7b2bb8b78dd310338cd72aeb84fd1947"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "d80b83c17f0c583b3be26153ba44ccc8"
+      "8fcc63b9127dea61c74c97646f6347fb"
     ],
     [
       "NegativeTests.Termination.uu___is_O",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "d70334c21976cdc131af9c6a0d73209e"
+      "6d1ef01db2163e8362b5d9f415d3cd1b"
     ],
     [
       "NegativeTests.Termination.uu___is_S",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "3ea1ec9153546e00745cd2eada8e8b37"
+      "a26315e4f0227fcee01cf22936b9ae07"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -58,7 +58,7 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "8fc64997e8537f22aedb051fadbc44f4"
+      "e421d0b5fadc595d1c99c71c3f790972"
     ]
   ]
 ]

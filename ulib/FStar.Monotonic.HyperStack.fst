@@ -31,20 +31,32 @@ let is_tip (tip:HH.rid) (h:HH.t) =
   /\ tip `is_in` h                                                      //the tip is active
   /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
 
+let rid_last_component (r:HH.rid) :GTot int
+  = let open FStar.List.Tot in
+    let r = HH.reveal r in
+    if length r = 0 then 0
+    else snd (hd r)
+
+let rid_ctr_pred (h:HH.t) (n:int) =
+  forall (r:HH.rid).{:pattern (h `Map.contains`r)}
+               h `Map.contains` r ==> rid_last_component r < n
+
 let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
 
 noeq type mem =
-  | HS : h:hh
+  | HS : rid_ctr:int
+       -> h:hh{rid_ctr_pred h rid_ctr}
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
 
-let empty_mem (m:HH.t) =
-  let empty_map = Map.restrict (Set.empty) m in
+let empty_mem (m:HH.t) = 
+  let empty_map = Map.restrict (Set.empty) m in 
   let h = Map.upd empty_map HH.root Heap.emp in
   let tip = HH.root in
-  HS h tip
-
-let test0 (m:mem) (r:rid{r `is_above` m.tip}) =
+  assume (rid_last_component HH.root == 0);
+  HS 1 h tip
+ 
+let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
     assert (r `is_in` m.h)
 
 let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
@@ -80,7 +92,7 @@ let popped m0 m1 =
   /\ Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip)
   /\ Map.equal m1.h (Map.restrict (Map.domain m1.h) m0.h)
 
-let pop (m0:mem{poppable m0}) : GTot mem =
+let pop (m0:mem{poppable m0}) : Tot mem =
   root_has_color_zero();
   let dom = remove_elt (Map.domain m0.h) m0.tip in
   let h0 = m0.h in
@@ -88,14 +100,18 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   let tip0 = m0.tip in
   let tip1 = HH.parent tip0 in
   assert (forall (r:sid). Map.contains h1 r ==>
-            (forall (s:sid). includes s r ==> Map.contains h1 s));
-  HS h1 tip1
+  	    (forall (s:sid). includes s r ==> Map.contains h1 s));
+  HS m0.rid_ctr h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
+//Mark it private so that clients can't use its projectors etc.
+//enabling extraction of mreference to just a reference in ML and pointer in C
 private
 noeq
-type mreference (a:Type) (rel:preorder a) =
-  | MkRef : frame:rid -> mrref:HH.mrref frame a rel -> mreference a rel
+type mreference' (a:Type) (rel:preorder a) =
+  | MkRef : frame:rid -> mrref:HH.mrref frame a rel -> mreference' a rel
+
+let mreference a rel = mreference' a rel
 
 //TODO: rename to frame_of, avoiding the inconsistent use of camelCase
 let frameOf (#a:Type) (#rel:preorder a) (r:mreference a rel)
@@ -193,7 +209,7 @@ let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
 
 let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (frameOf s)}) (v:a)
   : GTot mem
-  = HS (m.h.[mrref_of s] <- v) m.tip
+  = HS m.rid_ctr (m.h.[mrref_of s] <- v) m.tip
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
@@ -289,12 +305,12 @@ let coerce_mrref (#id1:rid) (#id2:rid) (#a:Type) (#rel:preorder a)
  * AR: we can prove this lemma only if both the mreferences have same preorder
  *)
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  : Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-  = lemma_sel_same_addr h.h (mrref_of r1) (coerce_mrref (mrref_of r2))
+  :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
+= lemma_sel_same_addr #(frameOf r1) #a #rel h.h (mrref_of r1) (mrref_of r2)
 
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  : Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
+  :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
     [SMTPat (sel h r1); SMTPat (sel h r2)]
   = lemma_sel_same_addr h r1 r2
@@ -302,21 +318,21 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
 #set-options "--z3rlimit 16"
 
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-   : Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-           (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-   = Classical.or_elim
-           #(h `contains` r1)
-           #(h `contains` r2)
-           #(fun _ -> h `contains` r1 /\ h `contains` r2)
-           (fun _ -> lemma_sel_same_addr h r1 r2)
-           (fun _ -> lemma_sel_same_addr h r2 r1);
-     HH.lemma_upd_same_addr h.h (mrref_of r1) (coerce_mrref (mrref_of r2)) x
+  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+= Classical.or_elim
+    #(h `contains` r1)
+    #(h `contains` r2)
+    #(fun _ -> h `contains` r1 /\ h `contains` r2)
+    (fun _ -> lemma_sel_same_addr h r1 r2)
+    (fun _ -> lemma_sel_same_addr h r2 r1);
+  HH.lemma_upd_same_addr h.h (mrref_of r1) (mrref_of r2) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-   : Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-           (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-           [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
-   = lemma_upd_same_addr h r1 r2 x
+  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
+= lemma_upd_same_addr h r1 r2 x
 
 (*
  * AR: relating contains and weak_contains.

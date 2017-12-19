@@ -42,7 +42,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fe5ed4752d41dac911b96e7398b06c24"
+      "2eb4c871b94e445ea80f8d7ff79e17e3"
     ],
     [
       "Ex04f.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c13eb6ad31e87db24ef86104150ae11a"
+      "79e9fae0f245e3d0fb6fb0f9079532ac"
     ],
     [
       "Ex04f.fold_left_Cons_is_rev",
@@ -78,7 +78,7 @@
         "@fuel_correspondence_Ex04f.reverse.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.fold_left.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.reverse.fuel_instrumented", "@query",
-        "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.Cons@tok",
@@ -92,7 +92,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c888c0e6f277490ba03ed3c4820ceb2d"
+      "943e51b0eb099b9feafcc8449fbc1eb0"
     ]
   ]
 ]
