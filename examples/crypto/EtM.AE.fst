@@ -256,7 +256,7 @@ let keygen (parent:rid)
 /// encrypt:
 ///       We return a cipher, preserve the invariant,
 ///       and extend the log by exactly one entry
-#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --z3rlimit 20"
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --z3rlimit 30"
 let encrypt (k:key) (plain:Plain.plain)
   : ST cipher
   (requires (fun h0 -> invariant h0 k))
