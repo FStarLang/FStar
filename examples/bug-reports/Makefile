@@ -40,7 +40,7 @@ SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121
   bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug400.fst bug419.fst bug442.fst\
   bug442b.fst bug466.fst bug484.fst bug542.fst bug543.fst bug554.fst bug575.fst bug604.fst bug606.fst\
   bug626.fst bug682.fst bug715.fst bug739.fst bug815.fst bug815b.fst bug851.fst bug933.fst bug933b.fst\
-  bug1038.fst bug1055b.fst bug1091.fst
+  bug1038.fst bug1055b.fst bug1091.fst bug1361.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
