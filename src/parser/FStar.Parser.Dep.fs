@@ -694,6 +694,41 @@ in
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
 
+
+(** Sort files in topological order given the dependence graph deps
+ **)
+let topological_dependences_of (dep_graph:dependence_graph) file_system_map all_source_files =
+    let topologically_sorted = BU.mk_ref [] in
+    (* Compute the transitive closure, collecting visiting files in a post-order traversal *)
+    let rec aux (cycle:list<file_name>) filename =
+      let direct_deps, color = must (deps_try_find dep_graph filename) in
+      match color with
+      | Gray ->
+        Errors. log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
+        Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
+        print_graph dep_graph;
+        print_string "\n";
+        exit 1
+      | Black ->
+        (* If the element has been visited already, then the map contains all its
+         * dependencies. Otherwise, the map only contains its direct dependencies. *)
+        ()
+      | White ->
+        (* Unvisited. Compute. *)
+        deps_add_dep dep_graph filename (direct_deps, Gray);
+        List.iter (fun k -> aux (k :: cycle) k)
+                  (dependences_of file_system_map
+                                  dep_graph
+                                  all_source_files
+                                  filename);
+        (* Mutate the graph (it now remembers transitive dependencies). *)
+        deps_add_dep dep_graph filename (direct_deps, Black);
+        (* Also build the topological sort (Tarjan's algorithm). *)
+        topologically_sorted := filename :: !topologically_sorted
+    in
+    List.iter (aux []) all_source_files;
+    !topologically_sorted
+
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
 let collect (all_cmd_line_files: list<file_name>)
@@ -731,48 +766,15 @@ let collect (all_cmd_line_files: list<file_name>)
     end
   in
   List.iter discover_one all_cmd_line_files;
-
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
 
-  let topological_dependences_of all_command_line_files =
-      let topologically_sorted = BU.mk_ref [] in
-      (* Compute the transitive closure, collecting visiting files in a post-order traversal *)
-      let rec aux (cycle:list<file_name>) filename =
-        let direct_deps, color = must (deps_try_find dep_graph filename) in
-        match color with
-        | Gray ->
-            Errors. log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
-            Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
-            print_graph dep_graph;
-            print_string "\n";
-            exit 1
-        | Black ->
-            (* If the element has been visited already, then the map contains all its
-             * dependencies. Otherwise, the map only contains its direct dependencies. *)
-            ()
-        | White ->
-            (* Unvisited. Compute. *)
-            deps_add_dep dep_graph filename (direct_deps, Gray);
-            List.iter (fun k -> aux (k :: cycle) k)
-                      (dependences_of file_system_map
-                                      dep_graph
-                                      all_command_line_files
-                                      filename);
-            (* Mutate the graph (it now remembers transitive dependencies). *)
-            deps_add_dep dep_graph filename (direct_deps, Black);
-            (* Also build the topological sort (Tarjan's algorithm). *)
-            topologically_sorted := filename :: !topologically_sorted
-      in
-      List.iter (aux []) all_command_line_files;
-      !topologically_sorted
-  in
   //only verify those files on the command line
   all_cmd_line_files |>
   List.iter (fun f ->
     let m = lowercase_module_name f in
     Options.add_verify_module m);
 
-  topological_dependences_of all_cmd_line_files,
+  topological_dependences_of dep_graph file_system_map all_cmd_line_files,
   Mk (dep_graph, file_system_map, all_cmd_line_files)
 
 let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
@@ -877,12 +879,13 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
             // .krml files can be produced using just an interface, unlike .ml files
             Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f))
           );
-    let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
+    let all_fst_files = keys |> List.filter is_implementation in
+    let all_fst_files = topological_dependences_of deps file_system_map all_fst_files in
     let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
         if Options.should_extract (lowercase_module_name fst_file)
         then [output_ml_file fst_file]
         else []
-      ) |> Util.sort_with String.compare in
+      ) in
     let all_krml_files = List.map output_krml_file keys in
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t");
