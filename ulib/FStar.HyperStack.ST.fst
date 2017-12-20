@@ -51,18 +51,11 @@ private abstract let mem_pre :preorder mem = mem_rel
 
 type mem_predicate = mem -> Type0
 
-abstract let stable (p:mem_predicate) =
-  forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
-
-let stable_predicate = p:mem_predicate{stable p}
-
-assume type witnessed: stable_predicate -> Type0
-
 (* Predicates that we will witness with regions and refs *)
-abstract let region_contains_pred (r:HH.rid) :stable_predicate
+abstract let region_contains_pred (r:HH.rid) :mem_predicate
   = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
 
-abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stable_predicate
+abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :mem_predicate
   = fun m -> rid_last_component (HS.frameOf r) < m.rid_ctr /\
           (HS.is_mm r \/ (not (m.h `Map.contains` (HS.frameOf r)) \/ HH.contains_ref (HS.mrref_of r) m.h))
 
@@ -79,15 +72,20 @@ unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fu
 sub_effect DIV ~> GST = lift_div_gst
 
 
-(* TODO *)
+abstract let stable (p:mem_predicate) =
+  forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
+
+assume type witnessed: mem_predicate -> Type0
+
+(* TODO: we should derive these using DM4F *)
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
 
-assume val gst_witness: p:stable_predicate -> GST unit (fun post h0 -> p h0 /\ (witnessed p ==> post () h0))
-assume val gst_recall:  p:stable_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
+assume val gst_witness: p:mem_predicate -> GST unit (fun post h0 -> p h0 /\ stable p /\ (witnessed p ==> post () h0))
+assume val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
 
 assume val lemma_functoriality
-  (p:mem_predicate{stable p /\ witnessed p}) (q:mem_predicate{stable q /\ (forall (h:mem). p h ==> q h)})
+  (p:mem_predicate{witnessed p}) (q:mem_predicate{(forall (h:mem). p h ==> q h)})
   : Lemma (ensures (witnessed q))
 
 let st_pre   = gst_pre
@@ -797,13 +795,39 @@ type erid = r:rid{is_eternal_region r}
 
 type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
 
+(* TODO: AR: add pattern on this quantifier *)
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
-                        (r:m_rref i a b)(p:(mem -> Tot Type0))
-  = forall h0 h1. (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
+                        (r:m_rref i a b) (p:(mem -> Tot Type0))
+  = forall h0 h1. (p h0 /\ h0 `contains` r /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
-private let p_pred (#i:erid) (#a:Type) (#b:preorder a)
-                   (r:m_rref i a b) (p:(mem -> Tot Type0))
-  = fun (m:mem) -> m `HS.contains` r /\ p m
+abstract type mr_witnessed (p:(mem -> Tot Type0)) = witnessed p
+
+let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
+               (m:m_rref r a b) (p:(mem -> Type0))
+  :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
+           (ensures  (fun h0 _ h1 -> h0==h1 /\ mr_witnessed p))
+  = recall m;
+    let p_pred (#i:erid) (#a:Type) (#b:preorder a) (r:m_rref i a b) (p:mem_predicate) :mem_predicate
+      = fun m -> m `contains` r /\ p m
+    in
+    gst_witness (p_pred #r #a #b m p);
+    lemma_functoriality (p_pred #r #a #b m p) p
+
+let mr_weaken_witness (#r:erid) (#a:Type) (#b:preorder a)
+  (m:m_rref r a b) 
+  (p:(mem -> GTot Type0){stable_on_t m p})
+  (q:(mem -> GTot Type0){stable_on_t m q})
+  :Lemma ((forall h. p h ==> q h) /\ mr_witnessed m p ==> mr_witnessed m q)
+  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ mr_witnessed m p)) (ensures (mr_witnessed m q))
+      = lemma_functoriality (p_pred m p) (p_pred m q)
+    in
+    FStar.Classical.move_requires aux ()
+
+let mr_testify (#r:erid) (#a:Type) (#b:preorder a) 
+               (m:m_rref r a b) (p:(mem -> Type0))
+  :ST unit (requires (fun _      ->  mr_witnessed m p))
+           (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
+  = gst_recall (p_pred m p)
 
 abstract type mr_witnessed (#i:erid) (#a:Type) (#b:preorder a)
                            (r:m_rref i a b) (p:(mem -> Tot Type0))
