@@ -75,13 +75,6 @@ val witness (#r:rid) (#a:Type) (#b:reln a) (m:m_rref r a b) (p:HST.mem_predicate
       (ensures  (fun h0 _ h1 -> h0==h1 /\ witnessed p))
 let witness #r #a #b m p = HST.mr_witness m p
 
-let weaken_witness (#r:rid) (#a:Type) (#b:reln a)
-  (m:m_rref r a b) 
-  (p:HST.mem_predicate{stable_on_t m p})
-  (q:HST.mem_predicate{stable_on_t m q})
-  :Lemma ((forall h. p h ==> q h) /\ witnessed p ==> witnessed q)
-  = HST.mr_weaken_witness m p q
-
 (* claims a witnessed property holds in the current state *)
 val testify (p:mem_predicate)
   :ST unit (requires (fun _      ->  witnessed p))

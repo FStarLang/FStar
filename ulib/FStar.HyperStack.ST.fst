@@ -787,10 +787,8 @@ let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
     gst_witness (p_pred m p);
     lemma_functoriality (p_pred m p) p
 
-let mr_weaken_witness (#r:erid) (#a:Type) (#b:preorder a)
-  (m:m_rref r a b) 
-  (p:mem_predicate{stable_on_t m p})
-  (q:mem_predicate{stable_on_t m q})
+let weaken_witness
+  (p q:mem_predicate)
   :Lemma ((forall h. p h ==> q h) /\ witnessed p ==> witnessed q)
   = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ witnessed p)) (ensures (witnessed q))
       = lemma_functoriality p q
