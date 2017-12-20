@@ -186,7 +186,7 @@ val extend
          HS.modifies (Set.singleton r) h0 h1 /\
          HH.modifies_rref r (Set.singleton (addr_of t)) HS.(h0.h) HS.(h1.h) /\
          HS.sel h1 t == upd cur x y /\
-         MR.witnessed t (contains t x y)))
+         MR.witnessed (contains t x y)))
 
 /// `lookup t x`: Querying the map `t` at point `x`
 ///      Ensures: - The state does not change
@@ -207,7 +207,7 @@ val lookup
           | None -> ~(defined t x h1)
           | Some v ->
             contains t x v h1 /\
-            MR.witnessed t (contains t x v))))
+            MR.witnessed (contains t x v))))
  
 let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
