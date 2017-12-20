@@ -47,7 +47,9 @@ private abstract let eternal_refs_pred (m1 m2:mem) :Type0
 private abstract let mem_rel :relation mem
   = fun (m1 m2:mem) ->
     eternal_region_pred m1 m2 /\ rid_ctr_pred m1 m2 /\ rid_last_component_pred m1 m2 /\ eternal_refs_pred m1 m2
-private abstract let mem_pre :preorder mem = mem_rel
+private abstract let mem_pre :preorder mem =
+  HS.lemma_rid_ctr_pred ();
+  mem_rel
 
 type mem_predicate = mem -> Type0
 
@@ -256,6 +258,7 @@ let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m
   = let m0 = gst_get () in
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
     let h1 = Map.upd m0.h new_tip_rid Heap.emp in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
     let m1 = HS (m0.rid_ctr + 1) h1 new_tip_rid in
     gst_put m1
 
@@ -284,6 +287,8 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
   (ensures  (fun m0 s m1 -> is_stack_region (HS.frameOf s) /\ salloc_post init m0 s m1 /\ is_mm s == mm))
   = let m0 = gst_get () in
     let r, h = HH.alloc rel m0.tip init mm m0.h in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_rid_ctr_pred ();
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
@@ -311,7 +316,9 @@ let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem{m `
   :GTot mem
   = let h_0 = Map.sel m.h (frameOf r) in
     let h_1 = Heap.free_mm h_0 (as_ref r) in
-    HS m.rid_ctr (Map.upd m.h (frameOf r) h_1) m.tip
+    let h1 = Map.upd m.h (frameOf r) h_1 in
+    HS.lemma_rid_ctr_pred_upd m.h m.rid_ctr h1 m.rid_ctr;
+    HS m.rid_ctr h1 m.tip
 
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit
@@ -348,9 +355,12 @@ let new_region (r0:rid)
 		 m1.h == Map.upd m0.h r1 Heap.emp    /\
 		 m1.tip = m0.tip))
   = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
+    HS.lemma_rid_ctr_pred ();
     let m0 = gst_get () in
     let new_rid = HH.extend_monochrome r0 m0.rid_ctr in
-    let m1 = HS (m0.rid_ctr + 1) (Map.upd m0.h new_rid Heap.emp) m0.tip in
+    let h1 = Map.upd m0.h new_rid Heap.emp in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
@@ -369,9 +379,12 @@ let new_colored_region (r0:rid) (c:int)
 	        m1.h == Map.upd m0.h r1 Heap.emp    /\
 		m1.tip = m0.tip))
   = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
+    HS.lemma_rid_ctr_pred ();
     let m0 = gst_get () in
     let new_rid = HH.extend r0 m0.rid_ctr c in
-    let m1 = HS (m0.rid_ctr + 1) (Map.upd m0.h new_rid Heap.emp) m0.tip in
+    let h1 = Map.upd m0.h new_rid Heap.emp in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
@@ -391,6 +404,8 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   = if i <> HH.root then gst_recall (region_contains_pred i);
     let m0 = gst_get () in
     let r, h = HH.alloc rel i init mm m0.h in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_rid_ctr_pred ();
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
@@ -435,6 +450,7 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
        (ensures (assign_post r v))
   = let m0 = gst_get () in
     let h = HH.upd_tot m0.h (HS.mrref_of r) v in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1
 
@@ -495,7 +511,8 @@ let witness_region (i:rid)
 let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
   :ST unit (fun h0      -> HH.contains_ref (HS.mrref_of r) h0.h)
            (fun h0 _ h1 -> h0 == h1 /\ witnessed (ref_contains_pred r))
-  = gst_witness (ref_contains_pred r)
+  = HS.lemma_rid_ctr_pred ();
+    gst_witness (ref_contains_pred r)
 
 (* Tests *)
 val test_do_nothing: int -> Stack int
