@@ -185,22 +185,14 @@ Guidelines for the changelog:
 
      `type m_rref (r:rid) (a:Type) (b:reln a) = HST.m_rref r a b`
 
-  2. The `witnessed` predicate in `Monotonic.RRef` now takes as
-     argument the underlying refererence, in addition to the memory
-     predicate. Client changes for this should be rather syntactic,
-     since the predicate is already proven stable w.r.t. some ref. For
-     example, see this commit:
-
-     https://github.com/mitls/mitls-fstar/commit/558502ab5fa1d6859dba1a5d0cedea666514e7cb#diff-bab768cdd95c27702f121b17411de9aaR62
-
-  3. `HyperStack` references (`reference, mref, stackref, ...` etc.)
+  2. `HyperStack` references (`reference, mref, stackref, ...` etc.)
      are now defined in `FStar.HyperStack.ST`. So, the clients must
      `open` `FStar.HyperStack.ST` after `FStar.HyperStack` so that the
      correct ref types are in the context. If the clients also open
      `FStar.Monotonic.RRef`, then it can be opened after
      `FStar.HyperStack.ST`, since it defines its own ref type.
 
-  4. When allocating a new region or a reference, the caller has to
+  3. When allocating a new region or a reference, the caller has to
      now satisfy a precondition `witnessed (region_contains_pred r)`,
      where `r` is the parent region. If `r` is an eternal region, this
      predicate can be obtained using the
