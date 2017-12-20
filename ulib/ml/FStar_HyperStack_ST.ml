@@ -57,3 +57,4 @@ type ('a, 'b, 'c) m_rref = 'b ref
 let mr_witness _ _ _ _ _ = ()
 let mr_testify _ _ _ _ _ = ()
 type erid = rid
+type 'a witnessed = 'a FStar_CommonST.witnessed
