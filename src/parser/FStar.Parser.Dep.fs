@@ -847,7 +847,7 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
   *)
 let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
-        let order : ref<(list<string>)> = ref [] in
+        let order : ref<(list<string>)> = BU.mk_ref [] in
         let remaining_output_files = BU.smap_copy orig_output_file_map in
         let visited_other_modules = BU.smap_create 41 in
         let should_visit lc_module_name =
