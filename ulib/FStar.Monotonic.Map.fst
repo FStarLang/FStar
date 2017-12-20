@@ -95,8 +95,8 @@ let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r
             /\ modifies (Set.singleton r) h0 h1
             /\ modifies_rref r (Set.singleton (HS.as_addr hsref)) h0.h h1.h
             /\ m_sel h1 m == upd cur x y
-            /\ MR.witnessed m (defined m x)
-            /\ MR.witnessed m (contains m x y)))
+            /\ MR.witnessed (defined m x)
+            /\ MR.witnessed (contains m x y)))
   = recall m;
     let cur = m_read m in
     m_write m (upd cur x y);
@@ -114,8 +114,8 @@ let lookup #r #a #b #inv (m:t r a b inv) (x:a)
        (Some? y ==>
          defined m x h1 /\
          contains m x (Some?.v y) h1 /\
-         MR.witnessed m (defined m x) /\
-         MR.witnessed m (contains m x (Some?.v y)))))
+         MR.witnessed (defined m x) /\
+         MR.witnessed (contains m x (Some?.v y)))))
 =
   let y = sel (m_read m) x in
   match y with

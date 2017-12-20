@@ -89,7 +89,7 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
      let log1 = get_log h1 k in
      HyperHeap.modifies (Set.singleton k.region) h0.h h1.h
      /\ log1 == snoc log0 (m, c)
-     /\ witnessed k.log (at_least (Seq.length log0) (m, c) k.log)
+     /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
      /\ invariant h1 k)))
 
 

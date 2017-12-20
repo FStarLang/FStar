@@ -65,7 +65,7 @@ val encrypt: k:key -> m:msg -> ST cipher
       modifies_one k.region h0 h1 /\
       m_contains k.log h1
      /\ log1 == snoc log0 (m, c)
-     /\ witnessed k.log (at_least (Seq.length log0) (m, c) k.log))))
+     /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
 
 // BEGIN: EtMCPAEncrypt

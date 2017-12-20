@@ -37,8 +37,11 @@ let rid_last_component (r:HH.rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
-let rid_ctr_pred (h:HH.t) (n:int) =
-  forall (r:HH.rid).{:pattern (h `Map.contains`r)}
+(*
+ * AR: marking it abstract, else it has a high-chance of firing even with a pattern
+ *)
+abstract let rid_ctr_pred (h:HH.t) (n:int) =
+  forall (r:HH.rid).{:pattern (h `Map.contains` r)}
                h `Map.contains` r ==> rid_last_component r < n
 
 let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
@@ -48,6 +51,31 @@ noeq type mem =
        -> h:hh{rid_ctr_pred h rid_ctr}
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
+
+(****** rid_ctr_pred related lemmas ******)
+
+(*
+ * Expose the meaning of the predicate itself
+ *)
+let lemma_rid_ctr_pred ()
+  :Lemma (forall (m:mem) (r:HH.rid).{:pattern (m.h `Map.contains` r)} m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr)
+  = ()
+
+(*
+ * If h1 and c1 are in rid_ctr_pred relation, and
+ * - h2 is a superset of h1
+ * - c2 >= c1
+ * - all rids in (h2 - h1) have the last component less than c2
+ * Then h2 and c2 are in the rid_ctr_pred relation
+ *)
+let lemma_rid_ctr_pred_upd (h1:HH.t) (c1:int) (h2:HH.t) (c2:int)
+  :Lemma (requires (let s1 = Map.domain h1 in
+                    let s2 = Map.domain h2 in
+                    (rid_ctr_pred h1 c1 /\ Set.subset s1 s2 /\ c1 <= c2 /\
+		     (forall (r:rid). (Set.mem r s2 /\ (not (Set.mem r s1))) ==> rid_last_component r < c2))))
+         (ensures  (rid_ctr_pred h2 c2))
+  = ()
+(*****)
 
 let empty_mem (m:HH.t) = 
   let empty_map = Map.restrict (Set.empty) m in 
