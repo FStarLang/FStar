@@ -698,13 +698,6 @@ in
 (** Sort files in topological order given the dependence graph deps
  **)
 let topological_dependences_of (dep_graph:dependence_graph) file_system_map all_source_files =
-    let dep_graph = 
-      let d = deps_empty() in
-      deps_keys dep_graph |> List.iter (fun k ->
-      let deps, _ = BU.must (deps_try_find dep_graph k) in
-      deps_add_dep d k (deps, White));
-      d
-    in
     let topologically_sorted = BU.mk_ref [] in
     (* Compute the transitive closure, collecting visiting files in a post-order traversal *)
     let rec aux (cycle:list<file_name>) filename =
@@ -887,7 +880,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
             Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f))
           );
     let all_fst_files = keys |> List.filter is_implementation in
-    let all_fst_files = topological_dependences_of deps file_system_map all_fst_files |> List.rev in
+    let all_fst_files = topological_dependences_of deps file_system_map all_fst_files in
     let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
         if Options.should_extract (lowercase_module_name fst_file)
         then [output_ml_file fst_file]
