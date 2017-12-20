@@ -89,12 +89,11 @@ val testify (p:mem_predicate)
 let testify p = HST.gst_recall p
 
 (* 17-01-05 can we prove it from testify? *) 
-val testify_forall (#r:rid) (#a:Type) (#b:reln a) (#c:Type) (#p:(c -> mem -> Type0))
-  (m:m_rref r a b) 
+val testify_forall (#c:Type) (#p:(c -> mem -> Type0))
   ($s:squash (forall (x:c). witnessed (p x)))
   :ST unit (requires (fun h      -> True))
            (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
-let testify_forall #r #a #b #p $s = admit ()
+let testify_forall #c #p $s = admit ()
 
 (*
  * AR: 12/07: use recall from HyperStack.ST
