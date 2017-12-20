@@ -71,7 +71,18 @@ let gst_wp (a:Type)   = st_wp_h mem a
 unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
-
+(*
+ * AR: A few notes about the interface:
+ *     - The interface closely mimics the interface we formalized in our POPL'18 paper
+ *     - Specifically, `witnessed` is defined for any mem_predicate (not necessarily stable ones)
+ *     - `stable p` is a precondition for `gst_witness`
+ *     - `gst_recall` does not have a precondition for `stable p`, since `gst_witness` is the only way
+ *       clients would have obtained `witnessed p`, and so, `p` should already be stable
+ *     - `lemma_functoriality` does not require stablility for either `p` or `q`
+ *       Our metatheory ensures that this is sound (without requiring stability of `q`)
+ *       This form is useful in defining the MRRef interface (see mr_witness)
+ *)
+       
 abstract let stable (p:mem_predicate) =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
@@ -237,60 +248,6 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
  *     Set.set rid.
  *)
 
-
-// assume val rid_set_to_hh_rid_set (r:Set.set rid)
-//    :Tot (s:Set.set HH.rid{(forall (x:rid).{:pattern (Set.mem x r) \/ (Set.mem x s)} Set.mem x r <==> Set.mem x s) /\
-//                           (forall (y:HH.rid).{:pattern (Set.mem y s) \/ (Set.mem y r)} Set.mem y s <==> (rid_refinement y /\ Set.mem y r))})
-
-// let lemma_rid_set_to_hh_rid_set_union (r1:Set.set rid) (r2:Set.set rid)
-//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.union r1 r2) ==
-//                                 Set.union (rid_set_to_hh_rid_set r1) (rid_set_to_hh_rid_set r2)))
-// 	 [SMTPatOr [[SMTPat (rid_set_to_hh_rid_set (Set.union r1 r2))];
-// 	            [SMTPat (Set.union (rid_set_to_hh_rid_set r1) (rid_set_to_hh_rid_set r2))]]]
-//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.union r1 r2)) (Set.union (rid_set_to_hh_rid_set r1) (rid_set_to_hh_rid_set r2)))
-
-// let lemma_rid_set_to_hh_rid_set_complement (r:Set.set rid)
-//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.complement r) ==
-//                                 Set.complement (rid_set_to_hh_rid_set r)))
-// 	 [SMTPatOr [[SMTPat (rid_set_to_hh_rid_set (Set.complement r))];
-// 	            [SMTPat (Set.complement (rid_set_to_hh_rid_set r))]]]
-//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.complement r)) (Set.complement (rid_set_to_hh_rid_set r)))
-
-// let lemma_rid_set_to_hh_rid_set_singleton (r:rid)
-//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.singleton r) ==
-//                                 Set.singleton #HH.rid r))
-// 	 [SMTPat (rid_set_to_hh_rid_set (Set.singleton r))]
-//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.singleton r)) (Set.singleton #HH.rid r))
-
-// let lemma_rid_set_to_hh_rid_set_empty ()
-//   :Lemma (requires True) (ensures (rid_set_to_hh_rid_set (Set.empty #rid) == Set.empty #HH.rid))
-//   = assert (Set.equal (rid_set_to_hh_rid_set (Set.empty #rid)) (Set.empty #(HH.rid)))
-
-// assume Lemma_rid_set_hh_rid_set_empty: rid_set_to_hh_rid_set (Set.empty #rid) == Set.empty #HH.rid
-
-// let modifies (s:Set.set rid) (m0:mem) (m1:mem)
-//   = HyperStack.modifies (rid_set_to_hh_rid_set s) m0 m1
-
-// let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem)
-//   = HyperStack.modifies_transitively (rid_set_to_hh_rid_set s) m0 m1
-
-// let hh_modifies (s:Set.set rid) (m0:mem) (m1:mem)
-//   = HH.modifies (rid_set_to_hh_rid_set s) m0.h m1.h
-
-// let lemma_modifies_trans (m1:mem) (m2:mem) (m3:mem) (s1:Set.set rid) (s2:Set.set rid)
-//   :Lemma (requires (modifies s1 m1 m2 /\
-//                     modifies s2 m2 m3))
-// 	 (ensures  (modifies (Set.union s1 s2) m1 m3))
-// 	 [SMTPat (modifies s1 m1 m2); SMTPat (modifies s2 m2 m3)]
-//   = ()
-
-// #set-options "--z3rlimit 20"
-// let lemma_hh_modifies_trans (m1:mem) (m2:mem) (m3:mem) (s1:Set.set rid) (s2:Set.set rid)
-//   :Lemma (requires (hh_modifies s1 m1 m2 /\
-//                     hh_modifies s2 m2 m3))
-// 	 (ensures  (hh_modifies (Set.union s1 s2) m1 m3))
-// 	 [SMTPat (hh_modifies s1 m1 m2); SMTPat (hh_modifies s2 m2 m3)]
-//   = ()
 
 (**
    Pushes a new empty frame on the stack
@@ -795,64 +752,30 @@ type erid = r:rid{is_eternal_region r}
 
 type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
 
-(* TODO: AR: add pattern on this quantifier *)
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
-                        (r:m_rref i a b) (p:(mem -> Tot Type0))
-  = forall h0 h1. (p h0 /\ h0 `contains` r /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
-
-abstract type mr_witnessed (p:(mem -> Tot Type0)) = witnessed p
+                        (r:m_rref i a b) (p:mem_predicate)
+  = forall h0 h1.{:pattern (p h0); b (HS.sel h0 r) (HS.sel h1 r)}
+            (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
 let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
-               (m:m_rref r a b) (p:(mem -> Type0))
+               (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
-           (ensures  (fun h0 _ h1 -> h0==h1 /\ mr_witnessed p))
+           (ensures  (fun h0 _ h1 -> h0==h1 /\ witnessed p))
   = recall m;
-    let p_pred (#i:erid) (#a:Type) (#b:preorder a) (r:m_rref i a b) (p:mem_predicate) :mem_predicate
+    let p_pred (#i:erid) (#a:Type) (#b:preorder a)
+               (r:m_rref i a b) (p:mem_predicate)
+      :mem_predicate
       = fun m -> m `contains` r /\ p m
     in
-    gst_witness (p_pred #r #a #b m p);
-    lemma_functoriality (p_pred #r #a #b m p) p
+    gst_witness (p_pred m p);
+    lemma_functoriality (p_pred m p) p
 
 let mr_weaken_witness (#r:erid) (#a:Type) (#b:preorder a)
   (m:m_rref r a b) 
-  (p:(mem -> GTot Type0){stable_on_t m p})
-  (q:(mem -> GTot Type0){stable_on_t m q})
-  :Lemma ((forall h. p h ==> q h) /\ mr_witnessed m p ==> mr_witnessed m q)
-  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ mr_witnessed m p)) (ensures (mr_witnessed m q))
-      = lemma_functoriality (p_pred m p) (p_pred m q)
+  (p:mem_predicate{stable_on_t m p})
+  (q:mem_predicate{stable_on_t m q})
+  :Lemma ((forall h. p h ==> q h) /\ witnessed p ==> witnessed q)
+  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ witnessed p)) (ensures (witnessed q))
+      = lemma_functoriality p q
     in
     FStar.Classical.move_requires aux ()
-
-let mr_testify (#r:erid) (#a:Type) (#b:preorder a) 
-               (m:m_rref r a b) (p:(mem -> Type0))
-  :ST unit (requires (fun _      ->  mr_witnessed m p))
-           (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
-  = gst_recall (p_pred m p)
-
-abstract type mr_witnessed (#i:erid) (#a:Type) (#b:preorder a)
-                           (r:m_rref i a b) (p:(mem -> Tot Type0))
-  = stable (p_pred r p) /\ witnessed (p_pred r p)
-
-let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
-               (m:m_rref r a b) (p:(mem -> Type0))
-  :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
-           (ensures  (fun h0 _ h1 -> h0==h1 /\ mr_witnessed m p))
-  = recall m;
-    gst_witness (p_pred #r #a #b m p)
-
-let mr_weaken_witness (#r:erid) (#a:Type) (#b:preorder a)
-  (m:m_rref r a b) 
-  (p:(mem -> GTot Type0){stable_on_t m p})
-  (q:(mem -> GTot Type0){stable_on_t m q})
-  :Lemma ((forall h. p h ==> q h) /\ mr_witnessed m p ==> mr_witnessed m q)
-  = let aux () :Lemma (requires ((forall h. p h ==> q h) /\ mr_witnessed m p)) (ensures (mr_witnessed m q))
-      = lemma_functoriality (p_pred m p) (p_pred m q)
-    in
-    FStar.Classical.move_requires aux ()
-
-let mr_testify (#r:erid) (#a:Type) (#b:preorder a) 
-               (m:m_rref r a b) (p:(mem -> Type0))
-  :ST unit (requires (fun _      ->  mr_witnessed m p))
-           (ensures (fun h0 _ h1 -> h0==h1 /\ h0 `HS.contains` m /\ p h1))
-  = gst_recall (p_pred m p)
-
