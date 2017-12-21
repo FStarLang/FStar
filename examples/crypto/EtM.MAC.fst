@@ -61,7 +61,7 @@ let genPost parent h0 (k:key) h1 =
            assert((createEmpty #key).length == 0); *)
 
 val keygen: parent:rid -> ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (genPost parent))
 
 let keygen parent =

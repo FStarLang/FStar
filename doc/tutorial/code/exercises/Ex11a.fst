@@ -1,13 +1,11 @@
 module Ex11a
-open FStar.HyperStack.ST
 //robot
 
 open FStar.Set
 open FStar.HyperStack
+open FStar.HyperStack.ST
 
 module HH = FStar.HyperHeap
-
-type rid = HH.rid
 
 let only (#t:eqtype) (i:t) =
   singleton i
@@ -64,7 +62,7 @@ type robot_inv (b:bot) (h:mem) =
 
 // BEGIN: Build
 val new_point: r0:rid{is_eternal_region r0} -> x:int -> y:int -> z:int -> ST point
-  (requires (fun h0 -> True))
+  (requires (fun h0 -> witnessed (region_contains_pred r0)))
   (ensures (fun h0 p h1 ->
               modifies empty h0 h1
             /\ HH.extends (Point?.r p) r0
@@ -80,7 +78,7 @@ let new_point r0 x y z =
   Point r x y z
 
 val new_arm: r0:rid{is_eternal_region r0} -> ST arm
-  (requires (fun h0 -> True))
+  (requires (fun h0 -> witnessed (region_contains_pred r0)))
   (ensures (fun h0 x h1 ->
               modifies empty h0 h1
             /\ HH.extends (Arm?.r x) r0
@@ -92,12 +90,13 @@ let new_arm r0 =
   Arm r p a
 
 val new_robot: r0:rid{is_eternal_region r0} -> ST bot
-  (requires (fun h0 -> True))
+  (requires (fun h0 -> witnessed (region_contains_pred r0)))
   (ensures (fun h0 x h1 ->
 	      modifies empty h0 h1
             /\ HH.extends (Bot?.r x) r0
             /\ HH.fresh_region (Bot?.r x) h0.h h1.h
             /\ robot_inv x h1))
+#set-options "--z3rlimit 20"
 let new_robot r0 =
   let r = new_region r0 in
   let p = new_point r 0 0 0 in
@@ -155,7 +154,7 @@ let fly_both b0 b1 =
   fly b1
 // END: FlyBoth
 
-#reset-options
+#reset-options "--z3rlimit 10"
 val fly_one: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)} -> ST unit
   (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h /\ ~(flying b1 h)))
   (ensures (fun h0 x h1 ->
@@ -198,14 +197,15 @@ let lemma_bots_tl_disjoint #rs bs = ()
 //implement this function
 assume val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
-  (ensures  (fun h0 _u h1 ->   HH.modifies rs h0.h h1.h
-                          /\ (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
+  (ensures  (fun h0 _u h1 ->   HH.modifies rs h0.h h1.h /\
+                            (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
 
 val main: unit -> ST unit
     (requires (fun _ -> True))
     (ensures (fun m0 _ m1 -> modifies_transitively Set.empty m0 m1))
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let main () =
+  witness_region HH.root;
   let b1 = new_robot HH.root in
   let b2 = new_robot HH.root in
   fly_both b1 b2

@@ -4368,7 +4368,7 @@ let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h (HS.frame
 
 let ecreate
   (t:typ)
-  (r:HH.rid)
+  (r:HST.rid)
   (s: option (type_of_typ t))
 = let h0 = HST.get () in
   let s = match s with
@@ -4459,6 +4459,8 @@ let read
  (p: pointer value)
 = let h = HST.get () in
   let r = reference_of h p in
+  HST.witness_region (HS.frameOf r);
+  HST.witness_hsref r;
   let (| _ , c |) = !r in
   value_of_ovalue value (path_sel c (Pointer?.p p))
 
@@ -4469,6 +4471,7 @@ let is_null
   | NullPtr -> true
   | _ -> false
 
+#set-options "--z3rlimit 100"
 let owrite
   (#a: typ)
   (b: pointer a)
@@ -4485,6 +4488,8 @@ let owrite
   )))
 = let h0 = HST.get () in
   let r = reference_of h0 b in
+  HST.witness_region (HS.frameOf r);
+  HST.witness_hsref r;
   let v0 = !r in
   let (| t , c0 |) = v0 in
   let c1 = path_upd c0 (Pointer?.p b) z in
@@ -4492,7 +4497,7 @@ let owrite
   r := v1;
   let h1 = HST.get () in
   let e () : Lemma (
-    let gref = greference_of b in (
+   let gref = greference_of b in (
     HS.frameOf r == HS.frameOf gref /\
     HS.as_addr r == HS.as_addr gref /\
     HS.sel h0 gref == v0 /\
@@ -4522,6 +4527,7 @@ let owrite
     path_sel_upd_other' (Pointer?.p b) c0 z (Pointer?.p p)
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+#set-options "--z3rlimit 40"
 
 let write #a b z =
   owrite b (ovalue_of_value a z)

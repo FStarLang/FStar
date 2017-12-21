@@ -1,10 +1,10 @@
 module EtM.MAC
 
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open Platform.Bytes
@@ -12,6 +12,8 @@ open CoreCrypto
 open EtM.CPA
 
 module Ideal = EtM.Ideal
+
+module HST = FStar.HyperStack.ST
 
 type msg = EtM.CPA.cipher
 
@@ -53,7 +55,7 @@ noeq type key =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ fresh_region k.region h0.h h1.h
+  /\ HyperHeap.fresh_region k.region h0.h h1.h
   /\ m_contains k.log h1
   /\ m_sel h1 k.log == createEmpty
   (* CH: equivalent definition makes gen fail:
@@ -62,7 +64,7 @@ let genPost parent h0 (k:key) h1 =
            assert((createEmpty #key).length == 0); *)
 
 val keygen: parent:rid -> ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
   (ensures  (genPost parent))
 
 let keygen parent =

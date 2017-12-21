@@ -1,16 +1,18 @@
 module EtM.AE
 
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open EtM
 
 open Platform.Bytes
 open CoreCrypto
+
+module HST = FStar.HyperStack.ST
 
 type cipher = (CPA.cipher * MAC.tag)
 
@@ -60,7 +62,7 @@ let invariant (h:mem) (k:key) =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ fresh_region k.region h0.h h1.h
+  /\ HyperHeap.fresh_region k.region h0.h h1.h
   /\ Map.contains h1.h k.region
   /\ m_contains k.log h1
   /\ m_sel h1 k.log == createEmpty
@@ -68,7 +70,7 @@ let genPost parent h0 (k:key) h1 =
 
 
 val keygen: parent:rid -> ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
   (ensures  (genPost parent))
 
 

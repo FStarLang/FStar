@@ -170,7 +170,7 @@ let invariant (k:key) (h:mem) =
 ///       -- Returns a fresh key satisfying its invariant whose log is initially empty
 let keygen (parent:rid)
   : ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (fun m0 k m1 -> 
                modifies Set.empty m0 m1 /\
                extends k.region parent /\

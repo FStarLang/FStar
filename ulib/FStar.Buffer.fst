@@ -1,10 +1,10 @@
 module FStar.Buffer
  
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
 module Int32 = FStar.Int32
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Ghost
 
 
@@ -50,7 +50,6 @@ let content #a (b:buffer a) :
 (* Lifting from buffer to reference *)
 let as_ref #a (b:buffer a) = as_ref (content b)
 let as_addr #a (b:buffer a) = as_addr (content b)
-
 let frameOf #a (b:buffer a) : GTot HH.rid = HS.frameOf (content b)
 
 (* Liveliness condition, necessary for any computation on the buffer *)
@@ -78,7 +77,7 @@ let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
 (* y is included in x / x contains y *)
 let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
   x.max_length == y.max_length /\
-  x.content == y.content /\
+  x.content === y.content /\
   idx y >= idx x /\
   idx x + length x >= idx y + length y
 
@@ -412,7 +411,7 @@ abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1
       /\ HH.modifies_just (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0.h h1.h
       /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1))
 
-abstract let modifies_region rid bufs h0 h1 =
+abstract let modifies_region (rid:rid) bufs h0 h1 =
   modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1
 
 (* Lemmas introducing the 'modifies' predicates *)
@@ -475,7 +474,7 @@ let lemma_intro_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0
   (ensures  (modifies_3_2 b b' h0 h1))
   = ()
 
-let lemma_intro_modifies_region rid bufs h0 h1 : Lemma
+let lemma_intro_modifies_region (rid:rid) bufs h0 h1 : Lemma
   (requires (modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1))
   (ensures  (modifies_region rid bufs h0 h1))
   = ()
@@ -539,7 +538,7 @@ let lemma_reveal_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h
 	/\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1)) ))
   = ()
 
-let lemma_reveal_modifies_region rid bufs h0 h1 : Lemma
+let lemma_reveal_modifies_region (rid:rid) bufs h0 h1 : Lemma
   (requires (modifies_region rid bufs h0 h1))
   (ensures  (modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1))
   = ()
@@ -827,8 +826,8 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h (HS.frameOf x)}) (v
     let m' = Map.upd m (HS.frameOf x) (Heap.upd (Map.sel m (HS.frameOf x)) (HS.as_ref x) v) in
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
-val rcreate: #a:Type -> r:HH.rid -> init:a -> len:UInt32.t -> ST (buffer a)
-  (requires (fun h -> is_eternal_region r))
+val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
+  (requires (fun h -> is_eternal_region r /\ witnessed (region_contains_pred r)))
   (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
     /\ live h1 b /\ idx b == 0 /\ length b == v len
     /\ Map.domain h1.h == Map.domain h0.h
@@ -1142,7 +1141,7 @@ let rec fill #t b z len =
 let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t * buffer t)
   = sub b 0ul i, offset b i
 
-let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content == b'.content /\ idx b + length b == idx b'}) : Tot (buffer t)
+let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content === b'.content /\ idx b + length b == idx b'}) : Tot (buffer t)
   = MkBuffer (b.max_length) (b.content) (b.idx) (FStar.UInt32.(b.length +^ b'.length))
 
 

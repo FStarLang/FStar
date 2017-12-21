@@ -511,7 +511,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         EnumStr ["make"; "graph"; "full"],
         "Output the transitive closure of the full dependency graph in three formats:\n\t \
          'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
-         'full': a format suitable for 'make', including dependences for producing .ml files\n\t \
+         'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
          'make': (deprecated) a format suitable for 'make', including only dependences among source files");
 
        ( noshort,
@@ -911,7 +911,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [-r] silences range [r]\n\t\t\
          - [+r] enables range [r]\n\t\t\
          - [@r] makes range [r] fatal.");
-   
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),

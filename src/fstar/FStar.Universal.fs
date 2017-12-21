@@ -207,7 +207,7 @@ let load_module_from_cache env fn
             end
          | _ ->
            fail "Stale"
-    else None
+    else fail "Absent"
 
 let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
@@ -249,7 +249,12 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
   then match load_module_from_cache env fn with
        | None ->
          let tcmod, mii, env = tc_source_file () in
-         if FStar.Errors.get_err_count() = 0 then store_module_to_cache env fn (fst tcmod) mii;
+         if FStar.Errors.get_err_count() = 0
+         && (Options.lax()  //we'll write out a .checked.lax file
+             || Options.should_verify fn) //we'll write out a .checked file
+         //but we will not write out a .checked file for an unverified dependence
+         //of some file that should be checked
+         then store_module_to_cache env fn (fst tcmod) mii;
          tcmod, env
        | Some (tcmod, mii) ->
          let _, env =
