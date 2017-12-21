@@ -430,7 +430,7 @@ let collect_one
     then ()
     else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
     then record_open_namespace lid
-in
+  in
 
   let record_open_module_or_namespace (lid, kind) =
     match kind with
@@ -690,6 +690,11 @@ in
 
   in
   let ast, _ = Driver.parse_file filename in
+  let mname = lowercase_module_name filename in
+  if is_interface filename
+  && has_implementation original_map mname
+  && FStar.Options.dep() = Some "full"
+  then add_dep mo_roots (UseImplementation mname);
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
