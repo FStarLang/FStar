@@ -685,7 +685,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "15d20778c56ba85529bb7a433b4fdd91"
+      "1426a423254334c89b09a4ebcef083bb"
     ],
     [
       "FStar.HyperStack.ST.sfree",
@@ -3705,7 +3705,7 @@
       1,
       [ "@query" ],
       0,
-      "19d00d9cafdf27ea30a41ca3310e9015"
+      "ed51b0eecac07cfe6a255a6ef3466480"
     ]
   ]
 ]
