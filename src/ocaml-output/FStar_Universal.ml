@@ -640,7 +640,8 @@ let tc_one_file:
                         (let uu____1219 = FStar_Errors.get_err_count () in
                          uu____1219 = (Prims.parse_int "0")) &&
                           ((FStar_Options.lax ()) ||
-                             (FStar_Options.should_verify fn)) in
+                             (FStar_Options.should_verify
+                                ((FStar_Pervasives_Native.fst tcmod).FStar_Syntax_Syntax.name).FStar_Ident.str)) in
                       if uu____1216
                       then
                         store_module_to_cache env1 fn
