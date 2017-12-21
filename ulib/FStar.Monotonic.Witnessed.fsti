@@ -4,11 +4,11 @@ open FStar.Preorder
 
 (* Witnessed modality *)
 
-val witnessed : #state:Type0 -> #rel:preorder state -> p:(state -> Type0) -> Type0
+val witnessed : #state:Type -> #rel:preorder state -> p:(state -> Type0) -> Type0
 
 (* Weakening for the witnessed modality *)
 
-val witnessed_weakening : #state:Type0
+val witnessed_weakening : #state:Type
                        -> #rel:preorder state
                        -> p:(state -> Type0)
                        -> q:(state -> Type0)
@@ -18,19 +18,19 @@ val witnessed_weakening : #state:Type0
 
 (* Some logical properties of the witnessed modality *)
 
-val witnessed_constant : #state:Type0
+val witnessed_constant : #state:Type
                       -> #rel:preorder state
                       -> p:Type0
                       -> Lemma (witnessed #state #rel (fun _ -> p) <==> p)
                          [SMTPat (witnessed #state #rel (fun _ -> p))]
 
-val witnessed_nested : #state:Type0
+val witnessed_nested : #state:Type
                     -> #rel:preorder state
                     -> p:(state -> Type0)
                     -> Lemma (witnessed #state #rel (fun _ -> witnessed #state #rel p) <==> witnessed #state #rel p)
                        [SMTPat (witnessed #state #rel (fun _ -> witnessed #state #rel p))]
 
-val witnessed_and_1 : #state:Type0
+val witnessed_and_1 : #state:Type
                    -> #rel:preorder state
                    -> p:(state -> Type0) 
                    -> q:(state -> Type0)
@@ -38,7 +38,7 @@ val witnessed_and_1 : #state:Type0
                             (ensures  (witnessed #state #rel p /\ witnessed #state #rel q))
                       [SMTPat (witnessed #state #rel (fun s -> p s /\ q s))]
 
-val witnessed_and_2 : #state:Type0
+val witnessed_and_2 : #state:Type
                    -> #rel:preorder state
                    -> p:(state -> Type0) 
                    -> q:(state -> Type0)
@@ -46,7 +46,7 @@ val witnessed_and_2 : #state:Type0
                             (ensures  (witnessed #state #rel (fun s -> p s /\ q s)))
                       [SMTPat (witnessed #state #rel (fun s -> p s /\ q s))]
 
-val witnessed_or : #state:Type0
+val witnessed_or : #state:Type
                 -> #rel:preorder state
                 -> p:(state -> Type0)
                 -> q:(state -> Type0)
@@ -54,7 +54,7 @@ val witnessed_or : #state:Type0
                          (ensures  (witnessed #state #rel (fun s -> p s \/ q s)))
                    [SMTPat (witnessed #state #rel (fun s -> p s \/ q s))]
 
-val witnessed_impl : #state:Type0
+val witnessed_impl : #state:Type
                   -> #rel:preorder state
                   -> p:(state -> Type0)
                   -> q:(state -> Type0)
@@ -62,7 +62,7 @@ val witnessed_impl : #state:Type0
                            (ensures  (witnessed #state #rel q))
                      [SMTPat (witnessed #state #rel (fun s -> p s ==> q s))]
 
-val witnessed_forall : #state:Type0
+val witnessed_forall : #state:Type
                     -> #rel:preorder state
                     -> #t:Type0
                     -> p:(state -> t -> Type0) 
@@ -70,7 +70,7 @@ val witnessed_forall : #state:Type0
                              (ensures  (forall x . witnessed #state #rel (fun s -> p s x)))
                        [SMTPat (witnessed #state #rel (fun s -> forall x . p s x))]
 
-val witnessed_exists : #state:Type0
+val witnessed_exists : #state:Type
                     -> #rel:preorder state
                     -> #t:Type0
                     -> p:(state -> t -> Type0) 
