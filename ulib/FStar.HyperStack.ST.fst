@@ -259,6 +259,7 @@ let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
     let h1 = Map.upd m0.h new_tip_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    HS.lemma_downward_closed_new_region m0.h new_tip_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 new_tip_rid in
     gst_put m1
 
@@ -289,6 +290,7 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
     let r, h = HH.alloc rel m0.tip init mm m0.h in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_rid_ctr_pred ();
+    HS.lemma_downward_closed_same_domain m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
@@ -317,6 +319,7 @@ let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem{m `
   = let h_0 = Map.sel m.h (frameOf r) in
     let h_1 = Heap.free_mm h_0 (as_ref r) in
     let h1 = Map.upd m.h (frameOf r) h_1 in
+    HS.lemma_downward_closed_same_domain m.h h1;
     HS.lemma_rid_ctr_pred_upd m.h m.rid_ctr h1 m.rid_ctr;
     HS m.rid_ctr h1 m.tip
 
@@ -360,6 +363,7 @@ let new_region (r0:rid)
     let new_rid = HH.extend_monochrome r0 m0.rid_ctr in
     let h1 = Map.upd m0.h new_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
@@ -384,6 +388,7 @@ let new_colored_region (r0:rid) (c:int)
     let new_rid = HH.extend r0 m0.rid_ctr c in
     let h1 = Map.upd m0.h new_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
@@ -406,6 +411,7 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     let r, h = HH.alloc rel i init mm m0.h in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_rid_ctr_pred ();
+    HS.lemma_downward_closed_same_domain m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));

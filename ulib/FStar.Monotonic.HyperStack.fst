@@ -19,7 +19,7 @@ let is_below r1 r2      = r2 `is_above` r1
 let is_strictly_below r1 r2 = r1 `is_below` r2 && r1<>r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
 
-let downward_closed (h:HH.t) =
+abstract let downward_closed (h:HH.t) =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=HH.root    //either is the root
             \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
@@ -51,6 +51,30 @@ noeq type mem =
        -> h:hh{rid_ctr_pred h rid_ctr}
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
+
+(****** downward_closed related lemmas ******)
+
+(*
+ * Adding a new region preserves HH.map_invariant and downward_closed
+ *)
+let lemma_downward_closed_new_region (h:HH.t) (r:HH.rid{r =!= HH.root}) (t:Heap.heap)
+  :Lemma (requires (let p = parent r in
+                    HH.map_invariant h /\ downward_closed h /\
+                    h `Map.contains` p /\ (p == HH.root \/ (is_stack_region r == is_stack_region p))))
+         (ensures (let h1 = Map.upd h r t in
+                   HH.map_invariant h1 /\ downward_closed h1))
+  = ()
+
+(*
+ * Allocating refs does not change the map domain (and rid structure), so HH.map_invariant and downward_closed are retained
+ *)
+let lemma_downward_closed_same_domain (h1 h2:HH.t)
+  :Lemma (requires (HH.map_invariant h1 /\ downward_closed h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
+         (ensures  (HH.map_invariant h2 /\ downward_closed h2))
+  = ()
+
+(******)
+
 
 (****** rid_ctr_pred related lemmas ******)
 
