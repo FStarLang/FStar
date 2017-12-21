@@ -1,5 +1,5 @@
 [
-  "\u000bëáÒä…«ÄR\u0005úŸ \tÎ\t",
+  "Ã\u0016\u0007¿sY+>¯=¶p\nû€;",
   [
     [
       "ImmutableSTwHeaps.heap_rel",
@@ -8,10 +8,10 @@
       1,
       [ "@query" ],
       0,
-      "92dbe9533d60d70f6015c4cc629cc32a"
+      "afcbfe3431e98aeb4c1e98e51b9daa08"
     ],
     [
-      "ImmutableSTwHeaps.3767",
+      "ImmutableSTwHeaps.3769",
       1,
       2,
       1,
@@ -21,7 +21,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "84247759f57af22eec8c97b5f6b4af0e"
+      "03efaea3909ec2e95937d4abdb70c4e8"
     ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
@@ -34,7 +34,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "cc0109c1329f9c308c614f0a965e5a49"
+      "d26f7251878e1ccdc19b3add4ddddb52"
     ],
     [
       "ImmutableSTwHeaps.ist_witness",
@@ -47,7 +47,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "ead28206b8614d34d52678be0323900c"
+      "28a1cf2b4cfea5db8e7bb2178c1fdf70"
     ],
     [
       "ImmutableSTwHeaps.ist_recall",
@@ -60,7 +60,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "00ab8864fa404dc5d9e0bbba37a54c37"
+      "fccbcfa0f74ddc86279171e8d791b65e"
     ],
     [
       "ImmutableSTwHeaps.alloc",
@@ -90,7 +90,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "6f56c29e6a8a50e8d5b76ec58e3478ac"
+      "6fb05787a4815827129767c073a7b8d2"
     ],
     [
       "ImmutableSTwHeaps.read",
@@ -102,7 +102,7 @@
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda"
       ],
       0,
-      "db03e6f885d2bf194cdbf483406d8e9a"
+      "a5c1596c2a6e860bf6de7e1f2c10d5ef"
     ],
     [
       "ImmutableSTwHeaps.write",
@@ -116,7 +116,6 @@
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_ImmutableSTwHeaps.heap_rel",
         "lemma_FStar.Monotonic.Heap.lemma_contains_upd_modifies",
-        "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_distinct_mm",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_distinct_types",
         "lemma_FStar.Monotonic.Heap.lemma_sel_same_addr",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
@@ -128,7 +127,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "b23b3af2800cde471cb43224c79f4512"
+      "c370baf3edb5c7f90b4c50f63cede354"
     ]
   ]
 ]

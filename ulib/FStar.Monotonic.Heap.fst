@@ -160,8 +160,8 @@ private let lemma_alloc_fresh_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (m
 let lemma_ref_unused_iff_addr_unused #a #rel h r = ()
 let lemma_contains_implies_used #a #rel h r = ()
 let lemma_distinct_addrs_distinct_types #a #b #rel1 #rel2 h r1 r2 = ()
-let lemma_distinct_addrs_distinct_preorders #a #rel1 #rel2 h r1 r2 = ()
-let lemma_distinct_addrs_distinct_mm #a #b #rel1 #rel2 h r1 r2 = ()
+let lemma_distinct_addrs_distinct_preorders u = ()
+let lemma_distinct_addrs_distinct_mm u = ()
 let lemma_distinct_addrs_unused #a #b #rel1 #rel2 h r1 r2 = ()
 let lemma_alloc #a rel h0 x mm =
   let r, h1 = alloc rel h0 x mm in

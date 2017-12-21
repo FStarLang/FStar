@@ -4168,9 +4168,10 @@ let modifies_loc_addresses_intro_weak
     loc_disjoint l (loc_regions (Set.singleton r))
   ))
   (ensures (modifies (loc_union (loc_addresses r s) l) h1 h2))
-= ()
+= Classical.forall_intro_2 HS.lemma_reveal_tip_top
 
 let modifies_pointer_elim s h1 h2 #a' p' =
+  Classical.forall_intro_2 HS.lemma_reveal_tip_top;
   loc_disjoint_sym (loc_pointer p') s;
   let r = frameOf p' in
   let a = as_addr p' in
@@ -4185,6 +4186,7 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 #set-options "--z3rlimit 256"
 
 let modifies_buffer_elim #t1 b p h h' =
+  Classical.forall_intro_2 HS.lemma_reveal_tip_top;
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
   begin
@@ -4224,6 +4226,7 @@ let modifies_buffer_elim #t1 b p h h' =
   end
 
 let modifies_reference_elim #t b p h h' =
+  Classical.forall_intro_2 HS.lemma_reveal_tip_top;
   loc_disjoint_sym (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p
 
 let modifies_refl s h = ()
@@ -4293,8 +4296,7 @@ let modifies_loc_includes s1 h h' s2 =
   in
   Classical.forall_intro_2 g  //AR: this was the same pattern as above (forall_intro_2 and move_requires, there was no g)
 
-#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
-
+#set-options "--z3rlimit 80 --max_fuel 1 --max_ifuel 1"
 let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
   (l: loc)
@@ -4306,7 +4308,8 @@ let modifies_only_live_regions_weak
     (forall r . Set.mem r rs ==> (~ (HS.live_region h r)))
   ))
   (ensures (modifies l h h'))
-= ()
+= Classical.forall_intro_2 HS.lemma_reveal_tip_top
+#set-options "--z3rlimit 40"
 
 let modifies_regions_elim rs h h' = ()
 

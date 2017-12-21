@@ -101,6 +101,8 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()

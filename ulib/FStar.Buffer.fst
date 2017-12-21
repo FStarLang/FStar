@@ -898,7 +898,8 @@ private let lemma_aux_0
          (ensures  (live h0 b /\ live h0 bb /\
 	            (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
 		     as_seq h0 bb == as_seq h1 bb)))
-  = ()
+  = Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ()
 
 #set-options "--z3rlimit 10"
 private let lemma_aux_1

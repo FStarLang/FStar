@@ -256,9 +256,12 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
    *)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
+    HS.lemma_rid_ctr_pred ();  //AR: this gives us freshness of new_tip_rid, earlier it was coming from is_tip, which is now abstract
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
     let h1 = Map.upd m0.h new_tip_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    HS.lemma_downward_closed_new_region m0.h new_tip_rid Heap.emp;
+    HS.lemma_tip_top_push_frame m0.tip m0.h new_tip_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 new_tip_rid in
     gst_put m1
 
@@ -289,6 +292,8 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
     let r, h = HH.alloc rel m0.tip init mm m0.h in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_rid_ctr_pred ();
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
@@ -317,7 +322,9 @@ let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem{m `
   = let h_0 = Map.sel m.h (frameOf r) in
     let h_1 = Heap.free_mm h_0 (as_ref r) in
     let h1 = Map.upd m.h (frameOf r) h_1 in
+    HS.lemma_downward_closed_same_domain m.h h1;
     HS.lemma_rid_ctr_pred_upd m.h m.rid_ctr h1 m.rid_ctr;
+    HS.lemma_tip_top_same_domain m.tip m.h h1;
     HS m.rid_ctr h1 m.tip
 
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
@@ -325,9 +332,15 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
+    HS.lemma_rid_ctr_pred ();
     let h = HH.free (HS.mrref_of r) m0.h in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
@@ -360,6 +373,8 @@ let new_region (r0:rid)
     let new_rid = HH.extend_monochrome r0 m0.rid_ctr in
     let h1 = Map.upd m0.h new_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
+    HS.lemma_tip_top_alloc_eternal_region m0.tip m0.h new_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
@@ -384,6 +399,8 @@ let new_colored_region (r0:rid) (c:int)
     let new_rid = HH.extend r0 m0.rid_ctr c in
     let h1 = Map.upd m0.h new_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
+    HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
+    HS.lemma_tip_top_alloc_eternal_region m0.tip m0.h new_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
@@ -406,6 +423,8 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     let r, h = HH.alloc rel i init mm m0.h in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_rid_ctr_pred ();
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
@@ -427,14 +446,21 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
+#set-options "--z3rlimit 30"
 let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
   :ST unit
       (requires (fun m0 -> m0 `contains` r))
       (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
+    HS.lemma_rid_ctr_pred ();
     let h = HH.free (HS.mrref_of r) m0.h in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
 unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) m0 (_u:unit) m1 =
@@ -451,7 +477,11 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   = let m0 = gst_get () in
     let h = HH.upd_tot m0.h (HS.mrref_of r) v in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
