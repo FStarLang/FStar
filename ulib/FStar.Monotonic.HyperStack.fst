@@ -72,6 +72,10 @@ let lemma_tip_top_alloc_eternal_region (tip:HH.rid) (h:HH.t) (r:HH.rid{is_eterna
          (ensures  (tip_top tip (Map.upd h r t)))
   = ()
 
+let lemma_reveal_tip_top (m:mem) (r:sid)
+  :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
+  = ()
+
 (******)
 
 
