@@ -256,10 +256,12 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
    *)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
+    HS.lemma_rid_ctr_pred ();  //AR: this gives us freshness of new_tip_rid, earlier it was coming from is_tip, which is now abstract
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
     let h1 = Map.upd m0.h new_tip_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
     HS.lemma_downward_closed_new_region m0.h new_tip_rid Heap.emp;
+    HS.lemma_tip_top_push_frame m0.tip m0.h new_tip_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 new_tip_rid in
     gst_put m1
 
@@ -291,6 +293,7 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_rid_ctr_pred ();
     HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
@@ -321,6 +324,7 @@ let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem{m `
     let h1 = Map.upd m.h (frameOf r) h_1 in
     HS.lemma_downward_closed_same_domain m.h h1;
     HS.lemma_rid_ctr_pred_upd m.h m.rid_ctr h1 m.rid_ctr;
+    HS.lemma_tip_top_same_domain m.tip m.h h1;
     HS m.rid_ctr h1 m.tip
 
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
@@ -364,6 +368,7 @@ let new_region (r0:rid)
     let h1 = Map.upd m0.h new_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
     HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
+    HS.lemma_tip_top_alloc_eternal_region m0.tip m0.h new_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
@@ -389,6 +394,7 @@ let new_colored_region (r0:rid) (c:int)
     let h1 = Map.upd m0.h new_rid Heap.emp in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
     HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
+    HS.lemma_tip_top_alloc_eternal_region m0.tip m0.h new_rid Heap.emp;
     let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
@@ -412,6 +418,7 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_rid_ctr_pred ();
     HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));

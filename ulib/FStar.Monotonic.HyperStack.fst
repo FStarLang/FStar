@@ -26,10 +26,13 @@ abstract let downward_closed (h:HH.t) =
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
+abstract let tip_top (tip:HH.rid) (h:HH.t) =
+  forall (r:sid). r `is_in` h <==> r `is_above` tip  
+
 let is_tip (tip:HH.rid) (h:HH.t) =
   (is_stack_region tip \/ tip=HH.root)                                  //the tip is a stack region, or the root
   /\ tip `is_in` h                                                      //the tip is active
-  /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
+  /\ tip_top tip h                      //any other sid activation is a above (or equal to) the tip
 
 let rid_last_component (r:HH.rid) :GTot int
   = let open FStar.List.Tot in
@@ -51,6 +54,26 @@ noeq type mem =
        -> h:hh{rid_ctr_pred h rid_ctr}
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
+
+(****** tip_top related lemmas ******)
+
+let lemma_tip_top_push_frame (tip:HH.rid) (h:HH.t) (new_tip:HH.rid{new_tip =!= HH.root}) (t:Heap.heap)
+  :Lemma (requires (tip_top tip h /\ parent new_tip == tip))
+         (ensures  (tip_top new_tip (Map.upd h new_tip t)))
+  = ()
+
+let lemma_tip_top_same_domain (tip:HH.rid) (h1 h2:HH.t)
+  :Lemma (requires (tip_top tip h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
+         (ensures  (tip_top tip h2))
+  = ()
+
+let lemma_tip_top_alloc_eternal_region (tip:HH.rid) (h:HH.t) (r:HH.rid{is_eternal_region r}) (t:Heap.heap)
+  :Lemma (requires (tip_top tip h))
+         (ensures  (tip_top tip (Map.upd h r t)))
+  = ()
+
+(******)
+
 
 (****** downward_closed related lemmas ******)
 
