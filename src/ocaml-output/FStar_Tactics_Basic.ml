@@ -369,7 +369,7 @@ let do_unify:
         (try
            let res = FStar_TypeChecker_Rel.teq_nosmt env t1 t2 in
            debug_off (); res
-         with | uu____900_929 -> (debug_off (); false))
+         with | uu____929 -> (debug_off (); false))
 let trysolve:
   FStar_Tactics_Types.goal -> FStar_Syntax_Syntax.term -> Prims.bool =
   fun goal  ->
