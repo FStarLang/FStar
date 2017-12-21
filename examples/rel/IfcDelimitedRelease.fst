@@ -64,7 +64,7 @@ private val verify_test (x y z: ref int):
     let res h = sel h y + sel h z in
     del_rel n env l [res] [] test
   end
-let verify_test x y z = ()
+let verify_test x y z = Heap.lemma_distinct_addrs_distinct_preorders (); Heap.lemma_distinct_addrs_distinct_mm ()
 
 
 val sum : prog 6
@@ -85,7 +85,7 @@ private val verify_sum (x1 x2 x3 x4 x5 y : ref int):
       [fun h -> sel h x1 + sel h x2 + sel h x3 + sel h x4 + sel h x5]
       []
       sum))
-let verify_sum x1 x2 x3 x4 x5 y = ()
+let verify_sum x1 x2 x3 x4 x5 y = Heap.lemma_distinct_addrs_distinct_preorders (); Heap.lemma_distinct_addrs_distinct_mm ()
 
 val sum_swap : prog 6
 let sum_swap l h =
@@ -112,7 +112,7 @@ private val verify_sum_swap (x1 x2 x3 x4 x5 y : ref int):
       []
       sum_swap))
 #set-options "--z3rlimit 30"
-let verify_sum_swap x1 x2 x3 x4 x5 y = ()
+let verify_sum_swap x1 x2 x3 x4 x5 y = Heap.lemma_distinct_addrs_distinct_preorders (); Heap.lemma_distinct_addrs_distinct_mm ()
 
 
 
@@ -161,7 +161,7 @@ private val verify_wallet (x_h k x_l : ref int):
       []
       [fun h -> sel h x_h >= sel h k]
       wallet))
-let verify_wallet x_h k x_l = ()
+let verify_wallet x_h k x_l = Heap.lemma_distinct_addrs_distinct_preorders (); Heap.lemma_distinct_addrs_distinct_mm ()
 
 // This is not accepted
 //val wallet_attack_loop : prog 4

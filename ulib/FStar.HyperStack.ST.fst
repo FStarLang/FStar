@@ -332,9 +332,15 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
+    HS.lemma_rid_ctr_pred ();
     let h = HH.free (HS.mrref_of r) m0.h in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
@@ -440,14 +446,21 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
+#set-options "--z3rlimit 30"
 let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
   :ST unit
       (requires (fun m0 -> m0 `contains` r))
       (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
+    HS.lemma_rid_ctr_pred ();
     let h = HH.free (HS.mrref_of r) m0.h in
+    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
 unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) m0 (_u:unit) m1 =
@@ -464,7 +477,11 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   = let m0 = gst_get () in
     let h = HH.upd_tot m0.h (HS.mrref_of r) v in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
+    HS.lemma_downward_closed_same_domain m0.h h;
+    HS.lemma_tip_top_same_domain m0.tip m0.h h;
     let m1 = HS m0.rid_ctr h m0.tip in
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
