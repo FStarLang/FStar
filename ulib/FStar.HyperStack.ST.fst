@@ -13,7 +13,7 @@ open FStar.Preorder
 
 (* Eternal regions remain contained *)
 private abstract let eternal_region_pred (m1 m2:mem) :Type0
-  = forall (r:HH.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
+  = forall (r:HS.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
                  (HS.is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
 (* rid counter increases monotonically *)
@@ -27,7 +27,7 @@ private abstract let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
  * remains not contained in m2
  *)
 private abstract let rid_last_component_pred (m1 m2:mem) :Type0
-  = forall (r:HH.rid).{:pattern (m1.h `Map.contains` r)}
+  = forall (r:HS.rid).{:pattern (m1.h `Map.contains` r)}
                  ((~ (m1.h `Map.contains` r)) /\ rid_last_component r < m1.rid_ctr) ==>
 		 (~ (m2.h `Map.contains` r))
 
@@ -54,7 +54,7 @@ private abstract let mem_pre :preorder mem =
 type mem_predicate = mem -> Type0
 
 (* Predicates that we will witness with regions and refs *)
-abstract let region_contains_pred (r:HH.rid) :mem_predicate
+abstract let region_contains_pred (r:HS.rid) :mem_predicate
   = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
 
 abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :mem_predicate
@@ -141,7 +141,7 @@ effect Stack (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0))))
 *)
 effect Heap (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
+             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HS.root /\ h1.tip = HS.root ) ==> p a h1)) (* WP *)
 
 (**
   Effect of low-level code:
@@ -160,7 +160,7 @@ let inline_stack_inv h h' : GTot Type0 =
   (* The heap structure is unchanged *)
   /\ Map.domain h.h == Map.domain h'.h
   (* Any region that is not the tip has no seen any allocation *)
-  /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r <> h.tip /\ Map.contains h.h r)
+  /\ (forall (r:HS.rid). {:pattern (Map.contains h.h r)} (r <> h.tip /\ Map.contains h.h r)
        ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r) /\
            Map.contains h'.h r)
 
@@ -178,7 +178,7 @@ let inline_inv h h' : GTot Type0 =
   (* The stack invariant is enforced *)
   h.tip = h'.tip
   (* No frame may have received an allocation but the tip *)
-  /\ (forall (r:HH.rid). {:pattern (is_stack_region r)}(is_stack_region r /\ r `is_strictly_above` h.tip)
+  /\ (forall (r:HS.rid). {:pattern (is_stack_region r)}(is_stack_region r /\ r `is_strictly_above` h.tip)
        ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
 
 (**
@@ -211,12 +211,12 @@ sub_effect
  * (c) Similar thing happens with mem, there is a refinement that we attach to mem, but that could
  *     probably be moved to HyperStack mem itself.
  *)
-// unfold let rid_refinement (r:HH.rid)
-//   = r == HH.root                \/
+// unfold let rid_refinement (r:HS.rid)
+//   = r == HS.root                \/
 //     (not (is_eternal_region r)) \/
 //     witnessed (region_contains_pred r)
-// type rid = r:HH.rid{rid_refinement r}
-type rid = HH.rid
+// type rid = r:HS.rid{rid_refinement r}
+type rid = HS.rid
 
 type mreference (a:Type) (rel:preorder a) =
   r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
@@ -256,13 +256,7 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
    *)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
-    HS.lemma_rid_ctr_pred ();  //AR: this gives us freshness of new_tip_rid, earlier it was coming from is_tip, which is now abstract
-    let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
-    let h1 = Map.upd m0.h new_tip_rid Heap.emp in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
-    HS.lemma_downward_closed_new_region m0.h new_tip_rid Heap.emp;
-    HS.lemma_tip_top_push_frame m0.tip m0.h new_tip_rid Heap.emp;
-    let m1 = HS (m0.rid_ctr + 1) h1 new_tip_rid in
+    let m1 = HS.push_frame m0 in
     gst_put m1
 
 (**
@@ -277,27 +271,22 @@ let pop_frame (_:unit)
 
 let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
                 (s:mreference a rel{is_stack_region (frameOf s)}) (m1:mem)
-  = is_stack_region m0.tip                /\
-    Map.domain m0.h == Map.domain m1.h    /\
-    m0.tip = m1.tip                       /\
-    frameOf s   = m1.tip                  /\
-    HH.fresh_rref (mrref_of s) m0.h m1.h  /\  //it's a fresh reference in the top frame
-    m1==HyperStack.upd m0 s init  //and it's been initialized
+  = is_stack_region m0.tip              /\
+    Map.domain m0.h == Map.domain m1.h  /\
+    m0.tip = m1.tip                     /\
+    frameOf s   = m1.tip                /\
+    HS.fresh_ref s m0 m1                /\  //it's a fresh reference in the top frame
+    m1 == HyperStack.upd m0 s init  //and it's been initialized
 
 private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
   :StackInline (mreference a rel)
   (requires (fun m       -> is_stack_region m.tip))
   (ensures  (fun m0 s m1 -> is_stack_region (HS.frameOf s) /\ salloc_post init m0 s m1 /\ is_mm s == mm))
   = let m0 = gst_get () in
-    let r, h = HH.alloc rel m0.tip init mm m0.h in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
-    HS.lemma_rid_ctr_pred ();
-    HS.lemma_downward_closed_same_domain m0.h h;
-    HS.lemma_tip_top_same_domain m0.tip m0.h h;
-    let m1 = HS m0.rid_ctr h m0.tip in
+    let r, m1 = HS.alloc rel m0.tip init mm m0 in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
-    let r = HS.mk_mreference r in
+    HS.lemma_rid_ctr_pred ();  //AR: to prove that rid_last_component of r.id is < rid_ctr
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred (HS.frameOf r));
     r
@@ -317,65 +306,33 @@ let salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   (ensures salloc_post init)
   = salloc_common init true
 
-let remove_reference (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem{m `contains` r /\ is_mm r})
-  :GTot mem
-  = let h_0 = Map.sel m.h (frameOf r) in
-    let h_1 = Heap.free_mm h_0 (as_ref r) in
-    let h1 = Map.upd m.h (frameOf r) h_1 in
-    HS.lemma_downward_closed_same_domain m.h h1;
-    HS.lemma_rid_ctr_pred_upd m.h m.rid_ctr h1 m.rid_ctr;
-    HS.lemma_tip_top_same_domain m.tip m.h h1;
-    HS m.rid_ctr h1 m.tip
-
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
-   (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
+   (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
   = let m0 = gst_get () in
-    HS.lemma_rid_ctr_pred ();
-    let h = HH.free (HS.mrref_of r) m0.h in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
-    HS.lemma_downward_closed_same_domain m0.h h;
-    HS.lemma_tip_top_same_domain m0.tip m0.h h;
-    let m1 = HS m0.rid_ctr h m0.tip in
+    let m1 = HS.free r m0 in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
-let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
-  not (r `is_in` m0.h) /\
-  r `is_in` m1.h
-
-(*
- * AR: using this in mitls code, so that it corresponds to the
- * fresh_region definition in hyperheap.
- *)
-let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
-   (forall j. HH.includes r j ==> not (j `is_in` m0.h)) /\
-   r `is_in` m1.h
-
 #set-options "--z3rlimit 10"
 let new_region (r0:rid)
   :ST rid
       (requires (fun m        -> is_eternal_region r0 /\
-                              (r0 == HH.root \/ witnessed (region_contains_pred r0))))
+                              (r0 == HS.root \/ witnessed (region_contains_pred r0))))
       (ensures  (fun m0 r1 m1 ->
                  r1 `HH.extends` r0                  /\
-                 HH.fresh_region r1 m0.h m1.h        /\
-		 HH.color r1 = HH.color r0           /\
+                 HS.fresh_region r1 m0 m1            /\
+		 HS.color r1 = HS.color r0           /\
 		 witnessed (region_contains_pred r1) /\
 		 m1.h == Map.upd m0.h r1 Heap.emp    /\
 		 m1.tip = m0.tip))
-  = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
+  = if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
     HS.lemma_rid_ctr_pred ();
     let m0 = gst_get () in
-    let new_rid = HH.extend_monochrome r0 m0.rid_ctr in
-    let h1 = Map.upd m0.h new_rid Heap.emp in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
-    HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
-    HS.lemma_tip_top_alloc_eternal_region m0.tip m0.h new_rid Heap.emp;
-    let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
+    let new_rid, m1 = HS.new_eternal_region m0 r0 None in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
@@ -385,23 +342,18 @@ let is_eternal_color = HS.is_eternal_color
 let new_colored_region (r0:rid) (c:int)
   :ST rid
       (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0 /\
-                             (r0 == HH.root \/ witnessed (region_contains_pred r0))))
+                             (r0 == HS.root \/ witnessed (region_contains_pred r0))))
       (ensures (fun m0 r1 m1 ->
                 r1 `HH.extends` r0                  /\
-                HH.fresh_region r1 m0.h m1.h        /\
-	        HH.color r1 = c                     /\
+                HS.fresh_region r1 m0 m1            /\
+	        HS.color r1 = c                     /\
 		witnessed (region_contains_pred r1) /\
 	        m1.h == Map.upd m0.h r1 Heap.emp    /\
 		m1.tip = m0.tip))
-  = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
+  = if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
     HS.lemma_rid_ctr_pred ();
     let m0 = gst_get () in
-    let new_rid = HH.extend r0 m0.rid_ctr c in
-    let h1 = Map.upd m0.h new_rid Heap.emp in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h1 (m0.rid_ctr + 1);
-    HS.lemma_downward_closed_new_region m0.h new_rid Heap.emp;
-    HS.lemma_tip_top_alloc_eternal_region m0.tip m0.h new_rid Heap.emp;
-    let m1 = HS (m0.rid_ctr + 1) h1 m0.tip in
+    let new_rid, m1 = HS.new_eternal_region m0 r0 (Some c) in
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
@@ -416,19 +368,14 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
 
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
-      (requires (fun m       -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
+      (requires (fun m       -> is_eternal_region i /\ (i == HS.root \/ witnessed (region_contains_pred i))))
       (ensures  (fun m0 r m1 -> is_eternal_region (frameOf r) /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
-  = if i <> HH.root then gst_recall (region_contains_pred i);
+  = if i <> HS.root then gst_recall (region_contains_pred i);
     let m0 = gst_get () in
-    let r, h = HH.alloc rel i init mm m0.h in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
-    HS.lemma_rid_ctr_pred ();
-    HS.lemma_downward_closed_same_domain m0.h h;
-    HS.lemma_tip_top_same_domain m0.tip m0.h h;
-    let m1 = HS m0.rid_ctr h m0.tip in
+    let r, m1 = HS.alloc rel i init mm m0 in
     gst_put m1;
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
-    let r = mk_mreference r in
+    HS.lemma_rid_ctr_pred ();
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred i);
     r
@@ -436,13 +383,13 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
-      (requires (fun m -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
+      (requires (fun m -> is_eternal_region i /\ (i == HS.root \/ witnessed (region_contains_pred i))))
       (ensures (ralloc_post i init))
   = ralloc_common i init false
   
 let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mmmref a rel)
-      (requires (fun m -> is_eternal_region i /\ (i == HH.root \/ witnessed (region_contains_pred i))))
+      (requires (fun m -> is_eternal_region i /\ (i == HS.root \/ witnessed (region_contains_pred i))))
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
@@ -454,16 +401,12 @@ let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :
 let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
   :ST unit
       (requires (fun m0     -> r `is_live_for_rw_in` m0))
-      (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
+      (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
     HS.lemma_rid_ctr_pred ();
-    let h = HH.free (HS.mrref_of r) m0.h in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
-    HS.lemma_downward_closed_same_domain m0.h h;
-    HS.lemma_tip_top_same_domain m0.tip m0.h h;
-    let m1 = HS m0.rid_ctr h m0.tip in
+    let m1 = HS.free r m0 in
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();    
@@ -483,11 +426,7 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
-    let h = HH.upd_tot m0.h (HS.mrref_of r) v in
-    HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
-    HS.lemma_downward_closed_same_domain m0.h h;
-    HS.lemma_tip_top_same_domain m0.tip m0.h h;
-    let m1 = HS m0.rid_ctr h m0.tip in
+    let m1 = HS.upd_tot m0 r v in
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
@@ -508,7 +447,7 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
-    HH.sel_tot m0.h (HS.mrref_of r)
+    HS.sel_tot m0 r
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 
@@ -537,9 +476,9 @@ let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
    We can only recall eternal regions, not stack regions
    *)
 let recall_region (i:rid{is_eternal_region i})
-  :Stack unit (requires (fun m -> i == HH.root \/ witnessed (region_contains_pred i)))
+  :Stack unit (requires (fun m -> i == HS.root \/ witnessed (region_contains_pred i)))
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
-  = if i <> HH.root then gst_recall (region_contains_pred i)
+  = if i <> HS.root then gst_recall (region_contains_pred i)
 
 let witness_region (i:rid)
   :Stack unit (requires (fun m0      -> is_eternal_region i ==> i `is_in` m0.h))
@@ -645,25 +584,25 @@ let test_heap_code_with_stack_calls_and_regions () =
 
 val test_lax_code_with_stack_calls_and_regions: unit -> ST unit
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HS.root) h0 h1 ))
 let test_lax_code_with_stack_calls_and_regions () =
   push_frame();
   let color = 0 in
   HH.root_has_color_zero ();
-  let new_region = new_colored_region HH.root color in
+  let new_region = new_colored_region HS.root color in
   let s :ref int = ralloc new_region 1 in
   test_stack_with_long_lived s; // Stack call
   pop_frame()
 
 val test_lax_code_with_stack_calls_and_regions_2: unit -> ST unit
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HS.root) h0 h1 ))
 #set-options "--z3rlimit 10"
 let test_lax_code_with_stack_calls_and_regions_2 () =
   push_frame();
   let color = 0 in
   HH.root_has_color_zero ();
-  let new_region = new_colored_region HH.root color in
+  let new_region = new_colored_region HS.root color in
   let s :ref int = ralloc new_region 1 in
   test_stack_with_long_lived s; // Stack call
   test_lax_code_with_stack_calls_and_regions (); // ST call
@@ -704,7 +643,7 @@ val test_to_be_inlined: unit -> Inline (reference int * reference int)
 let test_to_be_inlined () =
   let r :stackref int = salloc 0 in
   HH.root_has_color_zero ();
-  let region = new_region HH.root in
+  let region = new_region HS.root in
   let r' = ralloc region 1 in
   r := 2;
   r' := 3;
@@ -778,7 +717,7 @@ let mm_tests _ =
   //this fails because the reference is no longer live
   //let _ = sfree r2 in
 
-  let id = new_region HH.root in
+  let id = new_region HS.root in
 
   let r3 :mmref int = ralloc_mm id 2 in
   let _ = !r3 in

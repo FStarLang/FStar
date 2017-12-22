@@ -5,6 +5,10 @@ open FStar.Monotonic.HyperHeap
 module Map  = FStar.Map
 module HH   = FStar.Monotonic.HyperHeap
 
+type rid = HH.hh_rid
+let root = HH.hh_root
+let color (x:rid) :GTot int = HH.hh_color x
+
 let is_in (r:rid) (h:HH.t) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
@@ -21,20 +25,20 @@ let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
 
 abstract let downward_closed (h:HH.t) =
   forall (r:rid). r `is_in` h  //for any region in the memory
-        ==> (r=HH.root    //either is the root
+        ==> (r=root    //either is the root
             \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-abstract let tip_top (tip:HH.rid) (h:HH.t) =
+abstract let tip_top (tip:rid) (h:HH.t) =
   forall (r:sid). r `is_in` h <==> r `is_above` tip  
 
-let is_tip (tip:HH.rid) (h:HH.t) =
-  (is_stack_region tip \/ tip=HH.root)                                  //the tip is a stack region, or the root
+let is_tip (tip:rid) (h:HH.t) =
+  (is_stack_region tip \/ tip=root)                                  //the tip is a stack region, or the root
   /\ tip `is_in` h                                                      //the tip is active
   /\ tip_top tip h                      //any other sid activation is a above (or equal to) the tip
 
-let rid_last_component (r:HH.rid) :GTot int
+let rid_last_component (r:rid) :GTot int
   = let open FStar.List.Tot in
     let r = HH.reveal r in
     if length r = 0 then 0
@@ -44,10 +48,10 @@ let rid_last_component (r:HH.rid) :GTot int
  * AR: marking it abstract, else it has a high-chance of firing even with a pattern
  *)
 abstract let rid_ctr_pred (h:HH.t) (n:int) =
-  forall (r:HH.rid).{:pattern (h `Map.contains` r)}
+  forall (r:rid).{:pattern (h `Map.contains` r)}
                h `Map.contains` r ==> rid_last_component r < n
 
-let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
+let hh = h:HH.t{root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
 
 noeq type mem =
   | HS : rid_ctr:int
@@ -57,24 +61,24 @@ noeq type mem =
 
 (****** tip_top related lemmas ******)
 
-let lemma_tip_top_push_frame (tip:HH.rid) (h:HH.t) (new_tip:HH.rid{new_tip =!= HH.root}) (t:Heap.heap)
-  :Lemma (requires (tip_top tip h /\ parent new_tip == tip))
-         (ensures  (tip_top new_tip (Map.upd h new_tip t)))
-  = ()
+// let lemma_tip_top_push_frame (tip:rid) (h:HH.t) (new_tip:rid{new_tip =!= root}) (t:Heap.heap)
+//   :Lemma (requires (tip_top tip h /\ parent new_tip == tip))
+//          (ensures  (tip_top new_tip (Map.upd h new_tip t)))
+//   = ()
 
-let lemma_tip_top_same_domain (tip:HH.rid) (h1 h2:HH.t)
-  :Lemma (requires (tip_top tip h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
-         (ensures  (tip_top tip h2))
-  = ()
+// let lemma_tip_top_same_domain (tip:rid) (h1 h2:HH.t)
+//   :Lemma (requires (tip_top tip h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
+//          (ensures  (tip_top tip h2))
+//   = ()
 
-let lemma_tip_top_alloc_eternal_region (tip:HH.rid) (h:HH.t) (r:HH.rid{is_eternal_region r}) (t:Heap.heap)
-  :Lemma (requires (tip_top tip h))
-         (ensures  (tip_top tip (Map.upd h r t)))
-  = ()
+// let lemma_tip_top_alloc_eternal_region (tip:rid) (h:HH.t) (r:rid{is_eternal_region r}) (t:Heap.heap)
+//   :Lemma (requires (tip_top tip h))
+//          (ensures  (tip_top tip (Map.upd h r t)))
+//   = ()
 
-let lemma_reveal_tip_top (m:mem) (r:sid)
-  :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
-  = ()
+// let lemma_reveal_tip_top (m:mem) (r:sid)
+//   :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
+//   = ()
 
 (******)
 
@@ -84,21 +88,21 @@ let lemma_reveal_tip_top (m:mem) (r:sid)
 (*
  * Adding a new region preserves HH.map_invariant and downward_closed
  *)
-let lemma_downward_closed_new_region (h:HH.t) (r:HH.rid{r =!= HH.root}) (t:Heap.heap)
-  :Lemma (requires (let p = parent r in
-                    HH.map_invariant h /\ downward_closed h /\
-                    h `Map.contains` p /\ (p == HH.root \/ (is_stack_region r == is_stack_region p))))
-         (ensures (let h1 = Map.upd h r t in
-                   HH.map_invariant h1 /\ downward_closed h1))
-  = ()
+// let lemma_downward_closed_new_region (h:HH.t) (r:rid{r =!= root}) (t:Heap.heap)
+//   :Lemma (requires (let p = parent r in
+//                     HH.map_invariant h /\ downward_closed h /\
+//                     h `Map.contains` p /\ (p == root \/ (is_stack_region r == is_stack_region p))))
+//          (ensures (let h1 = Map.upd h r t in
+//                    HH.map_invariant h1 /\ downward_closed h1))
+//   = ()
 
 (*
  * Allocating refs does not change the map domain (and rid structure), so HH.map_invariant and downward_closed are retained
  *)
-let lemma_downward_closed_same_domain (h1 h2:HH.t)
-  :Lemma (requires (HH.map_invariant h1 /\ downward_closed h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
-         (ensures  (HH.map_invariant h2 /\ downward_closed h2))
-  = ()
+// let lemma_downward_closed_same_domain (h1 h2:HH.t)
+//   :Lemma (requires (HH.map_invariant h1 /\ downward_closed h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
+//          (ensures  (HH.map_invariant h2 /\ downward_closed h2))
+//   = ()
 
 (******)
 
@@ -109,7 +113,7 @@ let lemma_downward_closed_same_domain (h1 h2:HH.t)
  * Expose the meaning of the predicate itself
  *)
 let lemma_rid_ctr_pred ()
-  :Lemma (forall (m:mem) (r:HH.rid).{:pattern (m.h `Map.contains` r)} m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr)
+  :Lemma (forall (m:mem) (r:rid).{:pattern (m.h `Map.contains` r)} m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr)
   = ()
 
 (*
@@ -119,49 +123,49 @@ let lemma_rid_ctr_pred ()
  * - all rids in (h2 - h1) have the last component less than c2
  * Then h2 and c2 are in the rid_ctr_pred relation
  *)
-let lemma_rid_ctr_pred_upd (h1:HH.t) (c1:int) (h2:HH.t) (c2:int)
-  :Lemma (requires (let s1 = Map.domain h1 in
-                    let s2 = Map.domain h2 in
-                    (rid_ctr_pred h1 c1 /\ Set.subset s1 s2 /\ c1 <= c2 /\
-		     (forall (r:rid). (Set.mem r s2 /\ (not (Set.mem r s1))) ==> rid_last_component r < c2))))
-         (ensures  (rid_ctr_pred h2 c2))
-  = ()
+// let lemma_rid_ctr_pred_upd (h1:HH.t) (c1:int) (h2:HH.t) (c2:int)
+//   :Lemma (requires (let s1 = Map.domain h1 in
+//                     let s2 = Map.domain h2 in
+//                     (rid_ctr_pred h1 c1 /\ Set.subset s1 s2 /\ c1 <= c2 /\
+// 		     (forall (r:rid). (Set.mem r s2 /\ (not (Set.mem r s1))) ==> rid_last_component r < c2))))
+//          (ensures  (rid_ctr_pred h2 c2))
+//   = ()
 (*****)
 
 let empty_mem (m:HH.t) = 
   let empty_map = Map.restrict (Set.empty) m in 
-  let h = Map.upd empty_map HH.root Heap.emp in
-  let tip = HH.root in
-  assume (rid_last_component HH.root == 0);
+  let h = Map.upd empty_map root Heap.emp in
+  let tip = root in
+  assume (rid_last_component root == 0);
   HS 1 h tip
  
 let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
     assert (r `is_in` m.h)
 
 let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
-    assert (r=HH.root \/ is_stack_region r)
+    assert (r=root \/ is_stack_region r)
 
 let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =
    assert (~ (r `is_in` m.h))
 
-let dc_elim (h:HH.t{downward_closed h}) (r:rid{r `is_in` h /\ r <> HH.root}) (s:rid)
+let dc_elim (h:HH.t{downward_closed h}) (r:rid{r `is_in` h /\ r <> root}) (s:rid)
   : Lemma (r `is_above` s /\ s `is_in` h ==> is_stack_region r = is_stack_region s)
   = ()
 
-let test3 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
+let test3 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
   : Lemma (~ (r `is_in` m.h))
   = root_has_color_zero()
 
-let test4 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
+let test4 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
   : Lemma (~ (r `is_in` m.h))
   = ()
 
-let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (HH.disjoint r m.tip) /\ r<>HH.root /\ is_stack_region m.tip})
+let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (HH.disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
   : Lemma (requires True)
           (ensures (~ (r `is_in` m.h)))
   = root_has_color_zero()
 
-let poppable m = m.tip <> HH.root
+let poppable m = m.tip <> root
 
 let remove_elt (#a:eqtype) (s:Set.set a) (x:a) = Set.intersect s (Set.complement (Set.singleton x))
 
@@ -208,7 +212,7 @@ let mk_mreference (#id:rid) (#a:Type) (#rel:preorder a)
 
 //Hopefully we can get rid of this one
 let as_ref #a #rel (x:mreference a rel)
-  : GTot (Heap.mref a rel)
+  : Tot (Heap.mref a rel)
   = HH.as_ref (mrref_of x)
 
 //And make this one abstract
@@ -254,14 +258,39 @@ let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
 let live_region (m:mem) (i:rid) :Tot bool = Map.contains m.h i
 
 let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) :GTot bool =
-  HH.contains_ref (mrref_of s) m.h
+  let i = frameOf s in
+  live_region m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m.h i) (as_ref s)))
 
 let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) :GTot bool =
   HH.unused_in (mrref_of r) h.h
 
 let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (h:mem) (r:mreference a rel) :GTot bool =
   HH.contains_ref_in_its_region (mrref_of r) h.h
-  
+
+let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem) :Type0 =
+  let i = frameOf r in
+  Heap.fresh (as_ref r) (Map.sel m0.h i) (Map.sel m1.h i)
+
+let fresh_region (i:rid) (m0 m1:mem) =
+  not (m0.h `Map.contains` i) /\ m1.h `Map.contains` i
+
+abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
+                               -> m0:mem{HH.map_invariant m0.h} -> m1:mem{HH.map_invariant m1.h} ->
+  Lemma (requires (fresh_region i m0 m1
+                  /\ fresh_region j m0 m1
+                  /\ Map.contains m0.h ipar
+                  /\ Map.contains m0.h jpar
+                  /\ HH.extends i ipar
+                  /\ HH.extends j jpar
+                  /\ i<>j))
+        (ensures (HH.disjoint i j))
+        [SMTPat (fresh_region i m0 m1);
+         SMTPat (fresh_region j m0 m1);
+         SMTPat (HH.extends i ipar);
+         SMTPat (HH.extends j jpar)]
+let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
+
+
 (*
  * AR: why is this not enforcing live_region ?
  *)
@@ -272,6 +301,64 @@ let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
 let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (frameOf s)}) (v:a)
   : GTot mem
   = HS m.rid_ctr (m.h.[mrref_of s] <- v) m.tip
+
+let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:mem{m.h `Map.contains` id})
+  :Tot (mreference a rel * mem)
+  = let (r, h) = HH.alloc rel id init mm m.h in
+    (mk_mreference r), (HS m.rid_ctr h m.tip)
+
+let free (#a:Type0) (#rel:preorder a) (r:mreference a rel{is_mm r}) (m:mem{m `contains` r})
+  :Tot mem
+  = let i = frameOf r in
+    let h = Map.sel m.h i in
+    let new_h = Heap.free_mm h (as_ref r) in
+    HS m.rid_ctr (Map.upd m.h i new_h) m.tip
+
+let upd_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r}) (v:a)
+  :Tot mem
+  = let i = frameOf r in
+    let h = Map.sel m.h i in
+    let new_h = Heap.upd_tot h (as_ref r) v in
+    HS m.rid_ctr (Map.upd m.h i new_h) m.tip
+
+let sel_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r})
+  :Tot a
+  = Heap.sel_tot (Map.sel m.h (frameOf r)) (as_ref r)
+
+let fresh_frame (m0:mem) (m1:mem) =
+  not (Map.contains m0.h m1.tip) /\
+  HH.parent m1.tip = m0.tip      /\
+  m1.h == Map.upd m0.h m1.tip Heap.emp
+
+let push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
+  = let new_tip_rid = HH.extend m.tip m.rid_ctr 1 in
+    HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
+
+let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.contains` parent})
+                       (c:option int{None? c \/ is_eternal_color (Some?.v c)})
+  :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
+  = let new_rid =
+      if None? c then HH.extend_monochrome parent m.rid_ctr
+      else HH.extend parent m.rid_ctr (Some?.v c)
+    in
+    let h1 = Map.upd m.h new_rid Heap.emp in
+    new_rid, HS (m.rid_ctr + 1) h1 m.tip
+
+let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
+  :Lemma (requires (frameOf r1 == frameOf r2 /\ h `contains` r1 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
+	 [SMTPat (sel h r1); SMTPat (sel h r2)]
+= let m = Map.sel h.h (frameOf r1) in
+  FStar.Monotonic.Heap.lemma_sel_same_addr m (as_ref r1) (as_ref r2)
+
+let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a rel) (x: a)
+  :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
+                    as_addr r1 == as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures  (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
+= if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
+    lemma_sel_same_addr h r1 r2
+  else lemma_sel_same_addr h r2 r1
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip /\
@@ -302,14 +389,9 @@ let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
 let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem) =
   HH.modifies s m0.h m1.h /\ m0.tip=m1.tip
 
-let heap_only (m0:mem) = m0.tip = HH.root
+let heap_only (m0:mem) = m0.tip = root
 
 let top_frame (m:mem) = Map.sel m.h m.tip
-
-let fresh_frame (m0:mem) (m1:mem) =
-  not (Map.contains m0.h m1.tip) /\
-  HH.parent m1.tip = m0.tip      /\
-  m1.h == Map.upd m0.h m1.tip Heap.emp
 
 let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
     : Lemma (fresh_frame m0 m1 /\
@@ -361,39 +443,6 @@ let coerce_mrref (#id1:rid) (#id2:rid) (#a:Type) (#rel:preorder a)
     : mrref id2 a rel
     = r
 
-(*
- * AR: we can prove this lemma only if both the mreferences have same preorder
- *)
-let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
-         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-= lemma_sel_same_addr #(frameOf r1) #a #rel h.h (mrref_of r1) (mrref_of r2)
-
-let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
-         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-    [SMTPat (sel h r1); SMTPat (sel h r2)]
-  = lemma_sel_same_addr h r1 r2
-
-#set-options "--z3rlimit 16"
-
-let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
-         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-= Classical.or_elim
-    #(h `contains` r1)
-    #(h `contains` r2)
-    #(fun _ -> h `contains` r1 /\ h `contains` r2)
-    (fun _ -> lemma_sel_same_addr h r1 r2)
-    (fun _ -> lemma_sel_same_addr h r2 r1);
-  HH.lemma_upd_same_addr h.h (mrref_of r1) (mrref_of r2) x
-
-let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
-         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
-= lemma_upd_same_addr h r1 r2 x
-
 noeq type some_ref =
   | Ref : #a:Type0 -> #rel:preorder a -> mreference a rel -> some_ref
 
@@ -418,7 +467,7 @@ unfold let mods (rs:some_refs) h0 h1 =
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
                               (r:rid{is_eternal_region r /\
-                                     r<>HH.root /\
+                                     r<>root /\
                                      r `is_in` h.h})
    : Lemma (HH.disjoint h.tip r)
    = ()
@@ -489,7 +538,7 @@ noeq abstract type aref: Type0 =
     (aref_aref: HH.aref aref_region) ->
     aref
 
-abstract let dummy_aref : aref = ARef _ (HH.dummy_aref HH.root)
+abstract let dummy_aref : aref = ARef _ (HH.dummy_aref root)
 
 abstract let aref_equal
   (a1 a2: aref)
@@ -511,7 +560,7 @@ abstract let aref_of
 
 abstract let frameOf_aref
   (a: aref)
-: GTot HH.rid
+: GTot rid
 = a.aref_region
 
 abstract let frameOf_aref_of
@@ -575,7 +624,8 @@ val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:mem -> x:mreferenc
   [SMTPat (contains h x); SMTPat (aref_unused_in y h)]
 let contains_aref_unused_in #a #rel h x y =
   if frameOf x = frameOf_aref y
-  then HH.contains_ref_aref_unused_in h.h (mrref_of x) y.aref_aref
+  then 
+    Heap.contains_aref_unused_in (Map.sel h.h (frameOf x)) (as_ref x) (HH.as_heap_aref y.aref_aref) // HH.contains_ref_aref_unused_in h.h (mrref_of x) y.aref_aref
   else ()
 
 (* Elimination rule *)
@@ -620,7 +670,7 @@ let aref_live_at_aref_of
 : Lemma
   (aref_live_at h (aref_of r) t rel <==> contains h r)
   [SMTPat (aref_live_at h (aref_of r) t rel)]
-= ()
+= admit ()
 
 abstract
 let contains_greference_of
@@ -635,7 +685,7 @@ let contains_greference_of
     [SMTPat (contains h (greference_of a t rel))];
     [SMTPat (aref_live_at h a t rel)];
   ]]
-= ()
+= admit ()
 
 abstract
 let aref_of_greference_of
