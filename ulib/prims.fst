@@ -157,12 +157,12 @@ let pure_wp    (a:Type) = pure_post a -> GTot pure_pre
 assume type guard_free: Type0 -> Type0
 
 unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
-     forall (y:a). y==x ==> p y
+     forall (return_val:a). return_val==x ==> p return_val
 
 unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
-	wp1 (fun (x:a) -> wp2 x p)
+	wp1 (fun (bind_result_1:a) -> wp2 bind_result_1 p)
 unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 
@@ -177,8 +177,8 @@ unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
 unfold let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
 unfold let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
 unfold let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
-unfold let pure_null_wp  (a:Type) (p:pure_post a) = forall (x:a). p x
-unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
+unfold let pure_null_wp  (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
+unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (trivial_result:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
@@ -197,7 +197,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 // Note the type of post, which allows to assume the precondition
 // for the well-formedness of the postcondition. c.f. #57
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        PURE a (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+        PURE a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
 
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
@@ -215,7 +215,7 @@ sub_effect
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
 (* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
-       GHOST a (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+       GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
 assume new type int : Type0
 
