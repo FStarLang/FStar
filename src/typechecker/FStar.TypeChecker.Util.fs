@@ -586,13 +586,15 @@ let return_value env u_t_opt t v =
   c
 
 let weaken_comp env (c:comp) (formula:term) : comp =
-    let c = Env.unfold_effect_abbrev env c in
-    let u_res_t, res_t, wp = destruct_comp c in
-    let md = Env.get_effect_decl env c.effect_name in
-    let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)
-                        [S.as_arg res_t; S.as_arg formula; S.as_arg wp]
-                        None wp.pos in
-    mk_comp md u_res_t res_t wp c.flags
+    if U.is_ml_comp c
+    then c
+    else let c = Env.unfold_effect_abbrev env c in
+         let u_res_t, res_t, wp = destruct_comp c in
+         let md = Env.get_effect_decl env c.effect_name in
+         let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)
+                            [S.as_arg res_t; S.as_arg formula; S.as_arg wp]
+                            None wp.pos in
+         mk_comp md u_res_t res_t wp c.flags
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
