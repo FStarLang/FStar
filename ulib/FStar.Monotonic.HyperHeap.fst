@@ -255,7 +255,7 @@ let unused_in (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot
   not (Map.contains m i) ||
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
 
-let weak_contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : GTot bool =
+let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : GTot bool =
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
 
 let fresh_rref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m0:t) (m1:t) =
@@ -569,4 +569,3 @@ let upd_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{contains
 
 let sel_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{contains_ref r m}) :Tot a
   = Heap.sel_tot (Map.sel m i) (as_ref r)
-

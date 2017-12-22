@@ -245,40 +245,23 @@ let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
  * we cannot prove the eternal regions invariant that all
  * included regions of a region are also in the map.
  *)
-let live_region (m:mem) (i:rid) =
-  (is_eternal_region i \/ i `is_above` m.tip)
-  /\ Map.contains m.h i
 
 (*
- * AR: adding a weaker version of live_region that could be
- * used in the precondition of read.
+ * AR: this used to be (is_eternal_region i \/ i `is_above` m.tip) /\ Map.contains ...
+ *     As far as the memory model is concerned, this could just be Map.contains
+ *     The fact that an eternal region is always contained (because of monotonicity) should be used in the ST interface
  *)
-let weak_live_region (m:mem) (i:rid) =
-  is_eternal_region i \/ i `is_above` m.tip
+let live_region (m:mem) (i:rid) :Tot bool = Map.contains m.h i
 
-let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) =
-  live_region m (frameOf s)
-  /\ HH.contains_ref (mrref_of s) m.h
+let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) :GTot bool =
+  HH.contains_ref (mrref_of s) m.h
 
-let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
-  ~ (live_region h (frameOf r)) \/
+let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) :GTot bool =
   HH.unused_in (mrref_of r) h.h
 
-private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
-  (requires (weak_live_region m r))
-  (ensures (is_eternal_region r \/ Map.contains m.h r))
-let weak_live_region_implies_eternal_or_in_map r m = ()
-
-(*
- * AR: corresponding to weak_live_region above.
- * Replacing HH.contains_ref with weak_contains_ref under mm flag.
- * If the reference is manually managed, we must prove Heap.contains
- * before reading the ref.
- *)
-let weak_contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) =
-  weak_live_region m (frameOf s) /\
-  (if is_mm s then HH.weak_contains_ref (mrref_of s) m.h else True)
-
+let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (h:mem) (r:mreference a rel) :GTot bool =
+  HH.contains_ref_in_its_region (mrref_of r) h.h
+  
 (*
  * AR: why is this not enforcing live_region ?
  *)
@@ -291,9 +274,10 @@ let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (f
   = HS m.rid_ctr (m.h.[mrref_of s] <- v) m.tip
 
 let equal_domains (m0:mem) (m1:mem) =
-  m0.tip = m1.tip
-  /\ Set.equal (Map.domain m0.h) (Map.domain m1.h)
-  /\ (forall r. Map.contains m0.h r ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
+  m0.tip = m1.tip /\
+  Set.equal (Map.domain m0.h) (Map.domain m1.h) /\
+  (forall r.{:pattern (Map.contains m0.h r) \/ (Map.contains m1.h r)}
+       Map.contains m0.h r ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
 
 let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   (requires (equal_domains m0 m1 /\ equal_domains m1 m2))
@@ -302,9 +286,9 @@ let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   = ()
 
 let equal_stack_domains (m0:mem) (m1:mem) =
-  m0.tip = m1.tip
-  /\ (forall r. (is_stack_region r /\ r `is_above` m0.tip) ==>
-           Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
+  m0.tip = m1.tip /\
+  (forall r. (is_stack_region r /\ r `is_above` m0.tip) ==>  //AR: TODO: this has no patterns, what's a good pattern here?
+        Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
 
 let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   (requires (equal_stack_domains m0 m1 /\ equal_stack_domains m1 m2))
@@ -313,22 +297,19 @@ let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   = ()
 
 let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
-  HH.modifies_just s m0.h m1.h
-  /\ m0.tip=m1.tip
+  HH.modifies_just s m0.h m1.h /\ m0.tip=m1.tip
 
 let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem) =
-  HH.modifies s m0.h m1.h
-  /\ m0.tip=m1.tip
+  HH.modifies s m0.h m1.h /\ m0.tip=m1.tip
 
-let heap_only (m0:mem) =
-  m0.tip = HH.root
+let heap_only (m0:mem) = m0.tip = HH.root
 
 let top_frame (m:mem) = Map.sel m.h m.tip
 
 let fresh_frame (m0:mem) (m1:mem) =
-  not (Map.contains m0.h m1.tip)
-  /\ HH.parent m1.tip = m0.tip
-  /\ m1.h == Map.upd m0.h m1.tip Heap.emp
+  not (Map.contains m0.h m1.tip) /\
+  HH.parent m1.tip = m0.tip      /\
+  m1.h == Map.upd m0.h m1.tip Heap.emp
 
 let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
     : Lemma (fresh_frame m0 m1 /\
@@ -336,7 +317,7 @@ let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
              modifies_transitively s m0 (pop m2))
     = ()
 
-let lemma_pop_is_popped (m0:mem{poppable m0})
+private let lemma_pop_is_popped (m0:mem{poppable m0})
   : Lemma (popped m0 (pop m0))
   = let m1 = pop m0 in
     assert (Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip))
@@ -412,15 +393,6 @@ let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mrefere
          (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
          [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
 = lemma_upd_same_addr h r1 r2 x
-
-(*
- * AR: relating contains and weak_contains.
- *)
-let contains_implies_weak_contains (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) :Lemma
-  (requires (True))
-  (ensures (contains h x ==> weak_contains h x))
-  [SMTPatOr [[SMTPat (contains h x)]; [SMTPat (weak_contains h x)]] ]
-  = ()
 
 noeq type some_ref =
   | Ref : #a:Type0 -> #rel:preorder a -> mreference a rel -> some_ref

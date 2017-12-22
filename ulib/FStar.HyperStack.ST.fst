@@ -34,12 +34,12 @@ private abstract let rid_last_component_pred (m1 m2:mem) :Type0
 (* Predicate for refs *)
 private abstract let eternal_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
-      {:pattern (HH.contains_ref (HS.mrref_of r) m1.h)}
+      {:pattern (m1 `HS.contains` r)}
       if is_mm r then True
       else
-        if HH.contains_ref (HS.mrref_of r) m1.h then
-	  if is_eternal_region (HS.frameOf r) then HH.contains_ref (HS.mrref_of r) m2.h /\ rel (HS.sel m1 r) (HS.sel m2 r)
-	  else if m2.h `Map.contains` (HS.frameOf r) then HH.contains_ref (HS.mrref_of r) m2.h /\ rel (HS.sel m1 r) (HS.sel m2 r)
+        if m1 `HS.contains` r then
+	  if is_eternal_region (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
+	  else if m2.h `Map.contains` (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else True
 	else True
 
@@ -59,7 +59,7 @@ abstract let region_contains_pred (r:HH.rid) :mem_predicate
 
 abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :mem_predicate
   = fun m -> rid_last_component (HS.frameOf r) < m.rid_ctr /\
-          (HS.is_mm r \/ (not (m.h `Map.contains` (HS.frameOf r)) \/ HH.contains_ref (HS.mrref_of r) m.h))
+          (HS.is_mm r \/ (not (m.h `Map.contains` (HS.frameOf r)) \/ m `HS.contains` r))
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
@@ -410,9 +410,9 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
                        (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
     let region_i = Map.sel m0.h i in
     as_ref x `Heap.unused_in` region_i /\
-     i `is_in` m0.h                    /\
-     i = frameOf x                     /\
-     m1 == upd m0 x init                      
+    i `is_in` m0.h                     /\
+    i = frameOf x                      /\
+    m1 == upd m0 x init                      
 
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
@@ -446,12 +446,18 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
-#set-options "--z3rlimit 30"
+let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :GTot bool =
+  (m `contains` r) ||
+    (let i = HS.frameOf r in
+     (is_eternal_region i || i `HS.is_above` m.tip) && (m `HS.contains_ref_in_its_region` r))
+
 let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
   :ST unit
-      (requires (fun m0 -> m0 `contains` r))
+      (requires (fun m0     -> r `is_live_for_rw_in` m0))
       (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
   = let m0 = gst_get () in
+    gst_recall (region_contains_pred (HS.frameOf r));
+    gst_recall (ref_contains_pred r);
     HS.lemma_rid_ctr_pred ();
     let h = HH.free (HS.mrref_of r) m0.h in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
@@ -472,9 +478,11 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) m0
    *)
 let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit
-       (requires (fun m -> m `contains` r /\ rel (HS.sel m r) v))
-       (ensures (assign_post r v))
+       (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
+       (ensures  (assign_post r v))
   = let m0 = gst_get () in
+    gst_recall (region_contains_pred (HS.frameOf r));
+    gst_recall (ref_contains_pred r);
     let h = HH.upd_tot m0.h (HS.mrref_of r) v in
     HS.lemma_rid_ctr_pred_upd m0.h m0.rid_ctr h m0.rid_ctr;
     HS.lemma_downward_closed_same_domain m0.h h;
@@ -485,7 +493,7 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
     gst_put m1
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
-  m1==m0 /\ x==HyperStack.sel m0 r
+  m1 == m0 /\ m0 `contains` r /\ x == HyperStack.sel m0 r
 
 (**
    Dereferences, provided that the reference exists.
@@ -495,8 +503,8 @@ unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
  * AR: making the precondition as weak_contains.
  *)
 let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
-  :Stack a (requires (fun m -> m `weak_contains` r))
-           (ensures (deref_post r))
+  :Stack a (requires (fun m -> r `is_live_for_rw_in` m))
+           (ensures  (deref_post r))
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
@@ -539,7 +547,7 @@ let witness_region (i:rid)
   = gst_witness (region_contains_pred i)
 
 let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
-  :ST unit (fun h0      -> HH.contains_ref (HS.mrref_of r) h0.h)
+  :ST unit (fun h0      -> h0 `HS.contains` r)
            (fun h0 _ h1 -> h0 == h1 /\ witnessed (ref_contains_pred r))
   = HS.lemma_rid_ctr_pred ();
     gst_witness (ref_contains_pred r)
@@ -554,7 +562,7 @@ let test_do_nothing x =
   x
 
 val test_do_something: #rel:preorder int -> s:mstackref int rel -> Stack int
-  (requires (fun h -> contains h s))
+  (requires (fun h     -> contains h s))
   (ensures (fun h r h1 -> contains h s /\ r = sel h s))
 let test_do_something #rel s =
   push_frame();
@@ -563,7 +571,7 @@ let test_do_something #rel s =
   res
 
 val test_do_something_else: #rel:preorder int -> s:mstackref int rel -> v:int -> Stack unit
-  (requires (fun h -> contains h s /\ rel (HS.sel h s) v))
+  (requires (fun h     -> contains h s /\ rel (HS.sel h s) v))
   (ensures (fun h r h1 -> contains h1 s /\ v = sel h1 s))
 let test_do_something_else #rel s v =
   push_frame();
