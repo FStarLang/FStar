@@ -98,7 +98,7 @@ let live_gbuffer_of_array_pointer
 let frameOf
   (#t: typ)
   (b: buffer t)
-: GTot HH.rid
+: GTot HS.rid
 = P.frameOf_buffer b
 
 let frameOf_gsingleton_buffer_of_pointer

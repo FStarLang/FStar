@@ -463,7 +463,7 @@ val gread
 val frameOf
   (#value: typ)
   (p: pointer value)
-: GTot HH.rid
+: GTot HS.rid
 
 val live_region_frameOf
   (#value: typ)
@@ -1054,7 +1054,7 @@ val buffer_live_gbuffer_of_array_pointer
 val frameOf_buffer
   (#t: typ)
   (b: buffer t)
-: GTot HH.rid
+: GTot HS.rid
 
 val frameOf_buffer_gsingleton_buffer_of_pointer
   (#t: typ)
@@ -1532,12 +1532,12 @@ val loc_buffer
 : GTot loc
 
 val loc_addresses
-  (r: HH.rid)
+  (r: HS.rid)
   (n: Set.set nat)
 : GTot loc
 
 val loc_regions
-  (r: Set.set HH.rid)
+  (r: Set.set HS.rid)
 : GTot loc
 
 
@@ -1642,7 +1642,7 @@ val loc_includes_gsub_buffer_l
 
 val loc_includes_addresses_pointer
   (#t: typ)
-  (r: HH.rid)
+  (r: HS.rid)
   (s: Set.set nat)
   (p: pointer t)
 : Lemma
@@ -1652,7 +1652,7 @@ val loc_includes_addresses_pointer
 
 val loc_includes_addresses_buffer
   (#t: typ)
-  (r: HH.rid)
+  (r: HS.rid)
   (s: Set.set nat)
   (p: buffer t)
 : Lemma
@@ -1662,7 +1662,7 @@ val loc_includes_addresses_buffer
 
 val loc_includes_region_pointer
   (#t: typ)
-  (s: Set.set HH.rid)
+  (s: Set.set HS.rid)
   (p: pointer t)
 : Lemma
   (requires (Set.mem (frameOf p) s))
@@ -1671,7 +1671,7 @@ val loc_includes_region_pointer
 
 val loc_includes_region_buffer
   (#t: typ)
-  (s: Set.set HH.rid)
+  (s: Set.set HS.rid)
   (b: buffer t)
 : Lemma
   (requires (Set.mem (frameOf_buffer b) s))
@@ -1679,8 +1679,8 @@ val loc_includes_region_buffer
   [SMTPat (loc_includes (loc_regions s) (loc_buffer b))]
 
 val loc_includes_region_addresses
-  (s: Set.set HH.rid)
-  (r: HH.rid)
+  (s: Set.set HS.rid)
+  (r: HS.rid)
   (a: Set.set nat)
 : Lemma
   (requires (Set.mem r s))
@@ -1688,7 +1688,7 @@ val loc_includes_region_addresses
   [SMTPat (loc_includes (loc_regions s) (loc_addresses r a))]
 
 val loc_includes_region_region
-  (s1 s2: Set.set HH.rid)
+  (s1 s2: Set.set HS.rid)
 : Lemma
   (requires (Set.subset s2 s1))
   (ensures (loc_includes (loc_regions s1) (loc_regions s2)))
@@ -1696,7 +1696,7 @@ val loc_includes_region_region
 
 val loc_includes_region_union_l
   (l: loc)
-  (s1 s2: Set.set HH.rid)
+  (s1 s2: Set.set HS.rid)
 : Lemma
   (requires (loc_includes l (loc_regions (Set.intersect s2 (Set.complement s1)))))
   (ensures (loc_includes (loc_union (loc_regions s1) l) (loc_regions s2)))
@@ -1871,7 +1871,7 @@ let loc_disjoint_gpointer_of_buffer_cell_l
 = loc_disjoint_includes (loc_buffer b) l (loc_pointer (gpointer_of_buffer_cell b i)) l
 
 val loc_disjoint_addresses
-  (r1 r2: HH.rid)
+  (r1 r2: HS.rid)
   (n1 n2: Set.set nat)
 : Lemma
   (requires (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
@@ -1881,7 +1881,7 @@ val loc_disjoint_addresses
 val loc_disjoint_pointer_addresses
   (#t: typ)
   (p: pointer t)
-  (r: HH.rid)
+  (r: HS.rid)
   (n: Set.set nat)
 : Lemma
   (requires (r <> frameOf p \/ (~ (Set.mem (as_addr p) n))))
@@ -1889,7 +1889,7 @@ val loc_disjoint_pointer_addresses
   [SMTPat (loc_disjoint (loc_pointer p) (loc_addresses r n))]
 
 val loc_disjoint_regions
-  (rs1 rs2: Set.set HH.rid)
+  (rs1 rs2: Set.set HS.rid)
 : Lemma
   (requires (Set.subset (Set.intersect rs1 rs2) Set.empty))
   (ensures (loc_disjoint (loc_regions rs1) (loc_regions rs2)))
@@ -1903,7 +1903,7 @@ val modifies
 : GTot Type0
 
 val modifies_loc_regions_intro
-  (rs: Set.set HH.rid)
+  (rs: Set.set HS.rid)
   (h1 h2: HS.mem)
 : Lemma
   (requires (HH.modifies_just rs h1.HS.h h2.HS.h))
@@ -1998,7 +1998,7 @@ val modifies_loc_includes
   [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')]
 
 val modifies_regions_elim
-  (rs: Set.set HH.rid)
+  (rs: Set.set HS.rid)
   (h h' : HS.mem)
 : Lemma
   (requires (
@@ -2007,7 +2007,7 @@ val modifies_regions_elim
   (ensures (HH.modifies_just rs h.HS.h h'.HS.h))
 
 val modifies_addresses_elim
-  (r: HH.rid)
+  (r: HS.rid)
   (a: Set.set nat)
   (l: loc)
   (h h' : HS.mem)
@@ -2169,7 +2169,7 @@ val modifies_fresh_frame_popped
   ))
 
 val modifies_only_live_regions
-  (rs: Set.set HH.rid)
+  (rs: Set.set HS.rid)
   (l: loc)
   (h h' : HS.mem)
 : Lemma
@@ -2180,7 +2180,7 @@ val modifies_only_live_regions
   (ensures (modifies l h h'))
 
 val modifies_loc_addresses_intro
-  (r: HH.rid)
+  (r: HS.rid)
   (a: Set.set nat)
   (l: loc)
   (h1 h2: HS.mem)

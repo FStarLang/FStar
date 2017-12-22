@@ -35,7 +35,7 @@ let m_contains (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.con
 let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.unused_in mr m
 
 let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:mem) (m1:mem) : GTot Type0 =
-  HyperHeap.fresh_rref (HS.mrref_of mr) m0.h m1.h
+  HS.fresh_ref mr m0 m1
 
 val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:mem -> m_rref r a b -> GTot a
 let m_sel #r #a #b h m = HS.sel h m

@@ -76,9 +76,9 @@ noeq type mem =
 //          (ensures  (tip_top tip (Map.upd h r t)))
 //   = ()
 
-// let lemma_reveal_tip_top (m:mem) (r:sid)
-//   :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
-//   = ()
+let lemma_reveal_tip_top (m:mem) (r:sid)
+  :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
+  = ()
 
 (******)
 
@@ -347,11 +347,25 @@ let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (frameOf r1 == frameOf r2 /\ h `contains` r1 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
+= let m = Map.sel h.h (frameOf r1) in
+  FStar.Monotonic.Heap.lemma_sel_same_addr m (as_ref r1) (as_ref r2)
+
+let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
+  :Lemma (requires (frameOf r1 == frameOf r2 /\ h `contains` r1 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
 = let m = Map.sel h.h (frameOf r1) in
   FStar.Monotonic.Heap.lemma_sel_same_addr m (as_ref r1) (as_ref r2)
 
 let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a rel) (x: a)
+  :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
+                    as_addr r1 == as_addr r2 /\ is_mm r1 == is_mm r2))
+         (ensures  (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+= if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
+    lemma_sel_same_addr h r1 r2
+  else lemma_sel_same_addr h r2 r1
+
+let lemma_upd_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a rel) (x: a)
   :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
                     as_addr r1 == as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))

@@ -81,7 +81,7 @@ let loc_includes_union_assoc_focalize_2
 
 let loc_includes_region_union_r
   (l: loc)
-  (s1 s2: Set.set HH.rid)
+  (s1 s2: Set.set HS.rid)
 : Lemma
   (requires (loc_includes l (loc_regions (Set.intersect s2 (Set.complement s1)))))
   (ensures (loc_includes (loc_union l (loc_regions s1)) (loc_regions s2)))
@@ -90,7 +90,7 @@ let loc_includes_region_union_r
 
 let loc_includes_region_union_assoc
   (l r: loc)
-  (s1 s2: Set.set HH.rid)
+  (s1 s2: Set.set HS.rid)
 : Lemma
   (requires (loc_includes (loc_union l r)) (loc_regions (Set.intersect s2 (Set.complement s1))))
   (ensures (loc_includes (loc_union l (loc_union (loc_regions s1) r)) (loc_regions s2)))
@@ -281,7 +281,7 @@ let loc_disjoint_gsub_buffer_l
 let loc_disjoint_addresses_pointer
   (#t: typ)
   (p: pointer t)
-  (r: HH.rid)
+  (r: HS.rid)
   (n: Set.set nat)
 : Lemma
   (requires (r <> frameOf p \/ (~ (Set.mem (as_addr p) n))))
