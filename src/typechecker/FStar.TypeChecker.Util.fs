@@ -721,7 +721,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             || debug env <| Options.Other "bind"
             then BU.print5 "Simplified (because %s) bind c1: %s\n\nc2: %s\n\nto c: %s\n\nWith effect lid: %s\n\n"
                             reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c) (Print.lid_to_string joined_eff);
-            U.comp_set_flags c bind_flags
+            c
           | Inr reason ->
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let c1_typ = Env.unfold_effect_abbrev env c1 in
