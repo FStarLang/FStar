@@ -55,7 +55,7 @@ type lcomp_with_binder = option<bv> * lcomp
 val subst_lcomp: subst_t -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
-val return_value: env -> typ -> term -> comp
+//val return_value: env -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t

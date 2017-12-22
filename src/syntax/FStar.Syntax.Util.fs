@@ -529,6 +529,7 @@ let rec is_unit t =
     | Tm_fvar fv ->
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
+      || fv_eq_lid fv PC.auto_squash_lid
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 

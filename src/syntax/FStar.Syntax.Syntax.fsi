@@ -137,6 +137,7 @@ and cflags =
   | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
   | LEMMA
   | CPS
   | DECREASES of term

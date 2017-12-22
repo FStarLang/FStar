@@ -528,14 +528,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let head, chead, g_head = tc_term (no_inst env) head in
     let e, c, g = if not env.lax && TcUtil.short_circuit_head head
                   then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
-                       //TODO: this is not efficient:
-                       //      It is quadratic in the size of boolean terms
-                       //      e.g., a && b && c && d ... & zzzz will be huge
-                       let c = if Env.should_verify env &&
-                               not (U.is_lcomp_partial_return c) &&
-                               U.is_pure_or_ghost_lcomp c
-                               then TcUtil.maybe_assume_result_eq_pure_term env e c
-                               else c in
+                       // //TODO: this is not efficient:
+                       // //      It is quadratic in the size of boolean terms
+                       // //      e.g., a && b && c && d ... & zzzz will be huge
+                       // let c = if Env.should_verify env &&
+                       //         not (U.is_lcomp_partial_return c) &&
+                       //         U.is_pure_or_ghost_lcomp c
+                       //         then TcUtil.maybe_assume_result_eq_pure_term env e c
+                       //         else c in
                        e, c, g
                   else
                     // If we're descending under `quote`, don't instantiate implicits
@@ -1239,13 +1239,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                          bind chead (bind c0 (bind c1 ... (bind cn (Tot (bs -> cres))))
     *)
     let monadic_application
-      (head, chead, ghead, cres)
-      subst
-      (arg_comps_rev:list<(arg * option<bv> * lcomp)>)
-      arg_rets_rev
-      guard
-      fvs
-      bs
+      (head, chead, ghead, cres)                        (* the head of the application, its lcomp chead, and guard ghead, returning a bs -> cres *)
+      subst                                             (* substituting actuals for formals seen so far, when actual is pure *)
+      (arg_comps_rev:list<(arg * option<bv> * lcomp)>)  (* type-checked actual arguments, so far; in reverse order *)
+      arg_rets_rev                                      (* The results of each argument at the logic level, in reverse order *)
+      guard                                             (* conjoined guard formula for all the actuals *)
+      fvs                                               (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
+      bs                                                (* formal parameters *)
         : term   //application of head to args
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
@@ -1256,6 +1256,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           match bs with
           | [] -> (* full app *)
               let cres = TcUtil.subst_lcomp subst cres in
+              //NS 12/22 ... this comment looks stale
               (* If we have f e1 e2
                   where e1 or e2 is impure but f is a pure function,
                   then refine the result to be equal to f x1 x2,
@@ -1270,8 +1271,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       in
       if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
 
-      (* Note: The outargs are in reverse order. e.g., f e1 e2 e3, we have *)
-      (* outargs = [(e3, _, c3); (e2; _; c2); (e1; _; c1)] *)
+      (* Note: The arg_comps_rev are in reverse order. e.g., f e1 e2 e3, we have *)
+      (* arg_comps_rev = [(e3, _, c3); (e2; _; c2); (e1; _; c1)] *)
       (* We build comp = bind chead (bind c1 (bind c2 (bind c3 cres))) *)
       (* The typing rule for monadic application should be something like *)
 
@@ -1302,7 +1303,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
               arg_rets below are those xn...x1 bound variables
        *)
       let cres =
+        let head_or_some_arg_is_effectful =
+            not (Util.is_pure_or_ghost_lcomp chead)
+            || (BU.for_some (fun (_, _, lc) -> not (Util.is_pure_or_ghost_lcomp lc)) arg_comps_rev)
+        in
         if Util.is_pure_or_ghost_lcomp cres
+        && head_or_some_arg_is_effectful
         then let term = S.mk_Tm_app head (List.rev arg_rets_rev) None head.pos in
              TcUtil.maybe_assume_result_eq_pure_term env term cres
         else cres
@@ -1318,15 +1324,18 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           cres
           arg_comps_rev
       in
-      let comp = TcUtil.bind head.pos env None chead (None, comp) in
+      let comp =
+          if Util.is_pure_or_ghost_lcomp chead
+          then TcUtil.bind head.pos env (Some head) chead (None, comp)
+          else TcUtil.bind head.pos env None chead (None, comp) in
 
       (* TODO : This is a really syntactic criterion to check if we can evaluate *)
       (* applications left-to-right, can we do better ? *)
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-                             S.fv_eq_lid fv Parser.Const.op_And ||
-                             S.fv_eq_lid fv Parser.Const.op_Or
+          S.fv_eq_lid fv Parser.Const.op_And ||
+          S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
