@@ -19,17 +19,20 @@ let is_below r1 r2      = r2 `is_above` r1
 let is_strictly_below r1 r2 = r1 `is_below` r2 && r1<>r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
 
-let downward_closed (h:HH.t) =
+abstract let downward_closed (h:HH.t) =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=HH.root    //either is the root
             \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
+abstract let tip_top (tip:HH.rid) (h:HH.t) =
+  forall (r:sid). r `is_in` h <==> r `is_above` tip  
+
 let is_tip (tip:HH.rid) (h:HH.t) =
   (is_stack_region tip \/ tip=HH.root)                                  //the tip is a stack region, or the root
   /\ tip `is_in` h                                                      //the tip is active
-  /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
+  /\ tip_top tip h                      //any other sid activation is a above (or equal to) the tip
 
 let rid_last_component (r:HH.rid) :GTot int
   = let open FStar.List.Tot in
@@ -37,8 +40,11 @@ let rid_last_component (r:HH.rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
-let rid_ctr_pred (h:HH.t) (n:int) =
-  forall (r:HH.rid).{:pattern (h `Map.contains`r)}
+(*
+ * AR: marking it abstract, else it has a high-chance of firing even with a pattern
+ *)
+abstract let rid_ctr_pred (h:HH.t) (n:int) =
+  forall (r:HH.rid).{:pattern (h `Map.contains` r)}
                h `Map.contains` r ==> rid_last_component r < n
 
 let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
@@ -48,6 +54,79 @@ noeq type mem =
        -> h:hh{rid_ctr_pred h rid_ctr}
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
+
+(****** tip_top related lemmas ******)
+
+let lemma_tip_top_push_frame (tip:HH.rid) (h:HH.t) (new_tip:HH.rid{new_tip =!= HH.root}) (t:Heap.heap)
+  :Lemma (requires (tip_top tip h /\ parent new_tip == tip))
+         (ensures  (tip_top new_tip (Map.upd h new_tip t)))
+  = ()
+
+let lemma_tip_top_same_domain (tip:HH.rid) (h1 h2:HH.t)
+  :Lemma (requires (tip_top tip h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
+         (ensures  (tip_top tip h2))
+  = ()
+
+let lemma_tip_top_alloc_eternal_region (tip:HH.rid) (h:HH.t) (r:HH.rid{is_eternal_region r}) (t:Heap.heap)
+  :Lemma (requires (tip_top tip h))
+         (ensures  (tip_top tip (Map.upd h r t)))
+  = ()
+
+let lemma_reveal_tip_top (m:mem) (r:sid)
+  :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
+  = ()
+
+(******)
+
+
+(****** downward_closed related lemmas ******)
+
+(*
+ * Adding a new region preserves HH.map_invariant and downward_closed
+ *)
+let lemma_downward_closed_new_region (h:HH.t) (r:HH.rid{r =!= HH.root}) (t:Heap.heap)
+  :Lemma (requires (let p = parent r in
+                    HH.map_invariant h /\ downward_closed h /\
+                    h `Map.contains` p /\ (p == HH.root \/ (is_stack_region r == is_stack_region p))))
+         (ensures (let h1 = Map.upd h r t in
+                   HH.map_invariant h1 /\ downward_closed h1))
+  = ()
+
+(*
+ * Allocating refs does not change the map domain (and rid structure), so HH.map_invariant and downward_closed are retained
+ *)
+let lemma_downward_closed_same_domain (h1 h2:HH.t)
+  :Lemma (requires (HH.map_invariant h1 /\ downward_closed h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
+         (ensures  (HH.map_invariant h2 /\ downward_closed h2))
+  = ()
+
+(******)
+
+
+(****** rid_ctr_pred related lemmas ******)
+
+(*
+ * Expose the meaning of the predicate itself
+ *)
+let lemma_rid_ctr_pred ()
+  :Lemma (forall (m:mem) (r:HH.rid).{:pattern (m.h `Map.contains` r)} m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr)
+  = ()
+
+(*
+ * If h1 and c1 are in rid_ctr_pred relation, and
+ * - h2 is a superset of h1
+ * - c2 >= c1
+ * - all rids in (h2 - h1) have the last component less than c2
+ * Then h2 and c2 are in the rid_ctr_pred relation
+ *)
+let lemma_rid_ctr_pred_upd (h1:HH.t) (c1:int) (h2:HH.t) (c2:int)
+  :Lemma (requires (let s1 = Map.domain h1 in
+                    let s2 = Map.domain h2 in
+                    (rid_ctr_pred h1 c1 /\ Set.subset s1 s2 /\ c1 <= c2 /\
+		     (forall (r:rid). (Set.mem r s2 /\ (not (Set.mem r s1))) ==> rid_last_component r < c2))))
+         (ensures  (rid_ctr_pred h2 c2))
+  = ()
+(*****)
 
 let empty_mem (m:HH.t) = 
   let empty_map = Map.restrict (Set.empty) m in 

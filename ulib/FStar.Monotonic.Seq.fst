@@ -73,7 +73,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 		     /\ modifies_one i h0 h1
 		     /\ modifies_rref i (Set.singleton (HS.as_addr r)) h0.h h1.h
 		     /\ HS.sel h1 r == Seq.snoc (HS.sel h0 r) x
-		     /\ witnessed r (at_least (Seq.length (HS.sel h0 r)) x r)))
+		     /\ witnessed (at_least (Seq.length (HS.sel h0 r)) x r)))
   =
     recall r;
     let s0 = m_read r in
@@ -135,7 +135,7 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
 		     /\ modifies_one rgn h0 h1
 		     /\ modifies_rref rgn (Set.singleton (HS.as_addr r)) h0.h h1.h
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
-		     /\ witnessed r (i_at_least (Seq.length (i_sel h0 r)) x r)))
+		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
     recall r;
     let s0 = m_read r in
@@ -384,7 +384,7 @@ let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
 //Note: we may want int seqn, instead of nat seqn
 //because the handshake uses an initial value of -1
 type seqn_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
-     (x:nat{x <= max /\ witnessed log (at_most_log_len x log)}) //never more than the length of the log
+     (x:nat{x <= max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
 	 
 type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
   m_rref i  //counter in region i
@@ -444,7 +444,7 @@ let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:s
 	   h0==h1 /\
 	   at_most_log_len (HS.sel h1 ctr) log h1))
   = let n = m_read ctr in
-    testify log (at_most_log_len n log)
+    testify (at_most_log_len n log)
 
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)

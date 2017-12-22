@@ -90,17 +90,16 @@ val lemma_distinct_addrs_distinct_types
          (ensures  (addr_of r1 <> addr_of r2))
 	 [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
 
-val lemma_distinct_addrs_distinct_preorders
-  (#a:Type0) (#rel1:preorder a) (#rel2:preorder a) (h:heap) (r1:mref a rel1) (r2:mref a rel2)
-  :Lemma (requires (rel1 =!= rel2 /\ h `contains` r1 /\ h `contains` r2))
-         (ensures  (addr_of r1 <> addr_of r2))
-	 [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
+val lemma_distinct_addrs_distinct_preorders (u:unit)
+  :Lemma (forall (a:Type0) (rel1 rel2:preorder a) (r1:mref a rel1) (r2:mref a rel2) (h:heap).
+            {:pattern (h `contains` r1); (h `contains` r2)}
+	    (h `contains` r1 /\ h `contains` r2 /\ rel1 =!= rel2) ==> addr_of r1 <> addr_of r2)
 
- val lemma_distinct_addrs_distinct_mm
-      (#a #b:Type0) (#rel1:preorder a) (#rel2: preorder b) (h:heap) (r1:mref a rel1) (r2:mref b rel2)
-    :Lemma (requires (is_mm r1 =!= is_mm r2 /\ h `contains` r1 /\ h `contains` r2))
-           (ensures  (addr_of r1 <> addr_of r2))
-    [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
+val lemma_distinct_addrs_distinct_mm (u:unit)
+  :Lemma (forall (a b:Type0) (rel1:preorder a) (rel2:preorder b) (r1:mref a rel1) (r2:mref b rel2) (h:heap).
+            {:pattern (h `contains` r1); (h `contains` r2)}
+	    (h `contains` r1 /\ h `contains` r2 /\ is_mm r1 =!= is_mm r2) ==> addr_of r1 <> addr_of r2)
+
 (*
  * AR: this is a bit surprising. i had to add ~ (r1 === r2) postcondition to make the lemma
  * lemma_live_1 in hyperstack to go through. if addr_of r1 <> addr_of r2, shouldn't we get ~ (r1 === r2)
@@ -156,7 +155,7 @@ val lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: heap) (r1 r2: mref a 
          (ensures (upd h r1 x == upd h r2 x))
          [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
 
- (*
+(*
   * AR: this is true only if the preorder is same, else r2 may not be contained in h
   *)
 val lemma_sel_upd1 (#a:Type0) (#rel:preorder a) (h:heap) (r1:mref a rel) (x:a) (r2:mref a rel)
