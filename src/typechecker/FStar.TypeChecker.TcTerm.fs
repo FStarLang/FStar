@@ -116,10 +116,11 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
   in
   (* if term, then lc is a trivial lazy computation (lcomp_of_comp) *)
   let lc = match tlc with
-    | Inl t -> U.lcomp_of_comp (if not (should_return t)
-                                || not (Env.should_verify env)
-                                then mk_Total t //don't add a return if we're not verifying; or if we're returning a function
-                                else TcUtil.return_value env t e)
+    | Inl t -> U.lcomp_of_comp <| mk_Total t
+//    U.lcomp_of_comp (if not (should_return t)
+//                                || not (Env.should_verify env)
+//                                then mk_Total t //don't add a return if we're not verifying; or if we're returning a function
+//                                else TcUtil.return_value env t e)
     | Inr lc -> lc in
   let t = lc.res_typ in
   let e, lc, g = match Env.expected_typ env with
@@ -186,6 +187,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
     | None ->
       e, c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
+       let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
+       let c = c.comp() in
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -1893,7 +1896,15 @@ and check_inner_let env e =
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
        let x = fst xbinder in
-       let e2, c2, g2 = tc_term (Env.push_bv env x) e2 in
+       let env_x = Env.push_bv env x in
+       let e2, c2, g2 = tc_term env_x e2 in
+       let c2 =
+           let eff1 = Env.norm_eff_name env c1.eff_name in
+           let eff2 = Env.norm_eff_name env c2.eff_name in
+           if Util.is_pure_or_ghost_effect env eff1
+           && Util.is_pure_or_ghost_effect env eff2
+           then c2 //the resulting computation is still pure/ghost; no need to insert a return
+           else Util.maybe_assume_result_eq_pure_term env_x e2 c2 in
        let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in

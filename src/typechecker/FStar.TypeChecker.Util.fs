@@ -861,10 +861,17 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
             if (Options.split_cases()) > 0
             then add_equality_to_post_condition env comp res_t
-            else let comp = Env.comp_to_comp_typ env comp in
-                 let md = Env.get_effect_decl env comp.effect_name in
-                 let _, _, wp = destruct_comp comp in
-                 let wp = mk_Tm_app  (inst_effect_fun_with [u_res_t] env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
+            else match lcases with
+                 | []
+                 | [_] -> comp
+                 | _ ->
+                   let comp = Env.comp_to_comp_typ env comp in
+                   let md = Env.get_effect_decl env comp.effect_name in
+                   let _, _, wp = destruct_comp comp in
+                   let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.ite_wp)
+                                      [S.as_arg res_t; S.as_arg wp]
+                                      None
+                                      wp.pos in
                  mk_comp md u_res_t res_t wp []
         end
     in
