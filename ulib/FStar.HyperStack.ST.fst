@@ -396,7 +396,8 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
 let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :GTot bool =
   (m `contains` r) ||
     (let i = HS.frameOf r in
-     (is_eternal_region i || i `HS.is_above` m.tip) && (m `HS.contains_ref_in_its_region` r))
+     (is_eternal_region i || i `HS.is_above` m.tip) &&
+     (not (is_mm r)       || m `HS.contains_ref_in_its_region` r))
 
 let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
   :ST unit
