@@ -810,30 +810,6 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let lc = bind (Env.get_range env) env None (U.lcomp_of_comp comp) (Some x, U.lcomp_of_comp lc2) in
     lc.comp()
 
-let ite env (guard:formula) lcomp_then lcomp_else =
-  let joined_eff = join_lcomp env lcomp_then lcomp_else in
-  let comp () =
-      if env.lax
-      && Options.ml_ish() //NS: Disabling this optimization temporarily
-      then
-         let u_t = env.universe_of env lcomp_then.res_typ in
-         lax_mk_tot_or_comp_l joined_eff u_t lcomp_then.res_typ []
-      else begin
-          let (md, _, _), (u_res_t, res_t, wp_then), (_, _, wp_else) = lift_and_destruct env (lcomp_then.comp()) (lcomp_else.comp()) in
-          let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
-          let wp = ifthenelse md res_t guard wp_then wp_else in
-          if (Options.split_cases()) > 0
-          then let comp = mk_comp md u_res_t res_t wp [] in
-               add_equality_to_post_condition env comp res_t
-          else let wp = mk_Tm_app  (inst_effect_fun_with [u_res_t] env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
-               mk_comp md u_res_t res_t wp []
-      end
- in
- {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
-  res_typ=lcomp_then.res_typ;
-  cflags=[];
-  comp=comp}
-
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
@@ -859,20 +835,18 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let comp = List.fold_right (fun (g, cthen) celse ->
                 let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env (cthen.comp()) celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
-            if (Options.split_cases()) > 0
-            then add_equality_to_post_condition env comp res_t
-            else match lcases with
-                 | []
-                 | [_] -> comp
-                 | _ ->
-                   let comp = Env.comp_to_comp_typ env comp in
-                   let md = Env.get_effect_decl env comp.effect_name in
-                   let _, _, wp = destruct_comp comp in
-                   let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.ite_wp)
-                                      [S.as_arg res_t; S.as_arg wp]
-                                      None
-                                      wp.pos in
-                 mk_comp md u_res_t res_t wp []
+            match lcases with
+            | []
+            | [_] -> comp
+            | _ ->
+              let comp = Env.comp_to_comp_typ env comp in
+              let md = Env.get_effect_decl env comp.effect_name in
+              let _, _, wp = destruct_comp comp in
+              let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.ite_wp)
+                                 [S.as_arg res_t; S.as_arg wp]
+                                 None
+                                 wp.pos in
+              mk_comp md u_res_t res_t wp []
         end
     in
     {eff_name=eff;
