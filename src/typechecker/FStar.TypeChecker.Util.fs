@@ -909,6 +909,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
 let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let should_return =
        not (env.lax)
+    && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
     && should_return env (Some e) lc
     && not (U.is_lcomp_partial_return lc)
   in
@@ -927,16 +928,13 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
           | None -> env.universe_of env (U.comp_result c)
       in
       if U.is_tot_or_gtot_comp c
-      then begin //insert a return
-            if not (Env.lid_exists env C.effect_GTot_lid)
-            then failwith (BU.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
-            else let retc = return_value env (Some u_t) (U.comp_result c) e in
-                 if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
-                 then let retc = U.comp_to_comp_typ retc in
-                      let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
-                      S.mk_Comp retc
-            else U.comp_set_flags retc flags
-       end
+      then //insert a return
+           let retc = return_value env (Some u_t) (U.comp_result c) e in
+           if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
+           then let retc = U.comp_to_comp_typ retc in
+                let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
+                S.mk_Comp retc
+           else U.comp_set_flags retc flags
        else //augment c's post-condition with a return
             let c = Env.unfold_effect_abbrev env c in
             let t = c.result_typ in
