@@ -1901,10 +1901,10 @@ and check_inner_let env e =
        let c2 =
            let eff1 = Env.norm_eff_name env c1.eff_name in
            let eff2 = Env.norm_eff_name env c2.eff_name in
-           if Util.is_pure_or_ghost_effect env eff1
-           && Util.is_pure_or_ghost_effect env eff2
+           if TcUtil.is_pure_or_ghost_effect env eff1
+           && TcUtil.is_pure_or_ghost_effect env eff2
            then c2 //the resulting computation is still pure/ghost; no need to insert a return
-           else Util.maybe_assume_result_eq_pure_term env_x e2 c2 in
+           else TcUtil.maybe_assume_result_eq_pure_term env_x e2 c2 in
        let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
