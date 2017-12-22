@@ -1207,7 +1207,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
         | None -> e, tfun_computed, guard in
 
-    let c = if env.top_level then   mk_Total tfun else TcUtil.return_value env tfun e in
+    let c = mk_Total tfun in
     let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
 
     e, c, g
