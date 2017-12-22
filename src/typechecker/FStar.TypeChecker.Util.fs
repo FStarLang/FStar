@@ -747,8 +747,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   //So, unless c1 is already a return or partial return,
                   //     in which case it already provides this equality
                   //we weaken wp2 with the (x == e) equality
-                  if not (lcomp_has_trivial_postcondition lc1)
-                  && not (U.is_partial_return c1)   //and it is not already decorated with a return
+                  if not (U.is_partial_return c1)   //and it is not already decorated with a return
                   then let _ = printfn "Inserting equality %s, c1.effect_name=%s, c1.flags=%A, lc1.flags=%A"
                                        (Print.term_to_string e)
                                        (Ident.string_of_lid (U.comp_effect_name c1))
