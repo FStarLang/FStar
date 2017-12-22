@@ -863,49 +863,6 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e_for_debug_o
                 comp=strengthen},
        {g0 with guard_f=Trivial}
 
-let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
-
-let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
-    let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) C.effect_PURE_lid lcases in
-    let bind_cases () =
-        let u_res_t = env.universe_of env res_t in
-        if env.lax
-        && Options.ml_ish() //NS: Disabling this optimization temporarily
-        then
-             lax_mk_tot_or_comp_l eff u_res_t res_t []
-        else begin
-            let ifthenelse md res_t g wp_t wp_e =
-                mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
-            let default_case =
-                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
-                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
-                let post   = S.new_bv None post_k in
-                let wp     = U.abs [mk_binder post]
-                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env C.false_lid)
-                                   (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
-                let md     = Env.get_effect_decl env C.effect_PURE_lid in
-                mk_comp md u_res_t res_t wp [] in
-            let comp = List.fold_right (fun (g, cthen) celse ->
-                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env (cthen.comp()) celse in
-                mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
-            match lcases with
-            | []
-            | [_] -> comp
-            | _ ->
-              let comp = Env.comp_to_comp_typ env comp in
-              let md = Env.get_effect_decl env comp.effect_name in
-              let _, _, wp = destruct_comp comp in
-              let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.ite_wp)
-                                 [S.as_arg res_t; S.as_arg wp]
-                                 None
-                                 wp.pos in
-              mk_comp md u_res_t res_t wp []
-        end
-    in
-    {eff_name=eff;
-     res_typ=res_t;
-     cflags=[];
-     comp=bind_cases}
 
 let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let should_return =
@@ -951,6 +908,73 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   in
   if not should_return then lc
   else {lc with comp=refine; cflags=flags}
+
+let maybe_return_e2_and_bind
+        (r:Range.range)
+        (env:env)
+        (e1opt:option<term>)
+        (lc1:lcomp)
+        (e2:term)
+        (x, lc2)
+   : lcomp =
+   let lc2 =
+        let eff1 = Env.norm_eff_name env lc1.eff_name in
+        let eff2 = Env.norm_eff_name env lc2.eff_name in
+        if is_pure_or_ghost_effect env eff1
+        && is_pure_or_ghost_effect env eff2
+        then lc2 //the resulting computation is still pure/ghost; no need to insert a return
+        else maybe_assume_result_eq_pure_term env e2 lc2 in
+   bind r env e1opt lc1 (x, lc2)
+
+let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
+
+let bind_cases env (res_t:typ) (lcases:list<(term * formula * lcomp)>) : lcomp =
+    let eff = List.fold_left (fun eff (_, _, lc) -> join_effects env eff lc.eff_name) C.effect_PURE_lid lcases in
+    let bind_cases () =
+        let u_res_t = env.universe_of env res_t in
+        if env.lax
+        && Options.ml_ish() //NS: Disabling this optimization temporarily
+        then
+             lax_mk_tot_or_comp_l eff u_res_t res_t []
+        else begin
+            let ifthenelse md res_t g wp_t wp_e =
+                mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
+            let default_case =
+                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
+                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
+                let post   = S.new_bv None post_k in
+                let wp     = U.abs [mk_binder post]
+                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env C.false_lid)
+                                   (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
+                let md     = Env.get_effect_decl env C.effect_PURE_lid in
+                mk_comp md u_res_t res_t wp [] in
+            let maybe_return ethen cthen =
+                if is_pure_or_ghost_effect env eff
+                ||  not (is_pure_or_ghost_effect env cthen.eff_name)
+                then cthen
+                else maybe_assume_result_eq_pure_term env ethen cthen
+            in
+            let comp = List.fold_right (fun (ethen, g, cthen) celse ->
+                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env ((maybe_return ethen cthen).comp()) celse in
+                mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
+            match lcases with
+            | []
+            | [_] -> comp
+            | _ ->
+              let comp = Env.comp_to_comp_typ env comp in
+              let md = Env.get_effect_decl env comp.effect_name in
+              let _, _, wp = destruct_comp comp in
+              let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.ite_wp)
+                                 [S.as_arg res_t; S.as_arg wp]
+                                 None
+                                 wp.pos in
+              mk_comp md u_res_t res_t wp []
+        end
+    in
+    {eff_name=eff;
+     res_typ=res_t;
+     cflags=[];
+     comp=bind_cases}
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');

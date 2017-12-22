@@ -345,7 +345,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
           let e1, c1, g1 = tc_term (Env.set_expected_typ env t_unit) e1 in
           let e2, c2, g2 = tc_term env e2 in
-          let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
+          let c = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (None, c2) in
           let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
           let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
           let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, t_unit, e1)]), e2)) None e.pos in
@@ -574,8 +574,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
     let c_branches, g_branches =
-      let cases, g = List.fold_right (fun (_, f, c, g) (caccum, gaccum) ->
-        (f, c)::caccum, Rel.conj_guard g gaccum) t_eqns ([], Rel.trivial_guard) in
+      let cases, g =
+          List.fold_right
+                (fun ((_pat, _when_opt, e), f, c, g) (caccum, gaccum) ->
+                     (e, f, c)::caccum,
+                     Rel.conj_guard g gaccum)
+                t_eqns
+                ([], Rel.trivial_guard) in
       (* bind_cases adds an exhaustiveness check *)
       TcUtil.bind_cases env res_t cases, g
     in
@@ -1907,14 +1912,7 @@ and check_inner_let env e =
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
        let e2, c2, g2 = tc_term env_x e2 in
-       let c2 =
-           let eff1 = Env.norm_eff_name env c1.eff_name in
-           let eff2 = Env.norm_eff_name env c2.eff_name in
-           if TcUtil.is_pure_or_ghost_effect env eff1
-           && TcUtil.is_pure_or_ghost_effect env eff2
-           then c2 //the resulting computation is still pure/ghost; no need to insert a return
-           else TcUtil.maybe_assume_result_eq_pure_term env_x e2 c2 in
-       let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
+       let cres = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
