@@ -889,8 +889,11 @@ let rec is_unit: FStar_Syntax_Syntax.term -> Prims.bool =
       let uu____2507 = unrefine t in uu____2507.FStar_Syntax_Syntax.n in
     match uu____2506 with
     | FStar_Syntax_Syntax.Tm_fvar fv ->
-        (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
-          (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid)
+        ((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
+           (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
+          ||
+          (FStar_Syntax_Syntax.fv_eq_lid fv
+             FStar_Parser_Const.auto_squash_lid)
     | FStar_Syntax_Syntax.Tm_uinst (t1,uu____2512) -> is_unit t1
     | uu____2517 -> false
 let rec non_informative: FStar_Syntax_Syntax.term -> Prims.bool =
