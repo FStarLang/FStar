@@ -8,6 +8,9 @@ module HH   = FStar.Monotonic.HyperHeap
 type rid = HH.hh_rid
 let root = HH.hh_root
 let color (x:rid) :GTot int = HH.hh_color x
+let extends (r1 r2:rid) = HH.extends r1 r2
+let disjoint (r1 r2:rid) = HH.disjoint r1 r2
+let includes (r1 r2:rid) = HH.includes r1 r2
 
 let is_in (r:rid) (h:HH.t) = h `Map.contains` r
 

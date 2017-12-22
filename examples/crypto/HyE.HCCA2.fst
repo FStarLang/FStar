@@ -4,7 +4,6 @@ open FStar.HyperStack.ST
 open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes
-open FStar.HyperHeap
 open FStar.HyperStack
 
 module B = Platform.Bytes

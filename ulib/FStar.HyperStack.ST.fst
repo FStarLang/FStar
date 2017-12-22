@@ -323,7 +323,7 @@ let new_region (r0:rid)
       (requires (fun m        -> is_eternal_region r0 /\
                               (r0 == HS.root \/ witnessed (region_contains_pred r0))))
       (ensures  (fun m0 r1 m1 ->
-                 r1 `HH.extends` r0                  /\
+                 r1 `HS.extends` r0                  /\
                  HS.fresh_region r1 m0 m1            /\
 		 HS.color r1 = HS.color r0           /\
 		 witnessed (region_contains_pred r1) /\
@@ -344,7 +344,7 @@ let new_colored_region (r0:rid) (c:int)
       (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0 /\
                              (r0 == HS.root \/ witnessed (region_contains_pred r0))))
       (ensures (fun m0 r1 m1 ->
-                r1 `HH.extends` r0                  /\
+                r1 `HS.extends` r0                  /\
                 HS.fresh_region r1 m0 m1            /\
 	        HS.color r1 = c                     /\
 		witnessed (region_contains_pred r1) /\
