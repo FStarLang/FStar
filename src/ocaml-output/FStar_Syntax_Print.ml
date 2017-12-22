@@ -915,6 +915,7 @@ and cflags_to_string: FStar_Syntax_Syntax.cflags -> Prims.string =
     | FStar_Syntax_Syntax.RETURN  -> "return"
     | FStar_Syntax_Syntax.PARTIAL_RETURN  -> "partial_return"
     | FStar_Syntax_Syntax.SOMETRIVIAL  -> "sometrivial"
+    | FStar_Syntax_Syntax.TRIVIAL_POSTCONDITION  -> "trivial_postcondition"
     | FStar_Syntax_Syntax.LEMMA  -> "lemma"
     | FStar_Syntax_Syntax.CPS  -> "cps"
     | FStar_Syntax_Syntax.DECREASES uu____2027 -> ""
