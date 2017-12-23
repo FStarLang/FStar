@@ -1553,16 +1553,17 @@ and tc_eqn scrutinee env branch
 
   (*<tc_pat>*)
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 :
-        pat                                (* the type-checked, fully decorated pattern                                   *)
-      * list<bv>                           (* all its bound variables, used for closing the type of the branch term       *)
-      * Env.env                            (* the environment extended with all the binders                               *)
-      * term                               (* terms corresponding to the pattern                                          *)
-      * guard_t                            (* accumulated guard for well-typedness of the type annotations on pattern bvs *)  //AR: for dependent patterns, this requires the equality of scrutinee and the pattern
-                                                                                                                              //which is available later in the typechecking for branches
-                                                                                                                              //so, here we just accumulate the guard, and return it
-                                                                                                                              //the caller will add it to the g_branches later
-                                                                                                                              //this guard is well-formed for list<bv>
-      * term                               (* the same term in normal form                                                *)
+        pat                          (* the type-checked, fully decorated pattern                                   *)
+      * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
+      * Env.env                      (* the environment extended with all the binders                               *)
+      * term                         (* terms corresponding to the pattern                                          *)
+      * guard_t                      (* accumulated guard for well-typedness of the type annotations on pattern bvs *)
+                                     //AR: for dependent patterns, this requires the equality of scrutinee and
+                                     //the pattern which is available later in the typechecking for branches
+                                     //so, here we just accumulate the guard, and return it
+                                     //the caller will add it to the g_branches later
+                                     //this guard is well-formed for list<bv>
+      * term                         (* the same term in normal form                                                *)
       =
     let tc_annot env t =
         let tu, u = U.type_u () in
@@ -1723,7 +1724,7 @@ and tc_eqn scrutinee env branch
     let maybe_return_c_weak should_return =
         let c_weak =
           if should_return
-          && U.is_tot_or_gtot_lcomp c_weak
+          && U.is_pure_or_ghost_lcomp c_weak
           then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
           else c_weak
         in
