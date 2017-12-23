@@ -2,8 +2,8 @@
 ///                         Can F\* replace Haskell and Coq?
 /// ==============================================================================
 ///
-/// Is F\* ready for its first "F\* vs 'pick your favourite language or proof
-/// assistant'" flame war? Can it take on heavyweights such as Haskell and Coq?
+/// Is F\* ready for its first F\* vs 'pick your favourite language or proof
+/// assistant' flame war? Can it take on heavyweights such as Haskell and Coq?
 ///
 /// Its list of supported features is full of fanciful words such as polymorphism,
 /// dependent types, user-defined monadic effects, refinement types, weakest
@@ -12,28 +12,34 @@
 /// but does F\* solve real world problems and does one need a PhD in type theory to
 /// use it? Is F\* ready for prime time?
 ///
-/// Of course the answer to this question will always depend on *who* you are and
-/// what you want to do? I will talk a bit more about *what* I am doing and *how* I
-/// got to work on F\* in the first place, but let it suffice to say that my PhD
-/// is in cryptography, not type theory and involved mathematical models and proofs mostly
-/// done on paper. This means that my programming skills usually are a bit
-/// `Rust <https://www.rust-lang.org>`_\y, no pun intended.
+/// Of course the answer to this question will always depend on *who* you are
+/// and what you want to do? I could write another post about *what* I am doing
+/// and *how* I got to work on F\* in the first place, but let it suffice to say
+/// that my PhD is in cryptography, not type theory and involved mathematical
+/// models and proofs mostly done on paper. See the `everest project <https: >`
+/// on how to encode such models in F\*. This means that my programming skills
+/// usually are a bit `Rust <https://www.rust-lang.org>`_\y, no pun intended.
 ///
-/// As to the *what*. About a week ago I came across `Joachim Breitner's inspiring
-/// blog
-/// post <https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it>`_
-/// on finding bugs in Haskell code by proving it. It is an excellent post.
+/// As to the *what*. About a week ago I came across `Joachim Breitner's
+/// inspiring post
+/// <https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it>`_
+/// on finding bugs in Haskell code by proving it. It is excellent work.
 /// Pitched at the right level for both the applied Haskell programmer and
 /// someone like me curious about Haskell and Coq in theory---without a lot of
 /// exposure to them in practice. What is nice about these two languages is that
 /// general knowledge of mathematical notation and functional programming goes
-/// some way towards understanding the gist of the code. Its concise and engaging
-/// programming style motivated me to dust off my F\* skills. So instead of
-/// parsing all of the Haskell and Coq code in detail, I decided to rewrite
-/// the example in F\* to explore the example.
+/// some way towards understanding the gist of the code. Its concise and
+/// engaging programming style motivated me to dust off my F\* skills. So
+/// instead of parsing all of the Haskell and Coq code and installing all the
+/// tools to play with it, I decided to rewrite the example in F\* to explore
+/// the example.
 ///
 /// This ended up being quite a lengthy post, so let me prepare you a bit as to what
 /// to expect in case you want to do some cherry picking.
+///
+/// The the main parts of the post are sandwitched between some general F\* background on datatypes and input/output.
+/// The first part then deal in the actual interval intersection code and the invariant that Joachim proves about it.
+/// Part two proves functional correctness based on a set semantic of intervals.
 ///
 ///  * The importance of libraries
 ///  * Part 1: Proving the intervals invariant
@@ -403,7 +409,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
                                           (Set.intersect (semI h1) (sem t2)))
                                (Set.union (Set.intersect (semI h2) (sem t1))
                                           (Set.intersect (sem t1) (sem t2)))));
-///
+
 ///  The rest of the proof simplifies the first three of the four intersects:
 ///  1. h1 n h2 = [f', h2.to]
 
@@ -418,7 +424,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 ///  3. h2 n t1 = empty
 
   lemma_semI_sem_disjoint h2 t1;
-///
+
 /// The proof now applies the distributive law in the other direction to combine the 3rd and 4th intersect:
 
   Set.lemma_equal_elim is1_n_is2
