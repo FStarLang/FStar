@@ -5,52 +5,58 @@
 /// Is F\* ready for its first F\* vs 'pick your favourite language or proof
 /// assistant' flame war? Can it take on heavyweights such as Haskell and Coq?
 ///
-/// Its list of supported features is full of fanciful words such as polymorphism,
-/// dependent types, user-defined monadic effects, refinement types, weakest
-/// precondition calculus, predicative hierarchy of universes with universe
-/// polymorphism, rich type-level computation, proofs by reification and so forth,
-/// but does F\* solve real world problems and does one need a PhD in type theory to
-/// use it? Is F\* ready for prime time?
+/// Its list of supported features is full of imaginative PL jargon such as
+/// polymorphism, dependent types, user-defined monadic effects, refinement
+/// types, weakest precondition calculus, predicative hierarchy of universes
+/// with universe polymorphism, rich type-level computation, proofs by
+/// reification and so forth, but does F\* solve real world problems (TM) or does
+/// one need a PhD in type theory to use it?
+///
+///   Is F\* ready for prime time?
 ///
 /// Of course the answer to this question will always depend on *who* you are
 /// and what you want to do? I could write another post about *what* I am doing
 /// and *how* I got to work on F\* in the first place, but let it suffice to say
 /// that my PhD is in cryptography, not type theory and involved mathematical
-/// models and proofs mostly done on paper. See the `everest project <https: >`
+/// models and proofs mostly done on paper. See the `everest project <https://everest-project.github.io>`_
 /// on how to encode such models in F\*. This means that my programming skills
 /// usually are a bit `Rust <https://www.rust-lang.org>`_\y, no pun intended.
 ///
-/// As to the *what*. About a week ago I came across `Joachim Breitner's
-/// inspiring post
+/// As to the *what*. About a week ago I came across `Joachim Breitner's inspiring
+/// post
 /// <https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it>`_
-/// on finding bugs in Haskell code by proving it. It is excellent work.
-/// Pitched at the right level for both the applied Haskell programmer and
-/// someone like me curious about Haskell and Coq in theory---without a lot of
-/// exposure to them in practice. What is nice about these two languages is that
-/// general knowledge of mathematical notation and functional programming goes
-/// some way towards understanding the gist of the code. Its concise and
-/// engaging programming style motivated me to dust off my F\* skills. So
-/// instead of parsing all of the Haskell and Coq code and installing all the
-/// tools to play with it, I decided to rewrite the example in F\* to explore
-/// the example.
+/// on *finding bugs in Haskell code by proving it*. Pitched at the right level, it
+/// is an excellent post for both the applied Haskell programmer and someone like me
+/// curious about Haskell and Coq in theory---without a lot of exposure to them in
+/// practice. What is nice about these two languages (and F\* too) is that general
+/// knowledge of mathematical notation and functional programming goes some way
+/// towards understanding the gist of the code. Its concise and engaging programming
+/// style motivated me to dust off my F\* skills. So instead of parsing all of the
+/// Haskell and Coq code and installing all the tools to play with it, I decided to
+/// explore the example by re-verifying it in F\*.
 ///
 /// This ended up being quite a lengthy post, so let me prepare you a bit as to what
 /// to expect in case you want to do some cherry picking.
 ///
-/// The the main parts of the post are sandwitched between some general F\* background on datatypes and input/output.
-/// The first part then deal in the actual interval intersection code and the invariant that Joachim proves about it.
-/// Part two proves functional correctness based on a set semantic of intervals.
+/// The the main parts of the post are sandwitched between some general F\*
+/// background on datatypes and input/output. The first part then deal in the
+/// actual interval intersection code and the invariant that Joachim proves
+/// about it. Part two proves functional correctness based on a set semantic of
+/// intervals.
 ///
-///  * The importance of libraries
-///  * Part 1: Proving the intervals invariant
-///  * Part 2: Proving functional correctness
-///    - The mathematical representation of intervals
-///    - The heart of the proof
-///    - Taking stock: intrinsic vs. extrinsic, intensional vs extensional
-///  * Extraction and testing
-///  * And the winner is!
-///    - Efforts and gains
-///    - Why functional programming and types
+///  * `The importance of libraries`_
+///  * `Part 1: Proving the intervals invariant`_
+///  * `Part 2: Proving functional correctness`_
+///
+///    - `The mathematical representation of intervals`_
+///    - `The heart of the proof`_
+///    - `Taking stock: intrinsic vs. extrinsic, intensional vs extensional`_
+///
+///  * `Extraction and testing`_
+///  * `And the winner is!`_
+///
+///    - `Developer efficiency & code to proof ratio`_
+///    - `Useability, maturity, and trusted computing base`_
 ///
 /// ----
 
@@ -61,11 +67,11 @@ module IntervalIntersect
 /// The importance of libraries
 /// ===========================
 ///
-/// Most of the code is about lists of integers. Luckily there is decent
-/// library support for both integers and lists in F\*. As explained by Joachim,
+/// Most of the code is about lists of integers. Luckily there is decent library
+/// support for both integers and lists in F\*. As explained by Joachim,
 /// verification loves termination. Se we use a list library of pure and total
-/// operations for both implementation and specifications. In particular list operations
-/// are provably terminating.
+/// operations for both implementation and specifications. In particular list
+/// operations are provably terminating.
 
 open FStar.List.Tot
 open FStar.Math.Lib
@@ -149,7 +155,7 @@ private let rec go (is1 is2:intervals)
             (hd ris).from >= max (hd is1).from (hd is2).from  )
          ))
          (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2]) =
-
+///
 /// The termination argument uses the lexicographic ordering of two values: the
 /// joint length of the lists and a bit indicating whether a reordering is
 /// necessary. To prove that the function terminates, at every
@@ -408,7 +414,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
   let h1::t1 = is1 in
   let h2::t2 = is2 in
   let f' = max h1.from h2.from in
-
+///
 /// The `assert` below expresses the outcome of the repeated application of set
 /// distributive law to state the following equality:
 ///
@@ -423,7 +429,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
                                           (Set.intersect (semI h1) (sem t2)))
                                (Set.union (Set.intersect (semI h2) (sem t1))
                                           (Set.intersect (sem t1) (sem t2)))));
-
+///
 ///  The rest of the proof simplifies the first three of the four intersects:
 ///  1. h1 n h2 = [f', h2.to]
 
@@ -438,9 +444,9 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 ///  3. h2 n t1 = empty
 
   lemma_semI_sem_disjoint h2 t1;
-
+///
 /// The proof now applies the distributive law in the other direction to combine the 3rd and 4th intersect:
-
+///
   Set.lemma_equal_elim is1_n_is2
                        (Set.union (semI (I f' h2.to))
                                   (Set.intersect (Set.union (range (h2.to) (h1.to))
@@ -524,22 +530,31 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
 /// Extraction and testing
 /// ======================
 ///
-/// Another crucial to program longevity is *testing*. This is not something F\* has
-/// traditionally been good at. Both Haskell and Coq follow the *typecheck first*,
-/// of *just typecheck* ethos. Actually running an F\* program can sometimes feel
-/// like an unnecessary chore.
+/// *Testing* too is crucial to program longevity. This is not something F\* has
+/// traditionally been good at. Like Haskell and Coq, F\* has a bit of an *if it
+/// typechecks it runs*, or even more extreme a *why run?* ethos. Just as with the
+/// Coq proof of a theorem, actually running an F\* program can sometimes feel like
+/// an unnecessary chore.
 ///
-/// Lately however, as we ramp up the inter-operability testing of miTLS.
-/// A simple print and test function confirm the code can be executed.
+/// Lately however, as we ramp up the inter-operability testing of miTLS and shipped
+/// `production code developed using F* <https://mozilla>`_ testing has become more
+/// important.
+///
+/// A simple print and test function confirm that the code can be executed.
 
 open FStar.All
 open FStar.IO
 open FStar.Printf
 
+/// The single most successful debugging tool and maybe most most iconic *C* feature
+/// after `++` is `printf`. See `this post <https://` for a post celebrating its
+/// arrival in F*.
 
 let ppInterval (I f t) = sprintf "0x%d-0x%d" f t
 
-let rec ppIntervals' (is:intervals): ML unit =
+/// I give two implementations for printing `intervals`. The first defines the function recursively, while the second uses a list iterator.
+
+let rec ppIntervals' (is:intervals): ML unit = 
   match is with
   | [] -> stdout <| "."
   | i::is ->
@@ -547,8 +562,7 @@ let rec ppIntervals' (is:intervals): ML unit =
       stdout <| " ";
       ppIntervals' is
 
-
-let ppIntervals is = FStar.List.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
+let ppIntervals is = FStar.List.Tot.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
 let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 
 /// And the winner is!
@@ -566,7 +580,7 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// a few dimensions that one could look at if one wanted to do an objective
 /// comparison, e.g., developer efficiency, the code to proof ratio, useability
 /// and maturity of the system, and the size of the trusted computing base.
-///
+/// 
 /// Developer efficiency & code to proof ratio
 /// ------------------------------------------
 ///
@@ -632,4 +646,4 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 ///   When a distinguished but elderly scientist states that something is possible,
 ///   they are almost certainly right. When they state that something is impossible,
 ///   they are very probably wrong.
-/// 
+///
