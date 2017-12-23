@@ -149,13 +149,13 @@ private let rec go (is1 is2:intervals)
             (hd ris).from >= max (hd is1).from (hd is2).from  )
          ))
          (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2]) =
-///
+
 /// The termination argument uses the lexicographic ordering of two values: the
 /// joint length of the lists and a bit indicating whether a reordering is
 /// necessary. To prove that the function terminates, at every
 /// recursive call either the first value decrease or the second value decreases
 /// while the first stays equal.
-///
+
   match is1, is2 with
   | _, [] -> []
   | [], _ -> []
@@ -198,62 +198,68 @@ let intersect (is1 is2:intervals) =
 /// Part 2: Proving functional correctness
 /// ======================================
 ///
-/// I could have stopped here and declare victory, 1:0 for FStar. Arguable there
-/// are few blemishes, like the F\* bug with local functions that I discovered, orq
+/// I could stop and declare victory here, 1:0 for FStar. Arguable there are a
+/// few blemishes, like the F\* bug with local functions that I discovered, or
 /// the low priority given to a weakes precondition calculus supporting `when`
 /// clauses, but overall I was positively surprised by the speed at which I
 /// could translate the Haskell and Coq code to F\* and by how little I had to
 /// do in terms of writing proofs.
 ///
 /// Mindful of Clarke's second law that the only way of discovering the limits
-/// of the possible is to venture a little way past them into the impossible, we
-/// wont stop when its easy. The second property that Joachim proved about the
-/// `intersect` function is that it corresponds to its corresponding function.
+/// of the possible is to venture a little way past them into the impossible, I
+/// wont stop when its easy. The second property Joachim proved about his
+/// `intersect` function was that it corresponds to its corresponding function.
 /// This sounds a bit tautological. What is meant here is that it corresponds to
 /// another way of representing intervals and another way of implementing
-/// intersection in that representation. Ideally this alternative way is in
-/// some sense be more pure and mathematical.
+/// intersection in that representation. Ideally this alternative way is *in
+/// some sense* more pure and mathematical.
 ///
 /// The mathematical representation of intervals
 /// ============================================
 ///
-/// In traditional mathematics, intervals are of course represented as sets, and
+/// In mathematics, intervals are of course traditionally represented as sets, and
 /// interval intersection simply becomes set intersection. Luckily, the
 /// `FStar.Set` module already provides us with set operations proven to be pure
 /// and total.
 ///
-/// However, unlike `Coq.Sets.Ensembles` the representation of `set a` as a function
-/// `a -> bool` is abstract in F\*. Consequently, we cannot define `range` using a
-/// lambda expression. This is what is lost, what do we then gain by hiding the
-/// representation of sets behind an abstraction? We can change the way sets are
-/// represented in `FStar.Set` under the hood, without affecting users of the
-/// library. Indeed F\* libraries often have two implementations, one acting as a
-/// model to prove that the pre- and post-conditions of the API do not allow to
-/// prove `False`, and an actual implementation for running the actual program. In
-/// fact different extraction targets, such as OCaml and F# would typically provide
-/// different implementations, e.g. the OCaml implementation is based on
-/// `Batteries <http://batteries.forge.ocamlcore.org/>`_.
+/// However, unlike `Coq.Sets.Ensembles` the representation of `set a` as a
+/// function `a -> bool` is abstract in F\*. Consequently, we cannot define
+/// `range` using a lambda expression. This is what is lost, what do we then
+/// gain by hiding the representation of sets behind an abstraction? We can
+/// change the way sets are represented in `FStar.Set` under the hood, without
+/// affecting users of the library. Indeed F\* libraries often have two
+/// implementations, one acting as a model to prove that the pre- and
+/// post-conditions of the API do not allow to prove `False`, and an actual
+/// implementation for running the actual program. In fact different extraction
+/// targets, such as OCaml and F# would typically provide different
+/// implementations, e.g. the OCaml implementation is based on
+/// `Batteries <http://batteries.forge.ocamlcore.org/>`_.[#note1]_
+///
+/// .. [#note] For verification to be meaningful, it is important that these
+///    alternative implementations are correct. In fact, while developing this post
+///    I observed that the `BatSet`-based OCaml implementation of `FStar.Set` assumed
+///    that set elements were compareable, which can be a source of unsoundness.
+///    Another F\* bug that I could fix.
 ///
 /// The declarative definition of a set using a predicate that all set members
 /// need to satisfy is known in mathematics as an intensional definition.
 /// Certain sets, for example the set of even numbers can only be defined
 /// intensionally. My intuition is that intensional definitions are more concise
-/// and better suited for proof, conversely, extensional definitions are more
-/// explicit guaranteeing that sets are finite.
+/// and better suited for proof, conversely, extensional definitions
+/// explicitly guarantee that sets are finite.
 ///
 /// To get the best of both worlds, I give both an intensional and an
 /// extensional description of integer ranges, but make the intensional
-/// definition ghost. This means that it never has to be extracted to `BatSet`
-/// based OCaml code.
+/// definition ghost. This means that it never has to be extracted to OCaml code.
 
 let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <= z &&
   z < t)
 
-/// The fact that I had to extend the `FStar.Set` library, rather than extend in
-/// a separate file as in the Coq development stems from the immayturity of F\*
-/// and the need for abstraction to simultaneously support verification and
-/// extraction. I use the ghostly intensional definition to specify the logical
-/// properties of the extensional definition.
+/// Because of the immaturity of F\* and the need for abstraction to
+/// simultaneously support verification and extraction, I had to fix and extend
+/// the `FStar.Set` library itself, rather than just add additional lemmas in a
+/// separate file as in the Coq development. I use the ghostly intensional
+/// definition to specify the logical properties of the extensional definition.
 
 let rec range (f t:offset): Tot (r:Set.set offset{r==rangeGT f t})
   (decreases %[t-f])
@@ -402,7 +408,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
   let h1::t1 = is1 in
   let h2::t2 = is2 in
   let f' = max h1.from h2.from in
-///
+
 /// The `assert` below expresses the outcome of the repeated application of set
 /// distributive law to state the following equality:
 ///
