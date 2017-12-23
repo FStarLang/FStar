@@ -122,7 +122,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let msg = if Rel.is_trivial g then None else Some <| Err.subtyping_failed env t t' in
      let g = Rel.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
-     // let lc, g = TcUtil.strengthen_precondition msg env e lc g in
+     let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
   in
   if debug env Options.Low
