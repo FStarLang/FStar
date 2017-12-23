@@ -58,7 +58,7 @@ val is_pure_or_ghost_effect: env -> lident -> bool
 //val return_value: env -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
-val bind_cases: env -> typ -> list<(term * typ * lcomp)> -> lcomp
+val bind_cases: env -> typ -> list<(typ * lident * (bool -> lcomp))> -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula

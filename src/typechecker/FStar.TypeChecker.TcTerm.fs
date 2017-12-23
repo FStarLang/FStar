@@ -102,28 +102,12 @@ let memo_tk (e:term) (t:typ) = e
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
     : term * lcomp * guard_t =
-  let e0 = e in
-  let should_return t =
-    match (SS.compress t).n with
-    | Tm_arrow(_, c) ->
-      if TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c)
-      then let t = U.unrefine <| (U.comp_result c) in
-           match (SS.compress t).n with
-           | Tm_constant _ -> false
-           | _ -> not (U.is_unit t) //uninformative function
-      else false //can't reason about effectful function definitions, so not worth returning this
-    | _ -> not (U.is_unit t)
-  in
-  (* if term, then lc is a trivial lazy computation (lcomp_of_comp) *)
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp <| mk_Total t
-//    U.lcomp_of_comp (if not (should_return t)
-//                                || not (Env.should_verify env)
-//                                then mk_Total t //don't add a return if we're not verifying; or if we're returning a function
-//                                else TcUtil.return_value env t e)
     | Inr lc -> lc in
   let t = lc.res_typ in
-  let e, lc, g = match Env.expected_typ env with
+  let e, lc, g =
+   match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
      if debug env Options.High
@@ -576,8 +560,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let c_branches, g_branches =
       let cases, g =
           List.fold_right
-                (fun ((_pat, _when_opt, e), f, c, g) (caccum, gaccum) ->
-                     (e, f, c)::caccum,
+                (fun (branch, f, eff_label, c, g) (caccum, gaccum) ->
+                     (f, eff_label, c)::caccum,
                      Rel.conj_guard g gaccum)
                 t_eqns
                 ([], Rel.trivial_guard) in
@@ -590,8 +574,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let mk_match scrutinee =
         (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
         (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
-        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
-              (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ ))
+        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _) ->
+              (pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name res_t))
         in
         let e = mk (Tm_match(scrutinee, branches)) None top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
@@ -1560,7 +1544,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
 and tc_eqn scrutinee env branch
         : (pat * option<term> * term)                                                             (* checked branch *)
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
-        * lcomp                                                                   (* computation type of the branch *)
+        * lident                                                                 (* effect label of the lcomp below *)
+        * (bool -> lcomp)                     (* computation type of the branch, with or without a "return" equation *)
         * guard_t =                                                                    (* well-formedness condition *)
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
@@ -1687,7 +1672,7 @@ and tc_eqn scrutinee env branch
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
   (*   (c). Close the VCs so that they no longer have the pattern-bound variables occurring free in them      *)
-  let c, g_when, g_branch =
+  let effect_label, maybe_return_c, g_when, g_branch =
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
@@ -1734,7 +1719,17 @@ and tc_eqn scrutinee env branch
 
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
-    TcUtil.close_lcomp env pat_bvs c_weak,
+    let maybe_return_c_weak should_return =
+        let c_weak =
+          if should_return
+          && U.is_tot_or_gtot_lcomp c_weak
+          then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
+          else c_weak
+        in
+        TcUtil.close_lcomp env pat_bvs c_weak
+    in
+    c_weak.eff_name,
+    maybe_return_c_weak,
     Rel.close_guard env binders g_when_weak,
     g_branch
   in
@@ -1836,8 +1831,9 @@ and tc_eqn scrutinee env branch
   then BU.print1 "Carrying guard from match: %s\n" <| guard_to_string env guard;
 
   SS.close_branch (pattern, when_clause, branch_exp),
-  branch_guard, //expressed in terms of discriminators and projectors on scrutinee---does not contain the pattern-bound variables
-  c, //closed already---does not contain free pattern-bound variables
+  branch_guard,   //expressed in terms of discriminators and projectors on scrutinee---does not contain the pattern-bound variables
+  effect_label,
+  maybe_return_c, //closed already---does not contain free pattern-bound variables
   guard
 
 (******************************************************************************)

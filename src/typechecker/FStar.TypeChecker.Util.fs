@@ -928,8 +928,11 @@ let maybe_return_e2_and_bind
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
 
-let bind_cases env (res_t:typ) (lcases:list<(term * formula * lcomp)>) : lcomp =
-    let eff = List.fold_left (fun eff (_, _, lc) -> join_effects env eff lc.eff_name) C.effect_PURE_lid lcases in
+let bind_cases env (res_t:typ) (lcases:list<(formula * lident * (bool -> lcomp))>) : lcomp =
+    let eff = List.fold_left (fun eff (_, eff_label, _) -> join_effects env eff eff_label)
+                             C.effect_PURE_lid
+                             lcases
+    in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
         if env.lax
@@ -948,14 +951,14 @@ let bind_cases env (res_t:typ) (lcases:list<(term * formula * lcomp)>) : lcomp =
                                    (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
                 let md     = Env.get_effect_decl env C.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
-            let maybe_return ethen cthen =
+            let maybe_return eff_label_then cthen =
                 if is_pure_or_ghost_effect env eff
-                ||  not (is_pure_or_ghost_effect env cthen.eff_name)
-                then cthen
-                else maybe_assume_result_eq_pure_term env ethen cthen
+                ||  not (is_pure_or_ghost_effect env eff_label_then)
+                then cthen false
+                else cthen true
             in
-            let comp = List.fold_right (fun (ethen, g, cthen) celse ->
-                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env ((maybe_return ethen cthen).comp()) celse in
+            let comp = List.fold_right (fun (g, eff_label,  cthen) celse ->
+                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env ((maybe_return eff_label cthen).comp()) celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
             match lcases with
             | []
