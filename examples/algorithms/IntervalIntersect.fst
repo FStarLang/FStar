@@ -403,7 +403,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
                                           (Set.intersect (semI h1) (sem t2)))
                                (Set.union (Set.intersect (semI h2) (sem t1))
                                           (Set.intersect (sem t1) (sem t2)))));
-
+///
 ///  The rest of the proof simplifies the first three of the four intersects:
 ///  1. h1 n h2 = [f', h2.to]
 
@@ -418,7 +418,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 ///  3. h2 n t1 = empty
 
   lemma_semI_sem_disjoint h2 t1;
-
+///
 /// The proof now applies the distributive law in the other direction to combine the 3rd and 4th intersect:
 
   Set.lemma_equal_elim is1_n_is2
@@ -589,4 +589,3 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// a distinguished but elderly scientist states that something is possible,
 /// they are almost certainly right. When they state that something is
 /// impossible, they are very probably wrong.
-/// 
