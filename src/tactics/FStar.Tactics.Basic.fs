@@ -228,7 +228,7 @@ let do_unify (env : env) (t1 : term) (t2 : term) : bool =
     try
             let res = Rel.teq_nosmt env t1 t2 in
             debug_off(); res
-    with | uu____900 -> debug_off(); false
+    with | _ -> debug_off(); false
 
 //    try Rel.teq_nosmt env t1 t2
 //    with | _ -> false
