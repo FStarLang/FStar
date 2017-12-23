@@ -10,8 +10,8 @@ let parse_z3_version_lines:
     | x::uu____22 ->
         let trimmed = FStar_Util.trim_string x in
         let parts = FStar_Util.split trimmed " " in
-        let rec aux uu___82_36 =
-          match uu___82_36 with
+        let rec aux uu___35_36 =
+          match uu___35_36 with
           | hash::[] ->
               let n1 =
                 Prims.min (FStar_String.strlen _z3hash_expected)
@@ -155,8 +155,8 @@ let uu___is_KILLED: z3status -> Prims.bool =
     match projectee with | KILLED  -> true | uu____475 -> false
 type z3statistics = Prims.string FStar_Util.smap[@@deriving show]
 let status_tag: z3status -> Prims.string =
-  fun uu___83_480  ->
-    match uu___83_480 with
+  fun uu___36_480  ->
+    match uu___36_480 with
     | SAT uu____481 -> "sat"
     | UNSAT uu____488 -> "unsat"
     | UNKNOWN uu____489 -> "unknown"
@@ -924,8 +924,8 @@ let giveZ3: FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___84_5652  ->
-            match uu___84_5652 with
+         (fun uu___37_5652  ->
+            match uu___37_5652 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____5653 -> ()));
@@ -968,8 +968,8 @@ let mk_input:
           let uu____6068 =
             FStar_All.pipe_right theory
               (FStar_Util.prefix_until
-                 (fun uu___85_6096  ->
-                    match uu___85_6096 with
+                 (fun uu___38_6096  ->
+                    match uu___38_6096 with
                     | FStar_SMTEncoding_Term.CheckSat  -> true
                     | uu____6097 -> false)) in
           FStar_All.pipe_right uu____6068 FStar_Option.get in
@@ -985,22 +985,22 @@ let mk_input:
             let ss_lines = pp suffix1 in
             let ps = FStar_String.concat "\n" ps_lines in
             let ss = FStar_String.concat "\n" ss_lines in
-            let uncaption uu___86_6175 =
-              match uu___86_6175 with
+            let uncaption uu___39_6175 =
+              match uu___39_6175 with
               | FStar_SMTEncoding_Term.Caption uu____6176 ->
                   FStar_SMTEncoding_Term.Caption ""
               | FStar_SMTEncoding_Term.Assume a ->
                   FStar_SMTEncoding_Term.Assume
-                    (let uu___91_6180 = a in
+                    (let uu___44_6180 = a in
                      {
                        FStar_SMTEncoding_Term.assumption_term =
-                         (uu___91_6180.FStar_SMTEncoding_Term.assumption_term);
+                         (uu___44_6180.FStar_SMTEncoding_Term.assumption_term);
                        FStar_SMTEncoding_Term.assumption_caption =
                          FStar_Pervasives_Native.None;
                        FStar_SMTEncoding_Term.assumption_name =
-                         (uu___91_6180.FStar_SMTEncoding_Term.assumption_name);
+                         (uu___44_6180.FStar_SMTEncoding_Term.assumption_name);
                        FStar_SMTEncoding_Term.assumption_fact_ids =
-                         (uu___91_6180.FStar_SMTEncoding_Term.assumption_fact_ids)
+                         (uu___44_6180.FStar_SMTEncoding_Term.assumption_fact_ids)
                      })
               | FStar_SMTEncoding_Term.DeclFun (n1,a,s,uu____6184) ->
                   FStar_SMTEncoding_Term.DeclFun
