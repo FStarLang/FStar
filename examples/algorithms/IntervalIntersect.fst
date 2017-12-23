@@ -233,9 +233,9 @@ let intersect (is1 is2:intervals) =
 /// implementation for running the actual program. In fact different extraction
 /// targets, such as OCaml and F# would typically provide different
 /// implementations, e.g. the OCaml implementation is based on
-/// `Batteries <http://batteries.forge.ocamlcore.org/>`_.[#note1]_
+/// `Batteries <http://batteries.forge.ocamlcore.org/>`_.[#]_
 ///
-/// .. [#note] For verification to be meaningful, it is important that these
+/// .. [#] For verification to be meaningful, it is important that these
 ///    alternative implementations are correct. In fact, while developing this post
 ///    I observed that the `BatSet`-based OCaml implementation of `FStar.Set` assumed
 ///    that set elements were compareable, which can be a source of unsoundness.
@@ -554,58 +554,82 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// And the winner is!
 /// ==================
 ///
-/// Efforts and gains
-/// -----------------
+/// A strange attachment bonds programmers and the language they program in. It
+/// is as if the language becomes an extension of their arms, fingers, eyes, and
+/// minds. Others have noted the addictive nature of programming and theorem
+/// proving. The dopamin rush when a program compiles, runs, or verifies. The
+/// language preference is thus a matter of taste. We are no golems, and won't
+/// cut off our arm lightly to replace it with a stronger version. Rather we are
+/// like junkies who will go back to what we know to get our next fix.
+///
+/// The title of the post is thus more tongue in cheek. Nevertheless, there are
+/// a few dimensions that one could look at if one wanted to do an objective
+/// comparison, e.g., developer efficiency, the code to proof ratio, useability
+/// and maturity of the system, and the size of the trusted computing base.
+///
+/// Developer efficiency & code to proof ratio
+/// ------------------------------------------
 ///
 /// I measure the success of a project more by the pleasure I get out of it than
 /// by the time I put into it. So it won't come as a surprise that I am not a
 /// big fan of filling in time sheets. I am interested in surveillance and
-/// anti-surveillance, and I am tempted to use Joachim's tool suggestion for a
-/// self study on the effects of (self-)surveillance on my productivity. Until
-/// then I will keep it qualitative.
+/// anti-surveillance, and some day I might be tempted to use Joachim's tool
+/// suggestion for a self study on the effects of (self-)surveillance on
+/// productivity. Until then I will keep it qualitative.
 ///
-/// I worked on the blog on off, for about a week, partly on a holiday to get
+/// I worked on the blog on-off, for about a week, partly on a holiday to get
 /// some much needed sun that I found beneficial for both coding and writing. I
-/// wast positively surprised, if not amazed, by the ease at which F\* could be
+/// was positively surprised, if not amazed, by the ease at which F\* could be
 /// used to verify side-effect free programs. I have used F\* to verify stateful
 /// programs in the past, but that felt substantially harder, likely because it
 /// is simply a harder problem.
 ///
-/// Why functional programming and types
-/// ------------------------------------
+/// I am willing to concede that an experienced Coq expert will get the job done
+/// faster than an F\* programmer with only some experience, and, for now the
+/// former will be easier to find.
 ///
-/// There are many areas in which bugs in programs have become so
-/// expensive, that programmers are willing to walk an extra mile to avoid bug
-/// infested code.
+/// I would argue that F\* wins hands down when it comes to automation and proof
+/// burdon. Coq enthusiasts could argue that automation tactics can bring down
+/// the burdon, and that explicit proof scripts have their value. However, it is
+/// my impression that F\* gets a lot of leverage from being designed from the
+/// ground up for automation---and F\* tactics are on their way.
 ///
-/// Two popular approaches for this are the use of modern programming languages
-/// and program verification.
+/// Useability, maturity, and trusted computing base
+/// ------------------------------------------------
 ///
-/// There are some similarities and synergies between the two. Modern languages,
+/// There are many areas in which bugs in programs have become so expensive,
+/// that programmers are willing to walk an extra mile to avoid bug infested
+/// code. Modern programming languages and program verification both reduce
+/// programming mistakes, and this can justify the effort of learning a new
+/// tool.
+///
+/// There are similarities and synergies between the two. Modern languages,
 /// such as strictly typed functional programming languages, ease (mathematical)
 /// reasoning about programs and program verification. There are also differences:
-/// The expressiveness and abstraction offered by a programming language such as
+/// The expressiveness and abstraction offered by a programming language like
 /// Haskell make code more readable. Supporting these in a verification tool may get
 /// in the way of automation and can result in a large trusted computing base. The
 /// established wisdom here is to have a small core language, and to translate more
-/// complex human readable code to that core.
+/// complex human readable code to the core.
 ///
 /// Ultimately, however, programming development is about engineering, and
-/// trade-offs need to be made. F\*'s philosophy is to expose the full power of the
-/// language to programmers/verifiers for as long as possible, and to translate to
-/// lower-level languages only for execution and for the automation of verification.
-/// verification engineers don't have to look at the gigabytes of SMT queries
-/// produced by F\* to gain the utility of automation, just like programmers rarely
-/// have to look at assembly code.
+/// trade-offs need to be made. F\*'s philosophy is to expose the full power of
+/// the language to programmers/verifiers for as long as possible, and to
+/// translate to lower-level languages only for execution and proof automation.
+/// verification engineers rarely look at the gigabytes of SMT queries produced
+/// by F\*, just like programmers rarely have to look at assembly code.
 ///
 /// Of course there is an exception to every rule, and the F\* team is currently
 /// developing a powerful extraction mechanism from a subset of F\* to C, the
 /// lingua-franca for, among others, efficient cryptographic code. An important
-/// property of that translation is that it preserves comments and readability, as C
-/// programmers with the necessary domain knowledge to audit the code are unlikely
+/// property of that translation is that it preserves comments and readability.
+/// The reason for this is that cryptographic code needs to be audited, and few
+/// experts with the necessary domain knowledge are likely
 /// to switch to F\* any time soon.
 ///
-/// However, never say never. Clarke's third and last rule goes as follows: When
-/// a distinguished but elderly scientist states that something is possible,
-/// they are almost certainly right. When they state that something is
-/// impossible, they are very probably wrong.
+/// However, never say never. Clarke's third and last rule goes as follows:
+///
+///   When a distinguished but elderly scientist states that something is possible,
+///   they are almost certainly right. When they state that something is impossible,
+///   they are very probably wrong.
+/// 
