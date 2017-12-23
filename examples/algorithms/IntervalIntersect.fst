@@ -18,7 +18,7 @@
 /// and what you want to do? I could write another post about *what* I am doing
 /// and *how* I got to work on F\* in the first place, but let it suffice to say
 /// that my PhD is in cryptography, not type theory and involved mathematical
-/// models and proofs mostly done on paper. See the `everest project <https://everest-project.github.io>`_
+/// models and proofs mostly done on paper. See `project everest <https://project-everest.github.io/>`_
 /// on how to encode such models in F\*. This means that my programming skills
 /// usually are a bit `Rust <https://www.rust-lang.org>`_\y, no pun intended.
 ///
@@ -537,7 +537,7 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
 /// an unnecessary chore.
 ///
 /// Lately however, as we ramp up the inter-operability testing of miTLS and shipped
-/// `production code developed using F* <https://mozilla>`_ testing has become more
+/// `production code developed using F* <https://blog.mozilla.org/security/2017/09/13/verified-cryptography-firefox-57/>`_ testing has become more
 /// important.
 ///
 /// A simple print and test function confirm that the code can be executed.
@@ -547,7 +547,7 @@ open FStar.IO
 open FStar.Printf
 
 /// The single most successful debugging tool and maybe most most iconic *C* feature
-/// after `++` is `printf`. See `this post <https://` for a post celebrating its
+/// after `++` is `printf`. See `this post <https://fstarlang.github.io/general/2017/11/22/sprintfstar.html>` for a post celebrating its
 /// arrival in F*.
 
 let ppInterval (I f t) = sprintf "0x%d-0x%d" f t
@@ -626,19 +626,19 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// established wisdom here is to have a small core language, and to translate more
 /// complex human readable code to the core.
 ///
-/// Ultimately, however, programming development is about engineering, and
-/// trade-offs need to be made. F\*'s philosophy is to expose the full power of
-/// the language to programmers/verifiers for as long as possible, and to
-/// translate to lower-level languages only for execution and proof automation.
+/// Ultimately, however, programming is engineering and
+/// trade-offs are unavoidable. F\* exposes the full power of
+/// the language to programmers/verifiers for as long as possible, and
+/// translates into lower-level languages only for execution and proof automation.
 /// verification engineers rarely look at the gigabytes of SMT queries produced
 /// by F\*, just like programmers rarely have to look at assembly code.
 ///
-/// Of course there is an exception to every rule, and the F\* team is currently
-/// developing a powerful extraction mechanism from a subset of F\* to C, the
+/// Of course there is an exception to every rule. The F\* team is currently
+/// developing a powerful extraction mechanism called KreMLin from a subset of F\* to C. C is the
 /// lingua-franca for, among others, efficient cryptographic code. An important
 /// property of that translation is that it preserves comments and readability.
-/// The reason for this is that cryptographic code needs to be audited, and few
-/// experts with the necessary domain knowledge are likely
+/// This is necessary as cryptographic code has to be audited, and the
+/// experts with the necessary domain knowledge are unlikely
 /// to switch to F\* any time soon.
 ///
 /// However, never say never. Clarke's third and last rule goes as follows:
