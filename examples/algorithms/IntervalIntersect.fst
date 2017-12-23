@@ -1,6 +1,6 @@
-/// ==============================================================================
-///                         Can F\* replace Haskell and Coq?
-/// ==============================================================================
+/// ==================================
+///  Can F\* replace Haskell and Coq?
+/// ==================================
 ///
 /// Is F\* ready for its first F\* vs 'pick your favourite language or proof
 /// assistant' flame war? Can it take on heavyweights such as Haskell and Coq?
@@ -51,6 +51,8 @@
 ///  * And the winner is!
 ///    - Efforts and gains
 ///    - Why functional programming and types
+///
+/// ----
 
 module IntervalIntersect
 
@@ -70,8 +72,8 @@ open FStar.Math.Lib
 
 type offset = int
 
-/// As in its Haskell version, I represent intervals as a datatype constructor. Note
-///  that `from` is inclusive and `to` is exclusive.
+/// As in its Haskell version, I represent intervals as a datatype constructor.
+/// Note that `from` is inclusive and `to` is exclusive.
 
 type interval = | I: from:offset -> to:offset -> interval
 
@@ -80,7 +82,7 @@ type interval = | I: from:offset -> to:offset -> interval
 /// start of the interval. Datatypes with a single constructor, also allow for
 /// the usual '.' notation, e.g., `i.from`, which makes them a convenient
 /// alternative to records.
-
+///
 /// Part 1: Proving the intervals invariant
 /// =======================================
 ///
@@ -147,12 +149,13 @@ private let rec go (is1 is2:intervals)
             (hd ris).from >= max (hd is1).from (hd is2).from  )
          ))
          (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2]) =
+///
 /// The termination argument uses the lexicographic ordering of two values: the
 /// joint length of the lists and a bit indicating whether a reordering is
 /// necessary. To prove that the function terminates, at every
 /// recursive call either the first value decrease or the second value decreases
 /// while the first stays equal.
-
+///
   match is1, is2 with
   | _, [] -> []
   | [], _ -> []
@@ -321,10 +324,14 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
 /// The heart of the proof
 /// ----------------------
 ///
-/// We now get into the heart of the correctness proof for `intersect`. Recall that Joachim's algorithm (after switching) distinguishes three cases about the head elements of two interval lists:
+/// We now get into the heart of the correctness proof for `intersect`. Recall
+/// that Joachim's algorithm (after switching) distinguishes three cases about
+/// the head elements of two interval lists:
+///
 ///  1. the heads are disjoint
 ///  2. the second head is a subset of the first
-///  3. the tho heads are overlapping
+///  3. the two heads are overlapping
+///
 /// We prove a lemma for each case.
 ///
 /// The first lemma states that if the heads are disjoint, then the head with
@@ -395,6 +402,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
   let h1::t1 = is1 in
   let h2::t2 = is2 in
   let f' = max h1.from h2.from in
+///
 /// The `assert` below expresses the outcome of the repeated application of set
 /// distributive law to state the following equality:
 ///
