@@ -18,27 +18,32 @@
 /// and what you want to do? I could write another post about *what* I am doing
 /// and *how* I got to work on F\* in the first place, but let it suffice to say
 /// that my PhD is in cryptography, not type theory and involved mathematical
-/// models and proofs mostly done on paper. See `project everest <https://project-everest.github.io/>`_
+/// models and proofs mostly done on paper. See `project everest`_
 /// on how to encode such models in F\*. This means that my programming skills
-/// usually are a bit `Rust <https://www.rust-lang.org>`_\y, no pun intended.
+/// usually are a bit `Rust`_\y, no pun intended.
 ///
 /// As to the *what*. About a week ago I came across `Joachim Breitner's inspiring
-/// post
-/// <https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it>`_
-/// on *finding bugs in Haskell code by proving it*. Pitched at the right level, it
-/// is an excellent post for both the applied Haskell programmer and someone like me
-/// curious about Haskell and Coq in theory---without a lot of exposure to them in
-/// practice. What is nice about these two languages (and F\* too) is that general
-/// knowledge of mathematical notation and functional programming goes some way
-/// towards understanding the gist of the code. Its concise and engaging programming
-/// style motivated me to dust off my F\* skills. So instead of parsing all of the
-/// Haskell and Coq code and installing all the tools to play with it, I decided to
-/// explore the example by re-verifying it in F\*.
+/// post`_ on *finding bugs in Haskell code by proving it*. Pitched at the right
+/// level, it is an excellent post for both the applied Haskell programmer and
+/// someone like me curious about Haskell and Coq in theory---without a lot of
+/// exposure to them in practice. What is nice about these two languages (and F\*
+/// too) is that general knowledge of mathematical notation and functional
+/// programming goes some way towards understanding the gist of the code. Its
+/// concise and engaging programming style motivated me to dust off my F\* skills.
+/// So instead of parsing all of the Haskell and Coq code and installing all the
+/// tools to play with it, I decided to explore the example by re-verifying it in
+/// F\*.
+///
+/// .. _`project everest`: https://project-everest.github.io
+/// .. _`Rust`: https://www.rust-lang.org
+/// .. _`Joachim Breitner's inspiring post`: https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it
+///
+/// ----
 ///
 /// This ended up being quite a lengthy post, so let me prepare you a bit as to what
 /// to expect in case you want to do some cherry picking.
 ///
-/// The the main parts of the post are sandwitched between some general F\*
+/// The main parts of the post are sandwitched between some general F\*
 /// background on datatypes and input/output. The first part then deal in the
 /// actual interval intersection code and the invariant that Joachim proves
 /// about it. Part two proves functional correctness based on a set semantic of
@@ -115,14 +120,14 @@ let good is =
 
 /// Coq is then used to prove that the `intersect` of two `good` `interval
 /// list`\s is itself a `good interval list`. Upon investigation, this invariant
-/// should in fact hold at all times, so I make good use of F^*'s refinement
+/// should in fact hold at all times, so I make good use of F*'s refinement
 /// types, to add the requirement to the `intervals`.
 
 let intervals = is:list interval{good is}
 
-/// This is a first example for F\*'s closely intertwines programming and
-/// verification style. Often Z3 can prove refinements automatically by
-/// discharging them as SMT constraint queries.
+/// This is a first example for F\*'s closely intertwined programming and
+/// verification style. Often the Z3_ SMT solver can prove refinements automatically by
+/// discharging them as SMT-LIB queries.
 
 /// The following function is needed in the termination argument for the
 /// `intersect` function. I will get back to it in a bit.
@@ -135,16 +140,19 @@ let needs_reorder (is1 is2:intervals) : nat =
 /// Joachim is right, the code of `intersect` is the kind of functional code
 /// that is pleasant to write: A small local recursive function, a few guards to
 /// do case analysis, done. That is when you have the power of Haskell at your
-/// hand. Unfortunately, `when` clauses are `not yet
-/// supported <https://github.com/FStarLang/FStar/issues/64>`_ by F\* for
+/// hand. Unfortunately, `when` clauses are not yet
+/// supported (issue64_) by F\* for
 /// verification. But they will be one day, so for now I am using nested `if`
 /// expressions. Oh horror.
 ///
 /// Another difference from the Haskell code is that I lifted local functions to
 /// the top level where they can be used in lemmas and instead declare them as
 /// private. Also, as I learned the hard way, while in principle supported,
-/// local functions are still somewhat
-/// `buggy <https://github.com/FStarLang/FStar/issues/1361>`_.
+/// local functions are still somewhat buggy (issue1361_).
+///
+/// .. _Z3: https://github.com/Z3Prover/z3/wiki
+/// .. _issue64: https://github.com/FStarLang/FStar/issues/64
+/// .. _issue1361: https://github.com/FStarLang/FStar/issues/1361
 
 private let rec go (is1 is2:intervals)
   : Pure intervals
@@ -228,18 +236,19 @@ let intersect (is1 is2:intervals) =
 /// `FStar.Set` module already provides us with set operations proven to be pure
 /// and total.
 ///
-/// However, unlike `Coq.Sets.Ensembles` the representation of `set a` as a
-/// function `a -> bool` is abstract in F\*. Consequently, we cannot define
-/// `range` using a lambda expression. This is what is lost, what do we then
-/// gain by hiding the representation of sets behind an abstraction? We can
-/// change the way sets are represented in `FStar.Set` under the hood, without
-/// affecting users of the library. Indeed F\* libraries often have two
-/// implementations, one acting as a model to prove that the pre- and
-/// post-conditions of the API do not allow to prove `False`, and an actual
-/// implementation for running the actual program. In fact different extraction
-/// targets, such as OCaml and F# would typically provide different
-/// implementations, e.g. the OCaml implementation is based on
-/// `Batteries <http://batteries.forge.ocamlcore.org/>`_.[#]_
+/// However, unlike `Coq.Sets.Ensembles` the representation of `set a` as a function
+/// `a -> bool` is abstract in F\*. Consequently, we cannot define `range` using a
+/// lambda expression. This is what is lost, what do we then gain by hiding the
+/// representation of sets behind an abstraction? We can change the way sets are
+/// represented in `FStar.Set` under the hood, without affecting users of the
+/// library. Indeed F\* libraries often have two implementations, one acting as a
+/// model to prove that the pre- and post-conditions of the API do not allow to
+/// prove `False`, and an actual implementation for running the actual program. In
+/// fact different extraction targets, such as OCaml and F# would typically provide
+/// different implementations, e.g. the OCaml implementation of many libraries
+/// modules is based on Batteries_. [#]_
+///
+/// .. _Batteries: http://batteries.forge.ocamlcore.org/
 ///
 /// .. [#] For verification to be meaningful, it is important that these
 ///    alternative implementations are correct. In fact, while developing this post
@@ -294,13 +303,11 @@ let rec sem (is : intervals) : Set.set offset =
   | [] -> Set.empty
   | (i :: is) -> Set.union (semI i) (sem is)
 
-/// This simple lemma should likely move to the `FStar.Set`, but it gives me the
-/// opportunity explain some of F\* automation power. The body of the lemma is
-/// straightforward and the proof is by definition. What the SMT pattern lemma
-/// does is to 'remind' the SMT solver that it can prove disjointness whenever
-/// the intersection of two sets is empty. Below I commented out two invocations
-/// of the lemma where the lemma is now automatically applied because of the
-/// pattern.
+/// This simple lemma should move to `FStar.Set`, but this allows me to
+/// explain some of F\*'s automation power. The body of the lemma is straightforward
+/// and the proof is by definition. But the SMT pattern 'reminds' the SMT solver to
+/// prove disjointness whenever the intersection of two sets is empty. Below I
+/// commented out two invocations of the lemma that are triggered by the pattern.
 
 let lemma_disjoint_intro (#a:eqtype) (s1 s2:Set.set a)
   : Lemma
@@ -311,9 +318,9 @@ let lemma_disjoint_intro (#a:eqtype) (s1 s2:Set.set a)
 
 
 /// I use the lemma to prove that an interval is disjoint from an interval list
-/// whenever their concatenaton is `good`. The local lemma is inspired
+/// whenever their concatenation is `good`. The local lemma is inspired
 /// by Joachim's `Intersection_range_semLIs_empty` lemma. It expresses the same
-/// idea and is proven by induction on an increasing lower bound.
+/// idea and follows by induction on an increasing lower bound.
 
 let lemma_semI_sem_disjoint (i:interval) (is:intervals)
   : Lemma
@@ -387,13 +394,14 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 
 #set-options "--z3rlimit 15"
 
-/// No, unfortunately this is not a panacea. Rather, it is a proven recipe for
-/// spending too much time idlying just to get the infamous "(Error) could not
-/// prove post-condition" error. Time that one should instead spend on thinking
-/// about the nature of what needs to be proven.
+/// No, unfortunately this is not a panacea and should only be used when
+/// verification is unstable. In other situations, it is a proven recipe for
+/// spending too much time idlying just to get the infamous "could not prove
+/// post-condition" error. Time that one should instead spend on thinking about the
+/// nature of the proof.
 ///
 /// To shortcut the thinking a bit, I looked at the Coq proof script. While most
-/// of it was pretty well obfuscated without a detailed knowledge of Coq tactics
+/// of it was pretty obfuscated without a detailed knowledge of Coq tactics
 /// and the ability to see the proof state, it revealed some crucial hints.
 ///
 /// One was the equivalent of the `lemma_semI_sem_lb_disjoint` lemma and its
@@ -429,7 +437,6 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
                                           (Set.intersect (semI h1) (sem t2)))
                                (Set.union (Set.intersect (semI h2) (sem t1))
                                           (Set.intersect (sem t1) (sem t2)))));
-///
 ///  The rest of the proof simplifies the first three of the four intersects:
 ///  1. h1 n h2 = [f', h2.to]
 
@@ -445,8 +452,9 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 
   lemma_semI_sem_disjoint h2 t1;
 ///
-/// The proof now applies the distributive law in the other direction to combine the 3rd and 4th intersect:
-///
+/// The proof now applies the distributive law in the other direction to combine
+/// the 3rd and 4th intersect:
+
   Set.lemma_equal_elim is1_n_is2
                        (Set.union (semI (I f' h2.to))
                                   (Set.intersect (Set.union (range (h2.to) (h1.to))
@@ -518,27 +526,29 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
 /// his priority was to prove the code and find bugs, rather than find the most
 /// elegant proof.
 ///
-/// I in turn dedicated some time to cleaning up the code and to make it robust to
-/// with regards to the unpredictability of the SMT solver. This is to support a
-/// claim I want to make about the F\* code being easier to maintain and adapt. The
-/// `hs-to-coq` authors understood the importance of proofs evolving with programs,
-/// not the lease because programs often change. The concise and closely integrated
-/// F\* proof makes maintaining programs easier. It acts as verified documentation
-/// that like good wine keeps its value over time as code is handed
-/// down through generations of programmers.
+/// I in turn dedicated some time to cleaning up the code and to makeing it
+/// robust to the unpredictability of the SMT solver. I claim that well written
+/// F\* code is easier to maintain and adapt than Coq proof scripts. The
+/// `hs-to-coq` authors understood the importance of proofs evolving with
+/// programs, not the lease because programs often change. The concise and
+/// closely integrated F\* proof makes maintaining programs easier, not the
+/// least because no translation is needed. Moreover, it acts as verified
+/// documentation that, like good wine, keeps its value as code is handed down
+/// through generations of programmers.
 ///
 /// Extraction and testing
 /// ======================
 ///
-/// *Testing* too is crucial to program longevity. This is not something F\* has
-/// traditionally been good at. Like Haskell and Coq, F\* has a bit of an *if it
-/// typechecks it runs*, or even more extreme a *why run?* ethos. Just as with the
-/// Coq proof of a theorem, actually running an F\* program can sometimes feel like
-/// an unnecessary chore.
+/// *Testing* too is crucial to program longevity and it is not something F\*
+/// has traditionally been good at. Like Haskell and Coq, F\* has a bit of an
+/// *if it typechecks it runs*, or even more extreme a *why run?* ethos. Just as
+/// with a Coq proof, actually running an F\* program can sometimes feel like an
+/// unnecessary chore.
 ///
-/// Lately however, as we ramp up the inter-operability testing of miTLS and shipped
-/// `production code developed using F* <https://blog.mozilla.org/security/2017/09/13/verified-cryptography-firefox-57/>`_ testing has become more
-/// important.
+/// Lately however, as we ramp up the inter-operability testing of miTLS and
+/// shipped `production code developed using F\*`_ testing has become more important
+///
+/// .. _`production code developed using F\*`: https://blog.mozilla.org/security/2017/09/13/verified-cryptography-firefox-57/
 ///
 /// A simple print and test function confirm that the code can be executed.
 
@@ -546,15 +556,17 @@ open FStar.All
 open FStar.IO
 open FStar.Printf
 
-/// The single most successful debugging tool and maybe most most iconic *C* feature
-/// after `++` is `printf`. See `this post <https://fstarlang.github.io/general/2017/11/22/sprintfstar.html>` for a post celebrating its
-/// arrival in F*.
+/// The single most successful debugging tool---and maybe the most iconic *C*
+/// feature after `++`---is `printf`. See `this post`_
+/// for a celebration of its arrival in F*.
+///
+/// .. _`this post`: https://fstarlang.github.io/general/2017/11/22/sprintfstar.html
 
 let ppInterval (I f t) = sprintf "0x%d-0x%d" f t
 
-/// I give two implementations for printing `intervals`. The first defines the function recursively, while the second uses a list iterator.
+/// I give two implementations for printing `intervals`. The first defines the function recursively, while the second uses a higher-order fold function.
 
-let rec ppIntervals' (is:intervals): ML unit = 
+let rec ppIntervals' (is:intervals): ML unit =
   match is with
   | [] -> stdout <| "."
   | i::is ->
@@ -571,7 +583,7 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// A strange attachment bonds programmers and the language they program in. It
 /// is as if the language becomes an extension of their arms, fingers, eyes, and
 /// minds. Others have noted the addictive nature of programming and theorem
-/// proving. The dopamin rush when a program compiles, runs, or verifies. The
+/// proving. The dopamine rush when a program compiles, runs, or verifies. The
 /// language preference is thus a matter of taste. We are no golems, and won't
 /// cut off our arm lightly to replace it with a stronger version. Rather we are
 /// like junkies who will go back to what we know to get our next fix.
@@ -580,14 +592,14 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// a few dimensions that one could look at if one wanted to do an objective
 /// comparison, e.g., developer efficiency, the code to proof ratio, useability
 /// and maturity of the system, and the size of the trusted computing base.
-/// 
+///
 /// Developer efficiency & code to proof ratio
 /// ------------------------------------------
 ///
 /// I measure the success of a project more by the pleasure I get out of it than
 /// by the time I put into it. So it won't come as a surprise that I am not a
 /// big fan of filling in time sheets. I am interested in surveillance and
-/// anti-surveillance, and some day I might be tempted to use Joachim's tool
+/// anti-surveillance, and some day I might be tempted to use Joachim's arbtt_ tool
 /// suggestion for a self study on the effects of (self-)surveillance on
 /// productivity. Until then I will keep it qualitative.
 ///
@@ -606,7 +618,10 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// burdon. Coq enthusiasts could argue that automation tactics can bring down
 /// the burdon, and that explicit proof scripts have their value. However, it is
 /// my impression that F\* gets a lot of leverage from being designed from the
-/// ground up for automation---and F\* tactics are on their way.
+/// ground up for automation---and F\* tactics_ are on their way.
+///
+/// .. _arbtt: http://arbtt.nomeata.de/
+/// .. _tactics: https://github.com/FStarLang/FStar/wiki/Efficient-execution-of-F*-tactics
 ///
 /// Useability, maturity, and trusted computing base
 /// ------------------------------------------------
@@ -633,13 +648,12 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 /// verification engineers rarely look at the gigabytes of SMT queries produced
 /// by F\*, just like programmers rarely have to look at assembly code.
 ///
-/// Of course there is an exception to every rule. The F\* team is currently
-/// developing a powerful extraction mechanism called KreMLin from a subset of F\* to C. C is the
-/// lingua-franca for, among others, efficient cryptographic code. An important
-/// property of that translation is that it preserves comments and readability.
-/// This is necessary as cryptographic code has to be audited, and the
-/// experts with the necessary domain knowledge are unlikely
-/// to switch to F\* any time soon.
+/// Of course there is an exception to every rule. `Jonathan Protzenko`_ developed a
+/// powerful extraction mechanism called KreMLin_ from a subset of F\* to C. C is
+/// the lingua-franca for, among others, efficient cryptographic code. An important
+/// property of that translation is that it preserves comments and readability. This
+/// is necessary as cryptographic code has to be audited, and the experts with the
+/// necessary domain knowledge are unlikely to switch to F\* any time soon.
 ///
 /// However, never say never. Clarke's third and last rule goes as follows:
 ///
@@ -647,3 +661,5 @@ let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
 ///   they are almost certainly right. When they state that something is impossible,
 ///   they are very probably wrong.
 ///
+/// .. _`Jonathan Protzenko`: https://jonathan.protzenko.fr/
+/// .. _KreMLin: https://github.com/FStarLang/kremlin/
