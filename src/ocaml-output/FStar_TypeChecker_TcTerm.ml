@@ -5228,7 +5228,7 @@ and tc_eqn:
                                                   let c_weak1 =
                                                     let uu____13627 =
                                                       should_return &&
-                                                        (FStar_Syntax_Util.is_tot_or_gtot_lcomp
+                                                        (FStar_Syntax_Util.is_pure_or_ghost_lcomp
                                                            c_weak) in
                                                     if uu____13627
                                                     then
