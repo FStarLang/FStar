@@ -6,8 +6,6 @@ module Map  = FStar.Map
 
 include FStar.Monotonic.HyperHeap
 
-type hmap = t
-
 let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
@@ -409,17 +407,17 @@ let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   = ()
 
 let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
-  modifies_just s m0.h m1.h /\ m0.tip=m1.tip
+  modifies_just s m0.h m1.h
 
 let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem) =
-  FStar.Monotonic.HyperHeap.modifies s m0.h m1.h /\ m0.tip=m1.tip
+  FStar.Monotonic.HyperHeap.modifies s m0.h m1.h
 
 let heap_only (m0:mem) = m0.tip = root
 
 let top_frame (m:mem) = Map.sel m.h m.tip
 
 let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
-    : Lemma (fresh_frame m0 m1 /\
+    : Lemma (fresh_frame m0 m1 /\ m1.tip == m2.tip /\
              modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==>
              modifies_transitively s m0 (pop m2))
     = ()
@@ -431,7 +429,7 @@ private let lemma_pop_is_popped (m0:mem{poppable m0})
 
 let modifies_one id h0 h1 = modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
-  Heap.modifies s (Map.sel h0.h id) (Map.sel h1.h id) /\ h1.tip=h0.tip
+  Heap.modifies s (Map.sel h0.h id) (Map.sel h1.h id)
 
 let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (contains h x))

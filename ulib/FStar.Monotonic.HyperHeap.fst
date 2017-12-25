@@ -29,7 +29,7 @@ abstract let color (x:rid): GTot int =
   | [] -> 0
   | (c, _)::_ -> c
 
-type t = Map.t rid heap
+type hmap = Map.t rid heap
 
 let has_eq_rid (u:unit) :
   Lemma (requires True)
@@ -146,28 +146,28 @@ assume val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
                     Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
 
-let modifies (s:Set.set rid) (m0:t) (m1:t) =
+let modifies (s:Set.set rid) (m0:hmap) (m1:hmap) =
   Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
   /\ Set.subset (Map.domain m0) (Map.domain m1)
 
-let modifies_just (s:Set.set rid) (m0:t) (m1:t) =
+let modifies_just (s:Set.set rid) (m0:hmap) (m1:hmap) =
   Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
   /\ Set.subset (Map.domain m0) (Map.domain m1)
 
-let modifies_one (r:rid) (m0:t) (m1:t) =
+let modifies_one (r:rid) (m0:hmap) (m1:hmap) =
   modifies_just (Set.singleton r) m0 m1
 
-let equal_on (s:Set.set rid) (m0:t) (m1:t) =
+let equal_on (s:Set.set rid) (m0:hmap) (m1:hmap) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
  /\ Map.equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
-abstract val lemma_modifies_just_trans: m1:t -> m2:t -> m3:t
+abstract val lemma_modifies_just_trans: m1:hmap -> m2:hmap -> m3:hmap
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies_just s1 m1 m2 /\ modifies_just s2 m2 m3))
                                (ensures (modifies_just (Set.union s1 s2) m1 m3))
 let lemma_modifies_just_trans m1 m2 m3 s1 s2 = ()
 
-abstract val lemma_modifies_trans: m1:t -> m2:t -> m3:t
+abstract val lemma_modifies_trans: m1:hmap -> m2:hmap -> m3:hmap
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
                                (ensures (modifies (Set.union s1 s2) m1 m3))
@@ -189,13 +189,13 @@ abstract val lemma_modset: i:rid -> j:rid
                            (ensures (Set.subset (mod_set (Set.singleton i)) (mod_set (Set.singleton j))))
 let lemma_modset i j = ()
 
-abstract val lemma_modifies_includes: m1:t -> m2:t
+abstract val lemma_modifies_includes: m1:hmap -> m2:hmap
                        -> i:rid -> j:rid
                        -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
                                 (ensures (modifies (Set.singleton j) m1 m2))
 let lemma_modifies_includes m1 m2 i j = ()
 
-abstract val lemma_modifies_includes2: m1:t -> m2:t
+abstract val lemma_modifies_includes2: m1:hmap -> m2:hmap
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ (forall x.  Set.mem x s1 ==> (exists y. Set.mem y s2 /\ includes y x))))
                                 (ensures (modifies s2 m1 m2))
@@ -214,7 +214,7 @@ abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (ensures (j<>root))
 let lemma_include_cons i j = ()
 
-let map_invariant (m:t) =
+let map_invariant (m:hmap) =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 

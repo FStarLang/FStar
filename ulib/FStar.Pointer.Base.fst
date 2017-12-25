@@ -1,7 +1,6 @@
 module FStar.Pointer.Base
 
 module DM = FStar.DependentMap
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 open FStar.HyperStack.ST // for := , !
@@ -3723,13 +3722,15 @@ let loc_includes_union_r s s1 s2 = ()
 
 let loc_includes_union_l s1 s2 s =
   Classical.forall_intro loc_aux_includes_refl';
-  Classical.forall_intro_2 loc_aux_includes_union_l_l;    
   Classical.forall_intro_2 loc_aux_includes_union_l_r;
   let u12 = loc_union s1 s2 in
   if StrongExcludedMiddle.strong_excluded_middle (loc_includes s1 s) then begin
+    assert (loc_includes u12 s1);
     loc_includes_trans u12 s1 s
   end
   else begin
+    Classical.forall_intro_2 loc_aux_includes_union_l_l;    
+    assert (loc_includes u12 s2);
     loc_includes_trans u12 s2 s
   end
 
@@ -4132,14 +4133,14 @@ let modifies'
   (s: loc)
   (h1 h2: HS.mem)
 : GTot Type0
-= HH.modifies_just (regions_of_loc s) h1.HS.h h2.HS.h /\ (
+= HS.modifies (regions_of_loc s) h1 h2 /\ (
     forall r . (
       HS.live_region h1 r /\
       Set.mem r (regions_of_loc s) /\
       (~ (Set.mem r (Ghost.reveal (Loc?.whole_regions s))))
     ) ==> (
       HS.live_region h2 r /\
-      HH.modifies_rref r (addrs_of_loc s r) h1.HS.h h2.HS.h
+      HS.modifies_ref r (addrs_of_loc s r) h1 h2
     )
   ) /\ (
     forall t (p: pointer t) . (
@@ -4163,7 +4164,7 @@ let modifies_loc_addresses_intro_weak
 : Lemma
   (requires (
     modifies (loc_union (loc_regions (Set.singleton r)) l) h1 h2 /\
-    HH.modifies_rref r s h1.HS.h h2.HS.h /\
+    HS.modifies_ref r s h1 h2 /\
     HS.live_region h1 r /\
     loc_disjoint l (loc_regions (Set.singleton r))
   ))
@@ -4237,17 +4238,17 @@ let modifies_loc_includes s1 h h' s2 =
   admit ();
   assert_spinoff (
     forall rs r . (
-      HH.modifies_just rs h.HS.h h'.HS.h /\
+      HS.modifies rs h h' /\
       HS.live_region h r /\
       (~ (Set.mem r rs))
     ) ==>
-    HH.modifies_rref r Set.empty h.HS.h h'.HS.h
+    HS.modifies_ref r Set.empty h h'
   );
   aux_addrs_nonempty s1;
   aux_addrs_nonempty s2;
   let h1 = h in
   let h2 = h' in
-  assert_spinoff (HH.modifies_just (regions_of_loc s1) h1.HS.h h2.HS.h);
+  assert_spinoff (HS.modifies (regions_of_loc s1) h1 h2);
   assert_spinoff (
     forall r . (
       HS.live_region h1 r /\
@@ -4255,7 +4256,7 @@ let modifies_loc_includes s1 h h' s2 =
       (~ (Set.mem r (Ghost.reveal (Loc?.whole_regions s1))))
     ) ==> (
       HS.live_region h2 r /\
-      HH.modifies_rref r (addrs_of_loc s1 r) h1.HS.h h2.HS.h
+      HS.modifies_ref r (addrs_of_loc s1 r) h1 h2
   ));
   let f
     (t: typ)
@@ -4371,7 +4372,7 @@ let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h (HS.frame
 
 let ecreate
   (t:typ)
-  (r:HST.rid)
+  (r:HS.rid)
   (s: option (type_of_typ t))
 = let h0 = HST.get () in
   let s = match s with
@@ -4564,12 +4565,12 @@ let hs_modifies_just_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    HH.modifies_just s h1.HS.h h2.HS.h /\
+    HS.modifies s h1 h2 /\
     h2.HS.tip == h1.HS.tip /\
     HS.popped h2 h3
   ))
   (ensures (
-    HH.modifies_just (Set.intersect s (Set.complement (HH.mod_set (Set.singleton h1.HS.tip)))) h0.HS.h h3.HS.h /\
+    HS.modifies (Set.intersect s (Set.complement (HS.mod_set (Set.singleton h1.HS.tip)))) h0 h3 /\
     h3.HS.tip == h0.HS.tip
   ))
 = ()
@@ -4582,16 +4583,16 @@ let hs_modifies_rref_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    (~ (Set.mem r (HH.mod_set (Set.singleton h1.HS.tip)))) /\
+    (~ (Set.mem r (HS.mod_set (Set.singleton h1.HS.tip)))) /\
     HS.live_region h0 r /\
     Set.subset (Map.domain h1.HS.h) (Map.domain h2.HS.h) /\
-    HH.modifies_rref r a h1.HS.h h2.HS.h /\
+    HS.modifies_ref r a h1 h2 /\
     h2.HS.tip == h1.HS.tip /\
     HS.popped h2 h3
   ))
   (ensures (
     HS.live_region h3 r /\
-    HH.modifies_rref r a h0.HS.h h3.HS.h
+    HS.modifies_ref r a h0 h3
   ))
 = ()
 
@@ -4602,17 +4603,17 @@ let modifies_fresh_frame_popped_weak
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_regions (HH.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
+    modifies (loc_union (loc_regions (HS.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
     h2.HS.tip == h1.HS.tip /\
     HS.popped h2 h3 /\
-    loc_disjoint (loc_regions (HH.mod_set (Set.singleton h1.HS.tip))) s
+    loc_disjoint (loc_regions (HS.mod_set (Set.singleton h1.HS.tip))) s
   ))
   (ensures (
     modifies s h0 h3 /\
     h3.HS.tip == h0.HS.tip
   ))
 = let rs = regions_of_loc s in
-  let mask = HH.mod_set (Set.singleton h1.HS.tip) in
+  let mask = HS.mod_set (Set.singleton h1.HS.tip) in
   let ru = Set.union mask rs in
   assert (Set.equal (Set.intersect ru (Set.complement mask)) rs);
   hs_modifies_just_fresh_frame_popped h0 h1 ru h2 h3;
@@ -4626,7 +4627,7 @@ let modifies_fresh_frame_popped_weak
     ))
     (ensures (
       HS.live_region h3 r /\
-      HH.modifies_rref r (addrs_of_loc s r) h0.HS.h h3.HS.h
+      HS.modifies_ref r (addrs_of_loc s r) h0 h3
     ))
   = hs_modifies_rref_fresh_frame_popped h0 h1 h2 h3 r (addrs_of_loc s r)
   in
@@ -4724,7 +4725,7 @@ let loc_includes_loc_regions_restrict_to_regions
 let modifies_fresh_frame_popped h0 h1 s h2 h3 =
   (* NOTE: I could automate the proof, but at least this way here
      it is replayable and also readable. *)
-  let rs = HH.mod_set (Set.singleton h1.HS.tip) in
+  let rs = HS.mod_set (Set.singleton h1.HS.tip) in
   let c_rs = Set.complement rs in
   let s_rs = restrict_to_regions s rs in
   let s_c_rs = restrict_to_regions s c_rs in

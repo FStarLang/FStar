@@ -1,12 +1,10 @@
 module FStar.Monotonic.RRef
 
 open FStar
-open FStar.HyperHeap
 
 open FStar.HyperStack
 open FStar.HyperStack.ST
 
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 

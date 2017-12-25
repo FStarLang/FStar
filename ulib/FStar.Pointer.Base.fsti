@@ -1,7 +1,6 @@
 module FStar.Pointer.Base
 
 module DM = FStar.DependentMap
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 open FStar.HyperStack.ST // for := , !
@@ -1906,7 +1905,7 @@ val modifies_loc_regions_intro
   (rs: Set.set HS.rid)
   (h1 h2: HS.mem)
 : Lemma
-  (requires (HH.modifies_just rs h1.HS.h h2.HS.h))
+  (requires (HS.modifies rs h1 h2))
   (ensures (modifies (loc_regions rs) h1 h2))
 
 val modifies_pointer_elim
@@ -2004,7 +2003,7 @@ val modifies_regions_elim
   (requires (
     modifies (loc_regions rs) h h'
   ))
-  (ensures (HH.modifies_just rs h.HS.h h'.HS.h))
+  (ensures (HS.modifies rs h h'))
 
 val modifies_addresses_elim
   (r: HS.rid)
@@ -2018,7 +2017,7 @@ val modifies_addresses_elim
     HS.live_region h r
   ))
   (ensures (
-    HH.modifies_rref r a h.HS.h h'.HS.h
+    HS.modifies_ref r a h h'
   ))
 
 val modifies_trans
@@ -2059,7 +2058,7 @@ val screate
 
 val ecreate
   (t:typ)
-  (r:HST.rid)
+  (r:HS.rid)
   (s: option (type_of_typ t))
 : HST.ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r /\ HST.witnessed (region_contains_pred r)))
@@ -2159,7 +2158,7 @@ val modifies_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_regions (HH.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
+    modifies (loc_union (loc_regions (HS.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
     h2.HS.tip == h1.HS.tip /\
     HS.popped h2 h3
   ))
@@ -2187,7 +2186,7 @@ val modifies_loc_addresses_intro
 : Lemma
   (requires (
     modifies (loc_union (loc_regions (Set.singleton r)) l) h1 h2 /\
-    HH.modifies_rref r a h1.HS.h h2.HS.h
+    HS.modifies_ref r a h1 h2
   ))
   (ensures (modifies (loc_union (loc_addresses r a) l) h1 h2))
 
