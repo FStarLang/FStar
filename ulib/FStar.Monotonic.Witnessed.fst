@@ -2,6 +2,25 @@ module FStar.Monotonic.Witnessed
 
 open FStar.Preorder
 
+(* NOT EXPOSED BY THE INTERFACE [start] *)
+
+(* 
+   A hybrid modal extension to F*'s classical reasoning logic:
+     - extends F*'s logic with two hybrid modal operators (get, set)
+     - extends F*'s logic with corresponding logical axioms, based
+       on the Kripke semantics of these two hybrid modal operators:
+
+         w |= get p   iff   w |= p w
+
+         w |= set p w'   iff   w' |= p
+
+    We do not expose these modal operators to the users directly.
+    Instead we use them below to define the 'witnessed' modality 
+    which is the basis of reasoning about monotonic state in F*, 
+    as discussed in Ahman et al.'s POPL 2018 paper "Recalling a 
+    Witness: Foundations and Applications of Monotonic State".
+*)
+
 (* Hybrid modal operators *)
 assume type get : #world:Type -> (world -> Type0) -> Type0
 assume type set : #world:Type -> Type0 -> world -> Type0
@@ -259,6 +278,11 @@ assume val set_eq : #world:Type
                  -> Lemma (set (v == v') w <==> v == v')
                     [SMTPat (set (v == v') w)]
 
+(* NOT EXPOSED BY THE INTERFACE [end] *)
+
+
+(* EXPOSED BY THE INTERFACE [start] *)
+
 (* Witnessed modality *)
 
 let witnessed (#state:Type) (#rel:preorder state) (p:(state -> Type0)) = 
@@ -289,4 +313,4 @@ let witnessed_forall #state #rel #t p = ()
 
 let witnessed_exists #state #rel #t p = ()
 
-
+(* EXPOSED BY THE INTERFACE [end] *)

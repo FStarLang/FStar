@@ -6,6 +6,7 @@ module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 (* Setting up the preorder for mem *)
 
@@ -88,7 +89,7 @@ sub_effect DIV ~> GST = lift_div_gst
 abstract let stable (p:mem_predicate) =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
-assume type witnessed: mem_predicate -> Type0
+let witnessed (p:mem_predicate) = witnessed #mem #mem_rel p
 
 (* TODO: we should derive these using DM4F *)
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
@@ -97,9 +98,9 @@ assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
 assume val gst_witness: p:mem_predicate -> GST unit (fun post h0 -> p h0 /\ stable p /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
 
-assume val lemma_functoriality
-  (p:mem_predicate{witnessed p}) (q:mem_predicate{(forall (h:mem). p h ==> q h)})
+val lemma_functoriality (p:mem_predicate{witnessed p}) (q:mem_predicate{(forall (h:mem). p h ==> q h)})
   : Lemma (ensures (witnessed q))
+let lemma_functoriality p q = ()
 
 let st_pre   = gst_pre
 let st_post' = gst_post'
