@@ -2,7 +2,6 @@ module FStar.HyperStack.ST
 
 open FStar.HyperStack
 
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 open FStar.Preorder
@@ -216,7 +215,6 @@ sub_effect
 //     (not (is_eternal_region r)) \/
 //     witnessed (region_contains_pred r)
 // type rid = r:HS.rid{rid_refinement r}
-type rid = HS.rid
 
 type mreference (a:Type) (rel:preorder a) =
   r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
@@ -564,7 +562,7 @@ val test_heap_code_with_stack_calls: unit -> Heap unit
 let test_heap_code_with_stack_calls () =
   let h = get () in
   // How is the following not known ?
-  HH.root_has_color_zero ();
+  HS.root_has_color_zero ();
   let s :ref int = ralloc h.tip 0 in
   test_stack_with_long_lived s;
   s := 1;
@@ -576,7 +574,7 @@ val test_heap_code_with_stack_calls_and_regions: unit -> Heap unit
 let test_heap_code_with_stack_calls_and_regions () =
   let h = get() in
   let color = 0 in
-  HH.root_has_color_zero ();
+  HS.root_has_color_zero ();
   let new_region = new_colored_region h.tip color in
   let s :ref int = ralloc new_region 1 in
   test_stack_with_long_lived s; // STStack call
@@ -589,7 +587,7 @@ val test_lax_code_with_stack_calls_and_regions: unit -> ST unit
 let test_lax_code_with_stack_calls_and_regions () =
   push_frame();
   let color = 0 in
-  HH.root_has_color_zero ();
+  HS.root_has_color_zero ();
   let new_region = new_colored_region HS.root color in
   let s :ref int = ralloc new_region 1 in
   test_stack_with_long_lived s; // Stack call
@@ -602,7 +600,7 @@ val test_lax_code_with_stack_calls_and_regions_2: unit -> ST unit
 let test_lax_code_with_stack_calls_and_regions_2 () =
   push_frame();
   let color = 0 in
-  HH.root_has_color_zero ();
+  HS.root_has_color_zero ();
   let new_region = new_colored_region HS.root color in
   let s :ref int = ralloc new_region 1 in
   test_stack_with_long_lived s; // Stack call
@@ -643,7 +641,7 @@ val test_to_be_inlined: unit -> Inline (reference int * reference int)
   (ensures  (fun h0 r h1 -> True))
 let test_to_be_inlined () =
   let r :stackref int = salloc 0 in
-  HH.root_has_color_zero ();
+  HS.root_has_color_zero ();
   let region = new_region HS.root in
   let r' = ralloc region 1 in
   r := 2;
