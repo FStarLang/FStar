@@ -256,7 +256,7 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
    *)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
-    let m1 = HS.push_frame m0 in
+    let m1 = HS.hs_push_frame m0 in
     gst_put m1
 
 (**

@@ -7,10 +7,12 @@ module HH   = FStar.Monotonic.HyperHeap
 
 type rid = HH.hh_rid
 let root = HH.hh_root
+let parent (r:rid{r =!= root}) :Tot rid = HH.parent r
 let color (x:rid) :GTot int = HH.hh_color x
 let extends (r1 r2:rid) = HH.extends r1 r2
 let disjoint (r1 r2:rid) = HH.disjoint r1 r2
 let includes (r1 r2:rid) = HH.includes r1 r2
+let disjoint_regions (s1 s2:Set.set rid) = HH.disjoint_regions s1 s2
 
 let is_in (r:rid) (h:HH.t) = h `Map.contains` r
 
@@ -277,6 +279,14 @@ let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem)
 let fresh_region (i:rid) (m0 m1:mem) =
   not (m0.h `Map.contains` i) /\ m1.h `Map.contains` i
 
+abstract private let stronger_fresh_region_was_redundant (i:rid) (m0 m1:mem)  //AR: because of map_invariant
+  :Tot unit
+  = let stronger_fresh_region (i:rid) (m0 m1:mem) =
+      (forall j. HH.includes i j ==> not (j `is_in` m0.h)) /\
+      i `is_in` m1.h
+    in
+    assert (fresh_region i m0 m1 ==> stronger_fresh_region i m0 m1)
+
 abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
                                -> m0:mem{HH.map_invariant m0.h} -> m1:mem{HH.map_invariant m1.h} ->
   Lemma (requires (fresh_region i m0 m1
@@ -333,7 +343,7 @@ let fresh_frame (m0:mem) (m1:mem) =
   HH.parent m1.tip = m0.tip      /\
   m1.h == Map.upd m0.h m1.tip Heap.emp
 
-let push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
+let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
   = let new_tip_rid = HH.extend m.tip m.rid_ctr 1 in
     HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
 
