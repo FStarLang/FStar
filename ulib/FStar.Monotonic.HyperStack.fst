@@ -55,6 +55,12 @@ noeq type mem =
        -> tip:rid{tip `is_tip` h}    //the id of the current top-most region
        -> mem
 
+let lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
+  :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
+         (ensures  (is_eternal_region r == is_eternal_region s /\ is_stack_region r == is_stack_region s))
+	 [SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r)]
+  = ()
+
 (****** tip_top related lemmas ******)
 
 let lemma_reveal_tip_top (m:mem) (r:sid)
