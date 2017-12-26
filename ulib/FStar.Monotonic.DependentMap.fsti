@@ -3,7 +3,6 @@ module FStar.Monotonic.DependentMap
     that grow monotonically,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module MR = FStar.Monotonic.RRef
 module DM = FStar.DependentMap
@@ -184,7 +183,7 @@ val extend
          let cur = HS.sel h0 t in
          HS.contains h1 t /\
          HS.modifies (Set.singleton r) h0 h1 /\
-         HH.modifies_rref r (Set.singleton (addr_of t)) HS.(h0.h) HS.(h1.h) /\
+         HS.modifies_ref r (Set.singleton (addr_of t)) h0 h1 /\
          HS.sel h1 t == upd cur x y /\
          MR.witnessed (contains t x y)))
 

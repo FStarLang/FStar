@@ -3,7 +3,6 @@ module FStar.Monotonic.DependentMap
     that grow monotonically,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module MR = FStar.Monotonic.RRef
 module DM = FStar.DependentMap

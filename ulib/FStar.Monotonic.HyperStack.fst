@@ -179,8 +179,6 @@ let pop (m0:mem{poppable m0}) : Tot mem =
   let h1 = Map.restrict dom m0.h in
   let tip0 = m0.tip in
   let tip1 = parent tip0 in
-  assert (forall (r:sid). Map.contains h1 r ==>
-  	    (forall (s:sid). includes s r ==> Map.contains h1 s));
   HS m0.rid_ctr h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
@@ -688,7 +686,7 @@ let aref_live_at_aref_of
 : Lemma
   (aref_live_at h (aref_of r) t rel <==> contains h r)
   [SMTPat (aref_live_at h (aref_of r) t rel)]
-= admit ()
+= ()
 
 abstract
 let contains_greference_of
@@ -703,7 +701,7 @@ let contains_greference_of
     [SMTPat (contains h (greference_of a t rel))];
     [SMTPat (aref_live_at h a t rel)];
   ]]
-= admit ()
+= ()
 
 abstract
 let aref_of_greference_of

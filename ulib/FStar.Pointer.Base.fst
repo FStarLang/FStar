@@ -3720,17 +3720,24 @@ let loc_includes_trans s1 s2 s3 =
 
 let loc_includes_union_r s s1 s2 = ()
 
+private let loc_includes_union_l_helper_l (s1 s2:loc)
+  :Lemma (loc_includes (loc_union s1 s2) s1)
+  = Classical.forall_intro loc_aux_includes_refl';
+    Classical.forall_intro_2 loc_aux_includes_union_l_l
+
+private let loc_includes_union_l_helper_r (s1 s2:loc)
+  :Lemma (loc_includes (loc_union s1 s2) s2)
+  = Classical.forall_intro loc_aux_includes_refl';
+    Classical.forall_intro_2 loc_aux_includes_union_l_r
+
 let loc_includes_union_l s1 s2 s =
-  Classical.forall_intro loc_aux_includes_refl';
-  Classical.forall_intro_2 loc_aux_includes_union_l_r;
   let u12 = loc_union s1 s2 in
   if StrongExcludedMiddle.strong_excluded_middle (loc_includes s1 s) then begin
-    assert (loc_includes u12 s1);
+    loc_includes_union_l_helper_l s1 s2;
     loc_includes_trans u12 s1 s
   end
   else begin
-    Classical.forall_intro_2 loc_aux_includes_union_l_l;    
-    assert (loc_includes u12 s2);
+    loc_includes_union_l_helper_r s1 s2;
     loc_includes_trans u12 s2 s
   end
 
@@ -3783,6 +3790,7 @@ let loc_includes_gsub_buffer_r l #t b i len =
     loc_includes_trans l (loc_buffer b) (loc_buffer g)
   end
 
+#set-options "--z3rlimit 100 --max_fuel 2 --max_ifuel 2"
 let loc_includes_gsub_buffer_l #t b i1 len1 i2 len2 =
   let g1 = gsub_buffer b i1 len1 in
   let g2 = gsub_buffer b i2 len2 in
@@ -3807,6 +3815,7 @@ let loc_includes_gsub_buffer_l #t b i1 len1 i2 len2 =
     Classical.forall_intro (Classical.move_requires f);
     assert (loc_aux_includes (LocBuffer g1) (LocBuffer g2))
   end
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
 
 let loc_includes_addresses_pointer #t r s p = ()
 
@@ -4297,7 +4306,7 @@ let modifies_loc_includes s1 h h' s2 =
   in
   Classical.forall_intro_2 g  //AR: this was the same pattern as above (forall_intro_2 and move_requires, there was no g)
 
-#set-options "--z3rlimit 80 --max_fuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 100 --max_fuel 1 --max_ifuel 1"
 let modifies_only_live_regions_weak
   (rs: Set.set HS.rid)
   (l: loc)
