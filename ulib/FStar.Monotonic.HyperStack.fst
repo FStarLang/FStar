@@ -1,8 +1,7 @@
 module FStar.Monotonic.HyperStack
 
 open FStar.Preorder
-open FStar.Monotonic.HyperHeap
-module Map  = FStar.Map
+module Map = FStar.Map
 
 include FStar.Monotonic.HyperHeap
 
@@ -58,51 +57,11 @@ noeq type mem =
 
 (****** tip_top related lemmas ******)
 
-// let lemma_tip_top_push_frame (tip:rid) (h:HH.t) (new_tip:rid{new_tip =!= root}) (t:Heap.heap)
-//   :Lemma (requires (tip_top tip h /\ parent new_tip == tip))
-//          (ensures  (tip_top new_tip (Map.upd h new_tip t)))
-//   = ()
-
-// let lemma_tip_top_same_domain (tip:rid) (h1 h2:HH.t)
-//   :Lemma (requires (tip_top tip h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
-//          (ensures  (tip_top tip h2))
-//   = ()
-
-// let lemma_tip_top_alloc_eternal_region (tip:rid) (h:HH.t) (r:rid{is_eternal_region r}) (t:Heap.heap)
-//   :Lemma (requires (tip_top tip h))
-//          (ensures  (tip_top tip (Map.upd h r t)))
-//   = ()
-
 let lemma_reveal_tip_top (m:mem) (r:sid)
   :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
   = ()
 
 (******)
-
-
-(****** downward_closed related lemmas ******)
-
-(*
- * Adding a new region preserves HH.map_invariant and downward_closed
- *)
-// let lemma_downward_closed_new_region (h:HH.t) (r:rid{r =!= root}) (t:Heap.heap)
-//   :Lemma (requires (let p = parent r in
-//                     HH.map_invariant h /\ downward_closed h /\
-//                     h `Map.contains` p /\ (p == root \/ (is_stack_region r == is_stack_region p))))
-//          (ensures (let h1 = Map.upd h r t in
-//                    HH.map_invariant h1 /\ downward_closed h1))
-//   = ()
-
-(*
- * Allocating refs does not change the map domain (and rid structure), so HH.map_invariant and downward_closed are retained
- *)
-// let lemma_downward_closed_same_domain (h1 h2:HH.t)
-//   :Lemma (requires (HH.map_invariant h1 /\ downward_closed h1 /\ Set.equal (Map.domain h1) (Map.domain h2)))
-//          (ensures  (HH.map_invariant h2 /\ downward_closed h2))
-//   = ()
-
-(******)
-
 
 (****** rid_ctr_pred related lemmas ******)
 
@@ -113,20 +72,6 @@ let lemma_rid_ctr_pred ()
   :Lemma (forall (m:mem) (r:rid).{:pattern (m.h `Map.contains` r)} m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr)
   = ()
 
-(*
- * If h1 and c1 are in rid_ctr_pred relation, and
- * - h2 is a superset of h1
- * - c2 >= c1
- * - all rids in (h2 - h1) have the last component less than c2
- * Then h2 and c2 are in the rid_ctr_pred relation
- *)
-// let lemma_rid_ctr_pred_upd (h1:HH.t) (c1:int) (h2:HH.t) (c2:int)
-//   :Lemma (requires (let s1 = Map.domain h1 in
-//                     let s2 = Map.domain h2 in
-//                     (rid_ctr_pred h1 c1 /\ Set.subset s1 s2 /\ c1 <= c2 /\
-// 		     (forall (r:rid). (Set.mem r s2 /\ (not (Set.mem r s1))) ==> rid_last_component r < c2))))
-//          (ensures  (rid_ctr_pred h2 c2))
-//   = ()
 (*****)
 
 let empty_mem (m:hmap) = 
@@ -184,6 +129,9 @@ let pop (m0:mem{poppable m0}) : Tot mem =
 //A (reference a) may reside in the stack or heap, and may be manually managed
 //Mark it private so that clients can't use its projectors etc.
 //enabling extraction of mreference to just a reference in ML and pointer in C
+(*
+ * AR: 12/26: Defining it using Heap.mref directly, removing the HyperHeap.mref indirection
+ *)
 private
 noeq
 type mreference' (a:Type) (rel:preorder a) =
@@ -248,7 +196,7 @@ let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
 
 (*
  * AR: this used to be (is_eternal_region i \/ i `is_above` m.tip) /\ Map.contains ...
- *     As far as the memory model is concerned, this could just be Map.contains
+ *     As far as the memory model is concerned, this should just be Map.contains
  *     The fact that an eternal region is always contained (because of monotonicity) should be used in the ST interface
  *)
 let live_region (m:mem) (i:rid) :Tot bool = Map.contains m.h i
@@ -298,7 +246,7 @@ abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:ri
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
 (*
- * AR: why is this not enforcing live_region ?
+ * memory model API
  *)
 let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
   : GTot a
@@ -404,6 +352,12 @@ let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   [SMTPat (equal_stack_domains m0 m1); SMTPat (equal_stack_domains m1 m2)]
   = ()
 
+(*
+ * AR: 12/26: modifies clauses
+ *            NOTE: the modifies clauses used to have a m0.tip == m1.tip conjunct too
+ *                  which seemed a bit misplaced
+ *                  removing that conjunct required very few changes (one in HACL), since ST effect gives it already
+ *)
 let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
   modifies_just s m0.h m1.h
 

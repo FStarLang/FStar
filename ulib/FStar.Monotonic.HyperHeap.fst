@@ -20,6 +20,15 @@ open FStar.Monotonic.Heap
 module Map = FStar.Map
 open FStar.Ghost
 
+(*
+ * AR: 12/26
+ *     Cleanup:
+ *     - Removed the mref type and associated lemmas
+ *     - This module now provides the map view of the memory and associated functions and lemmas
+ *     - The intention of this module is for it to be included in HyperStack
+ *     - Clients don't need to open/know about HyperHeap, they should work only with HyperStack
+ *)
+
 abstract type rid = erased (list (int * int))
 
 let reveal (r:rid) : GTot (list (int * int)) = reveal r

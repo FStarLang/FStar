@@ -391,6 +391,11 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
+(*
+ * AR: 12/26: For a ref to be readable/writable/free-able,
+ *            the client can either prove contains
+ *            or give us enough so that we can use monotonicity to derive contains
+ *)
 let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :GTot bool =
   (m `contains` r) ||
     (let i = HS.frameOf r in
