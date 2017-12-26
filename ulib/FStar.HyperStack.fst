@@ -2,8 +2,6 @@ module FStar.HyperStack
 
 include FStar.Monotonic.HyperStack
 
-open FStar.HyperHeap
-
 type reference (a:Type) = mreference a (Heap.trivial_preorder a)
 
 let stackref (a:Type) = mstackref a (Heap.trivial_preorder a)

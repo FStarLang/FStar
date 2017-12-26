@@ -1,7 +1,6 @@
 module HyE.CCA2  (* intuitively, parameterized by both PlainPKE and RSA *)
 open FStar.HyperStack.All
 open FStar.HyperStack.ST
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 open FStar.Seq

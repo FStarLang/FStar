@@ -2,7 +2,6 @@ module EtM.MAC
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 
@@ -52,7 +51,7 @@ noeq type key =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ fresh_region k.region h0.h h1.h
+  /\ fresh_region k.region h0 h1
   /\ m_contains k.log h1
   /\ m_sel h1 k.log == createEmpty
   (* CH: equivalent definition makes gen fail:

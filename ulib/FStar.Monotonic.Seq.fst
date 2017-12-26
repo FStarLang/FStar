@@ -3,7 +3,6 @@ module FStar.Monotonic.Seq
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Classical
-module HH   = FStar.HyperHeap
 module HS   = FStar.HyperStack
 module MR   = FStar.Monotonic.RRef
 module HST  = FStar.HyperStack.ST
@@ -29,7 +28,6 @@ abstract let grows (#a:Type) :Preorder.preorder (seq a)
     (forall (i:nat).{:pattern (Seq.index s1 i) \/ (Seq.index s2 i)} i < length s1 ==> index s1 i == index s2 i)
 
 open FStar.Monotonic.RRef
-open FStar.HyperHeap
 open FStar.HyperStack
 
 type rid = MR.rid
@@ -71,7 +69,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
        (ensures (fun h0 _ h1 ->
 	               contains h1 r
 		     /\ modifies_one i h0 h1
-		     /\ modifies_rref i (Set.singleton (HS.as_addr r)) h0.h h1.h
+		     /\ modifies_ref i (Set.singleton (HS.as_addr r)) h0 h1
 		     /\ HS.sel h1 r == Seq.snoc (HS.sel h0 r) x
 		     /\ witnessed (at_least (Seq.length (HS.sel h0 r)) x r)))
   =
@@ -133,7 +131,7 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
        (ensures (fun h0 _ h1 ->
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
-		     /\ modifies_rref rgn (Set.singleton (HS.as_addr r)) h0.h h1.h
+		     /\ modifies_ref rgn (Set.singleton (HS.as_addr r)) h0 h1
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
 		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
@@ -410,7 +408,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
 	   init <= Seq.length (HS.sel h log)))
        (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 
 		   modifies_one i h0 h1 /\
-		   modifies_rref i Set.empty h0.h h1.h /\
+		   modifies_ref i Set.empty h0 h1 /\
 		   m_fresh c h0 h1 /\
 		   HS.sel h1 c = init /\
 		   FStar.Map.contains h1.h i))
@@ -430,7 +428,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
        (ensures (fun h0 _ h1 ->
 	  modifies_one i h0 h1 /\
 	  (* AR: before merge: modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\ *)
-	  modifies_rref i (Set.singleton (HS.as_addr c)) h0.h h1.h /\
+	  modifies_ref i (Set.singleton (HS.as_addr c)) h0 h1 /\
 	  HS.sel h1 c = HS.sel h0 c + 1))
   = recall c; recall log;
     let n = m_read c + 1 in
@@ -449,8 +447,7 @@ let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:s
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
   = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
-    assert (HS.sel h r = HyperHeap.sel h.h (HS.mrref_of r));
-    assert (HS.sel h r = HyperHeap.sel h.h (HS.mrref_of r))
+    assert (HS.sel h r = Heap.sel (FStar.Map.sel h.h i) (HS.as_ref r))
 
 
 (* TODO: this fails with a silly inconsistent qualifier error *)

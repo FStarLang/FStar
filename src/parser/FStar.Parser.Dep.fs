@@ -430,7 +430,7 @@ let collect_one
     then ()
     else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
     then record_open_namespace lid
-in
+  in
 
   let record_open_module_or_namespace (lid, kind) =
     match kind with
@@ -690,6 +690,11 @@ in
 
   in
   let ast, _ = Driver.parse_file filename in
+  let mname = lowercase_module_name filename in
+  if is_interface filename
+  && has_implementation original_map mname
+  && FStar.Options.dep() = Some "full"
+  then add_dep mo_roots (UseImplementation mname);
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
@@ -846,6 +851,54 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
 let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
+    let sort_output_files (orig_output_file_map:BU.smap<string>) =
+        let order : ref<(list<string>)> = BU.mk_ref [] in
+        let remaining_output_files = BU.smap_copy orig_output_file_map in
+        let visited_other_modules = BU.smap_create 41 in
+        let should_visit lc_module_name =
+            Option.isSome (BU.smap_try_find remaining_output_files lc_module_name)
+            || Option.isNone (BU.smap_try_find visited_other_modules lc_module_name)
+        in
+        let mark_visiting lc_module_name =
+            let ml_file_opt = BU.smap_try_find remaining_output_files lc_module_name in
+            BU.smap_remove remaining_output_files lc_module_name;
+            BU.smap_add visited_other_modules lc_module_name true;
+            ml_file_opt
+        in
+        let emit_output_file_opt ml_file_opt =
+            match ml_file_opt with
+            | None -> ()
+            | Some ml_file -> order := ml_file :: !order
+        in
+        let rec aux = function
+            | [] -> ()
+            | lc_module_name::modules_to_extract ->
+              let visit_file file_opt =
+                match file_opt with
+                | None -> ()
+                | Some file_name ->
+                  match deps_try_find deps file_name with
+                  | None -> failwith (BU.format2 "Impossible: module %s: %s not found" lc_module_name file_name)
+                  | Some (immediate_deps, _) ->
+                    let immediate_deps =
+                        List.map (fun x -> String.lowercase (module_name_of_dep x)) immediate_deps
+                    in
+                    aux immediate_deps
+              in
+              if should_visit lc_module_name then begin
+                 let ml_file_opt = mark_visiting lc_module_name in
+                 //visit all its dependences
+                 visit_file (implementation_of file_system_map lc_module_name);
+                 visit_file (interface_of file_system_map lc_module_name);
+                 //and then emit this one's ML file
+                 emit_output_file_opt ml_file_opt
+              end;
+              aux modules_to_extract
+        in
+        let all_extracted_modules = BU.smap_keys orig_output_file_map in
+        aux all_extracted_modules;
+        List.rev !order
+    in
     let keys = deps_keys deps in
     let output_file ext fst_file =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
@@ -878,15 +931,26 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
             Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f))
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
-    let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
-        if Options.should_extract (lowercase_module_name fst_file)
-        then [output_ml_file fst_file]
-        else []
-      ) |> Util.sort_with String.compare in
-    let all_krml_files = List.map output_krml_file keys in
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
-    Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t");
-    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" (all_krml_files |> String.concat " \\\n\t")
+    let all_ml_files =
+        let ml_file_map = BU.smap_create 41 in
+        all_fst_files
+        |> List.iter (fun fst_file ->
+                       let mname = lowercase_module_name fst_file in
+                       if Options.should_extract mname
+                       then BU.smap_add ml_file_map mname (output_ml_file fst_file));
+        sort_output_files ml_file_map
+    in
+    let all_krml_files =
+        let krml_file_map = BU.smap_create 41 in
+        keys
+        |> List.iter (fun fst_file ->
+                       let mname = lowercase_module_name fst_file in
+                       BU.smap_add krml_file_map mname (output_krml_file fst_file));
+        sort_output_files krml_file_map
+    in
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> String.concat " \\\n\t");
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> String.concat " \\\n\t");
+    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> String.concat " \\\n\t")
 
 let print deps =
   match Options.dep() with
