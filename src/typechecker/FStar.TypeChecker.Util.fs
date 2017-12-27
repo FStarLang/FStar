@@ -585,6 +585,12 @@ let return_value env u_t_opt t v =
                     (N.comp_to_string env c);
   c
 
+let weaken_flags flags =
+    flags |> List.collect (function
+      | TOTAL -> [TRIVIAL_POSTCONDITION]
+      | RETURN -> [PARTIAL_RETURN; TRIVIAL_POSTCONDITION]
+      | f -> [f])
+
 let weaken_comp env (c:comp) (formula:term) : comp =
     if U.is_ml_comp c
     then c
@@ -594,7 +600,7 @@ let weaken_comp env (c:comp) (formula:term) : comp =
          let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)
                             [S.as_arg res_t; S.as_arg formula; S.as_arg wp]
                             None wp.pos in
-         mk_comp md u_res_t res_t wp c.flags
+         mk_comp md u_res_t res_t wp (weaken_flags c.flags)
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
@@ -607,7 +613,8 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
            | NonTrivial f ->
              weaken_comp env c f
   in
-  {lc with comp=weaken}
+  {lc with comp=weaken;
+           cflags=weaken_flags lc.cflags}
 
 let lcomp_has_trivial_postcondition lc =
     U.is_tot_or_gtot_lcomp lc
