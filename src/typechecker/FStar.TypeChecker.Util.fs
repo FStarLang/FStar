@@ -533,12 +533,15 @@ let close_lcomp env bvs (lc:lcomp) =
   let close () = close_comp env bvs (lc.comp()) in
   {lc with comp=close}
 
+let should_not_inline_lc (lc:lcomp) =
+    lc.cflags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
+
 (* should_return env (Some e) lc:
  * We will "return" e, adding an equality to the VC, if all of the following conditions hold
  * (a) e is a pure or ghost term
  * (b) Its return type, lc.result_typ, is not a sub-singleton (unit, squash, etc)
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
- * (d) It's not a let rec -- this is a bit sketchy currently since we only check let rec existence at the top-level. What about inner let recs within the term?
+ * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
 let should_return env (eopt:option<term>) (lc:lcomp) : bool =
     match eopt with
@@ -549,8 +552,8 @@ let should_return env (eopt:option<term>) (lc:lcomp) : bool =
       (let head, _ = U.head_and_args' e in
        match (U.un_uinst head).n with
        | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
-       | Tm_let ((true, _), _) -> false                             //condition (d)
-       | _ -> true)
+       | _ -> true)                              &&
+     not (should_not_inline_lc lc)                      //condition (d)
 
 let return_value env u_t_opt t v =
   let c =
@@ -626,21 +629,24 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
   let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
-      let flags =
-          if U.is_total_lcomp lc1
-          then if U.is_total_lcomp lc2
-               then [TOTAL]
-               else if U.is_tot_or_gtot_lcomp lc2
-               then [SOMETRIVIAL]
-               else []
-          else if U.is_tot_or_gtot_lcomp lc1
-               && U.is_tot_or_gtot_lcomp lc2
-          then [SOMETRIVIAL]
-          else []
-      in
-      if lcomp_has_trivial_postcondition lc2
-      then TRIVIAL_POSTCONDITION::flags
-      else flags
+      if should_not_inline_lc lc1
+      || should_not_inline_lc lc2
+      then [SHOULD_NOT_INLINE]
+      else let flags =
+              if U.is_total_lcomp lc1
+              then if U.is_total_lcomp lc2
+                   then [TOTAL]
+                   else if U.is_tot_or_gtot_lcomp lc2
+                   then [SOMETRIVIAL]
+                   else []
+              else if U.is_tot_or_gtot_lcomp lc1
+                   && U.is_tot_or_gtot_lcomp lc2
+              then [SOMETRIVIAL]
+              else []
+          in
+          if lcomp_has_trivial_postcondition lc2
+          then TRIVIAL_POSTCONDITION::flags
+          else flags
   in
   if debug env Options.Extreme
   || debug env <| Options.Other "bind"

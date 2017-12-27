@@ -1912,7 +1912,8 @@ and check_inner_let env e =
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
        let e2, c2, g2 = tc_term env_x e2 in
-       let cres = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
+       let cres =
+         TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
@@ -2009,6 +2010,8 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
+          let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
+          let cres = Util.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
           let guard = Rel.conj_guard g_lbs (Rel.close_guard env (List.map S.mk_binder bvs) g2) in
           let cres = TcUtil.close_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
