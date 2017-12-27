@@ -208,6 +208,46 @@ Guidelines for the changelog:
      https://github.com/FStarLang/FStar/commit/f531ce82a19aa7073856cea8dd14fa424bbdd5dd#diff-86e8502a719a3b2f58786f2bdabc4e75R491
 
 
+* Consolidation of HyperHeap and HyperStack memory models, and
+  corresponding APIs for `contains`, `modifies`, etc.
+
+  Client should now only work with `FStar.HyperStack`, in fact `open
+  FStar.HyperHeap` will now give an error. Following is a mapping from
+  `HH` (`HyperHeap`) API to `HS` (`HyperStack`) API:
+
+  1. `HH.contains_ref` --> `HS.contains`
+  2. `HH.fresh_rref` --> `HS.fresh_ref`
+  3. `HH.fresh_region` --> `HS.fresh_region`
+  4. `HH.modifies` --> `HS.modifies_transitively`
+  5. `HH.modifies_just` --> `HS.modifies`
+  6. `HH.modifies_one` --> `HS.modifies_one`
+
+  `HyperHeap` now only provides the map structure of the memory, and
+  is `include`d in `HyperStack`, meaning client now get `HS.rid`,
+  `HS.root`, etc. directly.
+
+  There is no `HyperHeap.mref` anymore. `HyperStack` refs are
+  implemented directly over `Heap.mref`, which means,
+  `HS.mk_mreference` now takes as argument `Heap.mref`, and there is
+  no `HS.mrref_of` function anymore.
+
+  The `HyperStack` API has also been consolidated. Different versions
+  of API (`weak_contains`, `stronger_fresh_region`, etc.) are not
+  there anymore.
+
+  There is one subtle change. The `HS.modifies` functions earlier also
+  established `m0.tip == m1.tip`, where `m0` and `m1` are two `HS`
+  memories. This clause is no longer there, it seemed a bit misplaced
+  in the `modifies` clauses. It also meant that if the clients wanted
+  to talk only about modified refs, regions, etc. without getting into
+  tip, they had to use `HH` functions (e.g. in `Pointer`). With this
+  clause no longer there, at some places, `m0.tip == m1.tip` had to be
+  added separately in postconditions, e.g. see the commit in HACL*
+  below. But note that this should be quite easy to prove, since the
+  `ST` effect provides this directly.
+
+  https://github.com/mitls/hacl-star/commit/f83c49860afc94f16a01994dff5f77760ccd2169#diff-17012d38a1adb8c50367e0adb69c471fR55
+
 ## C Extraction
 
 * [PR #1176](https://github.com/FStarLang/FStar/pull/1176)

@@ -2,12 +2,13 @@ module Serializing
 
 open Slice
 
-open FStar.Ghost
 open FStar.Seq
 module List = FStar.List.Tot
 open FStar.HyperStack
 open FStar.HyperStack.ST
 module B = FStar.Buffer
+
+open FStar.Ghost
 
 // kremlib libraries
 module C = C

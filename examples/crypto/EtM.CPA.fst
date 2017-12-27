@@ -2,7 +2,6 @@ module EtM.CPA
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 open EtM.Ideal
@@ -172,9 +171,9 @@ let keygen (parent:rid)
   : ST key
   (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (fun m0 k m1 -> 
-               modifies Set.empty m0 m1 /\
-               extends k.region parent /\
-               stronger_fresh_region k.region m0 m1 /\
+               modifies Set.empty m0 m1    /\
+               extends k.region parent  /\
+               fresh_region k.region m0 m1 /\
                log k m1 == createEmpty /\
                invariant k m1)) =
   let raw = CC.random keysize in

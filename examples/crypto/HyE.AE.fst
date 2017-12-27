@@ -2,7 +2,6 @@ module HyE.AE
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 open HyE.Ideal
@@ -31,7 +30,7 @@ noeq abstract type key =
 let genPost parent m0 (k:key) m1 =
     modifies Set.empty m0 m1
   /\ extends k.region parent
-  /\ fresh_region k.region m0.h m1.h
+  /\ fresh_region k.region m0 m1
   /\ m_contains k.log m1
   /\ m_sel m1 k.log == createEmpty
 
