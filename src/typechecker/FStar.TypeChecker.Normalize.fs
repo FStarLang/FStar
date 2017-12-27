@@ -1698,7 +1698,7 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t =
-        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses];
+        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses];
                         delta_level=[Unfold Delta_constant]}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
