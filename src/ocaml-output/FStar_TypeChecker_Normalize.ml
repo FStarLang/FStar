@@ -4732,9 +4732,12 @@ and ghost_to_pure_aux:
                steps =
                  [Eager_unfolding;
                  UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
-                 AllowUnboundUniverses];
+                 AllowUnboundUniverses;
+                 EraseUniverses];
                tcenv = (uu___141_16980.tcenv);
-               delta_level = (uu___141_16980.delta_level);
+               delta_level =
+                 [FStar_TypeChecker_Env.Unfold
+                    FStar_Syntax_Syntax.Delta_constant];
                primitive_steps = (uu___141_16980.primitive_steps);
                strong = (uu___141_16980.strong)
              }) env [] t in
