@@ -40,14 +40,12 @@
 ///
 /// ----
 ///
-/// This ended up being quite a lengthy post, so let me prepare you a bit as to what
-/// to expect in case you want to do some cherry picking.
+/// This ended up being a lengthy post. Here is the synopsis to enable cherry picking.
 ///
-/// The main parts of the post are sandwitched between some general F\*
-/// background on datatypes and input/output. The first part then deal in the
-/// actual interval intersection code and the invariant that Joachim proves
-/// about it. Part two proves functional correctness based on a set semantic of
-/// intervals.
+/// The two threads of the post are sandwitched between general F\* background
+/// on datatypes and input/output. The first threat treats the actual interval
+/// intersection code and the invariant Joachim proves about it. The second
+/// thread proves functional correctness using a set semantic for intervals.
 ///
 ///  * `The importance of libraries`_
 ///  * `Part 1: Proving the intervals invariant`_
@@ -68,20 +66,23 @@
 module IntervalIntersect
 
 #set-options "--use_two_phase_tc true"
-
+/// Activates the new `two phase commit`_ feature.
+/// .. _`two phase commit`_ https://github.com/FStarLang/FStar/issues?utf8=%E2%9C%93&q=label%3Acomponent%2Ftwo-phase-tc+
 /// The importance of libraries
 /// ===========================
 ///
-/// Most of the code is about lists of integers. Luckily there is decent library
-/// support for both integers and lists in F\*. As explained by Joachim,
-/// verification loves termination. Se we use a list library of pure and total
-/// operations for both implementation and specifications. In particular list
-/// operations are provably terminating.
+/// Most of the code is about lists of integers. Luckily, F* has a decent list
+/// library. Instead of mathematical integers, I use OCaml's native Int63 for
+/// the best performance. As explained by Joachim, verification loves
+/// termination. Se we use a list library of pure and total operations for both
+/// implementation and specifications. In particular list operations are
+/// provably terminating.
 
 open FStar.List.Tot
 open FStar.Math.Lib
+open FStar.Int64 // change to re-verify with different machine integer
 
-type offset = int
+type offset = t
 
 /// As in its Haskell version, I represent intervals as a datatype constructor.
 /// Note that `from` is inclusive and `to` is exclusive.
@@ -104,7 +105,7 @@ type interval = | I: from:offset -> to:offset -> interval
 let rec goodLIs (is:list interval) (lb:offset) =
   match is with
   | [] -> true
-  | I f t :: is -> lb <= f && f < t && goodLIs is t
+  | I f t :: is -> lb <=^ f && f <^ t && goodLIs is t
 
 /// Contrary to Joachim's informal claims, already in his Coq development
 /// intervals are however not necessarily non-adjacent. This is a good example
@@ -134,7 +135,7 @@ let intervals = is:list interval{good is}
 
 let needs_reorder (is1 is2:intervals) : nat =
  match is1, is2 with
-  | I f1 t1 :: _, I f2 t2 :: _ -> if t1 < t2 then 1 else 0
+  | I f1 t1 :: _, I f2 t2 :: _ -> if t1 <^ t2 then 1 else 0
   | _, _ -> 0
 
 /// Joachim is right, the code of `intersect` is the kind of functional code
@@ -154,13 +155,17 @@ let needs_reorder (is1 is2:intervals) : nat =
 /// .. _issue64: https://github.com/FStarLang/FStar/issues/64
 /// .. _issue1361: https://github.com/FStarLang/FStar/issues/1361
 
+let max a b = int_to_t (max (v a) (v b))
+
+//#set-options "--z3rlimit 40 --max_ifuel 7"
+
 private let rec go (is1 is2:intervals)
   : Pure intervals
          (requires True)
          (ensures (fun ris ->
           ( is1=[] \/ is2=[] ==> ris=[])
         /\ ( Cons? is1 /\ Cons? is1 /\ Cons? ris  ==>
-            (hd ris).from >= max (hd is1).from (hd is2).from  )
+            (hd ris).from >=^ max (hd is1).from (hd is2).from  )
          ))
          (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2]) =
 ///
@@ -175,13 +180,13 @@ private let rec go (is1 is2:intervals)
   | [], _ -> []
   | i1::is1, i2::is2 ->
     begin
-      let f' = max (i1.from) (i2.from) in
+      let f' = max i1.from i2.from in
       // reorder for symmetry
-      if i1.to < i2.to then go (i2::is2) (i1::is1)
-      // // disjoint
-      else if i1.from >= i2.to then go (i1::is1) is2
+      if i1.to <^ i2.to then  go (i2::is2) (i1::is1)
+      // disjoint
+      else if i1.from >=^ i2.to then go (i1::is1) is2
       // subset
-      else if i1.to = i2.to then I f' (I?.to i1) :: go is1 is2
+      else if i1.to = i2.to then I f' i1.to :: go is1 is2
       // overlapping
       else I f' (i2.to) ::
         go (I (i2.to) (i1.to) :: is1) is2
@@ -267,8 +272,8 @@ let intersect (is1 is2:intervals) =
 /// extensional description of integer ranges, but make the intensional
 /// definition ghost. This means that it never has to be extracted to OCaml code.
 
-let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <= z &&
-  z < t)
+let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <=^ z &&
+  z <^ t)
 
 /// Because of the immaturity of F\* and the need for abstraction to
 /// simultaneously support verification and extraction, I had to fix and extend
@@ -276,15 +281,15 @@ let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <= z
 /// separate file as in the Coq development. I use the ghostly intensional
 /// definition to specify the logical properties of the extensional definition.
 
-let rec range (f t:offset): Tot (r:Set.set offset{r==rangeGT f t})
-  (decreases %[t-f])
+let rec range (f:offset) (t:offset): Tot (r:Set.set offset{r==rangeGT f t})
+  (decreases %[v t- v f])
   =
-  if f>=t then (
+  if f>=^t then (
     Set.lemma_equal_elim (rangeGT f t) Set.empty;
     Set.empty
   ) else (
-    Set.lemma_equal_elim (rangeGT f t) (Set.union (Set.singleton f) (rangeGT (f+1) t ));
-    Set.union (Set.singleton f) ( range (f+1) t )
+    Set.lemma_equal_elim (rangeGT f t) (Set.union (Set.singleton f) (rangeGT (f+^ int_to_t 1) t ));
+    Set.union (Set.singleton f) ( range (f+^ int_to_t 1) t )
   )
 
 /// The proof that the extensionally defined set is the same as the
@@ -329,7 +334,7 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
   =
   let rec lemma_semI_sem_lb_disjoint (i:interval) (is:intervals) (lb:offset)
     : Lemma
-      (requires goodLIs is lb /\ i.to <= lb)
+      (requires goodLIs is lb /\ i.to <=^ lb)
       (ensures Set.disjoint (semI i) (sem is))
     =
     if (Cons? is) then
@@ -358,7 +363,7 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
 
 let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).from >= (hd is2).to )
+    (requires (hd is1).from >=^ (hd is2).to )
     (ensures (Set.intersect (sem is1) (sem is2) == Set.intersect (sem (is1)) (sem (tl is2))))
   =
   let h2 = hd is2 in
@@ -371,7 +376,7 @@ let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
 
 let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).to = (hd is2).to /\ (hd is1).from < (hd is2).to)
+    (requires (hd is1).to = (hd is2).to /\ (hd is1).from <^ (hd is2).to)
     (ensures (
       let h1::t1, h2::t2 = is1,is2 in
       let f' = max h1.from h2.from in
@@ -410,7 +415,7 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 
 let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).to > (hd is2).to /\ (hd is1).from < (hd is2).to)
+    (requires (hd is1).to >^ (hd is2).to /\ (hd is1).from <^ (hd is2).to)
     (ensures (
       let h1::t1 = is1 in let h2::t2 = is2 in
       let f' = max h1.from h2.from in
@@ -461,10 +466,6 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
                                                             (sem t1))
                                                  (sem t2)) )
 
-/// The following pragma resets the SMT solver to its original resource limit (roughly 5 seconds):
-
-#reset-options
-
 /// The final proof is by case analysis, in each step relying on the induction
 /// hypothesis and one of the lemmas. Again the `assert`\s document document the
 /// proof.
@@ -481,9 +482,9 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
     begin
        let f' = max (i1.from) (i2.from) in
        // reorder for symmetry
-       if i1.to < i2.to then lemma_intersection_spec (i2::is2) (i1::is1)
+       if i1.to <^ i2.to then lemma_intersection_spec (i2::is2) (i1::is1)
        // disjoint: i2.from < i2.to <= i1.from < i1.to
-       else if i1.from >= i2.to then (
+       else if i1.from >=^ i2.to then (
          // lemma_disjoint_intro (semI i1) (semI i2); //needed if SMTPat is removed
          assert (Set.disjoint (semI i1) (semI i2));
          lemma_intersection_spec (i1::is1) is2;
@@ -502,6 +503,9 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
        )
     end
 
+/// The following pragma resets the SMT solver to its original resource limit (roughly 5 seconds):
+
+  #reset-options
 
 /// Taking stock: intrinsic vs. extrinsic, intensional vs extensional
 /// -----------------------------------------------------------------
@@ -536,6 +540,9 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
 /// documentation that, like good wine, keeps its value as code is handed down
 /// through generations of programmers.
 ///
+/// To validate my claim, I changed the representation of intervals from
+/// mathematical integers to machine integers and this was indeed painfree.
+///
 /// Extraction and testing
 /// ======================
 ///
@@ -562,7 +569,7 @@ open FStar.Printf
 ///
 /// .. _`this post`: https://fstarlang.github.io/general/2017/11/22/sprintfstar.html
 
-let ppInterval (I f t) = sprintf "0x%d-0x%d" f t
+let ppInterval (I f t) = sprintf "0x%d-0x%d" (v f) (v t)
 
 /// I give two implementations for printing `intervals`. The first defines the function recursively, while the second uses a higher-order fold function.
 
@@ -574,8 +581,10 @@ let rec ppIntervals' (is:intervals): ML unit =
       stdout <| " ";
       ppIntervals' is
 
+let toI f t = I (int_to_t f) (int_to_t t)
+
 let ppIntervals is = FStar.List.Tot.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
-let main = stdout <| ppIntervals (intersect [I 3 10; I 10 15] [I 1 4; I 10 14])
+let main = stdout <| ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 10 14])
 
 /// And the winner is!
 /// ==================

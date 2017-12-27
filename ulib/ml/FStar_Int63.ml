@@ -28,8 +28,10 @@ let logand (a:int63) (b:int63) : int63 = a land b
 let logxor (a:int63) (b:int63) : int63 = a lxor b
 let logor  (a:int63) (b:int63) : int63 = a lor b
 let lognot (a:int63) : int63 = lnot a
-       
+
+(** This function should be deprecated and renamed to int_to_t? markulf *)
 let int_to_int63 (x:Prims.int) : int63 = int_of_string (Prims.to_string x)
+let int_to_t = int_to_int63
 
 let shift_right (a:int63) (b:int63) : int63 = a asr b
 let shift_left  (a:int63) (b:int63) : int63 = a lsl b

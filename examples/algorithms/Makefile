@@ -21,13 +21,13 @@ OCAML_DEFAULT_FLAGS=
 huffman-ocaml-repl: out Huffman.fst
 	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Huffman.fst
-	$(OCAMLC) -I out $(ULIB_ML)/prims.ml out/Huffman.ml -o Huffman.exe
+	$(OCAMLC) -I out out/Huffman.ml -o Huffman.exe
 	utop -I out -I $(ULIB_ML) Huffman.repl
 
 intersect-ocaml: out IntervalIntersect.fst
 	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml IntervalIntersect.fst
-	$(OCAMLC) -I out $(ULIB_ML)/prims.ml out/IntervalIntersect.ml -o Intersect.exe
+	$(OCAMLC) -I out out/IntervalIntersect.ml -o Intersect.exe
 	./Intersect.exe
 
 out:
