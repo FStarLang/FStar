@@ -20,6 +20,15 @@ open FStar.Monotonic.Heap
 module Map = FStar.Map
 open FStar.Ghost
 
+(*
+ * AR: 12/26
+ *     Cleanup:
+ *     - Removed the mref type and associated lemmas
+ *     - This module now provides the map view of the memory and associated functions and lemmas
+ *     - The intention of this module is for it to be included in HyperStack
+ *     - Clients don't need to open/know about HyperHeap, they should work only with HyperStack
+ *)
+
 abstract type rid = erased (list (int * int))
 
 let reveal (r:rid) : GTot (list (int * int)) = reveal r
@@ -29,7 +38,7 @@ abstract let color (x:rid): GTot int =
   | [] -> 0
   | (c, _)::_ -> c
 
-type t = Map.t rid heap
+type hmap = Map.t rid heap
 
 let has_eq_rid (u:unit) :
   Lemma (requires True)
@@ -49,32 +58,6 @@ let lemma_root_has_color_zero r = ()
 
 //expose this so that no-one should assume otheriwse
 let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
-
-abstract type mrref (id:rid) (a:Type) (rel:preorder a) = mref a rel
-
-(* let has_eq_rref (id:rid) (a:Type) : *)
-(*   Lemma (requires True) *)
-(*         (ensures hasEq (rref id a)) *)
-(*      [SMTPat (hasEq (rref id a))] *)
-(*   = ()        *)
-
-abstract val as_ref : #a:Type -> #id:rid -> #rel:preorder a -> r:mrref id a rel -> Tot (mref a rel)
-let as_ref #a #id #rel r = r
-
-val addr_of: #a:Type -> #id:rid -> #rel:preorder a -> r:mrref id a rel -> GTot nat
-let addr_of #a #id #rel r = addr_of (as_ref r)
-
-let is_mm (#a:Type) (#id:rid) (#rel:preorder a) (r:mrref id a rel) :GTot bool
-  = is_mm (as_ref r)
-
-abstract val ref_as_rref : #a:Type -> #rel:preorder a -> i:rid -> r:mref a rel -> GTot (mrref i a rel)
-let ref_as_rref #a #rel i r = r
-
-val lemma_as_ref_inj: #a:Type -> #i:rid -> #rel:preorder a -> r:mrref i a rel
-    -> Lemma (requires (True))
-             (ensures ((ref_as_rref i (as_ref r) == r)))
-       [SMTPat (as_ref r)]
-let lemma_as_ref_inj #a #i #rel r = ()
 
 private let rid_tail (r:rid{Cons? (reveal r)}) :rid =
   elift1_p Cons?.tl r
@@ -167,45 +150,33 @@ let lemma_extends_only_parent i j = ()
 private let test0 = assert (includes (hide [(0, 1) ; (1, 0)]) (hide [(2, 2); (0, 1); (1, 0)]))
 private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 (hide ((0,0)::(reveal r2))))
 
-let fresh_region (i:rid) (m0:t) (m1:t) =
- (forall j. includes i j ==> not (Map.contains m0 j))
- /\ Map.contains m1 i
-
-let sel (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) : GTot a
-  = sel (Map.sel m i) (as_ref r)
-unfold let op_String_Access (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) = sel m r
-
-let upd (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) (v:a) :GTot t
-  = Map.upd m i (upd (Map.sel m i) (as_ref r) v)
-unfold let op_String_Assignment (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) v = upd m r v
-
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
                     Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
 
-let modifies (s:Set.set rid) (m0:t) (m1:t) =
+let modifies (s:Set.set rid) (m0:hmap) (m1:hmap) =
   Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
   /\ Set.subset (Map.domain m0) (Map.domain m1)
 
-let modifies_just (s:Set.set rid) (m0:t) (m1:t) =
+let modifies_just (s:Set.set rid) (m0:hmap) (m1:hmap) =
   Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
   /\ Set.subset (Map.domain m0) (Map.domain m1)
 
-let modifies_one (r:rid) (m0:t) (m1:t) =
+let modifies_one (r:rid) (m0:hmap) (m1:hmap) =
   modifies_just (Set.singleton r) m0 m1
 
-let equal_on (s:Set.set rid) (m0:t) (m1:t) =
+let equal_on (s:Set.set rid) (m0:hmap) (m1:hmap) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
  /\ Map.equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
-abstract val lemma_modifies_just_trans: m1:t -> m2:t -> m3:t
+abstract val lemma_modifies_just_trans: m1:hmap -> m2:hmap -> m3:hmap
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies_just s1 m1 m2 /\ modifies_just s2 m2 m3))
                                (ensures (modifies_just (Set.union s1 s2) m1 m3))
 let lemma_modifies_just_trans m1 m2 m3 s1 s2 = ()
 
-abstract val lemma_modifies_trans: m1:t -> m2:t -> m3:t
+abstract val lemma_modifies_trans: m1:hmap -> m2:hmap -> m3:hmap
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
                                (ensures (modifies (Set.union s1 s2) m1 m3))
@@ -227,13 +198,13 @@ abstract val lemma_modset: i:rid -> j:rid
                            (ensures (Set.subset (mod_set (Set.singleton i)) (mod_set (Set.singleton j))))
 let lemma_modset i j = ()
 
-abstract val lemma_modifies_includes: m1:t -> m2:t
+abstract val lemma_modifies_includes: m1:hmap -> m2:hmap
                        -> i:rid -> j:rid
                        -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
                                 (ensures (modifies (Set.singleton j) m1 m2))
 let lemma_modifies_includes m1 m2 i j = ()
 
-abstract val lemma_modifies_includes2: m1:t -> m2:t
+abstract val lemma_modifies_includes2: m1:hmap -> m2:hmap
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ (forall x.  Set.mem x s1 ==> (exists y. Set.mem y s2 /\ includes y x))))
                                 (ensures (modifies s2 m1 m2))
@@ -247,48 +218,10 @@ let lemma_disjoint_parents pr r ps s =
     assert (pr `includes` r);
     assert (ps `includes` s)
 
-(* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
-let contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool  =
-  Map.contains m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
-
-let unused_in (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool =
-  not (Map.contains m i) ||
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
-
-let weak_contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : GTot bool =
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
-
-let fresh_rref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m0:t) (m1:t) =
-  FStar.Monotonic.Heap.unused_in (as_ref r) (Map.sel m0 i) /\
-  FStar.Monotonic.Heap.contains (Map.sel m1 i) (as_ref r)
-
-let modifies_rref (r:rid) (s:Set.set nat) h0 h1 =
-  Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
-
 abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (requires (i<>j /\ includes i j))
   (ensures (j<>root))
 let lemma_include_cons i j = ()
-
-let map_invariant (m:t) =
-  forall r. Map.contains m r ==>
-      (forall s. includes s r ==> Map.contains m s)
-
-abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
-                               -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} ->
-  Lemma (requires (fresh_region i m0 m1
-                  /\ fresh_region j m0 m1
-                  /\ Map.contains m0 ipar
-                  /\ Map.contains m0 jpar
-                  /\ extends i ipar
-                  /\ extends j jpar
-                  /\ i<>j))
-        (ensures (disjoint i j))
-        [SMTPat (fresh_region i m0 m1);
-         SMTPat (fresh_region j m0 m1);
-         SMTPat (extends i ipar);
-         SMTPat (extends j jpar)]
-let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
 let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
@@ -309,241 +242,6 @@ let root_is_root (s:rid)
           [SMTPat (includes s root)]
   = ()
 
-(*
-* AR: we can prove this lemma only if both the mreferences have same preorder
-*)
-let lemma_sel_same_addr (#i: rid) (#a:Type0) (#rel:preorder a) (h:t) (r1:mrref i a rel) (r2:mrref i a rel)
-  :Lemma (requires (contains_ref r1 h /\ addr_of r1 = addr_of r2 /\ is_mm r1 == is_mm r2))
-         (ensures  (contains_ref r2 h /\ sel h r1 == sel h r2))
-	 [SMTPat (sel h r1); SMTPat (sel h r2)]
-= let m = Map.sel h i in
-  FStar.Monotonic.Heap.lemma_sel_same_addr m r1 r2
-
-let lemma_upd_same_addr (#i: rid) (#a: Type0) (#rel: preorder a) (h: t) (r1 r2: mrref i a rel) (x: a)
-  :Lemma (requires ((contains_ref r1 h \/ contains_ref r2 h) /\ addr_of r1 = addr_of r2 /\ is_mm r1 == is_mm r2))
-         (ensures (upd h r1 x == upd h r2 x))
-         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
-= ()
-
-
-(*** Untyped views of references *)
-
-(* Definition and ghost decidable equality *)
-
-abstract let aref (i: rid) : Type0 = Heap.aref
-
-abstract let dummy_aref (i: rid) : aref i = Heap.dummy_aref
-
-abstract let aref_equal
-  (#i: rid)
-  (a1 a2: aref i)
-: Ghost bool
-  (requires True)
-  (ensures (fun b -> b == true <==> a1 == a2))
-= Heap.aref_equal a1 a2
-
-(* Introduction rule *)
-
-abstract let aref_of
-  (#i: rid)
-  (#a: Type)
-  (#rel: preorder a)
-  (r: mrref i a rel)
-: Tot (aref i)
-= Heap.aref_of r
-
-(* Operators lifted from rref *)
-
-abstract let addr_of_aref
-  (#id:rid)
-  (r:aref id)
-: GTot nat
-= Heap.addr_of_aref r
-
-abstract let addr_of_aref_of
-  (#id:rid)
-  (#a: Type)
-  (#rel: preorder a)
-  (r: mrref id a rel)
-: Lemma
-  (addr_of r == addr_of_aref (aref_of r))
-  [SMTPat (addr_of_aref (aref_of r))]
-= Heap.addr_of_aref_of r
-
-abstract let aref_is_mm
-  (#id: rid)
-  (r: aref id)
-: GTot bool
-= Heap.aref_is_mm r
-
-abstract let is_mm_aref_of
-  (#id: rid)
-  (#a: Type)
-  (#rel: preorder a)
-  (r: mrref id a rel)
-: Lemma
-  (is_mm r == aref_is_mm (aref_of r))
-  [SMTPat (aref_is_mm (aref_of r))]
-= Heap.is_mm_aref_of r
-
-abstract let aref_unused_in
-  (#i: rid)
-  (r: aref i)
-  (m: t)
-: GTot Type0
-= not (Map.contains m i) \/
-  Heap.aref_unused_in r (Map.sel m i)
-
-abstract let unused_in_aref_of
-  (#i: rid)
-  (#a: Type)
-  (#rel: preorder a)
-  (r: mrref i a rel)
-  (m: t)
-: Lemma
-  (aref_unused_in (aref_of r) m <==> unused_in r m)
-  [SMTPat (aref_unused_in (aref_of r) m)]
-= Heap.unused_in_aref_of r (Map.sel m i)
-
-abstract
-val contains_ref_aref_unused_in: #i: rid -> #a:Type -> #rel: preorder a -> h:t -> x:mrref i a rel -> y:aref i -> Lemma
-  (requires (contains_ref x h /\ aref_unused_in y h))
-  (ensures  (addr_of x <> addr_of_aref y))
-let contains_ref_aref_unused_in #i #a #rel h x y = Heap.contains_aref_unused_in (Map.sel h i) x y
-
-(* Elimination rule *)
-
-abstract let aref_live_at (m: t) (#i: rid) (a: aref i) (v: Type) (rel: preorder v) : GTot Type0 =
-  Map.contains m i /\
-  Heap.aref_live_at (Map.sel m i) a v rel
-
-abstract let grref_of
-  (#i: rid)
-  (a: aref i)
-  (v: Type0)
-  (rel: preorder v)
-: Ghost (mrref i v rel)
-  (requires (exists m . aref_live_at m a v rel))
-  (ensures (fun x -> True))
-= Heap.gref_of a v rel
-
-abstract let rref_of
-  (m: t)
-  (#i: rid)
-  (a: aref i)
-  (v: Type)
-  (rel: preorder v)
-: Pure (mrref i v rel)
-  (requires (aref_live_at m a v rel))
-  (ensures (fun x -> aref_live_at m a v rel /\ addr_of x == addr_of_aref a /\ is_mm x == aref_is_mm a))
-= Heap.ref_of (Map.sel m i) a v rel
-
-abstract
-let aref_live_at_aref_of
-  (m: t)
-  (#i: rid)
-  (#v: Type0)
-  (#rel: preorder v)
-  (r: mrref i v rel)
-: Lemma
-  (ensures (aref_live_at m (aref_of r) v rel <==> contains_ref r m))
-  [SMTPat (aref_live_at m (aref_of r) v rel)]
-= ()
-
-abstract
-let contains_ref_grref_of
-  (m: t)
-  (#i: rid)
-  (a: aref i)
-  (v: Type0)
-  (rel: preorder v)
-: Lemma
-  (requires (exists h' . aref_live_at h' a v rel))
-  (ensures ((exists h' . aref_live_at h' a v rel) /\ (contains_ref (grref_of a v rel) m <==> aref_live_at m a v rel)))
-  [SMTPatOr [
-    [SMTPat (contains_ref (grref_of a v rel) m)];
-    [SMTPat (aref_live_at m a v rel)];
-  ]]
-= ()
-
-abstract
-let aref_of_grref_of
-  (#i: rid)
-  (a: aref i)
-  (v: Type0)
-  (rel: preorder v)
-: Lemma
-  (requires (exists h . aref_live_at h a v rel))
-  (ensures ((exists h. aref_live_at h a v rel) /\ aref_of (grref_of a v rel) == a))
-  [SMTPat (aref_of (grref_of a v rel))]
-= ()
-
-(* Operators lowered to rref *)
-
-abstract
-let addr_of_grref_of
-  (#i: rid)
-  (a: aref i)
-  (t: Type0)
-  (rel: preorder t)
-: Lemma
-  (requires (exists h . aref_live_at h a t rel))
-  (ensures ((exists h . aref_live_at h a t rel) /\ addr_of (grref_of a t rel) == addr_of_aref a))
-  [SMTPat (addr_of (grref_of a t rel))]
-= ()
-
-abstract
-let is_mm_grref_of
-  (#i: rid)
-  (a: aref i)
-  (t: Type0)
-  (rel: preorder t)
-: Lemma
-  (requires (exists h . aref_live_at h a t rel))
-  (ensures ((exists h . aref_live_at h a t rel) /\ is_mm (grref_of a t rel) == aref_is_mm a))
-  [SMTPat (is_mm (grref_of a t rel))]
-= ()
-
-abstract
-let unused_in_gref_of
-  (#i: rid)
-  (a: aref i)
-  (v: Type0)
-  (rel: preorder v)
-  (h: t)
-: Lemma
-  (requires (exists h . aref_live_at h a v rel))
-  (ensures ((exists h . aref_live_at h a v rel) /\ (unused_in (grref_of a v rel) h <==> aref_unused_in a h)))
-  [SMTPat (unused_in (grref_of a v rel) h)]
-= ()
-
-abstract
-let sel_rref_of
-  (#i: rid)
-  (a: aref i)
-  (v: Type0)
-  (rel: preorder v)
-  (h1 h2: t)
-: Lemma
-  (requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel))
-  (ensures (aref_live_at h2 a v rel /\ sel h1 (rref_of h2 a v rel) == sel h1 (grref_of a v rel)))
-  [SMTPat (sel h1 (rref_of h2 a v rel))]
-= ()
-
-abstract
-let upd_rref_of
-  (#i: rid)
-  (a: aref i)
-  (v: Type0)
-  (rel: preorder v)
-  (h1 h2: t)
-  (x: v)
-: Lemma
-  (requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel))
-  (ensures (aref_live_at h2 a v rel /\ upd h1 (rref_of h2 a v rel) x == upd h1 (grref_of a v rel) x))
-  [SMTPat (upd h1 (rref_of h2 a v rel) x)]
-= ()
-
 abstract let extend (r:rid) (n:int) (c:int)
   :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
   = elift1 (fun r -> (c, n)::r) r
@@ -551,22 +249,3 @@ abstract let extend (r:rid) (n:int) (c:int)
 abstract let extend_monochrome (r:rid) (n:int)
   : Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == ((color r), n) /\ color s == color r))
 = elift1 (fun r -> ((match r with | [] -> 0 | (c, _) :: _ -> c), n)::r) r
-
-abstract let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:t{m `Map.contains` id})
-  :Tot (p:(mrref id a rel * t){let (r, h) = Heap.alloc rel (Map.sel m id) init mm in
-                               (as_ref (fst p) == r /\
-			        snd p == Map.upd m id h)})
-  = let (r, h) = Heap.alloc rel (Map.sel m id) init mm in
-    r, Map.upd m id h
-
-abstract let free (#a:Type0) (#rel:preorder a) (#id:rid) (r:mrref id a rel{is_mm r}) (m:t{contains_ref r m})
-  :Tot (m':t{let h = Heap.free_mm (Map.sel m id) (as_ref r) in
-             m' == Map.upd m id h})
-  = Map.upd m id (Heap.free_mm (Map.sel m id) (as_ref r))
-
-let upd_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{contains_ref r m}) (v:a) :Tot t
-  = Map.upd m i (Heap.upd_tot (Map.sel m i) (as_ref r) v)
-
-let sel_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{contains_ref r m}) :Tot a
-  = Heap.sel_tot (Map.sel m i) (as_ref r)
-

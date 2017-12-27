@@ -1,7 +1,6 @@
 module EtM.AE
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
@@ -240,9 +239,9 @@ let keygen (parent:rid)
   : ST key
   (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (fun h0 k h1 ->
-    modifies Set.empty h0 h1 /\
-    extends k.region parent /\
-    HyperHeap.fresh_region k.region h0.h h1.h /\
+    modifies Set.empty h0 h1    /\
+    extends k.region parent     /\
+    fresh_region k.region h0 h1 /\
     Map.contains h1.h k.region /\
     m_contains k.log h1 /\
     m_sel h1 k.log == createEmpty /\
@@ -263,7 +262,7 @@ let encrypt (k:key) (plain:Plain.plain)
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
      let log1 = get_log h1 k in
-     HyperHeap.modifies (Set.singleton k.region)  h0.h h1.h
+     modifies_transitively (Set.singleton k.region)  h0 h1
      /\ invariant h1 k
      /\ log1 == snoc log0 (plain, c)))) =
   let h0 = FStar.HyperStack.ST.get () in
