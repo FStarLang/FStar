@@ -6,6 +6,54 @@ open FStar.HyperStack.ST
 
 module HS = FStar.HyperStack
 
+let test0 (m:mem) (r:rid{r `is_above` m.tip}) = assert (r `is_in` m.h)
+
+let test1 (m:mem) (r:rid{r `is_above` m.tip}) = assert (r = root \/ is_stack_region r)
+
+let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) = assert (~ (r `is_in` m.h))
+
+let dc_elim (m:mem) (s:rid{s `is_in` m.h /\ s <> root}) (r:rid)
+  : Lemma ((s `is_above` r /\ r `is_in` m.h) ==> is_stack_region s = is_stack_region r)
+  = ()
+
+let test3 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
+  : Lemma (~ (r `is_in` m.h))
+  = root_has_color_zero ()
+
+let test4 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
+  : Lemma (~ (r `is_in` m.h))
+  = ()
+
+let stronger_fresh_region_was_redundant (i:rid) (m0 m1:mem)  //AR: because of map_invariant
+  :Tot unit
+  = let stronger_fresh_region (i:rid) (m0 m1:mem) =
+      (forall j. includes i j ==> not (j `is_in` m0.h)) /\
+      i `is_in` m1.h
+    in
+    assert (fresh_region i m0 m1 ==> stronger_fresh_region i m0 m1)
+
+let test5 (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
+                              (x:mreference a rel_a) (x':mreference a rel_a)
+                              (y:mreference b rel_b) (z:mreference nat rel_n)
+                              (h0:mem) (h1:mem) =
+  assume (h0 `contains` x);
+  assume (h0 `contains` x');
+  assume (as_addr x <> as_addr x');
+  assume (frameOf x == frameOf x');
+  assume (frameOf x <> frameOf y);
+  assume (frameOf x <> frameOf z);
+  //assert (Set.equal (normalize_term (refs_in_region x.id [Ref x])) (normalize_term (Set.singleton (as_addr x))))
+  assume (mods [Ref x; Ref y; Ref z] h0 h1);
+  //AR: TODO: this used to be an assert, but this no longer goers through
+  //since now we have set of nats, which plays badly with normalize_term
+  //on one side it remains nat, on the other side the normalizer normalizes it to a refinement type
+  //see for example the assertion above that doesn't succeed
+  assume (modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1);
+  assert (modifies (Set.union (Set.singleton (frameOf x))
+                              (Set.union (Set.singleton (frameOf y))
+                                         (Set.singleton (frameOf z)))) h0 h1);
+  ()
+
 (* Tests *)
 val test_do_nothing: int -> Stack int
   (requires (fun h -> True))

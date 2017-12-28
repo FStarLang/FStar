@@ -136,6 +136,9 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))
  *     should profile the queries to see if it actually helps
  *)
 
+(*
+ * marking these opaque, since expect them to be unfolded away beforehand
+ *)
 [@"opaque_to_smt"]
 unfold private let equal_heap_dom (r:rid) (m0 m1:mem) :Type0
   = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
@@ -209,7 +212,7 @@ let lemma_same_refs_in_non_tip_stack_regions_elim (m0 m1:mem) (r:rid)
 (******)
 
 let equal_domains (m0 m1:mem) =
-  m0.tip == m1.tip                               /\
+  m0.tip == m1.tip                              /\
   Set.equal (Map.domain m0.h) (Map.domain m1.h) /\
   same_refs_in_all_regions m0 m1
 
@@ -302,18 +305,8 @@ sub_effect
 
 
 (*
- * AR: A few caveats:
- * (a) The clients should now open HyperStack.ST after the memory model files (as with Heap and FStar.ST).
- * (b) When the clients get rid from this interface, they will get witnessed predicates.
- *     But if we directly get an id from the HH map, then we don't get these.
- * (c) Similar thing happens with mem, there is a refinement that we attach to mem, but that could
- *     probably be moved to HyperStack mem itself.
+ * AR: The clients should now open HyperStack.ST after the memory model files (as with Heap and FStar.ST)
  *)
-// unfold let rid_refinement (r:HS.rid)
-//   = r == HS.root                \/
-//     (not (is_eternal_region r)) \/
-//     witnessed (region_contains_pred r)
-// type rid = r:HS.rid{rid_refinement r}
 
 type mreference (a:Type) (rel:preorder a) =
   r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
@@ -346,7 +339,6 @@ type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
  *     However, one case where it could be an issue is modifies clauses that use
  *     Set.set rid.
  *)
-
 
 (**
    Pushes a new empty frame on the stack
@@ -414,7 +406,6 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
-#set-options "--z3rlimit 10"
 let new_region (r0:rid)
   :ST rid
       (requires (fun m        -> is_eternal_region r0 /\
@@ -476,7 +467,6 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred i);
     r
-#reset-options
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
@@ -541,9 +531,6 @@ unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
    Dereferences, provided that the reference exists.
    Guaranties the strongest low-level effect: Stack
    *)
-(*
- * AR: making the precondition as weak_contains.
- *)
 let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   :Stack a (requires (fun m -> r `is_live_for_rw_in` m))
            (ensures  (deref_post r))
