@@ -589,10 +589,12 @@ let return_value env u_t_opt t v =
   c
 
 let weaken_flags flags =
-    flags |> List.collect (function
-      | TOTAL -> [TRIVIAL_POSTCONDITION]
-      | RETURN -> [PARTIAL_RETURN; TRIVIAL_POSTCONDITION]
-      | f -> [f])
+    if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
+    then [SHOULD_NOT_INLINE]
+    else flags |> List.collect (function
+         | TOTAL -> [TRIVIAL_POSTCONDITION]
+         | RETURN -> [PARTIAL_RETURN; TRIVIAL_POSTCONDITION]
+         | f -> [f])
 
 let weaken_comp env (c:comp) (formula:term) : comp =
     if U.is_ml_comp c
@@ -830,6 +832,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e_for_debug_o
                  | TRIVIAL_POSTCONDITION
                     when not maybe_trivial_post ->
                    [TRIVIAL_POSTCONDITION]
+                 | SHOULD_NOT_INLINE -> [SHOULD_NOT_INLINE]
                  | _ -> []))
          in
          let strengthen () =
@@ -941,10 +944,16 @@ let maybe_return_e2_and_bind
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
 
-let bind_cases env (res_t:typ) (lcases:list<(formula * lident * (bool -> lcomp))>) : lcomp =
-    let eff = List.fold_left (fun eff (_, eff_label, _) -> join_effects env eff eff_label)
+let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (bool -> lcomp))>) : lcomp =
+    let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
                              lcases
+    in
+    let should_not_inline_whole_match, bind_cases_flags =
+        if lcases |> BU.for_some (fun (_, _, flags, _) ->
+           flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false))
+        then true, [SHOULD_NOT_INLINE]
+        else false, []
     in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
@@ -965,12 +974,12 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * (bool -> lcomp))
                 let md     = Env.get_effect_decl env C.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
             let maybe_return eff_label_then cthen =
-                if is_pure_or_ghost_effect env eff
-                ||  not (is_pure_or_ghost_effect env eff_label_then)
-                then cthen false
-                else cthen true
+                if should_not_inline_whole_match
+                || not (is_pure_or_ghost_effect env eff)
+                then cthen true //inline each the branch, if eligible
+                else cthen false //the entire match is pure and inlineable, so no need to inline each branch
             in
-            let comp = List.fold_right (fun (g, eff_label,  cthen) celse ->
+            let comp = List.fold_right (fun (g, eff_label, _, cthen) celse ->
                 let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env ((maybe_return eff_label cthen).comp()) celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
             match lcases with
@@ -984,12 +993,12 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * (bool -> lcomp))
                                  [S.as_arg res_t; S.as_arg wp]
                                  None
                                  wp.pos in
-              mk_comp md u_res_t res_t wp []
+              mk_comp md u_res_t res_t wp bind_cases_flags
         end
     in
     {eff_name=eff;
      res_typ=res_t;
-     cflags=[];
+     cflags=bind_cases_flags;
      comp=bind_cases}
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =

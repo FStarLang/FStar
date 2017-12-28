@@ -561,8 +561,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let c_branches, g_branches =
       let cases, g =
           List.fold_right
-                (fun (branch, f, eff_label, c, g) (caccum, gaccum) ->
-                     (f, eff_label, c)::caccum,
+                (fun (branch, f, eff_label, cflags, c, g) (caccum, gaccum) ->
+                     (f, eff_label, cflags, c)::caccum,
                      Rel.conj_guard g gaccum)
                 t_eqns
                 ([], Rel.trivial_guard) in
@@ -575,7 +575,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let mk_match scrutinee =
         (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
         (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
-        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _) ->
+        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _) ->
               (pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name res_t))
         in
         let e = mk (Tm_match(scrutinee, branches)) None top.pos in
@@ -1548,7 +1548,8 @@ and tc_eqn scrutinee env branch
         : (pat * option<term> * term)                                                             (* checked branch *)
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
         * lident                                                                 (* effect label of the lcomp below *)
-        * (bool -> lcomp)                     (* computation type of the branch, with or without a "return" equation *)
+        * list<cflags>                                                                      (* flags for each lcomp *)
+        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
         * guard_t =                                                                    (* well-formedness condition *)
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
@@ -1676,7 +1677,7 @@ and tc_eqn scrutinee env branch
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
   (*   (c). Close the VCs so that they no longer have the pattern-bound variables occurring free in them      *)
-  let effect_label, maybe_return_c, g_when, g_branch =
+  let effect_label, cflags, maybe_return_c, g_when, g_branch =
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
@@ -1733,6 +1734,7 @@ and tc_eqn scrutinee env branch
         TcUtil.close_lcomp env pat_bvs c_weak
     in
     c_weak.eff_name,
+    c_weak.cflags,
     maybe_return_c_weak,
     Rel.close_guard env binders g_when_weak,
     g_branch
@@ -1837,6 +1839,7 @@ and tc_eqn scrutinee env branch
   SS.close_branch (pattern, when_clause, branch_exp),
   branch_guard,   //expressed in terms of discriminators and projectors on scrutinee---does not contain the pattern-bound variables
   effect_label,
+  cflags,
   maybe_return_c, //closed already---does not contain free pattern-bound variables
   guard
 
