@@ -1,5 +1,5 @@
 [
-  "‚»¨@á%®Ó\u00067ém7í”©",
+  "˚€∂çÏåqSv˘˚°™£TK",
   [
     [
       "HyE.CCA2.__proj__PKey__item__log",
@@ -11,7 +11,7 @@
         "projection_inverse_HyE.CCA2.PKey_region"
       ],
       0,
-      "9a2379f352175937584a06ff4dd37b14"
+      "5d41fc5411c0089e02580a0d3f451c05"
     ],
     [
       "HyE.CCA2.keygen",
@@ -21,26 +21,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_typing_intro_FStar.Pervasives.V@tok",
-        "equation_FStar.HyperStack.ST.m_rref",
-        "equation_FStar.HyperStack.ST.mref",
+        "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.Monotonic.HyperStack.is_eternal_region",
-        "equation_FStar.Monotonic.HyperStack.mref",
-        "equation_FStar.Monotonic.HyperStack.upd",
-        "equation_FStar.Monotonic.RRef.m_rref",
-        "equation_FStar.Monotonic.RRef.rid",
-        "equation_FStar.Monotonic.Seq.rid",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "equation_HyE.CCA2.rid",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_HyE.CCA2.pkey@tok", "kinding_HyE.CCA2.skey@tok",
         "refinement_interpretation_FStar.HyperStack.All_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
-        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
-        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
-        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_a0bff51b7d6ff85a3ff970460c986e85",
-        "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_88cdf982f29494978cb456b377825f78"
+        "refinement_interpretation_HyE.CCA2_Tm_refine_88cdf982f29494978cb456b377825f78"
       ],
       0,
-      "9528f92be82e345a88133417c7bcb03f"
+      "00fd013b48a652c253fa3b3148f2c7e9"
     ],
     [
       "HyE.CCA2.encrypt",
@@ -64,7 +55,7 @@
         "refinement_interpretation_HyE.CCA2_Tm_refine_6e5e30b8a35b3df5111e4e25b1b2bf65"
       ],
       0,
-      "dffcb2507c205101a6bee947bb79a019"
+      "c39ca059e731050781afcfa701130658"
     ],
     [
       "HyE.CCA2.decrypt",
@@ -109,7 +100,7 @@
         "typing_HyE.CCA2.__proj__SKey__item__pk"
       ],
       0,
-      "66dc426887d7ff279b6047b89138504f"
+      "2edf4d3027c48be9103fe7c1de90dbb1"
     ]
   ]
 ]
