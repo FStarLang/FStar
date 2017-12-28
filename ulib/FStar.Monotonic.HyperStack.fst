@@ -35,7 +35,7 @@ abstract let downward_closed (h:hmap) =
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
 abstract let tip_top (tip:rid) (h:hmap) =
-  forall (r:sid). r `is_in` h <==> r `is_above` tip  
+  forall (r:sid). r `is_in` h <==> r `is_above` tip
 
 let is_tip (tip:rid) (h:hmap) =
   (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
@@ -69,7 +69,7 @@ noeq type mem =
 let lemma_map_invariant (m:mem) (r s:rid)
   :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
          (ensures  (s `is_in` m.h))
-	 [SMTPat (r `is_in` m.h); SMTPat (s `is_above` r); SMTPat (s `is_in` m.h)]
+         [SMTPat (r `is_in` m.h); SMTPat (s `is_above` r); SMTPat (s `is_in` m.h)]
   = ()
 
 (******)
@@ -80,7 +80,7 @@ let lemma_map_invariant (m:mem) (r s:rid)
 let lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
          (ensures  (is_eternal_region r == is_eternal_region s /\ is_stack_region r == is_stack_region s))
-	 [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_region s)];
+         [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_region s)];
                     [SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
                     ]]
   = ()
@@ -96,8 +96,8 @@ let lemma_tip_top (m:mem) (r:sid)
 let lemma_tip_top_smt (m:mem) (r:rid)
   :Lemma (requires (is_stack_region r))
          (ensures  (r `is_in` m.h <==> r `is_above` m.tip))
-	 [SMTPatOr [[SMTPat (is_stack_region r); SMTPat (r `is_above` m.tip)];
-	            [SMTPat (is_stack_region r); SMTPat (r `is_in` m.h)]]]
+         [SMTPatOr [[SMTPat (is_stack_region r); SMTPat (r `is_above` m.tip)];
+                    [SMTPat (is_stack_region r); SMTPat (r `is_in` m.h)]]]
   = ()
 
 (******)
@@ -113,14 +113,14 @@ let lemma_rid_ctr_pred ()
 
 (*****)
 
-let empty_mem (m:hmap) = 
-  let empty_map = Map.restrict (Set.empty) m in 
+let empty_mem (m:hmap) =
+  let empty_map = Map.restrict (Set.empty) m in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
   assume (rid_last_component root == 0);
   HS 1 h tip
- 
-let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
+
+let test0 (m:mem) (r:rid{r `is_above` m.tip}) =
     assert (r `is_in` m.h)
 
 let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
@@ -299,7 +299,7 @@ let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (f
 let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:mem{m.h `Map.contains` id})
   :Tot (p:(mreference a rel * mem){let (r, h) = Heap.alloc rel (Map.sel m.h id) init mm in
                                    as_ref (fst p) == r /\
-				   (snd p).h == Map.upd m.h id h})
+                                   (snd p).h == Map.upd m.h id h})
   = let r, h = Heap.alloc rel (Map.sel m.h id) init mm in
     (mk_mreference id r), (HS m.rid_ctr (Map.upd m.h id h) m.tip)
 
@@ -326,8 +326,39 @@ let fresh_frame (m0:mem) (m1:mem) =
   parent m1.tip = m0.tip         /\
   m1.h == Map.upd m0.h m1.tip Heap.emp
 
+private
+let extend_downward_closed (m:mem)
+    : Lemma (let new_tip_rid = extend m.tip m.rid_ctr 1 in
+             let hh = Map.upd m.h new_tip_rid Heap.emp in
+             downward_closed hh)
+    =
+    let new_tip_rid = extend m.tip m.rid_ctr 1 in
+    let hh = Map.upd m.h new_tip_rid Heap.emp in
+    let lem (r:rid{r `is_in` hh}) :
+        Lemma (r == root \/
+               (forall s. r `is_above` s /\
+                     s `is_in` hh ==>
+                     is_stack_region r == is_stack_region s))
+        = if r = root
+          then ()
+          else let lem (s:rid{r `is_above` s /\ s `is_in` hh})
+                   : Lemma (is_stack_region r == is_stack_region s)
+                   = if r = new_tip_rid
+                     then if s = new_tip_rid then ()
+                          else ()
+                     else if s = new_tip_rid then (
+                       assert (r `is_in` m.h);
+                       assert (r `is_above` m.tip \/ r = m.tip)
+                     )
+                     else ()
+               in
+               FStar.Classical.forall_intro lem
+     in
+     FStar.Classical.forall_intro lem
+
 let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
   = let new_tip_rid = extend m.tip m.rid_ctr 1 in
+    extend_downward_closed m;
     HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
 
 let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.contains` parent})
@@ -597,7 +628,7 @@ val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:mem -> x:mreferenc
   [SMTPat (contains h x); SMTPat (aref_unused_in y h)]
 let contains_aref_unused_in #a #rel h x y =
   if frameOf x = frameOf_aref y
-  then 
+  then
     Heap.contains_aref_unused_in (Map.sel h.h (frameOf x)) (as_ref x) y.aref_aref
   else ()
 
