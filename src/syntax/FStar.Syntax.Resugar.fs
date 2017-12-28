@@ -497,9 +497,9 @@ let rec resugar_term (t : S.term) : A.term =
                     let body = resugar_term e in
                     let pats = match m with
                       | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats
-                      | Meta_labeled (s, r, _) ->
+                      | Meta_labeled (s, r, _) -> []
                         // this case can occur in typechecker when a failure is wrapped in meta_labeled
-                        [[mk (name s r)]]
+                        // but is not denotable in the source AST
                       | _ -> failwith "wrong pattern format for QForall/QExists"
                     in
                     pats, body

@@ -1690,8 +1690,31 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let body =
           let hastypeZ = mk_HasTypeZ x t in
           let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
-          mkForall([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS)) in
-        [Util.mkAssume(mkForall([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")] in
+          mkForall([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS))
+        in
+        [Util.mkAssume(mkForall([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
+   in
+   let mk_with_type_axiom : env -> string -> term -> decls_t = fun env with_type tt ->
+        (* (assert (forall ((t Term) (e Term))
+                           (! (and (= (Prims.with_type t e)
+                                       e)
+                                   (HasType (Prims.with_type t e) t))
+                            :weight 0
+                            :pattern ((Prims.with_type t e)))))
+         *)
+        let tt = ("t", Term_sort) in
+        let t = mkFreeV tt in
+        let ee = ("e", Term_sort) in
+        let e = mkFreeV ee in
+        let with_type_t_e = mkApp(with_type, [t; e]) in
+        [Util.mkAssume(mkForall'([[with_type_t_e]],
+                                 Some 0, //weight
+                                 [tt;ee],
+                                 mkAnd(mkEq(with_type_t_e, e),
+                                       mk_HasType with_type_t_e t)),
+                       Some "with_type primitive axiom",
+                       "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
+   in
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1708,7 +1731,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
-                 (Const.inversion_lid,mk_inversion_axiom)
+                 (Const.inversion_lid,mk_inversion_axiom);
+                 (Const.with_type_lid, mk_with_type_axiom)
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
         match BU.find_opt (fun (l, _) -> lid_equals l t) prims with

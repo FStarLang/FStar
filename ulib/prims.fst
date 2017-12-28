@@ -384,3 +384,11 @@ let assert_norm p = ()
  * See the example usage in ulib/FStar.Algebra.Monoid.fst.
  *)
 irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
+
+(*
+ * `with_type t e` is just an identity function, but it receives special treatment
+ *  in the SMT encoding, where in addition to being an identity function, we have
+ *  an SMT axiom:
+ *  `forall e t.{:pattern (with_type e t)} has_type (with_type e t) t`
+ *)
+let with_type (#a:Type) (x:a) = a

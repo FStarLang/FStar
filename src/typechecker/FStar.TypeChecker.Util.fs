@@ -691,7 +691,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let subst_c2 reason =
+          let subst_c2 e1opt reason =
             match e1opt, b with
             | Some e, Some x ->
                 Inl (SS.subst_comp [NT(x,e)] c2, reason)
@@ -714,7 +714,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                  else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims, ("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")) (Env.get_range env)
             else if U.is_total_comp c1
                  && U.is_total_comp c2
-            then subst_c2 "both total"
+            then subst_c2 e1opt "both total"
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
@@ -749,34 +749,41 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               && should_return env e1opt lc1
               then
               begin
-                let e = Option.get e1opt in
-                let bv = Option.get b in
+                let e1 = Option.get e1opt in
+                let x = Option.get b in
                 //we will inline e in the WP of c2
-                match subst_c2 "inline all pure" with
-                | Inr _reason -> c2 //inlining failed, for some reason
-                | Inl (c2, _) ->
-                  //we have inlined, now wp2 has become wp2[e/x]
-                  //Now, c1's post-condition or type may carry some meaningful information
-                  //Then, it's important to weaken wp2 to
-                  //      ((x = e) ==> (wp2[e/x]))
-                  //So that whatever property is proven about the result of wp1 (i.e., x)
-                  //is still available in the proof of wp2
-                  //So, unless c1 is already a return or partial return,
-                  //     in which case it already provides this equality
-                  //we weaken wp2 with the (x == e) equality
-                  if not (U.is_partial_return c1)   //and it is not already decorated with a return
-                  then // let _ = printfn "Inserting equality %s, c1.effect_name=%s, c1.flags=%A, lc1.flags=%A"
-                       //                 (Print.term_to_string e)
-                       //                 (Ident.string_of_lid (U.comp_effect_name c1))
-                       //                 (U.comp_flags c1)
-                       //                 (lc1.cflags) in
-                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e (bv_to_name bv) in// e in
-                       weaken_comp env c2 x_eq_e
-                       //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
-                       //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
-                  else c2
-              end
-              else c2
+                //Aiming to build a VC of the form (x == e ==> wp2[e/x])
+                //The additional equality hypothesis may seem redundant, but
+                //c1's post-condition or type may carry some meaningful information
+                //Then, it's important to weaken wp2 to with the equality,
+                //So that whatever property is proven about the result of wp1 (i.e., x)
+                //is still available in the proof of wp2
+                //However, we apply two optimizations:
+                //   1. if c1 is already a return or a partial return,
+                //      then it already provides this equality, so no need to add it again
+                //   2. if c1 is marked with TRIVIAL_POSTCONDITION, then the post-condition
+                //      does not carry any useful information, only its result type might.
+                //      In this case, we build `wp2[with_type e t1/x]`, decorate `e1` with
+                //      its type before substituting. This allows the SMT solver to recover
+                //      the type of `e1` (using a primitive axiom about with_type), and
+                //      without polluting the VC with an additional equality.
+                //      Note, `with_type e t` can be normalized away to `e` if requested
+                //      explicitly by the user.
+                //   3. If neither of the two optimizations apply, then we generate
+                //           (x == e ==> wp2[e/x])
+                if U.is_partial_return c1                   // case (1)
+                then SS.subst_comp [NT(x,e1)] c2
+                else if lcomp_has_trivial_postcondition lc1 // case (2)
+                     && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
+                then let e1' = U.mk_with_type u_res_t1 res_t1 e1 in
+                     SS.subst_comp [NT(x, e1')] c2
+                else let c2 = SS.subst_comp [NT(x,e1)] c2 in //case (3)
+                     let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
+                     weaken_comp env c2 x_eq_e
+                //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
+                //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
+             end
+            else c2
             in
             (* AR: end code for inlining pure and ghost terms *)
             let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in

@@ -951,6 +951,11 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
+let mk_with_type u t e =
+    let t_with_type = fvar PC.with_type_lid Delta_equational None in
+    let t_with_type = mk (Tm_uinst(t_with_type, [u])) None dummyRange in
+    mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
+
 let lex_t    = fvar_const PC.lex_t_lid
 let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid Delta_constant (Some Data_ctor), [U_zero])) None dummyRange
 let lex_pair = fvar PC.lexcons_lid Delta_constant (Some Data_ctor)
