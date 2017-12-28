@@ -14,24 +14,6 @@
       "a7b98c405b24359c9c5fbba80401ec02"
     ],
     [
-      "EtM.CPA.__proj__Key__item__region",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6a7b4595aa9c1d18093f7807b6b98505"
-    ],
-    [
-      "EtM.CPA.__proj__Key__item__raw",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d634f982bbe7690560d2c56d3d6682f4"
-    ],
-    [
       "EtM.CPA.__proj__Key__item__log",
       1,
       2,
@@ -41,7 +23,7 @@
         "projection_inverse_EtM.CPA.Key_region"
       ],
       0,
-      "0874f99a83af52598bf40352da61ca53"
+      "8060c55bd820fb4c6b15b3d3ff609d5b"
     ],
     [
       "EtM.CPA.genPost",
@@ -50,7 +32,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "54e03e45cf4f635614d162201f0df84d"
+      "d1e1a191f1d39afdfd7ad99ed53302e8"
     ],
     [
       "EtM.CPA.keygen",
@@ -140,7 +122,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "814e2db0e286668acb2907af54d1644f"
+      "b490e86840c3ce95af6e8f8fddca3584"
     ],
     [
       "EtM.CPA.encrypt",
@@ -187,7 +169,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "982b3a8d79414f6a076cb423eae8fefa"
+      "66d8cafc9daab18a9bec619d5bfe1d47"
     ],
     [
       "EtM.CPA.decrypt",
@@ -196,7 +178,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "120c05bd3e8b8f4c3250a13e86793315"
+      "1c5c7bb271a6651664f5450c72dabf14"
     ],
     [
       "EtM.CPA.decrypt",
@@ -210,7 +192,7 @@
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "d1d853a4d8ca723f876751e8f465450d"
+      "50d7b22c7fad791ebf21c12ea5e69b82"
     ],
     [
       "EtM.CPA.decrypt",
@@ -230,7 +212,7 @@
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "e8b1d1962388c2edf1072e31e081234d"
+      "ba0ab666c2865ffea58715b7eac7e132"
     ],
     [
       "EtM.CPA.decrypt",
@@ -324,7 +306,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "3f7f2731051d8bbcc8f14968917dc0a8"
+      "b807a1669cbaa5831d0eac4b467d1848"
     ]
   ]
 ]

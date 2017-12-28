@@ -2,42 +2,6 @@
   "ŸÄ\bágÓˆ\u0011ÍP\u0017r\u000bÕ\u0017\u001f",
   [
     [
-      "HyE.CCA2.__proj__Entry__item__c",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "505393d5b1df76254b4501b2d3b1ff1c"
-    ],
-    [
-      "HyE.CCA2.__proj__Entry__item__p",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c73bed89bf600392d8695a2289fc5617"
-    ],
-    [
-      "HyE.CCA2.__proj__PKey__item__region",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bbd4c43f567868d2f3794cd42f58a993"
-    ],
-    [
-      "HyE.CCA2.__proj__PKey__item__rawpk",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7e7005b4fee1853dd9db389ae3cf77e4"
-    ],
-    [
       "HyE.CCA2.__proj__PKey__item__log",
       1,
       2,
@@ -47,25 +11,7 @@
         "projection_inverse_HyE.CCA2.PKey_region"
       ],
       0,
-      "bbd6f7e80726f707457741c68907c5d7"
-    ],
-    [
-      "HyE.CCA2.__proj__SKey__item__raw",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dcc179ee08cec007336a346843cdbf7d"
-    ],
-    [
-      "HyE.CCA2.__proj__SKey__item__pk",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "87c1e7c85bf8402826da6065903dae17"
+      "fdd26e936d086629fc7a6585e4d5e1d8"
     ],
     [
       "HyE.CCA2.keygen",
@@ -94,7 +40,7 @@
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_88cdf982f29494978cb456b377825f78"
       ],
       0,
-      "22da63c044aaf49075a195007c942da0"
+      "f80fecb4a13c3db7aedada6433a6e9ca"
     ],
     [
       "HyE.CCA2.encrypt",
@@ -118,7 +64,7 @@
         "refinement_interpretation_HyE.CCA2_Tm_refine_6e5e30b8a35b3df5111e4e25b1b2bf65"
       ],
       0,
-      "cb028cb29b93eeb5de32d5c9ef677408"
+      "cf15e47492e3cc93c4bb481beee7800a"
     ],
     [
       "HyE.CCA2.decrypt",
@@ -138,7 +84,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f9b3b2ac0013e49ac5b68ad278121a4f"
+      "01af749690e3d77f84c0f9c3f8e0018e"
     ]
   ]
 ]

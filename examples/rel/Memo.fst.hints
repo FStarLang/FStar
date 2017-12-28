@@ -9,15 +9,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "a6ecf62eef711cc3094bcae7e1c2fd1d"
-    ],
-    [
-      "Memo.bind",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3bf56f54993a96e13c185d051a0fad54"
     ]
   ]
 ]

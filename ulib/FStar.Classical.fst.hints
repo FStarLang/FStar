@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "d85eb0be547899bbd477fa7dd2c37569"
+      "404c424fc5f86aa7d8f01d5f1843a8aa"
     ],
     [
       "FStar.Classical.get_equality",
@@ -69,7 +69,7 @@
       1,
       [ "@query" ],
       0,
-      "f11cfd25be65eadb32279dee55b88204"
+      "16c55aa720e1b2a3cccfb484102615c2"
     ],
     [
       "FStar.Classical.forall_intro",
@@ -133,7 +133,7 @@
         "unit_typing"
       ],
       0,
-      "44d7c3673535d810f91c4dc0040e7a6e"
+      "b2dc93a92c0bb42fa1e3eb0ab077993b"
     ],
     [
       "FStar.Classical.move_requires",
@@ -146,7 +146,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "a0fb2c5be3c2feb1cbe29d22288ff5c6"
+      "f759d76d3d331d2cc3240706802f42f1"
     ],
     [
       "FStar.Classical.forall_impl_intro",
@@ -155,7 +155,7 @@
       1,
       [ "@query" ],
       0,
-      "ba06869c80f6ff22ca81667979140bb0"
+      "28ac1d16841c80f846404774afa258b4"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -167,7 +167,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "508216506d11a27b9bd74617d5ec60cf"
+      "3a3ccc9734c348ceece0ab66f9912682"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -182,7 +182,7 @@
         "unit_typing"
       ],
       0,
-      "efe2d2d85f5926fc2ddebf09bf6a6f56"
+      "798aae60f5def4c34f56a27d9370b262"
     ],
     [
       "FStar.Classical.ghost_lemma",
@@ -195,7 +195,7 @@
         "fuel_guarded_inversion_Prims.c_or", "unit_inversion"
       ],
       0,
-      "7b52ea508faaceb95e5efad3900cb4e3"
+      "509d00653454a3d8f041514341207016"
     ],
     [
       "FStar.Classical.or_elim",
@@ -210,7 +210,7 @@
         "unit_typing"
       ],
       0,
-      "cafb68ebcf760eb1eb79a7810479ad7d"
+      "2ca92c376e9bf6aa8890065cdcca5f1e"
     ],
     [
       "FStar.Classical.excluded_middle",
@@ -219,7 +219,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "a97e0b51259026b4677481d2a9f76cd6"
+      "71956dcbc4d7c5f1533433f08a58a213"
     ]
   ]
 ]

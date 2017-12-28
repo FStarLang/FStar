@@ -2,24 +2,6 @@
   "\u0014ÉðI+\u0014\nØ9*h€\n$Ô!",
   [
     [
-      "Bug190.__proj__FForall__item___0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "960949b2091c1ffca67277274d3a73d2"
-    ],
-    [
-      "Bug190.__proj__DForallElim__item__f",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e5c2eb59a0433208fd720ad5339da199"
-    ],
-    [
       "Bug190.__proj__DForallElim__item___1",
       1,
       2,
@@ -29,16 +11,7 @@
         "projection_inverse_Bug190.DForallElim_f"
       ],
       0,
-      "f0992a15d27a01eb2d66bee4a58832c1"
-    ],
-    [
-      "Bug190.__proj__DForallElim__item__x",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0ee67597fabeec332a8b71b43d30e1eb"
+      "5d5aa1320996765621541b68b870c97a"
     ]
   ]
 ]

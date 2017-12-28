@@ -18,15 +18,6 @@
       "346d08435de5a67913e7faa8f4c1c333"
     ],
     [
-      "MAC.__proj__Entry__item__k",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e8a7628fac211f654f6ed1f9de0d021f"
-    ],
-    [
       "MAC.__proj__Entry__item__t",
       1,
       2,
@@ -38,52 +29,7 @@
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
       ],
       0,
-      "77faf2978e49f7c195ef8f6145c4a4db"
-    ],
-    [
-      "MAC.__proj__Entry__item__m",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7d1ce4eb0de40f3cfafc8d0be6cb6d10"
-    ],
-    [
-      "MAC.mac",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5482efef50e5f1317411f508db2ef56d"
-    ],
-    [
-      "MAC.mac",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1230cce87442c16934e5f9cf3c746ebb"
-    ],
-    [
-      "MAC.verify",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dbc3f38265aa5b01ccfd7fe08de808a1"
-    ],
-    [
-      "MAC.verify",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2a041ebdd65c6876bca0e901ed7d7875"
+      "ef0963afe1f957a19ba1c37b926254ad"
     ],
     [
       "MAC.keygen",
@@ -97,51 +43,66 @@
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
       ],
       0,
-      "ac1a27c1e67b4a9b27f83c10b5b06dc3"
+      "357d14e66580ad0856241496d2ca7168"
     ],
     [
       "MAC.mac",
-      3,
+      1,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.find.fuel_instrumented",
-        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "bool_typing", "constructor_distinct_FStar.Pervasives.Native.Some",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Prims.HasEq_int", "bool_typing",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Monotonic.Heap.only",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Prims.l_True", "equation_SHA1.hmac_sha1",
-        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
+        "equation_FStar.Monotonic.Heap.set", "equation_FStar.ST.mref",
+        "equation_FStar.UInt32.n", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
+        "equation_Prims.l_True", "equation_Prims.nat",
+        "equation_SHA1.hmac_sha1", "equation_SHA1.key",
+        "equation_SHA1.keysize", "equation_SHA1.text",
         "equation_with_fuel_FStar.List.Tot.Base.find.fuel_instrumented",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_MAC.log", "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "interpretation_MAC_Tm_abs_e8ac7b1f62ef68ccc36f2ed3e7f4c9d2",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
+        "kinding_MAC.entry@tok", "kinding_Prims.list@tok",
+        "lemma_FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
+        "lemma_FStar.Set.mem_singleton", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_MAC.Entry_k", "projection_inverse_MAC.Entry_t",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
         "refinement_interpretation_MAC_Tm_refine_557169cc4eb3b2882384851770e3a3b4",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.singleton",
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "90cdf8a4440a608ea4b134295c63ae1f"
+      "dac5f3048a9cc69eec04b5fa143a6b9f"
     ],
     [
       "MAC.verify",
-      3,
+      1,
       2,
       2,
       [
@@ -153,11 +114,9 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
-        "refinement_interpretation_MAC_Tm_refine_4cefda6bf17327b4dcad5e57c7501d5c",
         "refinement_interpretation_MAC_Tm_refine_61aeee88c37953ca4933a44381e61e4a",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
@@ -165,7 +124,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "17e150c3f2011c124be2b879d6505e36"
+      "d9ce91c26dfc7dfd7753b800305e45db"
     ]
   ]
 ]

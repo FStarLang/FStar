@@ -9,24 +9,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "1217eb672ac52bec6d5644828aad7614"
-    ],
-    [
-      "Bug238.__proj__Box__item___0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1ea1e45705e210872deb757dcd198eb4"
-    ],
-    [
-      "Bug238.silly",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e0d4f6ff479d19224c00557865f8a245"
     ]
   ]
 ]

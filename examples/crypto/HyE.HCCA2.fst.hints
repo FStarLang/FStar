@@ -2,51 +2,6 @@
   "6‚ê\u0002\u0001\u0014\u0002˜\u000b˙\nmA⁄◊5",
   [
     [
-      "HyE.HCCA2.__proj__PKey__item__region",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "df364aa13f8c18dad224d4a4d81899fd"
-    ],
-    [
-      "HyE.HCCA2.__proj__PKey__item__rawpk",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d0aad02715612adb1233dec5fb497f11"
-    ],
-    [
-      "HyE.HCCA2.__proj__PKey__item__cca_pk",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e9e9cf295b4c2aa1625b31c3e7478ac3"
-    ],
-    [
-      "HyE.HCCA2.__proj__SKey__item__cca_sk",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "eca3bc7c1783e6341288823dde55d35e"
-    ],
-    [
-      "HyE.HCCA2.__proj__SKey__item__pk",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fa229340ada2ce2ee071e67a0beff254"
-    ],
-    [
       "HyE.HCCA2.keygen",
       1,
       2,
@@ -69,7 +24,7 @@
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_88cdf982f29494978cb456b377825f78"
       ],
       0,
-      "a138f64c325f99527b333c6f736c1bf8"
+      "33d94ea4311080c41094729f208c8514"
     ],
     [
       "HyE.HCCA2.encrypt",
@@ -96,7 +51,7 @@
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_88cdf982f29494978cb456b377825f78"
       ],
       0,
-      "f6bff61b2d427e0a3b13c312dc3af0d7"
+      "76cd0bddba78bd1cbe9e6313ca3ed9a6"
     ],
     [
       "HyE.HCCA2.decrypt",
@@ -125,7 +80,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "ecf7230e335257a003ee5741f0a67b16"
+      "15a5492f61eeba581e78d783470c8d38"
     ]
   ]
 ]

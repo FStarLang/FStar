@@ -92,7 +92,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "500d9584b8ba2d4bec7196c2b87fc1b9"
+      "ff91f029606b6532bddae0afc84f3923"
     ],
     [
       "Test.more_struct",
@@ -314,7 +314,7 @@
         "typing_FStar.Set.union", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "01f33f8867000ba3e89b0af884845d56"
+      "8d738d17f45c44e5087b310118d60f35"
     ]
   ]
 ]

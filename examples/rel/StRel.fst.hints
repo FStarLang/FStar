@@ -46,24 +46,6 @@
       "d4c990e19e2acde649446774815071c1"
     ],
     [
-      "StRel.glift",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b6fd65f13e32f49e07ef1dcdffdf93cb"
-    ],
-    [
-      "StRel.glift2",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a890f30da7f49d5e27a398447616a0ff"
-    ],
-    [
       "StRel.f1_ni",
       1,
       2,
@@ -80,7 +62,7 @@
         "token_correspondence_StRel.f1_hp"
       ],
       0,
-      "be7a19cba9dfd99474d31e53a08aff5e"
+      "413a2eb4dee5bf62283ddd63134aca21"
     ],
     [
       "StRel.f2_ni",
@@ -100,7 +82,7 @@
         "token_correspondence_StRel.f2_hp"
       ],
       0,
-      "9893c5e28360d0b9571fef9ad242a797"
+      "8fd68181db8592500512d846784214ee"
     ]
   ]
 ]

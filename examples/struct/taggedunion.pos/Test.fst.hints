@@ -406,7 +406,7 @@
         "typing_Test.either_l", "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "5483840d4cd84e66d7932f3009542b71"
+      "2cc0aaf9ade1ba8a9ae0da1b364d017d"
     ],
     [
       "Test.step",
@@ -514,7 +514,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "a75b4722231e377513012adcb16f3e29"
+      "9a5b96eaa69d4aa1c501855a646f470d"
     ],
     [
       "Test.step_alt",
@@ -638,7 +638,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "e5252db94016018e4c301c94e44ece0f"
+      "f32ee9647bd0aca90d97a3e95b2a1ae2"
     ]
   ]
 ]

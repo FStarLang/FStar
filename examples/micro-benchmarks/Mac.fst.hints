@@ -45,15 +45,6 @@
       "d579b3ccafad3ef1feca172293a1d5d4"
     ],
     [
-      "MAC.__proj__Entry__item__k",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5ef6f37f75a996eca7aa6b4620506284"
-    ],
-    [
       "MAC.__proj__Entry__item__t",
       1,
       2,
@@ -65,16 +56,7 @@
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
       ],
       0,
-      "bb9212117de1e7873cbb8219049d3936"
-    ],
-    [
-      "MAC.__proj__Entry__item__m",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "66cc957d9a8b3afdb54f6d88cbdc746b"
+      "2c2177dc0a8a97027b43a472e2d65b44"
     ],
     [
       "MAC.mac",
@@ -88,7 +70,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "4bc9207cd54412fbc4f998a9fc098660"
+      "627bf91b7d23d073fd5a131d26b146b4"
     ],
     [
       "MAC.verify",
@@ -118,7 +100,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "d80beadd1363d9779c6c5ce37ed9aa4f"
+      "f817153447866320a4e71c49554d2ee0"
     ]
   ]
 ]

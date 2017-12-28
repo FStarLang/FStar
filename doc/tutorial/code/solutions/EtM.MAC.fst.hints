@@ -62,25 +62,7 @@
         "typing_EtM.MAC.sha1", "typing_Platform.Bytes.op_At_Bar"
       ],
       0,
-      "d57169289715521e369d0782075f92a6"
-    ],
-    [
-      "EtM.MAC.__proj__Key__item__region",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7d1ebad87e145157cfec6f41ece9a2e2"
-    ],
-    [
-      "EtM.MAC.__proj__Key__item__raw",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "78210b53d90b98904e1e4cbea100767a"
+      "7498f54b1a0bcbbb158665837f6fb973"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -92,7 +74,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "a01585625eaf6d457a222d3a38d09754"
+      "8f905f29b635599c9b1701b408be48bb"
     ],
     [
       "EtM.MAC.genPost",
@@ -101,7 +83,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "58ce82d17b6386a7a40910a3656abd80"
+      "40e962ee8d6d6f72cf71ad1f8926f816"
     ],
     [
       "EtM.MAC.keygen",
@@ -193,7 +175,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "1f944af06fdf1d0d4dee29ac670aea2a"
+      "a990def46178021f9f58703621cd2dea"
     ],
     [
       "EtM.MAC.mac",
@@ -235,7 +217,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "95e6086994f828634fe71aecc433ba1c"
+      "06e5c963097341442a07be855ae59901"
     ],
     [
       "EtM.MAC.verify",
@@ -257,7 +239,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "07208f5a7bf6446bb7909bde0388bd96"
+      "96a508ba3891a90a84da634d035dae5d"
     ],
     [
       "EtM.MAC.verify",
@@ -318,7 +300,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "2f4598ed10d3ed6b7b5004dc1c4b9342"
+      "40f0aa4c24dafe30620f22d2531a1094"
     ]
   ]
 ]
