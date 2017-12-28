@@ -188,10 +188,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either_haseq",
         "constructor_distinct_FStar.Pervasives.Inl",
-        "data_elim_FStar.DependentMap.Mkt",
         "equation_FStar.DependentMap.concat",
         "equation_FStar.DependentMap.concat_mappings",
+        "equation_FStar.DependentMap.concat_value",
         "equation_FStar.DependentMap.sel", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.DependentMap.t",
         "proj_equation_FStar.DependentMap.Mkt_mappings",
@@ -202,10 +203,10 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings",
         "token_correspondence_FStar.DependentMap.concat_mappings",
-        "typing_FStar.DependentMap.concat"
+        "typing_FStar.DependentMap.sel"
       ],
       0,
-      "223713314888c799af7c6bcc1bed0007"
+      "1cc734b9548f9e2b4cb95a511228e501"
     ],
     [
       "FStar.DependentMap.sel_concat_r",
@@ -214,8 +215,8 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either_haseq",
         "constructor_distinct_FStar.Pervasives.Inr",
-        "data_elim_FStar.DependentMap.Mkt",
         "equation_FStar.DependentMap.concat",
         "equation_FStar.DependentMap.concat_mappings",
         "equation_FStar.DependentMap.sel", "equation_Prims.eqtype",
@@ -227,11 +228,10 @@
         "projection_inverse_FStar.Pervasives.Inr_v",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings",
-        "token_correspondence_FStar.DependentMap.concat_mappings",
-        "typing_FStar.DependentMap.concat"
+        "token_correspondence_FStar.DependentMap.concat_mappings"
       ],
       0,
-      "65b6ec47d11d89f913b0f4c443715bfd"
+      "146219ee95efedd8a45a47b24424004e"
     ],
     [
       "FStar.DependentMap.rename",

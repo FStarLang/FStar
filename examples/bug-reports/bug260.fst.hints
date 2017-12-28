@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ad896375a3e9316205c2a075dc6faeb3"
+      "0806bd0e96d1ed0df769af039b8db9de"
     ],
     [
       "Bug260.uu___is_O",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c5afb05fcab68d2e9b28512958723231"
+      "4e31c35e646a9b72b6532721ee827b6a"
     ],
     [
       "Bug260.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "d1a8c418e8868a8bf840fc39da0658c0"
+      "da61d19d34b97881a917a8e9dc68d542"
     ],
     [
       "Bug260.__proj__S__item___0",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
       ],
       0,
-      "c5cdc573ef0c7aa7777b590afd4ab761"
+      "f33e0a72f8df3843b8028c707c6c9911"
     ],
     [
       "Bug260.validity",
@@ -48,7 +48,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat_haseq" ],
       0,
-      "c42453dffa7e3013f1e16287b8171354"
+      "c24c8467ea01b4d59a77d9f4d61df0ca"
     ],
     [
       "Bug260.validity'",
@@ -57,7 +57,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat_haseq" ],
       0,
-      "a2f1d10e4d7ba095aedf60a8b45439ed"
+      "8b8cce204fbba119476284a3e201b364"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",
@@ -69,7 +69,7 @@
         "projection_inverse_Bug260.VSucc__n"
       ],
       0,
-      "baa40ef69c9b6a0b072e0c6ed2f19819"
+      "0d23fc3943e51fa09826964e9212aed7"
     ],
     [
       "Bug260.validity'_empty",
@@ -84,7 +84,7 @@
         "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
       ],
       0,
-      "03d12332112e0b49ca111249e6cbf86d"
+      "10e0251f6f1585133ea3f395cdb08735"
     ]
   ]
 ]

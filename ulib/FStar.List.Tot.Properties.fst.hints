@@ -951,7 +951,7 @@
         "typing_FStar.List.Tot.Base.partition"
       ],
       0,
-      "9d6dbd064eb434338893348accedb397"
+      "5f45294fcd81bfbc93eabd0655d8a896"
     ],
     [
       "FStar.List.Tot.Properties.partition_mem_forall",
@@ -990,7 +990,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "fd5511f8d5bca5537918442433f16299"
+      "69aa056f5f125354648f94b8caf99e6c"
     ],
     [
       "FStar.List.Tot.Properties.partition_mem_p_forall",
@@ -1022,7 +1022,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b71e942074583fff2add850b85ee690c"
+      "d6a696fa390812764178e26f3251cce3"
     ],
     [
       "FStar.List.Tot.Properties.partition_count",

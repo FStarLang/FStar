@@ -1052,7 +1052,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "a6ecd051dd75445a3482ce458ba781a4"
+      "8a1171a822483c0546f903f4f01c80e1"
     ],
     [
       "FStar.Monotonic.Heap.lemma_free_mm_sel",
@@ -1341,7 +1341,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "4f2f1770703437254b0756e04b97ea83"
+      "45d383cc737b218298edbdac799d6d47"
     ],
     [
       "FStar.Monotonic.Heap.lemma_sel_upd1",
@@ -1949,7 +1949,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "9418bc61984a5f0c34ebf6d8995bdeff"
+      "9cbb57f47a9d08a608028b31cb9e4f78"
     ],
     [
       "FStar.Monotonic.Heap.lemma_sel_equals_sel_tot_for_contained_refs",
