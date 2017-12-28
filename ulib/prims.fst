@@ -391,4 +391,4 @@ irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
  *  an SMT axiom:
  *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
  *)
-let with_type (#t:Type) (e:a) = e
+let with_type (#t:Type) (e:t) = e
