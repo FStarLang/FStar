@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2f12e9d975e0346ab8e02125c3c43766"
+      "c6774c3439ed0ab6661caf7ed5625532"
     ],
     [
       "Bug609.add''",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "79d503df10f7bbd1c1eb85c090dc80b9"
+      "3f904a2d5d6320abc129dae9b1f28d34"
     ],
     [
       "Bug609.test",
@@ -37,7 +37,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "45ae05dd43e008975630101d7e460d82"
+      "b40bcb8cc08d7f8bca4eb7dbbfb49ff1"
     ]
   ]
 ]
