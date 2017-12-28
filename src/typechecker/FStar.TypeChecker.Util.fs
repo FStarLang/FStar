@@ -936,10 +936,11 @@ let maybe_return_e2_and_bind
    let lc2 =
         let eff1 = Env.norm_eff_name env lc1.eff_name in
         let eff2 = Env.norm_eff_name env lc2.eff_name in
-        if is_pure_or_ghost_effect env eff1
+        if (not (is_pure_or_ghost_effect env eff1)
+            || should_not_inline_lc lc1)
         && is_pure_or_ghost_effect env eff2
-        then lc2 //the resulting computation is still pure/ghost; no need to insert a return
-        else maybe_assume_result_eq_pure_term env e2 lc2 in
+        then maybe_assume_result_eq_pure_term env e2 lc2
+        else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
@@ -974,10 +975,10 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (
                 let md     = Env.get_effect_decl env C.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
             let maybe_return eff_label_then cthen =
-                if should_not_inline_whole_match
-                || not (is_pure_or_ghost_effect env eff)
-                then cthen true //inline each the branch, if eligible
-                else cthen false //the entire match is pure and inlineable, so no need to inline each branch
+               if should_not_inline_whole_match
+               || not (is_pure_or_ghost_effect env eff)
+               then cthen true //inline each the branch, if eligible
+               else cthen false //the entire match is pure and inlineable, so no need to inline each branch
             in
             let comp = List.fold_right (fun (g, eff_label, _, cthen) celse ->
                 let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env ((maybe_return eff_label cthen).comp()) celse in

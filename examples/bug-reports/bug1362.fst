@@ -30,3 +30,24 @@ let f2 (b:bool) (n:nat) : Tot nat =
     else 0
   in
   k + 1
+
+let f3 (n:int) : Ghost int (requires True) (ensures (fun i -> i == 0)) =
+  let k =
+    let rec g (i:int) : Ghost int
+      (requires True)
+      (ensures (fun j -> j == 0)) = 0
+    in
+    g n
+  in k
+
+
+let f4 (n:int) : Ghost int (requires n >= 0) (ensures (fun i -> i == 0)) =
+  let k =
+    let rec g (i:int) : Ghost int
+      (requires i >= 0)
+      (ensures (fun j -> j == 0)) =
+      if i = 0 then 0
+      else g (i - 1)
+    in
+    g n
+  in k

@@ -1297,7 +1297,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let cres =
         let head_or_some_arg_is_effectful =
             not (Util.is_pure_or_ghost_lcomp chead)
-            || (BU.for_some (fun (_, _, lc) -> not (Util.is_pure_or_ghost_lcomp lc)) arg_comps_rev)
+            || (BU.for_some (fun (_, _, lc) -> not (Util.is_pure_or_ghost_lcomp lc)
+                                           || TcUtil.should_not_inline_lc lc)
+                            arg_comps_rev)
         in
         if Util.is_pure_or_ghost_lcomp cres
         && head_or_some_arg_is_effectful
