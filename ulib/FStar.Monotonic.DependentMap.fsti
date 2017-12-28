@@ -67,7 +67,7 @@ val grows (#a:_) (#b:_) (#inv:DM.t a (opt b) -> Type)
 /// `t r a b inv` is a mutable, imap stored in region `r` constrained
 ///               to evolve according to `grows`
 let t (r:MR.rid) (a:eqtype) (b:a -> Type) (inv:DM.t a (opt b) -> Type) =
-    MR.m_rref r (imap a b inv) grows
+    m_rref r (imap a b inv) grows
 
 /// `defined t x h`: In state `h`, map `t` is defined at point `x`.
 ///     - We define these in `Type` rather than `bool`
@@ -164,7 +164,7 @@ val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
 ///               - by updating it to contain `(x -> y)`
 ///               - and in the future `t` will always contain `(x -> y)`
 //This really should be hidden inside the MR library
-let addr_of (#r:_) (#a:_) (#b:_) (m:MR.m_rref r a b) : GTot nat =
+let addr_of (#r:_) (#a:_) (#b:_) (m:m_rref r a b) : GTot nat =
     HS.as_addr m
 
 val extend
@@ -185,7 +185,7 @@ val extend
          HS.modifies (Set.singleton r) h0 h1 /\
          HS.modifies_ref r (Set.singleton (addr_of t)) h0 h1 /\
          HS.sel h1 t == upd cur x y /\
-         MR.witnessed (contains t x y)))
+         witnessed (contains t x y)))
 
 /// `lookup t x`: Querying the map `t` at point `x`
 ///      Ensures: - The state does not change
@@ -206,7 +206,7 @@ val lookup
           | None -> ~(defined t x h1)
           | Some v ->
             contains t x v h1 /\
-            MR.witnessed (contains t x v))))
+            witnessed (contains t x v))))
  
 let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
@@ -231,7 +231,3 @@ val map_f (#a:eqtype) (#b #c:a -> Type)
 	      (ensures  (fun h0 m' h1 ->
 	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
 	                 ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))
-
-
-
-

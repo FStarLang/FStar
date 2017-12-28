@@ -48,7 +48,7 @@ let encrypt pk (p:PlainPKE.t) : ML RSA.cipher =
 
 
 let decrypt sk (c:RSA.cipher) : ML (option (PlainPKE.t)) =
-  let log = m_read (PKey?.log sk.pk) in
+  let log = !(PKey?.log sk.pk) in
   match HyE.Ideal.ind_cca, seq_find (function Entry c' _ -> c=c') log with
   | true,  Some t  -> Some(Entry?.p t)
   | _,  _       -> None

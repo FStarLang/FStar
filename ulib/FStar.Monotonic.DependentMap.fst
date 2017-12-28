@@ -45,18 +45,18 @@ let defined_stable #a #b #inv #r t x = ()
 ////////////////////////////////////////////////////////////////////////////////
 
 //The main stateful interface is minimal and straigtforward
-let alloc #a #b #inv #r _ = MR.m_alloc r []
+let alloc #a #b #inv #r _ = ralloc r []
 
 let extend #a #b #inv #r t x y =
     let open MR in
     recall t;
-    let cur = m_read t in
-    m_write t (upd cur x y);
+    let cur = !t in
+    t := upd cur x y;
     witness t (contains t x y)
 
 let lookup #a #b #inv #r t x =
     let open MR in
-    let m = m_read t in
+    let m = !t in
     let y = sel m x in
     match y with
     | None -> y
@@ -73,5 +73,5 @@ let rec mmap_f #a #b #c m f =
   | (| x, y |)::tl -> (| x, f x y |)::(mmap_f #a #b #c tl f)  //AR: doesn't work without these implicits
 
 let map_f #a #b #c #inv #inv' #r #r' t f
-  = let m = MR.m_read t in
-    MR.m_alloc r' (mmap_f m f)
+  = let m = !t in
+    ralloc r' (mmap_f m f)

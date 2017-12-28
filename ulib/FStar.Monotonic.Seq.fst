@@ -49,7 +49,7 @@ let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
 	 HS.contains h1 m /\
 	 HS.sel h1 m == init /\
 	 HST.ralloc_post r init h0 m h1))
-  = FStar.Monotonic.RRef.m_alloc r init
+  = ralloc r init
 
 (*
  * AR: changing rids below to rid which is eternal regions.
@@ -74,9 +74,9 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 		     /\ witnessed (at_least (Seq.length (HS.sel h0 r)) x r)))
   =
     recall r;
-    let s0 = m_read r in
+    let s0 = !r in
     let n = Seq.length s0 in
-    m_write r (Seq.snoc s0 x);
+    r := Seq.snoc s0 x;
     at_least_is_stable n x r;
     Seq.contains_snoc s0 x;
     witness r (at_least n x r)
@@ -94,7 +94,7 @@ let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
   : ST (i_seq r a p)
        (requires (fun _ -> HST.witnessed (region_contains_pred r)))
        (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 m h1))
-  = FStar.Monotonic.RRef.m_alloc r init
+  = ralloc r init
 
 let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:mem) =
         Seq.length (HS.sel h m) > n
@@ -119,7 +119,7 @@ let i_read (#r:rid) (#a:Type) (#p:Seq.seq a -> Type) (m:i_seq r a p)
   : ST (s:seq a{p s})
        (requires (fun h -> True))
        (ensures (fun h0 x h1 -> h0==h1 /\ x == i_sel h0 m))
-  = MR.m_read m
+  = !m
 
 let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
   : GTot Type0
@@ -136,9 +136,9 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
 		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
     recall r;
-    let s0 = m_read r in
+    let s0 = !r in
     let n = Seq.length s0 in
-    m_write r (Seq.snoc s0 x);
+    r := Seq.snoc s0 x;
     i_at_least_is_stable n x r;
     contains_snoc s0 x;
     witness r (i_at_least n x r)
@@ -296,27 +296,6 @@ let collect_snoc f s a =
 
 #reset-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 
-// val collect_append: f:('a -> Tot (seq 'b)) -> s1:seq 'a -> s2:seq 'a -> Lemma
-//   (requires True)
-//   (ensures (collect f (s1@s2) == (collect f s1 @ collect f s2)))
-//   (decreases (Seq.length s2))
-// let rec collect_append f s_1 s_2 =
-//   if Seq.length s_2 = 0
-//   then (cut (Seq.equal (s_1@s_2) s_1);
-//         cut (Seq.equal (collect f s_1 @ collect f s_2) (collect f s_1)))
-//   else (let prefix_2, last = un_snoc s_2 in
-//         let m_s_1 = collect f s_1 in
-//   	let m_p_2 = collect f prefix_2 in
-//   	let flast = f last in
-//   	cut (Seq.equal (s_1@s_2) (Seq.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
-//   	collect_snoc f (Seq.append s_1 prefix_2) last;                       //              = snoc (map f (s1@p)) (f last)
-//         collect_append f s_1 prefix_2;                                       //              = snoc (map f s_1 @ map f p) (f last)
-//   	cut (Seq.equal ((m_s_1 @ m_p_2) @ flast)
-//   		       (m_s_1 @ (m_p_2 @ flast)));                 //              = map f s1 @ (snoc (map f p) (f last))
-//         collect_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
-
-//17-01-05 all the stuff above should go to Seq.Properties! 
-
 let collect_grows (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s2:seq 'a)
   : Lemma (grows s1 s2 ==> grows (collect f s1) (collect f s2))
@@ -351,7 +330,6 @@ let collect_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows
 	  collect_grows f s1 s3
     in
     forall_intro_2 aux
-
 
 let collect_has_at_index (#a:Type) (#b:Type) (#i:rid)
 			 (r:m_rref i (seq a) grows)
@@ -389,10 +367,6 @@ type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
          (seqn_val i log max) //never more than the length of the log
 	 increases //increasing
 
-let monotonic_increases (x:unit)
-  : Lemma (monotonic int increases)
-  = ()
-
 let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
   : Lemma (stable_on_t l (at_most_log_len x l))
   = ()
@@ -409,13 +383,13 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
        (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 
 		   modifies_one i h0 h1 /\
 		   modifies_ref i Set.empty h0 h1 /\
-		   m_fresh c h0 h1 /\
+		   fresh_ref c h0 h1 /\
 		   HS.sel h1 c = init /\
 		   FStar.Map.contains h1.h i))
   =
     recall log; recall_region i;
     witness log (at_most_log_len init log);
-    m_alloc i init
+    ralloc i init
 
 let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 	           (#i:rid) (#log:log_t l a) ($c:seqn i log max)
@@ -427,13 +401,12 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 	  n + 1 <= max))
        (ensures (fun h0 _ h1 ->
 	  modifies_one i h0 h1 /\
-	  (* AR: before merge: modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\ *)
 	  modifies_ref i (Set.singleton (HS.as_addr c)) h0 h1 /\
 	  HS.sel h1 c = HS.sel h0 c + 1))
   = recall c; recall log;
-    let n = m_read c + 1 in
+    let n = !c + 1 in
     witness log (at_most_log_len n log);
-    m_write c n
+    c := n
 
 let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
   : ST unit
@@ -441,18 +414,9 @@ let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:s
        (ensures (fun h0 _ h1 ->
 	   h0==h1 /\
 	   at_most_log_len (HS.sel h1 ctr) log h1))
-  = let n = m_read ctr in
+  = let n = !ctr in
     testify (at_most_log_len n log)
 
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
-  = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
-    assert (HS.sel h r = Heap.sel (FStar.Map.sel h.h i) (HS.as_ref r))
-
-
-(* TODO: this fails with a silly inconsistent qualifier error *)
-(* logic val mem_index: #a:Type -> #i:rid -> n:nat -> x:a -> r:m_rref i (seq a) grows -> t -> GTot Type0 *)
-(* logic let mem_index #a #i n x r h = *)
-(*       mem x r h *)
-(*       /\ Seq.length (m_sel h r) > n *)
-(*       /\ Seq.index (m_sel h r) n = x *)
+  = assert (HS.sel h r = Heap.sel (FStar.Map.sel h.h i) (HS.as_ref r))

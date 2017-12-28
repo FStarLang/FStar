@@ -5,8 +5,9 @@ open FStar.Monotonic.RRef
 open FStar.HyperStack
 open FStar.HyperStack.ST
 
-module HS = FStar.HyperStack
-module MR = FStar.Monotonic.RRef
+module HS  = FStar.HyperStack
+module MR  = FStar.Monotonic.RRef
+module HST = FStar.HyperStack.ST
 
 (* Partial, dependent maps *)
 type map' (a:Type) (b:a -> Type) =
@@ -24,7 +25,7 @@ let sel #a #b (m:map' a b) (x:a)
   : Tot (option (b x))
   = m x
 
-abstract let grows #a #b #inv :MR.reln (map a b inv) =
+abstract let grows #a #b #inv :Preorder.preorder (map a b inv) =
   fun (m1 m2:map a b inv) ->
   forall x.{:pattern (Some? (m1 x))}
       Some? (m1 x) ==> Some? (m2 x) /\ Some?.v (m1 x) == Some?.v (m2 x)
@@ -44,7 +45,7 @@ let alloc (#r:rid) #a #b #inv
        (ensures (fun h0 x h1 ->
     inv (empty_map a b) /\
     ralloc_post r (empty_map a b) h0 x h1))
-  = FStar.Monotonic.RRef.m_alloc r (empty_map a b)
+  = ralloc r (empty_map a b)
 
 let defined #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
   : GTot Type0
@@ -75,12 +76,12 @@ let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r
             HS.contains h1 m
             /\ modifies (Set.singleton r) h0 h1
             /\ modifies_ref r (Set.singleton (HS.as_addr hsref)) h0 h1
-            /\ m_sel h1 m == upd cur x y
-            /\ MR.witnessed (defined m x)
-            /\ MR.witnessed (contains m x y)))
+            /\ HS.sel h1 m == upd cur x y
+            /\ HST.witnessed (defined m x)
+            /\ HST.witnessed (contains m x y)))
   = recall m;
-    let cur = m_read m in
-    m_write m (upd cur x y);
+    let cur = !m in
+    m := upd cur x y;
     contains_stable m x y;
     witness m (defined m x);
     witness m (contains m x y)
@@ -95,10 +96,10 @@ let lookup #r #a #b #inv (m:t r a b inv) (x:a)
        (Some? y ==>
          defined m x h1 /\
          contains m x (Some?.v y) h1 /\
-         MR.witnessed (defined m x) /\
-         MR.witnessed (contains m x (Some?.v y)))))
+         HST.witnessed (defined m x) /\
+         HST.witnessed (contains m x (Some?.v y)))))
 =
-  let y = sel (m_read m) x in
+  let y = sel !m x in
   match y with
     | None -> y
     | Some b ->
