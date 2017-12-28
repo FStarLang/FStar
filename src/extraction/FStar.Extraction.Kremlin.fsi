@@ -1,5 +1,5 @@
-(*
-   Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi, and Microsoft Research
+﻿(*
+   Copyright 2008-2017  Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,7 +13,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.HyperHeap
+(* -------------------------------------------------------------------- *)
+#light "off"
 
-include FStar.Monotonic.HyperHeap
-type rref (id:rid) (a:Type) = mrref id a (FStar.Heap.trivial_preorder a)
+module FStar.Extraction.Kremlin
+type decl
+type program = list<decl>
+type file = string * program
+type version = int
+type binary_format = version * list<file>
+
+val current_version: version
+val translate : FStar.Extraction.ML.Syntax.mllib -> list<file>

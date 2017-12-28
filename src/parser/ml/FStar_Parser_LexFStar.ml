@@ -146,6 +146,9 @@ let () =
     ] in
    List.iter (fun (k,v) -> Hashtbl.add operators k v) l
 
+let current_range lexbuf =
+    FStar_Parser_Util.mksyn_range (fst (L.range lexbuf)) (snd (L.range lexbuf))
+
 type delimiters = { angle:int ref; paren:int ref; }
 let n_typ_apps = ref 0
 
@@ -336,6 +339,7 @@ let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
 let regexp ieee64     = floatp | floate
 let regexp xieee64    = xinteger 'L' 'F'
+let regexp range      = digit+ '.' '.' digit+
 
 let regexp op_prefix  = ["!~?"]
 let regexp op_infix0a = ["|"] (* left *)
@@ -381,6 +385,11 @@ let rec token = lexer
  | '`' -> BACKTICK
 
  | ident -> let id = L.lexeme lexbuf in
+   if FStar_Util.starts_with id FStar_Ident.reserved_prefix
+   then FStar_Errors.raise_error
+                    (FStar_Errors.Fatal_ReservedPrefix,
+                     FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")
+                    (current_range lexbuf);
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
  | constructor -> let id = L.lexeme lexbuf in
    Hashtbl.find_option constructors id |> Option.default (NAME id)
@@ -399,6 +408,7 @@ let rec token = lexer
  | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | range -> RANGE (L.lexeme lexbuf)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
@@ -503,3 +513,4 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf
+

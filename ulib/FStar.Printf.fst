@@ -138,8 +138,6 @@ let parse_format_string
   : option (list dir)
   = parse_format (list_of_string s)
 
-//THIS DOESN'T WORK WITH '--use_two_phase_tc true'; disable it locally
-#set-options "--use_two_phase_tc false"
 /// `sprintf`: The main function of this module
 ///     A variable arity string formatter
 ///     Used as: `sprintf "format string" v1 ... vn`

@@ -46,6 +46,16 @@ assume HasEq_unit: hasEq unit
 (* A coercion down to universe 0 *)
 type squash (p:Type) : Type0 = x:unit{p}
 
+(* F* will automatically insert `auto_squash` when simplifying terms,
+   converting terms of the form `p /\ True` to `auto_squash p`.
+   
+   We distinguish these automatically inserted squashes from explicit, 
+   user-written squashes.
+
+   It's marked `private` so that users cannot write it themselves.
+*)   
+private let auto_squash (p:Type) = squash p
+
 (*
  * Squashed versions of truth and falsehood
  *)
@@ -366,3 +376,11 @@ abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
+
+(*
+ * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
+ * the return type is not unit and the head symbol is not marked irreducible.
+ * To circumvent this behavior, singleton can be used.
+ * See the example usage in ulib/FStar.Algebra.Monoid.fst.
+ *)
+irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x

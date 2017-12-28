@@ -278,7 +278,7 @@ let rec term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
-      | Tm_bvar x ->        db_to_string x ^ ":(" ^ (term_to_string x.sort) ^  ")"
+      | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
       | Tm_uvar (u, _) ->   uvar_to_string u

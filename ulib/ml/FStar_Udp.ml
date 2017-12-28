@@ -1,4 +1,3 @@
-module FStar_Udp = struct
   open FStar_Bytes
   open FStar_Error
   open Unix
@@ -27,7 +26,7 @@ module FStar_Udp = struct
 
   (* Send abstract bytes through the socket after making them concrete *)
   let sock_send sock str =
-    let str = FStar_Bytes.get_cbytes str in
+    let str = get_cbytes str in
     let len = String.length str in
     send sock str 0 len []
 
@@ -36,7 +35,7 @@ module FStar_Udp = struct
     let str = Bytes.create maxlen in
     let recvlen = recv sock str 0 maxlen [] in
     let str = String.sub str 0 recvlen in
-    FStar_Bytes.abytes str
+    abytes str
 
   (* Receive bytes from the netwok *)
   let recv s i =
@@ -49,7 +48,7 @@ module FStar_Udp = struct
   let send s b =
     try
       (let n = sock_send s b in
-       if n < Z.to_int (FStar_Bytes.length b) then
+       if n < String.length b then
          Error(Printf.sprintf "Network error, wrote %d bytes" n)
        else Correct())
     with Unix_error (e,s1,s2) ->
@@ -103,4 +102,3 @@ module FStar_Udp = struct
     let oc = out_channel_of_descr s in
     output_string oc b; flush oc
  *)
-end

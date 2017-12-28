@@ -259,7 +259,8 @@ let document_toplevel:
            | FStar_Pervasives_Native.None  ->
                (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
       | uu____1152 ->
-          FStar_Exn.raise (FStar_Errors.Err "Not a TopLevelModule")
+          FStar_Errors.raise_err
+            (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____1164 =
@@ -301,23 +302,23 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
                    name))
          | FStar_Pervasives_Native.None  ->
              let uu____1270 =
-               let uu____1271 =
+               let uu____1275 =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str in
-               FStar_Errors.Err uu____1271 in
-             FStar_Exn.raise uu____1270)
+               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1275) in
+             FStar_Errors.raise_err uu____1270)
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->
     let modules =
       FStar_List.map
         (fun fn  ->
-           let uu____1285 = FStar_Parser_Driver.parse_file fn in
-           FStar_Pervasives_Native.fst uu____1285) files in
+           let uu____1289 = FStar_Parser_Driver.parse_file fn in
+           FStar_Pervasives_Native.fst uu____1289) files in
     let mods = FStar_List.map document_module modules in
     let on = FStar_Options.prepend_output_dir "index.md" in
     let fd = FStar_Util.open_file_for_writing on in
     FStar_List.iter
       (fun m  ->
-         let uu____1311 = FStar_Util.format "%s\n" [m.FStar_Ident.str] in
-         FStar_Util.append_to_file fd uu____1311) mods;
+         let uu____1315 = FStar_Util.format "%s\n" [m.FStar_Ident.str] in
+         FStar_Util.append_to_file fd uu____1315) mods;
     FStar_Util.close_file fd

@@ -7,8 +7,7 @@
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
@@ -18,16 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a7ad196c904935d5c2f8e9aaae11324e"
-    ],
-    [
-      "Recursive.fac",
-      2,
-      1,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "723af5067751750b435fc55a074c81a5"
+      "525550171b859e4e65376b2f84f8c224"
     ],
     [
       "Recursive.fac_mon",
@@ -40,7 +30,8 @@
         "@fuel_irrelevance_Recursive.fac.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "bool_inversion",
+        "bool_typing", "equation_Prims.nat",
         "equation_with_fuel_Recursive.fac.fuel_instrumented",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
@@ -55,7 +46,7 @@
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "7bc51eebcc937373d9b533bb38282e3b"
+      "7a1a437f71806a964e8eabc9aed34eda"
     ],
     [
       "Recursive.fac_sum",
@@ -71,7 +62,7 @@
         "typing_Recursive.fac"
       ],
       0,
-      "633e90b610a7a68c8b0e0a3e2aa65e17"
+      "f4495e8ccb85cd722d9155e9e6980247"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -84,7 +75,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "67fe5b457a36717f51f762c9ad99f2ac"
+      "bd87b9d49507dcc24dde4120d09fb7a0"
     ]
   ]
 ]

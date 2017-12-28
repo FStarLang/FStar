@@ -3,7 +3,6 @@ module FStar.Monotonic.DependentMap
     that grow monotonically,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module MR = FStar.Monotonic.RRef
 module DM = FStar.DependentMap
@@ -50,7 +49,7 @@ let alloc #a #b #inv #r _ = MR.m_alloc r []
 
 let extend #a #b #inv #r t x y =
     let open MR in
-    m_recall t;
+    recall t;
     let cur = m_read t in
     m_write t (upd cur x y);
     witness t (contains t x y)

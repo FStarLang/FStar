@@ -740,6 +740,7 @@ let rec arrow_formals_comp k =
             then let bs', k = arrow_formals_comp (comp_result c) in
                 bs@bs', k
             else bs, c
+        | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
 
 let rec arrow_formals k =
@@ -1000,10 +1001,16 @@ let if_then_else b t1 t2 =
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
-
-let mk_squash p =
+//////////////////////////////////////////////////////////////////////////////////////
+// Operations on squashed and other irrelevant/sub-singleton types
+//////////////////////////////////////////////////////////////////////////////////////
+let mk_squash u p =
     let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
-    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
+    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
+
+let mk_auto_squash u p =
+    let sq = fvar PC.auto_squash_lid (Delta_defined_at_level 2) None in
+    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
     let head, args = head_and_args t in
@@ -1027,6 +1034,49 @@ let un_squash t =
         end
     | _ ->
       None
+
+let is_squash t =
+    let head, args = head_and_args t in
+    match (Subst.compress head).n, args with
+    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
+        when Syntax.fv_eq_lid fv PC.squash_lid ->
+        Some (u, t)
+    | _ -> None
+
+
+let is_auto_squash t =
+    let head, args = head_and_args t in
+    match (Subst.compress head).n, args with
+    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
+        when Syntax.fv_eq_lid fv PC.auto_squash_lid ->
+        Some (u, t)
+    | _ -> None
+
+let is_sub_singleton t =
+    let head, _ = head_and_args (unmeta t) in
+    match (un_uinst head).n with
+    | Tm_fvar fv ->
+          Syntax.fv_eq_lid fv PC.squash_lid
+        || Syntax.fv_eq_lid fv PC.auto_squash_lid
+        || Syntax.fv_eq_lid fv PC.and_lid
+        || Syntax.fv_eq_lid fv PC.or_lid
+        || Syntax.fv_eq_lid fv PC.not_lid
+        || Syntax.fv_eq_lid fv PC.imp_lid
+        || Syntax.fv_eq_lid fv PC.iff_lid
+        || Syntax.fv_eq_lid fv PC.ite_lid
+        || Syntax.fv_eq_lid fv PC.exists_lid
+        || Syntax.fv_eq_lid fv PC.forall_lid
+        || Syntax.fv_eq_lid fv PC.true_lid
+        || Syntax.fv_eq_lid fv PC.false_lid
+        || Syntax.fv_eq_lid fv PC.eq2_lid
+        || Syntax.fv_eq_lid fv PC.eq3_lid
+        || Syntax.fv_eq_lid fv PC.b2t_lid
+        //these are an uninterpreted predicates
+        //which we are better off treating as sub-singleton
+        || Syntax.fv_eq_lid fv PC.haseq_lid
+        || Syntax.fv_eq_lid fv PC.has_type_lid
+        || Syntax.fv_eq_lid fv PC.precedes_lid
+    | _ -> false
 
 let arrow_one (t:typ) : option<(binder * comp)> =
     bind_opt (match (compress t).n with

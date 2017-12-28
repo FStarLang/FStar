@@ -1,7 +1,6 @@
 module HyE.CCA2  (* intuitively, parameterized by both PlainPKE and RSA *)
 open FStar.HyperStack.All
 open FStar.HyperStack.ST
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 open FStar.Seq
@@ -32,7 +31,7 @@ let access_pk_raw (pk:pkey) =
 noeq abstract type skey =
   | SKey: raw:RSA.skey -> pk:pkey -> skey
 
-val keygen: parent:rid -> ML (pkey * skey)
+val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey * skey)
 let keygen parent  =
   let pkey_raw, skey_raw = RSA.gen () in
   let region = new_region parent in

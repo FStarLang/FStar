@@ -8,6 +8,8 @@ open FStar.ST
 
 open MonotonicArray
 
+#set-options "--use_two_phase_tc false"
+
 (***** an unstable sequence proof *****)
 
 let lemma_seq_append_unstable (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
@@ -280,7 +282,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
         Some len
       else
         None
-#reset-options
+#reset-options "--use_two_phase_tc false"
 
 (***** sender and receiver *****)
 
@@ -381,7 +383,7 @@ let lemma_sender_connection_ctr_equals_length_log
   :Lemma (ctr c h == Seq.length (log c h))
   = ()
 
-#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0 --use_two_phase_tc false"
 val send_aux 
           (#n:nat) 
           (file:iarray byte n) 
@@ -400,7 +402,7 @@ val send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_bytes (as_initialized_seq file h0) c from (ctr c h1) h1))
-#reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0 --use_two_phase_tc false"
 let rec send_aux #n file c from pos
       = if pos = n then ()
         else
@@ -598,7 +600,7 @@ let receive_file #n file c =
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
   ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
 
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 100 --use_two_phase_tc false"
 let lemma_partial_length_hiding
   (#n:nat) (#m:nat)
   (c0:connection{sender c0}) (c1:connection{sender c1})

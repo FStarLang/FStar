@@ -72,7 +72,7 @@ effect St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 
 let contains_pred (#a:Type0) (#rel:preorder a) (r:mref a rel) = fun h -> h `contains` r
 
-type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{witnessed (contains_pred r)}
+type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{is_mm r = false /\ witnessed (contains_pred r)}
 
 abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
   = gst_recall (contains_pred r)
@@ -82,7 +82,7 @@ abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
       (fun h -> True)
       (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
   = let h0 = gst_get () in
-    let r, h1 = alloc rel h0 init true in
+    let r, h1 = alloc rel h0 init false in
     gst_put h1;
     gst_witness (contains_pred r);
     r
@@ -101,6 +101,8 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()

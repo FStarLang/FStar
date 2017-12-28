@@ -47,6 +47,69 @@ Guidelines for the changelog:
        [commit mitls/hacl-star@c93dd40b89263056c6dec8c606eebd885ba2984e]
        [commit FStar@8529b03e30e8dd77cd181256f0ec3473f8cd68bf]
 
+* More predictable and uniform inlining behavior when computing wps
+
+  When computing wp of `let x = e1 in e2`, F* computes the wp of `e1`,
+  say `wp1`, and that of `e2`, say `wp2` (where `x` is free in
+  `wp2`), and binds the twp wps to get the final wp.
+
+  Earlier the typechecker would perform inlining of `e1` in `wp2` in
+  certain cases (i.e. `wp2[e/x]`), e.g. when both `e1` and `e2` are
+  `Tot`, or both `e1` and `e2` are `GTot`, etc. If none of these
+  optimizations applied, the typechecker would simply use the
+  effect-specific `bind` to compute the final wp. This behavior was
+  quite brittle. See PR 1350 for an example.
+
+  Now the typechecker follows a more uniform, and predictable inlining
+  strategy. Term `e1` is inlined into `wp2` if all the following
+  conditions hold:
+
+  1. `e1` is a `Pure` or `Ghost` term
+  2. The return type of `e1` is not `unit`
+  3. The head symbol of `e1` is not marked `irreducible` and it is not an `assume val`
+  4. `e1` is not a `let rec`
+
+  This is breaking change. Consider the following example (adapted
+  from `ulib/FStar.Algebra.Monoid.fst`):
+
+  ```
+  let t (m:Type) (u:m) (op:m -> m -> m) =
+    forall (x:m). x `op` u == x
+
+  let foo :unit =
+    let u : prop = True in
+    let conj (p q : prop) : prop = p /\ q in
+    assume (forall (p:prop). p `conj` u == p);  //extensionality of props
+    assert (t prop u conj) ;
+    ()
+  ```
+
+  Previously, the inlining of `u` and `conj` didn't kick in, and so,
+  when the query goes to Z3, the `assume` remains in the precondition
+  of the query, and Z3 is able to then prove `p /\ True == p`.
+
+  With the new inlining behavior, `u` and `mult` get inlined, and the
+  assumption then becomes `p /\ True == p`. Before giving it to Z3,
+  the normalizer simplifies `p /\ True` to `squash p` (roughly, see PR
+  380), and then Z3 is no longer able to prove the query.
+
+  To get around this inlining behavior, `prims` now provides a
+  `singleton` function. Wrapping `u` in `singleton` like:
+
+  ```
+    ...
+    let u : prop = singleton True in
+    ...
+  ```
+
+  prevents inlining of `u`, leaving the assumption as is for Z3.
+
+  See [commit
+  FStar@02707cd0](https://github.com/FStarLang/FStar/commit/02707cd037f1d297452bb150c7a7e84dc11d5ee7)
+  for an example.
+
+  Only `ulib/FStar.Algebra.Monoid.fst` needed to be tweaked like this.
+
 ## Standard library
 
 * [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
@@ -107,6 +170,83 @@ Guidelines for the changelog:
 * ucontrib/Platform/fst/*: These modules are deprecated. Their
   functionality is now moved to FStar.Bytes, FStar.Error, FStar.Tcp,
   FStar.Udp, and FStar.Date.
+
+* Implentation of the HyperStack memory model and monotonic libraries
+  (refs, sequences, and maps)
+
+
+  1. `Monotonic.RRef` is now transparently defined as `HyperStack`
+     reference. As a result, the coercion `as_hsref` is no longer
+     required, and one can simply use `HyperStack` functions `sel,
+     upd, ralloc, ...` etc. instead of `m_sel, m_upd, m_alloc,
+     ...`. The latter functions are still there in `Monotonic.RRef`
+     for backward compatibility, and they are just wrappers over the
+     underlying `HyperStack` functions.
+
+     `type m_rref (r:rid) (a:Type) (b:reln a) = HST.m_rref r a b`
+
+  2. `HyperStack` references (`reference, mref, stackref, ...` etc.)
+     are now defined in `FStar.HyperStack.ST`. So, the clients must
+     `open` `FStar.HyperStack.ST` after `FStar.HyperStack` so that the
+     correct ref types are in the context. If the clients also open
+     `FStar.Monotonic.RRef`, then it can be opened after
+     `FStar.HyperStack.ST`, since it defines its own ref type.
+
+  3. When allocating a new region or a reference, the caller has to
+     now satisfy a precondition `witnessed (region_contains_pred r)`,
+     where `r` is the parent region. If `r` is an eternal region, this
+     predicate can be obtained using the
+     `HyperStack.ST.witness_region` function (by showing that the
+     region is contained in the memory). See for example:
+
+     https://github.com/FStarLang/FStar/commit/29c542301e2589d76869b4663b9b21884ea9fcfa#diff-eaa8cd4efc632ac485423c4eae117fedR208
+
+     Further, in some cases ref allocation may need some annotation
+     about the default, trivial preorder (see the change regarding
+     implicit generalization of types above). For example:
+
+     https://github.com/FStarLang/FStar/commit/f531ce82a19aa7073856cea8dd14fa424bbdd5dd#diff-86e8502a719a3b2f58786f2bdabc4e75R491
+
+
+* Consolidation of HyperHeap and HyperStack memory models, and
+  corresponding APIs for `contains`, `modifies`, etc.
+
+  Client should now only work with `FStar.HyperStack`, in fact `open
+  FStar.HyperHeap` will now give an error. Following is a mapping from
+  `HH` (`HyperHeap`) API to `HS` (`HyperStack`) API:
+
+  1. `HH.contains_ref` --> `HS.contains`
+  2. `HH.fresh_rref` --> `HS.fresh_ref`
+  3. `HH.fresh_region` --> `HS.fresh_region`
+  4. `HH.modifies` --> `HS.modifies_transitively`
+  5. `HH.modifies_just` --> `HS.modifies`
+  6. `HH.modifies_one` --> `HS.modifies_one`
+
+  `HyperHeap` now only provides the map structure of the memory, and
+  is `include`d in `HyperStack`, meaning client now get `HS.rid`,
+  `HS.root`, etc. directly.
+
+  There is no `HyperHeap.mref` anymore. `HyperStack` refs are
+  implemented directly over `Heap.mref`, which means,
+  `HS.mk_mreference` now takes as argument `Heap.mref`, and there is
+  no `HS.mrref_of` function anymore.
+
+  The `HyperStack` API has also been consolidated. Different versions
+  of API (`weak_contains`, `stronger_fresh_region`, etc.) are not
+  there anymore.
+
+  There is one subtle change. The `HS.modifies` functions earlier also
+  established `m0.tip == m1.tip`, where `m0` and `m1` are two `HS`
+  memories. This clause is no longer there, it seemed a bit misplaced
+  in the `modifies` clauses. It also meant that if the clients wanted
+  to talk only about modified refs, regions, etc. without getting into
+  tip, they had to use `HH` functions (e.g. in `Pointer`). With this
+  clause no longer there, at some places, `m0.tip == m1.tip` had to be
+  added separately in postconditions, e.g. see the commit in HACL*
+  below. But note that this should be quite easy to prove, since the
+  `ST` effect provides this directly.
+
+  https://github.com/mitls/hacl-star/commit/f83c49860afc94f16a01994dff5f77760ccd2169#diff-17012d38a1adb8c50367e0adb69c471fR55
 
 ## C Extraction
 
@@ -214,6 +354,18 @@ Expected changes in the near future:
   should provide a faster workflow than using --detail_hint_replay
   (which still exists)
 
+* Every error or warning is now assigned a unique number. Error
+  reports now look like this:
+
+```
+.\test.fst(2,22-2,23): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int (see also D:\workspace\everest\FStar\ulib\prims.fst(316,17-316,23))
+```
+
+  Notice the `19`: that's the unique error number.
+  
+  Warnings can be silenced or turned into errors using the new
+  `--warn_error` option.
+   
 ## Miscellaneous
 
 * A file can now contain at most one module or interface

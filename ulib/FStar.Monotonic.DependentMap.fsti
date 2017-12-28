@@ -3,7 +3,6 @@ module FStar.Monotonic.DependentMap
     that grow monotonically,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module MR = FStar.Monotonic.RRef
 module DM = FStar.DependentMap
@@ -83,7 +82,7 @@ let defined
     (x:a)
     (h:HS.mem)
   : GTot Type
-  = Some? (sel (MR.m_sel h t) x)
+  = Some? (sel (HS.sel h t) x)
 
 /// `fresh t x h`: The map is not defined at point `x`
 let fresh
@@ -107,7 +106,7 @@ let value_of
     (x:a)
     (h:HS.mem{defined t x h})
   : GTot (b x)
-  = Some?.v (sel (MR.m_sel h t) x)
+  = Some?.v (sel (HS.sel h t) x)
 
 /// `contains t x y h`: In state `h`, `t` maps `x` to `y`
 let contains
@@ -154,9 +153,9 @@ val defined_stable
 val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
     (_:unit{inv (repr empty)})
   : ST (t r a b inv)
-       (requires (fun h -> True))
+       (requires (fun h -> HyperStack.ST.witnessed (region_contains_pred r)))
        (ensures (fun h0 x h1 ->
-         ralloc_post r empty h0 (MR.as_hsref x) h1))
+         ralloc_post r empty h0 x h1))
 
 /// `extend t x y`: Extending `t` with (x -> y)
 ///     Requires: - proving that the `t` does not already define `x`
@@ -166,8 +165,7 @@ val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
 ///               - and in the future `t` will always contain `(x -> y)`
 //This really should be hidden inside the MR library
 let addr_of (#r:_) (#a:_) (#b:_) (m:MR.m_rref r a b) : GTot nat =
-    let x = MR.as_hsref m in
-    Heap.addr_of (HH.as_ref (HS.MkRef?.ref x))
+    HS.as_addr m
 
 val extend
     (#a:eqtype)
@@ -180,13 +178,13 @@ val extend
   : ST unit
        (requires (fun h ->
          ~(defined t x h) /\
-         inv (repr (upd (MR.m_sel h t) x y))))
+         inv (repr (upd (HS.sel h t) x y))))
        (ensures (fun h0 u h1 ->
-         let cur = MR.m_sel h0 t in
-         MR.m_contains t h1 /\
+         let cur = HS.sel h0 t in
+         HS.contains h1 t /\
          HS.modifies (Set.singleton r) h0 h1 /\
-         HH.modifies_rref r (Set.singleton (addr_of t)) HS.(h0.h) HS.(h1.h) /\
-         MR.m_sel h1 t == upd cur x y /\
+         HS.modifies_ref r (Set.singleton (addr_of t)) h0 h1 /\
+         HS.sel h1 t == upd cur x y /\
          MR.witnessed (contains t x y)))
 
 /// `lookup t x`: Querying the map `t` at point `x`
@@ -203,7 +201,7 @@ val lookup
        (requires (fun h -> True))
        (ensures (fun h0 y h1 ->
          h0==h1 /\
-         y == sel (MR.m_sel h1 t) x /\
+         y == sel (HS.sel h1 t) x /\
          (match y with
           | None -> ~(defined t x h1)
           | Some v ->
@@ -212,8 +210,8 @@ val lookup
  
 let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
-  = forall (x:a).{:pattern (sel (MR.m_sel h t) x) \/ (DM.sel (repr (MR.m_sel h t)) x)}
-            defined t x h ==> pred x (Some?.v (sel (MR.m_sel h t) x))
+  = forall (x:a).{:pattern (sel (HS.sel h t) x) \/ (DM.sel (repr (HS.sel h t)) x)}
+            defined t x h ==> pred x (Some?.v (sel (HS.sel h t) x))
 
 let f_opt (#a:eqtype) (#b #c:a -> Type) (f: (x:a) -> b x -> c x) :(x:a) -> option (b x) -> option (c x)
   = fun x y ->
@@ -229,7 +227,11 @@ val map_f (#a:eqtype) (#b #c:a -> Type)
 	  (#r #r':MR.rid)
           (m:t r a b inv) (f: (x:a) -> b x -> c x)
 	  :ST (t r' a c inv')
-	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (MR.m_sel h0 m)))))
+	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\ witnessed (region_contains_pred r')))
 	      (ensures  (fun h0 m' h1 ->
-	                 inv' (DM.map (f_opt f) (repr (MR.m_sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
-	                 ralloc_post r' (mmap_f (MR.m_sel h0 m) f) h0 (MR.as_hsref m') h1))
+	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
+	                 ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))
+
+
+
+

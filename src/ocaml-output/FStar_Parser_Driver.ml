@@ -29,9 +29,9 @@ let parse_fragment: FStar_Parser_ParseIt.input_frag -> fragment =
     | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr [],uu____77) -> Empty
     | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr decls,uu____99) ->
         Decls decls
-    | FStar_Parser_ParseIt.ParseError (msg,r) ->
-        FStar_Exn.raise (FStar_Errors.Error (msg, r))
-    | FStar_Parser_ParseIt.Term uu____124 ->
+    | FStar_Parser_ParseIt.ParseError (e,msg,r) ->
+        FStar_Errors.raise_error (e, msg) r
+    | FStar_Parser_ParseIt.Term uu____125 ->
         failwith
           "Impossible: parsing a Toplevel always results in an ASTFragment"
 let parse_file:
@@ -41,18 +41,18 @@ let parse_file:
       FStar_Pervasives_Native.tuple2
   =
   fun fn  ->
-    let uu____138 =
+    let uu____139 =
       FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename fn) in
-    match uu____138 with
+    match uu____139 with
     | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inl ast,comments) ->
         (ast, comments)
-    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr uu____177,uu____178)
+    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr uu____178,uu____179)
         ->
         let msg = FStar_Util.format1 "%s: expected a module\n" fn in
         let r = FStar_Range.dummyRange in
-        FStar_Exn.raise (FStar_Errors.Error (msg, r))
-    | FStar_Parser_ParseIt.ParseError (msg,r) ->
-        FStar_Exn.raise (FStar_Errors.Error (msg, r))
-    | FStar_Parser_ParseIt.Term uu____225 ->
+        FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg) r
+    | FStar_Parser_ParseIt.ParseError (e,msg,r) ->
+        FStar_Errors.raise_error (e, msg) r
+    | FStar_Parser_ParseIt.Term uu____227 ->
         failwith
           "Impossible: parsing a Filename always results in an ASTFragment"

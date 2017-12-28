@@ -10,7 +10,7 @@
         "@query", "equation_Sig.sigsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "580c4729c60a08e8739c6a86283eb103"
+      "afadda8c788ceb4da3401a6a2193127a"
     ],
     [
       "Sig.pk",
@@ -19,7 +19,7 @@
       1,
       [ "@query", "equation_Sig.pksize", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "6dea315324ca00dd322ccda26bd546cb"
+      "2fd9834b7b9781e07e80cead0a4315c3"
     ],
     [
       "Sig.sk",
@@ -28,7 +28,7 @@
       1,
       [ "@query", "equation_Sig.sksize", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "e19bdc7590d8f75f113a2e71f282ab08"
+      "c502cc9e381c59dfad7af08e8c8e1f98"
     ],
     [
       "Sig.entry",
@@ -44,7 +44,7 @@
         "haseqSig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
       0,
-      "507cd1c1f9c0276dc240d80d1966849a"
+      "bcfb7801e48bef6d6ffad976edcc9e2e"
     ],
     [
       "Sig.__proj__Entry__item__k",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "bd810165876b9bb10b138a43a4801daf"
+      "2255d276888bf61b9c02fd5bcb75cb40"
     ],
     [
       "Sig.__proj__Entry__item__t",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
       0,
-      "92348e33d32241c8b3ebcacd0ec05ff7"
+      "f85b83e8ee726d79c279ba056c19a34a"
     ],
     [
       "Sig.__proj__Entry__item__m",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "a8edd87188f39c89d4f271f69a66bcff"
+      "07d5c729bb2325e66bfc53eeaf79da46"
     ],
     [
       "Sig.sign",
@@ -90,7 +90,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "a7210ae8afc96085404d2b2c14e834fa"
+      "966aebffdb8281eb4fd606959029a793"
     ],
     [
       "Sig.verify",
@@ -99,58 +99,20 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_Platform.Bytes.HasEq_bytes",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Sig.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Platform.Bytes.bytes", "equation_Sig.pk",
-        "equation_Sig.pksize", "equation_Sig.sigsize", "equation_Sig.text",
-        "fuel_guarded_inversion_Sig.entry", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "equation_Sig.text", "fuel_guarded_inversion_Sig.entry",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d",
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
       0,
-      "ce668856c214121ecfdf15818e7a88c4"
-    ],
-    [
-      "Sig.verify",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "f993bb68169de76e337b57db0ad47362"
-    ],
-    [
-      "Sig.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Sig.text"
-      ],
-      0,
-      "4b93d51a7da10590e04a8e9c7b6bf76c"
-    ],
-    [
-      "Sig.verify",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "equation_Sig.text",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "b5e3893a6be23013aef9371bddd331de"
+      "4d76fdaf01e76626b7d2e7c6a6028d7e"
     ]
   ]
 ]

@@ -13,7 +13,6 @@ type env = id ->  Tot label
 type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). {:pattern (Low? (env x))} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
 
-
  let p1 lo hi =
   if (read hi = 0) then 
     write lo (read hi)

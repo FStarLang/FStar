@@ -25,7 +25,7 @@ open FStar.Classical
 open FStar.FunctionalExtensionality
 open FStar.StrongExcludedMiddle
 
-#set-options "--max_fuel 1 --max_ifuel 1 --use_two_phase_tc true"
+#set-options "--max_fuel 1 --max_ifuel 1"
 
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
@@ -1119,14 +1119,14 @@ let rec inversion_elam #g s1 e #s t1 t2 ht heq hnew = match ht with
     *)
 
     (* AR: implicits required *)
-    let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved #s1 #s2 #u p1 in
+    let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved p1 in
     (* NS:
        psu1: tred_star (TArr s1 s2) (TArr u1 u2)
        psu2: tred_star u (TArr u1 u2)
     *)
 
     (* AR: implicits required *)
-    let ExIntro u1' (ExIntro u2' (Conj ptu1 ptu2)) = tred_tarr_preserved #t1 #t2 #u p2 in
+    let ExIntro u1' (ExIntro u2' (Conj ptu1 ptu2)) = tred_tarr_preserved p2 in
     (* NS:
         ptu1: tred_star (TArr s1 s2) (TArr u1' u2')
         ptu2: tred_star u (TArr u1' u2')

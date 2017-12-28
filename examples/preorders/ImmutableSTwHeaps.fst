@@ -132,4 +132,6 @@ val write : #a:Type ->
                              (fun h0 _ h1 -> h1 == upd h0 r x)
 let write #a r x =
   let h = ist_get () in
+  Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ();
   ist_put (upd h r x)

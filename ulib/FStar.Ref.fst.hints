@@ -2,44 +2,13 @@
   "‡\u0011þŒðº‚\u0018´ê¦¾\u001aõ„L",
   [
     [
-      "FStar.Ref.sel",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "450ca0dfdf9a26ddcee2f1b85771e6f9"
-    ],
-    [
-      "FStar.Ref.upd",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0,
-      "a54c86b6e6e91b6c1058101837900c0b"
-    ],
-    [
-      "FStar.Ref.addr_of",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ccaaf4ba338c9787837bc7a2342944dc"
-    ],
-    [
       "FStar.Ref.contains",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "608ca8c7c625016a53741e69ea060201"
+      "c1d8666e28324f05076b71c1f54e9dcc"
     ],
     [
       "FStar.Ref.unused_in",
@@ -48,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c4992e61d80584c7ea43819a0c18ec6c"
+      "40efca44d02f311d8c89468b6ebcaef8"
     ],
     [
       "FStar.Ref.fresh",
@@ -57,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "3ecc6de8f63efa01c8d9619a14c18a29"
+      "2443ae3bbd03c91dadf88c5e730f1012"
     ],
     [
       "FStar.Ref.only",
@@ -69,7 +38,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a4666a653563f732f9266452a5b8b332"
+      "56ac335285052d9ba125fae30d09d594"
     ],
     [
       "FStar.Ref.recall",
@@ -78,7 +47,7 @@
       1,
       [ "@query", "equation_FStar.Ref.contains" ],
       0,
-      "3548119aabc529bdd43f51053813fbe2"
+      "6854e77e1e57a5e11e0e6e65ee9546b1"
     ],
     [
       "FStar.Ref.alloc",
@@ -92,7 +61,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0f8bfd4b17dcf8bf44e4fdb7c4ca7045"
+      "78042f2af72842d255ef960919aa1c42"
     ],
     [
       "FStar.Ref.read",
@@ -101,7 +70,7 @@
       1,
       [ "@query", "equation_FStar.Ref.sel" ],
       0,
-      "d3ca0952809f089c8ca05e277d0491b2"
+      "83516b4350a80602400113ad9a6c06ec"
     ],
     [
       "FStar.Ref.write",
@@ -121,7 +90,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "e86ab9983a747cb427f321fa88389e49"
+      "b5b50b7437488ef6329766b0caab373e"
     ]
   ]
 ]

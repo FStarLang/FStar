@@ -69,7 +69,8 @@ type ctr = mref counter preorder'
 // we attach to backup every key. As a result, in the following we 
 // also omit the authenticated encryption and decryption functions.
 
-let saved_backup (c:ctr) (s:record) = fun h -> h `contains` c /\ saved (sel h c) s
+let saved_backup (c:ctr) (s:record) : (f:(heap -> Type0){FStar.ST.stable f}) =
+    fun h -> h `contains` c /\ saved (sel h c) s
 
 type backup (c:ctr) = s:record{witnessed (saved_backup c s)}
 
