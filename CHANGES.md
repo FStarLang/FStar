@@ -175,10 +175,9 @@ Guidelines for the changelog:
   (refs, sequences, and maps)
 
 
-  1. `Monotonic.RRef` interface is trimmed down. Following is the
-     mapping of the functions that have been removed (`MR` is
-     `Monotonic.RRef`, `HS` is `FStar.HyperStack`, `HST` is
-     `FStar.HyperStack.ST`):
+  1. `Monotonic.RRef` is gone. Following is the mapping of the
+     functions that have been removed (`MR` is `Monotonic.RRef`, `HS`
+     is `FStar.HyperStack`, `HST` is `FStar.HyperStack.ST`):
 
      1.  `MR.reln a` --> `Preorder.preorder a`
      2.  `MR.monotonic a b` --> `Preorder.preorder_rel a b`
@@ -192,11 +191,18 @@ Guidelines for the changelog:
      10. `MR.m_write r x` --> `r := x` (where `:=` is defined in `HST`)
      11. `MR.witnessed p` --> `HST.witnessed p`
      12. `MR.m_recall r` --> `HST.recall r`
+     13. `MR.rid` --> `HST.erid`
+     14. `MR.witness` --> `HST.mr_witness`
+     15. `MR.testify` --> `HST.testify`
+     16. `MR.testify_forall` --> `HST.testify_forall`
+     17. `MR.ex_rid` --> `HST.ex_rid`
+     18. `MR.ex_rid_of_rid` --> `HST.witness_region`
 
      See the following commits for examples:
      
      https://github.com/mitls/mitls-fstar/commit/be1b8899a344e885bd3a83a26b099ffb4184fd06
-
+     https://github.com/mitls/mitls-fstar/commit/73299b71075aca921aad6fbf78faeafe893731db
+     https://github.com/mitls/hacl-star/commit/1fb9727e8193e798fe7a6091ad8b16887a72b98d
      https://github.com/mitls/hacl-star/commit/c692487d970730206d1f3120933b85d46b87f0a3
 
 
