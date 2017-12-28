@@ -3,7 +3,6 @@ open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
-open FStar.Monotonic.RRef
 
 module MAC = EtM.MAC
 
@@ -15,6 +14,8 @@ module Ideal = EtM.Ideal
 module Plain = EtM.Plain
 
 (*** Basic types ***)
+
+type rid = erid
 
 /// An AE cipher includes a mac tag
 type cipher = (CPA.cipher * MAC.tag)

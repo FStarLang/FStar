@@ -90,11 +90,11 @@ abstract let stable (p:mem_predicate) =
 assume type witnessed: mem_predicate -> Type0
 
 (* TODO: we should derive these using DM4F *)
-assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
-assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
+assume private val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
+assume private val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
 
-assume val gst_witness: p:mem_predicate -> GST unit (fun post h0 -> p h0 /\ stable p /\ (witnessed p ==> post () h0))
-assume val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
+assume private val gst_witness: p:mem_predicate -> GST unit (fun post h0 -> p h0 /\ stable p /\ (witnessed p ==> post () h0))
+assume private val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
 
 assume val lemma_functoriality
   (p:mem_predicate{witnessed p}) (q:mem_predicate{(forall (h:mem). p h ==> q h)})
@@ -615,3 +615,16 @@ let weaken_witness
       = lemma_functoriality p q
     in
     FStar.Classical.move_requires aux ()
+
+let testify (p:mem_predicate)
+  :ST unit (requires (fun _      ->  witnessed p))
+           (ensures (fun h0 _ h1 -> h0==h1 /\ p h1))
+  = gst_recall p
+
+let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
+  ($s:squash (forall (x:c). witnessed (p x)))
+  :ST unit (requires (fun h      -> True))
+           (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
+  = admit ()
+
+type ex_rid = r:rid{is_eternal_region r /\ witnessed (region_contains_pred r)}

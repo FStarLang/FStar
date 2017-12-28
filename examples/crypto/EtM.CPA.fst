@@ -3,7 +3,6 @@ open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
-open FStar.Monotonic.RRef
 open EtM.Ideal
 
 open Platform.Bytes
@@ -11,6 +10,8 @@ module CC = EtM.CoreCrypto
 module B = Platform.Bytes
 
 open EtM.Plain
+
+type rid = erid
 
 (*** Basic types ***)
 

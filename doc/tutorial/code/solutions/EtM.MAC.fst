@@ -4,7 +4,6 @@ open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
-open FStar.Monotonic.RRef
 
 open Platform.Bytes
 open CoreCrypto
@@ -14,6 +13,7 @@ module Ideal = EtM.Ideal
 
 module HST = FStar.HyperStack.ST
 
+type rid = HST.erid
 type msg = EtM.CPA.cipher
 
 let keysize   = 64

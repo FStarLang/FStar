@@ -4,7 +4,6 @@ module FStar.Monotonic.DependentMap
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
-module MR = FStar.Monotonic.RRef
 module DM = FStar.DependentMap
 
 /// `map a b`: Represent the partial map as a list of pairs of points
@@ -48,20 +47,18 @@ let defined_stable #a #b #inv #r t x = ()
 let alloc #a #b #inv #r _ = ralloc r []
 
 let extend #a #b #inv #r t x y =
-    let open MR in
     recall t;
     let cur = !t in
     t := upd cur x y;
-    witness t (contains t x y)
+    mr_witness t (contains t x y)
 
 let lookup #a #b #inv #r t x =
-    let open MR in
     let m = !t in
     let y = sel m x in
     match y with
     | None -> y
     | Some b ->
-      witness t (contains t x b);
+      mr_witness t (contains t x b);
       y
 
 let rec mmap_f #a #b #c m f =
