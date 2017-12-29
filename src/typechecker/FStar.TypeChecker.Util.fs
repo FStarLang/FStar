@@ -641,7 +641,7 @@ let strengthen_precondition
             env
             (e_for_debug_only:term)
             (lc:lcomp)
-            (g0:guard_t) 
+            (g0:guard_t)
     : lcomp * guard_t =
     if Rel.is_trivial g0
     then lc, g0
@@ -856,37 +856,89 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             && should_return env e1opt lc1
             then let e1 = Option.get e1opt in
                  let x = Option.get b in
-                //we will inline e in the WP of c2
-                //Aiming to build a VC of the form (x == e ==> wp2[e/x])
-                //The additional equality hypothesis may seem redundant, but
-                //c1's post-condition or type may carry some meaningful information
-                //Then, it's important to weaken wp2 to with the equality,
-                //So that whatever property is proven about the result of wp1 (i.e., x)
-                //is still available in the proof of wp2
-                //However, we apply two optimizations:
+                //we will inline e1 in the WP of c2
+                //Aiming to build a VC of the form
+                //
+                //     M.bind (lift_(Pure/Ghost)_M wp1)
+                //            (x == e1 ==> lift_M2_M (wp2[e1/x]))
+                //
+                //
+                //The additional equality hypothesis may seem
+                //redundant, but c1's post-condition or type may carry
+                //some meaningful information Then, it's important to
+                //weaken wp2 to with the equality, So that whatever
+                //property is proven about the result of wp1 (i.e., x)
+                //is still available in the proof of wp2 However, we
+                //apply two optimizations:
+
                 //   a. if c1 is already a return or a partial return,
-                //      then it already provides this equality, so no need to add it again
-                //   b. if c1 is marked with TRIVIAL_POSTCONDITION, then the post-condition
-                //      does not carry any useful information, only its result type might.
-                //      In this case, we build `wp2[with_type e t1/x]`, decorate `e1` with
-                //      its type before substituting. This allows the SMT solver to recover
-                //      the type of `e1` (using a primitive axiom about with_type), and
-                //      without polluting the VC with an additional equality.
-                //      Note, `with_type e t` can be normalized away to `e` if requested
-                //      explicitly by the user.
-                //   c. If neither of the two optimizations apply, then we generate
-                //           (x == e ==> wp2[e/x])
+                //      then it already provides this equality, so no
+                //      need to add it again and instead generate
+                //
+                //         M.bind (lift_(Pure/Ghost)_M wp1)
+                //                (lift_M2_M (wp2[e1/x]))
+
+                //   b. if c1 is marked with TRIVIAL_POSTCONDITION,
+                //      then the post-condition does not carry any
+                //      useful information. We have two sub-cases:
+
+                //      (i) In case the user option
+                //          `vcgen.optimize_bind_as_seq = without_type`
+                //          rather than generating
+                //          M.bind wp1 (\x. wp2), we generate:
+                //
+                //           M.assert_wp (wp1 (\x. True))
+                //                       (lift_M2_M  (wp2[e1/x]))
+                //
+                //      Note, although the post-condition of c1 does
+                //      not carry useful information, its result type
+                //      might. When applying the optimization above,
+                //      the SMT solver is faced with reconstructing
+                //      the type of e1. Usually, it can do this, but
+                //      in some cases (e.g., if the result type has a
+                //      complex refinement), then this optimization
+                //      can actually cause a VC to fail. So, we add an
+                //      option to recover from this, at the cost of
+                //      some VC bloat:
+                //
+                //      (ii). In case the user option
+                //            `vcgen.optimize_bind_as_seq = with_type`,
+                //            we build
+                //
+                //             M.assert_wp (wp1 (\x. True))
+                //                        (lift_M2_M (wp2[with_type e1 t1/x]))
+                //
+                //      Where `with_type e1 t1`, decorates `e1` with
+                //      its type before substituting. This allows the
+                //      SMT solver to recover the type of `e1` (using
+                //      a primitive axiom about with_type), without
+                //      polluting the VC with an additional equality.
+                //      Note, specific occurrences of `with_type e t`
+                //      can be normalized away to `e` if requested
+                //      explicitly by a user tactic.
+                //
+                //   c. If neither of the optimizations above apply,
+                //   then we generate the WP mentioned at the top,
+                //   i.e.
+                //
+                //      M.bind (lift_(Pure/Ghost)_M wp1)
+                //             (x == e1 ==> lift_M2_M (wp2[e1/x]))
+
                  if U.is_partial_return c1
                  then // case (a)
                       let _ = debug (fun () ->
                          BU.print2 "(3) bind (case a): Substituting %s for %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       mk_bind c1 b c2
-                 else if false //disable temporarily
+                 else if Options.vcgen_optimize_bind_as_seq()
                       && lcomp_has_trivial_postcondition lc1
                       && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
                  then // case (b)
-                      let e1' = U.mk_with_type u_res_t1 res_t1 e1 in
+                      let e1' =
+                        if Options.vcgen_decorate_with_type()
+                        then U.mk_with_type u_res_t1 res_t1 e1 // case (b) (ii)
+                        else e1                                // case (b) (i)
+                      in
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case b): Substituting %s for %s" (N.term_to_string env e1') (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x, e1')] c2 in

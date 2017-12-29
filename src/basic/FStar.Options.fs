@@ -186,6 +186,7 @@ let defaults =
       ("use_hints"                    , Bool false);
       ("use_hint_hashes"              , Bool false);
       ("using_facts_from"             , Unset);
+      ("vcgen.optimize_bind_as_seq"   , Unset);
       ("verify_module"                , List []);
       ("warn_default_effects"         , Bool false);
       ("z3refresh"                    , Bool false);
@@ -290,6 +291,7 @@ let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
+let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
@@ -841,6 +843,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
        ( noshort,
+         "vcgen.optimize_bind_as_seq",
+          EnumStr ["off"; "without_type"; "with_type"],
+          "\n\t\tOptimize the generation of verification conditions, \n\t\t\t\
+           specifically the construction of monadic `bind`,\n\t\t\t\
+           generating `seq` instead of `bind` when the first computation as a trivial post-condition.\n\t\t\t\
+           By default, this optimization does not apply.\n\t\t\t\
+           When the `without_type` option is chosen, this imposes a cost on the SMT solver\n\t\t\t\
+           to reconstruct type information.\n\t\t\t\
+           When `with_type` is chosen, type information is provided to the SMT solver,\n\t\t\t\
+           but at the cost of VC bloat, which may often be redundant.");
+
+       ( noshort,
         "__temp_no_proj",
         Accumulated (SimpleStr "module_name"),
         "Don't generate projectors for this module");
@@ -964,7 +978,8 @@ let settable = function
     | "z3rlimit_factor"
     | "z3rlimit"
     | "z3refresh"
-    | "use_two_phase_tc" -> true
+    | "use_two_phase_tc"
+    | "vcgen.optimize_bind_as_seq" -> true
     | _ -> false
 
 // the first two options below are options that are passed to z3 using
@@ -1191,6 +1206,10 @@ let using_facts_from             () =
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
     | Some ns -> List.collect parse_setting ns |> List.rev
+let vcgen_optimize_bind_as_seq   () = Option.isSome (get_vcgen_optimize_bind_as_seq  ())
+let vcgen_decorate_with_type     () = match get_vcgen_optimize_bind_as_seq  () with
+                                      | Some "with_type" -> true
+                                      | _ -> false
 let warn_default_effects         () = get_warn_default_effects        ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
@@ -1224,4 +1243,3 @@ let should_extract m =
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"
-
