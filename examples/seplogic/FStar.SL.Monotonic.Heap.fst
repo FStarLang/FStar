@@ -1,11 +1,11 @@
-module FStar.Monotonic.Heap
+module FStar.SL.Monotonic.Heap
 
 open FStar.Preorder
 open FStar.Classical
 
 private noeq type heap_rec = {
   next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & rel:(option (preorder a)) & a))
+  memory   : nat -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -24,40 +24,40 @@ let emp = {
 
 private noeq type mref' (a:Type0) (rel:preorder a) :Type0 = {
   addr: nat;
-  init: FStar.Ghost.erased a;
-  mm:   FStar.Ghost.erased bool;  //manually managed flag
+  init: a;
+  mm:   bool;  //manually managed flag
 }
 
 let mref a rel = mref' a rel
 
 let addr_of #a #rel r = r.addr
 
-let is_mm #a #rel r = FStar.Ghost.reveal r.mm
+let is_mm #a #rel r = r.mm
 
 let compare_addrs #a #b #rel1 #rel2 r1 r2 = r1.addr = r2.addr
 
 let contains #a #rel h r =
   let _ = () in
   Some? (h.memory r.addr) /\
-  (let Some (| a1, pre_opt, _ |) = h.memory r.addr in
-   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+  (let Some (| a1, pre_opt, mm, _ |) = h.memory r.addr in
+   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
 let addr_unused_in n h = None? (h.memory n)
 
 let unused_in #a #rel r h = addr_unused_in (addr_of r) h
 
 let sel_tot #a #rel h r =
-  let Some (| _, _, x |) = h.memory r.addr in
+  let Some (| _, _, _, x |) = h.memory r.addr in
   x
 
 let sel #a #rel h r =
   if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r) then
     sel_tot #a h r
-  else FStar.Ghost.reveal r.init
+  else r.init
 
 let upd_tot' (#a: Type0) (#rel: preorder a) (h: heap) (r: mref a rel) (x: a) =
   { h with memory = (fun r' -> if r.addr = r'
-			    then Some (| a, Some rel, x |)
+			    then Some (| a, Some rel, r.mm, x |)
                             else h.memory r') }
 
 let upd_tot #a #rel h r x = upd_tot' h r x
@@ -70,54 +70,64 @@ let upd #a #rel h r x =
     then
       { next_addr = r.addr + 1;
         memory    = (fun (r':nat) -> if r' = r.addr
-	   		         then Some (| a, Some rel, x |)
+	   		         then Some (| a, Some rel, r.mm, x |)
                                  else h.memory r') }
     else
       { h with memory = (fun r' -> if r' = r.addr
-				then Some (| a, Some rel, x |)
+				then Some (| a, Some rel, r.mm, x |)
                                 else h.memory r') }
 
 let alloc #a rel h x mm =
-  let r = { addr = h.next_addr; init = FStar.Ghost.hide x; mm = FStar.Ghost.hide mm } in
+  let r = { addr = h.next_addr; init = x; mm = mm } in
   r, { next_addr = r.addr + 1;
        memory    = (fun (r':nat) -> if r' = r.addr
-	   		        then Some (| a, Some rel, x |)
+	   		        then Some (| a, Some rel, r.mm, x |)
                                 else h.memory r') }
 
 let free_mm #a #rel h r =
   { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
 
-let restrict #a #rel h r =
-  { next_addr = r.addr + 1;
-    memory    = (fun r' -> if r' = r.addr then h.memory r' else None) }
-
-let minus #a #rel h r =
-  { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
-
 let disjoint h1 h2 =
   let _ = () in
-  (forall (r:nat). ~(Some?(h1.memory r) && Some?(h2.memory r))) 
+  (forall (r:nat). ~(Some?(h1.memory r) && Some?(h2.memory r)))
 
-let join h1 h2 =
-  let heap_memory = (fun r' ->  match (h1.memory r', h2.memory r') with
-                              | (Some v1, None) -> Some v1 
+let join_tot h1 h2 =
+  let memory = (fun r' ->  match (h1.memory r', h2.memory r') with
+                              | (Some v1, None) -> Some v1
 			      | (None, Some v2) -> Some v2
 			      | _               -> None) in
   if (h1.next_addr < h2.next_addr)
-  then { next_addr = h2.next_addr;  memory = heap_memory }
-  else { next_addr = h1.next_addr;  memory = heap_memory }
+  then { next_addr = h2.next_addr;  memory = memory }
+  else { next_addr = h1.next_addr;  memory = memory }
+
+let join h1 h2 =
+  if FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint h1 h2)
+  then join_tot h1 h2
+  else emp
+
+let restrict #a #rel h r =
+  { next_addr = r.addr + 1;
+    memory    = (fun (r':nat) -> if r' = r.addr then h.memory r' else None) }
 
 let points_to #a #rel r x =
   { next_addr = r.addr + 1;
-    memory    = (fun r'  -> if r' = r.addr 
-                          then Some (| a, Some rel, x |)
-		          else None) }
+    memory    = (fun (r':nat)  -> if r' = r.addr 
+                              then Some (| a, Some rel, r.mm, x |)
+  		              else None) }
+
+let minus #a #rel h r =
+  { h with memory = (fun (r':nat) -> if r' = r.addr then None else h.memory r') }
+
+  // let memory    = (fun (r':nat) -> if r' = r.addr then None else h.memory r') in
+  // if (h.next_addr = r.addr + 1)
+  // then { next_addr = r.addr     ; memory = memory }
+  // else { next_addr = h.next_addr; memory = memory }
 
 (*
  * update of a well-typed mreference
  *)
 private let lemma_upd_contains_test
-  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{valid_upd h0 r x})
+  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a)
   :Lemma (h0 `contains` r ==>
           (let h1 = upd h0 r x in
 	   (forall (b:Type) (rel:preorder b) (r':mref b rel). (h0 `contains` r' /\ addr_of r' = addr_of r) ==> sel h1 r' == x /\
@@ -134,7 +144,7 @@ private let lemma_upd_contains_test
  * in h0, r' is well-typed, but in h1 it's not
  *)
 private let lemma_upd_contains_not_necessarily_well_typed_test
-  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{valid_upd h0 r x})
+  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a)
   :Lemma ((~ (r `unused_in` h0)) ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
@@ -147,7 +157,7 @@ private let lemma_upd_contains_not_necessarily_well_typed_test
  * update of an unused mreference
  *)
 private let lemma_upd_unused_test
-  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{valid_upd h0 r x})
+  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a)
   :Lemma (r `unused_in` h0 ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
@@ -186,7 +196,8 @@ private let lemma_alloc_fresh_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (m
 let lemma_ref_unused_iff_addr_unused #a #rel h r = ()
 let lemma_contains_implies_used #a #rel h r = ()
 let lemma_distinct_addrs_distinct_types #a #b #rel1 #rel2 h r1 r2 = ()
-let lemma_distinct_addrs_distinct_preorders #a #rel1 #rel2 h r1 r2 = ()
+let lemma_distinct_addrs_distinct_preorders u = ()
+let lemma_distinct_addrs_distinct_mm u = ()
 let lemma_distinct_addrs_unused #a #b #rel1 #rel2 h r1 r2 = ()
 let lemma_alloc #a rel h0 x mm =
   let r, h1 = alloc rel h0 x mm in
@@ -215,80 +226,56 @@ let lemma_sel_equals_sel_tot_for_contained_refs #a #rel h r = ()
 let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()
 let lemma_modifies_and_equal_dom_sel_diff_addr #a #rel s h0 h1 r = ()
 
-let lemma_restrict_contains #a #rel h r1 r2 = ()
-let lemma_restrict_unused #a #rel h r1 r2 = ()
-let lemma_restrict_sel #a #rel h r1 r2 = ()
-let lemma_minus_contains #a #rel h r1 r2 = ()
-let lemma_minus_unused #a #rel h r1 r2 = ()
-let lemma_minus_sel #a #rel h r1 r2 = () 
-let lemma_join_contains #a #rel h1 h2 r = ()
-let lemma_join_unused #a #rel h1 h2 r = ()
-let lemma_join_sel #a #rel h1 h2 r = ()
-let lemma_points_to_contains #a #rel r1 r2 x = ()
-let lemma_points_to_unused #a #rel r1 r2 x = ()
-let lemma_points_to_sel #a #rel r1 r2 x = ()
-let lemma_disjoint_is_comm h1 h2 = ()
-let lemma_emp_disjoint h = ()
-let lemma_emp_disjoint' h = ()
-let lemma_disjoint_restrict_minus #a #rel h r = ()
-let lemma_disjoint_points_to_minus #a #rel h r x = ()
-let lemma_join_restrict_minus #a #rel h r = 
-  assert (equal (join (restrict h r) (minus h r)) h)
-let lemma_join_is_comm h1 h2 = 
-  assert (equal (join h1 h2) (join h2 h1))
-let lemma_join_h_emp h = 
-  assert (equal (join h emp) h)
-let lemma_join_emp_h h = 
-  assert (equal (join emp h) h)
-  
-let lemma_restrict_eq_points_to #a #rel h r = admit ()
+let lemma_join_tot_restrict_minus #a #rel h r = 
+  assert (equal (join_tot (restrict h r) (minus h r)) (h))
+let lemma_join_tot_h_emp h =
+  assert (equal (join_tot h emp) h)
+let lemma_join_tot_emp_h h =
+  assert (equal (join_tot emp h) h)
+
+let lemma_contains_r_join_tot_restrict_minus #a #rel h r = ()
+let lemma_contains_r1_join_tot_restrict_minus #a #rel h r r1 = ()
+let lemma_contains_r_join_tot_points_to_minus #a #rel h r x = ()
+let lemma_contains_r1_join_tot_points_to_minus #a #rel h r r1 x = ()
+let lemma_contains_join_tot_h_emp #a #rel h r = ()
+
+let lemma_restrict_r_join_tot_restrict_minus #a #rel h r =
+  assert (equal (restrict (join_tot (restrict h r) (minus h r)) r) (restrict h r))
+let lemma_restrict_r1_join_tot_restrict_minus #a #rel h r r1 =
+  assert (equal (restrict (join_tot (restrict h r) (minus h r)) r1) (restrict h r1))
+let lemma_restrict_r_join_tot_points_to_minus #a #rel h r x = 
+  assert (equal (restrict (join_tot (points_to r x) (minus h r)) r) (points_to r x))
+let lemma_restrict_r1_join_tot_points_to_minus #a #rel h r r1 x =
+  assert (equal (restrict (join_tot (points_to r x) (minus h r)) r1) (restrict h r1))  
+let lemma_restrict_join_tot_h_emp #a #rel h r = 
+  assert (equal (restrict (join_tot h emp) r) (restrict h r))
+
+let lemma_sel_r_join_tot_restrict_minus #a #rel h r = ()
+let lemma_sel_r1_join_tot_restrict_minus #a #rel h r r1 = ()
+let lemma_sel_r_join_tot_points_to_minus #a #rel h r x = ()
+let lemma_sel_r1_join_tot_points_to_minus #a #rel h r r1 x = ()
+let lemma_sel_join_tot_h_emp #a #rel h r = ()
+let lemma_sel_join_tot_emp_h #a #rel h r = ()
+
+let lemma_restrict_eq_points_to #a #rel h r = 
+  admit ()
 
 let lemma_points_to_is_injective #a #rel r x y = 
   assert (sel (points_to r x) r == sel (points_to r y) r)
-
-let lemma_sel_r_from_minus #a #rel h r r1 = ()
-
-let lemma_sel_r1_from_restrict #a #rel h r r1 = admit ()
-
-let lemma_sel_r_join_points_to_minus #a #rel h r x = ()
-
-let lemma_sel_r1_join_points_to_minus #a #rel h h1 r r1 = admit ()
-
-let lemma_sel_join_h_emp #a #rel h r = ()
-
-let lemma_restrict_r_join_points_to_minus #a #rel h r x = ()
-let lemma_restrict_r1_join_points_to_minus #a #rel h r r1 x = ()
-
-let lemma_restrict_r_join_restrict_minus #a #rel h r = ()
-let lemma_restrict_r1_join_restrict_minus #a #rel h r r1 = ()
-let lemma_restrict_join_h_emp #a #rel h r = ()
-
-// // let lemma_sel_r_update #a #rel h r x n = ()
-// // let lemma_sel_r1_update #a #rel h r r1 x n = ()
-
-// // let lemma_restrict_r_update #a #rel h r x = ()
-// // let lemma_restrict_r1_update #a #rel h r r1 x = ()
-
-let lemma_contains_r_join_restrict_minus #a #rel h r = ()
-let lemma_contains_r1_join_restrict_minus #a #rel h r r1 p1 = ()
- 
-let lemma_contains_r_join_points_to_minus #a #rel h r x = ()
-let lemma_contains_r1_join_points_to_minus #a #rel h r r1 x p1 = ()
-let lemma_contains_join_h_emp #a #rel h r = ()
 
 (*** Untyped views of references *)
 
 (* Definition and ghost decidable equality *)
 noeq type aref' :Type0 = {
   a_addr: nat;
-  a_mm:   FStar.Ghost.erased bool;  //manually managed flag
+  a_mm:   bool;  //manually managed flag
 }
 let aref = aref'
 let dummy_aref = {
   a_addr = 0;
-  a_mm   = FStar.Ghost.hide false;
+  a_mm   = false;
 }
-let aref_equal a1 a2 = a1.a_addr = a2.a_addr && FStar.Ghost.reveal a1.a_mm = FStar.Ghost.reveal a2.a_mm
+let aref_equal a1 a2 = a1.a_addr = a2.a_addr && a1.a_mm = a2.a_mm
 
 (* Introduction rule *)
 let aref_of #t #rel r = {
@@ -299,7 +286,7 @@ let aref_of #t #rel r = {
 (* Operators lifted from ref *)
 let addr_of_aref a = a.a_addr
 let addr_of_aref_of #t #rel r = ()
-let aref_is_mm a = FStar.Ghost.reveal a.a_mm
+let aref_is_mm a = a.a_mm
 let is_mm_aref_of #t #rel r = ()
 let aref_unused_in a h = None? (h.memory a.a_addr)
 let unused_in_aref_of #t #rel r h = ()
@@ -309,8 +296,8 @@ let contains_aref_unused_in #a #rel h x y = ()
 let aref_live_at (h: heap) (a: aref) (t: Type0) (rel: preorder t) =
   let _ = () in
   Some? (h.memory a.a_addr) /\
-  (let Some (| a1, pre_opt, _ |) = h.memory a.a_addr in
-   t == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+  (let Some (| a1, pre_opt, mm, _ |) = h.memory a.a_addr in
+   t == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel /\ mm == a.a_mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
 let ref_of'
   (h: heap)
@@ -320,10 +307,10 @@ let ref_of'
 : Pure (mref t rel)
   (requires (aref_live_at h a t rel))
   (ensures (fun _ -> True))
-= let Some (| _, pre_opt, x |) = h.memory a.a_addr in
+= let Some (| _, pre_opt, _, x |) = h.memory a.a_addr in
   {
     addr = a.a_addr;
-    init = FStar.Ghost.hide x;
+    init = x;
     mm = a.a_mm
   }
 
@@ -347,5 +334,3 @@ let ref_of h a t rel = ref_of' h a t rel
 let aref_live_at_aref_of h #t #rel r = ()
 let contains_gref_of h a t rel = ()
 let aref_of_gref_of a t rel = ()
-
-let _eof = ()

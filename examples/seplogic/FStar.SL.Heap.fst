@@ -1,6 +1,6 @@
-module FStar.Heap
+module FStar.SL.Heap
 
-include FStar.Monotonic.Heap
+include FStar.SL.Monotonic.Heap
 
 let trivial_rel (a:Type0) :Preorder.relation a = fun x y -> True
 
