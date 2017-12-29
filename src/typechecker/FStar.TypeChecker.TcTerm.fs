@@ -1341,10 +1341,10 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       let app =
        if shortcuts_evaluation_order then
-         (* Question (NS): Why is this even possible here?
-//                            I thought this would be taken care of in
-//                            check_short_circuit_args
-//          *)
+         (* Note: this case is only reachable in --lax mode.
+                  In non-lax code, shortcut evaluation order is handled by
+                  check_short_circuit_args. See, roughly, line 511, case Tm_app
+         *)
          (* If the head is shortcutting we cannot hoist its arguments *)
          (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
          let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
