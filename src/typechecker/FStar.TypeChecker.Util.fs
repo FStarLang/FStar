@@ -620,6 +620,68 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   in
   S.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
 
+
+let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags =
+    if env.lax
+    then c
+    else let c = Env.unfold_effect_abbrev env c in
+         let u_res_t, res_t, wp = destruct_comp c in
+         let md = Env.get_effect_decl env c.effect_name in
+         let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assert_p)
+                            [S.as_arg res_t;
+                             S.as_arg <| label_opt env reason (Env.get_range env) f;
+                             S.as_arg wp]
+                            None
+                            wp.pos
+         in
+         mk_comp md u_res_t res_t wp flags
+
+let strengthen_precondition
+            (reason:option<(unit -> string)>)
+            env
+            (e_for_debug_only:term)
+            (lc:lcomp)
+            (g0:guard_t) 
+    : lcomp * guard_t =
+    if Rel.is_trivial g0
+    then lc, g0
+    else let flags =
+            let maybe_trivial_post, flags =
+              if U.is_tot_or_gtot_lcomp lc then true, [TRIVIAL_POSTCONDITION] else false, []
+            in
+            flags @ (
+            lc.cflags
+            |> List.collect (function
+                 | RETURN
+                 | PARTIAL_RETURN -> [PARTIAL_RETURN]
+                 | SOMETRIVIAL
+                 | TRIVIAL_POSTCONDITION
+                    when not maybe_trivial_post ->
+                   [TRIVIAL_POSTCONDITION]
+                 | SHOULD_NOT_INLINE -> [SHOULD_NOT_INLINE]
+                 | _ -> []))
+         in
+         let strengthen () =
+            let c = lcomp_comp lc in
+            if env.lax
+            then c
+            else let g0 = Rel.simplify_guard env g0 in
+                 match guard_form g0 with
+                 | Trivial -> c
+                 | NonTrivial f ->
+                   if Env.debug env <| Options.Extreme
+                   then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
+                                    (N.term_to_string env e_for_debug_only)
+                                    (N.term_to_string env f);
+                    strengthen_comp env reason c f flags
+         in
+       S.mk_lcomp (norm_eff_name env lc.eff_name)
+                  lc.res_typ
+                  flags
+                  strengthen,
+       {g0 with guard_f=Trivial}
+
+
 let lcomp_has_trivial_postcondition lc =
     U.is_tot_or_gtot_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
@@ -749,17 +811,51 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           | Inr reason ->
             debug (fun () ->
                 BU.print1 "(2) bind: Not simplified because %s\n" reason);
+            let mk_bind c1 b c2 =                      (* AR: end code for inlining pure and ghost terms *)
+                let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
+                let bs =
+                    match b with
+                    | None -> [null_binder t1]
+                    | Some x -> [S.mk_binder x]
+                in
+                let mk_lam wp =
+                    //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
+                    U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
+                in
+                let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
+                let wp_args = [
+                    S.as_arg r1;
+                    S.as_arg t1;
+                    S.as_arg t2;
+                    S.as_arg wp1;
+                    S.as_arg (mk_lam wp2)]
+                in
+                let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
+                mk_comp md u_t2 t2 wp bind_flags
+            in
+            let mk_seq c1 b c2 =
+                //c1 is PURE or GHOST
+                let c1 = Env.unfold_effect_abbrev env c1 in
+                let c2 = Env.unfold_effect_abbrev env c2 in
+                let m, _, lift2 = Env.join env c1.effect_name c2.effect_name in
+                let c2 = S.mk_Comp (lift_comp c2 m lift2) in
+                let u1, t1, wp1 = destruct_comp c1 in
+                let md_pure_or_ghost = Env.get_effect_decl env c1.effect_name in
+                let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost md_pure_or_ghost.trivial)
+                                    [S.as_arg t1; S.as_arg wp1]
+                                    None
+                                    r1
+                in
+                strengthen_comp env None c2 vc1 bind_flags
+            in
             (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let c1_typ = Env.unfold_effect_abbrev env c1 in
             let u_res_t1, res_t1, _ = destruct_comp c1_typ in
             //c1 and c2 are bound to the input comps
-            let c2 =
-              if Option.isSome b
-              && should_return env e1opt lc1
-              then
-              begin
-                let e1 = Option.get e1opt in
-                let x = Option.get b in
+            if Option.isSome b
+            && should_return env e1opt lc1
+            then let e1 = Option.get e1opt in
+                 let x = Option.get b in
                 //we will inline e in the WP of c2
                 //Aiming to build a VC of the form (x == e ==> wp2[e/x])
                 //The additional equality hypothesis may seem redundant, but
@@ -780,53 +876,31 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 //      explicitly by the user.
                 //   c. If neither of the two optimizations apply, then we generate
                 //           (x == e ==> wp2[e/x])
-                if U.is_partial_return c1                   // case (a)
-                then let _ = debug (fun () ->
+                 if U.is_partial_return c1
+                 then // case (a)
+                      let _ = debug (fun () ->
                          BU.print2 "(3) bind (case a): Substituting %s for %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
-                     SS.subst_comp [NT(x,e1)] c2
-                else if false //disable temporarily
-                     && lcomp_has_trivial_postcondition lc1 // case (b)
-                     && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
-                then let e1' = U.mk_with_type u_res_t1 res_t1 e1 in
-                     let _ = debug (fun () ->
+                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
+                      mk_bind c1 b c2
+                 else if false //disable temporarily
+                      && lcomp_has_trivial_postcondition lc1
+                      && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
+                 then // case (b)
+                      let e1' = U.mk_with_type u_res_t1 res_t1 e1 in
+                      let _ = debug (fun () ->
                         BU.print2 "(3) bind (case b): Substituting %s for %s" (N.term_to_string env e1') (Print.bv_to_string x)) in
-                     SS.subst_comp [NT(x, e1')] c2
-                else let c2 = SS.subst_comp [NT(x,e1)] c2 in //case (c)
-                     let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
-                     let _ = debug (fun () ->
+                      let c2 = SS.subst_comp [NT(x, e1')] c2 in
+                      mk_seq c1 b c2
+                 else // case (c)
+                      let _ = debug (fun () ->
                         BU.print2 "(3) bind (case c): Adding equality %s = %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
-                     weaken_comp env c2 x_eq_e
+                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
+                      let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
+                      let c2 = weaken_comp env c2 x_eq_e in
+                      mk_bind c1 b c2
                 //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
                 //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
-             end
-            else let _ = debug (fun () ->
-                        BU.print_string "(3) bind: No inline of e1 in c2") in
-                 c2
-            in
-            (* AR: end code for inlining pure and ghost terms *)
-            let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
-            let bs =
-                match b with
-                | None -> [null_binder t1]
-                | Some x -> [S.mk_binder x]
-            in
-            let mk_lam wp =
-                //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
-                U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
-            in
-            let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
-            let wp_args = [
-                S.as_arg r1;
-                S.as_arg t1;
-                S.as_arg t2;
-                S.as_arg wp1;
-                S.as_arg (mk_lam wp2)]
-            in
-            let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp)  wp_args None t2.pos in
-            let c = mk_comp md u_t2 t2 wp bind_flags in
-            debug (fun () ->
-                BU.print1 "(4) bind: result is\n\t%s" (Print.comp_to_string c));
-            c
+            else mk_bind c1 b c2
       end
   in S.mk_lcomp joined_eff
                 lc2.res_typ
@@ -839,67 +913,6 @@ let weaken_guard g1 g2 = match g1, g2 with
       let g = (U.mk_imp f1 f2) in
       NonTrivial g
     | _ -> g2
-
-let strengthen_precondition (reason:option<(unit -> string)>) env (e_for_debug_only:term) (lc:lcomp) (g0:guard_t) : lcomp * guard_t =
-    if Rel.is_trivial g0
-    then lc, g0
-    else let flags =
-            let maybe_trivial_post, flags =
-              if U.is_tot_or_gtot_lcomp lc then true, [TRIVIAL_POSTCONDITION] else false, []
-            in
-            flags @ (
-            lc.cflags
-            |> List.collect (function
-                 | RETURN
-                 | PARTIAL_RETURN -> [PARTIAL_RETURN]
-                 | SOMETRIVIAL
-                 | TRIVIAL_POSTCONDITION
-                    when not maybe_trivial_post ->
-                   [TRIVIAL_POSTCONDITION]
-                 | SHOULD_NOT_INLINE -> [SHOULD_NOT_INLINE]
-                 | _ -> []))
-         in
-         let strengthen () =
-            let c = lcomp_comp lc in
-            if env.lax
-            then c
-            else begin
-                let g0 = Rel.simplify_guard env g0 in
-                match guard_form g0 with
-                | Trivial -> c
-                | NonTrivial f ->
-                    //AR: With the new inlining behavior of pure and ghost terms, this may not be needed anymore, as we will inline pure and ghost terms if needed later on
-                    (*let c =
-                        if (U.is_pure_or_ghost_comp c
-                           && not (U.is_partial_return c))
-                        then let x = S.gen_bv "strengthen_pre_x" None (U.comp_result c) in
-                             let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
-                             let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, U.lcomp_of_comp xret) in
-                             lc.comp()
-                        else c in*)
-
-                    if Env.debug env <| Options.Extreme
-                    then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-                                    (N.term_to_string env e_for_debug_only)
-                                    (N.term_to_string env f);
-                    let c = Env.unfold_effect_abbrev env c in
-                    let u_res_t, res_t, wp = destruct_comp c in
-                    let md = Env.get_effect_decl env c.effect_name in
-                    let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assert_p)
-                                       [S.as_arg res_t; S.as_arg <| label_opt env reason (Env.get_range env) f;
-                                        S.as_arg wp]
-                                       None
-                                       wp.pos
-                    in
-                    mk_comp md u_res_t res_t wp flags
-             end
-         in
-       S.mk_lcomp (norm_eff_name env lc.eff_name)
-                  lc.res_typ
-                  flags
-                  strengthen,
-       {g0 with guard_f=Trivial}
-
 
 let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let should_return =
