@@ -221,6 +221,18 @@ let comp_set_flags (c:comp) f =
     in
     {c with n=Comp ({comp_to_comp_typ c with flags=f})}
 
+let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
+    let comp_typ_set_flags (c:comp) =
+        match c.n with
+        | Total _
+        | GTotal _ -> c
+        | Comp ct ->
+          let ct = {ct with flags=fs} in
+          {c with n=Comp ct}
+    in
+    {lc with cflags=fs;
+             comp=(fun () -> comp_typ_set_flags (lc.comp())) }
+
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
@@ -529,6 +541,7 @@ let rec is_unit t =
     | Tm_fvar fv ->
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
+      || fv_eq_lid fv PC.auto_squash_lid
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 

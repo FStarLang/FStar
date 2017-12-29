@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "378402988e3b037e7ef3e3cf7b0bc5fe"
+      "958801e9303009380170d1c5c5b4414f"
     ],
     [
       "FStar.Printf.uu___is_Int",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "dcc7d806aed62424c3d376490f374d8c"
+      "c78b77a714d527ca0ed86a666926bdc5"
     ],
     [
       "FStar.Printf.uu___is_Char",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "3fb758fb7b1ef5f19f8f665a93299c9c"
+      "a66040711d0c776279e632e0360eba5f"
     ],
     [
       "FStar.Printf.uu___is_String",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "855eda73db16d59c867a3b9410fd8d70"
+      "bd0a9a1b86767a44aeceab0120d1ba36"
     ],
     [
       "FStar.Printf.uu___is_U8",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "cc0f117d2f821741fceb0869b5fdfcb8"
+      "a1e65daaa45908e669b67c9897b0e0bc"
     ],
     [
       "FStar.Printf.uu___is_U16",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "ac9b64bd85d0f543df84b02acf6851ab"
+      "622653e6f951b174726f7830c811bbd9"
     ],
     [
       "FStar.Printf.uu___is_U32",
@@ -62,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "bd8b32545f478d025e87015cbe13f80d"
+      "551852136350e172e78559a4985eb73a"
     ],
     [
       "FStar.Printf.uu___is_U64",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "73ebacd1ceee6b6e482dbee932f97440"
+      "22e9d9a87e24b109154f44bf61b4084a"
     ],
     [
       "FStar.Printf.uu___is_I8",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "b3f058e26ca5220638e30b4bd70fc496"
+      "f8870029cc0359d25187eb3c07bacd33"
     ],
     [
       "FStar.Printf.uu___is_I16",
@@ -89,7 +89,7 @@
       1,
       [ "@query" ],
       0,
-      "cca5f74ea82cfdc66c67911d01475d5f"
+      "420145b5fb87e8ca9d523a72fdc6c14e"
     ],
     [
       "FStar.Printf.uu___is_I32",
@@ -98,7 +98,7 @@
       1,
       [ "@query" ],
       0,
-      "5979b8a6d7bb1f6345b83c4ab1190185"
+      "e64679ad43c2de80867d0be1cd0bd3bc"
     ],
     [
       "FStar.Printf.uu___is_I64",
@@ -107,7 +107,7 @@
       1,
       [ "@query" ],
       0,
-      "f7fa88f703c78a4e4659febd374c8b77"
+      "3db77cfd394fa2a0882ffe8158ea7bea"
     ],
     [
       "FStar.Printf.arg_type",
@@ -142,7 +142,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "b7c0a485766ab0c9ff38980ff5f46121"
+      "4f461a1ed55f450b0cc4799a1b91d472"
     ],
     [
       "FStar.Printf.string_of_arg",
@@ -185,7 +185,7 @@
         "fuel_guarded_inversion_FStar.Printf.arg", "string_inversion"
       ],
       0,
-      "643853b8fc5529e6e51b24ead9b7c84f"
+      "dd9f94cd41adb0cac922ee9878f0179f"
     ],
     [
       "FStar.Printf.dir",
@@ -199,7 +199,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "106556be112fa3cc562847f9cbfa7698"
+      "453bf1f3e9c028d1da002e00de1839db"
     ],
     [
       "FStar.Printf.uu___is_Lit",
@@ -208,7 +208,7 @@
       1,
       [ "@query" ],
       0,
-      "b833d0d30ca84fb87a3c9ddc3ef244fa"
+      "f5b4b8faf354e0a773b12e00d126d05b"
     ],
     [
       "FStar.Printf.__proj__Lit__item___0",
@@ -221,7 +221,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_37423919295cd822d336ea93baad95f4"
       ],
       0,
-      "3353ae4aed02e64666f68ef323c20536"
+      "3f4982700ab2de3e1cb1ee647e007939"
     ],
     [
       "FStar.Printf.uu___is_Arg",
@@ -230,7 +230,7 @@
       1,
       [ "@query" ],
       0,
-      "fdb86cfef27d897cea6aa31b0543f85b"
+      "9eb70a5d5460ff688bca870db7ed5ccd"
     ],
     [
       "FStar.Printf.__proj__Arg__item___0",
@@ -243,7 +243,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_d9dc5f03433d2ecffb05bfd949e65ef5"
       ],
       0,
-      "29f67dffbc03841443fbdc18e1c61f61"
+      "5a5577536c50af5376ad4a28cc8d2133"
     ],
     [
       "FStar.Printf.dir_type",
@@ -263,7 +263,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "f08ade97e457ba0411d05f2d9717c271"
+      "d3b72bd55a31f22842aa0ac24affeca3"
     ],
     [
       "FStar.Printf.string_of_dirs",
@@ -279,11 +279,12 @@
         "FStar.Printf_interpretation_Tm_arrow_7c88f0ea085fe34ecac9529218adc258",
         "FStar.Printf_interpretation_Tm_arrow_b10c52b88d382f790b56b0e265d17015",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "binder_x_2368d2b39f3a5b7fbce69a651b5bf73d_0",
         "binder_x_a703a5688952559d5cefe1268f16f195_1",
         "constructor_distinct_FStar.Printf.Arg",
         "constructor_distinct_FStar.Printf.Lit",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "disc_equation_FStar.Printf.Arg", "disc_equation_FStar.Printf.Lit",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_with_fuel_FStar.Printf.dir_type.fuel_instrumented",
@@ -296,11 +297,11 @@
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "string_typing", "subterm_ordering_Prims.Cons",
-        "typing_FStar.Printf_Tm_abs_5d2d3b5e01f2d03f395facb3303d4982",
+        "typing_FStar.Printf_Tm_abs_bb437ece6e6a3affb79829ed56d1a284",
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "29164984f647014f169c520b85005541"
+      "f1a3481601a9013017833f6f1299e49a"
     ],
     [
       "FStar.Printf.parse_format",
@@ -326,7 +327,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "c90376798bcdea7cb174280f4838ea23"
+      "547f8204da2ff38c4f948517968c2669"
     ],
     [
       "FStar.Printf.sprintf",
@@ -341,8 +342,9 @@
         "@fuel_irrelevance_FStar.Printf.dir_type.fuel_instrumented",
         "@fuel_irrelevance_FStar.Printf.parse_format.fuel_instrumented",
         "@query", "FStar.Printf_pretyping_3e72738bd1cbca97fbec30681a0df4b9",
-        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_FStar.Printf.Arg",
         "constructor_distinct_FStar.Printf.Bool",
         "constructor_distinct_FStar.Printf.Char",
@@ -356,8 +358,9 @@
         "constructor_distinct_FStar.Printf.U16",
         "constructor_distinct_FStar.Printf.U32",
         "constructor_distinct_FStar.Printf.U64",
+        "constructor_distinct_FStar.Printf.U8",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "data_typing_intro_FStar.Printf.Arg@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -388,7 +391,6 @@
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Prims.Cons_hd", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_FStar.Printf.Arg__0",
         "projection_inverse_FStar.Printf.Lit__0",
@@ -398,13 +400,13 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_39a7589807b989c403f9ee37183f1ff9",
         "string_inversion",
         "token_correspondence_FStar.Printf.parse_format.fuel_instrumented",
-        "typing_FStar.Printf.parse_format_string",
-        "typing_FStar.Printf_Tm_abs_18bb9310d1aaf87dee1bacf855585d96",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Printf_Tm_abs_b7a68d60c0fe24f7e4d5dc7c28db3a85",
         "typing_FStar.String.list_of_string",
         "typing_tok_FStar.Printf.I32@tok"
       ],
       0,
-      "48ec3304630e5d19d417fe2c31cc0b36"
+      "eed2fda5d7cac2b9fa1b70fdca787b85"
     ],
     [
       "FStar.Printf.test",
@@ -413,7 +415,7 @@
       1,
       [ "@query" ],
       0,
-      "0b240ba4e1b168e2f0c5528c80a792f2"
+      "ea232da073c4b4911ddfbb8cc0624e6b"
     ]
   ]
 ]

@@ -102,27 +102,12 @@ let memo_tk (e:term) (t:typ) = e
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
     : term * lcomp * guard_t =
-  let e0 = e in
-  let should_return t =
-    match (SS.compress t).n with
-    | Tm_arrow(_, c) ->
-      if TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c)
-      then let t = U.unrefine <| (U.comp_result c) in
-           match (SS.compress t).n with
-           | Tm_constant _ -> false
-           | _ -> not (U.is_unit t) //uninformative function
-      else false //can't reason about effectful function definitions, so not worth returning this
-    | _ -> not (U.is_unit t)
-  in
-  (* if term, then lc is a trivial lazy computation (lcomp_of_comp) *)
   let lc = match tlc with
-    | Inl t -> U.lcomp_of_comp (if not (should_return t)
-                                || not (Env.should_verify env)
-                                then mk_Total t //don't add a return if we're not verifying; or if we're returning a function
-                                else TcUtil.return_value env t e)
+    | Inl t -> U.lcomp_of_comp <| mk_Total t
     | Inr lc -> lc in
   let t = lc.res_typ in
-  let e, lc, g = match Env.expected_typ env with
+  let e, lc, g =
+   match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
      if debug env Options.High
@@ -134,11 +119,12 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
                 (Print.term_to_string t) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
-     let msg = if Rel.is_trivial g then None else (Some <| Err.subtyping_failed env t t') in
+     let msg = if Rel.is_trivial g then None else Some <| Err.subtyping_failed env t t' in
      let g = Rel.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
-     memo_tk e t', set_lcomp_result lc t', g in
+     memo_tk e t', set_lcomp_result lc t', g
+  in
   if debug env Options.Low
   then BU.print1 "Return comp type is %s\n" (Print.lcomp_to_string lc);
   e, lc, g
@@ -186,6 +172,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
     | None ->
       e, c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
+       let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
+       let c = c.comp() in
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -342,7 +330,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
           let e1, c1, g1 = tc_term (Env.set_expected_typ env t_unit) e1 in
           let e2, c2, g2 = tc_term env e2 in
-          let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
+          let c = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (None, c2) in
           let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
           let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
           let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, t_unit, e1)]), e2)) None e.pos in
@@ -525,14 +513,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let head, chead, g_head = tc_term (no_inst env) head in
     let e, c, g = if not env.lax && TcUtil.short_circuit_head head
                   then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
-                       //TODO: this is not efficient:
-                       //      It is quadratic in the size of boolean terms
-                       //      e.g., a && b && c && d ... & zzzz will be huge
-                       let c = if Env.should_verify env &&
-                               not (U.is_lcomp_partial_return c) &&
-                               U.is_pure_or_ghost_lcomp c
-                               then TcUtil.maybe_assume_result_eq_pure_term env e c
-                               else c in
+                       // //TODO: this is not efficient:
+                       // //      It is quadratic in the size of boolean terms
+                       // //      e.g., a && b && c && d ... & zzzz will be huge
+                       // let c = if Env.should_verify env &&
+                       //         not (U.is_lcomp_partial_return c) &&
+                       //         U.is_pure_or_ghost_lcomp c
+                       //         then TcUtil.maybe_assume_result_eq_pure_term env e c
+                       //         else c in
                        e, c, g
                   else
                     // If we're descending under `quote`, don't instantiate implicits
@@ -571,8 +559,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
     let c_branches, g_branches =
-      let cases, g = List.fold_right (fun (_, f, c, g) (caccum, gaccum) ->
-        (f, c)::caccum, Rel.conj_guard g gaccum) t_eqns ([], Rel.trivial_guard) in
+      let cases, g =
+          List.fold_right
+                (fun (branch, f, eff_label, cflags, c, g) (caccum, gaccum) ->
+                     (f, eff_label, cflags, c)::caccum,
+                     Rel.conj_guard g gaccum)
+                t_eqns
+                ([], Rel.trivial_guard) in
       (* bind_cases adds an exhaustiveness check *)
       TcUtil.bind_cases env res_t cases, g
     in
@@ -582,8 +575,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let mk_match scrutinee =
         (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
         (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
-        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
-              (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ ))
+        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _) ->
+              (pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name res_t))
         in
         let e = mk (Tm_match(scrutinee, branches)) None top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
@@ -615,7 +608,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
-    if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
+    if Options.use_two_phase_tc ()
     then
       //AR: if the top-level binding is unannotated, we want to drop the wps computed in phase 1
       //since they are lax etc., and phase 2 will do the proper computation anyway
@@ -632,7 +625,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in
-         //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
+         if Env.debug env <| Options.Other "TwoPhases"
+         then BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
            check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
          else lax_top, l, g
@@ -644,10 +638,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((true, {lbname=Inr _}::_), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
-    if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
+    if Options.use_two_phase_tc ()
     then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in  (* AR: are we calling it two times currently if lax mode? *)
-         //let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
+         if Env.debug env (Options.Other "TwoPhases") then
+           BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
             check_top_level_let_rec env lax_top
          else lax_top, l, g
@@ -1204,7 +1199,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
         | None -> e, tfun_computed, guard in
 
-    let c = if env.top_level then   mk_Total tfun else TcUtil.return_value env tfun e in
+    let c = mk_Total tfun in
     let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
 
     e, c, g
@@ -1236,13 +1231,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                          bind chead (bind c0 (bind c1 ... (bind cn (Tot (bs -> cres))))
     *)
     let monadic_application
-      (head, chead, ghead, cres)
-      subst
-      (arg_comps_rev:list<(arg * option<bv> * lcomp)>)
-      arg_rets_rev
-      guard
-      fvs
-      bs
+      (head, chead, ghead, cres)                        (* the head of the application, its lcomp chead, and guard ghead, returning a bs -> cres *)
+      subst                                             (* substituting actuals for formals seen so far, when actual is pure *)
+      (arg_comps_rev:list<(arg * option<bv> * lcomp)>)  (* type-checked actual arguments, so far; in reverse order *)
+      arg_rets_rev                                      (* The results of each argument at the logic level, in reverse order *)
+      guard                                             (* conjoined guard formula for all the actuals *)
+      fvs                                               (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
+      bs                                                (* formal parameters *)
         : term   //application of head to args
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
@@ -1253,6 +1248,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           match bs with
           | [] -> (* full app *)
               let cres = TcUtil.subst_lcomp subst cres in
+              //NS 12/22 ... this comment looks stale
               (* If we have f e1 e2
                   where e1 or e2 is impure but f is a pure function,
                   then refine the result to be equal to f x1 x2,
@@ -1267,8 +1263,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       in
       if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
 
-      (* Note: The outargs are in reverse order. e.g., f e1 e2 e3, we have *)
-      (* outargs = [(e3, _, c3); (e2; _; c2); (e1; _; c1)] *)
+      (* Note: The arg_comps_rev are in reverse order. e.g., f e1 e2 e3, we have *)
+      (* arg_comps_rev = [(e3, _, c3); (e2; _; c2); (e1; _; c1)] *)
       (* We build comp = bind chead (bind c1 (bind c2 (bind c3 cres))) *)
       (* The typing rule for monadic application should be something like *)
 
@@ -1299,7 +1295,14 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
               arg_rets below are those xn...x1 bound variables
        *)
       let cres =
+        let head_or_some_arg_is_effectful =
+            not (Util.is_pure_or_ghost_lcomp chead)
+            || (BU.for_some (fun (_, _, lc) -> not (Util.is_pure_or_ghost_lcomp lc)
+                                           || TcUtil.should_not_inline_lc lc)
+                            arg_comps_rev)
+        in
         if Util.is_pure_or_ghost_lcomp cres
+        && head_or_some_arg_is_effectful
         then let term = S.mk_Tm_app head (List.rev arg_rets_rev) None head.pos in
              TcUtil.maybe_assume_result_eq_pure_term env term cres
         else cres
@@ -1315,15 +1318,18 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           cres
           arg_comps_rev
       in
-      let comp = TcUtil.bind head.pos env None chead (None, comp) in
+      let comp =
+          if Util.is_pure_or_ghost_lcomp chead
+          then TcUtil.bind head.pos env (Some head) chead (None, comp)
+          else TcUtil.bind head.pos env None chead (None, comp) in
 
       (* TODO : This is a really syntactic criterion to check if we can evaluate *)
       (* applications left-to-right, can we do better ? *)
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-                             S.fv_eq_lid fv Parser.Const.op_And ||
-                             S.fv_eq_lid fv Parser.Const.op_Or
+          S.fv_eq_lid fv Parser.Const.op_And ||
+          S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1543,23 +1549,26 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
 and tc_eqn scrutinee env branch
         : (pat * option<term> * term)                                                             (* checked branch *)
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
-        * lcomp                                                                   (* computation type of the branch *)
+        * lident                                                                 (* effect label of the lcomp below *)
+        * list<cflags>                                                                      (* flags for each lcomp *)
+        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
         * guard_t =                                                                    (* well-formedness condition *)
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
 
   (*<tc_pat>*)
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 :
-        pat                                (* the type-checked, fully decorated pattern                                   *)
-      * list<bv>                           (* all its bound variables, used for closing the type of the branch term       *)
-      * Env.env                            (* the environment extended with all the binders                               *)
-      * term                               (* terms corresponding to the pattern                                          *)
-      * guard_t                            (* accumulated guard for well-typedness of the type annotations on pattern bvs *)  //AR: for dependent patterns, this requires the equality of scrutinee and the pattern
-                                                                                                                              //which is available later in the typechecking for branches
-                                                                                                                              //so, here we just accumulate the guard, and return it
-                                                                                                                              //the caller will add it to the g_branches later
-                                                                                                                              //this guard is well-formed for list<bv>
-      * term                               (* the same term in normal form                                                *)
+        pat                          (* the type-checked, fully decorated pattern                                   *)
+      * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
+      * Env.env                      (* the environment extended with all the binders                               *)
+      * term                         (* terms corresponding to the pattern                                          *)
+      * guard_t                      (* accumulated guard for well-typedness of the type annotations on pattern bvs *)
+                                     //AR: for dependent patterns, this requires the equality of scrutinee and
+                                     //the pattern which is available later in the typechecking for branches
+                                     //so, here we just accumulate the guard, and return it
+                                     //the caller will add it to the g_branches later
+                                     //this guard is well-formed for list<bv>
+      * term                         (* the same term in normal form                                                *)
       =
     let tc_annot env t =
         let tu, u = U.type_u () in
@@ -1670,7 +1679,7 @@ and tc_eqn scrutinee env branch
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
   (*   (c). Close the VCs so that they no longer have the pattern-bound variables occurring free in them      *)
-  let c, g_when, g_branch =
+  let effect_label, cflags, maybe_return_c, g_when, g_branch =
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
@@ -1717,7 +1726,18 @@ and tc_eqn scrutinee env branch
 
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
-    TcUtil.close_lcomp env pat_bvs c_weak,
+    let maybe_return_c_weak should_return =
+        let c_weak =
+          if should_return
+          && U.is_pure_or_ghost_lcomp c_weak
+          then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
+          else c_weak
+        in
+        TcUtil.close_lcomp env pat_bvs c_weak
+    in
+    c_weak.eff_name,
+    c_weak.cflags,
+    maybe_return_c_weak,
     Rel.close_guard env binders g_when_weak,
     g_branch
   in
@@ -1819,8 +1839,10 @@ and tc_eqn scrutinee env branch
   then BU.print1 "Carrying guard from match: %s\n" <| guard_to_string env guard;
 
   SS.close_branch (pattern, when_clause, branch_exp),
-  branch_guard, //expressed in terms of discriminators and projectors on scrutinee---does not contain the pattern-bound variables
-  c, //closed already---does not contain free pattern-bound variables
+  branch_guard,   //expressed in terms of discriminators and projectors on scrutinee---does not contain the pattern-bound variables
+  effect_label,
+  cflags,
+  maybe_return_c, //closed already---does not contain free pattern-bound variables
   guard
 
 (******************************************************************************)
@@ -1893,8 +1915,10 @@ and check_inner_let env e =
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
        let x = fst xbinder in
-       let e2, c2, g2 = tc_term (Env.push_bv env x) e2 in
-       let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
+       let env_x = Env.push_bv env x in
+       let e2, c2, g2 = tc_term env_x e2 in
+       let cres =
+         TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
@@ -1991,6 +2015,8 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
+          let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
+          let cres = Util.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
           let guard = Rel.conj_guard g_lbs (Rel.close_guard env (List.map S.mk_binder bvs) g2) in
           let cres = TcUtil.close_lcomp env bvs cres in
           let tres = norm env cres.res_typ in

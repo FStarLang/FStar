@@ -14,24 +14,26 @@
         "constructor_distinct_IfcRulesReify.Low",
         "constructor_distinct_WhileReify.AInt",
         "constructor_distinct_WhileReify.AOp",
+        "constructor_distinct_WhileReify.AVar",
         "data_typing_intro_IfcRulesReify.High@tok",
         "disc_equation_WhileReify.AInt", "disc_equation_WhileReify.AOp",
         "disc_equation_WhileReify.AVar",
         "equality_tok_IfcRulesReify.High@tok",
         "equality_tok_IfcRulesReify.Low@tok", "equation_IfcRulesReify.join",
         "equation_IfcRulesReify.op_Less_Equals",
+        "fuel_guarded_inversion_IfcRulesReify.label",
         "fuel_guarded_inversion_WhileReify.exp",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_WhileReify.AInt__0",
+        "projection_inverse_WhileReify.AOp__1",
+        "projection_inverse_WhileReify.AOp__2",
+        "projection_inverse_WhileReify.AVar__0",
         "subterm_ordering_WhileReify.AOp", "typing_IfcRulesReify.join",
-        "typing_IfcRulesReify.op_Less_Equals",
-        "typing_tok_IfcRulesReify.High@tok",
-        "typing_tok_IfcRulesReify.Low@tok"
+        "typing_IfcRulesReify.op_Less_Equals"
       ],
       0,
-      "0f8e96735897d8bca5b29ba919ae9e7e"
+      "4431489a968dd2c80cd7cfd0828ee832"
     ],
     [
       "IfcTypechecker.uu___is_Not_well_typed",
@@ -40,7 +42,7 @@
       1,
       [ "@query" ],
       0,
-      "586d56725d881714c484572fe1417226"
+      "f1518cef73a1de74f42586b5667088b1"
     ],
     [
       "IfcTypechecker.tc_com",
@@ -129,7 +131,7 @@
         "typing_tok_IfcTypechecker.Not_well_typed@tok", "unit_typing"
       ],
       0,
-      "193b040cd2d3f419248051edc50ba9cf"
+      "785f72c119453a0389d5c3cacdefd0d4"
     ],
     [
       "IfcTypechecker.tc_com_hybrid",
@@ -239,7 +241,7 @@
         "unit_typing"
       ],
       0,
-      "4f1b874202fce57f74ebd0805444f079"
+      "33f69fe17b383279e8054b59be31e00c"
     ]
   ]
 ]

@@ -176,21 +176,12 @@
       1,
       2,
       0,
-      [ "@query" ],
-      0,
-      "66a27cca3ed62ce67f96602319b9b81b"
-    ],
-    [
-      "X64.Vale.Lemmas_i.lemma_block",
-      2,
-      2,
-      0,
       [
         "@query", "disc_equation_Prims.Cons",
         "equation_X64.Semantics_s.code", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1dd8aefc45ee1a36e7d6cc60ef8cf856"
+      "23e44196476a1f41abe0765d16a06cfc"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_ifElse",
@@ -199,7 +190,7 @@
       0,
       [ "@query" ],
       0,
-      "dcdef929b8dcb65d89323a39f96faada"
+      "43179112ba6d44a14f1133a4f74a08a4"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_ifElse",
@@ -225,16 +216,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "25a5af569712cb53111b066f5b63f932"
-    ],
-    [
-      "X64.Vale.Lemmas_i.lemma_while",
-      1,
-      2,
-      0,
-      [ "@query" ],
-      0,
-      "f6d02c5a9921dc2c8ee62ec46acbcde9"
+      "dcba6c1ed211a844fda28a0dd12c38ca"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_whileTrue",
@@ -246,7 +228,7 @@
         "refinement_interpretation_X64.Vale.Lemmas_i_Tm_refine_7fa7a41c1e20c3dff0ea3ced22f336d0"
       ],
       0,
-      "7f517d0ad22f4542549f5b08b5ab1585"
+      "8da04ffee7b68169596f1e58a377ff43"
     ]
   ]
 ]

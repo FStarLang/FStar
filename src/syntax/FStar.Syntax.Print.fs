@@ -466,6 +466,8 @@ and cflags_to_string c =
         | RETURN -> "return"
         | PARTIAL_RETURN -> "partial_return"
         | SOMETRIVIAL -> "sometrivial"
+        | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
+        | SHOULD_NOT_INLINE -> "should_not_inline"
         | LEMMA -> "lemma"
         | CPS -> "cps"
         | DECREASES _ -> "" (* TODO : already printed for now *)

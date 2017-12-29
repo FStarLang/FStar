@@ -45,24 +45,6 @@
       ],
       0,
       "9917f9af50f2324850260a6040c87382"
-    ],
-    [
-      "FStar.Crypto.__proj__Mkrsa_pkey__item__modulus",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1132662e43d2f77d6365820bf6fbf292"
-    ],
-    [
-      "FStar.Crypto.__proj__Mkrsa_pkey__item__exponent",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8d79d2eed766c218962b9d4fcb0baec4"
     ]
   ]
 ]

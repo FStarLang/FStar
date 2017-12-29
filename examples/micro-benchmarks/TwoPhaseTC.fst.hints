@@ -19,7 +19,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "3fc77c3282c788382b6e39a07712445e"
+      "d975ae8684b43940c2acabe789c4c6ac"
     ],
     [
       "TwoPhaseTC.xxx",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e20e710a7eada588d740249c7285829d"
+      "c9964850a463eb416bce7c659d02b579"
     ],
     [
       "TwoPhaseTC.f12",
@@ -82,7 +82,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "79d93401e4bd55b23b3c5e022f004995"
+      "44d5e9f2f7d195e59592f727e665214d"
     ],
     [
       "TwoPhaseTC.f14",
@@ -91,7 +91,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "41c0883fb564dd0074f71660fb17a4c4"
+      "4e1a9923574166eca69d0033f18c5ef9"
     ],
     [
       "TwoPhaseTC.f18",
@@ -106,16 +106,7 @@
         "unit_typing"
       ],
       0,
-      "f84782ebc23dbea2e4c6add2f86bcde0"
-    ],
-    [
-      "TwoPhaseTC.__proj__ExIntro__item__a",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3d3dba4fd4d55ee551845753cb5de71c"
+      "7249d716751b80fadf9470dbd69abf2d"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",
@@ -130,7 +121,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_p"
       ],
       0,
-      "c5a2d3c6e60df8bcf80fa02f65f931d8"
+      "fb9814dfd8b73ea30e71272f7e581456"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__x",
@@ -142,7 +133,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "876186b9c815debc9670f4ff6dd805f5"
+      "e8707eb34ad3c17768df10ba11e1af4e"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item___3",
@@ -157,7 +148,7 @@
         "token_correspondence_TwoPhaseTC.__proj__ExIntro__item__p"
       ],
       0,
-      "5aedb713eabdad9ac89df86d0ab572c4"
+      "c9a69862121524dd57d76d7a28de73d0"
     ],
     [
       "TwoPhaseTC.f21",
@@ -171,7 +162,7 @@
         "typing_tok_TwoPhaseTC.IP@tok"
       ],
       0,
-      "d24e54e630fe251363b09aa36782ba7c"
+      "d7c67445bd53944e190697e8c600c397"
     ]
   ]
 ]

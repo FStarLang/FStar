@@ -3,13 +3,14 @@ open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
-open FStar.Monotonic.RRef
 
 open Platform.Bytes
 open EtM.CoreCrypto
 
 module Ideal = EtM.Ideal
 module CPA = EtM.CPA
+
+type rid = erid
 
 type msg = EtM.CPA.cipher
 
@@ -52,8 +53,8 @@ let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
   /\ fresh_region k.region h0 h1
-  /\ m_contains k.log h1
-  /\ m_sel h1 k.log == createEmpty
+  /\ contains h1 k.log
+  /\ sel h1 k.log == createEmpty
   (* CH: equivalent definition makes gen fail:
          /\ (m_sel h1 k.log).length == 0
          can't even prove:
@@ -72,10 +73,10 @@ let keygen parent =
 val mac: k:key -> m:msg -> ST tag
   (requires (fun h0 -> True))
   (ensures  (fun h0 t h1 ->
-    (let log0 = m_sel h0 k.log in
-     let log1 = m_sel h1 k.log in
+    (let log0 = sel h0 k.log in
+     let log1 = sel h1 k.log in
        modifies_one k.region h0 h1
-     /\ m_contains k.log h1
+     /\ contains h1 k.log
      /\ log1 == snoc log0 (m, t)
      /\ witnessed (at_least (Seq.length log0) (m, t) k.log)
      /\ Seq.length log1 == Seq.length log0 + 1
@@ -92,12 +93,12 @@ val verify: k:key -> m:msg -> t:tag -> ST bool
   (requires (fun h -> True (* not needed: Map.contains h k.region *) ))
   (ensures  (fun h0 res h1 ->
      modifies_none h0 h1 /\
-     (( Ideal.uf_cma && res ) ==> Seq.mem (m,t) (m_sel h0 k.log))))
+     (( Ideal.uf_cma && res ) ==> Seq.mem (m,t) (sel h0 k.log))))
 
 let verify k m t =
   let t' = hmac_sha1 k.raw m in
   let verified = (t = t') in
-  let log = m_read k.log in
+  let log = !k.log in
   let found = Seq.mem (m,t) log in
   if Ideal.uf_cma then
     verified && found

@@ -47,7 +47,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "9367a155535ba6514e8a1c71c2ce4b8d"
+      "8eb6585032b1e59173fcfdb364bc2e95"
     ],
     [
       "Ex12b2.Format.lemma_eq_intro",
@@ -251,7 +251,7 @@
         "typing_Platform.Bytes.utf8", "typing_Prims.pow2"
       ],
       0,
-      "1f1b7bed9e650372f4a7a8710bfc7028"
+      "be8b1acf4694d2039bc80e78f089291b"
     ],
     [
       "Ex12b2.Format.req_injective",

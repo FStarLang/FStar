@@ -47,15 +47,6 @@
       "bcfb7801e48bef6d6ffad976edcc9e2e"
     ],
     [
-      "Sig.__proj__Entry__item__k",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2255d276888bf61b9c02fd5bcb75cb40"
-    ],
-    [
       "Sig.__proj__Entry__item__t",
       1,
       2,
@@ -67,16 +58,7 @@
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
       0,
-      "f85b83e8ee726d79c279ba056c19a34a"
-    ],
-    [
-      "Sig.__proj__Entry__item__m",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "07d5c729bb2325e66bfc53eeaf79da46"
+      "f52d707a898917641aced7c28f1d30fc"
     ],
     [
       "Sig.sign",
@@ -90,7 +72,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "966aebffdb8281eb4fd606959029a793"
+      "13f001d38f46084e5bc60c9e4bab3cc9"
     ],
     [
       "Sig.verify",
@@ -112,7 +94,7 @@
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
       0,
-      "4d76fdaf01e76626b7d2e7c6a6028d7e"
+      "16c618324da349b8b29f87cda7e9ab97"
     ]
   ]
 ]

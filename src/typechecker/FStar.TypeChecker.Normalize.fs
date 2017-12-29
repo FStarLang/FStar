@@ -110,6 +110,7 @@ type cfg = {
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
     primitive_steps:list<primitive_step>;
     strong : bool;                       // under a binder
+    memoize_lazy : bool
 }
 
 type branches = list<(pat * option<term> * term)>
@@ -128,8 +129,9 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let mk t r = mk t None r
-let set_memo (r:memo<'a>) (t:'a) =
-  match !r with
+let set_memo cfg (r:memo<'a>) (t:'a) =
+  if cfg.memoize_lazy then
+    match !r with
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
 
@@ -300,7 +302,7 @@ let rec closure_as_term cfg (env:env) t =
               begin match lookup_bvar env x with
                     | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                     | Dummy -> t
-                    | Clos(env, t0, r, _) -> closure_as_term cfg env t0
+                    | Clos(env, t0, _, _) -> closure_as_term cfg env t0
               end
 
            | Tm_app(head, args) ->
@@ -702,7 +704,7 @@ let mk_psc_subst cfg env =
     List.fold_right
         (fun (binder_opt, closure) subst ->
             match binder_opt, closure with
-            | Some b, Clos(env, term, memo, _) ->
+            | Some b, Clos(env, term, _, _) ->
                 // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
                 let bv,_ = b in
                 if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
@@ -1173,7 +1175,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
 
                 | MemoLazy r :: stack ->
-                  set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
+                  set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
@@ -1698,7 +1700,9 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t =
-        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
+        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses];
+                        delta_level=[Unfold Delta_constant];
+                        memoize_lazy=false}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
@@ -1771,7 +1775,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     rebuild cfg env stack t
 
   | MemoLazy r::stack ->
-    set_memo r (env, t);
+    set_memo cfg r (env, t);
     log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
     rebuild cfg env stack t
 
@@ -1973,7 +1977,12 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps; strong=false}
+    {tcenv=e;
+     steps=s;
+     delta_level=d;
+     primitive_steps=built_in_primitive_steps;
+     strong=false;
+     memoize_lazy=true}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in

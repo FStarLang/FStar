@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "4bb3e6666f381bfef71f34683907b88c"
+      "02bab8780ddc18e07aa5742de1e7a144"
     ],
     [
       "FStar.Squash.give_proof",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "98cd05ea5762f1132307b78cb75aab9e"
+      "f1f21a3a255b61fc53198803abe3a878"
     ],
     [
       "FStar.Squash.squash_double_sum",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "5157da73c0b470c418dcb4ad984296e8"
+      "c8e8b93423e7d6e87aec1bde76757097"
     ]
   ]
 ]

@@ -11,33 +11,6 @@
       ],
       0,
       "ca5ff40fa89d97f2670a4ab7a382147b"
-    ],
-    [
-      "IfcDeclassify.__proj__Mkstate__item__secret",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e0c614cab258d3bcd0057928bc23b834"
-    ],
-    [
-      "IfcDeclassify.__proj__Mkstate__item__public",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5c2809811e1e627ef209fbf2b0a738f8"
-    ],
-    [
-      "IfcDeclassify.__proj__Mkstate__item__release",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b0c17144815fb8e7236577f83f325998"
     ]
   ]
 ]
