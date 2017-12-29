@@ -1300,8 +1300,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         in
         let term = S.mk_Tm_app head (List.rev arg_rets_rev) None head.pos in
         if Util.is_pure_or_ghost_lcomp cres
-        && (head_is_pure_and_some_arg_is_effectful)
-            // || Option.isSome (Env.expected_typ env))
+        && head_is_pure_and_some_arg_is_effectful
         then let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (Print.term_to_string term) in
              TcUtil.maybe_assume_result_eq_pure_term env term cres
         else let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (Print.term_to_string term) in
@@ -1329,30 +1328,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       let comp = TcUtil.subst_lcomp subst comp in
 
-     (* TODO : This is a really syntactic criterion to check if we can evaluate *)
-     (* applications left-to-right, can we do better ? *)
-     let shortcuts_evaluation_order =
-       match (SS.compress head).n with
-       | Tm_fvar fv ->
-         S.fv_eq_lid fv Parser.Const.op_And ||
-         S.fv_eq_lid fv Parser.Const.op_Or
-       | _ -> false
-     in
-
       let app =
-       if shortcuts_evaluation_order then
-         (* Question (NS): Why is this even possible here?
-//                            I thought this would be taken care of in
-//                            check_short_circuit_args
-//          *)
-         (* If the head is shortcutting we cannot hoist its arguments *)
-         (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
-         let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
-         let app = mk_Tm_app head args None r in
-         let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
-         TcUtil.maybe_monadic env app comp.eff_name comp.res_typ
-
-       else
           (* 2. For each monadic argument (including the head of the application) we introduce *)
           (*    a fresh variable and lift the actual argument to comp.       *)
           let lifted_args, head, args =
