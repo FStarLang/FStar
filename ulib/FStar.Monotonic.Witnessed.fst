@@ -314,3 +314,29 @@ let witnessed_forall #state #rel #t p = ()
 let witnessed_exists #state #rel #t p = ()
 
 (* EXPOSED BY THE INTERFACE [end] *)
+
+
+(* NOT EXPOSED BY THE INTERFACE [start] *)
+
+(* An equivalent past-view of the witnessed modality *)
+
+let witnessed_past (#state:Type) (#rel:preorder state) (p:(state -> Type0)) = 
+  get (fun s -> exists s' . rel s' s /\ (forall s'' . rel s' s'' ==> p s''))
+
+val witnessed_defs_equiv_1 : #state:Type
+                          -> #rel:preorder state
+                          -> p:(state -> Type0)
+                          -> Lemma (requires (witnessed #state #rel p)) 
+                                   (ensures  (witnessed_past #state #rel p))
+let witnessed_defs_equiv_1 #state #rel p = ()
+
+val witnessed_defs_equiv_2 : #state:Type
+                          -> #rel:preorder state
+                          -> p:(state -> Type0)
+                          -> Lemma (requires (witnessed_past #state #rel p)) 
+                                   (ensures  (witnessed #state #rel p))
+let witnessed_defs_equiv_2 #state #rel p = 
+  get_weakening #state (fun s -> exists s' . rel s' s /\ (forall s'' . rel s' s'' ==> p s'')) 
+                       (fun s -> forall s' . rel s s' ==> p s')
+
+(* NOT EXPOSED BY THE INTERFACE [end] *)
