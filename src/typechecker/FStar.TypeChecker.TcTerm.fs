@@ -88,7 +88,8 @@ let maybe_extend_subst s b v : subst_t =
     else NT(fst b, v)::s
 
 let set_lcomp_result lc t =
-    {lc with res_typ=t; comp=fun () -> U.set_result_typ (lc.comp()) t}
+    S.mk_lcomp lc.eff_name t lc.cflags
+               (fun () -> U.set_result_typ (lcomp_comp lc) t)
 
 let memo_tk (e:term) (t:typ) = e
 
@@ -110,8 +111,6 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     if debug env Options.High
-     then BU.print2 "Computed return type %s; expected type %s\n" (Print.term_to_string t) (Print.term_to_string t');
      let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
@@ -125,8 +124,6 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
   in
-  if debug env Options.Low
-  then BU.print1 "Return comp type is %s\n" (Print.lcomp_to_string lc);
   e, lc, g
 
 (************************************************************************************************************)
@@ -173,7 +170,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
       e, c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
-       let c = c.comp() in
+       let c = lcomp_comp c in
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -359,7 +356,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let expected_c, _, g = tc_comp env0 expected_c in
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
-    let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c'.comp()) in
+    let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
     let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
@@ -446,7 +443,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             end ;
             u
     in
-    let repr = Env.reify_comp env (c.comp()) u_c in
+    let repr = Env.reify_comp env (lcomp_comp c) u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
     let e, c, g' = comp_check_expected_typ env e c in
@@ -602,7 +599,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     in
     if debug env Options.Extreme
     then BU.print2 "(%s) comp type = %s\n"
-                      (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
+                      (Range.string_of_range top.pos) (Print.lcomp_to_string cres);
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
@@ -1172,9 +1169,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         let guard_body =  //we don't abstract over subtyping constraints; so solve them now
             Rel.solve_deferred_constraints envbody guard_body in
         if should_check_expected_effect
-        then let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
+        then let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, lcomp_comp cbody) in
              body, cbody, Rel.conj_guard guard_body guard
-        else body, cbody.comp(), guard_body
+        else body, lcomp_comp cbody, guard_body
     in
 
     let guard = if env.top_level || not(Env.should_verify env)
@@ -1247,7 +1244,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let cres, guard =
           match bs with
           | [] -> (* full app *)
-              let cres = TcUtil.subst_lcomp subst cres in
+//              let cres = TcUtil.subst_lcomp subst cres in
               //NS 12/22 ... this comment looks stale
               (* If we have f e1 e2
                   where e1 or e2 is impure but f is a pure function,
@@ -1259,7 +1256,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
           | _ ->  (* partial app *)
               let g = Rel.conj_guard ghead guard |> Rel.solve_deferred_constraints env in
-              U.lcomp_of_comp <| mk_Total  (SS.subst subst <| U.arrow bs (cres.comp())), g
+              U.lcomp_of_comp <| mk_Total  (U.arrow bs (lcomp_comp cres)), g
       in
       if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
 
@@ -1295,23 +1292,29 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
               arg_rets below are those xn...x1 bound variables
        *)
       let cres =
-        let head_or_some_arg_is_effectful =
-            not (Util.is_pure_or_ghost_lcomp chead)
-            || (BU.for_some (fun (_, _, lc) -> not (Util.is_pure_or_ghost_lcomp lc)
+        let head_is_pure_and_some_arg_is_effectful =
+            Util.is_pure_or_ghost_lcomp chead
+            && (BU.for_some (fun (_, _, lc) -> not (Util.is_pure_or_ghost_lcomp lc)
                                            || TcUtil.should_not_inline_lc lc)
                             arg_comps_rev)
         in
+        let term = S.mk_Tm_app head (List.rev arg_rets_rev) None head.pos in
         if Util.is_pure_or_ghost_lcomp cres
-        && head_or_some_arg_is_effectful
-        then let term = S.mk_Tm_app head (List.rev arg_rets_rev) None head.pos in
+        && (head_is_pure_and_some_arg_is_effectful)
+            // || Option.isSome (Env.expected_typ env))
+        then let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (Print.term_to_string term) in
              TcUtil.maybe_assume_result_eq_pure_term env term cres
-        else cres
+        else let _ = if Env.debug env Options.Extreme then BU.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (Print.term_to_string term) in
+             cres
       in
 
       (* 1. We compute the final computation type comp  *)
       let comp =
         List.fold_left
           (fun out_c ((e, q), x, c) ->
+              if Env.debug env Options.Extreme then BU.print2 "(b) Monadic app: Binding argument %s : %s\n"
+                        (match x with None -> "_" | Some x -> Print.bv_to_string x)
+                        (Print.term_to_string e);
               if Util.is_pure_or_ghost_lcomp c
               then TcUtil.bind e.pos env (Some e) c (x, out_c)
               else TcUtil.bind e.pos env None c (x, out_c))
@@ -1319,34 +1322,37 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           arg_comps_rev
       in
       let comp =
+          if Env.debug env Options.Extreme then BU.print1 "(c) Monadic app: Binding head %s " (Print.term_to_string head);
           if Util.is_pure_or_ghost_lcomp chead
           then TcUtil.bind head.pos env (Some head) chead (None, comp)
           else TcUtil.bind head.pos env None chead (None, comp) in
 
-      (* TODO : This is a really syntactic criterion to check if we can evaluate *)
-      (* applications left-to-right, can we do better ? *)
-      let shortcuts_evaluation_order =
-        match (SS.compress head).n with
-        | Tm_fvar fv ->
-          S.fv_eq_lid fv Parser.Const.op_And ||
-          S.fv_eq_lid fv Parser.Const.op_Or
-        | _ -> false
-      in
+      let comp = TcUtil.subst_lcomp subst comp in
+
+     (* TODO : This is a really syntactic criterion to check if we can evaluate *)
+     (* applications left-to-right, can we do better ? *)
+     let shortcuts_evaluation_order =
+       match (SS.compress head).n with
+       | Tm_fvar fv ->
+         S.fv_eq_lid fv Parser.Const.op_And ||
+         S.fv_eq_lid fv Parser.Const.op_Or
+       | _ -> false
+     in
 
       let app =
-        if shortcuts_evaluation_order then
-          (* Question (NS): Why is this even possible here?
-                            I thought this would be taken care of in
-                            check_short_circuit_args
-          *)
-          (* If the head is shortcutting we cannot hoist its arguments *)
-          (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
-          let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
-          let app = mk_Tm_app head args None r in
-          let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
-          TcUtil.maybe_monadic env app comp.eff_name comp.res_typ
+       if shortcuts_evaluation_order then
+         (* Question (NS): Why is this even possible here?
+//                            I thought this would be taken care of in
+//                            check_short_circuit_args
+//          *)
+         (* If the head is shortcutting we cannot hoist its arguments *)
+         (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
+         let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
+         let app = mk_Tm_app head args None r in
+         let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
+         TcUtil.maybe_monadic env app comp.eff_name comp.res_typ
 
-        else
+       else
           (* 2. For each monadic argument (including the head of the application) we introduce *)
           (*    a fresh variable and lift the actual argument to comp.       *)
           let lifted_args, head, args =
@@ -1381,6 +1387,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       (* Each conjunct in g is already labeled *)
       let comp, g = TcUtil.strengthen_precondition None env app comp guard in
+      if Env.debug env Options.Extreme then BU.print2 "(d) Monadic app: type of app\n\t(%s)\n\t: %s\n"
+        (Print.term_to_string app)
+        (Print.lcomp_to_string comp);
       app, comp, g
     in
 
@@ -1861,7 +1870,7 @@ and check_top_level_let env e =
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
-                 let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
+                 let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, lcomp_comp c1]) in
                  let g1 = map_guard g1 <| N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
                  let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, U.lcomp_of_comp c1
@@ -1878,7 +1887,7 @@ and check_top_level_let env e =
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  let _ = Rel.force_trivial_guard env g1 in
-                 let c = c1.comp () |> N.normalize_comp [N.Beta; N.NoFullNorm] env in
+                 let c = lcomp_comp c1 |> N.normalize_comp [N.Beta; N.NoFullNorm] env in
                  let e2 = if Util.is_pure_comp c
                           then e2
                           else mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos in
@@ -2164,9 +2173,9 @@ and check_let_bound_def top_level env lb
     let g1 = Rel.conj_guard g1 guard_f in
 
     if Env.debug env Options.Extreme
-    then BU.print3 "checked top-level def %s, result type is %s, guard is %s\n"
+    then BU.print3 "checked let-bound def %s : %s guard is %s\n"
             (Print.lbname_to_string lb.lbname)
-            (Print.term_to_string c1.res_typ)
+            (Print.lcomp_to_string c1)
             (Rel.guard_to_string env g1);
 
     e1, univ_vars, c1, g1, Option.isSome topt
@@ -2245,7 +2254,7 @@ and tc_tot_or_gtot_term env e : term
   if U.is_tot_or_gtot_lcomp c
   then e, c, g
   else let g = Rel.solve_deferred_constraints env g in
-       let c = c.comp() in
+       let c = lcomp_comp c in
        let c = norm_c env c in
        let target_comp, allow_ghost =
             if TcUtil.is_pure_effect env (U.comp_effect_name c)

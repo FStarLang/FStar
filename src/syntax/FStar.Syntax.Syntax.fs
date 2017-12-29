@@ -221,7 +221,7 @@ and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -231,6 +231,18 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+let mk_lcomp eff_name res_typ cflags comp_thunk =
+    { eff_name = eff_name;
+      res_typ = res_typ;
+      cflags = cflags;
+      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+let lcomp_comp lc =
+    match !(lc.comp_thunk) with
+    | Inl thunk ->
+      let c = thunk () in
+      lc.comp_thunk := Inr c;
+      c
+    | Inr c -> c
 type tscheme = list<univ_name> * typ
 
 type freenames_l = list<bv>

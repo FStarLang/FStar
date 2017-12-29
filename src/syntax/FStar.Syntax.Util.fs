@@ -230,8 +230,10 @@ let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
           let ct = {ct with flags=fs} in
           {c with n=Comp ct}
     in
-    {lc with cflags=fs;
-             comp=(fun () -> comp_typ_set_flags (lc.comp())) }
+    Syntax.mk_lcomp lc.eff_name
+                    lc.res_typ
+                    fs
+                    (fun () -> comp_typ_set_flags (lcomp_comp lc))
 
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
@@ -968,10 +970,7 @@ let lcomp_of_comp c0 =
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
-    {eff_name = eff_name;
-     res_typ = comp_result c0;
-     cflags = flags;
-     comp = fun() -> c0}
+    Syntax.mk_lcomp eff_name (comp_result c0) flags (fun () -> c0)
 
 let mk_residual_comp l t f = {
     residual_effect=l;

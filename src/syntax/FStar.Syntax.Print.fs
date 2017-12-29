@@ -364,7 +364,7 @@ and lbs_to_string quals lbs =
 
 and lcomp_to_string lc =
     if Options.print_effect_args () then
-        comp_to_string (lc.comp ())
+        comp_to_string (lcomp_comp lc)
     else
         U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
 

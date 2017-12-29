@@ -42,9 +42,6 @@ module Const = FStar.Parser.Const
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
-let subst_lcomp_opt s l = match l with
-    | Some (BU.Inl l) -> Some (BU.Inl (U.lcomp_of_comp <| SS.subst_comp s (l.comp())))
-    | _ -> l
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'

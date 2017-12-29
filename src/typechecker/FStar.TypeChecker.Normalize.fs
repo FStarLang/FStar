@@ -2000,8 +2000,8 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           {lc with eff_name=pure_eff;
-                    comp=(fun () -> ghost_to_pure env (lc.comp()))}
+           S.mk_lcomp pure_eff lc.res_typ lc.cflags
+                      (fun () -> ghost_to_pure env (lcomp_comp lc))
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc
