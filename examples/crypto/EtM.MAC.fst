@@ -3,13 +3,14 @@ open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
-open FStar.Monotonic.RRef
 
 open Platform.Bytes
 open EtM.CoreCrypto
 
 module Ideal = EtM.Ideal
 module CPA = EtM.CPA
+
+type rid = erid
 
 type msg = EtM.CPA.cipher
 

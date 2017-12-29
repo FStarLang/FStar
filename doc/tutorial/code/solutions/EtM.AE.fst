@@ -4,7 +4,6 @@ open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
-open FStar.Monotonic.RRef
 
 open EtM
 
@@ -13,6 +12,7 @@ open CoreCrypto
 
 module HST = FStar.HyperStack.ST
 
+type rid = HST.erid
 type cipher = (CPA.cipher * MAC.tag)
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)

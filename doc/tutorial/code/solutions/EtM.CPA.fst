@@ -4,7 +4,6 @@ open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
-open FStar.Monotonic.RRef
 
 open EtM.Ideal
 
@@ -18,6 +17,7 @@ module HST = FStar.HyperStack.ST
 
 open EtM.Plain
 
+type rid = HST.erid
 let ivsize = blockSize AES_128_CBC
 let keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)

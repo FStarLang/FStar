@@ -1,12 +1,10 @@
 (** A library for monotonic references to partial, dependent maps, with a whole-map invariant *)
 module FStar.Monotonic.Map
-open FStar.Monotonic.RRef
 
 open FStar.HyperStack
 open FStar.HyperStack.ST
 
 module HS  = FStar.HyperStack
-module MR  = FStar.Monotonic.RRef
 module HST = FStar.HyperStack.ST
 
 (* Partial, dependent maps *)
@@ -37,7 +35,7 @@ let empty_map a b
   : Tot (map' a b)
   = fun x -> None
 
-type rid = MR.rid
+type rid = HST.erid
 
 let alloc (#r:rid) #a #b #inv
   : ST (t r a b inv)
@@ -83,8 +81,8 @@ let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r
     let cur = !m in
     m := upd cur x y;
     contains_stable m x y;
-    witness m (defined m x);
-    witness m (contains m x y)
+    mr_witness m (defined m x);
+    mr_witness m (contains m x y)
 
 let lookup #r #a #b #inv (m:t r a b inv) (x:a)
   : ST (option (b x))
@@ -104,6 +102,6 @@ let lookup #r #a #b #inv (m:t r a b inv) (x:a)
     | None -> y
     | Some b ->
         contains_stable m x b;
-        witness m (defined m x);
-        witness m (contains m x b);
+        mr_witness m (defined m x);
+        mr_witness m (contains m x b);
         y

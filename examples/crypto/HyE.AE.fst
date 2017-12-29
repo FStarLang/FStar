@@ -3,7 +3,6 @@ open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperStack
-open FStar.Monotonic.RRef
 open HyE.Ideal
 
 open Platform.Bytes
@@ -14,6 +13,7 @@ module B = Platform.Bytes
 open HyE.Plain
 module Plain = HyE.Plain
 
+type rid = erid
 let ivsize = aeadRealIVSize AES_128_GCM
 let keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)

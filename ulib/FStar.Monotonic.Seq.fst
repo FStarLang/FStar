@@ -1,11 +1,12 @@
 module FStar.Monotonic.Seq
 
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Classical
 module HS   = FStar.HyperStack
-module MR   = FStar.Monotonic.RRef
 module HST  = FStar.HyperStack.ST
+
+open FStar.HyperStack
+open FStar.HyperStack.ST
 
 (* 2016-11-22: The following is meant to override the fact that the
    enclosing namespace of the current module (here FStar.Monotonic) is
@@ -27,10 +28,7 @@ abstract let grows (#a:Type) :Preorder.preorder (seq a)
     length s1 <= length s2 /\
     (forall (i:nat).{:pattern (Seq.index s1 i) \/ (Seq.index s2 i)} i < length s1 ==> index s1 i == index s2 i)
 
-open FStar.Monotonic.RRef
-open FStar.HyperStack
-
-type rid = MR.rid
+type rid = HST.erid
 
 let snoc (s:seq 'a) (x:'a) 
   : Tot (seq 'a) 
@@ -79,7 +77,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
     r := Seq.snoc s0 x;
     at_least_is_stable n x r;
     Seq.contains_snoc s0 x;
-    witness r (at_least n x r)
+    mr_witness r (at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Monotone sequences with a (stateless) invariant of the whole sequence
@@ -141,7 +139,7 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
     r := Seq.snoc s0 x;
     i_at_least_is_stable n x r;
     contains_snoc s0 x;
-    witness r (i_at_least n x r)
+    mr_witness r (i_at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Testing invariant sequences
@@ -159,7 +157,7 @@ let test0 r a k =
     let s = HS.sel h0 a in 
     at_least_is_stable k (Seq.index (HS.sel h0 a) k) a;
     Seq.contains_intro s k (Seq.index s k) in
-  MR.witness a (at_least k (Seq.index (HS.sel h0 a) k) a)
+  mr_witness a (at_least k (Seq.index (HS.sel h0 a) k) a)
   
 private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (i_sel h a)))
@@ -167,7 +165,7 @@ private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
 let itest r a k =
   let h0 = HST.get() in
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
-  MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
+  mr_witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
 private let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
                : ST unit (requires (fun _ -> HST.witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
@@ -258,7 +256,7 @@ let map_prefix (#a:Type) (#b:Type) (#i:rid)
 
 //17-01-05  this applies to log_t's defined below. 
 let map_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot b) (bs:seq b)
-  :Lemma (MR.stable_on_t r (map_prefix r f bs))
+  :Lemma (stable_on_t r (map_prefix r f bs))
   = ()
 
 let map_has_at_index (#a:Type) (#b:Type) (#i:rid)
@@ -272,7 +270,7 @@ let map_has_at_index (#a:Type) (#b:Type) (#i:rid)
 let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 			    (r:m_rref i (seq a) grows)
 			    (f:a -> Tot b) (n:nat) (v:b)
-  : Lemma (MR.stable_on_t r (map_has_at_index r f n v))
+  : Lemma (stable_on_t r (map_has_at_index r f n v))
   = ()
 		     
 
@@ -319,7 +317,7 @@ let collect_prefix (#a:Type) (#b:Type) (#i:rid)
   grows bs (collect f (HS.sel h r))
 
 let collect_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot (seq b)) (bs:seq b)
-  : Lemma (MR.stable_on_t r (collect_prefix r f bs))
+  : Lemma (stable_on_t r (collect_prefix r f bs))
   = let aux : h0:mem -> h1:mem -> Lemma
       (collect_prefix r f bs h0
        /\ grows (HS.sel h0 r) (HS.sel h1 r)
@@ -342,7 +340,7 @@ let collect_has_at_index (#a:Type) (#b:Type) (#i:rid)
 let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 				(r:m_rref i (seq a) grows)
 				(f:a -> Tot (seq b)) (n:nat) (v:b)
-  : Lemma (MR.stable_on_t r (collect_has_at_index r f n v))
+  : Lemma (stable_on_t r (collect_has_at_index r f n v))
   = Classical.forall_intro_2 (collect_grows f)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,9 +384,8 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
 		   fresh_ref c h0 h1 /\
 		   HS.sel h1 c = init /\
 		   FStar.Map.contains h1.h i))
-  =
-    recall log; recall_region i;
-    witness log (at_most_log_len init log);
+  = recall log; recall_region i;
+    mr_witness log (at_most_log_len init log);
     ralloc i init
 
 let increment_seqn (#l:rid) (#a:Type) (#max:nat)
@@ -405,7 +402,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 	  HS.sel h1 c = HS.sel h0 c + 1))
   = recall c; recall log;
     let n = !c + 1 in
-    witness log (at_most_log_len n log);
+    mr_witness log (at_most_log_len n log);
     c := n
 
 let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
