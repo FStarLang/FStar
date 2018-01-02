@@ -1,5 +1,5 @@
 module FStar.Buffer
- 
+
 open FStar.Seq
 open FStar.UInt32
 module Int32 = FStar.Int32
@@ -13,10 +13,10 @@ module HST = FStar.HyperStack.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
-//17-01-04 usage? move to UInt? 
+//17-01-04 usage? move to UInt?
 let lemma_size (x:int) : Lemma (requires (UInt.size x n))
-				     (ensures (x >= 0))
-				     [SMTPat (UInt.size x n)]
+             (ensures (x >= 0))
+             [SMTPat (UInt.size x n)]
   = ()
 
 (* Buffer general type, fully implemented on FStar's arrays *)
@@ -42,7 +42,7 @@ let max_length #a (b:buffer a) : GTot nat = v b.max_length
 let length #a (b:buffer a) : GTot nat = v b.length
 let idx #a (b:buffer a) : GTot nat = v b.idx
 
-//17-01-04 rename to container or ref? 
+//17-01-04 rename to container or ref?
 let content #a (b:buffer a) :
   GTot (reference (s:seq a{Seq.length s == v b.max_length})) = b.content
 
@@ -60,7 +60,7 @@ val recall: #a:Type
   (requires (fun m -> True))
   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 let recall #a b = recall b.content
- 
+
 (* Ghostly access an element of the array, or the full underlying sequence *)
 let as_seq #a h (b:buffer a) : GTot (s:seq a{Seq.length s == length b}) =
   Seq.slice (sel h b) (idx b) (idx b + length b)
@@ -207,7 +207,7 @@ let modifies_buffers (bufs:TSet.set abuffer) h h' : GTot Type0 =
   (forall rid. Set.mem rid (Map.domain h.h) ==>
     (HS.modifies_ref rid (arefs bufs) h h' /\
       (forall (#a:Type) (b:buffer a). {:pattern (frameOf b == rid /\ live h b /\ disjoint_from_bufs b bufs)}
-	(frameOf b == rid /\ live h b /\ disjoint_from_bufs b bufs ==> equal h b h' b /\ live h' b))))
+  (frameOf b == rid /\ live h b /\ disjoint_from_bufs b bufs ==> equal h b h' b /\ live h' b))))
 
 (* General modifies clause for buffers only *)
 let modifies_bufs rid buffs h h' =
@@ -252,8 +252,8 @@ let modifies_buf_4 (#t:Type) (#t':Type) (#t'':Type) (#t''':Type) rid (b:buffer t
 (* General lemmas for the modifies_bufs clause *)
 let lemma_modifies_bufs_trans rid bufs h0 h1 h2 :
   Lemma (requires (modifies_bufs rid bufs h0 h1 /\ modifies_bufs rid bufs h1 h2))
-	(ensures (modifies_bufs rid bufs h0 h2))
-	[SMTPat (modifies_bufs rid bufs h0 h1); SMTPat (modifies_bufs rid bufs h1 h2)]
+  (ensures (modifies_bufs rid bufs h0 h2))
+  [SMTPat (modifies_bufs rid bufs h0 h1); SMTPat (modifies_bufs rid bufs h1 h2)]
  = ()
 
 let lemma_modifies_bufs_sub rid bufs subbufs h0 h1 :
@@ -278,80 +278,80 @@ let lemma_modifies_bufs_superset #a #a' h0 h1 bufs b b' = ()
 (* Specialized lemmas *)
 let modifies_trans_0_0 rid h0 h1 h2 :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_0 rid h1 h2))
-	(ensures (modifies_buf_0 rid h0 h2))
-	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
+  (ensures (modifies_buf_0 rid h0 h2))
+  [SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
  = ()
 
 let modifies_trans_1_0 rid b h0 h1 h2 :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_0 rid h1 h2))
-	(ensures (modifies_buf_1 rid b h0 h2))
-	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
+  (ensures (modifies_buf_1 rid b h0 h2))
+  [SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
  = ()
 
 let modifies_trans_0_1 rid b h0 h1 h2 :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_1 rid b h1 h2))
-	(ensures (modifies_buf_1 rid b h0 h2))
-	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
+  (ensures (modifies_buf_1 rid b h0 h2))
+  [SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
 let modifies_trans_1_1 rid b h0 h1 h2 :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid b h1 h2))
-	(ensures (modifies_buf_1 rid b h0 h2))
-	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
+  (ensures (modifies_buf_1 rid b h0 h2))
+  [SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
 let modifies_trans_1_1' rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid b' h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b' h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b' h1 h2)]
  = ()
 
 let modifies_trans_2_0 rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_0 rid h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
  = ()
 
 let modifies_trans_2_1 rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_1 rid b h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
 let modifies_trans_2_1' rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_2 rid b' b h0 h1 /\ modifies_buf_1 rid b h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_2 rid b' b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_2 rid b' b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
 let modifies_trans_0_2 rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_2 rid b b' h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
  = ()
 
 let modifies_trans_1_2 rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_2 rid b b' h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
  = ()
 
 let modifies_trans_2_2 rid b b' h0 h1 h2 :
   Lemma (requires (modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_2 rid b b' h1 h2))
-	(ensures (modifies_buf_2 rid b b' h0 h2))
-	[SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
+  (ensures (modifies_buf_2 rid b b' h0 h2))
+  [SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
  = ()
 
 let modifies_trans_3_3 rid b b' b'' h0 h1 h2 :
   Lemma (requires (modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_buf_3 rid b b' b'' h1 h2))
-	(ensures (modifies_buf_3 rid b b' b'' h0 h2))
-	[SMTPat (modifies_buf_3 rid b b' b'' h0 h1); SMTPat (modifies_buf_3 rid b b' b'' h1 h2)]
+  (ensures (modifies_buf_3 rid b b' b'' h0 h2))
+  [SMTPat (modifies_buf_3 rid b b' b'' h0 h1); SMTPat (modifies_buf_3 rid b b' b'' h1 h2)]
  = ()
 
 let modifies_trans_4_4 rid b b' b'' b''' h0 h1 h2 :
   Lemma (requires (modifies_buf_4 rid b b' b'' b''' h0 h1 /\ modifies_buf_4 rid b b' b'' b''' h1 h2))
-	(ensures (modifies_buf_4 rid b b' b'' b''' h0 h2))
-	[SMTPat (modifies_buf_4 rid b b' b'' b''' h0 h1); SMTPat (modifies_buf_4 rid b b' b'' b''' h1 h2)]
+  (ensures (modifies_buf_4 rid b b' b'' b''' h0 h2))
+  [SMTPat (modifies_buf_4 rid b b' b'' b''' h0 h1); SMTPat (modifies_buf_4 rid b b' b'' b''' h1 h2)]
  = ()
 
 (* TODO: complete with specialized versions of every general lemma *)
@@ -530,14 +530,14 @@ let lemma_reveal_modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':bu
     (let rid = frameOf b in let rid' = frameOf b' in let rid'' = frameOf b'' in
     ((rid == rid' /\ rid' == rid'' /\ modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_one rid h0 h1)
     \/ (rid == rid' /\ rid' =!= rid'' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1
-	/\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid'')) h0 h1 )
-	\/ (rid =!= rid' /\ rid' == rid'' /\ modifies_buf_2 rid' b' b'' h0 h1 /\ modifies_buf_1 rid b h0 h1
-	/\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid'')) h0 h1 )
-	\/ (rid == rid'' /\ rid' =!= rid'' /\ modifies_buf_2 rid b b'' h0 h1 /\ modifies_buf_1 rid' b' h0 h1
-	/\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid')) h0 h1 )
-	\/ (rid =!= rid' /\ rid' =!= rid'' /\ rid =!= rid''
-	/\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton rid'')) h0 h1
-	/\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1)) )))
+  /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid'')) h0 h1 )
+  \/ (rid =!= rid' /\ rid' == rid'' /\ modifies_buf_2 rid' b' b'' h0 h1 /\ modifies_buf_1 rid b h0 h1
+  /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid'')) h0 h1 )
+  \/ (rid == rid'' /\ rid' =!= rid'' /\ modifies_buf_2 rid b b'' h0 h1 /\ modifies_buf_1 rid' b' h0 h1
+  /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid')) h0 h1 )
+  \/ (rid =!= rid' /\ rid' =!= rid'' /\ rid =!= rid''
+  /\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton rid'')) h0 h1
+  /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1)) )))
   = ()
 
 let lemma_reveal_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 : Lemma
@@ -549,12 +549,12 @@ let lemma_reveal_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h
     \/ (rid == rid' /\ rid' =!= h0.tip /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1
       /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0 h1 )
       \/ (rid =!= rid' /\ rid == h0.tip /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1
-	/\ HS.modifies (Set.union (Set.singleton rid') (Set.singleton h0.tip)) h0 h1 )
-	\/ (rid =!= rid' /\ rid' == h0.tip /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid b h0 h1
-	/\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0 h1 )
-	\/ (rid =!= rid' /\ rid' =!= h0.tip /\ rid =!= h0.tip
-	/\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0 h1
-	/\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1)) )))
+  /\ HS.modifies (Set.union (Set.singleton rid') (Set.singleton h0.tip)) h0 h1 )
+  \/ (rid =!= rid' /\ rid' == h0.tip /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid b h0 h1
+  /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0 h1 )
+  \/ (rid =!= rid' /\ rid' =!= h0.tip /\ rid =!= h0.tip
+  /\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0 h1
+  /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1)) )))
   = ()
 
 let lemma_reveal_modifies_region (rid:rid) bufs h0 h1 : Lemma
@@ -806,7 +806,7 @@ let create #a init len =
 
 unfold let p (#a:Type0) (init:list a) : GTot Type0 =
   normalize (0 < FStar.List.Tot.length init) /\
-  normalize (FStar.List.Tot.length init < UInt.max_int 32)
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
 unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
   normalize (length buf == len)
@@ -825,7 +825,7 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
      /\ as_seq h1 b == Seq.of_list init
      /\ q #a len b))
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
-	                                     //whereas the L.length init below will not
+                                       //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
@@ -894,8 +894,8 @@ let to_seq #a b l =
 // ocaml-only, used for conversions to Platform.bytes
 val to_seq_full: #a:Type -> b:buffer a -> ST (seq a)
   (requires (fun h -> live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ 
-			 r == as_seq #a h1 b ))
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\
+       r == as_seq #a h1 b ))
 let to_seq_full #a b =
   let s = !b.content in
   let i = v b.idx in
@@ -915,8 +915,8 @@ private let lemma_aux_0
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem) (tt:Type) (bb:buffer tt)
   :Lemma (requires (live h0 b /\ live h0 bb /\ disjoint b bb))
          (ensures  (live h0 b /\ live h0 bb /\
-	            (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
-		     as_seq h0 bb == as_seq h1 bb)))
+              (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
+         as_seq h0 bb == as_seq h1 bb)))
   = Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ()
 
@@ -925,9 +925,9 @@ private let lemma_aux_1
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem) (tt:Type)
   :Lemma (requires (live h0 b))
          (ensures  (live h0 b /\
-	            (forall (bb:buffer tt). (live h0 bb /\ disjoint b bb) ==>
-		                       (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
-		                        as_seq h0 bb == as_seq h1 bb))))
+              (forall (bb:buffer tt). (live h0 bb /\ disjoint b bb) ==>
+                           (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
+                            as_seq h0 bb == as_seq h1 bb))))
   = let open FStar.Classical in
     forall_intro (move_requires (lemma_aux_0 b n z h0 tt))
 
@@ -937,9 +937,9 @@ private let lemma_aux_2
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem)
   :Lemma (requires (live h0 b))
          (ensures  (live h0 b /\
-	            (forall (tt:Type) (bb:buffer tt). (live h0 bb /\ disjoint b bb) ==>
-		                                 (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
-		                                  as_seq h0 bb == as_seq h1 bb))))
+              (forall (tt:Type) (bb:buffer tt). (live h0 bb /\ disjoint b bb) ==>
+                                     (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
+                                      as_seq h0 bb == as_seq h1 bb))))
   = let open FStar.Classical in
     forall_intro (move_requires (lemma_aux_1 b n z h0))
 
@@ -982,7 +982,7 @@ let sub_sub
   (len2: UInt32.t {v i2 + v len2 <= v len1})
 : Lemma
   (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
-= ()  
+= ()
 
 let sub_zero_length
   (#a: Type)
@@ -1025,7 +1025,7 @@ let lemma_offset_spec (#a:Type) (b:buffer a)
      [SMTPatOr [[SMTPat (as_seq h (offset b i))];
                 [SMTPat (Seq.slice (as_seq h b) (v i) (length b))]]]
   = Seq.lemma_eq_intro (as_seq h (offset b i)) (Seq.slice (as_seq h b) (v i) (length b))
-  
+
 private val eq_lemma1:
     #a:eqtype
   -> b1:buffer a
@@ -1241,7 +1241,7 @@ let modifies_subbuffer_2 (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t'
   (ensures  (modifies_2 a a' h0 h1 /\ modifies_2 a' a h0 h1 /\ live h1 a))
   [SMTPat (modifies_2 sub a' h0 h1); SMTPat (includes a sub)]
   = ()
-    
+
 let modifies_subbuffer_2' (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t') (a:buffer t) : Lemma
   (requires (live h0 a /\ live h0 a' /\ includes a sub /\ modifies_2 a' sub h0 h1 ))
   (ensures  (modifies_2 a a' h0 h1 /\ live h1 a))
