@@ -406,7 +406,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t;lbeff = lbeff} ->
                 // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
                     let lb_lid = (right lbname).fv_name.v in
-                    BU.print1 "eff_lid: %s\n" (string_of_lid lbeff);
+                    BU.print2 "eff_lid for %s: %s\n" (string_of_lid lb_lid) (string_of_lid lbeff);
                     let meta = flags @ flags' @
                       (if string_of_lid lbeff = "FStar.HyperStack.ST.StackInline" then [ StackInline ] else [])
                     in
