@@ -649,12 +649,9 @@ let phi =
                   ( {e with level=Formula} )
 in
       ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
-| decoration list_decoration_ rawDecl
-    {let (d, ds, decl) = ($1, $2, $3) in
-      ( mk_decl decl (rhs parseState 3) (d :: ds) )}
-| rawDecl
-    {let decl = $1 in
-      ( mk_decl decl (rhs parseState 1) [] )}
+| list_decoration_ rawDecl
+    {let (ds, decl) = ($1, $2) in
+      ( mk_decl decl (rhs parseState 3) ds )}
 
 rawDecl:
   pragma

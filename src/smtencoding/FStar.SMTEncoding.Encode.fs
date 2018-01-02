@@ -2516,7 +2516,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
-                         Errors.raise_error (Errors.Fatal_NonVaribleInductiveTypeParameter,
+                         Errors.raise_error (Errors.Fatal_NonVariableInductiveTypeParameter,
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
                                       (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
