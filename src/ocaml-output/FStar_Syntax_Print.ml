@@ -724,7 +724,7 @@ and lcomp_to_string : FStar_Syntax_Syntax.lcomp -> Prims.string =
     let uu____1782 = FStar_Options.print_effect_args ()  in
     if uu____1782
     then
-      let uu____1783 = lc.FStar_Syntax_Syntax.comp ()  in
+      let uu____1783 = FStar_Syntax_Syntax.lcomp_comp lc  in
       comp_to_string uu____1783
     else
       (let uu____1785 = sli lc.FStar_Syntax_Syntax.eff_name  in
@@ -1006,6 +1006,8 @@ and cflags_to_string : FStar_Syntax_Syntax.cflags -> Prims.string =
     | FStar_Syntax_Syntax.RETURN  -> "return"
     | FStar_Syntax_Syntax.PARTIAL_RETURN  -> "partial_return"
     | FStar_Syntax_Syntax.SOMETRIVIAL  -> "sometrivial"
+    | FStar_Syntax_Syntax.TRIVIAL_POSTCONDITION  -> "trivial_postcondition"
+    | FStar_Syntax_Syntax.SHOULD_NOT_INLINE  -> "should_not_inline"
     | FStar_Syntax_Syntax.LEMMA  -> "lemma"
     | FStar_Syntax_Syntax.CPS  -> "cps"
     | FStar_Syntax_Syntax.DECREASES uu____2027 -> ""

@@ -159,6 +159,7 @@ let range_0 : FStar_Ident.lident = pconst "range_0"
 let guard_free : FStar_Ident.lident = pconst "guard_free" 
 let inversion_lid : FStar_Ident.lident =
   p2l ["FStar"; "Pervasives"; "inversion"] 
+let with_type_lid : FStar_Ident.lident = pconst "with_type" 
 let normalize : FStar_Ident.lident = pconst "normalize" 
 let normalize_term : FStar_Ident.lident = pconst "normalize_term" 
 let norm : FStar_Ident.lident = pconst "norm" 
