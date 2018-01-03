@@ -40,7 +40,7 @@ let contains #a #rel h r =
   let _ = () in
   Some? (h.memory r.addr) /\
   (let Some (| a1, pre_opt, mm, _ |) = h.memory r.addr in
-   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+   a == a1 /\ Some? pre_opt /\ (eq2 #(preorder a) (Some?.v pre_opt) rel) /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
 let addr_unused_in n h = None? (h.memory n)
 
@@ -257,8 +257,10 @@ let lemma_sel_r1_join_tot_points_to_minus #a #rel h r r1 x = ()
 let lemma_sel_join_tot_h_emp #a #rel h r = ()
 let lemma_sel_join_tot_emp_h #a #rel h r = ()
 
-let lemma_restrict_eq_points_to #a #rel h r = 
-  admit ()
+let lemma_restrict_eq_points_to #a #rel h r =
+  let h1 = restrict h r in
+  let Some (| _, _, _, _ |) = h1.memory r.addr in
+  ()
 
 let lemma_points_to_is_injective #a #rel r x y = 
   assert (sel (points_to r x) r == sel (points_to r y) r)
