@@ -1694,34 +1694,6 @@ and norm_comp : cfg -> env -> comp -> comp =
                                           effect_args=norm_args ct.effect_args;
                                           flags=flags})}
 
-(* Promotes Ghost T, when T is not informative to Pure T
-        Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
-*)
-and ghost_to_pure_aux cfg env c =
-    let norm t =
-        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses];
-                        delta_level=[Unfold Delta_constant];
-                        memoize_lazy=false}) env [] t in
-    let non_info t = non_informative (norm t) in
-    match c.n with
-    | Total _ -> c
-    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
-    | Comp ct ->
-        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
-        if U.is_ghost_effect l
-        && non_info ct.result_typ
-        then let ct =
-                 match downgrade_ghost_effect_name ct.effect_name with
-                 | Some pure_eff ->
-                   let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
-                   {ct with effect_name=pure_eff; flags=flags}
-                 | None ->
-                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
-                    {ct with effect_name=PC.effect_PURE_lid} in
-             {c with n=Comp ct}
-        else c
-    | _ -> c
-
 and norm_binder : cfg -> env -> binder -> binder =
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
 
@@ -1990,7 +1962,31 @@ let normalize_with_primitive_steps ps s e t =
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
-let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
+
+(* Promotes Ghost T, when T is not informative to Pure T
+        Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
+*)
+let ghost_to_pure env c =
+    let cfg = config [UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses] env in
+    let non_info t = non_informative (norm cfg [] [] t) in
+    match c.n with
+    | Total _ -> c
+    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
+    | Comp ct ->
+        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        if U.is_ghost_effect l
+        && non_info ct.result_typ
+        then let ct =
+                 match downgrade_ghost_effect_name ct.effect_name with
+                 | Some pure_eff ->
+                   let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
+                   {ct with effect_name=pure_eff; flags=flags}
+                 | None ->
+                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    {ct with effect_name=PC.effect_PURE_lid} in
+             {c with n=Comp ct}
+        else c
+    | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
     let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
