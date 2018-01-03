@@ -362,6 +362,11 @@ let rec resugar_term (t : S.term) : A.term =
       let b = BU.must (resugar_binder (List.hd x) t.pos) in
       mk (A.Refine(b, resugar_term phi))
 
+    | Tm_app({n=Tm_fvar fv}, [(e, _)])
+      when not (Options.print_implicits())
+           && S.fv_eq_lid fv C.b2t_lid ->
+      resugar_term e
+
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function
