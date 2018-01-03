@@ -651,7 +651,7 @@ in
       ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
 | list_decoration_ rawDecl
     {let (ds, decl) = ($1, $2) in
-      ( mk_decl decl (rhs parseState 3) ds )}
+      ( mk_decl decl (rhs parseState 2) ds )}
 
 rawDecl:
   pragma

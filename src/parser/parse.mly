@@ -147,7 +147,7 @@ decl:
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
   | ds=list(decoration) decl=rawDecl
-      { mk_decl decl (rhs parseState 3) ds }
+      { mk_decl decl (rhs parseState 2) ds }
 
 rawDecl:
   | p=pragma
