@@ -118,11 +118,6 @@ let points_to #a #rel r x =
 let minus #a #rel h r =
   { h with memory = (fun (r':nat) -> if r' = r.addr then None else h.memory r') }
 
-  // let memory    = (fun (r':nat) -> if r' = r.addr then None else h.memory r') in
-  // if (h.next_addr = r.addr + 1)
-  // then { next_addr = r.addr     ; memory = memory }
-  // else { next_addr = h.next_addr; memory = memory }
-
 (*
  * update of a well-typed mreference
  *)
