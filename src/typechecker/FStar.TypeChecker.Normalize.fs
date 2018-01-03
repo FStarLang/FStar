@@ -1679,7 +1679,6 @@ and norm_pattern_args cfg env args =
 
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
-        let comp = ghost_to_pure_aux cfg env comp in
         match comp.n with
             | Total (t, uopt) ->
               {comp with n=Total (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
