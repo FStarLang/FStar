@@ -54,8 +54,9 @@ let rec split_all () :Tac unit =
 (***** Tactics *****)
 
 let simplify_unused_in :tactic unit =
-  apply_lemma (quote lemma_r_unused_in_h);;
-  smt
+  apply_lemma (quote lemma_r_unused_in_minus) `or_else`
+  apply_lemma (quote lemma_r_unused_in_h)     `or_else`
+  return ()
 
 let simplify_contains_aux :tactic unit =
   assumption'' `or_else`
@@ -64,7 +65,9 @@ let simplify_contains_aux :tactic unit =
   apply_lemma (quote lemma_contains_r1_join_tot_restrict_minus)    `or_else`
   apply_lemma (quote lemma_contains_r1_join_tot_points_to_minus)   `or_else`
   apply_lemma (quote lemma_contains_join_tot_h_emp_with_next_addr) `or_else`
-  (apply_lemma (quote lemma_contains_r_points_to_unused_h);; simplify_unused_in);;
+  apply_lemma (quote lemma_contains_r_points_to_unused_h);;
+  split_all;;
+  simplify_unused_in;;
   norm []
 
 let simplify_contains :tactic unit =
@@ -178,7 +181,7 @@ let write_ok (h:heap) (r:addr) (n:t) =
   let p = fun _ h -> sel h r == n in
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r ==> post) solve
-
+  
 let increment_ok (h:heap) (r:addr) (n:t) =
   let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
   let p = fun _ h -> (sel h r == n +?^ 1uL) in

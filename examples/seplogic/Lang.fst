@@ -36,7 +36,7 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
 let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists (h0':heap) (h0'':heap). h0 == (join_tot h0' h0'') /\ wp_sep (fun x h1' -> p x (join_tot h1' h0'')) h0'
 
-let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap{h `contains` r })
+let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap{contains h r})
   :Lemma (requires phi (restrict h r) (minus h r))
          (ensures (exists (h':heap) (h'':heap). (h == join_tot h' h'') /\ 
 	          ((exists x. h' == (points_to r x)) /\ phi h' h'')))
