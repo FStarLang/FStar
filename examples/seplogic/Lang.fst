@@ -16,7 +16,7 @@ noeq type command :Type0 -> Type =
 let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
   = match c with
     | Return #a x ->
-      fun p h0 -> (h0 == emp) /\ p x h0
+      fun p h0 -> (is_emp h0) /\ p x h0
 
     | Bind #a #b c1 c2 ->
       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
@@ -31,7 +31,7 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
       fun p h0 -> (exists (x:t). h0 == (points_to r x)) /\ (forall (h1:heap). h1 == (points_to r y) ==> p () h1)
 
     | Alloc ->
-      fun p h0 -> (h0 == emp) /\ (forall (r:addr) (h1:heap). (h1 == points_to r 0uL) ==> p r h1)
+      fun p h0 -> (is_emp h0) /\ (forall (r:addr) (h1:heap). (h1 == points_to r 0uL) ==> p r h1)
 
 let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists (h0':heap) (h0'':heap). h0 == (join_tot h0' h0'') /\ wp_sep (fun x h1' -> p x (join_tot h1' h0'')) h0'
@@ -43,13 +43,13 @@ let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap{h `contains` r 
   = ()
 
 let lemma_alloc_return (phi:heap -> heap -> prop) (h:heap)
-  :Lemma (requires (phi emp h))
-         (ensures (exists (h':heap) (h'':heap). h == join_tot h' h'' /\ ((h' == emp) /\ phi h' h'')))
+  :Lemma (requires (phi (emp_with_next_addr (get_next_addr h)) h))
+         (ensures (exists (h':heap) (h'':heap). h == join_tot h' h'' /\ ((is_emp h') /\ phi h' h'')))
   = ()
 
 let lemma_bind (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
   :Lemma (requires (exists (h2':heap) (h2'':heap). h == join_tot h2' h2'' /\
-                                              phi h emp h2' h2''))
+                                              phi h (emp_with_next_addr (get_next_addr h)) h2' h2''))
          (ensures (exists (h1':heap) (h1'':heap). h == join_tot h1' h1'' /\
 	          (exists (h2':heap) (h2'':heap). h1' == join_tot h2' h2'' /\
 		                             phi h1' h1'' h2' h2'')))

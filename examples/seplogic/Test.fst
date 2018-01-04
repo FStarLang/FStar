@@ -59,7 +59,7 @@ let simplify_contains_aux :tactic unit =
 	   (apply_lemma (quote lemma_contains_r_join_tot_points_to_minus);; norm [])  `or_else`
 	   (apply_lemma (quote lemma_contains_r1_join_tot_restrict_minus);; norm [])  `or_else`
 	   (apply_lemma (quote lemma_contains_r1_join_tot_points_to_minus);; norm []) `or_else`
-           (apply_lemma (quote lemma_contains_join_tot_h_emp);; norm []))
+           (apply_lemma (quote lemma_contains_join_tot_h_emp_with_next_addr);; norm []))
 
 let simplify_contains :tactic unit =
   repeat simplify_contains_aux;;
@@ -67,11 +67,12 @@ let simplify_contains :tactic unit =
 
 let simplify_restrict_aux :tactic unit =
   (apply_lemma (quote lemma_eq_l_cong);; norm []);;
+  dump "gp";;
   (apply_lemma (quote lemma_restrict_r_join_tot_points_to_minus);; norm [])  `or_else`
   (apply_lemma (quote lemma_restrict_r_join_tot_restrict_minus);; norm [])   `or_else`
   (apply_lemma (quote lemma_restrict_r1_join_tot_restrict_minus);; norm [])  `or_else`
   (apply_lemma (quote lemma_restrict_r1_join_tot_points_to_minus);; norm []) `or_else`
-  (apply_lemma (quote lemma_restrict_join_tot_h_emp);; norm []);;
+  (apply_lemma (quote lemma_restrict_join_tot_h_emp_with_next_addr);; dump "A";; norm []);;
   simplify_contains
 
 let simplify_restrict :tactic unit =
@@ -129,13 +130,15 @@ let step :tactic unit =
   fail "step: failed"
 
 let simplify_select :tactic unit =
+ dump "In simplify_select";;
  (apply_lemma (quote lemma_sel_r_join_tot_restrict_minus);; norm [])   `or_else`
  (apply_lemma (quote lemma_sel_r_join_tot_points_to_minus);; norm [])  `or_else`
  (apply_lemma (quote lemma_sel_r1_join_tot_restrict_minus);; norm [])  `or_else`
  (apply_lemma (quote lemma_sel_r1_join_tot_points_to_minus);; norm []) `or_else`
- (apply_lemma (quote lemma_sel_join_tot_h_emp);; norm [])              `or_else`
- (apply_lemma (quote lemma_sel_join_tot_emp_h);; norm [])
- 
+ (apply_lemma (quote lemma_sel_join_tot_h_emp_with_next_addr);; norm [])              `or_else`
+ (apply_lemma (quote lemma_sel_join_tot_emp_with_next_addr_h);; norm []);;
+ simplify_contains
+
 let step_select :tactic unit =
  apply_lemma (quote lemma_eq_cong);; 
  norm [];;
@@ -205,11 +208,11 @@ let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
 //                     addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\
 // 		    sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
 
-let init_ok (h:heap) =
-  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
-  let p = fun r h -> sel h r == 7uL in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic t solve 
+// let init_ok (h:heap) =
+//   let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
+//   let p = fun r h -> sel h r == 7uL in
+//   let t = (lift_wpsep (wpsep_command c)) p h in
+//   assert_by_tactic t solve 
 
 let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
