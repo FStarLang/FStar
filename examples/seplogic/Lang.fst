@@ -31,7 +31,7 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
       fun p h0 -> (exists (x:t). h0 == (points_to r x)) /\ (forall (h1:heap). h1 == (points_to r y) ==> p () h1)
 
     | Alloc ->
-      fun p h0 -> (is_emp h0) /\ (forall (r:addr) (h1:heap). (h1 == points_to r 0uL) ==> p r h1)
+      fun p h0 -> (is_emp h0) /\ (forall (r:addr) (h1:heap). (h1 == points_to r 0uL) /\ (get_next_addr h1 == get_next_addr h0 + 1) ==> p r h1)
 
 let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists (h0':heap) (h0'':heap). h0 == (join_tot h0' h0'') /\ wp_sep (fun x h1' -> p x (join_tot h1' h0'')) h0'
@@ -60,6 +60,11 @@ let lemma_eq_implies_intro (phi:heap -> prop) (x:heap)
          (ensures (forall (y:heap). (y == x) ==> phi y))
   = ()
 
+let lemma_eq_implies_intro' (phi:heap -> prop) (phi':heap -> Type0) (x:heap)
+  :Lemma (requires phi' x ==> phi x)
+         (ensures (forall (y:heap). (y == x) /\ phi' y ==> phi y))
+  = ()
+  
 let lemma_addr_not_eq_refl (r1:addr) (r2:addr)
   :Lemma (requires addr_of r1 <> addr_of r2)
          (ensures addr_of r2 <> addr_of r1)

@@ -266,6 +266,34 @@ val lemma_emp_with_next_addr_is_emp (n:nat)
          (ensures is_emp (emp_with_next_addr n))
 	 [SMTPat (is_emp (emp_with_next_addr n))]
 
+val lemma_r_unused_in_emp_with_next_addr
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (n:nat)
+  :Lemma (requires addr_of r > n)
+         (ensures r `unused_in` emp_with_next_addr n)
+  
+val lemma_r_unused_in_h
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (requires addr_of r >= get_next_addr h)
+         (ensures r `unused_in` h)
+	 [SMTPat (r `unused_in` h)]
+
+val lemma_get_next_addr_points_to
+  (#a:Type0) (#rel:preorder a) (r:mref a rel) (x:a)
+  :Lemma (requires True)
+         (ensures (get_next_addr (points_to r x)) == addr_of r + 1)
+         [SMTPat (get_next_addr (points_to r x))]
+
+val lemma_get_next_addr_emp_with_next_addr (n:nat)
+  :Lemma (requires True)
+         (ensures (get_next_addr (emp_with_next_addr (n))) == n)
+	 [SMTPat (get_next_addr (emp_with_next_addr (n)))]
+
+val lemma_disjoint_points_to_unused_h
+  (#a:Type0) (#rel:preorder a) (r:mref a rel) (x:a) (h1:heap)
+  :Lemma (requires r `unused_in` h1)
+         (ensures disjoint (points_to r x) h1)
+	 [SMTPat (ensures (disjoint (points_to r x) h1))]
+
 val lemma_join_tot_is_comm (h1:heap) (h2:heap)
   :Lemma (requires True)
          (ensures (join_tot h1 h2) == (join_tot h2 h1))
@@ -332,6 +360,12 @@ val lemma_contains_join_tot_h_emp_with_next_addr
   :Lemma (requires h `contains` r)
          (ensures contains (join_tot h (emp_with_next_addr n)) r)
 	 [SMTPat (contains (join_tot h (emp_with_next_addr n)) r)]
+
+val lemma_contains_r_points_to_unused_h
+  (#a:Type0) (#rel:preorder a) (r:mref a rel) (x:a) (h1:heap)
+  :Lemma (requires r `unused_in` h1)
+         (ensures (contains (join_tot (points_to r x) h1) r))
+	 [SMTPat (contains (join_tot (points_to r x) h1) r)]
 
 val lemma_restrict_r_join_tot_restrict_minus
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)

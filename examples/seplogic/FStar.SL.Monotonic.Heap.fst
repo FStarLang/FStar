@@ -229,6 +229,14 @@ let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()
 let lemma_modifies_and_equal_dom_sel_diff_addr #a #rel s h0 h1 r = ()
 
 let lemma_emp_with_next_addr_is_emp n = ()
+let lemma_r_unused_in_emp_with_next_addr #a #rel h r n= ()
+
+let lemma_r_unused_in_h #a #rel h r = ()
+let lemma_get_next_addr_points_to #a #rel r x = ()
+let lemma_get_next_addr_emp_next_addr n = ()
+
+let lemma_disjoint_points_to_unused_h #a #rel r x h1 = ()
+
 let lemma_join_tot_is_comm h1 h2 =
   assert (equal (join_tot h1 h2) (join_tot h2 h1))
   
@@ -238,7 +246,6 @@ let lemma_join_tot_h_emp h =
   assert (equal (join_tot h emp) h)
 let lemma_join_tot_emp_h h =
   assert (equal (join_tot emp h) h)
-
 let lemma_join_tot_emp_with_next_addr_h h n =
   assert (equal (join_tot (emp_with_next_addr n) h) h)
 let lemma_join_tot_h_emp_with_next_addr h n =
@@ -250,6 +257,7 @@ let lemma_contains_r_join_tot_points_to_minus #a #rel h r x = ()
 let lemma_contains_r1_join_tot_points_to_minus #a #rel h r r1 x = ()
 let lemma_contains_join_tot_h_emp #a #rel h r = ()
 let lemma_contains_join_tot_h_emp_with_next_addr #a #rel h r n = ()
+let lemma_contains_r_points_to_unused_h #a #rel r x h1 = ()
 
 let lemma_restrict_r_join_tot_restrict_minus #a #rel h r =
   assert (equal (restrict (join_tot (restrict h r) (minus h r)) r) (restrict h r))

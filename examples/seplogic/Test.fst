@@ -54,12 +54,16 @@ let rec split_all () :Tac unit =
 (***** Tactics *****)
 
 let simplify_contains_aux :tactic unit =
+  dump "In simplify_contains_aux";;
   or_else assumption''
           ((apply_lemma (quote lemma_contains_r_join_tot_restrict_minus);; norm [])   `or_else`
 	   (apply_lemma (quote lemma_contains_r_join_tot_points_to_minus);; norm [])  `or_else`
 	   (apply_lemma (quote lemma_contains_r1_join_tot_restrict_minus);; norm [])  `or_else`
 	   (apply_lemma (quote lemma_contains_r1_join_tot_points_to_minus);; norm []) `or_else`
-           (apply_lemma (quote lemma_contains_join_tot_h_emp_with_next_addr);; norm []))
+           (apply_lemma (quote lemma_contains_join_tot_h_emp_with_next_addr);; norm []) `or_else`
+	   (apply_lemma (quote lemma_contains_r_points_to_unused_h);; 
+	    dump "heeee";;
+	    apply_lemma (quote lemma_r_unused_in_h);; smt;;  norm []))
 
 let simplify_contains :tactic unit =
   repeat simplify_contains_aux;;
@@ -107,10 +111,14 @@ let step_eq_implies_intro :tactic unit =
 let step_eq_implies_intro' :tactic unit =
   dump "In step_eq_implies_intro'";;
   forall_intro;;
-  apply_lemma (quote lemma_eq_implies_intro);;
+  dump "111";;
+  apply_lemma (quote lemma_eq_implies_intro');;
+  dump "122";;
   norm [];;
-  dump "B"
-
+  dump "133";;
+  implies_intro;;
+  dump "144"
+ 
 let step_intro :tactic unit =
   dump "In step_intro";;
   norm [];;
@@ -200,19 +208,19 @@ let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r /\ sel h r == n ==> t) solve
 
-// let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
-//   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
-//   let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
-//   let t = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ 
-//                     addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\
-// 		    sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
+let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
+  let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
+  let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ 
+                    addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\
+		    sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
 
-// let init_ok (h:heap) =
-//   let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
-//   let p = fun r h -> sel h r == 7uL in
-//   let t = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic t solve 
+let init_ok (h:heap) =
+  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
+  let p = fun r h -> sel h r == 7uL in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic t solve
 
 let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
