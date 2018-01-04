@@ -1,5 +1,5 @@
 [
-  "1˘™Ù2\\Ö]£.U\\®Q•E",
+  "D´~?*¯˝äÉ-Ã⁄6ÅÜ™",
   [
     [
       "FStar.HyperStack.ST.eternal_region_pred",
@@ -1847,6 +1847,28 @@
       ],
       0,
       "24b109422c4a270aca6075b49ac41bdf"
+    ],
+    [
+      "FStar.HyperStack.ST.testify_forall_region_contains_pred",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Monotonic.HyperHeap.HasEq_rid", "b2t_def",
+        "equation_FStar.HyperStack.ST.region_contains_pred",
+        "equation_FStar.Monotonic.HyperStack.is_eternal_region",
+        "equation_Prims.l_Forall", "equation_Prims.squash", "forall-interp",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "interpretation_FStar.HyperStack.ST_Tm_abs_6ef1517af6decec8987d7b75b90b44c5",
+        "interpretation_FStar.HyperStack.ST_Tm_abs_980d336aa23edf034e00703cf11d1c31",
+        "l_or-interp", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "token_correspondence_FStar.HyperStack.ST.region_contains_pred"
+      ],
+      0,
+      "5ce8bc098f33e41917241b11140d10d0"
     ]
   ]
 ]
