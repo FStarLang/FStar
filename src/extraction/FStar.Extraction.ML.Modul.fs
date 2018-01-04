@@ -406,7 +406,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
                 // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
                     let lb_lid = (right lbname).fv_name.v in
-                    let flags'' = match t.n with
+                    let flags'' = match (SS.compress t).n with
                       | Tm_arrow (_, { n = Comp { effect_name = e }}) when
                         string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
                           [ StackInline ]
