@@ -23,6 +23,7 @@ bytes \
 tactics \
 kv_parsing \
 vale \
+seplogic \
 hello \
 native_tactics \
 extraction

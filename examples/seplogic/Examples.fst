@@ -1,174 +1,16 @@
-module Test
-
-open Lang
-
-open FStar.SL.Heap
+module Examples
 
 open FStar.Tactics
+open FStar.SL.Heap
+open Lang
+open SL.Tactics
+
+(*
+ * Examples of programs and postconditions for the language in Lang
+ * We use the generic tactic `solve` to solve these goals
+ *)
 
 #reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-
-let unfold_fns :list string = [
-  "wp_command";
-  "wpsep_command";
-  "lift_wpsep";
-  "uu___is_Return";
-  "uu___is_Bind";
-  "uu___is_Read";
-  "uu___is_Write";
-  "uu___is_Alloc";
-  "__proj__Return__item__v";
-  "__proj__Bind__item__c1";
-  "__proj__Bind__item__c2";
-  "__proj__Read__item__id";
-  "__proj__Write__item__id";
-  "__proj__Write__item__v"
-]
-
-unfold let unfold_steps =
-  List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
-
-let and_elim' :tactic unit =
-  h <-- implies_intro;
-  and_elim (pack (Tv_Var h));;
-  clear h
-
-let implies_intros' :tactic unit =
-  repeat and_elim';;
-  implies_intros;;
-  return ()
-
-let assumption'  :tactic unit = 
-  apply_raw (quote FStar.Squash.return_squash);; assumption
-
-let assumption'' :tactic unit = 
-  or_else assumption' (apply_lemma (quote lemma_addr_not_eq_refl);; norm [];; assumption')
-
-let rec split_all () :Tac unit =
-  ( g <-- cur_goal;
-    match (term_as_formula g) with
-    | And _ _ -> split;; iseq [split_all; split_all]
-    | _       -> return ()
-  ) ()
-
-(***** Tactics *****)
-
-let simplify_unused_in :tactic unit =
-  apply_lemma (quote lemma_r_unused_in_minus) `or_else`
-  apply_lemma (quote lemma_r_unused_in_h)     `or_else`
-  return ()
-
-let simplify_contains_aux :tactic unit =
-  assumption'' `or_else`
-  apply_lemma (quote lemma_contains_r_join_tot_restrict_minus)     `or_else`
-  apply_lemma (quote lemma_contains_r_join_tot_points_to_minus)    `or_else`
-  apply_lemma (quote lemma_contains_r1_join_tot_restrict_minus)    `or_else`
-  apply_lemma (quote lemma_contains_r1_join_tot_points_to_minus)   `or_else`
-  apply_lemma (quote lemma_contains_join_tot_h_emp_with_next_addr) `or_else`
-  apply_lemma (quote lemma_contains_r_points_to_unused_h);;
-  split_all;;
-  simplify_unused_in;;
-  norm []
-
-let simplify_contains :tactic unit =
-  repeat simplify_contains_aux;;
-  return ()
-
-let simplify_restrict_aux :tactic unit =
-  apply_lemma (quote lemma_eq_l_cong);; 
-  norm [];;
-  apply_lemma (quote lemma_restrict_r_join_tot_points_to_minus)  `or_else`
-  apply_lemma (quote lemma_restrict_r_join_tot_restrict_minus)   `or_else`
-  apply_lemma (quote lemma_restrict_r1_join_tot_restrict_minus)  `or_else`
-  apply_lemma (quote lemma_restrict_r1_join_tot_points_to_minus) `or_else`
-  apply_lemma (quote lemma_restrict_join_tot_h_emp_with_next_addr);;
-  norm [];;
-  simplify_contains
-
-let simplify_restrict :tactic unit =
-  repeat simplify_restrict_aux;;
-  trytac trefl;;
-  return ()
-
-let step_bind :tactic unit = 
-  apply_lemma (quote lemma_bind);;
-  norm []
-
-let step_read_write :tactic unit = 
-  apply_lemma (quote lemma_read_write);;
-  norm [];;
-  simplify_contains
-
-let step_alloc_return :tactic unit =
-  apply_lemma (quote lemma_alloc_return);;
-  norm [];;
-  simplify_contains
-
-let step_eq_implies_intro :tactic unit =
-  apply_lemma (quote lemma_eq_implies_intro);;
-  norm []
-
-let step_eq_implies_intro' :tactic unit =
-  forall_intro;;
-  apply_lemma (quote lemma_eq_implies_intro');;
-  norm [];;
-  implies_intro;;
-  return ()
-
-let step_intro :tactic unit =
-  norm [];;
-  forall_intro;;
-  simplify_restrict;;
-  implies_intro;;
-  return ()
-
-let step :tactic unit =
-  step_bind              `or_else`
-  step_read_write        `or_else`
-  step_alloc_return      `or_else`
-  step_eq_implies_intro  `or_else`
-  step_eq_implies_intro' `or_else`
-  step_intro             `or_else`
-  fail "step: failed"
-
-let simplify_select :tactic unit =
- apply_lemma (quote lemma_sel_r_join_tot_restrict_minus)     `or_else`
- apply_lemma (quote lemma_sel_r_join_tot_points_to_minus)    `or_else`
- apply_lemma (quote lemma_sel_r1_join_tot_restrict_minus)    `or_else`
- apply_lemma (quote lemma_sel_r1_join_tot_points_to_minus)   `or_else`
- apply_lemma (quote lemma_sel_join_tot_h_emp_with_next_addr) `or_else`
- apply_lemma (quote lemma_sel_join_tot_emp_with_next_addr_h);;
- simplify_contains
-
-let step_select :tactic unit =
- apply_lemma (quote lemma_eq_cong);; 
- norm [];;
- simplify_select;;
- trytac trefl;;
- return ()
-
-let rec repeat_step_select () :Tac unit =
-  (g <-- trytac cur_goal;
-  begin match g with
-  | None -> return ()
-  | Some _ -> repeat step_select;;
-              trytac ((trefl;; qed) `or_else` smt);;
-              repeat_step_select
-  end
-  ) ()
-
-let simplify :tactic unit =
- split_all;;
- repeat_step_select;;
- return ()
-
-let solve :tactic unit =
- norm [delta; delta_only unfold_steps; primops];;
- trytac implies_intros';;
- dump "Initial goal";;
- repeat step;;
- simplify;;
- dump "Final goal"
 
 (***** Examples *****)
 open FStar.UInt
@@ -176,30 +18,48 @@ open FStar.UInt64
 
 type t = UInt64.t
 
+(*
+ * Prove that if we write n to r, then sel h r = n
+ * This gets completely solved using tactics
+ * There are some SMT goals generated by type checker during unification, related to Prims.prop and Type0
+ *)
 let write_ok (h:heap) (r:addr) (n:t) =
   let c = (Write r n) in
   let p = fun _ h -> sel h r == n in
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r ==> post) solve
-  
+
+(*
+ * Read r into n, Write n + 1 to r, then sel h r = n + 1
+ *)
 let increment_ok (h:heap) (r:addr) (n:t) =
   let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
   let p = fun _ h -> (sel h r == n +?^ 1uL) in
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
 
+#set-options "--use_two_phase_tc false"
+(*
+ * Swapping two refs
+ * TODO: fails with two phases
+ *)
 let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
   let p = fun _ h -> (sel h r1 == b /\ sel h r2 == a) in
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r1 /\  h `contains` r2 /\ addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> post) solve
 
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
   let c = Bind (Bind (Read r) (fun y -> Write r (y +?^ 1uL))) (fun _ -> (Bind (Read r) (fun y -> Write r (y +?^ 1uL))))  in
   let p = fun _ h -> sel h r == (n +?^ 2uL) in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r /\ sel h r == n ==> t) solve
 
+(*
+ * This example also goes through but takes a lot of time.
+ * Because of many SMT goals that are generated as part of unification.
+ *)
 // let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
 //   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
 //   let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
