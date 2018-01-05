@@ -235,7 +235,7 @@ let get_doc                     ()      = lookup_opt "doc"                      
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
-let get_extract                 ()      = lookup_opt "extract"                  (as_option as_string)
+let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
@@ -1135,7 +1135,7 @@ let prepend_output_dir fname =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
-let parse_setting s : list<(list<string> * bool)> =
+let parse_settings ns : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
@@ -1146,8 +1146,10 @@ let parse_setting s : list<(list<string> * bool)> =
                      else s in
              (FStar.Ident.path_of_text s, true)
     in
-    FStar.Util.split s " " |> List.map parse_one_setting
-
+    ns |> List.collect (fun s ->
+          FStar.Util.split s " "
+          |> List.map parse_one_setting)
+       |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
@@ -1225,7 +1227,7 @@ let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () =
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
-    | Some ns -> List.collect parse_setting ns |> List.rev
+    | Some ns -> parse_settings ns
 let vcgen_optimize_bind_as_seq   () = Option.isSome (get_vcgen_optimize_bind_as_seq  ())
 let vcgen_decorate_with_type     () = match get_vcgen_optimize_bind_as_seq  () with
                                       | Some "with_type" -> true
@@ -1252,7 +1254,7 @@ let should_extract m =
               | [], [], [] -> ()
               | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
       in
-      let setting = parse_setting extract_setting |> List.rev in
+      let setting = parse_settings extract_setting in
       let m_components = Ident.path_of_text m in
       let rec matches_path m_components path =
           match m_components, path with
