@@ -235,6 +235,7 @@ let get_doc                     ()      = lookup_opt "doc"                      
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
+let get_extract                 ()      = lookup_opt "extract"                  (as_option as_string)
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
@@ -552,17 +553,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          extract remaining modules from FStar.List.*, \n\t\t\t\t\
          not extract FStar.Reflection.*, \n\t\t\t\t\
          and extract all the rest.\n\t\t\
+         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\
          Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
 
        ( noshort,
         "extract_module",
         Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
-        "Only extract the specified modules (instead of the possibly-partial dependency graph)");
+        "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
 
        ( noshort,
         "extract_namespace",
         Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
-        "Only extract modules in the specified namespace");
+        "Deprecated: use --extract instead; Only extract modules in the specified namespace");
 
        ( noshort,
         "expose_interfaces",
@@ -677,7 +679,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "no_extract",
         Accumulated (PathStr "module name"),
-        "Do not extract code from this module");
+        "Deprecated: use --extract instead; Do not extract code from this module");
 
        ( noshort,
         "no_location_info",
@@ -1130,7 +1132,10 @@ let prepend_output_dir fname =
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
-let parse_setting s =
+//Used to parse the options of
+//   --using_facts_from
+//   --extract
+let parse_setting s : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
@@ -1141,7 +1146,7 @@ let parse_setting s =
                      else s in
              (FStar.Ident.path_of_text s, true)
     in
-    FStar.Util.split s " " |> List.map parse_one_setting in
+    FStar.Util.split s " " |> List.map parse_one_setting
 
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
@@ -1239,22 +1244,42 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 
-let should_extract_namespace m =
-    match get_extract_namespace () with
-    | [] -> false
-    | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
-
-let should_extract_module m =
-    match get_extract_module () with
-    | [] -> false
-    | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
-
 let should_extract m =
     let m = String.lowercase m in
-    not (no_extract m) &&
-    (match get_extract_namespace (), get_extract_module() with
-    | [], [] -> true //neither is set
-    | _ -> should_extract_namespace m || should_extract_module m)
+    match get_extract() with
+    | Some extract_setting -> //new option, using --extract '* -FStar' etc.
+      let _ = match get_no_extract(), get_extract_namespace(), get_extract_module () with
+              | [], [], [] -> ()
+              | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
+      in
+      let setting = parse_setting extract_setting |> List.rev in
+      let m_components = Ident.path_of_text m in
+      let rec matches_path m_components path =
+          match m_components, path with
+          | _, [] -> true
+          | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
+          | _ -> false
+      in
+      begin
+      match setting |> Util.try_find (fun (path, _) -> matches_path m_components path) with
+      | None -> false
+      | Some (_, flag) -> flag
+      end
+    | None -> //old
+        let should_extract_namespace m =
+            match get_extract_namespace () with
+            | [] -> false
+            | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
+        in
+        let should_extract_module m =
+            match get_extract_module () with
+            | [] -> false
+            | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
+        in
+        not (no_extract m) &&
+        (match get_extract_namespace (), get_extract_module() with
+        | [], [] -> true //neither is set
+        | _ -> should_extract_namespace m || should_extract_module m)
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"
