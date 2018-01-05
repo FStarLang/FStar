@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "04c0a388ab67670283c42f604afda51a"
+      "1f4fa615d0f8e00b2cfd943c20737172"
     ],
     [
       "Bug293.test",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "6c48a46facd4a70337b4703c9966a14c"
+      "4a86bc21a954d48afe8c2455325efef9"
     ]
   ]
 ]

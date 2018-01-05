@@ -2,33 +2,6 @@
   "\\‘ÊpwëÏAz¶×Ê:\u0018r\u000e",
   [
     [
-      "Bug116.__proj__TyAbs__item__g",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a9b97a58ed0fb5200dd8e3f62ee0108d"
-    ],
-    [
-      "Bug116.__proj__TyAbs__item__x",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4e506ee0881083bdc93cb38afa807b3d"
-    ],
-    [
-      "Bug116.__proj__TyAbs__item__e1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "002cd9a0d6d7d59e45860800ea0b1c48"
-    ],
-    [
       "Bug116.__proj__TyAbs__item___3",
       1,
       2,
@@ -41,16 +14,7 @@
         "projection_inverse_Bug116.TyAbs_x"
       ],
       0,
-      "fb393ef8709db4cf4db00ebb4e67320c"
-    ],
-    [
-      "Bug116.free_in_context",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "540d0e9eabcb6386f5a599bc300bb6b6"
+      "0732c9bd43eadc6e45e3f7ddc12dd547"
     ]
   ]
 ]

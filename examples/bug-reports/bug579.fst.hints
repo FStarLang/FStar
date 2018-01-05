@@ -8,25 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0375eb775a2abdaf64aae27c068c45c0"
-    ],
-    [
-      "Bug579.__proj__SBeta__item__e1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "52596bb707378bc6b497909b29707c7e"
-    ],
-    [
-      "Bug579.__proj__SBeta__item__e2",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8f5be3b926f4a165fe19a709997a9743"
+      "ced61fab357b892d50720b6a2ee144da"
     ],
     [
       "Bug579.typing",
@@ -35,34 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9040d8cf8429bcac108ae6a79ead82ec"
-    ],
-    [
-      "Bug579.__proj__TyEqu__item__e",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f7b82a373f97b2f1a71ef3e7b29ad9bc"
-    ],
-    [
-      "Bug579.__proj__TyEqu__item__t1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3acc973de8fc446836a108405e975f63"
-    ],
-    [
-      "Bug579.__proj__TyEqu__item__t2",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "59f68e3692f62c695a58921392c481b5"
+      "87e11a7d07f98cca53d408366ec83526"
     ],
     [
       "Bug579.__proj__TyEqu__item__ht",
@@ -75,7 +30,7 @@
         "projection_inverse_Bug579.TyEqu_t1"
       ],
       0,
-      "bfb1d14e3b86f9f6062ab825e26bcde2"
+      "ee9568f9edab2bdc796359c28b6c81fe"
     ],
     [
       "Bug579.progress'",
@@ -89,7 +44,7 @@
         "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "b4f255e695202d176fa6a1fe126e00e3"
+      "6869ea724f7b29da7e0c4b7fe8748edc"
     ],
     [
       "Bug579.progress",
@@ -103,7 +58,7 @@
         "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "5b0e2287c36a0fe092eb65fef5d3be9c"
+      "615c999c6340dbf40677f853f369cfa1"
     ]
   ]
 ]

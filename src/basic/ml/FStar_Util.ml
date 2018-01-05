@@ -856,8 +856,15 @@ let load_value_from_file (fname:string) =
 let print_exn e =
   Printexc.to_string e
 
-let digest_of_file (fname:string) =
-  BatDigest.file fname
+let digest_of_file =
+  let cache = smap_create (Z.of_int 101) in
+  fun (fname:string) ->
+    match smap_try_find cache fname with
+    | Some dig -> dig
+    | None ->
+      let dig = BatDigest.file fname in
+      smap_add cache fname dig;
+      dig
 
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)

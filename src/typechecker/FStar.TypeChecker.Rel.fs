@@ -2568,14 +2568,9 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                     if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                     match Env.monad_leq env c1.effect_name c2.effect_name with
                     | None ->
-                        if U.is_ghost_effect c1.effect_name
-                        && U.is_pure_effect c2.effect_name
-                        && U.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
-                        then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=identity_mlift} in
-                            solve_sub c1 edge c2
-                        else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
-                                        (Print.lid_to_string c1.effect_name)
-                                        (Print.lid_to_string c2.effect_name)) orig
+                       giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
+                                              (Print.lid_to_string c1.effect_name)
+                                              (Print.lid_to_string c2.effect_name)) orig
                     | Some edge ->
                         solve_sub c1 edge c2
                  end

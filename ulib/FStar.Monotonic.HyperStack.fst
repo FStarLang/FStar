@@ -5,7 +5,7 @@ module Map = FStar.Map
 
 include FStar.Monotonic.HyperHeap
 
-let is_in (r:rid) (h:hmap) = h `Map.contains` r
+unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
 let is_eternal_color c = c <= 0
@@ -13,11 +13,19 @@ let is_eternal_region r  = is_eternal_color (color r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 
-let is_above r1 r2      = r1 `includes` r2
-let is_just_below r1 r2 = r1 `extends`  r2
-let is_below r1 r2      = r2 `is_above` r1
-let is_strictly_below r1 r2 = r1 `is_below` r2 && r1<>r2
-let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
+(*
+ * AR: marking these unfolds, else I think there are pattern firing issues depending on which one we use
+ *)
+unfold let is_above r1 r2          = r1 `includes` r2
+unfold let is_just_below r1 r2     = r1 `extends`  r2
+unfold let is_below r1 r2          = r2 `is_above` r1
+let is_strictly_below r1 r2 = r1 `is_below` r2 && r1 <> r2
+let is_strictly_above r1 r2 = r1 `is_above` r2 && r1 <> r2
+
+//All regions above a contained region are contained
+abstract let map_invariant (m:hmap) =
+  forall r. Map.contains m r ==>
+      (forall s. includes s r ==> Map.contains m s)
 
 abstract let downward_closed (h:hmap) =
   forall (r:rid). r `is_in` h  //for any region in the memory
@@ -27,12 +35,12 @@ abstract let downward_closed (h:hmap) =
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
 abstract let tip_top (tip:rid) (h:hmap) =
-  forall (r:sid). r `is_in` h <==> r `is_above` tip  
+  forall (r:sid). r `is_in` h <==> r `is_above` tip
 
 let is_tip (tip:rid) (h:hmap) =
-  (is_stack_region tip \/ tip=root)                                  //the tip is a stack region, or the root
-  /\ tip `is_in` h                                                      //the tip is active
-  /\ tip_top tip h                      //any other sid activation is a above (or equal to) the tip
+  (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
+  tip `is_in` h                      /\   //the tip is live
+  tip_top tip h                          //any other sid activation is a above (or equal to) the tip
 
 let rid_last_component (r:rid) :GTot int
   = let open FStar.List.Tot in
@@ -41,30 +49,61 @@ let rid_last_component (r:rid) :GTot int
     else snd (hd r)
 
 (*
- * AR: marking it abstract, else it has a high-chance of firing even with a pattern
+ * AR: all live regions have last component less than the rid_ctr
+ *     marking it abstract, else it has a high-chance of firing even with a pattern
  *)
 abstract let rid_ctr_pred (h:hmap) (n:int) =
   forall (r:rid).{:pattern (h `Map.contains` r)}
                h `Map.contains` r ==> rid_last_component r < n
 
-let hh = h:hmap{root `is_in` h /\ map_invariant h /\ downward_closed h}    //the memory itself, always contains the root region, and the parent of any active region is active
-
+let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
+  = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
+  
 noeq type mem =
   | HS : rid_ctr:int
-       -> h:hh{rid_ctr_pred h rid_ctr}
-       -> tip:rid{tip `is_tip` h}    //the id of the current top-most region
-       -> mem
+         -> h:hmap
+         -> tip:rid{is_wf_with_ctr_and_tip h rid_ctr tip}
+         -> mem
+
+(******* map_invariant related lemmas ******)
+
+let lemma_map_invariant (m:mem) (r s:rid)
+  :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
+         (ensures  (s `is_in` m.h))
+         [SMTPat (r `is_in` m.h); SMTPat (s `is_above` r); SMTPat (s `is_in` m.h)]
+  = ()
+
+(******)
+
+
+(****** downward_closed related lemmas *******)
 
 let lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
          (ensures  (is_eternal_region r == is_eternal_region s /\ is_stack_region r == is_stack_region s))
-	 [SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r)]
+         [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_region s)];
+                    [SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
+                    ]]
   = ()
+
+(******)
 
 (****** tip_top related lemmas ******)
 
-let lemma_reveal_tip_top (m:mem) (r:sid)
+let lemma_tip_top (m:mem) (r:sid)
   :Lemma (r `is_in` m.h <==> r `is_above` m.tip)
+  = ()
+
+(*
+ * Pointer uses lemma_tip_top by calling it explicitly with Classical.forall_intro2
+ * Classical.forall_intro2 does not work well with SMTPat
+ * So adding this smt form of the same lemma
+ *)
+let lemma_tip_top_smt (m:mem) (r:rid)
+  :Lemma (requires (is_stack_region r))
+         (ensures  (r `is_in` m.h <==> r `is_above` m.tip))
+         [SMTPatOr [[SMTPat (is_stack_region r); SMTPat (r `is_above` m.tip)];
+                    [SMTPat (is_stack_region r); SMTPat (r `is_in` m.h)]]]
   = ()
 
 (******)
@@ -80,33 +119,12 @@ let lemma_rid_ctr_pred ()
 
 (*****)
 
-let empty_mem (m:hmap) = 
-  let empty_map = Map.restrict (Set.empty) m in 
+let empty_mem (m:hmap) =
+  let empty_map = Map.restrict (Set.empty) m in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
   assume (rid_last_component root == 0);
   HS 1 h tip
- 
-let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
-    assert (r `is_in` m.h)
-
-let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
-    assert (r=root \/ is_stack_region r)
-
-let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =
-   assert (~ (r `is_in` m.h))
-
-let dc_elim (h:hmap{downward_closed h}) (r:rid{r `is_in` h /\ r <> root}) (s:rid)
-  : Lemma (r `is_above` s /\ s `is_in` h ==> is_stack_region r = is_stack_region s)
-  = ()
-
-let test3 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
-  : Lemma (~ (r `is_in` m.h))
-  = root_has_color_zero()
-
-let test4 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
-  : Lemma (~ (r `is_in` m.h))
-  = ()
 
 let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
   : Lemma (requires True)
@@ -135,6 +153,7 @@ let pop (m0:mem{poppable m0}) : Tot mem =
 //A (reference a) may reside in the stack or heap, and may be manually managed
 //Mark it private so that clients can't use its projectors etc.
 //enabling extraction of mreference to just a reference in ML and pointer in C
+//note that this not enforcing any abstraction
 (*
  * AR: 12/26: Defining it using Heap.mref directly, removing the HyperHeap.mref indirection
  *)
@@ -194,13 +213,6 @@ let mmmref (a:Type) (rel:preorder a) =
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
 
 (*
- * The Map.contains conjunct is necessary to prove that upd
- * returns a valid mem. In particular, without Map.contains,
- * we cannot prove the eternal regions invariant that all
- * included regions of a region are also in the map.
- *)
-
-(*
  * AR: this used to be (is_eternal_region i \/ i `is_above` m.tip) /\ Map.contains ...
  *     As far as the memory model is concerned, this should just be Map.contains
  *     The fact that an eternal region is always contained (because of monotonicity) should be used in the ST interface
@@ -226,14 +238,6 @@ let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem)
 
 let fresh_region (i:rid) (m0 m1:mem) =
   not (m0.h `Map.contains` i) /\ m1.h `Map.contains` i
-
-abstract private let stronger_fresh_region_was_redundant (i:rid) (m0 m1:mem)  //AR: because of map_invariant
-  :Tot unit
-  = let stronger_fresh_region (i:rid) (m0 m1:mem) =
-      (forall j. includes i j ==> not (j `is_in` m0.h)) /\
-      i `is_in` m1.h
-    in
-    assert (fresh_region i m0 m1 ==> stronger_fresh_region i m0 m1)
 
 abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
                                -> m0:mem{map_invariant m0.h} -> m1:mem{map_invariant m1.h} ->
@@ -266,7 +270,7 @@ let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (f
 let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:mem{m.h `Map.contains` id})
   :Tot (p:(mreference a rel * mem){let (r, h) = Heap.alloc rel (Map.sel m.h id) init mm in
                                    as_ref (fst p) == r /\
-				   (snd p).h == Map.upd m.h id h})
+                                   (snd p).h == Map.upd m.h id h})
   = let r, h = Heap.alloc rel (Map.sel m.h id) init mm in
     (mk_mreference id r), (HS m.rid_ctr (Map.upd m.h id h) m.tip)
 
@@ -295,8 +299,7 @@ let fresh_frame (m0:mem) (m1:mem) =
 
 let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
   = let new_tip_rid = extend m.tip m.rid_ctr 1 in
-    let h1 = Map.upd m.h new_tip_rid Heap.emp in
-    HS (m.rid_ctr + 1) h1 new_tip_rid
+    HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
 
 let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.contains` parent})
                        (c:option int{None? c \/ is_eternal_color (Some?.v c)})
@@ -308,17 +311,12 @@ let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.
     let h1 = Map.upd m.h new_rid Heap.emp in
     new_rid, HS (m.rid_ctr + 1) h1 m.tip
 
+(****** The following two lemmas are only used in FStar.Pointer.Base, and invoked explicitly ******)
+
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (frameOf r1 == frameOf r2 /\ h `contains` r1 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-  = let m = Map.sel h.h (frameOf r1) in
-    FStar.Monotonic.Heap.lemma_sel_same_addr m (as_ref r1) (as_ref r2)
-
-let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
-  :Lemma (requires (frameOf r1 == frameOf r2 /\ h `contains` r1 /\ as_addr r1 = as_addr r2 /\ is_mm r1 == is_mm r2))
-         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-	 [SMTPat (sel h r1); SMTPat (sel h r2)]
-  = lemma_sel_same_addr h r1 r2
+  = Heap.lemma_sel_same_addr (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2)
 
 let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a rel) (x: a)
   :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
@@ -327,36 +325,6 @@ let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a
   = if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
       lemma_sel_same_addr h r1 r2
     else lemma_sel_same_addr h r2 r1
-
-let lemma_upd_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a rel) (x: a)
-  :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
-                    as_addr r1 == as_addr r2 /\ is_mm r1 == is_mm r2))
-         (ensures  (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
-  = lemma_upd_same_addr h r1 r2 x
-
-let equal_domains (m0:mem) (m1:mem) =
-  m0.tip = m1.tip /\
-  Set.equal (Map.domain m0.h) (Map.domain m1.h) /\
-  (forall r.{:pattern (Map.contains m0.h r) \/ (Map.contains m1.h r)}
-       Map.contains m0.h r ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
-
-let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
-  (requires (equal_domains m0 m1 /\ equal_domains m1 m2))
-  (ensures  (equal_domains m0 m2))
-  [SMTPat (equal_domains m0 m1); SMTPat (equal_domains m1 m2)]
-  = ()
-
-let equal_stack_domains (m0:mem) (m1:mem) =
-  m0.tip = m1.tip /\
-  (forall r. (is_stack_region r /\ r `is_above` m0.tip) ==>  //AR: TODO: this has no patterns, what's a good pattern here?
-        Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
-
-let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
-  (requires (equal_stack_domains m0 m1 /\ equal_stack_domains m1 m2))
-  (ensures  (equal_stack_domains m0 m2))
-  [SMTPat (equal_stack_domains m0 m1); SMTPat (equal_stack_domains m1 m2)]
-  = ()
 
 (*
  * AR: 12/26: modifies clauses
@@ -449,28 +417,6 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
 
 ////////////////////////////////////////////////////////////////////////////////
-#set-options "--initial_fuel 0 --max_fuel 0"
-let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
-                          (x:mreference a rel_a) (x':mreference a rel_a)
-                          (y:mreference b rel_b) (z:mreference nat rel_n)
-                          (h0:mem) (h1:mem) =
-  assume (h0 `contains` x);
-  assume (h0 `contains` x');
-  assume (as_addr x <> as_addr x');
-  assume (frameOf x == frameOf x');
-  assume (frameOf x <> frameOf y);
-  assume (frameOf x <> frameOf z);
-  //assert (Set.equal (normalize_term (refs_in_region x.id [Ref x])) (normalize_term (Set.singleton (as_addr x))))
-  assume (mods [Ref x; Ref y; Ref z] h0 h1);
-  //AR: TODO: this used to be an assert, but this no longer goers through
-  //since now we have set of nats, which plays badly with normalize_term
-  //on one side it remains nat, on the other side the normalizer normalizes it to a refinement type
-  //see for example the assertion above that doesn't succeed
-  assume (modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1);
-  assert (modifies (Set.union (Set.singleton (frameOf x))
-                              (Set.union (Set.singleton (frameOf y))
-                                         (Set.singleton (frameOf z)))) h0 h1);
-  ()
 
 
  //--------------------------------------------------------------------------------
@@ -600,7 +546,7 @@ val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:mem -> x:mreferenc
   [SMTPat (contains h x); SMTPat (aref_unused_in y h)]
 let contains_aref_unused_in #a #rel h x y =
   if frameOf x = frameOf_aref y
-  then 
+  then
     Heap.contains_aref_unused_in (Map.sel h.h (frameOf x)) (as_ref x) y.aref_aref
   else ()
 

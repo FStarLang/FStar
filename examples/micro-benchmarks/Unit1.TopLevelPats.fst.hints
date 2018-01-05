@@ -2,24 +2,6 @@
   "Œt\u007f'Ÿ\u0014\u0014‡„˜ÎqoçÙ\u0013",
   [
     [
-      "Unit1.TopLevelPats.x",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5b9fcf732b1a8718c11ce4769cd7bec4"
-    ],
-    [
-      "Unit1.TopLevelPats.y",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e3f7f305837768a44fc1efc4a6fa14a0"
-    ],
-    [
       "Unit1.TopLevelPats.uu___10",
       1,
       2,
@@ -30,7 +12,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "5046ae490190a9fb9d6f9f51f7b1cfc9"
+      "7075a617932b1d49766f699033fab383"
     ],
     [
       "Unit1.TopLevelPats.uu___11",
@@ -43,25 +25,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "e4fc2da97f6b8d8e15e070e70457afc5"
-    ],
-    [
-      "Unit1.TopLevelPats.z",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f62bd74cee76b7cbb9aeec1e76759eac"
-    ],
-    [
-      "Unit1.TopLevelPats.w",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6633512c401ecf08c75018b3ad2e6e35"
+      "944d5dfa9682255ae27f26ea9b0edbd2"
     ],
     [
       "Unit1.TopLevelPats.uu___13",
@@ -79,7 +43,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "aaf8f0d93e52241144745b6e802e51ba"
+      "2e441d4d9845d4883e91181bb95f95dd"
     ],
     [
       "Unit1.TopLevelPats.uu___14",
@@ -98,7 +62,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "3aeb476f5f421929dcc4866cdb136f9d"
+      "2cfab4fc29f60554a1b79e0ebc702ac0"
     ]
   ]
 ]

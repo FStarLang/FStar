@@ -3,9 +3,10 @@ module FStar.Monotonic.DependentMap
     that grow monotonically,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
-module HS = FStar.HyperStack
-module MR = FStar.Monotonic.RRef
-module DM = FStar.DependentMap
+
+module HS  = FStar.HyperStack
+module DM  = FStar.DependentMap
+module HST = FStar.HyperStack.ST
 
 /// The logical model of the map is given in terms of DM.t///
 let opt (#a:eqtype) (b:a -> Type) = fun (x:a) -> option (b x)
@@ -66,8 +67,8 @@ val grows (#a:_) (#b:_) (#inv:DM.t a (opt b) -> Type)
 ///
 /// `t r a b inv` is a mutable, imap stored in region `r` constrained
 ///               to evolve according to `grows`
-let t (r:MR.rid) (a:eqtype) (b:a -> Type) (inv:DM.t a (opt b) -> Type) =
-    MR.m_rref r (imap a b inv) grows
+let t (r:HST.erid) (a:eqtype) (b:a -> Type) (inv:DM.t a (opt b) -> Type) =
+    m_rref r (imap a b inv) grows
 
 /// `defined t x h`: In state `h`, map `t` is defined at point `x`.
 ///     - We define these in `Type` rather than `bool`
@@ -77,7 +78,7 @@ let defined
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (h:HS.mem)
@@ -89,7 +90,7 @@ let fresh
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (h:HS.mem)
@@ -101,7 +102,7 @@ let value_of
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (h:HS.mem{defined t x h})
@@ -113,7 +114,7 @@ let contains
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (y:b x)
@@ -127,11 +128,11 @@ val contains_stable
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (y:b x)
-  : Lemma (ensures (MR.stable_on_t t (contains t x y)))
+  : Lemma (ensures (HST.stable_on_t t (contains t x y)))
 
 /// `defined_stable`: The `defined` predicate is stable with respect to `grows`
 ///    - this is easily derivable from the previous lemma
@@ -140,17 +141,17 @@ val defined_stable
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
-  : Lemma (ensures (MR.stable_on_t t (defined t x)))
+  : Lemma (ensures (HST.stable_on_t t (defined t x)))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Interface of stateful operations
 ////////////////////////////////////////////////////////////////////////////////
 
 /// `alloc ()`: Allocating a new `t` requires proving the `inv` of the empty map
-val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
+val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
     (_:unit{inv (repr empty)})
   : ST (t r a b inv)
        (requires (fun h -> HyperStack.ST.witnessed (region_contains_pred r)))
@@ -163,15 +164,12 @@ val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
 ///     Ensures:  - that only `t` is modified
 ///               - by updating it to contain `(x -> y)`
 ///               - and in the future `t` will always contain `(x -> y)`
-//This really should be hidden inside the MR library
-let addr_of (#r:_) (#a:_) (#b:_) (m:MR.m_rref r a b) : GTot nat =
-    HS.as_addr m
 
 val extend
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (y:b x)
@@ -183,9 +181,9 @@ val extend
          let cur = HS.sel h0 t in
          HS.contains h1 t /\
          HS.modifies (Set.singleton r) h0 h1 /\
-         HS.modifies_ref r (Set.singleton (addr_of t)) h0 h1 /\
+         HS.modifies_ref r (Set.singleton (HS.as_addr t)) h0 h1 /\
          HS.sel h1 t == upd cur x y /\
-         MR.witnessed (contains t x y)))
+         witnessed (contains t x y)))
 
 /// `lookup t x`: Querying the map `t` at point `x`
 ///      Ensures: - The state does not change
@@ -194,7 +192,7 @@ val lookup
     (#a:eqtype)
     (#b:a -> Type)
     (#inv:DM.t a (opt b) -> Type)
-    (#r:MR.rid)
+    (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
   : ST (option (b x))
@@ -206,9 +204,9 @@ val lookup
           | None -> ~(defined t x h1)
           | Some v ->
             contains t x v h1 /\
-            MR.witnessed (contains t x v))))
+            witnessed (contains t x v))))
  
-let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
+let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
   = forall (x:a).{:pattern (sel (HS.sel h t) x) \/ (DM.sel (repr (HS.sel h t)) x)}
             defined t x h ==> pred x (Some?.v (sel (HS.sel h t) x))
@@ -224,14 +222,10 @@ val mmap_f (#a:eqtype) (#b #c:a -> Type) (m:map a b) (f: (x:a) -> b x -> c x)
 
 val map_f (#a:eqtype) (#b #c:a -> Type)
           (#inv:DM.t a (opt b) -> Type) (#inv':DM.t a (opt c) -> Type)
-	  (#r #r':MR.rid)
+	  (#r #r':HST.erid)
           (m:t r a b inv) (f: (x:a) -> b x -> c x)
 	  :ST (t r' a c inv')
 	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\ witnessed (region_contains_pred r')))
 	      (ensures  (fun h0 m' h1 ->
 	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
 	                 ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))
-
-
-
-

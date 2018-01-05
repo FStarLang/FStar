@@ -175,15 +175,36 @@ Guidelines for the changelog:
   (refs, sequences, and maps)
 
 
-  1. `Monotonic.RRef` is now transparently defined as `HyperStack`
-     reference. As a result, the coercion `as_hsref` is no longer
-     required, and one can simply use `HyperStack` functions `sel,
-     upd, ralloc, ...` etc. instead of `m_sel, m_upd, m_alloc,
-     ...`. The latter functions are still there in `Monotonic.RRef`
-     for backward compatibility, and they are just wrappers over the
-     underlying `HyperStack` functions.
+  1. `Monotonic.RRef` is gone. Following is the mapping of the
+     functions that have been removed (`MR` is `Monotonic.RRef`, `HS`
+     is `FStar.HyperStack`, `HST` is `FStar.HyperStack.ST`):
 
-     `type m_rref (r:rid) (a:Type) (b:reln a) = HST.m_rref r a b`
+     1.  `MR.reln a` --> `Preorder.preorder a`
+     2.  `MR.monotonic a b` --> `Preorder.preorder_rel a b`
+     3.  `MR.m_rref r a b` --> `HST.m_rref r a b`
+     4.  `MR.as_hsref` --> this coercion is not needed anymore
+     5.  `MR.m_contains r m` --> `HS.contains m r`
+     6.  `MR.m_fresh r m0 m1` --> `HS.fresh_ref r m0 m1`
+     7.  `MR.m_sel m r` --> `HS.sel m r`
+     8.  `MR.m_alloc r init` --> `HST.ralloc r init`
+     9.  `MR.m_read r` --> `!r` (where `!` is defined in `HST`)
+     10. `MR.m_write r x` --> `r := x` (where `:=` is defined in `HST`)
+     11. `MR.witnessed p` --> `HST.witnessed p`
+     12. `MR.m_recall r` --> `HST.recall r`
+     13. `MR.rid` --> `HST.erid`
+     14. `MR.witness` --> `HST.mr_witness`
+     15. `MR.testify` --> `HST.testify`
+     16. `MR.testify_forall` --> `HST.testify_forall`
+     17. `MR.ex_rid` --> `HST.ex_rid`
+     18. `MR.ex_rid_of_rid` --> `HST.witness_region`
+
+     See the following commits for examples:
+     
+     https://github.com/mitls/mitls-fstar/commit/be1b8899a344e885bd3a83a26b099ffb4184fd06
+     https://github.com/mitls/mitls-fstar/commit/73299b71075aca921aad6fbf78faeafe893731db
+     https://github.com/mitls/hacl-star/commit/1fb9727e8193e798fe7a6091ad8b16887a72b98d
+     https://github.com/mitls/hacl-star/commit/c692487d970730206d1f3120933b85d46b87f0a3
+
 
   2. `HyperStack` references (`reference, mref, stackref, ...` etc.)
      are now defined in `FStar.HyperStack.ST`. So, the clients must
@@ -212,8 +233,8 @@ Guidelines for the changelog:
   corresponding APIs for `contains`, `modifies`, etc.
 
   Client should now only work with `FStar.HyperStack`, in fact `open
-  FStar.HyperHeap` will now give an error. Following is a mapping from
-  `HH` (`HyperHeap`) API to `HS` (`HyperStack`) API:
+  FStar.HyperHeap` will now give an error. Following is a (partial)
+  mapping from `HH` (`HyperHeap`) API \to `HS` (`HyperStack`) API:
 
   1. `HH.contains_ref` --> `HS.contains`
   2. `HH.fresh_rref` --> `HS.fresh_ref`
@@ -221,6 +242,11 @@ Guidelines for the changelog:
   4. `HH.modifies` --> `HS.modifies_transitively`
   5. `HH.modifies_just` --> `HS.modifies`
   6. `HH.modifies_one` --> `HS.modifies_one`
+  7. ...
+  
+  For a complete list of the mapping implemented as a crude script to
+  rewrite source files, see:
+  https://github.com/mitls/mitls-fstar/blob/quic2c/src/tls/renamings.sh
 
   `HyperHeap` now only provides the map structure of the memory, and
   is `include`d in `HyperStack`, meaning client now get `HS.rid`,
@@ -247,6 +273,7 @@ Guidelines for the changelog:
   `ST` effect provides this directly.
 
   https://github.com/mitls/hacl-star/commit/f83c49860afc94f16a01994dff5f77760ccd2169#diff-17012d38a1adb8c50367e0adb69c471fR55
+
 
 ## C Extraction
 

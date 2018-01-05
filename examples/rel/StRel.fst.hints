@@ -24,7 +24,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "4960c1347e9d6d94f9e05fe552ad4a37"
+      "7fb32142e13d78df962831ba4ea38133"
     ],
     [
       "StRel.f2",
@@ -43,25 +43,7 @@
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
       ],
       0,
-      "d4c990e19e2acde649446774815071c1"
-    ],
-    [
-      "StRel.glift",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b6fd65f13e32f49e07ef1dcdffdf93cb"
-    ],
-    [
-      "StRel.glift2",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a890f30da7f49d5e27a398447616a0ff"
+      "1ee66991102cc89d29cce168c08a6043"
     ],
     [
       "StRel.f1_ni",
@@ -80,7 +62,7 @@
         "token_correspondence_StRel.f1_hp"
       ],
       0,
-      "be7a19cba9dfd99474d31e53a08aff5e"
+      "c549e6c34e2b6f51605ef4bcfdf5ea9f"
     ],
     [
       "StRel.f2_ni",
@@ -100,7 +82,7 @@
         "token_correspondence_StRel.f2_hp"
       ],
       0,
-      "9893c5e28360d0b9571fef9ad242a797"
+      "d17413729c06337620912edef7551718"
     ]
   ]
 ]

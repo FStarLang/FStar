@@ -2,24 +2,6 @@
   "±aE\u001d¬ñ[ú\u0014¨T\u0006œzNæ",
   [
     [
-      "MetaCoq.ttry",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "356d9d2ac30e0555089a3d887b2475ad"
-    ],
-    [
-      "MetaCoq.or",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "02e6d703cdad13154604b3f2b5423e45"
-    ],
-    [
       "MetaCoq.exact",
       1,
       2,
@@ -29,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "92e1cd7c932d40a3c7a6edc183e1dfe9"
+      "5d29e6a374b607b5f69a809bc312db40"
     ],
     [
       "MetaCoq.apply",
@@ -42,7 +24,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "35e058e4cc31b76fc1168423e6b1a924"
+      "44c97a5ad776cb1c5fc8e68c6db66200"
     ],
     [
       "MetaCoq.cut",
@@ -65,7 +47,7 @@
         "unit_typing"
       ],
       0,
-      "a50ce7d798190b246fd00f6fa74bbc3b"
+      "32977e017aee7de0a633d5e9ebcdba9b"
     ]
   ]
 ]
