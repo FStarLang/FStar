@@ -48,12 +48,19 @@ let get () = HS (Prims.parse_int "0", FStar_Map.const FStar_Monotonic_Heap.emp, 
 let recall = (fun r -> ())
 
 let recall_region = (fun r -> ())
+let witness_region _ = ()
+let witness_hsref _ _ = ()
+type erid = rid
 
 type 'a ref = 'a FStar_HyperStack.reference
 let alloc = salloc
 type ('a, 'b) mref = 'a ref
 type ('a, 'b, 'c) m_rref = 'b ref
+type ('a, 'b, 'c, 'd, 'e) stable_on_t = unit
 let mr_witness _ _ _ _ _ = ()
-let mr_testify _ _ _ _ _ = ()
-type erid = rid
+let testify _ = ()
+let testify_forall _ = ()
+let testify_forall_region_contains_pred _ _ = ()
+
+type ex_rid = erid
 type 'a witnessed = 'a FStar_CommonST.witnessed
