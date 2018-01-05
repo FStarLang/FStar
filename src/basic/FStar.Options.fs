@@ -125,6 +125,7 @@ let defaults =
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
       ("expose_interfaces"            , Bool false);
+      ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
@@ -540,6 +541,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "eager_inference",
         Const (mk_bool true),
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+
+       ( noshort,
+         "extract",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
+         Modules can be extracted or not using the [+|-] qualifier. \n\t\t\t\
+         For example --extract '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
+         not extract FStar.List.Tot.*, \n\t\t\t\t\
+         extract remaining modules from FStar.List.*, \n\t\t\t\t\
+         not extract FStar.Reflection.*, \n\t\t\t\t\
+         and extract all the rest.\n\t\t\
+         Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
 
        ( noshort,
         "extract_module",
@@ -1117,6 +1130,19 @@ let prepend_output_dir fname =
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
+let parse_setting s =
+    let parse_one_setting s =
+        if s = "*" then ([], true)
+        else if FStar.Util.starts_with s "-"
+        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+             (path, false)
+        else let s = if FStar.Util.starts_with s "+"
+                     then FStar.Util.substring_from s 1
+                     else s in
+             (FStar.Ident.path_of_text s, true)
+    in
+    FStar.Util.split s " " |> List.map parse_one_setting in
+
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
@@ -1192,17 +1218,6 @@ let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () =
-    let parse_one_setting s =
-        if s = "*" then ([], true)
-        else if FStar.Util.starts_with s "-"
-        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
-             (path, false)
-        else let s = if FStar.Util.starts_with s "+"
-                     then FStar.Util.substring_from s 1
-                     else s in
-             (FStar.Ident.path_of_text s, true)
-    in
-    let parse_setting s = FStar.Util.split s " " |> List.map parse_one_setting in
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
     | Some ns -> List.collect parse_setting ns |> List.rev
