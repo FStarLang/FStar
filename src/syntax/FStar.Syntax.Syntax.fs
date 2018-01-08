@@ -548,6 +548,22 @@ let has_simple_attribute (l: list<term>) s =
         false
   ) l
 
+// Compares the SHAPE of the patterns, *ignoring bound variables*
+let rec eq_pat (p1 : pat) (p2 : pat) : bool =
+    match p1.v, p2.v with
+    | Pat_constant c1, Pat_constant c2 -> eq_const c1 c2
+    | Pat_cons (fv1, as1), Pat_cons (fv2, as2) ->
+        if fv_eq fv1 fv2
+        then begin assert(List.length as1 = List.length as2);
+                   List.zip as1 as2 |>
+                   List.for_all (fun ((p1, b1), (p2, b2)) -> b1 = b2 && eq_pat p1 p2)
+             end
+        else false
+    | Pat_var _, Pat_var _ -> true
+    | Pat_wild _, Pat_wild _ -> true
+    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | _, _ -> false
+
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////

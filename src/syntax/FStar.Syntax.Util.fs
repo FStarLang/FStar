@@ -459,6 +459,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         ) else NotEqual
     in
     match t1.n, t2.n with
+    // We sometimes compare open terms, as we get alpha-equivalence
+    // for free.
+    | Tm_bvar bv1, Tm_bvar bv2 ->
+      equal_if (bv1.index = bv2.index)
+
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 

@@ -741,6 +741,15 @@ let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
+let and_match m1 m2 =
+    match m1 with
+    | MisMatch i -> MisMatch i
+    | HeadMatch -> begin match m2 () with
+                   | MisMatch j -> MisMatch j
+                   | _ -> HeadMatch
+                   end
+    | FullMatch -> m2 ()
+
 let fv_delta_depth env fv = match fv.fv_delta with
     | Delta_abstract d ->
       if env.curmodule.str = fv.fv_name.v.nsstr
@@ -794,11 +803,29 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
+    | Tm_match (t1, bs1), Tm_match (t2, bs2) ->
+        if List.length bs1 = List.length bs2
+        then List.fold_right (fun (b1, b2) a -> and_match a (fun () -> branch_matches env b1 b2))
+                             (List.zip bs1 bs2)
+                             (head_matches env t1 t2) |> head_match
+        else MisMatch (None, None)
+
     | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
     | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
     | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
+
+and branch_matches env (b1 : branch) (b2 : branch) : match_result =
+    let (p1, w1, t1) = b1 in
+    let (p2, w2, t2) = b2 in
+    if eq_pat p1 p2
+    then begin
+         if U.eq_tm t1 t2 = U.Equal
+         then FullMatch
+         else MisMatch (None, None)
+         end
+    else MisMatch (None, None)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
