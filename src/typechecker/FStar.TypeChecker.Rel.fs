@@ -817,11 +817,18 @@ let rec head_matches env t1 t2 : match_result =
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 and branch_matches env (b1 : branch) (b2 : branch) : match_result =
+    let related_by f o1 o2 =
+        match o1, o2 with
+        | None, None -> true
+        | Some x, Some y -> f x y
+        | _, _ -> false
+    in
     let (p1, w1, t1) = b1 in
     let (p2, w2, t2) = b2 in
     if eq_pat p1 p2
     then begin
-         if U.eq_tm t1 t2 = U.Equal
+         // We check the `when` branches too, even if unsupported for now
+         if U.eq_tm t1 t2 = U.Equal && related_by (fun t1 t2 -> U.eq_tm t1 t2 = U.Equal) w1 w2
          then FullMatch
          else MisMatch (None, None)
          end

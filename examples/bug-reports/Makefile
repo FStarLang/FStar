@@ -28,7 +28,7 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug590.fst bug601.fst bug605.fst bug609.fst bug613.fst bug686.fst bug705.fst bug706.fst bug707.fst bug709.fst\
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug836.fst bug844.fst bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
-  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1291.fst bug1287.fst
+  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1291.fst bug1287.fst bug1347.fst bug1347b.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
