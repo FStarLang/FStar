@@ -111,7 +111,7 @@ let ini_params () =
   check_z3hash ();
   (String.concat " "
                 (List.append
-                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
+                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2 smt.case_split=3";
                    (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
                  (Options.z3_cliopt())))
 

@@ -125,6 +125,7 @@ let defaults =
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
       ("expose_interfaces"            , Bool false);
+      ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
@@ -173,7 +174,6 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
-      ("split_cases"                  , Int 0);
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
@@ -187,6 +187,7 @@ let defaults =
       ("use_hints"                    , Bool false);
       ("use_hint_hashes"              , Bool false);
       ("using_facts_from"             , Unset);
+      ("vcgen.optimize_bind_as_seq"   , Unset);
       ("verify_module"                , List []);
       ("warn_default_effects"         , Bool false);
       ("z3refresh"                    , Bool false);
@@ -234,6 +235,7 @@ let get_doc                     ()      = lookup_opt "doc"                      
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
+let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
@@ -278,7 +280,6 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
-let get_split_cases             ()      = lookup_opt "split_cases"              as_int
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
@@ -292,6 +293,7 @@ let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
+let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
@@ -542,14 +544,27 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
 
        ( noshort,
+         "extract",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
+         Modules can be extracted or not using the [+|-] qualifier. \n\t\t\t\
+         For example --extract '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
+         not extract FStar.List.Tot.*, \n\t\t\t\t\
+         extract remaining modules from FStar.List.*, \n\t\t\t\t\
+         not extract FStar.Reflection.*, \n\t\t\t\t\
+         and extract all the rest.\n\t\t\
+         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\
+         Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
+
+       ( noshort,
         "extract_module",
         Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
-        "Only extract the specified modules (instead of the possibly-partial dependency graph)");
+        "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
 
        ( noshort,
         "extract_namespace",
         Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
-        "Only extract modules in the specified namespace");
+        "Deprecated: use --extract instead; Only extract modules in the specified namespace");
 
        ( noshort,
         "expose_interfaces",
@@ -664,7 +679,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "no_extract",
         Accumulated (PathStr "module name"),
-        "Do not extract code from this module");
+        "Deprecated: use --extract instead; Do not extract code from this module");
 
        ( noshort,
         "no_location_info",
@@ -764,11 +779,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                (default 'boxwrap')");
 
        ( noshort,
-        "split_cases",
-        IntStr "positive_integer",
-        "Partition VC of a match into groups of <positive_integer> cases");
-
-       ( noshort,
         "tactic_raw_binders",
         Const (mk_bool true),
         "Do not use the lexical scope of tactics to improve binder names");
@@ -846,6 +856,18 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          and retain all the rest.\n\t\t\
          Note, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\t\
          Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
+
+       ( noshort,
+         "vcgen.optimize_bind_as_seq",
+          EnumStr ["off"; "without_type"; "with_type"],
+          "\n\t\tOptimize the generation of verification conditions, \n\t\t\t\
+           specifically the construction of monadic `bind`,\n\t\t\t\
+           generating `seq` instead of `bind` when the first computation as a trivial post-condition.\n\t\t\t\
+           By default, this optimization does not apply.\n\t\t\t\
+           When the `without_type` option is chosen, this imposes a cost on the SMT solver\n\t\t\t\
+           to reconstruct type information.\n\t\t\t\
+           When `with_type` is chosen, type information is provided to the SMT solver,\n\t\t\t\
+           but at the cost of VC bloat, which may often be redundant.");
 
        ( noshort,
         "__temp_no_proj",
@@ -957,7 +979,6 @@ let settable = function
     | "smtencoding.elim_box"
     | "smtencoding.nl_arith_repr"
     | "smtencoding.l_arith_repr"
-    | "split_cases"
     | "timing"
     | "trace_error"
     | "unthrottle_inductives"
@@ -972,7 +993,8 @@ let settable = function
     | "z3rlimit_factor"
     | "z3rlimit"
     | "z3refresh"
-    | "use_two_phase_tc" -> true
+    | "use_two_phase_tc"
+    | "vcgen.optimize_bind_as_seq" -> true
     | _ -> false
 
 // the first two options below are options that are passed to z3 using
@@ -1110,6 +1132,24 @@ let prepend_output_dir fname =
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
+//Used to parse the options of
+//   --using_facts_from
+//   --extract
+let parse_settings ns : list<(list<string> * bool)> =
+    let parse_one_setting s =
+        if s = "*" then ([], true)
+        else if FStar.Util.starts_with s "-"
+        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+             (path, false)
+        else let s = if FStar.Util.starts_with s "+"
+                     then FStar.Util.substring_from s 1
+                     else s in
+             (FStar.Ident.path_of_text s, true)
+    in
+    ns |> List.collect (fun s ->
+          FStar.Util.split s " "
+          |> List.map parse_one_setting)
+       |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
@@ -1172,7 +1212,6 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
-let split_cases                  () = get_split_cases                 ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
@@ -1186,20 +1225,13 @@ let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () =
-    let parse_one_setting s =
-        if s = "*" then ([], true)
-        else if FStar.Util.starts_with s "-"
-        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
-             (path, false)
-        else let s = if FStar.Util.starts_with s "+"
-                     then FStar.Util.substring_from s 1
-                     else s in
-             (FStar.Ident.path_of_text s, true)
-    in
-    let parse_setting s = FStar.Util.split s " " |> List.map parse_one_setting in
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
-    | Some ns -> List.collect parse_setting ns |> List.rev
+    | Some ns -> parse_settings ns
+let vcgen_optimize_bind_as_seq   () = Option.isSome (get_vcgen_optimize_bind_as_seq  ())
+let vcgen_decorate_with_type     () = match get_vcgen_optimize_bind_as_seq  () with
+                                      | Some "with_type" -> true
+                                      | _ -> false
 let warn_default_effects         () = get_warn_default_effects        ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
@@ -1214,23 +1246,42 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 
-let should_extract_namespace m =
-    match get_extract_namespace () with
-    | [] -> false
-    | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
-
-let should_extract_module m =
-    match get_extract_module () with
-    | [] -> false
-    | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
-
 let should_extract m =
     let m = String.lowercase m in
-    not (no_extract m) &&
-    (match get_extract_namespace (), get_extract_module() with
-    | [], [] -> true //neither is set
-    | _ -> should_extract_namespace m || should_extract_module m)
+    match get_extract() with
+    | Some extract_setting -> //new option, using --extract '* -FStar' etc.
+      let _ = match get_no_extract(), get_extract_namespace(), get_extract_module () with
+              | [], [], [] -> ()
+              | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
+      in
+      let setting = parse_settings extract_setting in
+      let m_components = Ident.path_of_text m in
+      let rec matches_path m_components path =
+          match m_components, path with
+          | _, [] -> true
+          | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
+          | _ -> false
+      in
+      begin
+      match setting |> Util.try_find (fun (path, _) -> matches_path m_components path) with
+      | None -> false
+      | Some (_, flag) -> flag
+      end
+    | None -> //old
+        let should_extract_namespace m =
+            match get_extract_namespace () with
+            | [] -> false
+            | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
+        in
+        let should_extract_module m =
+            match get_extract_module () with
+            | [] -> false
+            | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
+        in
+        not (no_extract m) &&
+        (match get_extract_namespace (), get_extract_module() with
+        | [], [] -> true //neither is set
+        | _ -> should_extract_namespace m || should_extract_module m)
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"
-

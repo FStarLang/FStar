@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ad896375a3e9316205c2a075dc6faeb3"
+      "5a415f5d1ad9ad8111b281f83783d682"
     ],
     [
       "Bug260.uu___is_O",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "4fb0b0038cc785b80a1fa996fba7818b"
+      "182f9e591a4787999457dfd1369f5c46"
     ],
     [
       "Bug260.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "0e098ef3d348931034f96c02feb3f0d2"
+      "36bc661d18a5455ee6afbb2aceef0cc5"
     ],
     [
       "Bug260.__proj__S__item___0",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
       ],
       0,
-      "ba67346918c032845b7795b8d9439fa0"
+      "85ec6a9e65d457879f68a5ba5567e11f"
     ],
     [
       "Bug260.validity",
@@ -48,16 +48,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat_haseq" ],
       0,
-      "a114dc60d210ba2ba01a4d8fcacf1184"
-    ],
-    [
-      "Bug260.__proj__VSucc__item__n",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bb9b154eff49a7ce4cbd20e1807470c0"
+      "b5cc7d9014bcbfab881c1c4b8235d0e9"
     ],
     [
       "Bug260.validity'",
@@ -66,16 +57,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat_haseq" ],
       0,
-      "429e11e9a8593521c53bd67ad35b83a3"
-    ],
-    [
-      "Bug260.__proj__VSucc'__item__n",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4729070184a6d75ba58eee9813922683"
+      "24ad292b0cd29302251fb114094bc4d7"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",
@@ -87,7 +69,7 @@
         "projection_inverse_Bug260.VSucc__n"
       ],
       0,
-      "f30fe131d589b7dc0783b2c9f8a101ed"
+      "2cf43ee92d4f5dcda12586520055c8d4"
     ],
     [
       "Bug260.validity'_empty",
@@ -102,7 +84,7 @@
         "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
       ],
       0,
-      "ad282b1a26f046bb2fec1ed285f4fe4f"
+      "3eea20ebb1ba877c6b8d13cc26685302"
     ]
   ]
 ]

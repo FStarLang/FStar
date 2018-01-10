@@ -1,10 +1,8 @@
 module EtM.AE
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.HyperStack.ST
-open FStar.Monotonic.RRef
 
 module MAC = EtM.MAC
 
@@ -16,6 +14,8 @@ module Ideal = EtM.Ideal
 module Plain = EtM.Plain
 
 (*** Basic types ***)
+
+type rid = erid
 
 /// An AE cipher includes a mac tag
 type cipher = (CPA.cipher * MAC.tag)
@@ -49,7 +49,7 @@ let get_mac_log (h:mem) (k:key) =
 
 /// cpa log
 let get_cpa_log (h:mem) (k:key) =
-  m_sel h (CPA.Key?.log k.ke)
+  sel h (CPA.Key?.log k.ke)
 
 (*** Main invariant on the ideal state ***)
 (** There are three components to this invariant
@@ -240,12 +240,12 @@ let keygen (parent:rid)
   : ST key
   (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (fun h0 k h1 ->
-    modifies Set.empty h0 h1 /\
-    extends k.region parent /\
-    HyperHeap.fresh_region k.region h0.h h1.h /\
+    modifies Set.empty h0 h1    /\
+    extends k.region parent     /\
+    fresh_region k.region h0 h1 /\
     Map.contains h1.h k.region /\
-    m_contains k.log h1 /\
-    m_sel h1 k.log == createEmpty /\
+    contains h1 k.log /\
+    sel h1 k.log == createEmpty /\
     invariant h1 k)) =
   let region = new_region parent in
   let ke = CPA.keygen region in
@@ -263,7 +263,7 @@ let encrypt (k:key) (plain:Plain.plain)
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
      let log1 = get_log h1 k in
-     HyperHeap.modifies (Set.singleton k.region)  h0.h h1.h
+     modifies_transitively (Set.singleton k.region)  h0 h1
      /\ invariant h1 k
      /\ log1 == snoc log0 (plain, c)))) =
   let h0 = FStar.HyperStack.ST.get () in

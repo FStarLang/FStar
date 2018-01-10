@@ -110,6 +110,7 @@ type cfg = {
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
     primitive_steps:list<primitive_step>;
     strong : bool;                       // under a binder
+    memoize_lazy : bool
 }
 
 type branches = list<(pat * option<term> * term)>
@@ -128,8 +129,9 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let mk t r = mk t None r
-let set_memo (r:memo<'a>) (t:'a) =
-  match !r with
+let set_memo cfg (r:memo<'a>) (t:'a) =
+  if cfg.memoize_lazy then
+    match !r with
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
 
@@ -300,7 +302,7 @@ let rec closure_as_term cfg (env:env) t =
               begin match lookup_bvar env x with
                     | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                     | Dummy -> t
-                    | Clos(env, t0, r, _) -> closure_as_term cfg env t0
+                    | Clos(env, t0, _, _) -> closure_as_term cfg env t0
               end
 
            | Tm_app(head, args) ->
@@ -702,7 +704,7 @@ let mk_psc_subst cfg env =
     List.fold_right
         (fun (binder_opt, closure) subst ->
             match binder_opt, closure with
-            | Some b, Clos(env, term, memo, _) ->
+            | Some b, Clos(env, term, _, _) ->
                 // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
                 let bv,_ = b in
                 if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
@@ -1130,7 +1132,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg env stack t
 
                 | MemoLazy r :: stack ->
-                  set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
+                  set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
@@ -1643,7 +1645,6 @@ and norm_pattern_args cfg env args =
 
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
-        let comp = ghost_to_pure_aux cfg env comp in
         match comp.n with
             | Total (t, uopt) ->
               {comp with n=Total (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
@@ -1658,32 +1659,6 @@ and norm_comp : cfg -> env -> comp -> comp =
                                           result_typ=norm cfg env [] ct.result_typ;
                                           effect_args=norm_args ct.effect_args;
                                           flags=flags})}
-
-(* Promotes Ghost T, when T is not informative to Pure T
-        Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
-*)
-and ghost_to_pure_aux cfg env c =
-    let norm t =
-        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
-    let non_info t = non_informative (norm t) in
-    match c.n with
-    | Total _ -> c
-    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
-    | Comp ct ->
-        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
-        if U.is_ghost_effect l
-        && non_info ct.result_typ
-        then let ct =
-                 match downgrade_ghost_effect_name ct.effect_name with
-                 | Some pure_eff ->
-                   let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
-                   {ct with effect_name=pure_eff; flags=flags}
-                 | None ->
-                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
-                    {ct with effect_name=PC.effect_PURE_lid} in
-             {c with n=Comp ct}
-        else c
-    | _ -> c
 
 and norm_binder : cfg -> env -> binder -> binder =
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
@@ -1737,7 +1712,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     rebuild cfg env stack t
 
   | MemoLazy r::stack ->
-    set_memo r (env, t);
+    set_memo cfg r (env, t);
     log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
     rebuild cfg env stack t
 
@@ -1964,7 +1939,12 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps; strong=false}
+    {tcenv=e;
+     steps=s;
+     delta_level=d;
+     primitive_steps=built_in_primitive_steps;
+     strong=false;
+     memoize_lazy=true}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in
@@ -1973,7 +1953,31 @@ let normalize_with_primitive_steps ps s e t =
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
-let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
+
+(* Promotes Ghost T, when T is not informative to Pure T
+        Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
+*)
+let ghost_to_pure env c =
+    let cfg = config [UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses] env in
+    let non_info t = non_informative (norm cfg [] [] t) in
+    match c.n with
+    | Total _ -> c
+    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
+    | Comp ct ->
+        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        if U.is_ghost_effect l
+        && non_info ct.result_typ
+        then let ct =
+                 match downgrade_ghost_effect_name ct.effect_name with
+                 | Some pure_eff ->
+                   let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
+                   {ct with effect_name=pure_eff; flags=flags}
+                 | None ->
+                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    {ct with effect_name=PC.effect_PURE_lid} in
+             {c with n=Comp ct}
+        else c
+    | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
     let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
@@ -1982,8 +1986,8 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           {lc with eff_name=pure_eff;
-                    comp=(fun () -> ghost_to_pure env (lc.comp()))}
+           S.mk_lcomp pure_eff lc.res_typ lc.cflags
+                      (fun () -> ghost_to_pure env (lcomp_comp lc))
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc

@@ -8,25 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "613d968ecf88e392a4a51e2998d1d43f"
-    ],
-    [
-      "Bug213.__proj__IP__item__f",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a33099f946c4e719ba6be7bca8e77c26"
-    ],
-    [
-      "Bug213.__proj__ExIntro__item__a",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "33d76c31cbecf5256799c05f21759be5"
+      "986e13bee64d3cec853ec56a4bfee11a"
     ],
     [
       "Bug213.__proj__ExIntro__item__p",
@@ -41,7 +23,7 @@
         "projection_inverse_Bug213.ExIntro_p"
       ],
       0,
-      "adf4702af78f2363f7a6336b62371770"
+      "56cef31dcdec74db361c41aa1bd67b9e"
     ],
     [
       "Bug213.__proj__ExIntro__item__x",
@@ -53,7 +35,7 @@
         "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "62be5ef3049424701628f8e61501122c"
+      "0513c2e239161066b1495a44a2a5ca54"
     ],
     [
       "Bug213.__proj__ExIntro__item___3",
@@ -68,7 +50,7 @@
         "token_correspondence_Bug213.__proj__ExIntro__item__p"
       ],
       0,
-      "d3dd80f2a4d230c41134da0f6f815641"
+      "99a75169f24a1f90dfbb9f61e2559849"
     ],
     [
       "Bug213.foo",
@@ -81,7 +63,7 @@
         "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "27f3e0609168bcf6f4c92c657e94d43e"
+      "a9b135e3a3b229d7ddab7c8e56dd5104"
     ]
   ]
 ]

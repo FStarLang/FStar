@@ -2,15 +2,6 @@
   "\u001a≤‘7¿HI4xù\bQ˜\u001f†D",
   [
     [
-      "DoNotation.bind",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "573f455819deafd0fb8ec2c39518c1de"
-    ],
-    [
       "DoNotation.add",
       1,
       2,
@@ -24,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6ce2fca044419660627990db1172126c"
+      "25c88cb424a283fe4bdc6cafa8bef134"
     ],
     [
       "DoNotation.uu___11",
@@ -37,7 +28,7 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "2a8fba017ee9a76fba9837844ef0816c"
+      "52cf4f2945eed36e4fc9869f0521fd95"
     ]
   ]
 ]

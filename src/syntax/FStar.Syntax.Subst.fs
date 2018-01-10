@@ -466,8 +466,10 @@ let close_binders (bs:binders) : binders =
 
 let close_lcomp (bs:binders) lc =
     let s = closing_subst bs in
-    {lc with res_typ=subst s lc.res_typ;
-             comp=(fun () -> subst_comp s (lc.comp())); }
+    Syntax.mk_lcomp lc.eff_name
+                    lc.res_typ
+                    lc.cflags
+                    (fun () -> subst_comp s (lcomp_comp lc))
 
 let close_pat p =
     let rec aux sub p = match p.v with

@@ -364,7 +364,7 @@ and lbs_to_string quals lbs =
 
 and lcomp_to_string lc =
     if Options.print_effect_args () then
-        comp_to_string (lc.comp ())
+        comp_to_string (lcomp_comp lc)
     else
         U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
 
@@ -469,6 +469,8 @@ and cflags_to_string c =
         | RETURN -> "return"
         | PARTIAL_RETURN -> "partial_return"
         | SOMETRIVIAL -> "sometrivial"
+        | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
+        | SHOULD_NOT_INLINE -> "should_not_inline"
         | LEMMA -> "lemma"
         | CPS -> "cps"
         | DECREASES _ -> "" (* TODO : already printed for now *)

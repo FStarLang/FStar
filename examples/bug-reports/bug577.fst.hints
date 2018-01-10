@@ -2,15 +2,6 @@
   "I¿»*²¨ˆ‡´\u000f±\u0010Cm!Ç",
   [
     [
-      "Bug577.__proj__Multi_step__item__x",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fcc433d2b9ac87f8d2ee694906610fc6"
-    ],
-    [
       "Bug577.__proj__Multi_step__item___1",
       1,
       2,
@@ -20,7 +11,7 @@
         "projection_inverse_Bug577.Multi_step_x"
       ],
       0,
-      "5d1b46b9e74784904e66d8f847d17b2c"
+      "72fb92fcb0e1f59f36d68b6c2cbb54dd"
     ],
     [
       "Bug577.steps_preserves_red",
@@ -32,7 +23,7 @@
         "fuel_guarded_inversion_Bug577.step"
       ],
       0,
-      "2e8b9cb94a541a5375ed1e4cee803a89"
+      "5da9c4c6e88dcb07097ea719e4152fa4"
     ]
   ]
 ]

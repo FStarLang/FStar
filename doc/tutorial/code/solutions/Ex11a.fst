@@ -5,10 +5,7 @@ open FStar.Set
 open FStar.HyperStack
 open FStar.HyperStack.ST
 
-module HH = FStar.HyperHeap
 module HST = FStar.HyperStack.ST
-
-type rid = HH.rid
 
 let only (#t:eqtype) (i:t) =
   singleton i
@@ -20,7 +17,7 @@ let op_Plus_Plus_Hat (s:set rid) (r2:rid) =
   union s (singleton r2)
 
 type distinct (r:rid) (s:set rid) =
-  forall x. Set.mem x s ==> HH.disjoint x r
+  forall x. Set.mem x s ==> disjoint x r
 
 // BEGIN: Types
 noeq type point =
@@ -38,12 +35,12 @@ noeq type arm =
 
 noeq type bot =
   | Bot : r:rid
-        -> pos  :point{HH.includes r (Point?.r pos)}
-        -> left :arm  {HH.includes r (Arm?.r left)}
-        -> right:arm  {HH.includes r (Arm?.r right)
-                      /\ HH.disjoint (Point?.r pos) (Arm?.r left)
-                      /\ HH.disjoint (Point?.r pos) (Arm?.r right)
-                      /\ HH.disjoint (Arm?.r left)  (Arm?.r right)}
+        -> pos  :point{includes r (Point?.r pos)}
+        -> left :arm  {includes r (Arm?.r left)}
+        -> right:arm  {includes r (Arm?.r right)
+                      /\ disjoint (Point?.r pos) (Arm?.r left)
+                      /\ disjoint (Point?.r pos) (Arm?.r right)
+                      /\ disjoint (Arm?.r left)  (Arm?.r right)}
         -> bot
 // END: Types
 
@@ -68,8 +65,8 @@ val new_point: r0:rid{is_eternal_region r0} -> x:int -> y:int -> z:int -> ST poi
   (requires (fun h0 -> witnessed (region_contains_pred r0)))
   (ensures (fun h0 p h1 ->
               modifies empty h0 h1
-            /\ HH.extends (Point?.r p) r0
-            /\ HH.fresh_region (Point?.r p) h0.h h1.h
+            /\ extends (Point?.r p) r0
+            /\ fresh_region (Point?.r p) h0 h1
             /\ sel h1 (Point?.x p) = x
             /\ sel h1 (Point?.y p) = y
             /\ sel h1 (Point?.z p) = z))
@@ -84,8 +81,8 @@ val new_arm: r0:rid{is_eternal_region r0} -> ST arm
   (requires (fun h0 -> witnessed (region_contains_pred r0)))
   (ensures (fun h0 x h1 ->
               modifies empty h0 h1
-            /\ HH.extends (Arm?.r x) r0
-            /\ HH.fresh_region (Arm?.r x) h0.h h1.h))
+            /\ extends (Arm?.r x) r0
+            /\ fresh_region (Arm?.r x) h0 h1))
 let new_arm r0 =
   let r = new_region r0 in
   let p = ralloc r 0 in
@@ -96,8 +93,8 @@ val new_robot: r0:rid{is_eternal_region r0} -> ST bot
   (requires (fun h0 -> witnessed (region_contains_pred r0)))
   (ensures (fun h0 x h1 ->
 	      modifies empty h0 h1
-            /\ HH.extends (Bot?.r x) r0
-            /\ HH.fresh_region (Bot?.r x) h0.h h1.h
+            /\ extends (Bot?.r x) r0
+            /\ fresh_region (Bot?.r x) h0 h1
             /\ robot_inv x h1))
 let new_robot r0 =
   let r = new_region r0 in
@@ -141,7 +138,7 @@ let fly b =
 // END: Fly
 
 // BEGIN: FlyBoth
-val fly_both: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)}
+val fly_both: b0:bot -> b1:bot{disjoint (Bot?.r b0) (Bot?.r b1)}
   -> ST unit
   (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h))
   (ensures (fun h0 x h1 ->
@@ -157,7 +154,7 @@ let fly_both b0 b1 =
 // END: FlyBoth
 
 #reset-options "--z3rlimit 10"
-val fly_one: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)} -> ST unit
+val fly_one: b0:bot -> b1:bot{disjoint (Bot?.r b0) (Bot?.r b1)} -> ST unit
   (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h /\ ~(flying b1 h)))
   (ensures (fun h0 x h1 ->
               modifies_transitively (only (Bot?.r b0)) h0 h1
@@ -193,7 +190,7 @@ let rec lemma_mem_rid #rs bs b =
 val lemma_bots_tl_disjoint: #rs:set rid -> bs:bots rs{Cons? bs}
   -> Lemma (requires True)
           (ensures (forall b. let Cons hd tl = bs in
-			 mem b tl ==> HH.disjoint (Bot?.r b) (Bot?.r hd)))
+			 mem b tl ==> disjoint (Bot?.r b) (Bot?.r hd)))
 let lemma_bots_tl_disjoint #rs bs = ()
 
 #reset-options "--z3rlimit 20"
@@ -202,13 +199,13 @@ module HS = FStar.HyperStack
 
 let lemma_frame_robot_inv_and_flying
   (b:bot) (rs:set rid) (h0:HS.mem) (h1:HS.mem)
-  :Lemma (requires (HH.modifies rs h0.h h1.h /\ (forall r. Set.mem r rs ==> HH.disjoint r (Bot?.r b)) /\ robot_inv b h0 /\ flying b h0))
+  :Lemma (requires (modifies_transitively rs h0 h1 /\ (forall r. Set.mem r rs ==> disjoint r (Bot?.r b)) /\ robot_inv b h0 /\ flying b h0))
          (ensures  (robot_inv b h1 /\ flying b h1))
   = ()
 
 val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
-  (ensures  (fun h0 _u h1 ->   HH.modifies rs h0.h h1.h
+  (ensures  (fun h0 _u h1 ->   modifies_transitively rs h0 h1
                           /\ (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
 #set-options "--z3rlimit 50"
 let rec fly_robot_army #rs bs =
@@ -228,7 +225,7 @@ val main: unit -> ST unit
     (ensures (fun m0 _ m1 -> modifies_transitively Set.empty m0 m1))
 #set-options "--z3rlimit 20"
 let main () =
-  witness_region HH.root;
-  let b1 = new_robot HH.root in
-  let b2 = new_robot HH.root in
+  witness_region root;
+  let b1 = new_robot root in
+  let b2 = new_robot root in
   fly_both b1 b2

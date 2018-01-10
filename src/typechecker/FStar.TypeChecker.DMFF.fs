@@ -652,10 +652,10 @@ and star_type' env t =
           is_tuple_constructor (SS.compress head)
         ) ->
             true
-        | Tm_fvar fv -> 
+        | Tm_fvar fv ->
              let (_, ty), _ = Env.lookup_lid env.env fv.fv_name.v in
              if is_non_dependent_arrow ty (List.length args)
-             then 
+             then
                // We need to check that the result of the application is a datatype
                 let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
                 begin match (SS.compress res).n with
@@ -715,8 +715,8 @@ and star_type' env t =
       (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (Print.term_to_string t)))*)
 
-  | Tm_ascribed (e, _, _) ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed (with tactics) is outside of the definition language: %s"
+ | Tm_ascribed (_, (_, Some _), _) ->
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Ascriptions with tactics are outside of the definition language: %s"
         (Print.term_to_string t)))
 
   | Tm_refine _ ->

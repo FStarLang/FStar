@@ -2,10 +2,8 @@ module EtM.AE
 
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.HyperStack.ST
-open FStar.Monotonic.RRef
 
 open EtM
 
@@ -14,6 +12,7 @@ open CoreCrypto
 
 module HST = FStar.HyperStack.ST
 
+type rid = HST.erid
 type cipher = (CPA.cipher * MAC.tag)
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
@@ -27,14 +26,14 @@ abstract noeq type key =
                log:log_t region -> key
 
 let get_log (m:mem) (k:key) =
-  m_sel m k.log
+  sel m k.log
 
 
 let get_mac_log (m:mem) (k:key) =
-  m_sel m (MAC.Key?.log k.km)
+  sel m (MAC.Key?.log k.km)
 
 let get_cpa_log (m:mem) (k:key) =
-  m_sel m (CPA.Key?.log k.ke)
+  sel m (CPA.Key?.log k.ke)
 
 
 // BEGIN: EtMAEInvariant
@@ -62,10 +61,10 @@ let invariant (h:mem) (k:key) =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ HyperHeap.fresh_region k.region h0.h h1.h
+  /\ HyperStack.fresh_region k.region h0 h1
   /\ Map.contains h1.h k.region
-  /\ m_contains k.log h1
-  /\ m_sel h1 k.log == createEmpty
+  /\ contains h1 k.log
+  /\ sel h1 k.log == createEmpty
   /\ invariant h1 k
 
 
@@ -87,7 +86,7 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
      let log1 = get_log h1 k in
-     HyperHeap.modifies (Set.singleton k.region) h0.h h1.h
+     HyperStack.modifies_transitively (Set.singleton k.region) h0 h1
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
      /\ invariant h1 k)))
@@ -114,7 +113,7 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
    (* CH*MK: If we wanted to also prove correctness of the EtM.AE
       we would use this stronger post-condition:
       
-	Seq.mem (Some.v res, c) (m_sel h0 k.log) *)
+	Seq.mem (Some.v res, c) (sel h0 k.log) *)
 
       )
   ))

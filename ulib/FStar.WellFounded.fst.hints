@@ -2,15 +2,6 @@
   "∂\fÊè˘ﬁ\bL\u007fèfºA^e\u0015",
   [
     [
-      "FStar.WellFounded.__proj__AccIntro__item___0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1b8c2a09f9cb19f95d191603d7e060cf"
-    ],
-    [
       "FStar.WellFounded.acc_inv",
       1,
       2,
@@ -20,7 +11,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "f8c9635edb2ded5274703211540f8ab9"
+      "9eebb9204bd886d70f91d5547665b49a"
     ],
     [
       "FStar.WellFounded.apply",
@@ -29,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "226f4ddfe06a0161e9c2218fc8bb5b2c"
+      "7e435bc5cc8f7cb58378579f397d0aeb"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -45,7 +36,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "eeb65337ae92c1236e7e6d8ad6c77641"
+      "2102cd5ba3b85373a5d1296d4127afdf"
     ]
   ]
 ]

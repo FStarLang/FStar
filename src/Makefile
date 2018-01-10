@@ -132,6 +132,7 @@ utest-prelude:
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
 	+$(MAKE) ocaml-unit-tests  #run the unit tests
+	+$(MAKE) fstarlib
 
 ocaml-unit-tests:
 	$(BIN)/tests.exe

@@ -24,6 +24,7 @@ tactics \
 pattern-matching \
 kv_parsing \
 vale \
+seplogic \
 hello \
 native_tactics \
 extraction

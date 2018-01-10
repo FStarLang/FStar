@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1526b6ac6de4c19deecc6fd35ecd79e1"
-    ],
-    [
-      "Bug184.__proj__Refl__item__x",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4ef9323a4b953a9879288243da567482"
-    ],
-    [
-      "Bug184.foo",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a834d099c7d764023a95f89387ec5586"
+      "b87650b0a21eb0d5f18b9fcadb3f21a3"
     ]
   ]
 ]

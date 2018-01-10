@@ -150,7 +150,7 @@ type raw_error =
   | Fatal_NonSingletonTopLevelModule
   | Fatal_NonTopRecFunctionNotFullyEncoded
   | Fatal_NonTrivialPreConditionInPrims
-  | Fatal_NonVaribleInductiveTypeParameter
+  | Fatal_NonVariableInductiveTypeParameter
   | Fatal_NotApplicationOrFv
   | Fatal_NotEnoughArgsToEffect
   | Fatal_NotEnoughArgumentsForEffect
@@ -291,6 +291,7 @@ type raw_error =
   | Warning_MissingInterfaceOrImplementation
   | Warning_ConstructorBuildsUnexpectedType
   | Warning_ModuleOrFileNotFoundWarning
+  | Error_NoLetMutable
   | Error_BadImplicit
 
 // Needs review: Do we need CFatal, or can we just use CError?
@@ -444,7 +445,7 @@ let default_flags =
   (Fatal_NonSingletonTopLevelModule                  , CFatal);
   (Fatal_NonTopRecFunctionNotFullyEncoded            , CFatal);
   (Fatal_NonTrivialPreConditionInPrims               , CFatal);
-  (Fatal_NonVaribleInductiveTypeParameter            , CFatal);
+  (Fatal_NonVariableInductiveTypeParameter           , CFatal);
   (Fatal_NotApplicationOrFv                          , CFatal);
   (Fatal_NotEnoughArgsToEffect                       , CFatal);
   (Fatal_NotEnoughArgumentsForEffect                 , CFatal);
