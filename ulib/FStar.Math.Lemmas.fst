@@ -211,8 +211,7 @@ val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (ensures  (w = z))
 let lemma_eq_trans_2 w x y z = ()
 
-#reset-options "--z3rlimit 80 --max_fuel 0 --max_ifuel 0 --z3seed 3"
-
+#reset-options "--z3rlimit 150 --initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0 --z3seed 3"
 private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
   =
@@ -308,7 +307,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 75 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 150 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
