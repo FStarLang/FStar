@@ -34,6 +34,6 @@ let char_of_int (i:nat{i < pow2 21}) : char = char_of_u32 (U32.uint_to_t i)
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __char_of_int (x:int) : Tot char
+let __char_of_int (x:int) : char
     = char_of_int x
 #reset-options
