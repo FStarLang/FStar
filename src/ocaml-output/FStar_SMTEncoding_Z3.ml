@@ -95,8 +95,8 @@ let ini_params: Prims.unit -> Prims.string =
                FStar_Util.string_of_int uu____310 in
              FStar_Util.format1 "smt.random_seed=%s" uu____309 in
            [uu____308] in
-         "-smt2 -in auto_config=false model=true smt.relevancy=2" ::
-           uu____305 in
+         "-smt2 -in auto_config=false model=true smt.relevancy=2 smt.case_split=3"
+           :: uu____305 in
        let uu____311 = FStar_Options.z3_cliopt () in
        FStar_List.append uu____302 uu____311 in
      FStar_String.concat " " uu____299)
