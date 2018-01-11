@@ -2447,3 +2447,114 @@ let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
     let tps, env, g, us = tc_binders env tps in
     Rel.force_trivial_guard env g;
     tps, env, us
+
+////////////////////////////////////////////////////////////////////////////////
+
+(*
+    Pre-condition: exists k. env |- t : GTot k
+    i.e., t is well-typed in env at some time k
+
+    Returns (Some k), if it can find k quickly
+*)
+let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
+  let mk_tm_type u = S.mk (Tm_type u) None t.pos in
+  match (SS.compress t).n with
+  | Tm_delayed _
+  | Tm_bvar _ -> failwith "Impossible"
+
+  | Tm_name x ->
+    Some (fst (Env.lookup_bv env x))
+
+  | Tm_fvar fv ->
+    bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->
+    Some t)
+
+  | Tm_uinst({n=Tm_fvar fv}, us) ->
+    bind_opt (Env.try_lookup_and_inst_lid env us fv.fv_name.v) (fun (t, _) ->
+    Some t)
+
+  | Tm_constant sc ->
+    Some (tc_constant env t.pos sc)
+
+  | Tm_type u ->
+    Some (mk_tm_type (U_succ u))
+
+  | Tm_abs(bs, body, Some ({residual_effect=eff; residual_typ=Some tbody})) ->
+    let mk_comp =
+      if Ident.lid_equals eff Const.effect_Tot_lid
+      then Some S.mk_Total'
+      else if Ident.lid_equals eff Const.effect_GTot_lid
+      then Some S.mk_GTotal'
+      else None
+    in
+    BU.bind_opt mk_comp (fun f ->
+    BU.bind_opt (universe_of_well_typed_term env tbody) (fun u ->
+    Some (S.mk (Tm_arrow(bs, f tbody (Some u))) None t.pos)))
+
+  | Tm_arrow(bs, c) ->
+    let bs, c = SS.open_comp bs c in
+    let rec aux env us bs =
+      match bs with
+      | [] ->
+        bind_opt (universe_of_well_typed_term env (U.comp_result c)) (fun uc ->
+        Some (mk_tm_type (S.U_max (uc::us))))
+
+      | (x, imp)::bs ->
+        bind_opt (universe_of_well_typed_term env x.sort) (fun u_x ->
+        let env = Env.push_bv env x in
+        aux env (u_x::us) bs)
+    in
+    aux env [] bs
+
+  | Tm_abs _ -> None
+
+  | Tm_refine(x, _) ->
+    bind_opt (universe_of_well_typed_term env x.sort) (fun u_x ->
+    Some (mk_tm_type u_x))
+
+  | Tm_app(hd, args) ->
+    let t_hd = type_of_well_typed_term env hd in
+    let rec aux t_hd =
+      match (N.unfold_whnf env t_hd).n with
+      | Tm_arrow(bs, c) ->
+        let n_args = List.length args in
+        let n_bs = List.length bs in
+        let bs_t_opt =
+          if n_args < n_bs
+          then let bs, rest = BU.first_N n_args bs in
+               let t = S.mk (Tm_arrow (rest, c)) None t_hd.pos in
+               let bs, c = SS.open_comp bs (S.mk_Total t) in
+               Some (bs, U.comp_result c)
+          else if n_args = n_bs
+          then let bs, c = SS.open_comp bs c in
+               if U.is_tot_or_gtot_comp c
+               then Some (bs, U.comp_result c)
+               else None
+          else None
+        in
+        bind_opt bs_t_opt (fun (bs, t) ->
+          let subst = List.map2 (fun b a -> NT (fst b, fst a)) bs args in
+          Some (SS.subst subst t))
+      | Tm_refine(x, _) -> aux x.sort
+      | Tm_ascribed(t, _, _) -> aux t
+      | _ -> None
+    in
+    bind_opt t_hd aux
+
+  | Tm_ascribed(_, (Inl t, _), _) -> Some t
+  | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
+  | Tm_uvar(_, t) -> Some t
+
+  | Tm_meta(t, _) ->
+    type_of_well_typed_term env t
+
+  | Tm_match _
+  | Tm_let _
+  | Tm_unknown
+  | Tm_uinst _ -> None
+
+and universe_of_well_typed_term env t =
+  match type_of_well_typed_term env t with
+  | Some ({n=Tm_type u}) -> Some u
+  | _ -> None
+

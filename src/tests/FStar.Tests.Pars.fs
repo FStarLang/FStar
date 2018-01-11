@@ -55,6 +55,7 @@ let init_once () : unit =
                 TcTerm.tc_term
                 TcTerm.type_of_tot_term
                 TcTerm.universe_of
+                TcTerm.type_of_well_typed_term
                 solver
                 Const.prims_lid in
   env.solver.init env;

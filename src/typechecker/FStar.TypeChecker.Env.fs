@@ -104,6 +104,7 @@ type env = {
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  fast_type_of   :env -> term -> option<typ>;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
@@ -176,7 +177,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of universe_of solver module_lid =
+let initial_env deps tc_term type_of universe_of fast_type_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -201,6 +202,7 @@ let initial_env deps tc_term type_of universe_of solver module_lid =
     nosynth=false;
     tc_term=tc_term;
     type_of=type_of;
+    fast_type_of=fast_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
@@ -448,7 +450,12 @@ let effect_signature se =
 
     | _ -> None
 
-let try_lookup_lid_aux env lid =
+let try_lookup_lid_aux us_opt env lid =
+  let inst_tscheme ts =
+      match us_opt with
+      | None -> inst_tscheme ts
+      | Some us -> inst_tscheme_with ts us
+  in
   let mapper (lr, rng) =
     match lr with
     | Inl t ->
@@ -530,12 +537,20 @@ let lookup_bv env bv =
                      Range.set_use_range r (Range.use_range bvr)
 
 let try_lookup_lid env l =
-    match try_lookup_lid_aux env l with
+    match try_lookup_lid_aux None env l with
     | None -> None
     | Some ((us, t), r) ->
       let use_range = range_of_lid l in
       let r = Range.set_use_range r (Range.use_range use_range) in
       Some ((us, Subst.set_use_range use_range t), r)
+
+let try_lookup_and_inst_lid env us l =
+    match try_lookup_lid_aux (Some us) env l with
+    | None -> None
+    | Some ((_, t), r) ->
+      let use_range = range_of_lid l in
+      let r = Range.set_use_range r (Range.use_range use_range) in
+      Some (Subst.set_use_range use_range t, r)
 
 let lookup_lid env l =
     match try_lookup_lid env l with

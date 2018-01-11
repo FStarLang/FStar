@@ -100,6 +100,7 @@ type env = {
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  fast_type_of   :env -> term -> option<typ>;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
@@ -139,6 +140,7 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term*lcomp*guard_t) ->
                   (env -> term -> term*typ*guard_t) ->
                   (env -> term -> universe) ->
+                  (env -> term -> option<typ>) ->
                   solver_t -> lident -> env
 
 (* Some utilities *)
@@ -169,6 +171,7 @@ val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
 val lookup_qname           : env -> lident -> option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
+val try_lookup_and_inst_lid: env -> universes -> lident -> option<(typ * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
 val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
