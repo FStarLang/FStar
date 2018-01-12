@@ -2892,16 +2892,12 @@ let resolve_implicits' must_total forcelax g =
           let (_, env, u, tm, k, r) = hd in
           if unresolved u
           then until_fixpoint (hd::out, changed) tl
-          else let env = Env.set_expected_typ env k in
-               let tm = N.normalize [N.Beta] env tm in
+          else let tm = N.normalize [N.Beta] env tm in
+               let env = if forcelax then {env with lax=true} else env in
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let env = if forcelax then {env with lax=true} else env in
-               let g = if must_total
-                       then let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in g
-                       else let _, _, g = env.tc_term ({env with use_bv_sorts=true}) tm in g
-               in
+               let g = env.check_type_of must_total env tm k in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in

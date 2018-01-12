@@ -87,7 +87,7 @@ let init_env deps : TcEnv.env =
         TcTerm.tc_term
         TcTerm.type_of_tot_term
         TcTerm.universe_of
-        TcTerm.type_of_well_typed_term
+        TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
   in

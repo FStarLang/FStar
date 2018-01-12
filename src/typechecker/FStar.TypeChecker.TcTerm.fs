@@ -2558,3 +2558,18 @@ and universe_of_well_typed_term env t =
   | Some ({n=Tm_type u}) -> Some u
   | _ -> None
 
+let check_type_of_well_typed_term must_total env t k =
+  let env = Env.set_expected_typ env k in
+  let env = {env with use_bv_sorts=true} in
+  let slow_check () =
+    if must_total
+    then let _, _, g = env.type_of env t in g
+    else let _, _, g = env.tc_term env t in g
+  in
+  match type_of_well_typed_term env t with
+  | None -> slow_check ()
+  | Some k' ->
+    let _, _, g = value_check_expected_typ env t (Inl k') Rel.trivial_guard in
+    if Rel.is_trivial g
+    then g
+    else slow_check ()

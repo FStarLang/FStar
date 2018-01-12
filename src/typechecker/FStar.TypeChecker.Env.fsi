@@ -100,7 +100,7 @@ type env = {
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  fast_type_of   :env -> term -> option<typ>;
+  check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
@@ -140,7 +140,7 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term*lcomp*guard_t) ->
                   (env -> term -> term*typ*guard_t) ->
                   (env -> term -> universe) ->
-                  (env -> term -> option<typ>) ->
+                  (bool -> env -> term -> typ -> guard_t) ->
                   solver_t -> lident -> env
 
 (* Some utilities *)
