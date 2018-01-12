@@ -475,11 +475,11 @@ let compile_op arity s r =
     match s with
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"
-    | ".{}<-" -> "op_Brace_Assignment"
+    | ".[||]<-" -> "op_Brack_Lens_Assignment"
     | ".(||)<-" -> "op_Lens_Assignment"    
     | ".[]" -> "op_String_Access"
     | ".()" -> "op_Array_Access"
-    | ".{}" -> "op_Brace_Access"
+    | ".[||]" -> "op_Brack_Lens_Access"
     | ".(||)" -> "op_Lens_Access"    
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
