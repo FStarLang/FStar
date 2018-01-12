@@ -16,6 +16,8 @@ assume val upd_ref (#a:Type) (r:ref a) (v:a) : ST unit
 
 /// `hlens a b`: is a lens from a `(heap * a) ` to `b`
 ///  It is purely specificational.
+///  In the blog post, we gloss over this detail, treating
+///  hlens as pure lenses, rather than ghost lenses
 noeq
 type hlens a b = {
      get: (heap * a) -> GTot b;
@@ -117,11 +119,12 @@ let ( ~.  ) #a #b (l:lens a b) = as_stlens l
 /// `s |... t`: composes a stateful lens with a pure one on the right
 let ( |... ) #a #b #c (#l:hlens a b) (sl:stlens l) (m:lens b c) = sl |.. (~. m)
 /// `x.[s]`: accessor of `x` using the stateful lens `s`
-let op_String_Access #a #b (#l:hlens a b) (x:a) (sl:stlens l) = sl.st_get x
+let ( .[] ) #a #b (#l:hlens a b) (x:a) (sl:stlens l) = sl.st_get x
 /// `x.[s] <- v`: mutator of `x` using the statful lens `s` to `v`
-let op_String_Assignment #a #b (#l:hlens a b) (x:a) (sl:stlens l) (y:b) = let _ = sl.st_put y x in ()
+let ( .[]<- ) #a #b (#l:hlens a b) (x:a) (sl:stlens l) (y:b) = let _ = sl.st_put y x in ()
 /// `v`: A stateful lens for a single reference
 let v #a = stlens_ref #a
+let deref = v
 
 /// test3: test0 can be written more compactly like so
 let test3 (c:ref (ref int)) = c.[v |.. v]
@@ -165,15 +168,10 @@ let x : lens point (ref int) = {
 let ( |^. ) #a #b #c (#l:hlens b c) (m:lens a b) (sl:stlens l) = (~. m) |.. sl
 
 let ( |.^ ) #a #b #c (#l:hlens a b) (sl:stlens l) (m:lens b c) = sl |.. (~. m)
-
 let ( |. ) #a #b #c (m:lens a b) (n:lens b c) = Lens.(m |.. n)
 
-// let ( |^^. ) #a #b #c (m:lens a b) (n:hlens b c) = compose_hlens (as_hlens m) n
-
-let spec #a #b (#l:hlens a b) (s:stlens l) = l
-
-let op_Array_Access #a #b (#l:hlens a b) (x:a) ($hs:(heap * stlens l)) = l.get (fst hs, x)
-let op_Array_Assignment #a #b (#l:hlens a b) (x:a) ($hs:(heap * stlens l)) (y:b)  = l.put y (fst hs, x)
+let ( .() ) #a #b (#l:hlens a b) (x:a) ($hs:(heap * stlens l)) = l.get (fst hs, x)
+let ( .()<- ) #a #b (#l:hlens a b) (x:a) ($hs:(heap * stlens l)) (y:b)  = l.put y (fst hs, x)
 
 let move_x (delta:int) (c:circle) : ST unit
   (requires (fun _ -> True))
@@ -181,3 +179,15 @@ let move_x (delta:int) (c:circle) : ST unit
              let l = center |^. v |.^ x |.. v in
              (h1, c) == (c.(h0, l) <- c.(h0, l) + delta)))
    = c.[center |^. v |.^ x |.. v] <- c.[center |^. v |.^ x |.. v] + delta
+
+let move_x2 (delta:int) (c:circle) : ST unit
+  (requires (fun _ -> True))
+  (ensures  (fun h0 _ h' ->
+             let rp = c.center in
+             let p = sel h0 rp in
+             let rx = p.x in
+             let h1 = upd h0 rx (sel h0 rx + delta) in
+             let p = sel h1 rp in
+             let h2 = upd h1 rp ({p with x = rx}) in
+             h' == h2))
+   = c.[center |^. v |.^ x |.. v] <- (c.[center |^. v |.^ x |.. v] + delta)
