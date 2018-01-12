@@ -1878,6 +1878,8 @@ and encode_term:
                                 (uu___109_6006.FStar_TypeChecker_Env.type_of);
                               FStar_TypeChecker_Env.universe_of =
                                 (uu___109_6006.FStar_TypeChecker_Env.universe_of);
+                              FStar_TypeChecker_Env.check_type_of =
+                                (uu___109_6006.FStar_TypeChecker_Env.check_type_of);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___109_6006.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qname_and_index =
@@ -5077,6 +5079,8 @@ let encode_free_var:
                                        (uu___117_17090.FStar_TypeChecker_Env.type_of);
                                      FStar_TypeChecker_Env.universe_of =
                                        (uu___117_17090.FStar_TypeChecker_Env.universe_of);
+                                     FStar_TypeChecker_Env.check_type_of =
+                                       (uu___117_17090.FStar_TypeChecker_Env.check_type_of);
                                      FStar_TypeChecker_Env.use_bv_sorts =
                                        (uu___117_17090.FStar_TypeChecker_Env.use_bv_sorts);
                                      FStar_TypeChecker_Env.qname_and_index =
@@ -5706,6 +5710,8 @@ let encode_top_level_let:
                          (uu___120_18573.FStar_TypeChecker_Env.type_of);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___120_18573.FStar_TypeChecker_Env.universe_of);
+                       FStar_TypeChecker_Env.check_type_of =
+                         (uu___120_18573.FStar_TypeChecker_Env.check_type_of);
                        FStar_TypeChecker_Env.use_bv_sorts =
                          (uu___120_18573.FStar_TypeChecker_Env.use_bv_sorts);
                        FStar_TypeChecker_Env.qname_and_index =
