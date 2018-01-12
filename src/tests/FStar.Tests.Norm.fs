@@ -114,7 +114,7 @@ let tests =
   let _ = Pars.pars_and_tc_fragment "let fst_a (x: 'a) (y: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let id_list (x: list 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let id_list_m (x: list tb) = x" in //same as recons_m, but no pattern matching
-  [// (0, (app apply [one; id; nm n]), (nm n))
+  [ //(0, (app apply [one; id; nm n]), (nm n))
   // ; (1, (app id [nm x]), (nm x))
   // ; (1, (app apply [tt; nm n; nm m]), (nm n))
   // ; (2, (app apply [ff; nm n; nm m]), (nm m))
@@ -129,7 +129,9 @@ let tests =
   // ; (11, (minus (encode 10) (encode 10)), z)
   // ; (12, (minus (encode 100) (encode 100)), z)
   // ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
-  // ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
+
+  //// ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
+
   // ; (15, (let_ x (app succ [one])
   //           (let_ y (app mul [nm x; nm x])
   //              (let_ h (app mul [nm y; nm y])
@@ -146,32 +148,33 @@ let tests =
   // ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
   // ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
   // ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
-  // ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
+
+  //// ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  //// ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   // The following do not work for NBE because of type allications.
     // Prims.Int not found
-  // ; (24, (tc "recons [0;1]"), (tc "[0;1]"))
-  // ; (25, (tc "copy [0;1]"), (tc "[0;1]"))
-  // ; (26, (tc "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc "[10;9;8;7;6;5;4;3;2;1;0]"))
-  // ; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
+  //// ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
+  //// ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
+  //// ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
+  //// ; (1062, (Pars.tc_nbe "f (B 5 3)"), (Pars.tc_nbe "2")) 
   // Type defs not yet implemented for NBE
-  // ; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  //// ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))") (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
 
-  // ; (28, (tc "(fun x y z q -> z) T T F T"), (tc "F"))
-  // ; (29, (tc "[T; F]"), (tc "[T; F]"))
-  // ; (31, (tc "id_tb T"), (tc "T"))
-  // ; (32, (tc "(fun #a x -> x) #tb T"), (tc "T"))
-  // ; (33, (tc "revtb T"), (tc "F"))
-  // ; (34, (tc "(fun x y -> x) T F"), (tc "T"))
-  // ; (35, (tc "fst_a T F"), (tc "T"))
-  // ; (36, (tc "idd T"), (tc "T"))
-
-  // ; (301, (tc "id_list [T]"), (tc "[T]"))
-  // ; (3012, (tc "id_list_m [T]"), (tc "[T]"))
-  // ; (302, (tc "recons_m [T]"), (tc "[T]"))
-  (303, (tc "recons [T; F]"), (tc "[T; F]"))
-  // ; (304, (tc "rev [T; F; F]"), (tc "[F; F; T]"))
-  // ; (305, (tc "rev [[T]; [F; T]]"), (tc "[[F; T]; [T]]"))
+  // ; (28, (tc_nbe "(fun x y z q -> z) T T F T"), (tc_nbe "F"))
+  // ; (29, (tc_nbe "[T; F]"), (tc_nbe "[T; F]"))
+  // ; (31, (tc_nbe "id_tb T"), (tc_nbe "T"))
+  // ; (32, (tc_nbe "(fun #a x -> x) #tb T"), (tc_nbe "T"))
+  // ; (33, (tc_nbe "revtb T"), (tc_nbe "F"))
+  // ; (34, (tc_nbe "(fun x y -> x) T F"), (tc_nbe "T"))
+  // ; (35, (tc_nbe "fst_a T F"), (tc_nbe "T"))
+  // ; (36, (tc_nbe "idd T"), (tc_nbe "T"))
+  // ; (301, (tc_nbe "id_list [T]"), (tc_nbe "[T]"))
+  // ; (3012, (tc_nbe "id_list_m [T]"), (tc_nbe "[T]"))
+  // ; (302, (tc_nbe "recons_m [T]"), (tc_nbe "[T]"))
+  (302, (tc_nbe "idd T"), (tc_nbe "T"));
+  (303, (tc_nbe "recons [T; F]"), (tc_nbe "[T; F]"))
+  // ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
+  // ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
   ]
 
 
@@ -184,7 +187,7 @@ let run_either i r expected normalizer =
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
-    ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
+    // ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
 //    BU.print1 "result = %s\n" (P.term_to_string x);
 //    BU.print1 "expected = %s\n\n" (P.term_to_string expected);
     always i (term_eq (U.unascribe x) expected)
@@ -248,12 +251,12 @@ let run_nbe_tac () =
        open FStar.Tactics.Effect" in
 
     // let s0 = "" in
-    // BU.print1 "Term: %s\n" (P.term_to_string (tc s0));
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc_nbe s0));
 
     let s1 = "FStar.Tactics.Effect.assert_by_tactic (True ==> False \/ True) (
                 FStar.Tactics.Logic.implies_intro;;
                 FStar.Tactics.Logic.left)" in
-    BU.print1 "Term: %s\n" (P.term_to_string (tc s1));
+    BU.print1 "Term: %s\n" (P.term_to_string (tc_nbe s1));
 // Term: FStar.Tactics.Effect.assert_by_tactic (Test.a u#_ ==> Test.a u#_ \/ Prims.l_True)
 //   (FStar.Tactics.Effect.bind u#_
 //       u#_
@@ -266,7 +269,7 @@ let run_nbe_tac () =
     //             FStar.Tactics.Effect.bind (FStar.Tactics.Logic.implies_intro)
     //               (fun x -> FStar.Tactics.Effect.bind (FStar.Tactics.Logic.right)
     //                  (fun y -> FStar.Tactics.Effect.return () )))" in
-    // BU.print1 "Term: %s\n" (P.term_to_string (tc s2));
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc_nbe s2));
 // Term: FStar.Tactics.Effect.assert_by_tactic (Prims.l_True ==> Prims.l_False \/ Prims.l_True)
 //   (FStar.Tactics.Effect.bind u#_
 //       u#_
@@ -284,28 +287,28 @@ let run_nbe_tac () =
 
     // let s3 = "FStar.Tactics.Effect.reify_tactic (FStar.Tactics.Effect.trace_wrap (FStar.Tactics.Effect.bind FStar.Tactics.Logic.right
     //       (fun x -> FStar.Tactics.Logic.right)))" in
-    // BU.print1 "Term: %s\n" (P.term_to_string (tc s3));
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc_nbe s3));
 
     // let s4 = "FStar.Tactics.Effect.__by_tactic (FStar.Tactics.Effect.reify_tactic (FStar.Tactics.Effect.trace_wrap
     //       FStar.Tactics.Logic.right))
     // (Prims.squash (Prims.l_False \/ Prims.l_True))" in
-    // BU.print1 "Term: %s\n" (P.term_to_string (tc s4));
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc_nbe s4));
 
-     // run_tac_interpreter 11 (tc s1) (tc "()");
-     run_interpreter 12 (tc s1) (tc "()");
-     run_nbe 13 (tc s1) (tc "()")
+     // run_tac_interpreter 11 (tc_nbe s1) (tc_nbe "()");
+     run_interpreter 12 (tc_nbe s1) (tc_nbe "()");
+     run_nbe 13 (tc_nbe s1) (tc_nbe "()")
 
-     // run_tac_interpreter 11 (tc s1) (tc "()");
-     // run_interpreter 12 (tc s1) (tc "()");
-     // run_nbe 13 (tc s1) (tc "()");
+     // run_tac_interpreter 11 (tc_nbe s1) (tc_nbe "()");
+     // run_interpreter 12 (tc_nbe s1) (tc_nbe "()");
+     // run_nbe 13 (tc_nbe s1) (tc_nbe "()");
 
-     // run_tac_interpreter 31 (tc s3) (tc "()");
-     // run_interpreter 32 (tc s3) (tc "()");
-     // run_nbe 33 (tc s3) (tc "()")
+     // run_tac_interpreter 31 (tc_nbe s3) (tc_nbe "()");
+     // run_interpreter 32 (tc_nbe s3) (tc_nbe "()");
+     // run_nbe 33 (tc_nbe s3) (tc_nbe "()")
 
-     // run_tac_interpreter 41 (tc s4) (tc "()");
-     // run_interpreter 42 (tc s4) (tc "()");
-     // run_nbe 43 (tc s4) (tc "()")
+     // run_tac_interpreter 41 (tc_nbe s4) (tc_nbe "()");
+     // run_interpreter 42 (tc_nbe s4) (tc_nbe "()");
+     // run_nbe 43 (tc_nbe s4) (tc_nbe "()")
 
 
 let compare_times l_int l_nbe =

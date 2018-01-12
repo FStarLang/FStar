@@ -58,19 +58,34 @@ and t = //JUST FSHARP
   | Lam of (t -> t) * aqual
   | Accu of atom * list<(t * aqual)>
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
+  | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
 
 type head = t
 type annot = option<t>
 
+let rec t_to_string (x:t) =
+    match x with
+    | Lam _ -> "Lam"
+    | Accu (a, l) -> "Accu (" ^ (atom_to_string a) ^ ") (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
+    | Construct (fv, us, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^ (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
+    | Unit -> "Unit"
+    | Bool b -> if b then "Bool true" else "Bool false"
+
+and atom_to_string (a: atom) =
+    match a with
+    | Var v -> "Var " ^ (P.bv_to_string v)
+    | Type u -> "Type " ^ (P.univ_to_string u)
+    | Match (t, _) -> "Match " ^ (t_to_string t)
+    | Rec (_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+
 let is_not_accu (x:t) =
   match x with
   | Accu (_, _) -> false
   | _ -> true
 
-let mkConstruct i ts = Construct(i,ts)
+let mkConstruct i us ts = Construct(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
@@ -83,12 +98,23 @@ let isAccu (trm:t) =
   | Accu _ -> true
   | _ -> false
 
-let rec pickBranch (c : fv) (branches : list<branch>) : term =
+let isAccuTyp (x:t) =
+  match x with
+  | Accu(Type _, _) -> true
+  | _ -> false
+
+let rec pickBranch (c : fv) (branches : list<branch>) (args: list<t * aqual>) = // : term * list<t>  =
   match branches with
   | [] -> failwith "Branch not found"
-  | ({v = Pat_cons (c', args)}, _, e) :: bs when (fv_eq c c') ->
-    e
-  | b :: bs -> pickBranch c bs
+  | ({v = Pat_cons (c', pats')}, _, e) :: bs when (fv_eq c c') ->
+      assert (List.length args = List.length pats');
+      debug (fun () -> BU.print1 ">>>> args: %s\n" (String.concat "; " (List.map (fun (x, _) -> t_to_string x) args)));
+      let args2 = List.filter_map (fun x -> x) <| List.map2 (fun (p,_) (a,_) -> match p.v with Pat_dot_term _ -> None | _ when (not (isAccuTyp a)) (*Nik:  when it's not a universe*)  -> Some a) pats' args in
+      debug (fun () -> BU.print1 ">>>> args2: %s\n" (String.concat "; " (List.map (fun x -> t_to_string x) args2)));
+      // (e, (List.map (fun (x, _) -> x) args))
+      (e, args)
+      //(e, args2)
+  | b :: bs -> pickBranch c bs args
 
 (* Tests is the application is full and if none of the arguments is symbolic *)
 let rec test_args ts cnt =
@@ -133,22 +159,6 @@ let rec count_abstractions (t : term) : int =
        *)
     | Tm_meta (t, _)
     | Tm_ascribed (t, _, _) -> count_abstractions t
-
-
-let rec t_to_string (x:t) =
-    match x with
-    | Lam _ -> "Lam"
-    | Accu (a, l) -> "Accu (" ^ (atom_to_string a) ^ ") (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
-    | Construct (fv, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
-    | Unit -> "Unit"
-    | Bool b -> if b then "Bool true" else "Bool false"
-
-and atom_to_string (a: atom) =
-    match a with
-    | Var v -> "Var " ^ (P.bv_to_string v)
-    | Type u -> "Type " ^ (P.univ_to_string u)
-    | Match (t, _) -> "Match " ^ (t_to_string t)
-    | Rec (_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 
 (* XXX unused *)
@@ -198,7 +208,7 @@ let rec app (f:t) (x:t) (q:aqual) =
   match f with
   | Lam (f, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
-  | Construct (i, ts) -> Construct (i, (x,q)::ts)
+  | Construct (i, us, ts) -> Construct (i, us, (x,q)::ts)
   | Unit
   | Bool _ -> failwith "Ill-typed application"
 
@@ -206,6 +216,43 @@ and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
   | [] -> f
   | _ -> iapp (app f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
+
+and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
+  let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
+  //VD: for now, also search in local environment (local definitions are not part of env.sigtab)
+  match List.find BU.is_some [find_sigelt_in_gamma env fvar.fv_name.v; find_in_sigtab env fvar.fv_name.v] with
+   | Some elt ->
+     (match elt with
+      | Some { sigel = Sig_let ((is_rec, [lb]), _) } ->
+        if is_rec then
+          mkAccuRec lb []
+        else
+          begin
+             debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
+             debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
+             let t = SS.compress lb.lbdef in
+             let x = (S.new_bv None S.tun, None) in
+             let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
+             app (translate env bs t') (translate_univ env bs (List.hd us)) None
+             // translate env [] lb.lbdef
+          end
+      | Some { sigel = Sig_datacon(_, _, _, _, _, []) } ->
+          mkConstruct fvar us []
+      // VD: This was a stopgap for definitions not found in environment:
+      // | Some { sigel = Sig_declare_typ(lid, univs, ty) } ->
+      //     (match (SS.compress ty).n with
+      //      | Tm_type u -> mkAccuTyp u
+      //      | _ -> failwith "impossible?")
+      | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
+          mkConstruct fvar us []
+      | None ->
+          mkConstruct fvar us [] (* Zoe : Treat all other cases as type/data constructors for now. *)
+      | Some s ->
+          BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
+     )
+   | None ->
+       mkConstruct fvar us [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
+
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
@@ -231,14 +278,22 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_uinst (t, [u]) ->
       debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (P.univ_to_string u));
-      let tr = translate env bs t in
-      (match tr with
-       | Lam _ ->
-           let x = (S.new_bv None S.tun, None) in
-           let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
-           app (translate env bs t') (translate_univ env bs u) None
-       | _ ->
-           app tr (translate_univ env bs u) None)
+      (match (SS.compress t).n with
+       | Tm_fvar fv ->
+          translate_fv env bs [u] fv
+          // let tr = translate env bs t in
+          // //t is always an fv
+          // // specialize the definition of t for u (if it has one, i.e. not a constructor)
+          // // don't do this here, but when looking up def of fv; if it's a constructor, just mkConstructor
+          // (match tr with
+          //  | Lam _ ->
+          //      let x = (S.new_bv None S.tun, None) in
+          //      let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
+          //      app (translate env bs t') (translate_univ env bs u) None
+          //  | _ ->
+          //      app tr (translate_univ env bs u) None)
+
+       | _ -> failwith "Expected an fv")
 
     | Tm_uinst (t, _) ->
       debug (fun () -> BU.print1 "Term with univs: %s\n" (P.term_to_string t));
@@ -271,37 +326,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       translate env bs tm
 
     | Tm_fvar fvar ->
-      let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
-      //VD: for now, also search in local environment (local definitions are not part of env.sigtab)
-      (match List.find BU.is_some [find_sigelt_in_gamma env fvar.fv_name.v; find_in_sigtab env fvar.fv_name.v] with
-       | Some elt ->
-         (match elt with
-          | Some { sigel = Sig_let ((is_rec, [lb]), _) } ->
-            if is_rec then
-              mkAccuRec lb []
-            else
-              begin
-                 debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
-                 debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-                 translate env [] lb.lbdef
-              end
-          | Some { sigel = Sig_datacon(_, _, _, _, _, []) } ->
-              mkConstruct fvar []
-          // VD: This was a stopgap for definitions not found in environment:
-          // | Some { sigel = Sig_declare_typ(lid, univs, ty) } ->
-          //     (match (SS.compress ty).n with
-          //      | Tm_type u -> mkAccuTyp u
-          //      | _ -> failwith "impossible?")
-          | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
-              mkConstruct fvar []
-          | None ->
-              mkConstruct fvar [] (* Zoe : Treat all other cases as type/data constructors for now. *)
-          | Some s ->
-              BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
-         )
-       | None ->
-           mkConstruct fvar [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
-       )
+        translate_fv env bs [] fvar
 
     | Tm_app (e, [arg]) ->
       debug (fun () -> BU.print2 "Application %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
@@ -316,18 +341,14 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
         match scrut with
-        | Construct(c, args) -> (* Scrutinee is a constructed value *)
+        | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
              are binders -- i.e. no nested patterns for now *)
           (* XXX : is rev needed?  VD: I don't think so *)
-
-          // VD: Not passing implicit arguments and accumulators, since de Bruijn indices in bound variables don't count them
-          //     Not really a solution, but I'm not sure what the underlying issue is here
-          let args = List.filter (fun (x, q) -> not (BU.is_some q) && is_not_accu x) args in
           debug (fun () -> BU.print1 "Match args: %s\n" (String.concat "; " (List.map (fun (x, q) -> (if BU.is_some q then "#" else "") ^(t_to_string x)) args)));
-
-          let branch = translate env ((List.map (fun (x, _) -> x) args) @ bs) (pickBranch c branches) in
-          branch
+          let branch, args = (pickBranch c branches args) in
+          // translate env (args @ bs) branch
+          translate env ((List.map (fun (x, _) -> x) args) @ bs) branch
         | _ ->
           mkAccuMatch scrut case
       in
@@ -363,15 +384,17 @@ and readback (env:Env.env) (x:t) : term =
       let body = readback env (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
-    | Construct (fv, args) ->
+    | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) args in
       (match args with
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
        | h::hs ->
          // VD: This will currently not do the right thing if there's more than one universe variable
-         (match (fst h).n with
-          | Tm_type u -> U.mk_app (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) [u]) hs
-          | _ -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args ))
+         //(match (fst h).n with
+         (match us with
+          | [u] (* Tm_type u *) -> U.mk_app (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) [u]) hs
+          | [] -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args
+          | _ -> failwith "Case not handled" ))
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv
