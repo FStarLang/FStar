@@ -120,7 +120,7 @@ let return (#a:Type) (x:a) :st a =
   fun s -> x, s
 
 unfold
-let bind (#a:Type) (#b:Type) _rng (m:st a) (f:a -> st b) :st b =
+let bind (#a:Type) (#b:Type) (m:st a) (f:a -> st b) :st b =
 fun s0 ->
   let x, s1 = m s0 in
   let y, s2 = f x s1 in

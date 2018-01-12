@@ -7,7 +7,7 @@ let st t = int -> t * int
 let return (x : 'a) : st 'a =
     fun s -> (x, s)
 
-let bind _rng (m : st 'a) (f : 'a -> st 'b) : st 'b =
+let bind (m : st 'a) (f : 'a -> st 'b) : st 'b =
     fun s -> let (x, s') = m s in f x s'
 
 let get () : st int =

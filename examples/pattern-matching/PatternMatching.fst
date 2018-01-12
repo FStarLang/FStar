@@ -274,7 +274,6 @@ let return #a (x: a) : match_res a =
   Success x
 
 let bind (#a #b: Type)
-         _rng
          (f: match_res a)
          (g: a -> match_res b)
     : match_res b =

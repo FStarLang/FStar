@@ -92,7 +92,7 @@ let rec concatMap_flatten_map #a #b (f:a -> list b) l :
    This version may answer some of the questions above. *)
 
 (* These utilities are better moved to the squash library *)
-let bind _rng = FStar.Squash.bind_squash
+let bind = FStar.Squash.bind_squash
 let return = FStar.Squash.return_squash
 let pure_as_squash (#a:Type) 
                    (#p:_)
