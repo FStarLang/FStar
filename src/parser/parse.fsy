@@ -49,6 +49,8 @@ open FStar.String
 %token DOLLAR
 %token DOT
 %token DOT_LBRACK
+%token DOT_LBRACK_BAR
+%token DOT_LENS_PAREN_LEFT
 %token DOT_LPAREN
 %token EFFECT
 %token ELSE
@@ -114,6 +116,8 @@ open FStar.String
 %token <string> OPINFIX3
 %token <string> OPINFIX4
 %token <string> OPPREFIX
+%token <string> OP_MIXFIX_ACCESS
+%token <string> OP_MIXFIX_ASSIGNMENT
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
 %token PRAGMALIGHT
@@ -458,6 +462,24 @@ let x =
                                ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
     ( [ x ] )}
+| DOT_LBRACK_BAR term RBRACE
+    {let (_10, e0, _30) = ((), $2, ()) in
+let x =
+  let _3 = _30 in
+  let e = e0 in
+  let _1 = _10 in
+                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
+in
+    ( [ x ] )}
+| DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT
+    {let (_10, e0, _30) = ((), $2, ()) in
+let x =
+  let _3 = _30 in
+  let e = e0 in
+  let _1 = _10 in
+                                                  ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 )
+in
+    ( [ x ] )}
 | DOT_LPAREN term RPAREN nonempty_list_dotOperator_
     {let (_10, e0, _30, xs) = ((), $2, (), $4) in
 let x =
@@ -474,6 +496,24 @@ let x =
   let e = e0 in
   let _1 = _10 in
                                ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 )
+in
+    ( x :: xs )}
+| DOT_LBRACK_BAR term RBRACE nonempty_list_dotOperator_
+    {let (_10, e0, _30, xs) = ((), $2, (), $4) in
+let x =
+  let _3 = _30 in
+  let e = e0 in
+  let _1 = _10 in
+                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
+in
+    ( x :: xs )}
+| DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT nonempty_list_dotOperator_
+    {let (_10, e0, _30, xs) = ((), $2, (), $4) in
+let x =
+  let _3 = _30 in
+  let e = e0 in
+  let _1 = _10 in
+                                                  ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
     ( x :: xs )}
 
@@ -1138,6 +1178,20 @@ let op =
        ( mk_ident("::", rhs parseState 1) )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN OP_MIXFIX_ASSIGNMENT RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let op =
+  let op = op0 in
+       ( mk_ident(op, rhs parseState 1) )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN OP_MIXFIX_ACCESS RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let op =
+  let op = op0 in
+       ( mk_ident(op, rhs parseState 1) )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | UNDERSCORE
     {let _1 = () in
       ( mk_pattern PatWild (rhs parseState 1) )}
@@ -1399,6 +1453,20 @@ let id =
        ( mk_ident("::", rhs parseState 1) )
 in
     ( {id with idText = compile_op' id.idText id.idRange} )}
+| LPAREN OP_MIXFIX_ASSIGNMENT RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let id =
+  let op = op0 in
+       ( mk_ident(op, rhs parseState 1) )
+in
+    ( {id with idText = compile_op' id.idText id.idRange} )}
+| LPAREN OP_MIXFIX_ACCESS RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let id =
+  let op = op0 in
+       ( mk_ident(op, rhs parseState 1) )
+in
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 
 lidentOrUnderscore:
   IDENT
@@ -1478,6 +1546,30 @@ let op_expr =
   let e = e0 in
   let _1 = _10 in
                                ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 )
+in
+      (
+        let (op, e2, _) = op_expr in
+        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+      )}
+| atomicTermNotQUident DOT_LBRACK_BAR term RBRACE LARROW noSeqTerm
+    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+let op_expr =
+  let _3 = _30 in
+  let e = e0 in
+  let _1 = _10 in
+                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
+in
+      (
+        let (op, e2, _) = op_expr in
+        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+      )}
+| atomicTermNotQUident DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT LARROW noSeqTerm
+    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+let op_expr =
+  let _3 = _30 in
+  let e = e0 in
+  let _1 = _10 in
+                                                  ( mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
       (
         let (op, e2, _) = op_expr in
@@ -2118,6 +2210,20 @@ in
 let op =
   let op = op0 in
        ( mk_ident("::", rhs parseState 1) )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN OP_MIXFIX_ASSIGNMENT RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let op =
+  let op = op0 in
+       ( mk_ident(op, rhs parseState 1) )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN OP_MIXFIX_ACCESS RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let op =
+  let op = op0 in
+       ( mk_ident(op, rhs parseState 1) )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
