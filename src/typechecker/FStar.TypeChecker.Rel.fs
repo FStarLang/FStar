@@ -743,9 +743,9 @@ let head_match = function
 
 let and_match m1 m2 =
     match m1 with
-    | MisMatch i -> MisMatch i
+    | MisMatch (i, j) -> MisMatch (i, j)
     | HeadMatch -> begin match m2 () with
-                   | MisMatch j -> MisMatch j
+                   | MisMatch (i,j) -> MisMatch (i, j)
                    | _ -> HeadMatch
                    end
     | FullMatch -> m2 ()
