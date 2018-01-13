@@ -629,8 +629,6 @@ let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
   = witnessed_forall_2 #mem #mem_rel #c (fun h x -> p x h); 
     gst_recall (fun h -> forall (x:c) . p x h)
 
-//witnessed #mem #mem_rel p
-
 let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
   :ST unit (requires (fun _       -> True))
