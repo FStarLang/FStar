@@ -68,12 +68,19 @@ val witnessed_impl : #state:Type
                   -> Lemma (requires (witnessed #state #rel (fun s -> p s ==> q s) /\ witnessed #state #rel p))
                            (ensures  (witnessed #state #rel q))
 
-val witnessed_forall : #state:Type
-                    -> #rel:preorder state
-                    -> #t:Type0
-                    -> p:(state -> t -> Type0) 
-                    -> Lemma (requires (witnessed #state #rel (fun s -> forall x . p s x)))
-                             (ensures  (forall x . witnessed #state #rel (fun s -> p s x)))
+val witnessed_forall_1 : #state:Type
+                      -> #rel:preorder state
+                      -> #t:Type0
+                      -> p:(state -> t -> Type0) 
+                      -> Lemma (requires (witnessed #state #rel (fun s -> forall x . p s x)))
+                               (ensures  (forall x . witnessed #state #rel (fun s -> p s x)))
+
+val witnessed_forall_2 : #state:Type
+                      -> #rel:preorder state
+                      -> #t:Type0
+                      -> p:(state -> t -> Type0) 
+                      -> Lemma (requires (forall x . witnessed #state #rel (fun s -> p s x)))
+                               (ensures  (witnessed #state #rel (fun s -> forall x . p s x)))
 
 val witnessed_exists : #state:Type
                     -> #rel:preorder state

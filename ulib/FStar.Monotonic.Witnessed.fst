@@ -309,7 +309,10 @@ let witnessed_or #state #rel p q = ()
 let witnessed_impl #state #rel p q = 
   get_and_2 (fun s -> forall s' . rel s s' ==> p s' ==> q s') (fun s -> forall s' . rel s s' ==> p s')
 
-let witnessed_forall #state #rel #t p = ()
+let witnessed_forall_1 #state #rel #t p = ()
+
+let witnessed_forall_2 #state #rel #t p = 
+  get_forall_2 #state #t (fun s x -> forall s' . rel s s' ==> p s' x)
 
 let witnessed_exists #state #rel #t p = ()
 
