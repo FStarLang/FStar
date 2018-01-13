@@ -145,8 +145,9 @@ type mlpattern =
 | MLP_Tuple  of list<mlpattern>
 
 
+(* metadata, suitable for either the C or the OCaml backend *)
 type meta =
-  | Mutable
+  | Mutable (* deprecated *)
   | Assumed
   | Private
   | NoExtract
@@ -156,6 +157,7 @@ type meta =
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
   | Comment of string
+  | StackInline
 
 // rename
 type metadata = list<meta>
@@ -197,10 +199,11 @@ and mllb = {
     mllb_tysc:option<mltyscheme>; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
+    mllb_meta:metadata;
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * metadata * list<mllb>
+and mlletbinding = mlletflavor * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty

@@ -230,8 +230,10 @@ let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
           let ct = {ct with flags=fs} in
           {c with n=Comp ct}
     in
-    {lc with cflags=fs;
-             comp=(fun () -> comp_typ_set_flags (lc.comp())) }
+    Syntax.mk_lcomp lc.eff_name
+                    lc.res_typ
+                    fs
+                    (fun () -> comp_typ_set_flags (lcomp_comp lc))
 
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
@@ -471,6 +473,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         ) else NotEqual
     in
     match t1.n, t2.n with
+    // We sometimes compare open terms, as we get alpha-equivalence
+    // for free.
+    | Tm_bvar bv1, Tm_bvar bv2 ->
+      equal_if (bv1.index = bv2.index)
+
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
@@ -951,6 +958,11 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
+let mk_with_type u t e =
+    let t_with_type = fvar PC.with_type_lid Delta_equational None in
+    let t_with_type = mk (Tm_uinst(t_with_type, [u])) None dummyRange in
+    mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
+
 let lex_t    = fvar_const PC.lex_t_lid
 let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid Delta_constant (Some Data_ctor), [U_zero])) None dummyRange
 let lex_pair = fvar PC.lexcons_lid Delta_constant (Some Data_ctor)
@@ -963,10 +975,7 @@ let lcomp_of_comp c0 =
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
-    {eff_name = eff_name;
-     res_typ = comp_result c0;
-     cflags = flags;
-     comp = fun() -> c0}
+    Syntax.mk_lcomp eff_name (comp_result c0) flags (fun () -> c0)
 
 let mk_residual_comp l t f = {
     residual_effect=l;

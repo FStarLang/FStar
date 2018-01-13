@@ -628,4 +628,13 @@ let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
            (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
   = admit ()
 
+let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
+  ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
+  :ST unit (requires (fun _       -> True))
+           (ensures  (fun h0 _ h1 -> h0 == h1 /\
+	                          (forall (x:c). (not (is_eternal_region (p x))) \/ h1.h `Map.contains` (p x))))
+  = let p' (x:c) :mem_predicate = region_contains_pred (p x) in
+    let s:squash (forall (x:c). witnessed (p' x)) = () in
+    testify_forall s
+
 type ex_rid = r:rid{is_eternal_region r /\ witnessed (region_contains_pred r)}

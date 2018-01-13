@@ -233,8 +233,8 @@ Guidelines for the changelog:
   corresponding APIs for `contains`, `modifies`, etc.
 
   Client should now only work with `FStar.HyperStack`, in fact `open
-  FStar.HyperHeap` will now give an error. Following is a mapping from
-  `HH` (`HyperHeap`) API to `HS` (`HyperStack`) API:
+  FStar.HyperHeap` will now give an error. Following is a (partial)
+  mapping from `HH` (`HyperHeap`) API \to `HS` (`HyperStack`) API:
 
   1. `HH.contains_ref` --> `HS.contains`
   2. `HH.fresh_rref` --> `HS.fresh_ref`
@@ -242,6 +242,11 @@ Guidelines for the changelog:
   4. `HH.modifies` --> `HS.modifies_transitively`
   5. `HH.modifies_just` --> `HS.modifies`
   6. `HH.modifies_one` --> `HS.modifies_one`
+  7. ...
+  
+  For a complete list of the mapping implemented as a crude script to
+  rewrite source files, see:
+  https://github.com/mitls/mitls-fstar/blob/quic2c/src/tls/renamings.sh
 
   `HyperHeap` now only provides the map structure of the memory, and
   is `include`d in `HyperStack`, meaning client now get `HS.rid`,

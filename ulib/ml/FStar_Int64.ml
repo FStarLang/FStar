@@ -67,3 +67,4 @@ let op_Less_Equals_Hat = lte
 
 let to_string = Int64.to_string                     
 let int_to_t s = int_to_int64 s
+let __int_to_t = int_to_t
