@@ -66,3 +66,4 @@ let op_Less_Equals_Hat = lte
 
 let to_string = string_of_int
 let int_to_t s = s
+let __int_to_t = int_to_t

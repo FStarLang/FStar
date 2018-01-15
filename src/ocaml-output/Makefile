@@ -109,7 +109,7 @@ fstar.exe: $(GENERATED_FILES)
 
 install-compiler-lib: fstar.exe
 	mkdir -p ../../bin/fstar-compiler-lib/
-	$(FIND) -name "*.cm[ix]" -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	$(FIND) -name "*.cmi" -exec cp {} ../../bin/fstar-compiler-lib/ \;
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules

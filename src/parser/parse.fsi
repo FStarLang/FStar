@@ -50,6 +50,8 @@ type token =
   | PRAGMALIGHT
   | PIPE_RIGHT
   | PERCENT_LBRACK
+  | OP_MIXFIX_ASSIGNMENT of (string)
+  | OP_MIXFIX_ACCESS of (string)
   | OPPREFIX of (string)
   | OPINFIX4 of (string)
   | OPINFIX3 of (string)
@@ -115,6 +117,8 @@ type token =
   | ELSE
   | EFFECT
   | DOT_LPAREN
+  | DOT_LENS_PAREN_LEFT
+  | DOT_LBRACK_BAR
   | DOT_LBRACK
   | DOT
   | DOLLAR
@@ -188,6 +192,8 @@ type tokenId =
     | TOKEN_PRAGMALIGHT
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
+    | TOKEN_OP_MIXFIX_ASSIGNMENT
+    | TOKEN_OP_MIXFIX_ACCESS
     | TOKEN_OPPREFIX
     | TOKEN_OPINFIX4
     | TOKEN_OPINFIX3
@@ -253,6 +259,8 @@ type tokenId =
     | TOKEN_ELSE
     | TOKEN_EFFECT
     | TOKEN_DOT_LPAREN
+    | TOKEN_DOT_LENS_PAREN_LEFT
+    | TOKEN_DOT_LBRACK_BAR
     | TOKEN_DOT_LBRACK
     | TOKEN_DOT
     | TOKEN_DOLLAR

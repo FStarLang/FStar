@@ -12,6 +12,7 @@ type byte = u8
 type bytes = string
 type cbytes = string (* not in FStar.Bytes *)
 
+let len (b:bytes) = String.length b
 let length (b:bytes) = Z.of_int (String.length b)
 
 let reveal (b:bytes) = ()
@@ -30,7 +31,7 @@ let get (b:bytes) (pos:u32) = int_of_char (String.get b pos)
 let op_String_Access = get
 
 let set_byte (bs:bytes) (pos:u32) (b:byte) =
-    Bytes.set (Bytes.copy bs) pos (char_of_int b)
+    let x = (Bytes.copy bs) in Bytes.set x pos (char_of_int b); x
 let op_String_Assignment = set_byte
 let index (b:bytes) (i:Z.t) = get b (Z.to_int i)
 
@@ -140,6 +141,7 @@ let xor_idempotent (n:U32.t) (b1:bytes) (b2:bytes) = ()
 (*********************************************************************************)
 (* Under discussion *)
 let utf8 (x:string) : bytes = x (* TODO: use Camomile *)
+let utf8_encode = utf8
 let iutf8 (x:bytes) : string = x (* TODO: use Camomile *)
 let iutf8_opt (x:bytes) : string option = Some (x)
 (*********************************************************************************)
