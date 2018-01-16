@@ -7625,9 +7625,7 @@ let rec type_of_well_typed_term:
       | FStar_Syntax_Syntax.Tm_delayed uu____18087 -> failwith "Impossible"
       | FStar_Syntax_Syntax.Tm_bvar uu____18114 -> failwith "Impossible"
       | FStar_Syntax_Syntax.Tm_name x ->
-          let uu____18118 =
-            let uu____18119 = FStar_TypeChecker_Env.lookup_bv env x in
-            FStar_Pervasives_Native.fst uu____18119 in
+          let uu____18118 = x.FStar_Syntax_Syntax.sort in
           FStar_Pervasives_Native.Some uu____18118
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           let uu____18125 =

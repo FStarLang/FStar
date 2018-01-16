@@ -2463,7 +2463,7 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   | Tm_bvar _ -> failwith "Impossible"
 
   | Tm_name x ->
-    Some (fst (Env.lookup_bv env x))
+    Some x.sort
 
   | Tm_fvar fv ->
     bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->
