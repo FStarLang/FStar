@@ -907,6 +907,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     in
     let output_ml_file = output_file ".ml" in
     let output_krml_file = output_file ".krml" in
+    let output_cmx_file = output_file ".cmx" in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
@@ -924,7 +925,24 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then (
             Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f);
-            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
+            let cmx_files =
+                let fst_files =
+                    f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
+                in
+                let extracted_fst_files =
+                    fst_files |> List.filter (fun f ->
+                        is_implementation f &&
+                        (let mname = lowercase_module_name f in
+                         Options.should_extract mname))
+                in
+                extracted_fst_files |> List.map output_cmx_file
+            in
+           if Options.should_extract (lowercase_module_name f)
+           then Util.print3 "%s: %s \\\n\t%s\n\n"
+                        (output_cmx_file f)
+                        (output_ml_file f)
+                        (String.concat " \\\n\t" cmx_files);
+           Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
           ) else if not(has_implementation file_system_map (lowercase_module_name f))
                  && is_interface f then (
             // .krml files can be produced using just an interface, unlike .ml files
