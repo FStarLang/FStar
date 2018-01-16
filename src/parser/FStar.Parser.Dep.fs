@@ -931,9 +931,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                 in
                 let extracted_fst_files =
                     fst_files |> List.filter (fun f ->
-                        is_implementation f &&
-                        (let mname = lowercase_module_name f in
-                         Options.should_extract mname))
+                        Options.should_extract (lowercase_module_name f))
                 in
                 extracted_fst_files |> List.map output_cmx_file
             in

@@ -1349,10 +1349,10 @@ let print_full: deps -> Prims.unit =
                                FStar_All.pipe_right fst_files
                                  (FStar_List.filter
                                     (fun f1  ->
-                                       (is_implementation f1) &&
-                                         (let mname =
-                                            lowercase_module_name f1 in
-                                          FStar_Options.should_extract mname))) in
+                                       let uu____4454 =
+                                         lowercase_module_name f1 in
+                                       FStar_Options.should_extract
+                                         uu____4454)) in
                              FStar_All.pipe_right extracted_fst_files
                                (FStar_List.map output_cmx_file) in
                            (let uu____4460 =
