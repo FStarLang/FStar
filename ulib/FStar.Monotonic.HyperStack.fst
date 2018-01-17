@@ -392,11 +392,13 @@ noeq type some_ref =
 
 let some_refs = list some_ref
 
+[@"opaque_to_smt"]
 private let rec regions_of_some_refs (rs:some_refs) :Tot (Set.set rid) =
   match rs with
   | []         -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton (frameOf r)) (regions_of_some_refs tl)
 
+[@"opaque_to_smt"]
 private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
   match rs with
   | []         -> Set.empty
@@ -404,21 +406,25 @@ private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
     Set.union (if frameOf x = r then Set.singleton (as_addr x) else Set.empty)
               (refs_in_region r tl)
 
+[@"opaque_to_smt"]
 private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot Type0 =
   match i with
   | []         -> True
   | (Ref x)::tl ->
-    (modifies_ref (frameOf x) (refs_in_region (frameOf x) rs) h0 h1 /\
-     modifies_some_refs tl rs h0 h1)
+    (modifies_ref (frameOf x) (refs_in_region (frameOf x) rs) h0 h1) /\
+    (modifies_some_refs tl rs h0 h1)
 
+[@"opaque_to_smt"]
+unfold private let norm_steps :list norm_step =
+  [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
+                            "FStar.Monotonic.HyperStack.refs_in_region";
+                            "FStar.Monotonic.HyperStack.modifies_some_refs"];
+   primops]
+
+[@"opaque_to_smt"]
 unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
-  norm [delta;
-        delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
-                    "FStar.Monotonic.HyperStack.refs_in_region";
-                    "FStar.Monotonic.HyperStack.modifies_some_refs"];
-        primops]
-       (modifies (regions_of_some_refs rs) h0 h1 /\
-        modifies_some_refs rs rs h0 h1)
+       (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
+       (norm norm_steps (modifies_some_refs rs rs h0 h1))
 
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
