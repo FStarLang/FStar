@@ -96,7 +96,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "2450acdf7a2f06b65e7ffd37b03e4fa6"
+      "fcb02b6ca1acf4ef131a0654ae85b0e3"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -333,7 +333,7 @@
         "typing_FStar.OrdSet.sorted", "typing_Prims.uu___is_Nil"
       ],
       0,
-      "925d189a0ac81ac18fc92d6539bdf288"
+      "5b39fe612c4ff7bb737c1ff99b40bfdc"
     ],
     [
       "FStar.OrdSet.subset",
