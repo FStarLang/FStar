@@ -1287,7 +1287,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     let when_clause = conjoin_opt wopt when_opt in
                     p, (when_clause, f_when), (mlbranch, f_branch, t_branch)))
                 true in
-             let mlbranches = List.flatten mlbranches in
+             let mlbranches : list<(mlpattern * (option<mlexpr> * e_tag) * (mlexpr * e_tag * mlty))>
+               = List.flatten mlbranches in
              //if the type of the pattern isn't compatible with the type of the scrutinee
              //    insert a magic around the scrutinee
              let e = if pat_t_compat
