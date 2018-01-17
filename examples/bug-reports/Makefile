@@ -68,7 +68,7 @@ SHOULD_NOT_VERIFY_CLOSED=bug035.fst bug043.fst bug044.fst bug063.fst bug120.fst 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.
 SHOULD_NOT_VERIFY_BROKEN=
-SHOULD_NOT_VERIFY_OPEN=bug151.fst bug1041.fst bug1056.fst
+SHOULD_NOT_VERIFY_OPEN=bug151.fst bug1041.fst bug1056.fst bug1368.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_NOT_VERIFY_CLOSED.
