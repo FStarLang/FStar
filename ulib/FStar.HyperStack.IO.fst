@@ -2,4 +2,5 @@ module FStar.HyperStack.IO
 
 open FStar.HyperStack.All
 
-assume val print_string: Prims.string -> Dv unit
+let print_string (s:Prims.string) : Dv unit =
+  FStar.IO.print_string s
