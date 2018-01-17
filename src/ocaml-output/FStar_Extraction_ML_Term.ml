@@ -1761,9 +1761,9 @@ and term_as_mlexpr':
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_set_range_of );
               FStar_Syntax_Syntax.pos = uu____5936;
-              FStar_Syntax_Syntax.vars = uu____5937;_},(a1,uu____5939)::
-            (a2,uu____5941)::[])
-           -> term_as_mlexpr' g a1
+              FStar_Syntax_Syntax.vars = uu____5937;_},(t1,uu____5939)::
+            (r,uu____5941)::[])
+           -> term_as_mlexpr' g t1
        | FStar_Syntax_Syntax.Tm_app
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant

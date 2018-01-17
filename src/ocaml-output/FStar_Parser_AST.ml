@@ -1448,8 +1448,12 @@ let compile_op:
         match s with
         | ".[]<-" -> "op_String_Assignment"
         | ".()<-" -> "op_Array_Assignment"
+        | ".[||]<-" -> "op_Brack_Lens_Assignment"
+        | ".(||)<-" -> "op_Lens_Assignment"
         | ".[]" -> "op_String_Access"
         | ".()" -> "op_Array_Access"
+        | ".[||]" -> "op_Brack_Lens_Access"
+        | ".(||)" -> "op_Lens_Access"
         | uu____5062 ->
             let uu____5063 =
               let uu____5064 =

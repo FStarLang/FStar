@@ -369,7 +369,9 @@ rule token args = parse
  | "?." { QMARK_DOT }
  | "?" { QMARK }
  | ".[" { DOT_LBRACK }
+ | ".(|" { DOT_LENS_PAREN_LEFT } 
  | ".(" { DOT_LPAREN }
+ | ".[|" { DOT_LBRACK_BAR } 
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
  | "::" { COLON_COLON }
@@ -400,7 +402,15 @@ rule token args = parse
  | op_infix2  symbolchar* { OPINFIX2 (ulexeme lexbuf) }
  | "**"       symbolchar* { OPINFIX4 (ulexeme lexbuf) }
  | op_infix3  symbolchar* { OPINFIX3 (ulexeme lexbuf) }
-
+ | ".[]<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ | ".()<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ | ".(||)<-"              { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ | ".[||]<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
+ 
+ | ".[]"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
+ | ".()"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
+ | ".(||)"                { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
+ | ".[||]"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }
  | eof { lc := 1; EOF }
 

@@ -479,8 +479,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     then begin
       let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
       let err_msg =
-        BU.format3 "The effect combinator is %s (n=%s) (%s)"
-          error (string_of_int n) (Print.tscheme_to_string ts)
+        BU.format4 "The effect combinator is %s (m,n=%s,%s) (%s)"
+          error (string_of_int m) (string_of_int n) (Print.tscheme_to_string ts)
       in
       raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg) (snd ts ).pos
     end ;

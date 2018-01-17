@@ -11,7 +11,7 @@ let mk_if (test e_true e_false: term) : Tot term =
 
 let t : tactic unit =
   b <-- quote bool ;
-  let test' = fresh_binder b in
+  test' <-- return (fresh_binder b);
   let test = pack (Tv_Var test') in
   e_true <-- quote 3 ;
   e_false <-- quote () ;

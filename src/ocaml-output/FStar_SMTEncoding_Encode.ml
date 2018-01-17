@@ -2432,7 +2432,7 @@ and encode_term:
                        env
                  | (FStar_Syntax_Syntax.Tm_constant
                     (FStar_Const.Const_set_range_of
-                    ),(rng,uu____7197)::(arg,uu____7199)::[]) ->
+                    ),(arg,uu____7197)::(rng,uu____7199)::[]) ->
                      encode_term arg env
                  | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify
                     ),uu____7234) ->
