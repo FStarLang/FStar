@@ -2569,7 +2569,15 @@ let check_type_of_well_typed_term must_total env t k =
   match type_of_well_typed_term env t with
   | None -> slow_check ()
   | Some k' ->
-    let _, _, g = value_check_expected_typ env t (Inl k') Rel.trivial_guard in
-    if Rel.is_trivial g
-    then g
+    let b = Rel.subtype_nosmt env k' k in
+    let _ = 
+      if Env.debug env <| Options.Other "FastImplicits"
+      then BU.print5 "(%s) Fast check %s: %s : %s <: %s\n"
+                                            (Range.string_of_range t.pos)
+                                            (if b then "succeeded" else "failed")
+                                            (Print.term_to_string t)
+                                            (Print.term_to_string k')
+                                            (Print.term_to_string k) in
+    if b
+    then Rel.trivial_guard
     else slow_check ()

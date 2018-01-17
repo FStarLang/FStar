@@ -8728,12 +8728,23 @@ let (check_type_of_well_typed_term :
           match uu____19049 with
           | FStar_Pervasives_Native.None  -> slow_check ()
           | FStar_Pervasives_Native.Some k' ->
-              let uu____19053 =
-                value_check_expected_typ env2 t (FStar_Util.Inl k')
-                  FStar_TypeChecker_Rel.trivial_guard
-                 in
-              (match uu____19053 with
-               | (uu____19060,uu____19061,g) ->
-                   let uu____19063 = FStar_TypeChecker_Rel.is_trivial g  in
-                   if uu____19063 then g else slow_check ())
+              let b = FStar_TypeChecker_Rel.subtype_nosmt env2 k' k  in
+              ((let uu____19055 =
+                  FStar_All.pipe_left (FStar_TypeChecker_Env.debug env2)
+                    (FStar_Options.Other "FastImplicits")
+                   in
+                if uu____19055
+                then
+                  let uu____19056 =
+                    FStar_Range.string_of_range t.FStar_Syntax_Syntax.pos  in
+                  let uu____19057 = FStar_Syntax_Print.term_to_string t  in
+                  let uu____19058 = FStar_Syntax_Print.term_to_string k'  in
+                  let uu____19059 = FStar_Syntax_Print.term_to_string k  in
+                  FStar_Util.print5 "(%s) Fast check %s: %s : %s <: %s\n"
+                    uu____19056 (if b then "succeeded" else "failed")
+                    uu____19057 uu____19058 uu____19059
+                else ());
+               if b
+               then FStar_TypeChecker_Rel.trivial_guard
+               else slow_check ())
   
