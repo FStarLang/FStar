@@ -42,4 +42,5 @@ true: \
 <ulib/tactics_ml/**/*.ml>: \
   package(fstar-compiler-lib)
 
-<ulib/ml/extracted/FStar_Monotonic_Seq.ml>: principal
+<**/FStar_Monotonic_Seq.ml>: \
+  principal
