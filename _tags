@@ -41,3 +41,5 @@ true: \
 
 <ulib/tactics_ml/**/*.ml>: \
   package(fstar-compiler-lib)
+
+<**/*.ml>: principal

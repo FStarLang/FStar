@@ -369,8 +369,6 @@ let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
   : Lemma (stable_on_t l (at_most_log_len x l))
   = ()
 
-(* assume val gcut : f:(unit -> GTot Type){f ()} -> Tot unit *)
-
 let new_seqn (#a:Type) (#l:rid) (#max:nat)
   	     (i:rid) (init:nat) (log:log_t l a)
   : ST (seqn i log max)
