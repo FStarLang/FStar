@@ -153,9 +153,10 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     Option.isSome (implementation_of file_system_map key)
 
 let cache_file_name fn =
-    if Options.lax()
-    then fn ^ ".checked.lax"
-    else fn ^ ".checked"
+    FStar.Options.prepend_cache_dir
+        (if Options.lax()
+         then fn ^ ".checked.lax"
+         else fn ^ ".checked")
 
 let file_of_dep_aux
                 (use_checked_file:bool)

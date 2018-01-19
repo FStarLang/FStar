@@ -114,6 +114,7 @@ let defaults =
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
+      ("cache_dir"                    , Unset);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -224,6 +225,7 @@ let lookup_opt s c =
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
+let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -467,6 +469,7 @@ let rec arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
 let pp_validate_dir p =
   let pp = as_string p in
   mkdir false pp;
+  mkdir false "pp/cache";
   p
 
 let pp_lowercase s =
@@ -487,6 +490,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_checked_modules",
         Const (mk_bool true),
         "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
+
+      ( noshort,
+        "cache_dir",
+        PostProcessed (pp_validate_dir, PathStr "dir"),
+        "Read and write .checked and .checked.lax in directory <dir>");
 
       ( noshort,
         "codegen",
@@ -1131,6 +1139,13 @@ let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
   | Some x -> x ^ "/" ^ fname
+
+let prepend_cache_dir fpath =
+  match get_cache_dir() with
+  | None -> fpath
+  | Some x ->
+    let fname = FStar.Util.basename fpath in
+    x ^ "/" ^ fname
 
 //Used to parse the options of
 //   --using_facts_from
