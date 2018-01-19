@@ -653,18 +653,33 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let bounded_arith_ops
         =
-        let bounded_int_types =
-           [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
+        let bounded_signed_int_types =
+           [ "Int8"; "Int16"; "Int32"; "Int64" ]
+        in
+        let bounded_unsigned_int_types =
+           [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
         in
         let int_as_bounded r int_to_t n =
             let c = EMB.embed_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
-        bounded_int_types |> List.collect (fun m ->
-        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
-         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
-         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)))])
+        let add_sub_mul_v =
+          (bounded_signed_int_types @ bounded_unsigned_int_types)
+          |> List.collect (fun m ->
+            [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
+             (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
+             (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)));
+             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> EMB.embed_int r x))])
+        in
+        let div_mod_unsigned =
+          bounded_unsigned_int_types
+          |> List.collect (fun m ->
+            [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)));
+             (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)))])
+        in
+       add_sub_mul_v
+       @ div_mod_unsigned
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
