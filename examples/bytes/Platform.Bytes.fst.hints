@@ -1550,7 +1550,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "9c95cd1571a3b1b4601fa93d9f831045"
+      "35d065d8ab23a8d2fdfccc5c8df6eea1"
     ],
     [
       "Platform.Bytes.lbytes",
@@ -1878,7 +1878,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "6053e1860671ea9fe3c88bdf590ce19a"
+      "6ff32ec44b96bcbad05766e3d537ab36"
     ],
     [
       "Platform.Bytes.split",
@@ -1951,8 +1951,9 @@
         "@fuel_irrelevance_Platform.Bytes.sum_length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "b2t_def", "bool_inversion", "bool_typing",
-        "constructor_distinct_Prims.Cons", "equation_FStar.UInt32.n",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.cbytes",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "equation_FStar.UInt32.n", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.cbytes",
         "equation_Platform.Bytes.empty_bytes",
         "equation_Platform.Bytes.get_cbytes_",
         "equation_Platform.Bytes.good_bytes",
@@ -1965,16 +1966,12 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Platform.Bytes.empty_bytes",
         "function_token_typing_Platform.Bytes.string_length_empty",
-        "int_inversion", "int_typing", "lemma_Platform.Bytes.empty_append",
-        "lemma_Platform.Bytes.get_cbytes__ok",
+        "int_inversion", "int_typing", "lemma_Platform.Bytes.get_cbytes__ok",
         "lemma_Platform.Bytes.lemma_getBytes",
-        "lemma_Platform.Bytes.lemma_getBytes_2",
         "lemma_Platform.Bytes.length_0_empty",
         "lemma_Platform.Bytes.string_length_append",
-        "lemma_Platform.Bytes.substring_full",
-        "lemma_Platform.Bytes.sum_length_0_concat_empty",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality",
+        "lemma_Platform.Bytes.substring_full", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "proj_equation_Platform.Bytes.Mkproto_bytes_bl",
@@ -1989,7 +1986,7 @@
         "projection_inverse_Platform.Bytes.Mkproto_bytes_max",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Platform.Bytes_Tm_refine_1f7a1fd8c1092ada483f8a837ab1b7fc",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "refinement_interpretation_Platform.Bytes_Tm_refine_536347875785861bb211fea36e4af97e",
@@ -2005,7 +2002,7 @@
         "typing_Platform.Bytes.op_At_Bar", "typing_Prims.strcat"
       ],
       0,
-      "d547dbe2b468664d78901c679054a496"
+      "95df7197e68e4307315df940dae30791"
     ],
     [
       "Platform.Bytes.lemma_split_1",
@@ -2133,7 +2130,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "dc4580c266ffe00dbe19f9829565daae"
+      "63e328c2d02067a02666329c587e246f"
     ],
     [
       "Platform.Bytes.lemma_split_2",
@@ -2182,7 +2179,7 @@
         "typing_Platform.Bytes.split"
       ],
       0,
-      "94d3661c4212f3a1c574a07e9106f7c9"
+      "518397a303e06d019324d3c73b4003d4"
     ],
     [
       "Platform.Bytes.lemma_split_3",
@@ -2210,7 +2207,7 @@
         "typing_Platform.Bytes.get_cbytes_", "typing_Platform.Bytes.split"
       ],
       0,
-      "fb374123722df20ca91bc4f424268972"
+      "7d24efeb7bba9aaf70b7321c4c478331"
     ],
     [
       "Platform.Bytes.lemma_split",
@@ -2383,7 +2380,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "4b0c509d4faa72fd7ead522e5326967c"
+      "1dcc235efa871d80e37ef51661b0e22a"
     ],
     [
       "Platform.Bytes.split2",
@@ -2528,7 +2525,7 @@
         "typing_Platform.Bytes.repr_bytes"
       ],
       0,
-      "eb8c2877e61acd5cd1dbeee3f5b5e911"
+      "a5618361257f6c2fa76796ea9b1b8d09"
     ],
     [
       "Platform.Bytes.abytes_get_cbytes",
@@ -2584,7 +2581,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "445ecf3de8a6a0af6ffbcf8357967f8d"
+      "1e8a4bca509c020805820b9005630ad7"
     ],
     [
       "Platform.Bytes.int_of_bytes_of_int",

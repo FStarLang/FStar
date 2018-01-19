@@ -392,21 +392,39 @@ noeq type some_ref =
 
 let some_refs = list some_ref
 
-let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) =
+[@"opaque_to_smt"]
+private let rec regions_of_some_refs (rs:some_refs) :Tot (Set.set rid) =
   match rs with
-  | [] -> Set.empty
+  | []         -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton (frameOf r)) (regions_of_some_refs tl)
 
-let rec refs_in_region (r:rid) (rs:some_refs) : GTot (Set.set nat) =
+[@"opaque_to_smt"]
+private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
   match rs with
   | []         -> Set.empty
   | (Ref x)::tl ->
-    Set.union (if frameOf x=r then Set.singleton (as_addr x) else Set.empty)
+    Set.union (if frameOf x = r then Set.singleton (as_addr x) else Set.empty)
               (refs_in_region r tl)
 
-unfold let mods (rs:some_refs) h0 h1 =
-    modifies (normalize_term (regions_of_some_refs rs)) h0 h1
-  /\ (forall (r:rid). modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1)
+[@"opaque_to_smt"]
+private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot Type0 =
+  match i with
+  | []         -> True
+  | (Ref x)::tl ->
+    (modifies_ref (frameOf x) (refs_in_region (frameOf x) rs) h0 h1) /\
+    (modifies_some_refs tl rs h0 h1)
+
+[@"opaque_to_smt"]
+unfold private let norm_steps :list norm_step =
+  [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
+                            "FStar.Monotonic.HyperStack.refs_in_region";
+                            "FStar.Monotonic.HyperStack.modifies_some_refs"];
+   primops]
+
+[@"opaque_to_smt"]
+unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
+       (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
+       (norm norm_steps (modifies_some_refs rs rs h0 h1))
 
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
@@ -417,38 +435,6 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
- //--------------------------------------------------------------------------------
-  //assert (sel h0 x' == sel h1 x')
-
-(* let f2 (a:Type0) (b:Type0) (x:reference a) (y:reference b) *)
-(*                         (h0:mem) (h1:mem) =  *)
-(*   assume (HH.disjoint (frameOf x) (frameOf y)); *)
-(*   assume (mods [Ref x; Ref y] h0 h1); *)
-(*  //-------------------------------------------------------------------------------- *)
-(*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
-
-(* let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) : GTot Type0 = *)
-(*   match i with *)
-(*   | [] -> True *)
-(*   | Ref x::tl -> *)
-(*     let r = x.id in *)
-(*     (modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1 /\ *)
-(*      modifies_some_refs tl rs h0 h1) *)
-
-(* unfold let mods_2 (rs:some_refs) h0 h1 = *)
-(*     modifies (normalize_term (regions_of_some_refs rs)) h0 h1 *)
-(*   /\ modifies_some_refs rs rs h0 h1 *)
-
-(* #reset-options "--log_queries --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
-(* #set-options "--debug FStar.HyperStack --debug_level print_normalized_terms" *)
-(* let f3 (a:Type0) (b:Type0) (x:reference a) *)
-(*                         (h0:mem) (h1:mem) =  *)
-(*   assume (mods_2 [Ref x] h0 h1); *)
-(*  //-------------------------------------------------------------------------------- *)
-(*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
-
 
 (*** Untyped views of references *)
 
