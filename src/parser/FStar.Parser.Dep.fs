@@ -934,7 +934,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           //this one prints:
           //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
           //                 touch $@
-          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" 
+          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
                                              norm_f
                                              norm_f
                                              files;
@@ -953,8 +953,9 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                     f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
                 in
                 let extracted_fst_files =
-                    fst_files |> List.filter (fun f ->
-                        Options.should_extract (lowercase_module_name f))
+                    fst_files |> List.filter (fun df ->
+                        lowercase_module_name df <> lowercase_module_name f //avoid circular deps on f's own cmx
+                        && Options.should_extract (lowercase_module_name df))
                 in
                 extracted_fst_files |> List.map output_cmx_file
             in
