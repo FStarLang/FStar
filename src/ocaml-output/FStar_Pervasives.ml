@@ -5,7 +5,7 @@ type ('Aheap,'Aa,'Apre) st_post_h' = 'Aa -> 'Aheap -> Obj.t[@@deriving show]
 type ('Aheap,'Aa) st_post_h = ('Aheap,'Aa,Prims.unit) st_post_h'[@@deriving
                                                                   show]
 type ('Aheap,'Aa) st_wp_h = Prims.unit -> 'Aheap st_pre_h[@@deriving show]
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___23_85) st_return = 'Ap[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___5_85) st_return = 'Ap[@@deriving show]
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) st_bind_wp = 'Awp1[@@deriving
                                                                     show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) st_if_then_else =
@@ -56,7 +56,7 @@ type ('Ah,'Aa,'Apre) all_post_h' = 'Aa result -> 'Ah -> Obj.t[@@deriving
 type ('Ah,'Aa) all_post_h = ('Ah,'Aa,Prims.unit) all_post_h'[@@deriving show]
 type ('Ah,'Aa) all_wp_h = Prims.unit -> 'Ah all_pre_h[@@deriving show]
 type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = Prims.unit[@@deriving show]
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___25_1274) all_return = 'Ap[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___7_1274) all_return = 'Ap[@@deriving show]
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1[@@deriving
                                                                     show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else =
