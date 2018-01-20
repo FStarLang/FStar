@@ -77,7 +77,6 @@ let codegen (umods, env) =
            FStar.Extraction.ML.Code for both OCaml and F# extraction.
            When bootstarpped in OCaml, this will use the old printer
            for F# extraction and the new printer for OCaml extraction. *)
-        let outdir = Options.output_dir() in
         List.iter (FStar.Extraction.ML.PrintML.print ext) mllibs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
@@ -95,7 +94,7 @@ let gen_native_tactics (umods, env) out_dir =
     Options.set_option "codegen" (Options.String "tactics");
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
-    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
+    List.iter (FStar.Extraction.ML.PrintML.print ".ml") mllibs;
 
     (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
     let user_tactics_modules = Universal.user_tactics_modules in
