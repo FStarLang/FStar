@@ -917,26 +917,37 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
-    let output_ml_file = output_file ".ml" in
-    let output_krml_file = output_file ".krml" in
-    let output_cmx_file = output_file ".cmx" in
+    let norm_path s = replace_chars s '\\' "/" in
+    let output_ml_file f = norm_path (output_file ".ml" f) in
+    let output_krml_file f = norm_path (output_file ".krml" f) in
+    let output_cmx_file f = norm_path (output_file ".cmx" f) in
+    let cache_file f = norm_path (cache_file_name f) in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
+          let norm_f = norm_path f in
           let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
+          let files = List.map norm_path files in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
+          let files = String.concat "\\\n\t" files in
           //interfaces get two lines of output
           //this one prints:
           //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
           //                 touch $@
-          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
+          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" 
+                                             norm_f
+                                             norm_f
+                                             files;
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s: %s \\\n\t%s\n\n" (cache_file_name f) f (String.concat " \\\n\t" files);
+          Util.print3 "%s: %s \\\n\t%s\n\n"
+                      (cache_file f)
+                      norm_f
+                      files;
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then (
-            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f);
+            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file f);
             let cmx_files =
                 let fst_files =
                     f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
@@ -951,12 +962,12 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
            then Util.print3 "%s: %s \\\n\t%s\n\n"
                         (output_cmx_file f)
                         (output_ml_file f)
-                        (String.concat " \\\n\t" cmx_files);
-           Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f)
+                        (String.concat "\\\n\t" cmx_files);
+           Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f)
           ) else if not(has_implementation file_system_map (lowercase_module_name f))
                  && is_interface f then (
             // .krml files can be produced using just an interface, unlike .ml files
-            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file_name f))
+            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f))
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files =
@@ -976,9 +987,9 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                        BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> String.concat " \\\n\t");
-    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> String.concat " \\\n\t");
-    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> String.concat " \\\n\t")
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> List.map norm_path |> String.concat " \\\n\t")
 
 let print deps =
   match Options.dep() with
