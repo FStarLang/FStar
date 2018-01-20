@@ -78,7 +78,7 @@ let codegen (umods, env) =
            When bootstarpped in OCaml, this will use the old printer
            for F# extraction and the new printer for OCaml extraction. *)
         let outdir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
+        List.iter (FStar.Extraction.ML.PrintML.print ext) mllibs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
@@ -112,7 +112,7 @@ let init_native_tactics () =
 let init_warn_error() =
   Errors.init_warn_error_flags;
   let s = Options.warn_error() in
-  if s <> "" then 
+  if s <> "" then
     FStar.Parser.ParseIt.parse_warn_error s
 
 (****************************************************************************)
