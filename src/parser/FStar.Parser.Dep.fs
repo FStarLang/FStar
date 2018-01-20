@@ -707,6 +707,13 @@ let collect (all_cmd_line_files: list<file_name>)
     * deps //topologically sorted transitive dependences of all_cmd_line_files
     =
 
+  let all_cmd_line_files =
+      all_cmd_line_files |> List.map (fun fn ->
+        match FStar.Options.find_file fn with
+        | None ->
+          Errors.raise_err (Errors.Fatal_ModuleOrFileNotFound,
+                            Util.format1 "File %s could not be found\n" fn)
+        | Some fn -> fn) in
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
   let dep_graph : dependence_graph = deps_empty () in
@@ -747,7 +754,7 @@ let collect (all_cmd_line_files: list<file_name>)
         let direct_deps, color = must (deps_try_find dep_graph filename) in
         match color with
         | Gray ->
-            Errors. log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
+            Errors.log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
             Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
             print_graph dep_graph;
             print_string "\n";

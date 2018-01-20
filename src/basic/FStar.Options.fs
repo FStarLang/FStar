@@ -1137,14 +1137,12 @@ let pervasives_native_basename () =
 let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
-  | Some x -> x ^ "/" ^ fname
+  | Some x -> FStar.Util.join_paths x fname
 
 let prepend_cache_dir fpath =
   match get_cache_dir() with
   | None -> fpath
-  | Some x ->
-    let fname = FStar.Util.basename fpath in
-    x ^ "/" ^ fname
+  | Some x -> FStar.Util.join_paths x (FStar.Util.basename fpath)
 
 //Used to parse the options of
 //   --using_facts_from
