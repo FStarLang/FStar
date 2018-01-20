@@ -1100,7 +1100,9 @@ let find_file filename =
   else
     (* In reverse, because the last directory has the highest precedence. *)
     Util.find_map (List.rev (include_path ())) (fun p ->
-      let path = Util.join_paths p filename in
+      let path =
+        if p = "." then filename
+        else Util.join_paths p filename in
       if Util.file_exists path then
         Some path
       else
