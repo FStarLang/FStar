@@ -786,6 +786,11 @@ let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
     dependences_of file_system_map deps all_cmd_line_files f
 
 let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
+    let fn =
+        match FStar.Options.find_file fn with
+        | Some fn -> fn
+        | _ -> fn
+    in
     let cache_file = cache_file_name fn in
     let digest_of_file fn =
         if Options.debug_any()
