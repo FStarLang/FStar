@@ -915,7 +915,8 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
     let output_file ext fst_file =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
-        Options.prepend_output_dir (ml_base_name ^ ext)
+        let dir= match Options.output_dir() with None -> "" | Some x -> x ^ "/" in
+        dir ^ ml_base_name ^ ext
     in
     let output_ml_file = output_file ".ml" in
     let output_krml_file = output_file ".krml" in
