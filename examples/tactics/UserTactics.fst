@@ -77,7 +77,7 @@ let test_apply (x:nat) (y:nat) =
 let mul_commute_ascription : tactic unit =
     g <-- cur_goal;
     match term_as_formula g with
-    | Comp Eq _ _ _ ->
+    | Comp (Eq _) _ _ ->
         apply_lemma (quote lemma_mul_comm)
     | _ ->
         fail "Not an equality"

@@ -28,7 +28,7 @@ let prune_for_seq : tactic unit =
   //prune the local environment
   _ig <-- mapM (fun b ->
     match term_as_formula (type_of_binder b) with
-    | Comp Eq t _ _ ->
+    | Comp (Eq (Some t)) _ _ ->
       s <-- is_seq_t t;
       if s then //this is a sequence equality; keep it
         idtac
@@ -40,7 +40,7 @@ let try_unref_eq : tactic unit =
   g <-- cur_goal; //this is just the goal type
   let f = term_as_formula g in
   match f with
-  | Comp Eq t l r ->
+  | Comp (Eq (Some t)) l r ->
     begin match inspect t with
     | Tv_Refine _ _ ->
         apply_lemma (quote unrefine_eq_lem);;
@@ -60,7 +60,7 @@ let sequence_pruning =
   let f = term_as_formula g in
   print ("This is the formula: " ^ (formula_to_string f));;
   match f with 
-  | Comp Eq t l r ->
+  | Comp (Eq (Some t)) l r ->
     dump "B";;
     //could use inspect t, but in this case ...
     b <-- is_seq_t t ; //use double everywhere in monadic notation (TODO)

@@ -170,13 +170,13 @@ let is_arith_expr t =
 val is_arith_prop : term -> tm prop
 let rec is_arith_prop (t:term) =
     match term_as_formula t with
-    | Comp Eq _ l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | Comp BoolEq _ l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | Comp Lt _ l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
-    | Comp Le _ l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
-    | And l r           -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
-    | Or l r            -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _                 -> fail ("connector (" ^ term_to_string t ^ ")")
+    | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | Comp Lt l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
+    | Comp Le l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
+    | And l r         -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
+    | Or l r          -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
+    | _               -> fail ("connector (" ^ term_to_string t ^ ")")
 
 
 // Run the monadic computations, disregard the counter

@@ -151,7 +151,7 @@ let arith_to_bv_tac : tactic unit =
     g <-- cur_goal;
     let f = term_as_formula g in
     match f with
-    | Comp Eq t l r ->
+    | Comp (Eq _) l r ->
      begin match run_tm (as_arith_expr l) with
       | Inl s ->
     	  dump s;;

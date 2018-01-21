@@ -95,7 +95,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
     g <-- cur_goal;
     let f = term_as_formula g in
     match f with
-    | Comp Eq t l r ->
+    | Comp (Eq _) l r ->
         begin match run_tm (is_arith_expr l) with
         | Inl s ->
             trefl
