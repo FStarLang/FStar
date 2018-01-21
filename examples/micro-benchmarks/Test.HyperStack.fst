@@ -326,4 +326,8 @@ let mods_test2 (a:Type0) (rel:preorder a) (x y z w:mref a rel)
 
 let test_logical_operators_on_witnessed (p q:mem_predicate)
   = lemma_witnessed_and p q;
-    assert (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))
+    assert (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q));
+    lemma_witnessed_or p q;
+    assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
+    lemma_witnessed_nested p;
+    assert (witnessed (fun _ -> witnessed p) <==> witnessed p)

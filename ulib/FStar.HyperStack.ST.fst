@@ -654,26 +654,18 @@ let lemma_witnessed_and (p q:mem_predicate)
   :Lemma (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))
   = W.lemma_witnessed_and mem_rel p q
 
-val lemma_witnessed_or :#state:Type
-                        -> rel:preorder state
-                        -> p:(state -> Type0)
-                        -> q:(state -> Type0)
-                        -> Lemma ((st_witnessed rel p \/ st_witnessed rel q) ==> st_witnessed rel (fun s -> p s \/ q s))
+let lemma_witnessed_or (p q:mem_predicate)
+  :Lemma ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s))
+  = W.lemma_witnessed_or mem_rel p q
 
-val lemma_witnessed_impl :#state:Type
-                          -> rel:preorder state
-                          -> p:(state -> Type0)
-                          -> q:(state -> Type0)
-                          -> Lemma ((st_witnessed rel (fun s -> p s ==> q s) /\ st_witnessed rel p) ==> st_witnessed rel q)
+let lemma_witnessed_impl (p q:mem_predicate)
+  :Lemma ((witnessed (fun s -> p s ==> q s) /\ witnessed p) ==> witnessed q)
+  = W.lemma_witnessed_impl mem_rel p q
 
-val lemma_witnessed_forall :#state:Type
-                            -> #t:Type
-                            -> rel:preorder state
-                            -> p:(t -> state -> Type0) 
-                            -> Lemma ((st_witnessed rel (fun s -> forall x. p x s)) <==> (forall x. st_witnessed rel (p x)))
+let lemma_witnessed_forall (#t:Type) (p:(t -> mem_predicate))
+  :Lemma ((witnessed (fun s -> forall x. p x s)) <==> (forall x. witnessed (p x)))
+  = W.lemma_witnessed_forall mem_rel p
 
-val lemma_witnessed_exists :#state:Type
-                            -> #t:Type
-                            -> rel:preorder state
-                            -> p:(t -> state -> Type0) 
-                            -> Lemma ((exists x. st_witnessed rel (p x)) ==> st_witnessed rel (fun s -> exists x. p x s))
+let lemma_witnessed_exists (#t:Type) (p:(t -> mem_predicate))
+  :Lemma ((exists x. witnessed (p x)) ==> witnessed (fun s -> exists x. p x s))
+  = W.lemma_witnessed_exists mem_rel p
