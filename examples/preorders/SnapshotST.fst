@@ -76,7 +76,7 @@ effect MST (a:Type) (pre:mst_pre) (post:(t -> Tot (mst_post a)))
 
 (* The logical witnessed capability for the richer type of states *)
 
-let witnessed (p:predicate t) = witnessed #t #rel_t p
+let witnessed (p:predicate t) = witnessed rel_t p
 
 (* Actions of MST. *)
 

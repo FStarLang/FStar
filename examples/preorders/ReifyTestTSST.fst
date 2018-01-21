@@ -89,7 +89,7 @@ effect TSST    (a:Type)
 
 (* An abstract (box-style) modality for witnessed stable predicates. *)
 
-let witnessed (ts:timestamp) (p:predicate state{stable p state_rel}) = witnessed #state #state_rel p
+let witnessed (ts:timestamp) (p:predicate state{stable p state_rel}) = witnessed state_rel p
 
 
 (* Generic effects (operations) for preorder-indexed state monads. *)

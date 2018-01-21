@@ -107,7 +107,7 @@ let ist_put x = ISTATE?.put x
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed #heap #heap_rel p
+let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed heap_rel p
 
 assume val ist_witness : p:predicate heap{stable p heap_rel} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)

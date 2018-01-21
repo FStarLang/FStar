@@ -67,7 +67,7 @@ effect IST    (a:Type)
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed #heap #heap_rel p
+let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed heap_rel p
 
 
 (* Generic effects (operations) for IST. *)

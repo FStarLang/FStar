@@ -285,7 +285,7 @@ assume private val set_eq :#world:Type
 
 (* Witnessed modality *)
 
-let st_witnessed #state rel p = get (fun s -> forall s'. rel s s' ==> p s')
+let witnessed #state rel p = get (fun s -> forall s'. rel s s' ==> p s')
 
 (* Weakening for the witnessed modality *)
 
@@ -298,8 +298,8 @@ let lemma_witnessed_constant #state rel p = get_constant_lemma state p
 let lemma_witnessed_nested #state rel p = ()
 
 let lemma_witnessed_and #state rel p q =
-  let aux () :Lemma (requires (st_witnessed rel p /\ st_witnessed rel q))
-                    (ensures  (st_witnessed rel (fun s -> p s /\ q s)))
+  let aux () :Lemma (requires (witnessed rel p /\ witnessed rel q))
+                    (ensures  (witnessed rel (fun s -> p s /\ q s)))
     = get_and_2 (fun s -> forall s'. rel s s' ==> p s') (fun s -> forall s'. rel s s' ==> q s')
   in
   FStar.Classical.move_requires aux ()
@@ -307,15 +307,15 @@ let lemma_witnessed_and #state rel p q =
 let lemma_witnessed_or #state rel p q = ()
 
 let lemma_witnessed_impl #state rel p q = 
-  let aux () :Lemma (requires ((st_witnessed rel (fun s -> p s ==> q s) /\ st_witnessed rel p)))
-                    (ensures  (st_witnessed rel q))
+  let aux () :Lemma (requires ((witnessed rel (fun s -> p s ==> q s) /\ witnessed rel p)))
+                    (ensures  (witnessed rel q))
     = get_and_2 (fun s -> forall s'. rel s s' ==> p s' ==> q s') (fun s -> forall s'. rel s s' ==> p s')
   in
   FStar.Classical.move_requires aux ()
 
 let lemma_witnessed_forall #state #t rel p =
-  let aux () :Lemma (requires (forall x. st_witnessed rel (fun s -> p x s)))
-                    (ensures  (st_witnessed rel (fun s -> forall x. p x s)))
+  let aux () :Lemma (requires (forall x. witnessed rel (fun s -> p x s)))
+                    (ensures  (witnessed rel (fun s -> forall x. p x s)))
     = get_forall_2 #state #t (fun x s -> forall s'. rel s s' ==> p x s')
   in
   FStar.Classical.move_requires aux ()
@@ -335,15 +335,15 @@ let witnessed_past (#state:Type) (rel:preorder state) (p:(state -> Type0)) =
 val witnessed_defs_equiv_1 :#state:Type
                             -> rel:preorder state
                             -> p:(state -> Type0)
-                            -> Lemma (requires (st_witnessed #state rel p)) 
-                                    (ensures  (st_witnessed #state rel p))
+                            -> Lemma (requires (witnessed #state rel p)) 
+                                    (ensures  (witnessed #state rel p))
 let witnessed_defs_equiv_1 #state rel p = ()
 
 val witnessed_defs_equiv_2 :#state:Type
                             -> rel:preorder state
                             -> p:(state -> Type0)
-                            -> Lemma (requires (st_witnessed #state rel p)) 
-                                    (ensures  (st_witnessed #state rel p))
+                            -> Lemma (requires (witnessed #state rel p)) 
+                                    (ensures  (witnessed #state rel p))
 let witnessed_defs_equiv_2 #state rel p = 
   get_weakening #state (fun s -> exists s'. rel s' s /\ (forall s''. rel s' s'' ==> p s'')) 
                        (fun s -> forall s'. rel s s' ==> p s')

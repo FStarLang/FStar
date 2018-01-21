@@ -88,7 +88,7 @@ sub_effect DIV ~> GST = lift_div_gst
 abstract let stable (p:mem_predicate) =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
-let witnessed (p:mem_predicate) = W.st_witnessed mem_rel p
+abstract let witnessed (p:mem_predicate) = W.witnessed mem_rel p
 
 (* TODO: we should derive these using DM4F *)
 assume private val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
@@ -648,7 +648,7 @@ let lemma_witnessed_constant (p:Type0)
 let lemma_witnessed_nested (p:mem_predicate)
   :Lemma (witnessed (fun (m:mem) -> witnessed p) <==> witnessed p)
   = W.lemma_witnessed_nested mem_rel p;
-    assert (FStar.FunctionalExtensionality.feq (fun (m:mem) -> witnessed p) (fun (m:mem) -> W.st_witnessed mem_rel p))
+    assert (FStar.FunctionalExtensionality.feq (fun (m:mem) -> witnessed p) (fun (m:mem) -> W.witnessed mem_rel p))
 
 let lemma_witnessed_and (p q:mem_predicate)
   :Lemma (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))
