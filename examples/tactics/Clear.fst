@@ -33,8 +33,9 @@ let clear_all_of_type (t : typ) : tactic unit =
 let l2 (x : int) (y : bool) (z : int) =
     assert_by_tactic (phi ==> (psi ==> xi))
             (e <-- cur_env;
-             guard (List.length (binders_of_env e) = 3);;
+             let n = List.length (binders_of_env e) in
              u <-- quote int;
              clear_all_of_type u;;
              e <-- cur_env;
-             guard (List.length (binders_of_env e) = 1))
+             // We're removing two binders
+             guard (List.length (binders_of_env e) = n - 2))
