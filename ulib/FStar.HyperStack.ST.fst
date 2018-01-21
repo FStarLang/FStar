@@ -2,10 +2,10 @@ module FStar.HyperStack.ST
 
 open FStar.HyperStack
 
+module W  = FStar.Monotonic.Witnessed
 module HS = FStar.HyperStack
 
 open FStar.Preorder
-open FStar.Monotonic.Witnessed
 
 (* Setting up the preorder for mem *)
 
@@ -88,7 +88,7 @@ sub_effect DIV ~> GST = lift_div_gst
 abstract let stable (p:mem_predicate) =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
-let witnessed (p:mem_predicate) = witnessed #mem #mem_rel p
+let witnessed (p:mem_predicate) = W.st_witnessed mem_rel p
 
 (* TODO: we should derive these using DM4F *)
 assume private val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
@@ -99,7 +99,7 @@ assume private val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> witn
 
 val lemma_functoriality (p:mem_predicate{witnessed p}) (q:mem_predicate{(forall (h:mem). p h ==> q h)})
   : Lemma (ensures (witnessed q))
-let lemma_functoriality p q = ()
+let lemma_functoriality p q = W.lemma_witnessed_weakening mem_rel p q
 
 let st_pre   = gst_pre
 let st_post' = gst_post'
@@ -542,8 +542,6 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 
-module G = FStar.Ghost
-
 //   NS: This version is just fine; all the operation on mem are ghost
 //       and we can rig it so that mem just get erased at the end
 (**
@@ -626,8 +624,8 @@ let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
   ($s:squash (forall (x:c). witnessed (p x)))
   :ST unit (requires (fun h      -> True))
            (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
-  = witnessed_forall_2 #mem #mem_rel #c (fun h x -> p x h); 
-    gst_recall (fun h -> forall (x:c) . p x h)
+  = W.lemma_witnessed_forall mem_rel p;
+    gst_recall (fun h -> forall (x:c). p x h)
 
 let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
@@ -639,3 +637,43 @@ let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
     testify_forall s
 
 type ex_rid = r:rid{is_eternal_region r /\ witnessed (region_contains_pred r)}
+
+
+(****** logical properties of witnessed ******)
+
+let lemma_witnessed_constant (p:Type0)
+  :Lemma (witnessed (fun (m:mem) -> p) <==> p)
+  = W.lemma_witnessed_constant mem_rel p
+
+let lemma_witnessed_nested (p:mem_predicate)
+  :Lemma (witnessed (fun (m:mem) -> witnessed p) <==> witnessed p)
+  = W.lemma_witnessed_nested mem_rel p;
+    assert (FStar.FunctionalExtensionality.feq (fun (m:mem) -> witnessed p) (fun (m:mem) -> W.st_witnessed mem_rel p))
+
+let lemma_witnessed_and (p q:mem_predicate)
+  :Lemma (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))
+  = W.lemma_witnessed_and mem_rel p q
+
+val lemma_witnessed_or :#state:Type
+                        -> rel:preorder state
+                        -> p:(state -> Type0)
+                        -> q:(state -> Type0)
+                        -> Lemma ((st_witnessed rel p \/ st_witnessed rel q) ==> st_witnessed rel (fun s -> p s \/ q s))
+
+val lemma_witnessed_impl :#state:Type
+                          -> rel:preorder state
+                          -> p:(state -> Type0)
+                          -> q:(state -> Type0)
+                          -> Lemma ((st_witnessed rel (fun s -> p s ==> q s) /\ st_witnessed rel p) ==> st_witnessed rel q)
+
+val lemma_witnessed_forall :#state:Type
+                            -> #t:Type
+                            -> rel:preorder state
+                            -> p:(t -> state -> Type0) 
+                            -> Lemma ((st_witnessed rel (fun s -> forall x. p x s)) <==> (forall x. st_witnessed rel (p x)))
+
+val lemma_witnessed_exists :#state:Type
+                            -> #t:Type
+                            -> rel:preorder state
+                            -> p:(t -> state -> Type0) 
+                            -> Lemma ((exists x. st_witnessed rel (p x)) ==> st_witnessed rel (fun s -> exists x. p x s))
