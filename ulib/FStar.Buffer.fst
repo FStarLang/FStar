@@ -881,7 +881,7 @@ let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
 
 let rfree (#a:Type) (b:buffer a)
   :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
-           (ensures  (fun h0 _ h1 -> live h0 b /\ is_mm b.content /\ h1 == HS.free b.content h0))
+           (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
   = rfree b.content
 
 (* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
