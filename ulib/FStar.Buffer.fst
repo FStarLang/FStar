@@ -822,16 +822,16 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
      /\ frameOf b == h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
      /\ modifies_0 h0 h1
-     /\ as_seq h1 b == Seq.seq_of_list init
+     /\ as_seq h1 b == Seq.of_list init
      /\ q #a len b))
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
-  lemma_seq_list_bij s;
+  lemma_of_list_length s init;
   let content: reference (s:seq a{Seq.length s == v len}) =
-    salloc (Seq.seq_of_list init) in
+    salloc (Seq.of_list init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
   assert (Seq.equal (as_seq h b) (sel h b));
