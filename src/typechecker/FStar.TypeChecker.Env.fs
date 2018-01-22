@@ -426,7 +426,13 @@ let try_lookup_bv env (bv:bv) =
       Some (id.sort, id.ppname.idRange)
     | _ -> None)
 
-let lookup_type_of_let se lid = match se.sigel with
+let lookup_type_of_let us_opt se lid =
+    let inst_tscheme ts =
+      match us_opt with
+      | None -> inst_tscheme ts
+      | Some us -> inst_tscheme_with ts us
+    in
+    match se.sigel with
     | Sig_let((_, [lb]), _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
@@ -440,7 +446,12 @@ let lookup_type_of_let se lid = match se.sigel with
 
     | _ -> None
 
-let effect_signature se =
+let effect_signature us_opt se =
+    let inst_tscheme ts =
+       match us_opt with
+       | None -> inst_tscheme ts
+       | Some us -> inst_tscheme_with ts us
+    in
     match se.sigel with
     | Sig_new_effect(ne) ->
         Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)), se.sigrng)
@@ -485,8 +496,11 @@ let try_lookup_lid_aux us_opt env lid =
 
     | Inr se ->
       begin match se with // FIXME why does this branch not use rng?
-        | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
-        | _ -> effect_signature (fst se)
+        | { sigel = Sig_let _ }, None ->
+          lookup_type_of_let us_opt (fst se) lid
+
+        | _ ->
+          effect_signature us_opt (fst se)
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
@@ -613,7 +627,7 @@ let lookup_definition delta_levels env lid =
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
-      begin match effect_signature se with
+      begin match effect_signature None se with
         | None -> None
         | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end

@@ -2569,6 +2569,12 @@ let check_type_of_well_typed_term must_total env t k =
   match type_of_well_typed_term env t with
   | None -> slow_check ()
   | Some k' ->
+    if Env.debug env <| Options.Other "FastImplicits"
+    then BU.print4 "(%s) Fast check  %s : %s <:? %s\n"
+                                            (Range.string_of_range t.pos)
+                                            (Print.term_to_string t)
+                                            (Print.term_to_string k')
+                                            (Print.term_to_string k);
     let b = Rel.subtype_nosmt env k' k in
     let _ = 
       if Env.debug env <| Options.Other "FastImplicits"
