@@ -78,6 +78,7 @@ and fsdoc = string
 and lifetime =
   | Eternal
   | Stack
+  | ManuallyManaged
 
 and expr =
   | EBound of var
@@ -94,6 +95,7 @@ and expr =
     EBufCreate of lifetime * expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
+  | EBufFree of expr
   | EBufSub of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
   | EMatch of expr * branches
@@ -662,6 +664,8 @@ and translate_expr env e: expr =
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate_mm") ->
+      EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
       let rec list_elements acc e2 =
         match e2.expr with
@@ -674,6 +678,8 @@ and translate_expr env e: expr =
       in
       let list_elements = list_elements [] in
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree") ->
+      EBufFree (translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
