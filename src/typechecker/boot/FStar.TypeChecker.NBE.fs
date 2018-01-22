@@ -103,17 +103,15 @@ let isAccuTyp (x:t) =
   | Accu(Type _, _) -> true
   | _ -> false
 
-let rec pickBranch (c : fv) (branches : list<branch>) (args: list<t * aqual>) = // : term * list<t>  =
+let rec pickBranch (c : fv) (branches : list<branch>) (args: list<t * aqual>): term * list<t * aqual>  =
   match branches with
   | [] -> failwith "Branch not found"
   | ({v = Pat_cons (c', pats')}, _, e) :: bs when (fv_eq c c') ->
       assert (List.length args = List.length pats');
       debug (fun () -> BU.print1 ">>>> args: %s\n" (String.concat "; " (List.map (fun (x, _) -> t_to_string x) args)));
-      let args2 = List.filter_map (fun x -> x) <| List.map2 (fun (p,_) (a,_) -> match p.v with Pat_dot_term _ -> None | _ when (not (isAccuTyp a)) (*Nik:  when it's not a universe*)  -> Some a) pats' args in
-      debug (fun () -> BU.print1 ">>>> args2: %s\n" (String.concat "; " (List.map (fun x -> t_to_string x) args2)));
-      // (e, (List.map (fun (x, _) -> x) args))
+      let args_filtered = List.filter_map (fun x -> x) <| List.map2 (fun (p,_) (a,q) -> match p.v with Pat_dot_term _ -> None | _ (*Nik:  when it's not a universe*)  -> Some (a, q)) pats' args in
+      debug (fun () -> BU.print1 ">>>> args (filtered): %s\n" (String.concat "; " (List.map (fun (x, _) -> t_to_string x) args_filtered)));
       (e, args)
-      //(e, args2)
   | b :: bs -> pickBranch c bs args
 
 (* Tests is the application is full and if none of the arguments is symbolic *)
@@ -228,24 +226,23 @@ and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
           mkAccuRec lb []
         else
           begin
+             debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
              debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
              debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-             let t = SS.compress lb.lbdef in
-             let x = (S.new_bv None S.tun, None) in
-             let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
-             app (translate env bs t') (translate_univ env bs (List.hd us)) None
-             // translate env [] lb.lbdef
+             // let t = SS.compress lb.lbdef in
+             // let x = (S.new_bv None S.tun, None) in
+             // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
+             // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
+             translate env [] lb.lbdef
           end
-      | Some { sigel = Sig_datacon(_, _, _, _, _, []) } ->
+      | Some { sigel = Sig_datacon(_, _, _, lid, _, []) } ->
+          debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_datacon\n" (P.lid_to_string lid));
           mkConstruct fvar us []
-      // VD: This was a stopgap for definitions not found in environment:
-      // | Some { sigel = Sig_declare_typ(lid, univs, ty) } ->
-      //     (match (SS.compress ty).n with
-      //      | Tm_type u -> mkAccuTyp u
-      //      | _ -> failwith "impossible?")
       | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
+          debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_inductive_type\n" (P.lid_to_string lid));
           mkConstruct fvar us []
       | None ->
+          debug (fun() -> BU.print "Translate fv: it's not in the environment\n" []);
           mkConstruct fvar us [] (* Zoe : Treat all other cases as type/data constructors for now. *)
       | Some s ->
           BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
@@ -256,7 +253,7 @@ and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
-    debug (fun () -> BU.print1 "BS list: %s\n" (String.concat "; " (List.map (fun x -> t_to_string x) bs)));
+    debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
 
     match (SS.compress e).n with
     | Tm_delayed (_, _) -> failwith "Tm_delayed: Impossible"
@@ -347,7 +344,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           (* XXX : is rev needed?  VD: I don't think so *)
           debug (fun () -> BU.print1 "Match args: %s\n" (String.concat "; " (List.map (fun (x, q) -> (if BU.is_some q then "#" else "") ^(t_to_string x)) args)));
           let branch, args = (pickBranch c branches args) in
-          // translate env (args @ bs) branch
           translate env ((List.map (fun (x, _) -> x) args) @ bs) branch
         | _ ->
           mkAccuMatch scrut case
@@ -388,13 +384,10 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) args in
       (match args with
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
-       | h::hs ->
-         // VD: This will currently not do the right thing if there's more than one universe variable
-         //(match (fst h).n with
+       | _ ->
          (match us with
-          | [u] (* Tm_type u *) -> U.mk_app (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) [u]) hs
-          | [] -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args
-          | _ -> failwith "Case not handled" ))
+          | u::us -> U.mk_app (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (u::us)) args
+          | [] -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args))
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv

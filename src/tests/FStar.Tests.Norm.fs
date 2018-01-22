@@ -102,7 +102,15 @@ let tests =
                                        | A x y \
                                        | B y x -> y - x" in
   let _ = Pars.pars_and_tc_fragment "type tb = | T | F" in
-
+  let _ = Pars.pars_and_tc_fragment "type rb = | A1 | A2 | A3" in
+  let _ = Pars.pars_and_tc_fragment "type hb = | H : tb -> hb" in
+  let _ = Pars.pars_and_tc_fragment "let select (i:tb) (x:'a) (y:'a) : Tot 'a = \
+                                         match i with \
+                                          | T -> x \
+                                          | F -> y" in
+  let _ = Pars.pars_and_tc_fragment "let select_hb (h:hb) : Tot tb = \
+                                         match h with \
+                                          | H t -> t" in
   let _ = Pars.pars_and_tc_fragment "let recons_m (x:list tb) = \
                                          match x with \
                                           | [] -> []  \
@@ -114,15 +122,15 @@ let tests =
   let _ = Pars.pars_and_tc_fragment "let fst_a (x: 'a) (y: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let id_list (x: list 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let id_list_m (x: list tb) = x" in //same as recons_m, but no pattern matching
-  [ //(0, (app apply [one; id; nm n]), (nm n))
-  // ; (1, (app id [nm x]), (nm x))
-  // ; (1, (app apply [tt; nm n; nm m]), (nm n))
-  // ; (2, (app apply [ff; nm n; nm m]), (nm m))
-  // ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
-  // ; (4, (app twice [apply; ff; nm n; nm m]), (nm m))
-  // ; (5, (minus one z), one)
-  // ; (6, (app pred [one]), z)
-  // ; (7, (minus one one), z)
+  [ (0, (app apply [one; id; nm n]), (nm n))
+  ; (1, (app id [nm x]), (nm x))
+  ; (1, (app apply [tt; nm n; nm m]), (nm n))
+  ; (2, (app apply [ff; nm n; nm m]), (nm m))
+  ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
+  ; (4, (app twice [apply; ff; nm n; nm m]), (nm m))
+  ; (5, (minus one z), one)
+  ; (6, (app pred [one]), z)
+  ; (7, (minus one one), z)
   // ; (8, (app mul [one; one]), one)
   // ; (9, (app mul [two; one]), two)
   // ; (10, (app mul [app succ [one]; one]), two)
@@ -132,18 +140,18 @@ let tests =
 
   //// ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
 
-  // ; (15, (let_ x (app succ [one])
-  //           (let_ y (app mul [nm x; nm x])
-  //              (let_ h (app mul [nm y; nm y])
-  //                      (minus (nm h) (nm h))))), z)
-  // ; (16, (mk_let x (app succ [one])
-  //           (mk_let y (app mul [nm x; nm x])
-  //                   (mk_let h (app mul [nm y; nm y])
-  //                           (minus (nm h) (nm h))))), z)
-  // ; (17, (let_ x (app succ [one])
-  //           (let_ y (app mul [nm x; nm x])
-  //              (let_ h (app mul [nm y; nm y])
-  //                      (minus (nm h) (nm h))))), z)
+  ; (15, (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+               (let_ h (app mul [nm y; nm y])
+                       (minus (nm h) (nm h))))), z)
+  ; (16, (mk_let x (app succ [one])
+            (mk_let y (app mul [nm x; nm x])
+                    (mk_let h (app mul [nm y; nm y])
+                            (minus (nm h) (nm h))))), z)
+  ; (17, (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+               (let_ h (app mul [nm y; nm y])
+                       (minus (nm h) (nm h))))), z)
   // ; (18, (pred_nat (snat (snat znat))), (snat znat))
   // ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
   // ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
@@ -170,9 +178,11 @@ let tests =
   // ; (36, (tc_nbe "idd T"), (tc_nbe "T"))
   // ; (301, (tc_nbe "id_list [T]"), (tc_nbe "[T]"))
   // ; (3012, (tc_nbe "id_list_m [T]"), (tc_nbe "[T]"))
-  // ; (302, (tc_nbe "recons_m [T]"), (tc_nbe "[T]"))
-  (302, (tc_nbe "idd T"), (tc_nbe "T"));
-  (303, (tc_nbe "recons [T; F]"), (tc_nbe "[T; F]"))
+  ; (302, (tc_nbe "recons_m [T; F]"), (tc_nbe "[T; F]"))
+  ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
+  ; (304, (tc_nbe "select_hb (H F)"), (tc_nbe "F"))
+  ; (305, (tc_nbe "idd T"), (tc_nbe "T"));
+  (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
   // ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
   // ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
   ]
