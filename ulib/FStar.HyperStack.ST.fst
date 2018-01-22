@@ -66,7 +66,7 @@ abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a re
 new_effect GST = STATE_h mem
 
 let gst_pre           = st_pre_h mem
-let gst_post' (a:Type) (pre:Type) = st_post_h' mem a True
+let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
 let gst_post (a:Type) = st_post_h mem a
 let gst_wp (a:Type)   = st_wp_h mem a
 
