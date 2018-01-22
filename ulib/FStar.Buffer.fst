@@ -845,26 +845,44 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h (HS.frameOf x)}) (v
     let m' = Map.upd m (HS.frameOf x) (Heap.upd (Map.sel m (HS.frameOf x)) (HS.as_ref x) v) in
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
-val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
-  (requires (fun h -> is_eternal_region r /\ witnessed (region_contains_pred r)))
-  (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
+unfold let rcreate_post_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (b:buffer a) (h0 h1:mem) :Type0
+  = b `unused_in` h0
     /\ live h1 b /\ idx b == 0 /\ length b == v len
     /\ Map.domain h1.h == Map.domain h0.h
     /\ h1.tip == h0.tip
     /\ modifies (Set.singleton r) h0 h1
     /\ modifies_ref r Set.empty h0 h1
     /\ as_seq h1 b == Seq.create (v len) init
-    /\ ~(is_mm b.content)))
-let rcreate #a r init len =
-  let h0 = HST.get() in
-  let s = Seq.create (v len) init in
-  let content: reference (s:seq a{Seq.length s == v len}) = ralloc r s in
-  let b = MkBuffer len content 0ul len in
-  let h1 = HST.get() in
-  assert (Seq.equal (as_seq h1 b) (sel h1 b));
-  lemma_upd h0 content s;
-  b
 
+private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
+  :ST (buffer a) (requires (fun h0      -> is_eternal_region r /\ witnessed (region_contains_pred r)))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\
+		                        is_mm b.content == mm))
+  = let h0 = HST.get() in
+    let s = Seq.create (v len) init in
+    let content: reference (s:seq a{Seq.length s == v len}) =
+      if mm then ralloc_mm r s else ralloc r s
+    in
+    let b = MkBuffer len content 0ul len in
+    let h1 = HST.get() in
+    assert (Seq.equal (as_seq h1 b) (sel h1 b));
+    lemma_upd h0 content s;
+    b
+
+val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
+  (requires (fun h            -> is_eternal_region r /\ witnessed (region_contains_pred r)))
+  (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
+let rcreate #a r init len = rcreate_common r init len false
+
+let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
+  :ST (buffer a) (requires (fun h0      -> is_eternal_region r /\ witnessed (region_contains_pred r)))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
+  = rcreate_common r init len true
+
+let rfree (#a:Type) (b:buffer a)
+  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
+           (ensures  (fun h0 _ h1 -> live h0 b /\ is_mm b.content /\ h1 == HS.free b.content h0))
+  = rfree b.content
 
 (* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
 
