@@ -351,15 +351,16 @@ and translate_flags flags =
     | Syntax.Substitute -> Some Substitute
     | Syntax.GCType -> Some GCType
     | Syntax.Comment s -> Some (Comment s)
+    | Syntax.StackInline -> Some MustDisappear
     | _ -> None // is this all of them?
   ) flags
 
 and translate_decl env d: list<decl> =
   match d with
-  | MLM_Let (flavor, flags, lbs) ->
+  | MLM_Let (flavor, lbs) ->
       // We don't care about mutual recursion, since every C file will include
       // its own header with the forward declarations.
-      List.choose (translate_let env flavor flags) lbs
+      List.choose (translate_let env flavor) lbs
 
   | MLM_Loc _ ->
       // JP: TODO: use this to reconstruct location information
@@ -377,20 +378,22 @@ and translate_decl env d: list<decl> =
       BU.print1_warning "Skipping the translation of exception: %s\n" m;
       []
 
-and translate_let env flavor flags lb: option<decl> =
+and translate_let env flavor lb: option<decl> =
   match lb with
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
-      mllb_def = { expr = MLE_Fun (args, body) }
+      mllb_def = { expr = MLE_Fun (args, body) };
+      mllb_meta = meta
     }
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
-      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
+      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) };
+      mllb_meta = meta
     } ->
       // Case 1: a possibly-polymorphic function.
-      let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
+      let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) meta in
       let env = if flavor = Rec then extend env name false else env in
       let env = List.fold_left (fun env name -> extend_t env name) env tvars in
       let rec find_return_type eff i = function
@@ -404,14 +407,14 @@ and translate_let env flavor flags lb: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
-      let flags = match eff, t with
-        | E_GHOST, _ 
-        | E_PURE, TUnit -> MustDisappear :: translate_flags flags
-        | _ -> translate_flags flags
+      let meta = match eff, t with
+        | E_GHOST, _
+        | E_PURE, TUnit -> MustDisappear :: translate_flags meta
+        | _ -> translate_flags meta
       in
       if assumed then
         if List.length tvars = 0 then
-          Some (DExternal (None, flags, name, translate_type env t0))
+          Some (DExternal (None, meta, name, translate_type env t0))
         else begin
           BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (Syntax.string_of_mlpath name);
           None
@@ -419,31 +422,32 @@ and translate_let env flavor flags lb: option<decl> =
       else begin
         try
           let body = translate_expr env body in
-          Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
+          Some (DFunction (None, meta, List.length tvars, t, name, binders, body))
         with e ->
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
           Errors. log_issue Range.dummyRange (Errors.Warning_FunctionNotExtacted, (BU.format2 "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg));
           let msg = "This function was not extracted:\n" ^ msg in
-          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
+          Some (DFunction (None, meta, List.length tvars, t, name, binders, EAbortS msg))
       end
 
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t);
-      mllb_def = expr
+      mllb_def = expr;
+      mllb_meta = meta
     } ->
       // Case 2: this is a global
-      let flags = translate_flags flags in
+      let meta = translate_flags meta in
       let env = List.fold_left (fun env name -> extend_t env name) env tvars in
       let t = translate_type env t in
       let name = env.module_name, name in
       begin try
         let expr = translate_expr env expr in
-        Some (DGlobal (flags, name, List.length tvars, t, expr))
+        Some (DGlobal (meta, name, List.length tvars, t, expr))
       with e ->
         Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
-        Some (DGlobal (flags, name, List.length tvars, t, EAny))
+        Some (DGlobal (meta, name, List.length tvars, t, EAny))
       end
 
   | { mllb_name = name; mllb_tysc = ts } ->
@@ -597,11 +601,12 @@ and translate_expr env e: expr =
   | MLE_Name n ->
       EQualified n
 
-  | MLE_Let ((flavor, flags, [{
+  | MLE_Let ((flavor, [{
       mllb_name = name;
       mllb_tysc = Some ([], typ); // assuming unquantified type
       mllb_add_unit = add_unit; // ?
       mllb_def = body;
+      mllb_meta = flags;
       print_typ = print // ?
     }]), continuation) ->
       let is_mut = BU.for_some (function Mutable -> true | _ -> false) flags in
@@ -629,8 +634,18 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
-  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _) when (string_of_mlpath p = "Prims.admit") ->
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _)
+    when string_of_mlpath p = "Prims.admit" ->
       EAbort
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, [arg])
+    when string_of_mlpath p = "FStar.HyperStack.All.failwith" ->
+      (match arg with
+       | {expr=MLE_Const (MLC_String msg)} -> EAbortS msg
+       | _ ->
+         let print = with_ty MLTY_Top (MLE_Name (mlpath_of_lident (Ident.lid_of_str "FStar.HyperStack.IO.print_string"))) in
+         let print = with_ty MLTY_Top (MLE_App (print, [arg])) in
+         let t = translate_expr env print in
+         ESequence [t; EAbort])
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v } ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" && is_mutable env v) ->
       EBound (find env v)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v }; e ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" && is_mutable env v) ->

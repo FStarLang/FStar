@@ -578,7 +578,7 @@
         "typing_Benton2004.reify_exp"
       ],
       0,
-      "9a5df30cbcd28e2cfbcfb152a9343130"
+      "c7e797fcd820757fabf283a7c7364d9c"
     ],
     [
       "Benton2004.RHL.r_if",
@@ -1006,7 +1006,7 @@
         "typing_tok_Benton2004.RHL.Right@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "ba4b5a3dfb7dc9088a71a3d8d247a87c"
+      "f341e21c5d44a1da27f0201f541c1164"
     ],
     [
       "Benton2004.RHL.r_while",
@@ -1163,7 +1163,7 @@
         "typing_Benton2004.RHL.gand", "typing_Benton2004.RHL.interp"
       ],
       0,
-      "4fa8b7f76889ab082848fa4d0ed2d8e1"
+      "b01221bb8da79dc7ea88b11683aaf5ab"
     ],
     [
       "Benton2004.RHL.r_sym",

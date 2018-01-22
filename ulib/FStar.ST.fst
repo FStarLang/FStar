@@ -19,6 +19,8 @@ open FStar.TSet
 open FStar.Heap
 open FStar.Preorder
 
+module W = FStar.Monotonic.Witnessed
+
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
 new_effect GST = STATE_h heap
@@ -43,14 +45,15 @@ type heap_predicate = heap -> Type0
 let stable (p:heap_predicate) =
   forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2
 
-assume type witnessed: (p:heap_predicate{stable p}) -> Type0
+abstract let witnessed (p:heap_predicate{stable p}) = W.witnessed heap_rel p
 
 assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
 
-assume val lemma_functoriality
-  (p:heap_predicate{stable p /\ witnessed p}) (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
+val lemma_functoriality (p:heap_predicate{stable p /\ witnessed p}) 
+                        (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
   :Lemma (ensures (witnessed q))
+let lemma_functoriality p q = W.lemma_witnessed_weakening heap_rel p q
 
 (***** ST effect *****)
 

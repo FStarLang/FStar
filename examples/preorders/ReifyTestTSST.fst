@@ -1,6 +1,7 @@
 module ReifyTestTSST
 
 open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 (* *************************************************************************************************** *)
 (* A nat-valued instance of time-stamped preorder-indexed state monads for reify-recall demonstration. *)
@@ -88,9 +89,7 @@ effect TSST    (a:Type)
 
 (* An abstract (box-style) modality for witnessed stable predicates. *)
 
-assume type witnessed: ts:timestamp ->
-			p:predicate state{stable p state_rel} -> 
-			Type0
+let witnessed (ts:timestamp) (p:predicate state{stable p state_rel}) = witnessed state_rel p
 
 
 (* Generic effects (operations) for preorder-indexed state monads. *)

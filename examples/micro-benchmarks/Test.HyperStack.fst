@@ -297,3 +297,37 @@ let mm_tests _ =
   //this fails because recall of mm refs is not allowed
   //let _ = recall r3 in
   ()
+
+(*
+ * set up: x and y are in different regions.
+ *         x and z are in same region but have different addresses
+ *         w is in a region different from x and y
+ *         mods_test1 mods [x; y]
+ *         we prove that z and w remain same, and usual modifies clauses
+ *         we use `mods` to specify the mods_test1
+ *)
+assume val mods_test1 (a:Type0) (rel:preorder a) (x y z w:mref a rel)
+  :ST unit (fun h0 -> True)
+	   (fun h0 _ h1 -> mods [ Ref x; Ref y ] h0 h1)
+
+let mods_test2 (a:Type0) (rel:preorder a) (x y z w:mref a rel)
+  :ST unit (fun h0 -> frameOf x =!= frameOf y /\ 
+                   frameOf z == frameOf x  /\
+                   as_addr z =!= as_addr x /\
+    	           frameOf w =!= frameOf x /\
+	           frameOf w =!= frameOf y)
+	   (fun h0 _ h1 -> sel h0 z == sel h1 z /\ sel h0 w == sel h1 w /\
+	                modifies (Set.union (Set.singleton (frameOf x))
+			                    (Set.singleton (frameOf y))) h0 h1 /\
+			modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1 /\
+			modifies_ref (frameOf y) (Set.singleton (as_addr y)) h0 h1)
+  = recall x; recall y; recall z; recall w;
+    mods_test1 a rel x y z w
+
+let test_logical_operators_on_witnessed (p q:mem_predicate)
+  = lemma_witnessed_and p q;
+    assert (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q));
+    lemma_witnessed_or p q;
+    assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
+    lemma_witnessed_nested p;
+    assert (witnessed (fun _ -> witnessed p) <==> witnessed p)

@@ -916,7 +916,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 
-        | Tm_constant Const_set_range_of, [(rng, _); (arg, _)] ->
+        | Tm_constant Const_set_range_of, [(arg, _); (rng, _)] ->
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
@@ -2516,7 +2516,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
-                         Errors.raise_error (Errors.Fatal_NonVaribleInductiveTypeParameter,
+                         Errors.raise_error (Errors.Fatal_NonVariableInductiveTypeParameter,
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
                                       (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos

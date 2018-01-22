@@ -576,7 +576,7 @@ let mk_MLE_Seq e1 e2 = match e1.expr, e2.expr with
 *)
 let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
     match lbs with
-       | (NonRec, quals, [lb]) when not top_level ->
+       | (NonRec, [lb]) when not top_level ->
          (match lb.mllb_tysc with
           | Some ([], t) when (t=ml_unit_ty) ->
             if body.expr=ml_unit.expr
@@ -831,20 +831,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
-            // the lack of as-patterns makes this a little bit heavy
-            begin match term_as_mlexpr' g t with
-            | { expr = MLE_Let ((NonRec, flags, bodies), continuation);
-                mlty = mlty;
-                loc = loc
-              }, tag, typ ->
-                {
-                  expr = MLE_Let ((NonRec, Mutable :: flags, bodies), continuation);
-                  mlty = mlty;
-                  loc = loc
-                }, tag, typ
-            | _ ->
-                failwith "impossible"
-            end
+            raise_err (Error_NoLetMutable, "let-mutable no longer supported")
 
         | Tm_meta(t, Meta_monadic (m, _)) ->
           let t = SS.compress t in
@@ -904,8 +891,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let ty = term_as_mlty g (tabbrev PC.range_lid) in
           with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
 
-        | Tm_app({n=Tm_constant Const_set_range_of}, [(a1, _); (a2, _)]) ->
-          term_as_mlexpr' g a1
+        | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); (r, _)]) ->
+          term_as_mlexpr' g t
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
@@ -976,7 +963,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
                         let l_app = List.fold_right
                             (fun (x, arg) out ->
-                              with_ty out.mlty <| mk_MLE_Let false (NonRec, [], [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]) out)
+                              with_ty out.mlty <| mk_MLE_Let false (NonRec,
+                                [{mllb_name=x; mllb_tysc=Some ([], arg.mlty);
+                                mllb_add_unit=false; mllb_def=arg;
+                                print_typ=true; mllb_meta=[]}]) out)
                             lbs app in // lets are to ensure L to R eval ordering of arguments
                         l_app, f, t
 
@@ -1237,7 +1227,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let expected_t = snd polytype in
               let e, _ = check_term_as_mlexpr env e f expected_t in
               let f = maybe_downgrade_eff env f expected_t in
-              f, {mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true} in
+              f, {mllb_meta = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true} in
 
          (*after the above definitions, here is the main code for extracting let expressions*)
           let lbs = lbs |> List.map maybe_generalize in
@@ -1259,7 +1249,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
           let is_rec = if is_rec = true then Rec else NonRec in
 
-          with_ty_loc t' (mk_MLE_Let top_level (is_rec, [], List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
+          with_ty_loc t' (mk_MLE_Let top_level (is_rec, List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
 
       | Tm_match(scrutinee, pats) ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
@@ -1373,4 +1363,4 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in
-    MLM_Let (NonRec,[], [{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=false}] )
+    MLM_Let (NonRec,[{mllb_meta=[]; mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=false}] )

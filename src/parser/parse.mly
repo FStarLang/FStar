@@ -62,7 +62,7 @@ open FStar_String
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
@@ -72,6 +72,7 @@ open FStar_String
 %token BACKTICK UNIV_HASH
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
+%token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 
 /* These are artificial */
 %token EOF
@@ -146,11 +147,8 @@ decl:
   | ASSUME lid=uident COLON phi=formula
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
-  | d=decoration ds=list(decoration) decl=rawDecl
-      { mk_decl decl (rhs parseState 3) (d :: ds) }
-
-  | decl=rawDecl
-      { mk_decl decl (rhs parseState 1) [] }
+  | ds=list(decoration) decl=rawDecl
+      { mk_decl decl (rhs parseState 2) ds }
 
 rawDecl:
   | p=pragma
@@ -960,13 +958,17 @@ range:
      { mk_ident (op, rhs parseState 1) }
   | op=operatorInfix0ad12
      { op }
-  | op=PIPE_RIGHT
+       | op=PIPE_RIGHT
      { mk_ident("|>", rhs parseState 1) }
   | op=COLON_EQUALS
      { mk_ident(":=", rhs parseState 1) }
   | op=COLON_COLON
      { mk_ident("::", rhs parseState 1) }
-
+  | op=OP_MIXFIX_ASSIGNMENT
+     { mk_ident(op, rhs parseState 1) }
+  | op=OP_MIXFIX_ACCESS
+     { mk_ident(op, rhs parseState 1) }
+  
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
   | op=OPINFIX0a
@@ -980,6 +982,8 @@ range:
 %inline dotOperator:
   | DOT_LPAREN e=term RPAREN { mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 }
   | DOT_LBRACK e=term RBRACK { mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LBRACK_BAR e=term RBRACE { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LENS_PAREN_LEFT e=term LENS_PAREN_RIGHT { mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 }
 
 some(X):
   | x=X { Some x }
