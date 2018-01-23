@@ -628,6 +628,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.gt_big_int x y)));
              (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.ge_big_int x y)));
              (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
+             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
