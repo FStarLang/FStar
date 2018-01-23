@@ -95,7 +95,6 @@ and expr =
     EBufCreate of lifetime * expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
-  | EBufFree of expr
   | EBufSub of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
   | EMatch of expr * branches
@@ -117,6 +116,8 @@ and expr =
   | EString of string
   | EFun of list<binder> * expr * typ
   | EAbortS of string
+  | EBufFree of expr
+
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
