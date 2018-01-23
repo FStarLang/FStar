@@ -63,7 +63,6 @@ and expr =
   | EBufCreate of (lifetime,expr,expr) FStar_Pervasives_Native.tuple3 
   | EBufRead of (expr,expr) FStar_Pervasives_Native.tuple2 
   | EBufWrite of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
-  | EBufFree of expr 
   | EBufSub of (expr,expr) FStar_Pervasives_Native.tuple2 
   | EBufBlit of (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5 
   | EMatch of (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
@@ -89,7 +88,8 @@ and expr =
   | EBufFill of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
   | EString of Prims.string 
   | EFun of (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3 
-  | EAbortS of Prims.string [@@deriving show]
+  | EAbortS of Prims.string 
+  | EBufFree of expr [@@deriving show]
 and op =
   | Add 
   | AddW 
@@ -364,29 +364,23 @@ let (uu___is_EBufWrite : expr -> Prims.bool) =
 let (__proj__EBufWrite__item___0 :
   expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
   fun projectee  -> match projectee with | EBufWrite _0 -> _0 
-let (uu___is_EBufFree : expr -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | EBufFree _0 -> true | uu____1581 -> false
-  
-let (__proj__EBufFree__item___0 : expr -> expr) =
-  fun projectee  -> match projectee with | EBufFree _0 -> _0 
 let (uu___is_EBufSub : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EBufSub _0 -> true | uu____1597 -> false
+    match projectee with | EBufSub _0 -> true | uu____1585 -> false
   
 let (__proj__EBufSub__item___0 :
   expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | EBufSub _0 -> _0 
 let (uu___is_EBufBlit : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EBufBlit _0 -> true | uu____1631 -> false
+    match projectee with | EBufBlit _0 -> true | uu____1619 -> false
   
 let (__proj__EBufBlit__item___0 :
   expr -> (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5) =
   fun projectee  -> match projectee with | EBufBlit _0 -> _0 
 let (uu___is_EMatch : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EMatch _0 -> true | uu____1683 -> false
+    match projectee with | EMatch _0 -> true | uu____1671 -> false
   
 let (__proj__EMatch__item___0 :
   expr ->
@@ -395,49 +389,49 @@ let (__proj__EMatch__item___0 :
   = fun projectee  -> match projectee with | EMatch _0 -> _0 
 let (uu___is_EOp : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EOp _0 -> true | uu____1729 -> false
+    match projectee with | EOp _0 -> true | uu____1717 -> false
   
 let (__proj__EOp__item___0 :
   expr -> (op,width) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | EOp _0 -> _0 
 let (uu___is_ECast : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ECast _0 -> true | uu____1757 -> false
+    match projectee with | ECast _0 -> true | uu____1745 -> false
   
 let (__proj__ECast__item___0 :
   expr -> (expr,typ) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | ECast _0 -> _0 
 let (uu___is_EPushFrame : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EPushFrame  -> true | uu____1780 -> false
+    match projectee with | EPushFrame  -> true | uu____1768 -> false
   
 let (uu___is_EPopFrame : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EPopFrame  -> true | uu____1784 -> false
+    match projectee with | EPopFrame  -> true | uu____1772 -> false
   
 let (uu___is_EBool : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EBool _0 -> true | uu____1789 -> false
+    match projectee with | EBool _0 -> true | uu____1777 -> false
   
 let (__proj__EBool__item___0 : expr -> Prims.bool) =
   fun projectee  -> match projectee with | EBool _0 -> _0 
 let (uu___is_EAny : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EAny  -> true | uu____1800 -> false
+    match projectee with | EAny  -> true | uu____1788 -> false
   
 let (uu___is_EAbort : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EAbort  -> true | uu____1804 -> false
+    match projectee with | EAbort  -> true | uu____1792 -> false
   
 let (uu___is_EReturn : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EReturn _0 -> true | uu____1809 -> false
+    match projectee with | EReturn _0 -> true | uu____1797 -> false
   
 let (__proj__EReturn__item___0 : expr -> expr) =
   fun projectee  -> match projectee with | EReturn _0 -> _0 
 let (uu___is_EFlat : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EFlat _0 -> true | uu____1831 -> false
+    match projectee with | EFlat _0 -> true | uu____1819 -> false
   
 let (__proj__EFlat__item___0 :
   expr ->
@@ -446,64 +440,70 @@ let (__proj__EFlat__item___0 :
   = fun projectee  -> match projectee with | EFlat _0 -> _0 
 let (uu___is_EField : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EField _0 -> true | uu____1879 -> false
+    match projectee with | EField _0 -> true | uu____1867 -> false
   
 let (__proj__EField__item___0 :
   expr -> (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3) =
   fun projectee  -> match projectee with | EField _0 -> _0 
 let (uu___is_EWhile : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EWhile _0 -> true | uu____1913 -> false
+    match projectee with | EWhile _0 -> true | uu____1901 -> false
   
 let (__proj__EWhile__item___0 :
   expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | EWhile _0 -> _0 
 let (uu___is_EBufCreateL : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EBufCreateL _0 -> true | uu____1943 -> false
+    match projectee with | EBufCreateL _0 -> true | uu____1931 -> false
   
 let (__proj__EBufCreateL__item___0 :
   expr -> (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | EBufCreateL _0 -> _0 
 let (uu___is_ETuple : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ETuple _0 -> true | uu____1975 -> false
+    match projectee with | ETuple _0 -> true | uu____1963 -> false
   
 let (__proj__ETuple__item___0 : expr -> expr Prims.list) =
   fun projectee  -> match projectee with | ETuple _0 -> _0 
 let (uu___is_ECons : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ECons _0 -> true | uu____2001 -> false
+    match projectee with | ECons _0 -> true | uu____1989 -> false
   
 let (__proj__ECons__item___0 :
   expr -> (typ,Prims.string,expr Prims.list) FStar_Pervasives_Native.tuple3)
   = fun projectee  -> match projectee with | ECons _0 -> _0 
 let (uu___is_EBufFill : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EBufFill _0 -> true | uu____2043 -> false
+    match projectee with | EBufFill _0 -> true | uu____2031 -> false
   
 let (__proj__EBufFill__item___0 :
   expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
   fun projectee  -> match projectee with | EBufFill _0 -> _0 
 let (uu___is_EString : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EString _0 -> true | uu____2073 -> false
+    match projectee with | EString _0 -> true | uu____2061 -> false
   
 let (__proj__EString__item___0 : expr -> Prims.string) =
   fun projectee  -> match projectee with | EString _0 -> _0 
 let (uu___is_EFun : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EFun _0 -> true | uu____2093 -> false
+    match projectee with | EFun _0 -> true | uu____2081 -> false
   
 let (__proj__EFun__item___0 :
   expr -> (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3) =
   fun projectee  -> match projectee with | EFun _0 -> _0 
 let (uu___is_EAbortS : expr -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EAbortS _0 -> true | uu____2129 -> false
+    match projectee with | EAbortS _0 -> true | uu____2117 -> false
   
 let (__proj__EAbortS__item___0 : expr -> Prims.string) =
   fun projectee  -> match projectee with | EAbortS _0 -> _0 
+let (uu___is_EBufFree : expr -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | EBufFree _0 -> true | uu____2129 -> false
+  
+let (__proj__EBufFree__item___0 : expr -> expr) =
+  fun projectee  -> match projectee with | EBufFree _0 -> _0 
 let (uu___is_Add : op -> Prims.bool) =
   fun projectee  -> match projectee with | Add  -> true | uu____2140 -> false 
 let (uu___is_AddW : op -> Prims.bool) =
