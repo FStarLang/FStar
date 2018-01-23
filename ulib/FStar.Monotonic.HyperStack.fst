@@ -409,6 +409,7 @@ private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem
 
 [@"opaque_to_smt"]
 unfold private let norm_steps :list norm_step =
+  //iota for reducing match
   [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
                             "FStar.Monotonic.HyperStack.refs_in_region";
                             "FStar.Monotonic.HyperStack.modifies_some_refs"];
@@ -416,8 +417,8 @@ unfold private let norm_steps :list norm_step =
 
 [@"opaque_to_smt"]
 unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
-       (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
-       (norm norm_steps (modifies_some_refs rs rs h0 h1))
+  (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
+  (norm norm_steps (modifies_some_refs rs rs h0 h1))
 
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
