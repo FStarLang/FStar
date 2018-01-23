@@ -3,4 +3,4 @@ on the version of the OCaml compiler. In order for extraction to work with
 OCaml 4.02.X, 4.04.X, 4.05.X, 4.06.X, and 4.07.X slightly different versions of the
 ML prettyprinter are included for now.
 
-Currently, the prettyprinters for 4.05.X, 4.06X, and 4.07.X are identical.
+Currently, the prettyprinters for 4.05.X, 4.06.X, and 4.07.X are identical.
