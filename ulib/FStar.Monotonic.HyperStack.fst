@@ -239,7 +239,7 @@ let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem)
 let fresh_region (i:rid) (m0 m1:mem) =
   not (m0.h `Map.contains` i) /\ m1.h `Map.contains` i
 
-abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
+private val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
                                -> m0:mem{map_invariant m0.h} -> m1:mem{map_invariant m1.h} ->
   Lemma (requires (fresh_region i m0 m1
                   /\ fresh_region j m0 m1
@@ -249,10 +249,6 @@ abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:ri
                   /\ extends j jpar
                   /\ i<>j))
         (ensures (disjoint i j))
-        [SMTPat (fresh_region i m0 m1);
-         SMTPat (fresh_region j m0 m1);
-         SMTPat (extends i ipar);
-         SMTPat (extends j jpar)]
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
 (*
@@ -357,29 +353,26 @@ let modifies_one id h0 h1 = modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
   Heap.modifies s (Map.sel h0.h id) (Map.sel h1.h id)
 
-let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
+private let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (contains h x))
   (ensures (contains h x
             /\ modifies_one (frameOf x) h (upd h x v)
             /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
             /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPat (contains h x)]
   = ()
 
-let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
+private let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (frameOf x = h.tip /\ x `unused_in` h))
   (ensures (frameOf x = h.tip
             /\ modifies_one h.tip h (upd h x v)
             /\ modifies_ref h.tip Set.empty h (upd h x v)
             /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPat (x `unused_in` h)]
   = ()
 
-val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
+private val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
                   -> h:mem -> x:mreference a rel -> x':mreference a' rel' -> Lemma
   (requires (contains h x /\ x' `unused_in` h))
   (ensures  (frameOf x <> frameOf x' \/ ~ (as_ref x === as_ref x')))
-  [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
 let lemma_live_1 #a #a' #rel #rel' h x x' = ()
 
 let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) : Lemma
