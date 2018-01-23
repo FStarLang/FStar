@@ -22,5 +22,30 @@ open FStar.ST
 open FStar.All
 module BU = FStar.Util
 
-let has_cygpath = false
-let try_convert_file_name_to_mixed s = s
+let has_cygpath =
+    try
+        let _, t_out, _ = BU.run_proc "which" "cygpath" "" in
+        BU.trim_string t_out = "/usr/bin/cygpath"
+    with
+    | _ -> false
+
+//try to convert filename passed from the editor to mixed path
+//that works on both cygwin and native windows
+//noop if not on cygwin
+//on cygwin emacs this is required
+
+let try_convert_file_name_to_mixed =
+  let cache = BU.smap_create 20 in
+  fun (s:string) ->
+    if has_cygpath
+    && BU.starts_with s "/" then
+      match BU.smap_try_find cache s with
+      | Some s ->
+          s
+      | None ->
+          let _, out, _ = BU.run_proc "cygpath" ("-m " ^ s) "" in
+          let out = BU.trim_string out in
+          BU.smap_add cache s out;
+          out
+    else
+      s
