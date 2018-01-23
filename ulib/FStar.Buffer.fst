@@ -806,7 +806,7 @@ let create #a init len =
 
 unfold let p (#a:Type0) (init:list a) : GTot Type0 =
   normalize (0 < FStar.List.Tot.length init) /\
-  normalize (FStar.List.Tot.length init < UInt.max_int 32)
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
 unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
   normalize (length buf == len)
