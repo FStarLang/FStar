@@ -99,15 +99,11 @@ private let trace_wrap (t : tactic 'a) : tactic 'a =
     r <-- t;
     return r
 
-// Must run with tactics off, as it will otherwise try to run `by_tactic
-// (reify_tactic t)`, which fails as `t` is not a concrete tactic
-#reset-options "--no_tactics"
 let assert_by_tactic (p:Type) (t:tactic unit)
   : Pure unit
          (requires (by_tactic (trace_wrap t) (squash p)))
          (ensures (fun _ -> p))
   = ()
-#reset-options
 
 (* We don't peel off all `by_tactic`s in negative positions, so give the SMT a way to reason about them *)
 val by_tactic_seman : a:Type -> tau:(tactic a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
