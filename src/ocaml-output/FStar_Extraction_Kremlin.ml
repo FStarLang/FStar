@@ -669,8 +669,8 @@ let thd3:
       -> 'Auu____2729
   = fun uu____2741  -> match uu____2741 with | (uu____2748,uu____2749,x) -> x
 let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
-  fun uu___33_2755  ->
-    match uu___33_2755 with
+  fun uu___34_2755  ->
+    match uu___34_2755 with
     | "UInt8" -> FStar_Pervasives_Native.Some UInt8
     | "UInt16" -> FStar_Pervasives_Native.Some UInt16
     | "UInt32" -> FStar_Pervasives_Native.Some UInt32
@@ -681,8 +681,8 @@ let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
     | "Int64" -> FStar_Pervasives_Native.Some Int64
     | uu____2758 -> FStar_Pervasives_Native.None
 let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
-  fun uu___34_2763  ->
-    match uu___34_2763 with
+  fun uu___35_2763  ->
+    match uu___35_2763 with
     | "op_Negation" -> FStar_Pervasives_Native.Some Not
     | "op_AmpAmp" -> FStar_Pervasives_Native.Some And
     | "op_BarBar" -> FStar_Pervasives_Native.Some Or
@@ -692,8 +692,8 @@ let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
 let is_bool_op: Prims.string -> Prims.bool =
   fun op  -> (mk_bool_op op) <> FStar_Pervasives_Native.None
 let mk_op: Prims.string -> op FStar_Pervasives_Native.option =
-  fun uu___35_2776  ->
-    match uu___35_2776 with
+  fun uu___36_2776  ->
+    match uu___36_2776 with
     | "add" -> FStar_Pervasives_Native.Some Add
     | "op_Plus_Hat" -> FStar_Pervasives_Native.Some Add
     | "add_mod" -> FStar_Pervasives_Native.Some AddW
@@ -775,20 +775,20 @@ let extend: env -> Prims.string -> Prims.bool -> env =
   fun env  ->
     fun x  ->
       fun is_mut  ->
-        let uu___41_2890 = env in
+        let uu___42_2890 = env in
         {
           names = ({ pretty = x; mut = is_mut } :: (env.names));
-          names_t = (uu___41_2890.names_t);
-          module_name = (uu___41_2890.module_name)
+          names_t = (uu___42_2890.names_t);
+          module_name = (uu___42_2890.module_name)
         }
 let extend_t: env -> Prims.string -> env =
   fun env  ->
     fun x  ->
-      let uu___42_2897 = env in
+      let uu___43_2897 = env in
       {
-        names = (uu___42_2897.names);
+        names = (uu___43_2897.names);
         names_t = (x :: (env.names_t));
-        module_name = (uu___42_2897.module_name)
+        module_name = (uu___43_2897.module_name)
       }
 let find_name: env -> Prims.string -> name =
   fun env  ->
@@ -879,8 +879,8 @@ and translate_flags:
   FStar_Extraction_ML_Syntax.meta Prims.list -> flag Prims.list =
   fun flags1  ->
     FStar_List.choose
-      (fun uu___36_3285  ->
-         match uu___36_3285 with
+      (fun uu___37_3285  ->
+         match uu___37_3285 with
          | FStar_Extraction_ML_Syntax.Private  ->
              FStar_Pervasives_Native.Some Private
          | FStar_Extraction_ML_Syntax.NoExtract  ->
@@ -935,8 +935,8 @@ and translate_let:
             FStar_Extraction_ML_Syntax.print_typ = uu____3334;_} ->
             let assumed =
               FStar_Util.for_some
-                (fun uu___37_3353  ->
-                   match uu___37_3353 with
+                (fun uu___38_3353  ->
+                   match uu___38_3353 with
                    | FStar_Extraction_ML_Syntax.Assumed  -> true
                    | uu____3354 -> false) meta in
             let env1 =
@@ -946,8 +946,8 @@ and translate_let:
             let env2 =
               FStar_List.fold_left
                 (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars in
-            let rec find_return_type eff i uu___38_3375 =
-              match uu___38_3375 with
+            let rec find_return_type eff i uu___39_3375 =
+              match uu___39_3375 with
               | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____3380,eff1,t) when
                   i > (Prims.parse_int "0") ->
                   find_return_type eff1 (i - (Prims.parse_int "1")) t
@@ -1037,8 +1037,8 @@ and translate_let:
             FStar_Extraction_ML_Syntax.print_typ = uu____3531;_} ->
             let assumed =
               FStar_Util.for_some
-                (fun uu___37_3550  ->
-                   match uu___37_3550 with
+                (fun uu___38_3550  ->
+                   match uu___38_3550 with
                    | FStar_Extraction_ML_Syntax.Assumed  -> true
                    | uu____3551 -> false) meta in
             let env1 =
@@ -1048,8 +1048,8 @@ and translate_let:
             let env2 =
               FStar_List.fold_left
                 (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars in
-            let rec find_return_type eff i uu___38_3572 =
-              match uu___38_3572 with
+            let rec find_return_type eff i uu___39_3572 =
+              match uu___39_3572 with
               | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____3577,eff1,t) when
                   i > (Prims.parse_int "0") ->
                   find_return_type eff1 (i - (Prims.parse_int "1")) t
@@ -1457,8 +1457,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
           ->
           let is_mut =
             FStar_Util.for_some
-              (fun uu___39_4553  ->
-                 match uu___39_4553 with
+              (fun uu___40_4553  ->
+                 match uu___40_4553 with
                  | FStar_Extraction_ML_Syntax.Mutable  -> true
                  | uu____4554 -> false) flags1 in
           let uu____4555 =
@@ -2209,8 +2209,8 @@ and translate_width:
   (FStar_Const.signedness,FStar_Const.width) FStar_Pervasives_Native.tuple2
     FStar_Pervasives_Native.option -> width
   =
-  fun uu___40_5657  ->
-    match uu___40_5657 with
+  fun uu___41_5657  ->
+    match uu___41_5657 with
     | FStar_Pervasives_Native.None  -> CInt
     | FStar_Pervasives_Native.Some (FStar_Const.Signed ,FStar_Const.Int8 ) ->
         Int8

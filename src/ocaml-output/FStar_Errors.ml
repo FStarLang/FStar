@@ -2283,8 +2283,8 @@ let findIndex:
     fun v1  ->
       FStar_All.pipe_right l
         (FStar_List.index
-           (fun uu___25_3464  ->
-              match uu___25_3464 with
+           (fun uu___26_3464  ->
+              match uu___26_3464 with
               | (e,uu____3470) when e = v1 -> true
               | uu____3471 -> false))
 let errno_of_error: raw_error -> Prims.int =
@@ -2357,8 +2357,8 @@ let add_errors:
                     (e, uu____3670) in
                   log_issue r uu____3665) errs)
 let issue_of_exn: Prims.exn -> issue FStar_Pervasives_Native.option =
-  fun uu___26_3675  ->
-    match uu___26_3675 with
+  fun uu___27_3675  ->
+    match uu___27_3675 with
     | Error (e,msg,r) ->
         let errno = errno_of_error e in
         let uu____3682 =
@@ -2390,8 +2390,8 @@ let err_exn: Prims.exn -> Prims.unit =
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___27_3703  ->
-    match uu___27_3703 with
+  fun uu___28_3703  ->
+    match uu___28_3703 with
     | Error uu____3704 -> true
     | FStar_Util.NYI uu____3711 -> true
     | Stop  -> true

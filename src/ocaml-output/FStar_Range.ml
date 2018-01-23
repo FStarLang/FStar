@@ -63,16 +63,16 @@ let set_use_range: range -> rng -> range =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___22_98 = r2 in
-        { def_range = (uu___22_98.def_range); use_range = use_rng }
+        let uu___23_98 = r2 in
+        { def_range = (uu___23_98.def_range); use_range = use_rng }
       else r2
 let set_def_range: range -> rng -> range =
   fun r2  ->
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___23_106 = r2 in
-        { def_range = def_rng; use_range = (uu___23_106.use_range) }
+        let uu___24_106 = r2 in
+        { def_range = def_rng; use_range = (uu___24_106.use_range) }
       else r2
 let mk_pos: Prims.int -> Prims.int -> pos =
   fun l  ->
@@ -157,8 +157,8 @@ let range_before_pos: range -> pos -> Prims.bool =
   fun m1  -> fun p  -> let uu____226 = end_of_range m1 in pos_geq p uu____226
 let end_of_line: pos -> pos =
   fun p  ->
-    let uu___24_230 = p in
-    { line = (uu___24_230.line); col = FStar_Util.max_int }
+    let uu___25_230 = p in
+    { line = (uu___25_230.line); col = FStar_Util.max_int }
 let extend_to_end_of_line: range -> range =
   fun r  ->
     let uu____234 = file_of_range r in
