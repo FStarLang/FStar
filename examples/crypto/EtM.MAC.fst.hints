@@ -145,7 +145,8 @@
         "projection_inverse_EtM.MAC.Key_log",
         "projection_inverse_EtM.MAC.Key_region",
         "projection_inverse_FStar.Monotonic.HyperStack.HS_h",
-        "refinement_interpretation_EtM.MAC_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
+        "refinement_interpretation_EtM.MAC_Tm_refine_6fbd4d82bb3e7e5b2939e88df41fcbe3",
+        "refinement_interpretation_EtM.MAC_Tm_refine_98f3ea9974061fc22d23d7c9296c4efa",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
@@ -169,7 +170,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "4da48046de16208e66de22de174fff82"
+      "eb4d22dd8f8b11f8aefc0b790d02af8d"
     ],
     [
       "EtM.MAC.mac",
@@ -252,8 +253,10 @@
         "equation_CoreCrypto.hashSize", "equation_EtM.CPA.cipher",
         "equation_EtM.CPA.ivsize", "equation_EtM.MAC.log_entry",
         "equation_EtM.MAC.log_t", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
+        "equation_EtM.MAC.msg", "equation_EtM.MAC.rid",
+        "equation_EtM.MAC.tag",
         "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.HyperStack.ST.is_live_for_rw_in",
         "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.HyperStack.ST.modifies_none",
@@ -266,7 +269,6 @@
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Monotonic.HyperStack.mref",
         "equation_FStar.Monotonic.HyperStack.sel",
-        "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Seq.Properties.mem", "equation_FStar.Set.eqtype",
         "equation_FStar.Set.subset", "equation_Platform.Bytes.bytes",
         "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
@@ -291,6 +293,7 @@
         "proj_equation_EtM.MAC.Key_log",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
         "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_EtM.MAC_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
@@ -302,7 +305,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "37f83069e050062a0d9a33ce55a4b3a9"
+      "757514d34ff6d5d380831556d43736ff"
     ]
   ]
 ]

@@ -96,7 +96,8 @@
         "projection_inverse_EtM.CPA.Key_log",
         "projection_inverse_EtM.CPA.Key_region",
         "projection_inverse_FStar.Monotonic.HyperStack.HS_h",
-        "refinement_interpretation_EtM.CPA_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
+        "refinement_interpretation_EtM.CPA_Tm_refine_6fbd4d82bb3e7e5b2939e88df41fcbe3",
+        "refinement_interpretation_EtM.CPA_Tm_refine_98f3ea9974061fc22d23d7c9296c4efa",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_ffd890ccd7288c856f2f05ce06687083",
@@ -120,7 +121,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "2a4a0c8262ec6af8371f20cc47469ed9"
+      "58000ef0f0ba0f744ef2af10d7eb28f4"
     ],
     [
       "EtM.CPA.encrypt",
@@ -210,7 +211,7 @@
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "808e8e5a549f7230ce6ae50e14765f54"
+      "0c8908b792ad365ae68e3caee3b1d6e0"
     ],
     [
       "EtM.CPA.decrypt",
@@ -234,9 +235,10 @@
         "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
         "equation_EtM.CPA.ivsize", "equation_EtM.CPA.log_t",
         "equation_EtM.CPA.mem", "equation_EtM.CPA.msg",
-        "equation_EtM.Ideal.auth", "equation_EtM.Ideal.ind_cpa_rest_adv",
-        "equation_EtM.Plain.coerce",
+        "equation_EtM.CPA.rid", "equation_EtM.Ideal.auth",
+        "equation_EtM.Ideal.ind_cpa_rest_adv", "equation_EtM.Plain.coerce",
         "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.HyperStack.ST.is_live_for_rw_in",
         "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.HyperStack.ST.modifies_none",
@@ -252,7 +254,6 @@
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Monotonic.HyperStack.mref",
         "equation_FStar.Monotonic.HyperStack.sel",
-        "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Monotonic.Seq.log_t",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
@@ -285,9 +286,9 @@
         "lemma_FStar.Map.lemma_SelConcat2",
         "lemma_FStar.Map.lemma_SelRestrict",
         "lemma_FStar.Map.lemma_equal_intro",
-        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
+        "lemma_FStar.Pervasives.invertOption", "lemma_FStar.Set.mem_empty",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "proj_equation_EtM.CPA.Key_log",
         "proj_equation_EtM.CPA.Key_region",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
@@ -296,7 +297,7 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_EtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
-        "refinement_interpretation_EtM.CPA_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
+        "refinement_interpretation_EtM.CPA_Tm_refine_bf39e03e7bf3dbaddd44bb50fdd17db7",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
@@ -321,10 +322,10 @@
         "typing_FStar.Monotonic.Seq.grows", "typing_FStar.Seq.Base.seq",
         "typing_FStar.Seq.Properties.seq_find",
         "typing_FStar.Set.complement", "typing_FStar.Set.empty",
-        "typing_FStar.UInt.fits", "typing_Prims.pow2"
+        "typing_FStar.Set.mem", "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "5944a5ca12681748f63f3935cea07b2f"
+      "f2224825583eeb46720572bc528b7e09"
     ]
   ]
 ]
