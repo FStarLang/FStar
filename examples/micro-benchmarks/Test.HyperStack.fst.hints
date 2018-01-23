@@ -487,7 +487,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "00805f5f56835734946672f0654d9ea1"
+      "925585a7161722d5946c79f6fc8ac8dd"
     ],
     [
       "Test.HyperStack.test_allocate",
@@ -839,7 +839,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "51a228fc1976a6c99b322a2f9f29462e"
+      "04c865deec626c608e2eb095b55e8413"
     ],
     [
       "Test.HyperStack.test_heap_code_with_stack_calls",
