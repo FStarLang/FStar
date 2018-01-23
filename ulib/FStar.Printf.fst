@@ -203,6 +203,7 @@ let parse_something : extension_parser =
     | 'S' :: rest -> Some (MkExtension something_to_string, rest)
     | _ -> None
 
+inline_for_extraction
 let my_sprintf = ext_sprintf parse_something
 
 let test_ext () = my_sprintf "%d: Hello %s, sprintf %s %ul, with %XS or %XS extensions"
