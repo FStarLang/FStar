@@ -331,3 +331,7 @@ let test_logical_operators_on_witnessed (p q:mem_predicate)
     assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
     lemma_witnessed_nested p;
     assert (witnessed (fun _ -> witnessed p) <==> witnessed p)
+
+
+//TODO: new_region return value has color same as that of input, and that witnessed (region_contains_pred) is true for it
+//TODO: new_colored_region value has witnessed (region_contains_pred)
