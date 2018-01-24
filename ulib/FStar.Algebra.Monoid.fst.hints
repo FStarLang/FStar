@@ -301,7 +301,7 @@
         "token_correspondence_FStar.Algebra.Monoid.embed_nat_int"
       ],
       0,
-      "46a724fff25bf712ef21cda59c611668"
+      "5c898c5334be0e3244975d93a9adc6ef"
     ],
     [
       "FStar.Algebra.Monoid.neg",
@@ -358,7 +358,7 @@
         "typing_tok_Prims.T@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "ea6f605e27c98c3d660a4f9a7d08ea02"
+      "69caabdda2a87854195c488d0278a300"
     ],
     [
       "FStar.Algebra.Monoid.uu___8",
@@ -399,7 +399,7 @@
         "unit_typing"
       ],
       0,
-      "a19a35393c05908e119ad0ade7973a48"
+      "0f6346524bc29febf6239a5954a0d277"
     ],
     [
       "FStar.Algebra.Monoid.__proj__LAct__item__mult_lemma",
