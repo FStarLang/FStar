@@ -5,5 +5,5 @@ open FStar.All
    This is type unsafe. *)
 
 assume new type dyn
-val mkdyn : 'a -> ML dyn
+val mkdyn : 'a -> EXT dyn
 val undyn : d:dyn{false} -> EXT 'a
