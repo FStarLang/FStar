@@ -629,6 +629,85 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                 end
             )))))
 
+(* AN ALTERNATIVE IMPL OF __apply *)
+
+// let new_uvars (reason:string) (env:env) (typs:list<binder>) : tac<(list<arg> * subst_t)> =
+//     let us, subst, implicits =
+//        List.fold_right (fun (bv, aq) (us, subst, implicits) -> 
+//             let u, g_u = TcUtil.new_implicit_var reason t.pos env bv.sort in
+//             (u, aq)::us, S.NT(bv, u)::subst, implicits@g_u.implicits) 
+//             typs
+//             ([], [], [])
+
+//     in
+//     bind (add_implicits implicits) (fun _ ->
+//     ret (us, subst))                       
+
+// let rec arrow_many c =
+//   if not (U.is_total_comp c) then None
+//   else let t = U.comp_result c in
+//        match U.arrow_one t with
+//        | None -> None
+//        | Some (b, c) ->
+//          match arrow_many c with
+//          | None -> Some ([b], c)
+//          | Some (bs, c) -> Some (b::bs, c)
+
+// let __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
+//     let formals, c = 
+//       let c = S.mk_Total typ in
+//       match arrow_many c with
+//       | None -> [], c
+//       | Some (bs, c) -> bs, c
+//     in
+//     bind cur_goal (fun goal ->
+//     let rec add_uvar_goals args =
+//       match args with
+//       | [] -> ret ()
+//       | (u, _)::args ->
+//          let u = bnorm goal.context u in
+//          match (SS.compress (fst (U.head_and_args u))).n with
+//          | Tm_uvar (uvar, _) ->
+//            bind get (fun ps ->
+//            if uopt && uvar_free uvar ps
+//            then ret ()
+//            else bind (add_goals [{ goal with
+//                                   witness  = bnorm goal.context u;
+//                                   goal_ty  = bnorm goal.context bv.sort;
+//                                   is_guard = false; }]) (fun _ ->
+//                 add_uvar_goals args))
+//          | _ -> 
+//            add_uvar_goals args
+//     in
+//     let rec aux formals c =
+//       match formals with
+//       | [] -> 
+//         bind (trytac (t_exact false true tm)) (function
+//         | Some r -> ret r // if tm is a solution, we're done
+//         | None -> raise NoUnif)
+
+//       | _ -> 
+//         if U.is_total_comp c then
+//           trytac 
+//            (bind (new_uvars "apply" goal.context formals) (fun (args, subst) -> 
+//             let tm' = mk_Tm_app tm args None goal.context.range in
+//             let typ' = SS.subst subst <| comp_to_typ c in
+//             bind (t_exact false true tm') (fun _ ->
+//             ret args))) (function
+//           | Some args ->
+//             add_uvar_goals args
+//           | None -> 
+//             let formals, last = BU.prefix formals in
+//             let c = U.arrow [last] (S.mk_Total c) in
+//             aux formals c)
+//        else
+//           let formals, last = BU.prefix formals in
+//           let c = U.arrow [last] (S.mk_Total c) in
+//           aux formals c
+//      in
+//      aux formals c)
+
+
 // The exception is thrown only when the tactic runs, not when it's defined,
 // so we need to do this to catch it
 let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
@@ -688,7 +767,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                             (tts goal.context (U.mk_squash U_zero post))
                             (tts goal.context goal.goal_ty)
     else
-        let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
+//NS: 01/24 ... looks redundant    
+//        let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
         bind (add_implicits implicits.implicits) (fun _ ->
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve goal U.exp_unit) (fun _ ->
@@ -710,10 +790,16 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | Tm_uvar _ ->
                 ret ([{ goal with
                         witness = bnorm goal.context term;
-                        goal_ty = bnorm goal.context typ }], [])
+                        goal_ty = 
+                          //NS: 01/24 ...expensive
+                          //bnorm goal.context typ
+                          typ}], [])
             | _ ->
-                let term = bnorm env term in
-                let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
+                //NS:01/24: use the fast path instead
+                let g_typ =
+                    FStar.TypeChecker.Env.check_type_of_well_typed_term false env term typ in
+                // let term = bnorm env term in
+                // let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
                 bind (goal_from_guard "apply_lemma solved arg" goal.context g_typ goal.opts) (function
                 | None -> ret ([], [])
                 | Some g -> ret ([], [g])
