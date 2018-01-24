@@ -101,7 +101,21 @@ val set_byte:
 
 unfold let op_String_Assignment = set_byte
 
+val reveal_set_byte:
+    b:bytes
+  -> pos:u32 {U32.v pos < length b}
+  -> x:byte
+  -> Lemma
+    (reveal (set_byte b pos x) == Seq.upd (reveal b) (U32.v pos) x)
+    [SMTPat (reveal (set_byte b pos x))]
+
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
+
+val index_reveal:
+    b: bytes
+  -> (i: nat { i < length b })
+  -> Lemma
+    (S.index (reveal b) i == index b i)
 
 let equal b1 b2 =
   length b1 = length b2 /\
