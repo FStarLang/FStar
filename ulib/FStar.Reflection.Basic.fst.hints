@@ -14,7 +14,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6dafe19bef7497eee67111f2e11f7635"
+      "7e6d42fb2469eb8ba28bddc7ff0782dc"
     ],
     [
       "FStar.Reflection.Basic.smaller",
@@ -46,7 +46,7 @@
         "fuel_guarded_inversion_FStar.Reflection.Data.term_view"
       ],
       0,
-      "e168d7cf823a1902356b7c9fb348168c"
+      "105e8e1e074aee91b366f7e836208922"
     ],
     [
       "FStar.Reflection.Basic.smaller_comp",
@@ -62,7 +62,7 @@
         "fuel_guarded_inversion_FStar.Reflection.Data.comp_view"
       ],
       0,
-      "83945678ef7493943b3313a4db6f71f9"
+      "adaac73c54a1fb80c23300cc18ca452c"
     ]
   ]
 ]

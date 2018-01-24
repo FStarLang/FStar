@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "80009306483e86becd128aabbfca2940"
+      "93fe7db1b4b83881bd958a7d4bf27eb4"
     ],
     [
       "FStar.Squash.get_proof",
@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "844d55283d2568685f6bcf1487daa203"
+      "7e98d75186125fe2b840bd0fd1b50a0f"
     ],
     [
       "FStar.Squash.give_proof",
@@ -36,7 +36,7 @@
         "unit_typing"
       ],
       0,
-      "0b0d2a9705765cf73634072dad344fe3"
+      "1ce257c648e819d8e9303ea226080bdf"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -49,7 +49,7 @@
         "unit_inversion"
       ],
       0,
-      "cb44ca8266469c6aa603c84ff5c1cb3b"
+      "b340983e3c4e6f4944d592f9e6b306d5"
     ],
     [
       "FStar.Squash.push_sum",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "75439a52344ec27cc32bb73c1ddcc2a7"
+      "f75b8d9e06584dc1b904567684a94d17"
     ],
     [
       "FStar.Squash.squash_double_sum",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "790c4fb8479d81d710d9f5799ae651df"
+      "5c0cd7a79b17293b05af2bedc523a01d"
     ]
   ]
 ]

@@ -14,7 +14,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "6b68f0d7e1ad4e66a4d610e9ca093c2e"
+      "efec4a4aec8be0d8ad99cd8522111615"
     ],
     [
       "Bug1299.failing",
@@ -23,7 +23,7 @@
       1,
       [ "@query" ],
       0,
-      "c40e16055f537fa6df51be426f4fc048"
+      "3b3d226b2e4b92525cf81fc7e610af51"
     ],
     [
       "Bug1299.should_fail",
@@ -40,7 +40,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "93feb304fbde50a35cd9d11d973cb7cb"
+      "904b2e7b3b02006a37b8c4709cd5c73d"
     ],
     [
       "Bug1299.test",
@@ -61,7 +61,7 @@
         "typing_FStar.Tactics.Builtins.__fail", "unit_typing"
       ],
       0,
-      "495c3de26002908e989900e91d3b1ab4"
+      "87b66301fe0b3b43fbf26a07cea53f90"
     ]
   ]
 ]

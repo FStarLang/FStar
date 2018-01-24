@@ -47,7 +47,7 @@
         "typing_Prims.__proj__Cons__item__tl", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "b223f286de84c9e4c02e4502f9421a94"
+      "05e115a3dfff30dbc59c681ff9ed35db"
     ],
     [
       "MergeSort.merge_inv",
@@ -56,7 +56,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4506e104e712f3b13eb64e70193daec5"
+      "f16c5a7dd968d9d727273747af31f0b3"
     ],
     [
       "MergeSort.merge",
@@ -109,7 +109,7 @@
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "5c6d6d3edd55ef067d240362b3c00ba6"
+      "0c39599e27081a3daad9469bc05cbf53"
     ],
     [
       "MergeSort.mergesort",
@@ -145,7 +145,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "3673cb54cba3d13efcbc091ba63e316f"
+      "2b2919c507a3e72a02669f7613018090"
     ]
   ]
 ]

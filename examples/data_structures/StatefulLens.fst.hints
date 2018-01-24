@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "2a68cc45ec08c4b2ec2561477ccbb5ce"
+      "8162fbcd34d804c0c3692c45257037dd"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "4956c3e162a6c73120658bdf3db23da6"
+      "22c87222e2bcefc6b931620f2d7b8a59"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "a1e56dd2f0741251bd62f8d4c477606e"
+      "1bb0508637ec0f4454eb5b5910960698"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "bff187df9cad6e611efeee04f3350e99"
+      "7b923c1755cb49c0ca3c09f40386d27c"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "0a9480fff1d390c8ddff972faa44f0e5"
+      "373f86dd4070264184c54eb6a73684f6"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "961ed7e4ae6453740e2926925c6361e6"
+      "db2198fcdc61c36b8648dad90f6e4313"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "0865c6c12aac28b9956520bafdf39637"
+      "b0c232771c7a289050d3dd765218d2b7"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "55527d49d56429c7a938adb566086f6d"
+      "bf3d5103f715ef886f56a94976f1552c"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "4acc38df23909b406408984477d7b93c"
+      "1b5e21ae7f152b7784d8904b1365cd27"
     ]
   ]
 ]
