@@ -797,7 +797,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ ->
                 //NS:01/24: use the fast path instead
                 let g_typ =
-                    FStar.TypeChecker.Env.check_type_of_well_typed_term false env term typ in
+                    FStar.TypeChecker.TcTerm.check_type_of_well_typed_term false env term typ in
                 // let term = bnorm env term in
                 // let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
                 bind (goal_from_guard "apply_lemma solved arg" goal.context g_typ goal.opts) (function
