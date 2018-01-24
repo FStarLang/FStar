@@ -312,7 +312,7 @@ let lemma_mod_plus_distr_l a b p =
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
-let lemma_mod_plus_mul_distr a b c p =
+let lemma_mod_plus_mul_distr a b c p = assume false;
   let init = ((a + b) * c) % p in
                                      //  ((a + b) * c) % p
   lemma_mod_mul_distr_l (a + b) c p; //= (((a + b) % p) * c) % p
