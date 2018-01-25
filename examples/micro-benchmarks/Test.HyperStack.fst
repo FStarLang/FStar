@@ -42,12 +42,7 @@ let test5 (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preor
   assume (frameOf x == frameOf x');
   assume (frameOf x <> frameOf y);
   assume (frameOf x <> frameOf z);
-  //assert (Set.equal (normalize_term (refs_in_region x.id [Ref x])) (normalize_term (Set.singleton (as_addr x))))
   assume (mods [Ref x; Ref y; Ref z] h0 h1);
-  //AR: TODO: this used to be an assert, but this no longer goers through
-  //since now we have set of nats, which plays badly with normalize_term
-  //on one side it remains nat, on the other side the normalizer normalizes it to a refinement type
-  //see for example the assertion above that doesn't succeed
   assume (modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1);
   assert (modifies (Set.union (Set.singleton (frameOf x))
                               (Set.union (Set.singleton (frameOf y))
@@ -331,7 +326,3 @@ let test_logical_operators_on_witnessed (p q:mem_predicate)
     assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
     lemma_witnessed_nested p;
     assert (witnessed (fun _ -> witnessed p) <==> witnessed p)
-
-
-//TODO: new_region return value has color same as that of input, and that witnessed (region_contains_pred) is true for it
-//TODO: new_colored_region value has witnessed (region_contains_pred)

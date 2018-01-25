@@ -13,8 +13,8 @@ open FStar.Preorder
 
 (* Eternal regions remain contained *)
 private abstract let eternal_region_pred (m1 m2:mem) :Type0
-  = forall (r:HS.rid).{:pattern (is_eternal_color (color r)); (m1.h `Map.contains` r)}
-                 (is_eternal_color (color r) /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
+  = forall (r:HS.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
+                 (HS.is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
 (* rid counter increases monotonically *)
 private abstract let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
@@ -38,7 +38,7 @@ private abstract let eternal_refs_pred (m1 m2:mem) :Type0
       if is_mm r then True
       else
         if m1 `HS.contains` r then
-	  if is_eternal_color (color (HS.frameOf r)) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
+	  if is_eternal_region (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else if m2.h `Map.contains` (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else True
 	else True
@@ -55,7 +55,7 @@ type mem_predicate = mem -> Type0
 
 (* Predicates that we will witness with regions and refs *)
 abstract let region_contains_pred (r:HS.rid) :mem_predicate
-  = fun m -> (not (is_eternal_color (color r))) \/ m.h `Map.contains` r
+  = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
 
 abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :mem_predicate
   = fun m -> rid_last_component (HS.frameOf r) < m.rid_ctr /\
@@ -334,9 +334,8 @@ type mmstackref (a:Type) = mmmstackref a (Heap.trivial_preorder a)
 type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 
-let is_eternal_region (r:rid) :Type0 = is_eternal_color (color r) /\ (r == root \/ witnessed (region_contains_pred r))
-
-private let lemma_root_is_eternal_region () :Lemma (is_eternal_region root) = ()
+let is_eternal_region (r:rid) :Type0
+  = HS.is_eternal_region r /\ (r == HS.root \/ witnessed (region_contains_pred r))
 
 (*
  * AR: The change to using ST.rid may not be that bad itself,
@@ -417,6 +416,7 @@ let new_region (r0:rid)
       (ensures  (fun m0 r1 m1 ->
                  r1 `HS.extends` r0                  /\
                  HS.fresh_region r1 m0 m1            /\
+		 HS.color r1 = HS.color r0           /\
 		 is_eternal_region r1                /\
 		 m1.h == Map.upd m0.h r1 Heap.emp    /\
 		 m1.tip = m0.tip))
@@ -436,8 +436,8 @@ let new_colored_region (r0:rid) (c:int)
       (ensures (fun m0 r1 m1 ->
                 r1 `HS.extends` r0                  /\
                 HS.fresh_region r1 m0 m1            /\
-		is_eternal_region r1                /\
 	        HS.color r1 = c                     /\
+		is_eternal_region r1                /\
 	        m1.h == Map.upd m0.h r1 Heap.emp    /\
 		m1.tip = m0.tip))
   = if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
@@ -487,8 +487,8 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
  *            the client can either prove contains
  *            or give us enough so that we can use monotonicity to derive contains
  *)
-let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :GTot Type0 =
-  (m `contains` r) /\
+let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :Type0 =
+  (m `contains` r) \/
     (let i = HS.frameOf r in
      (is_eternal_region i \/ i `HS.is_above` m.tip) /\
      (not (is_mm r)       \/ m `HS.contains_ref_in_its_region` r))
@@ -565,8 +565,8 @@ let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
 (**
    We can only recall eternal regions, not stack regions
    *)
-let recall_region (i:rid)
-  :Stack unit (requires (fun m -> is_eternal_region i))
+let recall_region (i:rid{is_eternal_region i})
+  :Stack unit (requires (fun m -> True))
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
   = if i <> HS.root then gst_recall (region_contains_pred i)
 
@@ -621,23 +621,24 @@ let testify (p:mem_predicate)
            (ensures (fun h0 _ h1 -> h0==h1 /\ p h1))
   = gst_recall p
 
-// private let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
+// let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
 //   ($s:squash (forall (x:c). witnessed (p x)))
 //   :ST unit (requires (fun h      -> True))
 //            (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
 //   = W.lemma_witnessed_forall mem_rel p;
 //     gst_recall (fun h -> forall (x:c). p x h)
 
-// private let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
+// let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
 //   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
 //   :ST unit (requires (fun _       -> True))
 //            (ensures  (fun h0 _ h1 -> h0 == h1 /\
-// 	                          (forall (x:c). (not (is_eternal_color (color (p x)))) \/ h1.h `Map.contains` (p x))))
+// 	                          (forall (x:c). (not (is_eternal_region (p x))) \/ h1.h `Map.contains` (p x))))
 //   = let p' (x:c) :mem_predicate = region_contains_pred (p x) in
 //     let s:squash (forall (x:c). witnessed (p' x)) = () in
 //     testify_forall s
 
 type ex_rid = erid
+
 
 (****** logical properties of witnessed ******)
 

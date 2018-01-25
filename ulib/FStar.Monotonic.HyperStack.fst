@@ -9,8 +9,7 @@ unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
 let is_eternal_color c = c <= 0
-
-private let is_eternal_region r  = is_eternal_color (color r)
+let is_eternal_region r  = is_eternal_color (color r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 

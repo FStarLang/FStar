@@ -2045,7 +2045,7 @@ let is_mm
 (* // TODO: recover with addresses?
 let recall
   (#value: Type)
-  (p: pointer value {HS.is_eternal_region (frameOf p) && not (is_mm p)})
+  (p: pointer value {is_eternal_region (frameOf p) && not (is_mm p)})
 : HST.Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0 == m1 /\ live m1 p))
