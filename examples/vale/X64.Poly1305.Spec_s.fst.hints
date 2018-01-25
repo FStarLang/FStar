@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9384e678eb8689dc7caa43e9f6fe7a46"
+      "cc785e07f76a5260cf188bb5b1887f43"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",

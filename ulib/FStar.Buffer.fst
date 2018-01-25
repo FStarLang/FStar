@@ -869,16 +869,23 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
     lemma_upd h0 content s;
     b
 
+(** This function allocates a buffer in an "eternal" region, i.e. a region where memory is
+ * automatically-managed. One does not need to call rfree on such a buffer. It
+ * translates to C as a call to malloc and assumes a conservative garbage
+ * collector is runnning. *)
 val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h            -> is_eternal_region r))
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
+(** This function allocates a buffer into a manually-managed region, meaning that the client must
+ * call rfree in order to avoid memory leaks. It translates to C as a straight malloc. *)
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
                  (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
   = rcreate_common r init len true
 
+(** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
 let rfree (#a:Type) (b:buffer a)
   :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
            (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
