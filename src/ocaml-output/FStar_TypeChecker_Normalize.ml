@@ -3546,13 +3546,14 @@ let rec norm:
                     FStar_All.pipe_right cfg.steps
                       (FStar_List.contains NoDeltaSteps) in
                   Prims.op_Negation uu____13332) &&
-                   ((FStar_Syntax_Util.is_pure_effect n1) ||
-                      ((FStar_Syntax_Util.is_ghost_effect n1) &&
-                         (let uu____13334 =
-                            FStar_All.pipe_right cfg.steps
-                              (FStar_List.contains
-                                 PureSubtermsWithinComputations) in
-                          Prims.op_Negation uu____13334))) in
+                   (((FStar_Syntax_Util.is_pure_effect n1) ||
+                       (FStar_Syntax_Util.is_ghost_effect n1))
+                      &&
+                      (let uu____13334 =
+                         FStar_All.pipe_right cfg.steps
+                           (FStar_List.contains
+                              PureSubtermsWithinComputations) in
+                       Prims.op_Negation uu____13334)) in
                if uu____13329
                then
                  let binder =
