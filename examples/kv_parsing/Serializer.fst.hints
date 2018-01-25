@@ -73,7 +73,7 @@
         "typing_Serializer.entry_st_bufs"
       ],
       0,
-      "2b814cbbf136044aebd2c72d7648a063"
+      "124bbd918a17dc9fb3575b12286626ea"
     ],
     [
       "Serializer.adjacent_entries_disjoint",
@@ -542,7 +542,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "c1ae2abcdf56667e75dfcb556686da0f"
+      "0374bd7c72a44b9a429ddfa310243e28"
     ],
     [
       "Serializer.join_slices",
@@ -933,7 +933,7 @@
         "typing_Slice.buffer_split_at"
       ],
       0,
-      "222c8110233a6f276d5f2b72f8aaa27d"
+      "5d0c00d27a4c23afe48ec26eabd37c7e"
     ],
     [
       "Serializer.join_is_concat",
@@ -1157,7 +1157,7 @@
         "typing_Slice.bslice_split_at"
       ],
       0,
-      "766b517dd56d1a35f9e11f3e25dd8b3a"
+      "48569e9a2d23aab648c5a824a97286d8"
     ]
   ]
 ]
