@@ -359,6 +359,7 @@ type norm_step =
   | Delta
   | Zeta
   | Iota
+	| UnfoldAttr:#t:Type -> a:t -> norm_step
   | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
 
 // Helpers, so we don't expose the actual inductive
@@ -370,6 +371,7 @@ abstract let delta    : norm_step = Delta
 abstract let zeta     : norm_step = Zeta
 abstract let iota     : norm_step = Iota
 abstract let delta_only (s:list string) : norm_step = UnfoldOnly s
+abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x

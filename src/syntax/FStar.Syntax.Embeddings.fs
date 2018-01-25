@@ -209,6 +209,7 @@ type norm_step =
     | Zeta
     | Iota
     | UnfoldOnly of list<string>
+    | UnfoldAttr of attribute
 
 (* the steps as terms *)
 let steps_Simpl      = tdataconstr PC.steps_simpl
@@ -219,6 +220,7 @@ let steps_Delta      = tdataconstr PC.steps_delta
 let steps_Zeta       = tdataconstr PC.steps_zeta
 let steps_Iota       = tdataconstr PC.steps_iota
 let steps_UnfoldOnly = tdataconstr PC.steps_unfoldonly
+let steps_UnfoldAttr = tdataconstr PC.steps_unfoldattr
 
 let embed_norm_step (rng:range) (n:norm_step) : term =
     match n with
@@ -239,6 +241,8 @@ let embed_norm_step (rng:range) (n:norm_step) : term =
     | UnfoldOnly l ->
         S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string rng l)]
                     None rng
+    | UnfoldAttr a ->
+        S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
 
 let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
     let t = U.unmeta_safe t0 in
@@ -261,6 +265,8 @@ let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
     | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
         BU.bind_opt (unembed_list unembed_string l) (fun ss ->
         Some <| UnfoldOnly ss)
+    | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
+        Some (UnfoldAttr a)
     | _ ->
         if w then
         Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));

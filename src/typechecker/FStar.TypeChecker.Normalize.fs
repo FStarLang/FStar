@@ -923,7 +923,7 @@ let is_norm_request hd args =
 
     | _ -> false
 
-let tr_norm_step = function
+let tr_norm_step env = function
     | EMB.Zeta ->    [Zeta]
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil Delta_constant]
@@ -933,12 +933,15 @@ let tr_norm_step = function
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | EMB.UnfoldAttr t ->
+        let sigelts = Env.lookup_sigelt_with_attr env t in
+        [UnfoldUntil Delta_constant; UnfoldOnly (List.concatMap lids_of_sigelt sigelts)]
 
-let tr_norm_steps s =
-    List.concatMap tr_norm_step s
+let tr_norm_steps env s =
+    List.concatMap (tr_norm_step env) s
 
-let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps in
+let get_norm_request env (full_norm:term -> term) args =
+    let parse_steps env s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps env in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
@@ -946,7 +949,7 @@ let get_norm_request (full_norm:term -> term) args =
       s, tm
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if not (List.contains z s) then Exclude z::s else s in
-      let s = Beta::parse_steps (full_norm steps) in
+      let s = Beta::parse_steps env (full_norm steps) in
       let s = add_exclude s Zeta in
       let s = add_exclude s Iota in
       s, tm
@@ -1018,7 +1021,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
             let cfg' = {cfg with steps=(List.filter (function | UnfoldOnly _ | NoDeltaSteps -> false | _ -> true) cfg.steps);
                                  delta_level=[Unfold Delta_constant]} in
-            let s, tm = get_norm_request (norm cfg' env []) args in
+            let s, tm = get_norm_request cfg.tcenv (norm cfg' env []) args in
             let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
@@ -1065,7 +1068,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 then false
                 else begin
                     match cfg.steps |> List.tryFind (function UnfoldOnly _ -> true | _ -> false) with
-                    | Some (UnfoldOnly lids) -> should_delta && BU.for_some (fv_eq_lid f) lids
+                    | Some _ ->
+                      // To be reviewed: Can there be more than one UnfoldOnly? if so,
+                      // we need to check them all to see if 'f' is present in the list
+                      // UnfoldOnly specifies.
+                      should_delta && List.fold_left (fun acc x -> 
+                        match x with
+                        | UnfoldOnly lids -> acc || BU.for_some (fv_eq_lid f) lids
+                        | _ -> acc
+                      ) false cfg.steps
                     | _ -> should_delta
                 end
             in
