@@ -145,4 +145,8 @@ case $CMD in
 	fi
 	replace $2 $3
 	;;
+    *)
+	help
+	exit 1
+	;;
 esac
