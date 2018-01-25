@@ -31,7 +31,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "388e01081129978e1a10620d712ddd6f"
+      "7d7792817e488e91f45d87e2371f06c6"
     ],
     [
       "Test.colored_object_struct",
@@ -77,7 +77,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "ac3e77b6178810d2ea0cd05f4c92ddee"
+      "8afe88c6c7d8adcf6360ba9546d56c62"
     ],
     [
       "Test.write_struct_field",
@@ -106,7 +106,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "9e148bb427b91522783c0794cde83478"
+      "8db79c9a83e56b4c1614e9c449bef3ac"
     ],
     [
       "Test.flip",
@@ -204,7 +204,7 @@
         "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
       ],
       0,
-      "80617525375c30e3ab7bde5b6f254de3"
+      "f33437fd3ad46c780688eb3049730303"
     ],
     [
       "Test.flip'",
@@ -301,7 +301,7 @@
         "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
       ],
       0,
-      "58b23b2c0464db3603bca73db6ce3dff"
+      "90033763650c1d9c9a7f3b03590f0cbe"
     ]
   ]
 ]
