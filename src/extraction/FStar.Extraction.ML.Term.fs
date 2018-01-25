@@ -1133,6 +1133,17 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             =
               let f_e = effect_as_etag g lbeff in
               let t = SS.compress t in
+              let no_gen () =
+              let expected_t = term_as_mlty g t in
+                  (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
+                  (*                       (Print.lbname_to_string lbname) *)
+                  (*                       (Print.term_to_string t) *)
+                  (*                       (Code.string_of_mlty g.currentModule expected_t)); *)
+                  (lbname_, f_e, (t, ([], ([],expected_t))), false, e)
+              in
+              if not top_level
+              then no_gen()
+              else
             //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
               match t.n with
                 | Tm_arrow(bs, c) when (List.hd bs |> is_type_binder g) ->
@@ -1214,14 +1225,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         err_value_restriction e
                    end
 
-                | _ ->  (* no generalizations; TODO: normalize and retry? *)
-                  let expected_t = term_as_mlty g t in
-                  (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
-                  (*                       (Print.lbname_to_string lbname) *)
-                  (*                       (Print.term_to_string t) *)
-                  (*                       (Code.string_of_mlty g.currentModule expected_t)); *)
-                  (lbname_, f_e, (t, ([], ([],expected_t))), false, e) in
-
+                | _ ->  no_gen()
+          in
           let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = snd polytype in
