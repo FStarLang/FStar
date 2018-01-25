@@ -56,7 +56,7 @@ let live #a (h:mem) (b:buffer a) : GTot Type0 = HS.contains h b.content
 let unmapped_in #a (b:buffer a) (h:mem) : GTot Type0 = unused_in b h
 
 val recall: #a:Type
-  -> b:buffer a{is_eternal_region (frameOf b) && not (is_mm b.content)} -> Stack unit
+  -> b:buffer a{is_eternal_region (frameOf b) /\ not (is_mm b.content)} -> Stack unit
   (requires (fun m -> True))
   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 let recall #a b = recall b.content
@@ -855,7 +855,7 @@ unfold let rcreate_post_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (b:buff
     /\ as_seq h1 b == Seq.create (v len) init
 
 private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
-  :ST (buffer a) (requires (fun h0      -> is_eternal_region r /\ witnessed (region_contains_pred r)))
+  :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
                  (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\
 		                        is_mm b.content == mm))
   = let h0 = HST.get() in
@@ -870,12 +870,12 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
     b
 
 val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
-  (requires (fun h            -> is_eternal_region r /\ witnessed (region_contains_pred r)))
+  (requires (fun h            -> is_eternal_region r))
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
-  :ST (buffer a) (requires (fun h0      -> is_eternal_region r /\ witnessed (region_contains_pred r)))
+  :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
                  (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
   = rcreate_common r init len true
 
