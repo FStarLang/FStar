@@ -135,42 +135,38 @@ let mod_mod_pat a k k' =
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
-    // JP: need to normalize so that the intermediary nat bindings disappear in
-    // the extracted C and WASM code
-    normalize_term (
-      let l = U64.add_mod a.low b.low in
-      let r = { low = l;
-                high = U64.add_mod (U64.add_mod a.high b.high) (carry l b.low)} in
-      let a_l = U64.v a.low in
-      let a_h = U64.v a.high in
-      let b_l = U64.v b.low in
-      let b_h = U64.v b.high in
-      carry_sum_ok a.low b.low;
-      Math.lemma_mod_plus_distr_l (a_h + b_h) ((a_l + b_l) / (pow2 64)) (pow2 64);
-      assert (U64.v r.high == (a_h + b_h + (a_l + b_l) / (pow2 64)) % pow2 64);
-      // mod_mul (a_h + b_h + (a_l + b_l) / (pow2 64)) (pow2 64) (pow2 64);
-      assert (U64.v r.high * pow2 64 ==
-                (a_h * pow2 64 +
-                  b_h * pow2 64 +
-                  (a_l + b_l) / (pow2 64) * (pow2 64)) % pow2 128);
-      // mod_mod (U64.v r.low) (pow2 64) (pow2 64);
-      assert (U64.v r.low == (U64.v r.low) % pow2 128);
-      mod_add_small (a_h * pow2 64 +
-                      b_h * pow2 64 +
-                      (a_l + b_l) / (pow2 64) * (pow2 64))
-              ((a_l + b_l) % (pow2 64))
-              (pow2 128);
-      assert (U64.v r.low + U64.v r.high * pow2 64 ==
-                    (a_h * pow2 64 +
-                    b_h * pow2 64 +
-                    (a_l + b_l) / (pow2 64) * (pow2 64) + (a_l + b_l) % (pow2 64)) % pow2 128);
-      mod_spec_rew_n (a_l + b_l) (pow2 64);
-      assert (v r ==
-              (a_h * pow2 64 +
+  let l = U64.add_mod a.low b.low in
+  let r = { low = l;
+            high = U64.add_mod (U64.add_mod a.high b.high) (carry l b.low)} in
+  let a_l = U64.v a.low in
+  let a_h = U64.v a.high in
+  let b_l = U64.v b.low in
+  let b_h = U64.v b.high in
+  carry_sum_ok a.low b.low;
+  Math.lemma_mod_plus_distr_l (a_h + b_h) ((a_l + b_l) / (pow2 64)) (pow2 64);
+  assert (U64.v r.high == (a_h + b_h + (a_l + b_l) / (pow2 64)) % pow2 64);
+  // mod_mul (a_h + b_h + (a_l + b_l) / (pow2 64)) (pow2 64) (pow2 64);
+  assert (U64.v r.high * pow2 64 ==
+            (a_h * pow2 64 +
               b_h * pow2 64 +
-              a_l + b_l) % pow2 128);
-      r
-    )
+              (a_l + b_l) / (pow2 64) * (pow2 64)) % pow2 128);
+  // mod_mod (U64.v r.low) (pow2 64) (pow2 64);
+  assert (U64.v r.low == (U64.v r.low) % pow2 128);
+  mod_add_small (a_h * pow2 64 +
+                  b_h * pow2 64 +
+                  (a_l + b_l) / (pow2 64) * (pow2 64))
+          ((a_l + b_l) % (pow2 64))
+          (pow2 128);
+  assert (U64.v r.low + U64.v r.high * pow2 64 ==
+                (a_h * pow2 64 +
+                b_h * pow2 64 +
+                (a_l + b_l) / (pow2 64) * (pow2 64) + (a_l + b_l) % (pow2 64)) % pow2 128);
+  mod_spec_rew_n (a_l + b_l) (pow2 64);
+  assert (v r ==
+          (a_h * pow2 64 +
+          b_h * pow2 64 +
+          a_l + b_l) % pow2 128);
+  r
 #set-options "--z3rlimit 5"
 
 let sub (a b: t) : Pure t
@@ -429,7 +425,6 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
   let high = U64.shift_left hi s in
   let low = U64.shift_right lo (U32.sub u32_64 s) in
-  normalize_term (
   let s = U32.v s in
   let high_n = U64.v hi % pow2 (64 - s) * pow2 s in
   let low_n = U64.v lo / pow2 (64 - s) in
@@ -440,7 +435,7 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   pow2_div_bound (U64.v lo) (64-s);
   assert (low_n < pow2 s);
   mod_mul_pow2 (U64.v hi) (64 - s) s;
-  U64.add high low)
+  U64.add high low
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3cliopt 'smt.case_split=3'"
 
 
@@ -483,7 +478,6 @@ let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
               (U64.v hi * pow2 64) * pow2 (U32.v s) % pow2 128 +
               U64.v lo * pow2 (U32.v s) / pow2 64 * pow2 64)) =
   let r = add_u64_shift_left hi lo s in
-  normalize_term (
   let hi = U64.v hi in
   let lo = U64.v lo in
   let s = U32.v s in
@@ -496,7 +490,7 @@ let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
   assert (lo / pow2 (64-s) == lo * pow2 s / pow2 64);
   assert (U64.v r * pow2 64 == hi * pow2 s * pow2 64 % pow2 128 + lo * pow2 s / pow2 64 * pow2 64);
   mul_abc_to_acb hi (pow2 s) (pow2 64);
-  r)
+  r
 
 #set-options "--z3rlimit 40"
 val add_mod_small' : n:nat -> m:nat -> k:pos ->
@@ -567,13 +561,12 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
   else
     let r = { low = U64.shift_left a.low s;
               high = add_u64_shift_left_respec a.high a.low s; } in
-    normalize_term (
     let s = U32.v s in
     let a_l = U64.v a.low in
     let a_h = U64.v a.high in
     mod_spec_rew_n (a_l * pow2 s) (pow2 64);
     shift_t_mod_val a s;
-    r)
+    r
 
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
@@ -601,7 +594,6 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
                              U64.v hi * pow2 (64 - U32.v s) % pow2 64)) =
   let low = U64.shift_right lo s in
   let high = U64.shift_left hi (U32.sub u32_64 s) in
-  normalize_term (
   let s = U32.v s in
   let low_n = U64.v lo / pow2 s in
   let high_n = U64.v hi % pow2 s * pow2 (64 - s) in
@@ -611,7 +603,7 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   pow2_div_bound (U64.v lo) s;
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
-  U64.add low high)
+  U64.add low high
   
 #set-options "--z3rlimit 10"
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
@@ -625,13 +617,10 @@ let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
                              U64.v hi * pow2 64 / pow2 (U32.v s) % pow2 64)) =
-    // JP: need to normalize so that the intermediary nat bindings disappear in
-    // the extracted C and WASM code
-      let r = add_u64_shift_right hi lo s in
-    normalize_term (
-      let s = U32.v s in
-      mul_pow2_diff (U64.v hi) 64 s;
-      r)
+  let r = add_u64_shift_right hi lo s in
+  let s = U32.v s in
+  mul_pow2_diff (U64.v hi) 64 s;
+  r
 
 let mul_div_spec (n:nat) (k:pos) : Lemma (n / k * k == n - n % k) = ()
 
@@ -663,35 +652,29 @@ let u128_div_pow2 a s =
 let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
-    // JP: need to normalize so that the intermediary nat bindings disappear in
-    // the extracted C and WASM code
-    if U32.eq s 0ul then a
-    else
-      let r = { low = add_u64_shift_right_respec a.high a.low s;
-                high = U64.shift_right a.high s; } in
-    normalize_term (
-      let a_h = U64.v a.high in
-      let a_l = U64.v a.low in
-      let s = U32.v s in
-      shift_right_reconstruct a_h s;
-      assert (v r == a_h * pow2 (64-s) + a_l / pow2 s);
-      u128_div_pow2 a s;
-      r)
+  if U32.eq s 0ul then a
+  else
+  let r = { low = add_u64_shift_right_respec a.high a.low s;
+            high = U64.shift_right a.high s; } in
+  let a_h = U64.v a.high in
+  let a_l = U64.v a.low in
+  let s = U32.v s in
+  shift_right_reconstruct a_h s;
+  assert (v r == a_h * pow2 (64-s) + a_l / pow2 s);
+  u128_div_pow2 a s;
+  r
 
 let shift_right_large (a: t) (s: U32.t{U32.v s >= 64 /\ U32.v s < 128}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
-    // JP: need to normalize so that the intermediary nat bindings disappear in
-    // the extracted C and WASM code
-    let r = { high = U64.uint_to_t 0;
-              low = U64.shift_right a.high (U32.sub s u32_64); } in
-    normalize_term (
-      let s = U32.v s in
-      Math.pow2_plus 64 (s - 64);
-      div_product (v a) (pow2 64) (pow2 (s - 64));
-      assert (v a / pow2 s == v a / pow2 64 / pow2 (s - 64));
-      div_plus_multiple (U64.v a.low) (U64.v a.high) (pow2 64);
-      r)
+  let r = { high = U64.uint_to_t 0;
+            low = U64.shift_right a.high (U32.sub s u32_64); } in
+  let s = U32.v s in
+  Math.pow2_plus 64 (s - 64);
+  div_product (v a) (pow2 64) (pow2 (s - 64));
+  assert (v a / pow2 s == v a / pow2 64 / pow2 (s - 64));
+  div_plus_multiple (U64.v a.low) (U64.v a.high) (pow2 64);
+  r
 
 let shift_right (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 128))
