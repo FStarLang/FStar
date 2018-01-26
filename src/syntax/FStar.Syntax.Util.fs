@@ -1512,3 +1512,33 @@ let un_alien (t : term) : dyn =
     match t.n with
     | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"
+
+///////////////////////////////////////////
+// Setting pragmas
+///////////////////////////////////////////
+let process_pragma p r =
+    let set_options t s =
+    match Options.set_options t s with
+      | Getopt.Success -> ()
+      | Getopt.Help  ->
+        Errors.raise_error
+                (Errors.Fatal_FailToProcessPragma,
+                 "Failed to process pragma: use 'fstar --help' to see which options are available")
+                r
+      | Getopt.Error s ->
+        Errors.raise_error
+                (Errors.Fatal_FailToProcessPragma,
+                 "Failed to process pragma: " ^s)
+                r
+    in
+    match p with
+    | LightOff ->
+      if p = LightOff
+      then Options.set_ml_ish()
+    | SetOptions o ->
+      set_options Options.Set o
+    | ResetOptions sopt ->
+      Options.restore_cmd_line_options false |> ignore;
+      match sopt with
+      | None -> ()
+      | Some s -> set_options Options.Reset s

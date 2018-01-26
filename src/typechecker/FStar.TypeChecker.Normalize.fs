@@ -1235,8 +1235,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps |> List.contains NoDeltaSteps)
-            && ((U.is_pure_effect n || U.is_ghost_effect n)
-                && not (cfg.steps |> List.contains PureSubtermsWithinComputations))
+            && ((U.is_pure_effect n
+                 && (not (cfg.steps |> List.contains PureSubtermsWithinComputations)
+                     || Options.normalize_pure_terms_for_extraction()))
+                || (U.is_ghost_effect n
+                    && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
