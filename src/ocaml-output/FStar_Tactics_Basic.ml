@@ -1137,7 +1137,9 @@ let norm: FStar_Syntax_Embeddings.norm_step Prims.list -> Prims.unit tac =
     bind cur_goal
       (fun goal  ->
          let steps =
-           let uu____2170 = FStar_TypeChecker_Normalize.tr_norm_steps s in
+           let uu____2170 =
+             FStar_TypeChecker_Normalize.tr_norm_steps
+               goal.FStar_Tactics_Types.context s in
            FStar_List.append
              [FStar_TypeChecker_Normalize.Reify;
              FStar_TypeChecker_Normalize.UnfoldTac] uu____2170 in
@@ -1178,7 +1180,8 @@ let norm_term_env:
                         (FStar_TypeChecker_Rel.force_trivial_guard e guard;
                          (let steps =
                             let uu____2239 =
-                              FStar_TypeChecker_Normalize.tr_norm_steps s in
+                              FStar_TypeChecker_Normalize.tr_norm_steps
+                                ps.FStar_Tactics_Types.main_context s in
                             FStar_List.append
                               [FStar_TypeChecker_Normalize.Reify;
                               FStar_TypeChecker_Normalize.UnfoldTac]
@@ -2255,7 +2258,7 @@ let norm_binder_type:
                 | FStar_Pervasives_Native.Some (e0,bvs) ->
                     let steps =
                       let uu____4723 =
-                        FStar_TypeChecker_Normalize.tr_norm_steps s in
+                        FStar_TypeChecker_Normalize.tr_norm_steps e0 s in
                       FStar_List.append
                         [FStar_TypeChecker_Normalize.Reify;
                         FStar_TypeChecker_Normalize.UnfoldTac] uu____4723 in

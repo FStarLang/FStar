@@ -351,7 +351,7 @@ abstract let normalize_term (#a:Type) (x:a) : a = x
 abstract let normalize (a:Type0) = a
 
 abstract
-type norm_step =
+noeq type norm_step =
   | Simpl
   | Weak
   | HNF

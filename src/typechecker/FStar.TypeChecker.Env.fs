@@ -597,23 +597,15 @@ let lookup_definition delta_levels env lid =
   | _ -> None
 
 let lookup_sigelt_with_attr env (a:attribute) : list<sigelt> =
-  let sigelt_with_attr se = List.find (function a' ->  
-       match U.eq_tm a a' with
+  let sigelt_with_attr se ses =
+    if (List.existsML (function a' ->  match U.eq_tm a a' with
        | U.Equal -> true
-       | _ -> false
-  ) se.sigattrs in
-  let l = BU.smap_fold (sigtab env) (fun _ v ses -> 
-       match sigelt_with_attr v with
-       | Some _ -> v::ses
-       | _ -> ses) [] in
+       | _ -> false) se.sigattrs) then se::ses else ses in
+  let l = BU.smap_fold (sigtab env) (fun _ v ses -> sigelt_with_attr v ses) [] in
   BU.smap_fold (gamma_cache env) (fun _ v ses -> 
-       match v with 
-       | (Inr (se, _), _) -> 
-         begin match sigelt_with_attr se with
-         | Some _ -> se::ses
-         | _ -> ses
-         end
-       | _ -> ses ) l
+    match v with 
+    | (Inr (se, _), _) -> sigelt_with_attr se ses
+    | _ -> ses ) l
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
