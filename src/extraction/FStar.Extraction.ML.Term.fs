@@ -784,8 +784,18 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
         | _ -> mlAppExpr
 
 let maybe_downgrade_eff g f t =
+    let rec non_informative t =
+      if type_leq g t ml_unit_ty
+      || erasableType g t
+      then true
+      else match t with
+           | MLTY_Fun (_, E_PURE, t)
+           | MLTY_Fun (_, E_GHOST, t) ->
+             non_informative t
+           | _ -> false
+    in
     if f = E_GHOST
-    && type_leq g t ml_unit_ty
+    && non_informative t
     then E_PURE
     else f
 
