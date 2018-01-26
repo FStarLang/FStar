@@ -4208,14 +4208,15 @@ let check_sigelt_quals:
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    ((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                          (visibility x))
-                         || (reducibility x))
-                        || (reification x))
-                       || (inferred x))
-                      ||
-                      (env.FStar_TypeChecker_Env.is_iface &&
-                         (x = FStar_Syntax_Syntax.Assumption))))
+                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                           (visibility x))
+                          || (reducibility x))
+                         || (reification x))
+                        || (inferred x))
+                       ||
+                       (env.FStar_TypeChecker_Env.is_iface &&
+                          (x = FStar_Syntax_Syntax.Assumption)))
+                      || (x = FStar_Syntax_Syntax.NoExtract)))
         | FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
