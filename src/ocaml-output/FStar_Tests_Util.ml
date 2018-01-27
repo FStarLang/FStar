@@ -1,5 +1,5 @@
 open Prims
-let always: Prims.int -> Prims.bool -> Prims.unit =
+let (always : Prims.int -> Prims.bool -> Prims.unit) =
   fun id1  ->
     fun b  ->
       if b
@@ -7,52 +7,60 @@ let always: Prims.int -> Prims.bool -> Prims.unit =
       else
         (let uu____8 =
            let uu____13 =
-             let uu____14 = FStar_Util.string_of_int id1 in
-             FStar_Util.format1 "Assertion failed: test %s" uu____14 in
-           (FStar_Errors.Fatal_AssertionFailure, uu____13) in
+             let uu____14 = FStar_Util.string_of_int id1  in
+             FStar_Util.format1 "Assertion failed: test %s" uu____14  in
+           (FStar_Errors.Fatal_AssertionFailure, uu____13)  in
          FStar_Errors.raise_error uu____8 FStar_Range.dummyRange)
-let x: FStar_Syntax_Syntax.bv =
+  
+let (x : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
-let y: FStar_Syntax_Syntax.bv =
+  
+let (y : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "y" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
-let n: FStar_Syntax_Syntax.bv =
+  
+let (n : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "n" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
-let h: FStar_Syntax_Syntax.bv =
+  
+let (h : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "h" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
-let m: FStar_Syntax_Syntax.bv =
+  
+let (m : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "m" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
-let tm: 'Auu____17 . 'Auu____17 -> 'Auu____17 FStar_Syntax_Syntax.syntax =
+  
+let tm : 'Auu____17 . 'Auu____17 -> 'Auu____17 FStar_Syntax_Syntax.syntax =
   fun t  ->
     FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
       FStar_Range.dummyRange
-let nm: FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term =
-  fun x1  -> FStar_Syntax_Syntax.bv_to_name x1
-let app:
+  
+let (nm : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term) =
+  fun x1  -> FStar_Syntax_Syntax.bv_to_name x1 
+let (app :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term Prims.list ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun x1  ->
     fun ts  ->
       let uu____43 =
         let uu____46 =
           let uu____47 =
-            let uu____62 = FStar_List.map FStar_Syntax_Syntax.as_arg ts in
-            (x1, uu____62) in
-          FStar_Syntax_Syntax.Tm_app uu____47 in
-        FStar_Syntax_Syntax.mk uu____46 in
+            let uu____62 = FStar_List.map FStar_Syntax_Syntax.as_arg ts  in
+            (x1, uu____62)  in
+          FStar_Syntax_Syntax.Tm_app uu____47  in
+        FStar_Syntax_Syntax.mk uu____46  in
       uu____43 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let rec term_eq':
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool =
+  
+let rec (term_eq' :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1  ->
     fun t2  ->
-      let t11 = FStar_Syntax_Subst.compress t1 in
-      let t21 = FStar_Syntax_Subst.compress t2 in
+      let t11 = FStar_Syntax_Subst.compress t1  in
+      let t21 = FStar_Syntax_Subst.compress t2  in
       let binders_eq xs ys =
         ((FStar_List.length xs) = (FStar_List.length ys)) &&
           (FStar_List.forall2
@@ -61,7 +69,8 @@ let rec term_eq':
                   match (uu____101, uu____102) with
                   | ((x1,uu____104),(y1,uu____106)) ->
                       term_eq' x1.FStar_Syntax_Syntax.sort
-                        y1.FStar_Syntax_Syntax.sort) xs ys) in
+                        y1.FStar_Syntax_Syntax.sort) xs ys)
+         in
       let args_eq xs ys =
         ((FStar_List.length xs) = (FStar_List.length ys)) &&
           (FStar_List.forall2
@@ -69,7 +78,8 @@ let rec term_eq':
                 fun uu____169  ->
                   match (uu____168, uu____169) with
                   | ((a,imp),(b,imp')) -> (term_eq' a b) && (imp = imp')) xs
-             ys) in
+             ys)
+         in
       let comp_eq1 c d =
         match ((c.FStar_Syntax_Syntax.n), (d.FStar_Syntax_Syntax.n)) with
         | (FStar_Syntax_Syntax.Total (t,uu____206),FStar_Syntax_Syntax.Total
@@ -83,7 +93,7 @@ let rec term_eq':
               &&
               (args_eq ct1.FStar_Syntax_Syntax.effect_args
                  ct2.FStar_Syntax_Syntax.effect_args)
-        | uu____227 -> false in
+        | uu____227 -> false  in
       match ((t11.FStar_Syntax_Syntax.n), (t21.FStar_Syntax_Syntax.n)) with
       | (FStar_Syntax_Syntax.Tm_bvar x1,FStar_Syntax_Syntax.Tm_bvar y1) ->
           x1.FStar_Syntax_Syntax.index = y1.FStar_Syntax_Syntax.index
@@ -106,7 +116,7 @@ let rec term_eq':
          (xs,t,uu____310),FStar_Syntax_Syntax.Tm_abs (ys,u,uu____313)) ->
           if (FStar_List.length xs) > (FStar_List.length ys)
           then
-            let uu____362 = FStar_Util.first_N (FStar_List.length ys) xs in
+            let uu____362 = FStar_Util.first_N (FStar_List.length ys) xs  in
             (match uu____362 with
              | (xs1,xs') ->
                  let t12 =
@@ -118,15 +128,17 @@ let rec term_eq':
                              (FStar_Syntax_Syntax.Tm_abs
                                 (xs', t, FStar_Pervasives_Native.None))
                              FStar_Pervasives_Native.None
-                             t11.FStar_Syntax_Syntax.pos in
-                         (xs1, uu____437, FStar_Pervasives_Native.None) in
-                       FStar_Syntax_Syntax.Tm_abs uu____420 in
-                     FStar_Syntax_Syntax.mk uu____419 in
+                             t11.FStar_Syntax_Syntax.pos
+                            in
+                         (xs1, uu____437, FStar_Pervasives_Native.None)  in
+                       FStar_Syntax_Syntax.Tm_abs uu____420  in
+                     FStar_Syntax_Syntax.mk uu____419  in
                    uu____416 FStar_Pervasives_Native.None
-                     t11.FStar_Syntax_Syntax.pos in
+                     t11.FStar_Syntax_Syntax.pos
+                    in
                  term_eq' t12 t21)
           else
-            (let uu____464 = FStar_Util.first_N (FStar_List.length xs) ys in
+            (let uu____464 = FStar_Util.first_N (FStar_List.length xs) ys  in
              match uu____464 with
              | (ys1,ys') ->
                  let t22 =
@@ -138,12 +150,14 @@ let rec term_eq':
                              (FStar_Syntax_Syntax.Tm_abs
                                 (ys', u, FStar_Pervasives_Native.None))
                              FStar_Pervasives_Native.None
-                             t21.FStar_Syntax_Syntax.pos in
-                         (ys1, uu____539, FStar_Pervasives_Native.None) in
-                       FStar_Syntax_Syntax.Tm_abs uu____522 in
-                     FStar_Syntax_Syntax.mk uu____521 in
+                             t21.FStar_Syntax_Syntax.pos
+                            in
+                         (ys1, uu____539, FStar_Pervasives_Native.None)  in
+                       FStar_Syntax_Syntax.Tm_abs uu____522  in
+                     FStar_Syntax_Syntax.mk uu____521  in
                    uu____518 FStar_Pervasives_Native.None
-                     t21.FStar_Syntax_Syntax.pos in
+                     t21.FStar_Syntax_Syntax.pos
+                    in
                  term_eq' t11 t22)
       | (FStar_Syntax_Syntax.Tm_arrow (xs,c),FStar_Syntax_Syntax.Tm_arrow
          (ys,d)) -> (binders_eq xs ys) && (comp_eq1 c d)
@@ -205,29 +219,33 @@ let rec term_eq':
           term_eq' t11 t22
       | (FStar_Syntax_Syntax.Tm_delayed uu____1299,uu____1300) ->
           let uu____1325 =
-            let uu____1326 = FStar_Syntax_Print.tag_of_term t11 in
-            let uu____1327 = FStar_Syntax_Print.tag_of_term t21 in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1326 uu____1327 in
+            let uu____1326 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1327 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1326 uu____1327
+             in
           failwith uu____1325
       | (uu____1328,FStar_Syntax_Syntax.Tm_delayed uu____1329) ->
           let uu____1354 =
-            let uu____1355 = FStar_Syntax_Print.tag_of_term t11 in
-            let uu____1356 = FStar_Syntax_Print.tag_of_term t21 in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1355 uu____1356 in
+            let uu____1355 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1356 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1355 uu____1356
+             in
           failwith uu____1354
       | (FStar_Syntax_Syntax.Tm_unknown ,FStar_Syntax_Syntax.Tm_unknown ) ->
           true
       | uu____1357 -> false
-let term_eq:
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool =
+  
+let (term_eq :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1  ->
     fun t2  ->
-      let b = term_eq' t1 t2 in
+      let b = term_eq' t1 t2  in
       if Prims.op_Negation b
       then
-        (let uu____1370 = FStar_Syntax_Print.term_to_string t1 in
-         let uu____1371 = FStar_Syntax_Print.term_to_string t2 in
+        (let uu____1370 = FStar_Syntax_Print.term_to_string t1  in
+         let uu____1371 = FStar_Syntax_Print.term_to_string t2  in
          FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
            uu____1370 uu____1371)
       else ();
       b
+  
