@@ -525,7 +525,7 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"  ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.m_rref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"    
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg; _], p) when
@@ -536,10 +536,10 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mreference" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||    
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||        
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||        
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"       
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg], p) when
@@ -549,19 +549,19 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.mmstackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.mmref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.reference" ||    
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||        
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||            
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||                
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.reference" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref"
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([_;arg], p) when
     Syntax.string_of_mlpath p = "FStar.HyperStack.s_ref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"    
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
     ->
       TBuf (translate_type env arg)
-      
+
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named ([], (path, type_name)) ->
@@ -885,12 +885,16 @@ and translate_constant c: expr =
       |> BU.for_some (fun (c:Char.char) -> c = Char.char_of_int 0)
       then failwith (BU.format1 "Refusing to translate a string literal that contains a null character: %s" s);
       EString s
+  | MLC_Char c ->
+      let i = BU.int_of_char c in
+      let s = BU.string_of_int i in
+      let c = EConstant (UInt32, s) in
+      let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
+      EApp(char_of_int, [c])
   | MLC_Int (s, Some _) ->
       failwith "impossible: machine integer not desugared to a function call"
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
-  | MLC_Char _ ->
-      failwith "todo: translate_expr [MLC_Char]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
   | MLC_Int (s, None) ->
