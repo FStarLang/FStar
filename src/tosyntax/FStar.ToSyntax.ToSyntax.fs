@@ -2307,6 +2307,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                             {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
                     else lbs in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
+          (*
+           * AR: we first deguar the term with no attributes and then add attributes in the end, see desugar_decl above
+           *     this used to be fine, because subsequent typechecker then works on terms that have attributes
+           *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
+           *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms 
+           *)
           let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;

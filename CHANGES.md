@@ -228,6 +228,15 @@ Guidelines for the changelog:
 
      https://github.com/FStarLang/FStar/commit/f531ce82a19aa7073856cea8dd14fa424bbdd5dd#diff-86e8502a719a3b2f58786f2bdabc4e75R491
 
+  4. `FStar.Monotonic.HyperStack.is_eternal_region` is
+     deprecated. Client should instead use
+     `FStar.HyperStack.ST.is_eternal_region`. To migrate the code, the
+     script `renamings.sh` in `FStar/.scripts` can be used as:
+     `renamings.sh replace "HS\.is_eternal_region" "is_eternal_region"`.
+     Most of the stateful code already includes `FStar.HyperStack.ST`,
+     so the above should just work. This change simplifies the point 3
+     above, in that there is no extra proof obligation when creating
+     regions now.
 
 * Consolidation of HyperHeap and HyperStack memory models, and
   corresponding APIs for `contains`, `modifies`, etc.

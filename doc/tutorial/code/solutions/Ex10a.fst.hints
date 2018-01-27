@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "da2bbaf33d8287311b3ea38d4a5fb884"
+      "867010f060caf9241a26bb5208c8cbbd"
     ],
     [
       "Ex10a.uu___is_Readable",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "cce8934d9ce43e6ac29c42252d903db7"
+      "4e3ef46f70d6026509fa2e831196d35d"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "601ef3cdad27ede6e3488b74278187cf"
+      "808019576d727c86f69fc4410b10c580"
     ],
     [
       "Ex10a.uu___is_Writable",
@@ -39,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "f6a9e2ebe4bae8fd36593a8e6ff611e0"
+      "c9ee6e139a901bd8aa216c4ae6b2f64a"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "48fab9a61e73c6fb143468c7567bede0"
+      "2105b89af5300db118bba12cad6f230b"
     ],
     [
       "Ex10a.canWrite",
@@ -61,7 +61,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "121aafa347db3f510eefee3d0487e833"
+      "1507c9e7bc5744c8d45dfa545d72c7bd"
     ],
     [
       "Ex10a.canRead",
@@ -74,7 +74,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "f6e93f0815ffdec8b4ca4df559d6d09f"
+      "e318426fcabe85c3c24afade38611793"
     ],
     [
       "Ex10a.revoke",
@@ -83,7 +83,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
       0,
-      "9d7d2fa750047c7f35a6bcc9bd45b98e"
+      "0e438dfec76a4f839dba63c68dafc51c"
     ],
     [
       "Ex10a.grant",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "8867479e83a29b8e8f7730393b72e484"
+      "a8881422eccafc442ee8a6c8fb0a22c1"
     ],
     [
       "Ex10a.revoke",
@@ -124,7 +124,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "eebe77b5dfa5594a861ed60a5ded3edb"
+      "ece276c2be3ef8c82ae2ca4d0bc4176d"
     ],
     [
       "Ex10a.safe_delete",
@@ -146,7 +146,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "94d937e489c7212f4a9235a0737e38fb"
+      "d42ead941a8c2308d16d86939f11dff5"
     ],
     [
       "Ex10a.test_acls",
@@ -175,7 +175,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "114a67595ae1c86f657f30e907fb54f1"
+      "9f663c108cafee1faecbb66c400457cc"
     ]
   ]
 ]
