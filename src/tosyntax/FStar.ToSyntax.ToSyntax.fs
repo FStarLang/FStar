@@ -686,7 +686,25 @@ and desugar_machine_integer env repr (signedness, width) range =
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
 and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
-    let tm, mut = fail_or env ((if resolve then Env.try_lookup_lid else Env.try_lookup_lid_no_resolve) env) l in
+    let tm, mut, attrs = fail_or env ((if resolve then Env.try_lookup_lid_with_attributes else Env.try_lookup_lid_with_attributes_no_resolve) env) l in
+    let warn_if_deprecated (attrs:list<attribute>) :unit =
+      List.iter (fun a -> match a.n with
+        | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
+          let msg = (Print.term_to_string tm) ^ " is deprecated" in
+          let msg =
+            if List.length args > 0 then
+              (match (fst (List.hd args)).n with
+               | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
+               | _ -> msg)
+            else msg
+          in
+          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+        | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
+          let msg = (Print.term_to_string tm) ^ " is deprecated" in
+          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+        | _ -> ()) attrs
+    in
+    warn_if_deprecated attrs;
     let tm = setpos tm in
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
@@ -2216,6 +2234,7 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
   let attrs = mk_comment_attr d :: attrs in
+  let s = List.fold_left (fun s a -> s ^ "; " ^ (Print.term_to_string a)) "" attrs in
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
@@ -2288,11 +2307,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                             {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
                     else lbs in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
+          let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = [] } in
+                    sigattrs = attrs } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in

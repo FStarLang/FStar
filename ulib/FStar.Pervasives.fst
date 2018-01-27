@@ -274,3 +274,5 @@ type __internal_ocaml_attributes =
   | Substitute
   | Gc
   | Comment of string
+
+irreducible let deprecated (s:string) = ()
