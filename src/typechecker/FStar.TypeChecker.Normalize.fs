@@ -967,9 +967,17 @@ let should_reify cfg stack = match stack with
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
-        log cfg  (fun () ->
-            let t = compress t in
-            BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
+        let t =
+            if Env.debug cfg.tcenv (Options.Other "NormDelayed")
+            then (match t.n with
+                  | Tm_delayed _ ->
+                    BU.print1 "NORM delayed: %s\n" (Print.term_to_string t)
+                  | _ -> ());
+            compress t
+        in
+        log cfg  (fun () -> 
+          let t = compress t in
+          BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
@@ -1631,7 +1639,9 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
-           if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+           if true ||
+           cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+           //|| true
            //we're really trying to compute here; no point propagating range information
            //which can be expensive
            then t
