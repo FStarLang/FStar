@@ -382,7 +382,7 @@ let rec compress (t:term) =
     | Tm_delayed((t, s), memo) ->
         let t' = compress (push_subst s t) in
 //        Unionfind.update_in_tx memo (Some t');
-        memo := Some t';
+//        memo := Some t';
         t'
     | _ -> let t' = force_uvar t in
            match t'.n with
