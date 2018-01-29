@@ -13,8 +13,8 @@ open FStar.Preorder
 
 (* Eternal regions remain contained *)
 private abstract let eternal_region_pred (m1 m2:mem) :Type0
-  = forall (r:HS.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
-                 (HS.is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
+  = forall (r:HS.rid).{:pattern (HS.is_eternal_color (color r)); (m1.h `Map.contains` r)}
+                 (HS.is_eternal_color (color r) /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
 (* rid counter increases monotonically *)
 private abstract let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
@@ -38,7 +38,7 @@ private abstract let eternal_refs_pred (m1 m2:mem) :Type0
       if is_mm r then True
       else
         if m1 `HS.contains` r then
-	  if is_eternal_region (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
+	  if HS.is_eternal_color (color (HS.frameOf r)) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else if m2.h `Map.contains` (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else True
 	else True
@@ -55,7 +55,7 @@ type mem_predicate = mem -> Type0
 
 (* Predicates that we will witness with regions and refs *)
 abstract let region_contains_pred (r:HS.rid) :mem_predicate
-  = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
+  = fun m -> (not (HS.is_eternal_color (color r))) \/ m.h `Map.contains` r
 
 abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :mem_predicate
   = fun m -> rid_last_component (HS.frameOf r) < m.rid_ctr /\
@@ -334,6 +334,9 @@ type mmstackref (a:Type) = mmmstackref a (Heap.trivial_preorder a)
 type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 
+let is_eternal_region (r:rid) :Type0
+  = HS.is_eternal_color (color r) /\ (r == HS.root \/ witnessed (region_contains_pred r))
+
 (*
  * AR: The change to using ST.rid may not be that bad itself,
  *     since subtyping should take care of most instances in the client usage.
@@ -409,13 +412,12 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
 
 let new_region (r0:rid)
   :ST rid
-      (requires (fun m        -> is_eternal_region r0 /\
-                              (r0 == HS.root \/ witnessed (region_contains_pred r0))))
+      (requires (fun m        -> is_eternal_region r0))
       (ensures  (fun m0 r1 m1 ->
                  r1 `HS.extends` r0                  /\
                  HS.fresh_region r1 m0 m1            /\
 		 HS.color r1 = HS.color r0           /\
-		 witnessed (region_contains_pred r1) /\
+		 is_eternal_region r1                /\
 		 m1.h == Map.upd m0.h r1 Heap.emp    /\
 		 m1.tip = m0.tip))
   = if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
@@ -430,13 +432,12 @@ let is_eternal_color = HS.is_eternal_color
 
 let new_colored_region (r0:rid) (c:int)
   :ST rid
-      (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0 /\
-                             (r0 == HS.root \/ witnessed (region_contains_pred r0))))
+      (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0))
       (ensures (fun m0 r1 m1 ->
                 r1 `HS.extends` r0                  /\
                 HS.fresh_region r1 m0 m1            /\
 	        HS.color r1 = c                     /\
-		witnessed (region_contains_pred r1) /\
+		is_eternal_region r1                /\
 	        m1.h == Map.upd m0.h r1 Heap.emp    /\
 		m1.tip = m0.tip))
   = if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
@@ -457,7 +458,7 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
 
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
-      (requires (fun m       -> is_eternal_region i /\ (i == HS.root \/ witnessed (region_contains_pred i))))
+      (requires (fun m       -> is_eternal_region i))
       (ensures  (fun m0 r m1 -> is_eternal_region (frameOf r) /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
   = if i <> HS.root then gst_recall (region_contains_pred i);
     let m0 = gst_get () in
@@ -471,13 +472,13 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
-      (requires (fun m -> is_eternal_region i /\ (i == HS.root \/ witnessed (region_contains_pred i))))
+      (requires (fun m -> is_eternal_region i))
       (ensures (ralloc_post i init))
   = ralloc_common i init false
   
 let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mmmref a rel)
-      (requires (fun m -> is_eternal_region i /\ (i == HS.root \/ witnessed (region_contains_pred i))))
+      (requires (fun m -> is_eternal_region i))
       (ensures (ralloc_post i init))
   = ralloc_common i init true
 
@@ -486,11 +487,11 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
  *            the client can either prove contains
  *            or give us enough so that we can use monotonicity to derive contains
  *)
-let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :GTot bool =
-  (m `contains` r) ||
+let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :Type0 =
+  (m `contains` r) \/
     (let i = HS.frameOf r in
-     (is_eternal_region i || i `HS.is_above` m.tip) &&
-     (not (is_mm r)       || m `HS.contains_ref_in_its_region` r))
+     (is_eternal_region i \/ i `HS.is_above` m.tip) /\
+     (not (is_mm r)       \/ m `HS.contains_ref_in_its_region` r))
 
 let rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
   :ST unit
@@ -565,12 +566,12 @@ let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
    We can only recall eternal regions, not stack regions
    *)
 let recall_region (i:rid{is_eternal_region i})
-  :Stack unit (requires (fun m -> i == HS.root \/ witnessed (region_contains_pred i)))
+  :Stack unit (requires (fun m -> True))
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
   = if i <> HS.root then gst_recall (region_contains_pred i)
 
 let witness_region (i:rid)
-  :Stack unit (requires (fun m0      -> is_eternal_region i ==> i `is_in` m0.h))
+  :Stack unit (requires (fun m0      -> is_eternal_color (color i) ==> i `is_in` m0.h))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
   = gst_witness (region_contains_pred i)
 
@@ -631,12 +632,12 @@ let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\
-	                          (forall (x:c). (not (is_eternal_region (p x))) \/ h1.h `Map.contains` (p x))))
+	                          (forall (x:c). (not (HS.is_eternal_color (color (p x)))) \/ h1.h `Map.contains` (p x))))
   = let p' (x:c) :mem_predicate = region_contains_pred (p x) in
     let s:squash (forall (x:c). witnessed (p' x)) = () in
     testify_forall s
 
-type ex_rid = r:rid{is_eternal_region r /\ witnessed (region_contains_pred r)}
+type ex_rid = erid
 
 
 (****** logical properties of witnessed ******)

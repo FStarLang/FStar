@@ -9,6 +9,8 @@ unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
 let is_eternal_color c = c <= 0
+
+[@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
 let is_eternal_region r  = is_eternal_color (color r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
@@ -80,8 +82,9 @@ let lemma_map_invariant (m:mem) (r s:rid)
 
 let lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
-         (ensures  (is_eternal_region r == is_eternal_region s /\ is_stack_region r == is_stack_region s))
-         [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_region s)];
+         (ensures  (is_eternal_color (color r) == is_eternal_color (color s) /\
+	            is_stack_region r == is_stack_region s))
+         [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_color (color s))];
                     [SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
                     ]]
   = ()
@@ -126,7 +129,7 @@ let empty_mem (m:hmap) =
   assume (rid_last_component root == 0);
   HS 1 h tip
 
-let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
+let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_color (color r) /\ not (disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
   : Lemma (requires True)
           (ensures (~ (r `is_in` m.h)))
   = root_has_color_zero()
@@ -201,13 +204,13 @@ let mstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }
 
 let mref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_region (frameOf s) && not (is_mm s) }
+  s:mreference a rel{ is_eternal_color (color (frameOf s)) && not (is_mm s) }
 
 let mmmstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s) && is_mm s }
 
 let mmmref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_region (frameOf s) && is_mm s }
+  s:mreference a rel{ is_eternal_color (color (frameOf s)) && is_mm s }
 
 //NS: Why do we need this one?
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
@@ -297,7 +300,7 @@ let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
   = let new_tip_rid = extend m.tip m.rid_ctr 1 in
     HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
 
-let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.contains` parent})
+let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ m.h `Map.contains` parent})
                        (c:option int{None? c \/ is_eternal_color (Some?.v c)})
   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
   = let new_rid =
@@ -422,7 +425,7 @@ unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
 
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
-                              (r:rid{is_eternal_region r /\
+                              (r:rid{is_eternal_color (color r) /\
                                      r<>root /\
                                      r `is_in` h.h})
    : Lemma (disjoint h.tip r)

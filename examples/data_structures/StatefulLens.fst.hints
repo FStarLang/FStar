@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "8162fbcd34d804c0c3692c45257037dd"
+      "c944f3a1ac6fb94d14e223ee97c2ac1b"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "22c87222e2bcefc6b931620f2d7b8a59"
+      "b4da84c49b8c381f3f6bc90a8a3db371"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "1bb0508637ec0f4454eb5b5910960698"
+      "df29905f123cc2e2535037ef34a21176"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "7b923c1755cb49c0ca3c09f40386d27c"
+      "f4b7ee29a77aa7e2800c21c53c3c5b02"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "373f86dd4070264184c54eb6a73684f6"
+      "788a94d967d309737dc2b610042c7e8d"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "db2198fcdc61c36b8648dad90f6e4313"
+      "9bbcf49b1f4ad3204154f2ec09cfbf91"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "b0c232771c7a289050d3dd765218d2b7"
+      "6221d8dac90c1fa214ba0d759f63debf"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "bf3d5103f715ef886f56a94976f1552c"
+      "8c73a67cabc9943ffea6f7263ba4f3f2"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "1b5e21ae7f152b7784d8904b1365cd27"
+      "f09f66ed0e8881f1922e58fc000b6ae7"
     ]
   ]
 ]
