@@ -67,7 +67,8 @@ module IntervalIntersect
 
 #set-options "--use_two_phase_tc true"
 /// Activates the new `two phase commit`_ feature.
-/// .. _`two phase commit`_ https://github.com/FStarLang/FStar/issues?utf8=%E2%9C%93&q=label%3Acomponent%2Ftwo-phase-tc+
+/// .. _`two phase commit` https://github.com/FStarLang/FStar/issues?utf8=%E2%9C%93&q=label%3Acomponent%2Ftwo-phase-tc+
+///
 /// The importance of libraries
 /// ===========================
 ///
@@ -168,7 +169,7 @@ private let rec go (is1 is2:intervals)
             (hd ris).from >=^ max (hd is1).from (hd is2).from  )
          ))
          (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2]) =
-///
+
 /// The termination argument uses the lexicographic ordering of two values: the
 /// joint length of the lists and a bit indicating whether a reordering is
 /// necessary. To prove that the function terminates, at every
@@ -427,7 +428,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
   let h1::t1 = is1 in
   let h2::t2 = is2 in
   let f' = max h1.from h2.from in
-///
+
 /// The `assert` below expresses the outcome of the repeated application of set
 /// distributive law to state the following equality:
 ///
@@ -456,7 +457,7 @@ let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons?
 ///  3. h2 n t1 = empty
 
   lemma_semI_sem_disjoint h2 t1;
-///
+
 /// The proof now applies the distributive law in the other direction to combine
 /// the 3rd and 4th intersect:
 
@@ -672,3 +673,4 @@ let main = stdout <| ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 
 ///
 /// .. _`Jonathan Protzenko`: https://jonathan.protzenko.fr/
 /// .. _KreMLin: https://github.com/FStarLang/kremlin/
+/// 
