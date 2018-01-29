@@ -351,7 +351,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
               let tac_arity = List.length bs in
               let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-              match mk_interpretation_fun tac_lid lid_arg t bs with
+              match mk_interpretation_fun g.tcenv tac_lid lid_arg t bs with
               | Some tac_interpretation ->
                   let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
                   [MLM_Top app]
