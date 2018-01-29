@@ -94,6 +94,7 @@ val settable                    : string -> bool
 val resettable                  : string -> bool
 
 val __temp_no_proj              : string  -> bool
+val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool

@@ -111,6 +111,7 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 let defaults =
      [
       ("__temp_no_proj"               , List []);
+      ("__temp_fast_implicits"        , Bool false);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
@@ -874,6 +875,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Accumulated (SimpleStr "module_name"),
         "Don't generate projectors for this module");
 
+       ( noshort,
+        "__temp_fast_implicits",
+        Const (mk_bool true),
+        "Don't use this option yet");
+
        ( 'v',
          "version",
          WithSideEffect ((fun _ -> display_version(); exit 0),
@@ -1152,6 +1158,7 @@ let parse_settings ns : list<(list<string> * bool)> =
        |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
+let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
