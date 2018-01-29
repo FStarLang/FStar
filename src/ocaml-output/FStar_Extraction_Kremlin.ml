@@ -3,27 +3,27 @@ type decl =
   | DGlobal of
   (flag Prims.list,(Prims.string Prims.list,Prims.string)
                      FStar_Pervasives_Native.tuple2,Prims.int,typ,expr)
-  FStar_Pervasives_Native.tuple5
+  FStar_Pervasives_Native.tuple5 
   | DFunction of
   (cc FStar_Pervasives_Native.option,flag Prims.list,Prims.int,typ,(Prims.string
                                                                     Prims.list,
                                                                     Prims.string)
                                                                     FStar_Pervasives_Native.tuple2,
-  binder Prims.list,expr) FStar_Pervasives_Native.tuple7
+  binder Prims.list,expr) FStar_Pervasives_Native.tuple7 
   | DTypeAlias of
   ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-  flag Prims.list,Prims.int,typ) FStar_Pervasives_Native.tuple4
+  flag Prims.list,Prims.int,typ) FStar_Pervasives_Native.tuple4 
   | DTypeFlat of
   ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
   flag Prims.list,Prims.int,(Prims.string,(typ,Prims.bool)
                                             FStar_Pervasives_Native.tuple2)
                               FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple4
+  FStar_Pervasives_Native.tuple4 
   | DExternal of
   (cc FStar_Pervasives_Native.option,flag Prims.list,(Prims.string Prims.list,
                                                        Prims.string)
                                                        FStar_Pervasives_Native.tuple2,
-  typ) FStar_Pervasives_Native.tuple4
+  typ) FStar_Pervasives_Native.tuple4 
   | DTypeVariant of
   ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
   flag Prims.list,Prims.int,(Prims.string,(Prims.string,(typ,Prims.bool)
@@ -31,180 +31,187 @@ type decl =
                                             FStar_Pervasives_Native.tuple2
                                             Prims.list)
                               FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple4[@@deriving show]
+  FStar_Pervasives_Native.tuple4 [@@deriving show]
 and cc =
-  | StdCall
-  | CDecl
-  | FastCall[@@deriving show]
+  | StdCall 
+  | CDecl 
+  | FastCall [@@deriving show]
 and flag =
-  | Private
-  | WipeBody
-  | CInline
-  | Substitute
-  | GCType
-  | Comment of Prims.string
-  | MustDisappear[@@deriving show]
+  | Private 
+  | WipeBody 
+  | CInline 
+  | Substitute 
+  | GCType 
+  | Comment of Prims.string 
+  | MustDisappear [@@deriving show]
 and lifetime =
-  | Eternal
-  | Stack[@@deriving show]
+  | Eternal 
+  | Stack [@@deriving show]
 and expr =
-  | EBound of Prims.int
+  | EBound of Prims.int 
   | EQualified of (Prims.string Prims.list,Prims.string)
-  FStar_Pervasives_Native.tuple2
-  | EConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2
-  | EUnit
-  | EApp of (expr,expr Prims.list) FStar_Pervasives_Native.tuple2
-  | ETypApp of (expr,typ Prims.list) FStar_Pervasives_Native.tuple2
-  | ELet of (binder,expr,expr) FStar_Pervasives_Native.tuple3
-  | EIfThenElse of (expr,expr,expr) FStar_Pervasives_Native.tuple3
-  | ESequence of expr Prims.list
-  | EAssign of (expr,expr) FStar_Pervasives_Native.tuple2
-  | EBufCreate of (lifetime,expr,expr) FStar_Pervasives_Native.tuple3
-  | EBufRead of (expr,expr) FStar_Pervasives_Native.tuple2
-  | EBufWrite of (expr,expr,expr) FStar_Pervasives_Native.tuple3
-  | EBufSub of (expr,expr) FStar_Pervasives_Native.tuple2
-  | EBufBlit of (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5
+  FStar_Pervasives_Native.tuple2 
+  | EConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2 
+  | EUnit 
+  | EApp of (expr,expr Prims.list) FStar_Pervasives_Native.tuple2 
+  | ETypApp of (expr,typ Prims.list) FStar_Pervasives_Native.tuple2 
+  | ELet of (binder,expr,expr) FStar_Pervasives_Native.tuple3 
+  | EIfThenElse of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
+  | ESequence of expr Prims.list 
+  | EAssign of (expr,expr) FStar_Pervasives_Native.tuple2 
+  | EBufCreate of (lifetime,expr,expr) FStar_Pervasives_Native.tuple3 
+  | EBufRead of (expr,expr) FStar_Pervasives_Native.tuple2 
+  | EBufWrite of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
+  | EBufSub of (expr,expr) FStar_Pervasives_Native.tuple2 
+  | EBufBlit of (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5 
   | EMatch of (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple2
-  | EOp of (op,width) FStar_Pervasives_Native.tuple2
-  | ECast of (expr,typ) FStar_Pervasives_Native.tuple2
-  | EPushFrame
-  | EPopFrame
-  | EBool of Prims.bool
-  | EAny
-  | EAbort
-  | EReturn of expr
+  FStar_Pervasives_Native.tuple2 
+  | EOp of (op,width) FStar_Pervasives_Native.tuple2 
+  | ECast of (expr,typ) FStar_Pervasives_Native.tuple2 
+  | EPushFrame 
+  | EPopFrame 
+  | EBool of Prims.bool 
+  | EAny 
+  | EAbort 
+  | EReturn of expr 
   | EFlat of
   (typ,(Prims.string,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple2
-  | EField of (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3
-  | EWhile of (expr,expr) FStar_Pervasives_Native.tuple2
+  FStar_Pervasives_Native.tuple2 
+  | EField of (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3 
+  | EWhile of (expr,expr) FStar_Pervasives_Native.tuple2 
   | EBufCreateL of (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2
-  | ETuple of expr Prims.list
+  
+  | ETuple of expr Prims.list 
   | ECons of (typ,Prims.string,expr Prims.list)
-  FStar_Pervasives_Native.tuple3
-  | EBufFill of (expr,expr,expr) FStar_Pervasives_Native.tuple3
-  | EString of Prims.string
-  | EFun of (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3
-  | EAbortS of Prims.string[@@deriving show]
+  FStar_Pervasives_Native.tuple3 
+  | EBufFill of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
+  | EString of Prims.string 
+  | EFun of (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3 
+  | EAbortS of Prims.string [@@deriving show]
 and op =
-  | Add
-  | AddW
-  | Sub
-  | SubW
-  | Div
-  | DivW
-  | Mult
-  | MultW
-  | Mod
-  | BOr
-  | BAnd
-  | BXor
-  | BShiftL
-  | BShiftR
-  | BNot
-  | Eq
-  | Neq
-  | Lt
-  | Lte
-  | Gt
-  | Gte
-  | And
-  | Or
-  | Xor
-  | Not[@@deriving show]
+  | Add 
+  | AddW 
+  | Sub 
+  | SubW 
+  | Div 
+  | DivW 
+  | Mult 
+  | MultW 
+  | Mod 
+  | BOr 
+  | BAnd 
+  | BXor 
+  | BShiftL 
+  | BShiftR 
+  | BNot 
+  | Eq 
+  | Neq 
+  | Lt 
+  | Lte 
+  | Gt 
+  | Gte 
+  | And 
+  | Or 
+  | Xor 
+  | Not [@@deriving show]
 and pattern =
-  | PUnit
-  | PBool of Prims.bool
-  | PVar of binder
-  | PCons of (Prims.string,pattern Prims.list)
-  FStar_Pervasives_Native.tuple2
-  | PTuple of pattern Prims.list
+  | PUnit 
+  | PBool of Prims.bool 
+  | PVar of binder 
+  | PCons of (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2
+  
+  | PTuple of pattern Prims.list 
   | PRecord of (Prims.string,pattern) FStar_Pervasives_Native.tuple2
-  Prims.list
-  | PConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                    show]
+  Prims.list 
+  | PConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2 
+[@@deriving show]
 and width =
-  | UInt8
-  | UInt16
-  | UInt32
-  | UInt64
-  | Int8
-  | Int16
-  | Int32
-  | Int64
-  | Bool
-  | CInt[@@deriving show]
+  | UInt8 
+  | UInt16 
+  | UInt32 
+  | UInt64 
+  | Int8 
+  | Int16 
+  | Int32 
+  | Int64 
+  | Bool 
+  | CInt [@@deriving show]
 and binder = {
-  name: Prims.string;
-  typ: typ;
-  mut: Prims.bool;}[@@deriving show]
+  name: Prims.string ;
+  typ: typ ;
+  mut: Prims.bool }[@@deriving show]
 and typ =
-  | TInt of width
-  | TBuf of typ
-  | TUnit
+  | TInt of width 
+  | TBuf of typ 
+  | TUnit 
   | TQualified of (Prims.string Prims.list,Prims.string)
-  FStar_Pervasives_Native.tuple2
-  | TBool
-  | TAny
-  | TArrow of (typ,typ) FStar_Pervasives_Native.tuple2
-  | TBound of Prims.int
+  FStar_Pervasives_Native.tuple2 
+  | TBool 
+  | TAny 
+  | TArrow of (typ,typ) FStar_Pervasives_Native.tuple2 
+  | TBound of Prims.int 
   | TApp of
   ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-  typ Prims.list) FStar_Pervasives_Native.tuple2
-  | TTuple of typ Prims.list[@@deriving show]
-let uu___is_DGlobal: decl -> Prims.bool =
+  typ Prims.list) FStar_Pervasives_Native.tuple2 
+  | TTuple of typ Prims.list [@@deriving show]
+let (uu___is_DGlobal : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DGlobal _0 -> true | uu____547 -> false
-let __proj__DGlobal__item___0:
+  
+let (__proj__DGlobal__item___0 :
   decl ->
     (flag Prims.list,(Prims.string Prims.list,Prims.string)
                        FStar_Pervasives_Native.tuple2,Prims.int,typ,expr)
-      FStar_Pervasives_Native.tuple5
-  = fun projectee  -> match projectee with | DGlobal _0 -> _0
-let uu___is_DFunction: decl -> Prims.bool =
+      FStar_Pervasives_Native.tuple5)
+  = fun projectee  -> match projectee with | DGlobal _0 -> _0 
+let (uu___is_DFunction : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DFunction _0 -> true | uu____639 -> false
-let __proj__DFunction__item___0:
+  
+let (__proj__DFunction__item___0 :
   decl ->
     (cc FStar_Pervasives_Native.option,flag Prims.list,Prims.int,typ,
       (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      binder Prims.list,expr) FStar_Pervasives_Native.tuple7
-  = fun projectee  -> match projectee with | DFunction _0 -> _0
-let uu___is_DTypeAlias: decl -> Prims.bool =
+      binder Prims.list,expr) FStar_Pervasives_Native.tuple7)
+  = fun projectee  -> match projectee with | DFunction _0 -> _0 
+let (uu___is_DTypeAlias : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DTypeAlias _0 -> true | uu____745 -> false
-let __proj__DTypeAlias__item___0:
+  
+let (__proj__DTypeAlias__item___0 :
   decl ->
     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      flag Prims.list,Prims.int,typ) FStar_Pervasives_Native.tuple4
-  = fun projectee  -> match projectee with | DTypeAlias _0 -> _0
-let uu___is_DTypeFlat: decl -> Prims.bool =
+      flag Prims.list,Prims.int,typ) FStar_Pervasives_Native.tuple4)
+  = fun projectee  -> match projectee with | DTypeAlias _0 -> _0 
+let (uu___is_DTypeFlat : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DTypeFlat _0 -> true | uu____831 -> false
-let __proj__DTypeFlat__item___0:
+  
+let (__proj__DTypeFlat__item___0 :
   decl ->
     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
       flag Prims.list,Prims.int,(Prims.string,(typ,Prims.bool)
                                                 FStar_Pervasives_Native.tuple2)
                                   FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple4
-  = fun projectee  -> match projectee with | DTypeFlat _0 -> _0
-let uu___is_DExternal: decl -> Prims.bool =
+      FStar_Pervasives_Native.tuple4)
+  = fun projectee  -> match projectee with | DTypeFlat _0 -> _0 
+let (uu___is_DExternal : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DExternal _0 -> true | uu____939 -> false
-let __proj__DExternal__item___0:
+  
+let (__proj__DExternal__item___0 :
   decl ->
     (cc FStar_Pervasives_Native.option,flag Prims.list,(Prims.string
                                                           Prims.list,
                                                          Prims.string)
                                                          FStar_Pervasives_Native.tuple2,
-      typ) FStar_Pervasives_Native.tuple4
-  = fun projectee  -> match projectee with | DExternal _0 -> _0
-let uu___is_DTypeVariant: decl -> Prims.bool =
+      typ) FStar_Pervasives_Native.tuple4)
+  = fun projectee  -> match projectee with | DExternal _0 -> _0 
+let (uu___is_DTypeVariant : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DTypeVariant _0 -> true | uu____1037 -> false
-let __proj__DTypeVariant__item___0:
+  
+let (__proj__DTypeVariant__item___0 :
   decl ->
     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
       flag Prims.list,Prims.int,(Prims.string,(Prims.string,(typ,Prims.bool)
@@ -212,422 +219,510 @@ let __proj__DTypeVariant__item___0:
                                                 FStar_Pervasives_Native.tuple2
                                                 Prims.list)
                                   FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple4
-  = fun projectee  -> match projectee with | DTypeVariant _0 -> _0
-let uu___is_StdCall: cc -> Prims.bool =
+      FStar_Pervasives_Native.tuple4)
+  = fun projectee  -> match projectee with | DTypeVariant _0 -> _0 
+let (uu___is_StdCall : cc -> Prims.bool) =
   fun projectee  ->
     match projectee with | StdCall  -> true | uu____1144 -> false
-let uu___is_CDecl: cc -> Prims.bool =
+  
+let (uu___is_CDecl : cc -> Prims.bool) =
   fun projectee  ->
     match projectee with | CDecl  -> true | uu____1148 -> false
-let uu___is_FastCall: cc -> Prims.bool =
+  
+let (uu___is_FastCall : cc -> Prims.bool) =
   fun projectee  ->
     match projectee with | FastCall  -> true | uu____1152 -> false
-let uu___is_Private: flag -> Prims.bool =
+  
+let (uu___is_Private : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | Private  -> true | uu____1156 -> false
-let uu___is_WipeBody: flag -> Prims.bool =
+  
+let (uu___is_WipeBody : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | WipeBody  -> true | uu____1160 -> false
-let uu___is_CInline: flag -> Prims.bool =
+  
+let (uu___is_CInline : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | CInline  -> true | uu____1164 -> false
-let uu___is_Substitute: flag -> Prims.bool =
+  
+let (uu___is_Substitute : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | Substitute  -> true | uu____1168 -> false
-let uu___is_GCType: flag -> Prims.bool =
+  
+let (uu___is_GCType : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | GCType  -> true | uu____1172 -> false
-let uu___is_Comment: flag -> Prims.bool =
+  
+let (uu___is_Comment : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | Comment _0 -> true | uu____1177 -> false
-let __proj__Comment__item___0: flag -> Prims.string =
-  fun projectee  -> match projectee with | Comment _0 -> _0
-let uu___is_MustDisappear: flag -> Prims.bool =
+  
+let (__proj__Comment__item___0 : flag -> Prims.string) =
+  fun projectee  -> match projectee with | Comment _0 -> _0 
+let (uu___is_MustDisappear : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | MustDisappear  -> true | uu____1188 -> false
-let uu___is_Eternal: lifetime -> Prims.bool =
+  
+let (uu___is_Eternal : lifetime -> Prims.bool) =
   fun projectee  ->
     match projectee with | Eternal  -> true | uu____1192 -> false
-let uu___is_Stack: lifetime -> Prims.bool =
+  
+let (uu___is_Stack : lifetime -> Prims.bool) =
   fun projectee  ->
     match projectee with | Stack  -> true | uu____1196 -> false
-let uu___is_EBound: expr -> Prims.bool =
+  
+let (uu___is_EBound : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBound _0 -> true | uu____1201 -> false
-let __proj__EBound__item___0: expr -> Prims.int =
-  fun projectee  -> match projectee with | EBound _0 -> _0
-let uu___is_EQualified: expr -> Prims.bool =
+  
+let (__proj__EBound__item___0 : expr -> Prims.int) =
+  fun projectee  -> match projectee with | EBound _0 -> _0 
+let (uu___is_EQualified : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EQualified _0 -> true | uu____1219 -> false
-let __proj__EQualified__item___0:
+  
+let (__proj__EQualified__item___0 :
   expr ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | EQualified _0 -> _0
-let uu___is_EConstant: expr -> Prims.bool =
+    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | EQualified _0 -> _0 
+let (uu___is_EConstant : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EConstant _0 -> true | uu____1253 -> false
-let __proj__EConstant__item___0:
-  expr -> (width,Prims.string) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EConstant _0 -> _0
-let uu___is_EUnit: expr -> Prims.bool =
+  
+let (__proj__EConstant__item___0 :
+  expr -> (width,Prims.string) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EConstant _0 -> _0 
+let (uu___is_EUnit : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EUnit  -> true | uu____1276 -> false
-let uu___is_EApp: expr -> Prims.bool =
+  
+let (uu___is_EApp : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EApp _0 -> true | uu____1287 -> false
-let __proj__EApp__item___0:
-  expr -> (expr,expr Prims.list) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EApp _0 -> _0
-let uu___is_ETypApp: expr -> Prims.bool =
+  
+let (__proj__EApp__item___0 :
+  expr -> (expr,expr Prims.list) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EApp _0 -> _0 
+let (uu___is_ETypApp : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ETypApp _0 -> true | uu____1323 -> false
-let __proj__ETypApp__item___0:
-  expr -> (expr,typ Prims.list) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | ETypApp _0 -> _0
-let uu___is_ELet: expr -> Prims.bool =
+  
+let (__proj__ETypApp__item___0 :
+  expr -> (expr,typ Prims.list) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | ETypApp _0 -> _0 
+let (uu___is_ELet : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ELet _0 -> true | uu____1359 -> false
-let __proj__ELet__item___0:
-  expr -> (binder,expr,expr) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | ELet _0 -> _0
-let uu___is_EIfThenElse: expr -> Prims.bool =
+  
+let (__proj__ELet__item___0 :
+  expr -> (binder,expr,expr) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | ELet _0 -> _0 
+let (uu___is_EIfThenElse : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EIfThenElse _0 -> true | uu____1395 -> false
-let __proj__EIfThenElse__item___0:
-  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | EIfThenElse _0 -> _0
-let uu___is_ESequence: expr -> Prims.bool =
+  
+let (__proj__EIfThenElse__item___0 :
+  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | EIfThenElse _0 -> _0 
+let (uu___is_ESequence : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ESequence _0 -> true | uu____1427 -> false
-let __proj__ESequence__item___0: expr -> expr Prims.list =
-  fun projectee  -> match projectee with | ESequence _0 -> _0
-let uu___is_EAssign: expr -> Prims.bool =
+  
+let (__proj__ESequence__item___0 : expr -> expr Prims.list) =
+  fun projectee  -> match projectee with | ESequence _0 -> _0 
+let (uu___is_EAssign : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EAssign _0 -> true | uu____1449 -> false
-let __proj__EAssign__item___0:
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EAssign _0 -> _0
-let uu___is_EBufCreate: expr -> Prims.bool =
+  
+let (__proj__EAssign__item___0 :
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EAssign _0 -> _0 
+let (uu___is_EBufCreate : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufCreate _0 -> true | uu____1479 -> false
-let __proj__EBufCreate__item___0:
-  expr -> (lifetime,expr,expr) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | EBufCreate _0 -> _0
-let uu___is_EBufRead: expr -> Prims.bool =
+  
+let (__proj__EBufCreate__item___0 :
+  expr -> (lifetime,expr,expr) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | EBufCreate _0 -> _0 
+let (uu___is_EBufRead : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufRead _0 -> true | uu____1513 -> false
-let __proj__EBufRead__item___0:
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EBufRead _0 -> _0
-let uu___is_EBufWrite: expr -> Prims.bool =
+  
+let (__proj__EBufRead__item___0 :
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EBufRead _0 -> _0 
+let (uu___is_EBufWrite : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufWrite _0 -> true | uu____1543 -> false
-let __proj__EBufWrite__item___0:
-  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | EBufWrite _0 -> _0
-let uu___is_EBufSub: expr -> Prims.bool =
+  
+let (__proj__EBufWrite__item___0 :
+  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | EBufWrite _0 -> _0 
+let (uu___is_EBufSub : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufSub _0 -> true | uu____1577 -> false
-let __proj__EBufSub__item___0:
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EBufSub _0 -> _0
-let uu___is_EBufBlit: expr -> Prims.bool =
+  
+let (__proj__EBufSub__item___0 :
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EBufSub _0 -> _0 
+let (uu___is_EBufBlit : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufBlit _0 -> true | uu____1611 -> false
-let __proj__EBufBlit__item___0:
-  expr -> (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5 =
-  fun projectee  -> match projectee with | EBufBlit _0 -> _0
-let uu___is_EMatch: expr -> Prims.bool =
+  
+let (__proj__EBufBlit__item___0 :
+  expr -> (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5) =
+  fun projectee  -> match projectee with | EBufBlit _0 -> _0 
+let (uu___is_EMatch : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EMatch _0 -> true | uu____1663 -> false
-let __proj__EMatch__item___0:
+  
+let (__proj__EMatch__item___0 :
   expr ->
     (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | EMatch _0 -> _0
-let uu___is_EOp: expr -> Prims.bool =
+      FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | EMatch _0 -> _0 
+let (uu___is_EOp : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EOp _0 -> true | uu____1709 -> false
-let __proj__EOp__item___0: expr -> (op,width) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | EOp _0 -> _0
-let uu___is_ECast: expr -> Prims.bool =
+  
+let (__proj__EOp__item___0 :
+  expr -> (op,width) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EOp _0 -> _0 
+let (uu___is_ECast : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ECast _0 -> true | uu____1737 -> false
-let __proj__ECast__item___0:
-  expr -> (expr,typ) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | ECast _0 -> _0
-let uu___is_EPushFrame: expr -> Prims.bool =
+  
+let (__proj__ECast__item___0 :
+  expr -> (expr,typ) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | ECast _0 -> _0 
+let (uu___is_EPushFrame : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EPushFrame  -> true | uu____1760 -> false
-let uu___is_EPopFrame: expr -> Prims.bool =
+  
+let (uu___is_EPopFrame : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EPopFrame  -> true | uu____1764 -> false
-let uu___is_EBool: expr -> Prims.bool =
+  
+let (uu___is_EBool : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBool _0 -> true | uu____1769 -> false
-let __proj__EBool__item___0: expr -> Prims.bool =
-  fun projectee  -> match projectee with | EBool _0 -> _0
-let uu___is_EAny: expr -> Prims.bool =
+  
+let (__proj__EBool__item___0 : expr -> Prims.bool) =
+  fun projectee  -> match projectee with | EBool _0 -> _0 
+let (uu___is_EAny : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EAny  -> true | uu____1780 -> false
-let uu___is_EAbort: expr -> Prims.bool =
+  
+let (uu___is_EAbort : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EAbort  -> true | uu____1784 -> false
-let uu___is_EReturn: expr -> Prims.bool =
+  
+let (uu___is_EReturn : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EReturn _0 -> true | uu____1789 -> false
-let __proj__EReturn__item___0: expr -> expr =
-  fun projectee  -> match projectee with | EReturn _0 -> _0
-let uu___is_EFlat: expr -> Prims.bool =
+  
+let (__proj__EReturn__item___0 : expr -> expr) =
+  fun projectee  -> match projectee with | EReturn _0 -> _0 
+let (uu___is_EFlat : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EFlat _0 -> true | uu____1811 -> false
-let __proj__EFlat__item___0:
+  
+let (__proj__EFlat__item___0 :
   expr ->
     (typ,(Prims.string,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | EFlat _0 -> _0
-let uu___is_EField: expr -> Prims.bool =
+      FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | EFlat _0 -> _0 
+let (uu___is_EField : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EField _0 -> true | uu____1859 -> false
-let __proj__EField__item___0:
-  expr -> (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | EField _0 -> _0
-let uu___is_EWhile: expr -> Prims.bool =
+  
+let (__proj__EField__item___0 :
+  expr -> (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | EField _0 -> _0 
+let (uu___is_EWhile : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EWhile _0 -> true | uu____1893 -> false
-let __proj__EWhile__item___0:
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EWhile _0 -> _0
-let uu___is_EBufCreateL: expr -> Prims.bool =
+  
+let (__proj__EWhile__item___0 :
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EWhile _0 -> _0 
+let (uu___is_EBufCreateL : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufCreateL _0 -> true | uu____1923 -> false
-let __proj__EBufCreateL__item___0:
-  expr -> (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | EBufCreateL _0 -> _0
-let uu___is_ETuple: expr -> Prims.bool =
+  
+let (__proj__EBufCreateL__item___0 :
+  expr -> (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | EBufCreateL _0 -> _0 
+let (uu___is_ETuple : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ETuple _0 -> true | uu____1955 -> false
-let __proj__ETuple__item___0: expr -> expr Prims.list =
-  fun projectee  -> match projectee with | ETuple _0 -> _0
-let uu___is_ECons: expr -> Prims.bool =
+  
+let (__proj__ETuple__item___0 : expr -> expr Prims.list) =
+  fun projectee  -> match projectee with | ETuple _0 -> _0 
+let (uu___is_ECons : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ECons _0 -> true | uu____1981 -> false
-let __proj__ECons__item___0:
-  expr -> (typ,Prims.string,expr Prims.list) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | ECons _0 -> _0
-let uu___is_EBufFill: expr -> Prims.bool =
+  
+let (__proj__ECons__item___0 :
+  expr -> (typ,Prims.string,expr Prims.list) FStar_Pervasives_Native.tuple3)
+  = fun projectee  -> match projectee with | ECons _0 -> _0 
+let (uu___is_EBufFill : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufFill _0 -> true | uu____2023 -> false
-let __proj__EBufFill__item___0:
-  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | EBufFill _0 -> _0
-let uu___is_EString: expr -> Prims.bool =
+  
+let (__proj__EBufFill__item___0 :
+  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | EBufFill _0 -> _0 
+let (uu___is_EString : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EString _0 -> true | uu____2053 -> false
-let __proj__EString__item___0: expr -> Prims.string =
-  fun projectee  -> match projectee with | EString _0 -> _0
-let uu___is_EFun: expr -> Prims.bool =
+  
+let (__proj__EString__item___0 : expr -> Prims.string) =
+  fun projectee  -> match projectee with | EString _0 -> _0 
+let (uu___is_EFun : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EFun _0 -> true | uu____2073 -> false
-let __proj__EFun__item___0:
-  expr -> (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3 =
-  fun projectee  -> match projectee with | EFun _0 -> _0
-let uu___is_EAbortS: expr -> Prims.bool =
+  
+let (__proj__EFun__item___0 :
+  expr -> (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3) =
+  fun projectee  -> match projectee with | EFun _0 -> _0 
+let (uu___is_EAbortS : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EAbortS _0 -> true | uu____2109 -> false
-let __proj__EAbortS__item___0: expr -> Prims.string =
-  fun projectee  -> match projectee with | EAbortS _0 -> _0
-let uu___is_Add: op -> Prims.bool =
-  fun projectee  -> match projectee with | Add  -> true | uu____2120 -> false
-let uu___is_AddW: op -> Prims.bool =
+  
+let (__proj__EAbortS__item___0 : expr -> Prims.string) =
+  fun projectee  -> match projectee with | EAbortS _0 -> _0 
+let (uu___is_Add : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Add  -> true | uu____2120 -> false 
+let (uu___is_AddW : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | AddW  -> true | uu____2124 -> false
-let uu___is_Sub: op -> Prims.bool =
-  fun projectee  -> match projectee with | Sub  -> true | uu____2128 -> false
-let uu___is_SubW: op -> Prims.bool =
+  
+let (uu___is_Sub : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Sub  -> true | uu____2128 -> false 
+let (uu___is_SubW : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | SubW  -> true | uu____2132 -> false
-let uu___is_Div: op -> Prims.bool =
-  fun projectee  -> match projectee with | Div  -> true | uu____2136 -> false
-let uu___is_DivW: op -> Prims.bool =
+  
+let (uu___is_Div : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Div  -> true | uu____2136 -> false 
+let (uu___is_DivW : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | DivW  -> true | uu____2140 -> false
-let uu___is_Mult: op -> Prims.bool =
+  
+let (uu___is_Mult : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | Mult  -> true | uu____2144 -> false
-let uu___is_MultW: op -> Prims.bool =
+  
+let (uu___is_MultW : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | MultW  -> true | uu____2148 -> false
-let uu___is_Mod: op -> Prims.bool =
-  fun projectee  -> match projectee with | Mod  -> true | uu____2152 -> false
-let uu___is_BOr: op -> Prims.bool =
-  fun projectee  -> match projectee with | BOr  -> true | uu____2156 -> false
-let uu___is_BAnd: op -> Prims.bool =
+  
+let (uu___is_Mod : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Mod  -> true | uu____2152 -> false 
+let (uu___is_BOr : op -> Prims.bool) =
+  fun projectee  -> match projectee with | BOr  -> true | uu____2156 -> false 
+let (uu___is_BAnd : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | BAnd  -> true | uu____2160 -> false
-let uu___is_BXor: op -> Prims.bool =
+  
+let (uu___is_BXor : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | BXor  -> true | uu____2164 -> false
-let uu___is_BShiftL: op -> Prims.bool =
+  
+let (uu___is_BShiftL : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | BShiftL  -> true | uu____2168 -> false
-let uu___is_BShiftR: op -> Prims.bool =
+  
+let (uu___is_BShiftR : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | BShiftR  -> true | uu____2172 -> false
-let uu___is_BNot: op -> Prims.bool =
+  
+let (uu___is_BNot : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | BNot  -> true | uu____2176 -> false
-let uu___is_Eq: op -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____2180 -> false
-let uu___is_Neq: op -> Prims.bool =
-  fun projectee  -> match projectee with | Neq  -> true | uu____2184 -> false
-let uu___is_Lt: op -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____2188 -> false
-let uu___is_Lte: op -> Prims.bool =
-  fun projectee  -> match projectee with | Lte  -> true | uu____2192 -> false
-let uu___is_Gt: op -> Prims.bool =
-  fun projectee  -> match projectee with | Gt  -> true | uu____2196 -> false
-let uu___is_Gte: op -> Prims.bool =
-  fun projectee  -> match projectee with | Gte  -> true | uu____2200 -> false
-let uu___is_And: op -> Prims.bool =
-  fun projectee  -> match projectee with | And  -> true | uu____2204 -> false
-let uu___is_Or: op -> Prims.bool =
-  fun projectee  -> match projectee with | Or  -> true | uu____2208 -> false
-let uu___is_Xor: op -> Prims.bool =
-  fun projectee  -> match projectee with | Xor  -> true | uu____2212 -> false
-let uu___is_Not: op -> Prims.bool =
-  fun projectee  -> match projectee with | Not  -> true | uu____2216 -> false
-let uu___is_PUnit: pattern -> Prims.bool =
+  
+let (uu___is_Eq : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Eq  -> true | uu____2180 -> false 
+let (uu___is_Neq : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Neq  -> true | uu____2184 -> false 
+let (uu___is_Lt : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Lt  -> true | uu____2188 -> false 
+let (uu___is_Lte : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Lte  -> true | uu____2192 -> false 
+let (uu___is_Gt : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Gt  -> true | uu____2196 -> false 
+let (uu___is_Gte : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Gte  -> true | uu____2200 -> false 
+let (uu___is_And : op -> Prims.bool) =
+  fun projectee  -> match projectee with | And  -> true | uu____2204 -> false 
+let (uu___is_Or : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Or  -> true | uu____2208 -> false 
+let (uu___is_Xor : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Xor  -> true | uu____2212 -> false 
+let (uu___is_Not : op -> Prims.bool) =
+  fun projectee  -> match projectee with | Not  -> true | uu____2216 -> false 
+let (uu___is_PUnit : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PUnit  -> true | uu____2220 -> false
-let uu___is_PBool: pattern -> Prims.bool =
+  
+let (uu___is_PBool : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PBool _0 -> true | uu____2225 -> false
-let __proj__PBool__item___0: pattern -> Prims.bool =
-  fun projectee  -> match projectee with | PBool _0 -> _0
-let uu___is_PVar: pattern -> Prims.bool =
+  
+let (__proj__PBool__item___0 : pattern -> Prims.bool) =
+  fun projectee  -> match projectee with | PBool _0 -> _0 
+let (uu___is_PVar : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PVar _0 -> true | uu____2237 -> false
-let __proj__PVar__item___0: pattern -> binder =
-  fun projectee  -> match projectee with | PVar _0 -> _0
-let uu___is_PCons: pattern -> Prims.bool =
+  
+let (__proj__PVar__item___0 : pattern -> binder) =
+  fun projectee  -> match projectee with | PVar _0 -> _0 
+let (uu___is_PCons : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PCons _0 -> true | uu____2255 -> false
-let __proj__PCons__item___0:
-  pattern -> (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | PCons _0 -> _0
-let uu___is_PTuple: pattern -> Prims.bool =
+  
+let (__proj__PCons__item___0 :
+  pattern -> (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | PCons _0 -> _0 
+let (uu___is_PTuple : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PTuple _0 -> true | uu____2287 -> false
-let __proj__PTuple__item___0: pattern -> pattern Prims.list =
-  fun projectee  -> match projectee with | PTuple _0 -> _0
-let uu___is_PRecord: pattern -> Prims.bool =
+  
+let (__proj__PTuple__item___0 : pattern -> pattern Prims.list) =
+  fun projectee  -> match projectee with | PTuple _0 -> _0 
+let (uu___is_PRecord : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PRecord _0 -> true | uu____2311 -> false
-let __proj__PRecord__item___0:
-  pattern -> (Prims.string,pattern) FStar_Pervasives_Native.tuple2 Prims.list
-  = fun projectee  -> match projectee with | PRecord _0 -> _0
-let uu___is_PConstant: pattern -> Prims.bool =
+  
+let (__proj__PRecord__item___0 :
+  pattern -> (Prims.string,pattern) FStar_Pervasives_Native.tuple2 Prims.list)
+  = fun projectee  -> match projectee with | PRecord _0 -> _0 
+let (uu___is_PConstant : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PConstant _0 -> true | uu____2345 -> false
-let __proj__PConstant__item___0:
-  pattern -> (width,Prims.string) FStar_Pervasives_Native.tuple2 =
-  fun projectee  -> match projectee with | PConstant _0 -> _0
-let uu___is_UInt8: width -> Prims.bool =
+  
+let (__proj__PConstant__item___0 :
+  pattern -> (width,Prims.string) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | PConstant _0 -> _0 
+let (uu___is_UInt8 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | UInt8  -> true | uu____2368 -> false
-let uu___is_UInt16: width -> Prims.bool =
+  
+let (uu___is_UInt16 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | UInt16  -> true | uu____2372 -> false
-let uu___is_UInt32: width -> Prims.bool =
+  
+let (uu___is_UInt32 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | UInt32  -> true | uu____2376 -> false
-let uu___is_UInt64: width -> Prims.bool =
+  
+let (uu___is_UInt64 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | UInt64  -> true | uu____2380 -> false
-let uu___is_Int8: width -> Prims.bool =
+  
+let (uu___is_Int8 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | Int8  -> true | uu____2384 -> false
-let uu___is_Int16: width -> Prims.bool =
+  
+let (uu___is_Int16 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | Int16  -> true | uu____2388 -> false
-let uu___is_Int32: width -> Prims.bool =
+  
+let (uu___is_Int32 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | Int32  -> true | uu____2392 -> false
-let uu___is_Int64: width -> Prims.bool =
+  
+let (uu___is_Int64 : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | Int64  -> true | uu____2396 -> false
-let uu___is_Bool: width -> Prims.bool =
+  
+let (uu___is_Bool : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | Bool  -> true | uu____2400 -> false
-let uu___is_CInt: width -> Prims.bool =
+  
+let (uu___is_CInt : width -> Prims.bool) =
   fun projectee  ->
     match projectee with | CInt  -> true | uu____2404 -> false
-let __proj__Mkbinder__item__name: binder -> Prims.string =
+  
+let (__proj__Mkbinder__item__name : binder -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
         __fname__name
-let __proj__Mkbinder__item__typ: binder -> typ =
+  
+let (__proj__Mkbinder__item__typ : binder -> typ) =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
         __fname__typ
-let __proj__Mkbinder__item__mut: binder -> Prims.bool =
+  
+let (__proj__Mkbinder__item__mut : binder -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
         __fname__mut
-let uu___is_TInt: typ -> Prims.bool =
+  
+let (uu___is_TInt : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TInt _0 -> true | uu____2427 -> false
-let __proj__TInt__item___0: typ -> width =
-  fun projectee  -> match projectee with | TInt _0 -> _0
-let uu___is_TBuf: typ -> Prims.bool =
+  
+let (__proj__TInt__item___0 : typ -> width) =
+  fun projectee  -> match projectee with | TInt _0 -> _0 
+let (uu___is_TBuf : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TBuf _0 -> true | uu____2439 -> false
-let __proj__TBuf__item___0: typ -> typ =
-  fun projectee  -> match projectee with | TBuf _0 -> _0
-let uu___is_TUnit: typ -> Prims.bool =
+  
+let (__proj__TBuf__item___0 : typ -> typ) =
+  fun projectee  -> match projectee with | TBuf _0 -> _0 
+let (uu___is_TUnit : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TUnit  -> true | uu____2450 -> false
-let uu___is_TQualified: typ -> Prims.bool =
+  
+let (uu___is_TQualified : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TQualified _0 -> true | uu____2461 -> false
-let __proj__TQualified__item___0:
+  
+let (__proj__TQualified__item___0 :
   typ ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | TQualified _0 -> _0
-let uu___is_TBool: typ -> Prims.bool =
+    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | TQualified _0 -> _0 
+let (uu___is_TBool : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TBool  -> true | uu____2490 -> false
-let uu___is_TAny: typ -> Prims.bool =
+  
+let (uu___is_TAny : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TAny  -> true | uu____2494 -> false
-let uu___is_TArrow: typ -> Prims.bool =
+  
+let (uu___is_TArrow : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TArrow _0 -> true | uu____2503 -> false
-let __proj__TArrow__item___0: typ -> (typ,typ) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | TArrow _0 -> _0
-let uu___is_TBound: typ -> Prims.bool =
+  
+let (__proj__TArrow__item___0 :
+  typ -> (typ,typ) FStar_Pervasives_Native.tuple2) =
+  fun projectee  -> match projectee with | TArrow _0 -> _0 
+let (uu___is_TBound : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TBound _0 -> true | uu____2527 -> false
-let __proj__TBound__item___0: typ -> Prims.int =
-  fun projectee  -> match projectee with | TBound _0 -> _0
-let uu___is_TApp: typ -> Prims.bool =
+  
+let (__proj__TBound__item___0 : typ -> Prims.int) =
+  fun projectee  -> match projectee with | TBound _0 -> _0 
+let (uu___is_TApp : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TApp _0 -> true | uu____2551 -> false
-let __proj__TApp__item___0:
+  
+let (__proj__TApp__item___0 :
   typ ->
     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      typ Prims.list) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | TApp _0 -> _0
-let uu___is_TTuple: typ -> Prims.bool =
+      typ Prims.list) FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | TApp _0 -> _0 
+let (uu___is_TTuple : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TTuple _0 -> true | uu____2601 -> false
-let __proj__TTuple__item___0: typ -> typ Prims.list =
-  fun projectee  -> match projectee with | TTuple _0 -> _0
+  
+let (__proj__TTuple__item___0 : typ -> typ Prims.list) =
+  fun projectee  -> match projectee with | TTuple _0 -> _0 
 type program = decl Prims.list[@@deriving show]
 type ident = Prims.string[@@deriving show]
 type fields_t =
@@ -648,27 +743,27 @@ type lident =
   (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
 [@@deriving show]
 type version = Prims.int[@@deriving show]
-let current_version: version = Prims.parse_int "27"
+let (current_version : version) = (Prims.parse_int "27") 
 type file = (Prims.string,program) FStar_Pervasives_Native.tuple2[@@deriving
                                                                    show]
 type binary_format = (version,file Prims.list) FStar_Pervasives_Native.tuple2
 [@@deriving show]
-let fst3:
+let fst3 :
   'Auu____2677 'Auu____2678 'Auu____2679 .
     ('Auu____2679,'Auu____2678,'Auu____2677) FStar_Pervasives_Native.tuple3
       -> 'Auu____2679
-  = fun uu____2689  -> match uu____2689 with | (x,uu____2697,uu____2698) -> x
-let snd3:
+  = fun uu____2689  -> match uu____2689 with | (x,uu____2697,uu____2698) -> x 
+let snd3 :
   'Auu____2703 'Auu____2704 'Auu____2705 .
     ('Auu____2705,'Auu____2704,'Auu____2703) FStar_Pervasives_Native.tuple3
       -> 'Auu____2704
-  = fun uu____2715  -> match uu____2715 with | (uu____2722,x,uu____2724) -> x
-let thd3:
+  = fun uu____2715  -> match uu____2715 with | (uu____2722,x,uu____2724) -> x 
+let thd3 :
   'Auu____2729 'Auu____2730 'Auu____2731 .
     ('Auu____2731,'Auu____2730,'Auu____2729) FStar_Pervasives_Native.tuple3
       -> 'Auu____2729
-  = fun uu____2741  -> match uu____2741 with | (uu____2748,uu____2749,x) -> x
-let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
+  = fun uu____2741  -> match uu____2741 with | (uu____2748,uu____2749,x) -> x 
+let (mk_width : Prims.string -> width FStar_Pervasives_Native.option) =
   fun uu___33_2755  ->
     match uu___33_2755 with
     | "UInt8" -> FStar_Pervasives_Native.Some UInt8
@@ -680,7 +775,8 @@ let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
     | "Int32" -> FStar_Pervasives_Native.Some Int32
     | "Int64" -> FStar_Pervasives_Native.Some Int64
     | uu____2758 -> FStar_Pervasives_Native.None
-let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
+  
+let (mk_bool_op : Prims.string -> op FStar_Pervasives_Native.option) =
   fun uu___34_2763  ->
     match uu___34_2763 with
     | "op_Negation" -> FStar_Pervasives_Native.Some Not
@@ -689,9 +785,10 @@ let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
     | "op_Equality" -> FStar_Pervasives_Native.Some Eq
     | "op_disEquality" -> FStar_Pervasives_Native.Some Neq
     | uu____2766 -> FStar_Pervasives_Native.None
-let is_bool_op: Prims.string -> Prims.bool =
-  fun op  -> (mk_bool_op op) <> FStar_Pervasives_Native.None
-let mk_op: Prims.string -> op FStar_Pervasives_Native.option =
+  
+let (is_bool_op : Prims.string -> Prims.bool) =
+  fun op  -> (mk_bool_op op) <> FStar_Pervasives_Native.None 
+let (mk_op : Prims.string -> op FStar_Pervasives_Native.option) =
   fun uu___35_2776  ->
     match uu___35_2776 with
     | "add" -> FStar_Pervasives_Native.Some Add
@@ -734,92 +831,103 @@ let mk_op: Prims.string -> op FStar_Pervasives_Native.option =
     | "op_Less_Equals_Hat" -> FStar_Pervasives_Native.Some Lte
     | "lte" -> FStar_Pervasives_Native.Some Lte
     | uu____2779 -> FStar_Pervasives_Native.None
-let is_op: Prims.string -> Prims.bool =
-  fun op  -> (mk_op op) <> FStar_Pervasives_Native.None
-let is_machine_int: Prims.string -> Prims.bool =
-  fun m  -> (mk_width m) <> FStar_Pervasives_Native.None
+  
+let (is_op : Prims.string -> Prims.bool) =
+  fun op  -> (mk_op op) <> FStar_Pervasives_Native.None 
+let (is_machine_int : Prims.string -> Prims.bool) =
+  fun m  -> (mk_width m) <> FStar_Pervasives_Native.None 
 type env =
   {
-  names: name Prims.list;
-  names_t: Prims.string Prims.list;
-  module_name: Prims.string Prims.list;}[@@deriving show]
+  names: name Prims.list ;
+  names_t: Prims.string Prims.list ;
+  module_name: Prims.string Prims.list }[@@deriving show]
 and name = {
-  pretty: Prims.string;
-  mut: Prims.bool;}[@@deriving show]
-let __proj__Mkenv__item__names: env -> name Prims.list =
+  pretty: Prims.string ;
+  mut: Prims.bool }[@@deriving show]
+let (__proj__Mkenv__item__names : env -> name Prims.list) =
   fun projectee  ->
     match projectee with
     | { names = __fname__names; names_t = __fname__names_t;
         module_name = __fname__module_name;_} -> __fname__names
-let __proj__Mkenv__item__names_t: env -> Prims.string Prims.list =
+  
+let (__proj__Mkenv__item__names_t : env -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
     | { names = __fname__names; names_t = __fname__names_t;
         module_name = __fname__module_name;_} -> __fname__names_t
-let __proj__Mkenv__item__module_name: env -> Prims.string Prims.list =
+  
+let (__proj__Mkenv__item__module_name : env -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
     | { names = __fname__names; names_t = __fname__names_t;
         module_name = __fname__module_name;_} -> __fname__module_name
-let __proj__Mkname__item__pretty: name -> Prims.string =
+  
+let (__proj__Mkname__item__pretty : name -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { pretty = __fname__pretty; mut = __fname__mut;_} -> __fname__pretty
-let __proj__Mkname__item__mut: name -> Prims.bool =
+  
+let (__proj__Mkname__item__mut : name -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { pretty = __fname__pretty; mut = __fname__mut;_} -> __fname__mut
-let empty: Prims.string Prims.list -> env =
-  fun module_name  -> { names = []; names_t = []; module_name }
-let extend: env -> Prims.string -> Prims.bool -> env =
+  
+let (empty : Prims.string Prims.list -> env) =
+  fun module_name  -> { names = []; names_t = []; module_name } 
+let (extend : env -> Prims.string -> Prims.bool -> env) =
   fun env  ->
     fun x  ->
       fun is_mut  ->
-        let uu___41_2890 = env in
+        let uu___41_2890 = env  in
         {
           names = ({ pretty = x; mut = is_mut } :: (env.names));
           names_t = (uu___41_2890.names_t);
           module_name = (uu___41_2890.module_name)
         }
-let extend_t: env -> Prims.string -> env =
+  
+let (extend_t : env -> Prims.string -> env) =
   fun env  ->
     fun x  ->
-      let uu___42_2897 = env in
+      let uu___42_2897 = env  in
       {
         names = (uu___42_2897.names);
         names_t = (x :: (env.names_t));
         module_name = (uu___42_2897.module_name)
       }
-let find_name: env -> Prims.string -> name =
+  
+let (find_name : env -> Prims.string -> name) =
   fun env  ->
     fun x  ->
       let uu____2904 =
-        FStar_List.tryFind (fun name  -> name.pretty = x) env.names in
+        FStar_List.tryFind (fun name  -> name.pretty = x) env.names  in
       match uu____2904 with
       | FStar_Pervasives_Native.Some name -> name
       | FStar_Pervasives_Native.None  ->
           failwith "internal error: name not found"
-let is_mutable: env -> Prims.string -> Prims.bool =
-  fun env  -> fun x  -> let uu____2916 = find_name env x in uu____2916.mut
-let find: env -> Prims.string -> Prims.int =
+  
+let (is_mutable : env -> Prims.string -> Prims.bool) =
+  fun env  -> fun x  -> let uu____2916 = find_name env x  in uu____2916.mut 
+let (find : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
       try FStar_List.index (fun name  -> name.pretty = x) env.names
       with
       | uu____2931 ->
           let uu____2932 =
-            FStar_Util.format1 "Internal error: name not found %s\n" x in
+            FStar_Util.format1 "Internal error: name not found %s\n" x  in
           failwith uu____2932
-let find_t: env -> Prims.string -> Prims.int =
+  
+let (find_t : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
       try FStar_List.index (fun name  -> name = x) env.names_t
       with
       | uu____2947 ->
           let uu____2948 =
-            FStar_Util.format1 "Internal error: name not found %s\n" x in
+            FStar_Util.format1 "Internal error: name not found %s\n" x  in
           failwith uu____2948
-let add_binders:
+  
+let add_binders :
   'Auu____2952 .
     env ->
       (Prims.string,'Auu____2952) FStar_Pervasives_Native.tuple2 Prims.list
@@ -832,51 +940,57 @@ let add_binders:
            fun uu____2982  ->
              match uu____2982 with
              | (name,uu____2988) -> extend env1 name false) env binders
-let rec translate: FStar_Extraction_ML_Syntax.mllib -> file Prims.list =
+  
+let rec (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
   fun uu____3129  ->
     match uu____3129 with
     | FStar_Extraction_ML_Syntax.MLLib modules ->
         FStar_List.filter_map
           (fun m  ->
              let m_name =
-               let uu____3177 = m in
+               let uu____3177 = m  in
                match uu____3177 with
                | (path,uu____3191,uu____3192) ->
-                   FStar_Extraction_ML_Syntax.string_of_mlpath path in
+                   FStar_Extraction_ML_Syntax.string_of_mlpath path
+                in
              try
                FStar_Util.print1 "Attempting to translate module %s\n" m_name;
-               (let uu____3214 = translate_module m in
+               (let uu____3214 = translate_module m  in
                 FStar_Pervasives_Native.Some uu____3214)
              with
              | e ->
-                 ((let uu____3223 = FStar_Util.print_exn e in
+                 ((let uu____3223 = FStar_Util.print_exn e  in
                    FStar_Util.print2
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu____3223);
                   FStar_Pervasives_Native.None)) modules
-and translate_module:
+
+and (translate_module :
   (FStar_Extraction_ML_Syntax.mlpath,(FStar_Extraction_ML_Syntax.mlsig,
                                        FStar_Extraction_ML_Syntax.mlmodule)
                                        FStar_Pervasives_Native.tuple2
                                        FStar_Pervasives_Native.option,
     FStar_Extraction_ML_Syntax.mllib) FStar_Pervasives_Native.tuple3 -> 
-    file
+    file)
   =
   fun uu____3224  ->
     match uu____3224 with
     | (module_name,modul,uu____3239) ->
         let module_name1 =
           FStar_List.append (FStar_Pervasives_Native.fst module_name)
-            [FStar_Pervasives_Native.snd module_name] in
+            [FStar_Pervasives_Native.snd module_name]
+           in
         let program =
           match modul with
           | FStar_Pervasives_Native.Some (_signature,decls) ->
               FStar_List.collect (translate_decl (empty module_name1)) decls
           | uu____3270 ->
-              failwith "Unexpected standalone interface or nested modules" in
+              failwith "Unexpected standalone interface or nested modules"
+           in
         ((FStar_String.concat "_" module_name1), program)
-and translate_flags:
-  FStar_Extraction_ML_Syntax.meta Prims.list -> flag Prims.list =
+
+and (translate_flags :
+  FStar_Extraction_ML_Syntax.meta Prims.list -> flag Prims.list) =
   fun flags1  ->
     FStar_List.choose
       (fun uu___36_3285  ->
@@ -896,8 +1010,9 @@ and translate_flags:
          | FStar_Extraction_ML_Syntax.StackInline  ->
              FStar_Pervasives_Native.Some MustDisappear
          | uu____3289 -> FStar_Pervasives_Native.None) flags1
-and translate_decl:
-  env -> FStar_Extraction_ML_Syntax.mlmodule1 -> decl Prims.list =
+
+and (translate_decl :
+  env -> FStar_Extraction_ML_Syntax.mlmodule1 -> decl Prims.list) =
   fun env  ->
     fun d  ->
       match d with
@@ -912,10 +1027,11 @@ and translate_decl:
           (FStar_Util.print1_warning
              "Skipping the translation of exception: %s\n" m;
            [])
-and translate_let:
+
+and (translate_let :
   env ->
     FStar_Extraction_ML_Syntax.mlletflavor ->
-      FStar_Extraction_ML_Syntax.mllb -> decl FStar_Pervasives_Native.option
+      FStar_Extraction_ML_Syntax.mllb -> decl FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun flavor  ->
@@ -938,59 +1054,64 @@ and translate_let:
                 (fun uu___37_3353  ->
                    match uu___37_3353 with
                    | FStar_Extraction_ML_Syntax.Assumed  -> true
-                   | uu____3354 -> false) meta in
+                   | uu____3354 -> false) meta
+               in
             let env1 =
               if flavor = FStar_Extraction_ML_Syntax.Rec
               then extend env name false
-              else env in
+              else env  in
             let env2 =
               FStar_List.fold_left
-                (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars in
+                (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars
+               in
             let rec find_return_type eff i uu___38_3375 =
               match uu___38_3375 with
               | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____3380,eff1,t) when
                   i > (Prims.parse_int "0") ->
                   find_return_type eff1 (i - (Prims.parse_int "1")) t
-              | t -> (eff, t) in
+              | t -> (eff, t)  in
             let uu____3384 =
               find_return_type FStar_Extraction_ML_Syntax.E_PURE
-                (FStar_List.length args) t0 in
+                (FStar_List.length args) t0
+               in
             (match uu____3384 with
              | (eff,t) ->
-                 let t1 = translate_type env2 t in
-                 let binders = translate_binders env2 args in
-                 let env3 = add_binders env2 args in
-                 let name1 = ((env3.module_name), name) in
+                 let t1 = translate_type env2 t  in
+                 let binders = translate_binders env2 args  in
+                 let env3 = add_binders env2 args  in
+                 let name1 = ((env3.module_name), name)  in
                  let meta1 =
                    match (eff, t1) with
                    | (FStar_Extraction_ML_Syntax.E_GHOST ,uu____3416) ->
-                       let uu____3417 = translate_flags meta in MustDisappear
-                         :: uu____3417
+                       let uu____3417 = translate_flags meta  in
+                       MustDisappear :: uu____3417
                    | (FStar_Extraction_ML_Syntax.E_PURE ,TUnit ) ->
-                       let uu____3420 = translate_flags meta in MustDisappear
-                         :: uu____3420
-                   | uu____3423 -> translate_flags meta in
+                       let uu____3420 = translate_flags meta  in
+                       MustDisappear :: uu____3420
+                   | uu____3423 -> translate_flags meta  in
                  if assumed
                  then
                    (if (FStar_List.length tvars) = (Prims.parse_int "0")
                     then
                       let uu____3432 =
                         let uu____3433 =
-                          let uu____3452 = translate_type env3 t0 in
+                          let uu____3452 = translate_type env3 t0  in
                           (FStar_Pervasives_Native.None, meta1, name1,
-                            uu____3452) in
-                        DExternal uu____3433 in
+                            uu____3452)
+                           in
+                        DExternal uu____3433  in
                       FStar_Pervasives_Native.Some uu____3432
                     else
                       ((let uu____3465 =
-                          FStar_Extraction_ML_Syntax.string_of_mlpath name1 in
+                          FStar_Extraction_ML_Syntax.string_of_mlpath name1
+                           in
                         FStar_Util.print1_warning
                           "No writing anything for %s (polymorphic assume)\n"
                           uu____3465);
                        FStar_Pervasives_Native.None))
                  else
                    (try
-                      let body1 = translate_expr env3 body in
+                      let body1 = translate_expr env3 body  in
                       FStar_Pervasives_Native.Some
                         (DFunction
                            (FStar_Pervasives_Native.None, meta1,
@@ -998,21 +1119,25 @@ and translate_let:
                              body1))
                     with
                     | e ->
-                        let msg = FStar_Util.print_exn e in
+                        let msg = FStar_Util.print_exn e  in
                         ((let uu____3498 =
                             let uu____3503 =
                               let uu____3504 =
                                 FStar_Extraction_ML_Syntax.string_of_mlpath
-                                  name1 in
+                                  name1
+                                 in
                               FStar_Util.format2
-                                "Writing a stub for %s (%s)\n" uu____3504 msg in
+                                "Writing a stub for %s (%s)\n" uu____3504 msg
+                               in
                             (FStar_Errors.Warning_FunctionNotExtacted,
-                              uu____3503) in
+                              uu____3503)
+                             in
                           FStar_Errors.log_issue FStar_Range.dummyRange
                             uu____3498);
                          (let msg1 =
                             Prims.strcat "This function was not extracted:\n"
-                              msg in
+                              msg
+                             in
                           FStar_Pervasives_Native.Some
                             (DFunction
                                (FStar_Pervasives_Native.None, meta1,
@@ -1040,59 +1165,64 @@ and translate_let:
                 (fun uu___37_3550  ->
                    match uu___37_3550 with
                    | FStar_Extraction_ML_Syntax.Assumed  -> true
-                   | uu____3551 -> false) meta in
+                   | uu____3551 -> false) meta
+               in
             let env1 =
               if flavor = FStar_Extraction_ML_Syntax.Rec
               then extend env name false
-              else env in
+              else env  in
             let env2 =
               FStar_List.fold_left
-                (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars in
+                (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars
+               in
             let rec find_return_type eff i uu___38_3572 =
               match uu___38_3572 with
               | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____3577,eff1,t) when
                   i > (Prims.parse_int "0") ->
                   find_return_type eff1 (i - (Prims.parse_int "1")) t
-              | t -> (eff, t) in
+              | t -> (eff, t)  in
             let uu____3581 =
               find_return_type FStar_Extraction_ML_Syntax.E_PURE
-                (FStar_List.length args) t0 in
+                (FStar_List.length args) t0
+               in
             (match uu____3581 with
              | (eff,t) ->
-                 let t1 = translate_type env2 t in
-                 let binders = translate_binders env2 args in
-                 let env3 = add_binders env2 args in
-                 let name1 = ((env3.module_name), name) in
+                 let t1 = translate_type env2 t  in
+                 let binders = translate_binders env2 args  in
+                 let env3 = add_binders env2 args  in
+                 let name1 = ((env3.module_name), name)  in
                  let meta1 =
                    match (eff, t1) with
                    | (FStar_Extraction_ML_Syntax.E_GHOST ,uu____3613) ->
-                       let uu____3614 = translate_flags meta in MustDisappear
-                         :: uu____3614
+                       let uu____3614 = translate_flags meta  in
+                       MustDisappear :: uu____3614
                    | (FStar_Extraction_ML_Syntax.E_PURE ,TUnit ) ->
-                       let uu____3617 = translate_flags meta in MustDisappear
-                         :: uu____3617
-                   | uu____3620 -> translate_flags meta in
+                       let uu____3617 = translate_flags meta  in
+                       MustDisappear :: uu____3617
+                   | uu____3620 -> translate_flags meta  in
                  if assumed
                  then
                    (if (FStar_List.length tvars) = (Prims.parse_int "0")
                     then
                       let uu____3629 =
                         let uu____3630 =
-                          let uu____3649 = translate_type env3 t0 in
+                          let uu____3649 = translate_type env3 t0  in
                           (FStar_Pervasives_Native.None, meta1, name1,
-                            uu____3649) in
-                        DExternal uu____3630 in
+                            uu____3649)
+                           in
+                        DExternal uu____3630  in
                       FStar_Pervasives_Native.Some uu____3629
                     else
                       ((let uu____3662 =
-                          FStar_Extraction_ML_Syntax.string_of_mlpath name1 in
+                          FStar_Extraction_ML_Syntax.string_of_mlpath name1
+                           in
                         FStar_Util.print1_warning
                           "No writing anything for %s (polymorphic assume)\n"
                           uu____3662);
                        FStar_Pervasives_Native.None))
                  else
                    (try
-                      let body1 = translate_expr env3 body in
+                      let body1 = translate_expr env3 body  in
                       FStar_Pervasives_Native.Some
                         (DFunction
                            (FStar_Pervasives_Native.None, meta1,
@@ -1100,21 +1230,25 @@ and translate_let:
                              body1))
                     with
                     | e ->
-                        let msg = FStar_Util.print_exn e in
+                        let msg = FStar_Util.print_exn e  in
                         ((let uu____3695 =
                             let uu____3700 =
                               let uu____3701 =
                                 FStar_Extraction_ML_Syntax.string_of_mlpath
-                                  name1 in
+                                  name1
+                                 in
                               FStar_Util.format2
-                                "Writing a stub for %s (%s)\n" uu____3701 msg in
+                                "Writing a stub for %s (%s)\n" uu____3701 msg
+                               in
                             (FStar_Errors.Warning_FunctionNotExtacted,
-                              uu____3700) in
+                              uu____3700)
+                             in
                           FStar_Errors.log_issue FStar_Range.dummyRange
                             uu____3695);
                          (let msg1 =
                             Prims.strcat "This function was not extracted:\n"
-                              msg in
+                              msg
+                             in
                           FStar_Pervasives_Native.Some
                             (DFunction
                                (FStar_Pervasives_Native.None, meta1,
@@ -1127,14 +1261,15 @@ and translate_let:
             FStar_Extraction_ML_Syntax.mllb_def = expr;
             FStar_Extraction_ML_Syntax.mllb_meta = meta;
             FStar_Extraction_ML_Syntax.print_typ = uu____3721;_} ->
-            let meta1 = translate_flags meta in
+            let meta1 = translate_flags meta  in
             let env1 =
               FStar_List.fold_left
-                (fun env1  -> fun name1  -> extend_t env1 name1) env tvars in
-            let t1 = translate_type env1 t in
-            let name1 = ((env1.module_name), name) in
+                (fun env1  -> fun name1  -> extend_t env1 name1) env tvars
+               in
+            let t1 = translate_type env1 t  in
+            let name1 = ((env1.module_name), name)  in
             (try
-               let expr1 = translate_expr env1 expr in
+               let expr1 = translate_expr env1 expr  in
                FStar_Pervasives_Native.Some
                  (DGlobal
                     (meta1, name1, (FStar_List.length tvars), t1, expr1))
@@ -1143,13 +1278,16 @@ and translate_let:
                  ((let uu____3768 =
                      let uu____3773 =
                        let uu____3774 =
-                         FStar_Extraction_ML_Syntax.string_of_mlpath name1 in
-                       let uu____3775 = FStar_Util.print_exn e in
+                         FStar_Extraction_ML_Syntax.string_of_mlpath name1
+                          in
+                       let uu____3775 = FStar_Util.print_exn e  in
                        FStar_Util.format2
                          "Not translating definition for %s (%s)\n"
-                         uu____3774 uu____3775 in
+                         uu____3774 uu____3775
+                        in
                      (FStar_Errors.Warning_DefinitionNotTranslated,
-                       uu____3773) in
+                       uu____3773)
+                      in
                    FStar_Errors.log_issue FStar_Range.dummyRange uu____3768);
                   FStar_Pervasives_Native.Some
                     (DGlobal
@@ -1163,71 +1301,78 @@ and translate_let:
             ((let uu____3793 =
                 let uu____3798 =
                   FStar_Util.format1 "Not translating definition for %s\n"
-                    name in
-                (FStar_Errors.Warning_DefinitionNotTranslated, uu____3798) in
+                    name
+                   in
+                (FStar_Errors.Warning_DefinitionNotTranslated, uu____3798)
+                 in
               FStar_Errors.log_issue FStar_Range.dummyRange uu____3793);
              (match ts with
               | FStar_Pervasives_Native.Some (idents,t) ->
                   let uu____3806 =
-                    FStar_Extraction_ML_Code.string_of_mlty ([], "") t in
+                    FStar_Extraction_ML_Code.string_of_mlty ([], "") t  in
                   FStar_Util.print2 "Type scheme is: forall %s. %s\n"
                     (FStar_String.concat ", " idents) uu____3806
               | FStar_Pervasives_Native.None  -> ());
              FStar_Pervasives_Native.None)
-and translate_type_decl:
+
+and (translate_type_decl :
   env ->
     FStar_Extraction_ML_Syntax.one_mltydecl ->
-      decl FStar_Pervasives_Native.option
+      decl FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun ty  ->
       match ty with
       | (assumed,name,_mangled_name,args,flags1,FStar_Pervasives_Native.Some
          (FStar_Extraction_ML_Syntax.MLTD_Abbrev t)) ->
-          let name1 = ((env.module_name), name) in
+          let name1 = ((env.module_name), name)  in
           let env1 =
             FStar_List.fold_left
-              (fun env1  -> fun name2  -> extend_t env1 name2) env args in
+              (fun env1  -> fun name2  -> extend_t env1 name2) env args
+             in
           if assumed
           then
-            let name2 = FStar_Extraction_ML_Syntax.string_of_mlpath name1 in
+            let name2 = FStar_Extraction_ML_Syntax.string_of_mlpath name1  in
             (FStar_Util.print1_warning
                "Not translating type definition (assumed) for %s\n" name2;
              FStar_Pervasives_Native.None)
           else
             (let uu____3844 =
                let uu____3845 =
-                 let uu____3862 = translate_flags flags1 in
-                 let uu____3865 = translate_type env1 t in
-                 (name1, uu____3862, (FStar_List.length args), uu____3865) in
-               DTypeAlias uu____3845 in
+                 let uu____3862 = translate_flags flags1  in
+                 let uu____3865 = translate_type env1 t  in
+                 (name1, uu____3862, (FStar_List.length args), uu____3865)
+                  in
+               DTypeAlias uu____3845  in
              FStar_Pervasives_Native.Some uu____3844)
       | (uu____3874,name,_mangled_name,args,flags1,FStar_Pervasives_Native.Some
          (FStar_Extraction_ML_Syntax.MLTD_Record fields)) ->
-          let name1 = ((env.module_name), name) in
+          let name1 = ((env.module_name), name)  in
           let env1 =
             FStar_List.fold_left
-              (fun env1  -> fun name2  -> extend_t env1 name2) env args in
+              (fun env1  -> fun name2  -> extend_t env1 name2) env args
+             in
           let uu____3906 =
             let uu____3907 =
-              let uu____3934 = translate_flags flags1 in
+              let uu____3934 = translate_flags flags1  in
               let uu____3937 =
                 FStar_List.map
                   (fun uu____3964  ->
                      match uu____3964 with
                      | (f,t) ->
                          let uu____3979 =
-                           let uu____3984 = translate_type env1 t in
-                           (uu____3984, false) in
-                         (f, uu____3979)) fields in
-              (name1, uu____3934, (FStar_List.length args), uu____3937) in
-            DTypeFlat uu____3907 in
+                           let uu____3984 = translate_type env1 t  in
+                           (uu____3984, false)  in
+                         (f, uu____3979)) fields
+                 in
+              (name1, uu____3934, (FStar_List.length args), uu____3937)  in
+            DTypeFlat uu____3907  in
           FStar_Pervasives_Native.Some uu____3906
       | (uu____4007,name,_mangled_name,args,flags1,FStar_Pervasives_Native.Some
          (FStar_Extraction_ML_Syntax.MLTD_DType branches)) ->
-          let name1 = ((env.module_name), name) in
-          let flags2 = translate_flags flags1 in
-          let env1 = FStar_List.fold_left extend_t env args in
+          let name1 = ((env.module_name), name)  in
+          let flags2 = translate_flags flags1  in
+          let env1 = FStar_List.fold_left extend_t env args  in
           let uu____4044 =
             let uu____4045 =
               let uu____4078 =
@@ -1241,153 +1386,169 @@ and translate_type_decl:
                                 match uu____4189 with
                                 | (name2,t) ->
                                     let uu____4204 =
-                                      let uu____4209 = translate_type env1 t in
-                                      (uu____4209, false) in
-                                    (name2, uu____4204)) ts in
-                         (cons1, uu____4162)) branches in
-              (name1, flags2, (FStar_List.length args), uu____4078) in
-            DTypeVariant uu____4045 in
+                                      let uu____4209 = translate_type env1 t
+                                         in
+                                      (uu____4209, false)  in
+                                    (name2, uu____4204)) ts
+                            in
+                         (cons1, uu____4162)) branches
+                 in
+              (name1, flags2, (FStar_List.length args), uu____4078)  in
+            DTypeVariant uu____4045  in
           FStar_Pervasives_Native.Some uu____4044
       | (uu____4248,name,_mangled_name,uu____4251,uu____4252,uu____4253) ->
           ((let uu____4263 =
               let uu____4268 =
                 FStar_Util.format1 "Not translating type definition for %s\n"
-                  name in
-              (FStar_Errors.Warning_DefinitionNotTranslated, uu____4268) in
+                  name
+                 in
+              (FStar_Errors.Warning_DefinitionNotTranslated, uu____4268)  in
             FStar_Errors.log_issue FStar_Range.dummyRange uu____4263);
            FStar_Pervasives_Native.None)
-and translate_type: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
+
+and (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env  ->
     fun t  ->
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Tuple [] -> TAny
       | FStar_Extraction_ML_Syntax.MLTY_Top  -> TAny
       | FStar_Extraction_ML_Syntax.MLTY_Var name ->
-          let uu____4272 = find_t env name in TBound uu____4272
+          let uu____4272 = find_t env name  in TBound uu____4272
       | FStar_Extraction_ML_Syntax.MLTY_Fun (t1,uu____4274,t2) ->
           let uu____4276 =
-            let uu____4281 = translate_type env t1 in
-            let uu____4282 = translate_type env t2 in
-            (uu____4281, uu____4282) in
+            let uu____4281 = translate_type env t1  in
+            let uu____4282 = translate_type env t2  in
+            (uu____4281, uu____4282)  in
           TArrow uu____4276
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],p) when
-          let uu____4286 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4286 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4286 = "Prims.unit" -> TUnit
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],p) when
-          let uu____4290 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4290 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4290 = "Prims.bool" -> TBool
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],("FStar"::m::[],"t")) when
           is_machine_int m ->
-          let uu____4302 = FStar_Util.must (mk_width m) in TInt uu____4302
+          let uu____4302 = FStar_Util.must (mk_width m)  in TInt uu____4302
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],("FStar"::m::[],"t'")) when
           is_machine_int m ->
-          let uu____4314 = FStar_Util.must (mk_width m) in TInt uu____4314
+          let uu____4314 = FStar_Util.must (mk_width m)  in TInt uu____4314
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[],p) when
-          let uu____4319 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4319 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4319 = "FStar.Monotonic.HyperStack.mem" -> TUnit
       | FStar_Extraction_ML_Syntax.MLTY_Named
           (uu____4320::arg::uu____4322::[],p) when
-          (((let uu____4328 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          (((let uu____4328 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4328 = "FStar.Monotonic.HyperStack.s_mref") ||
-              (let uu____4330 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              (let uu____4330 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                  in
                uu____4330 = "FStar.Monotonic.HyperHeap.mrref"))
              ||
-             (let uu____4332 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             (let uu____4332 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                 in
               uu____4332 = "FStar.HyperStack.ST.m_rref"))
             ||
-            (let uu____4334 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            (let uu____4334 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4334 = "FStar.HyperStack.ST.s_mref")
-          -> let uu____4335 = translate_type env arg in TBuf uu____4335
+          -> let uu____4335 = translate_type env arg  in TBuf uu____4335
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::uu____4337::[],p) when
           ((((((((((let uu____4343 =
-                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                     uu____4343 = "FStar.Monotonic.HyperStack.mreference") ||
                      (let uu____4345 =
-                        FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                        FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                       uu____4345 = "FStar.Monotonic.HyperStack.mstackref"))
                     ||
                     (let uu____4347 =
-                       FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                       FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                      uu____4347 = "FStar.Monotonic.HyperStack.mref"))
                    ||
                    (let uu____4349 =
-                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                     uu____4349 = "FStar.Monotonic.HyperStack.mmmstackref"))
                   ||
                   (let uu____4351 =
-                     FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                     FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                    uu____4351 = "FStar.Monotonic.HyperStack.mmmref"))
                  ||
                  (let uu____4353 =
-                    FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                    FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                   uu____4353 = "FStar.Monotonic.Heap.mref"))
                 ||
                 (let uu____4355 =
-                   FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                   FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                  uu____4355 = "FStar.HyperStack.ST.mreference"))
                ||
                (let uu____4357 =
-                  FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                  FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                 uu____4357 = "FStar.HyperStack.ST.mstackref"))
               ||
-              (let uu____4359 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              (let uu____4359 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                  in
                uu____4359 = "FStar.HyperStack.ST.mref"))
              ||
-             (let uu____4361 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             (let uu____4361 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                 in
               uu____4361 = "FStar.HyperStack.ST.mmmstackref"))
             ||
-            (let uu____4363 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            (let uu____4363 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4363 = "FStar.HyperStack.ST.mmmref")
-          -> let uu____4364 = translate_type env arg in TBuf uu____4364
+          -> let uu____4364 = translate_type env arg  in TBuf uu____4364
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[],p) when
           ((((((((((let uu____4371 =
-                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                     uu____4371 = "FStar.Buffer.buffer") ||
                      (let uu____4373 =
-                        FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                        FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                       uu____4373 = "FStar.HyperStack.reference"))
                     ||
                     (let uu____4375 =
-                       FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                       FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                      uu____4375 = "FStar.HyperStack.stackref"))
                    ||
                    (let uu____4377 =
-                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                     uu____4377 = "FStar.HyperStack.ref"))
                   ||
                   (let uu____4379 =
-                     FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                     FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                    uu____4379 = "FStar.HyperStack.mmstackref"))
                  ||
                  (let uu____4381 =
-                    FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                    FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                   uu____4381 = "FStar.HyperStack.mmref"))
                 ||
                 (let uu____4383 =
-                   FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                   FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                  uu____4383 = "FStar.HyperStack.ST.reference"))
                ||
                (let uu____4385 =
-                  FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                  FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                 uu____4385 = "FStar.HyperStack.ST.stackref"))
               ||
-              (let uu____4387 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              (let uu____4387 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                  in
                uu____4387 = "FStar.HyperStack.ST.ref"))
              ||
-             (let uu____4389 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             (let uu____4389 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                 in
               uu____4389 = "FStar.HyperStack.ST.mmstackref"))
             ||
-            (let uu____4391 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            (let uu____4391 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4391 = "FStar.HyperStack.ST.mmref")
-          -> let uu____4392 = translate_type env arg in TBuf uu____4392
+          -> let uu____4392 = translate_type env arg  in TBuf uu____4392
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu____4393::arg::[],p) when
-          (let uu____4400 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          (let uu____4400 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
            uu____4400 = "FStar.HyperStack.s_ref") ||
-            (let uu____4402 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            (let uu____4402 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4402 = "FStar.HyperStack.ST.s_ref")
-          -> let uu____4403 = translate_type env arg in TBuf uu____4403
+          -> let uu____4403 = translate_type env arg  in TBuf uu____4403
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu____4404::[],p) when
-          let uu____4408 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4408 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4408 = "FStar.Ghost.erased" -> TAny
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],(path,type_name)) ->
           TQualified (path, type_name)
@@ -1395,55 +1556,58 @@ and translate_type: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
           ((ns = ["Prims"]) || (ns = ["FStar"; "Pervasives"; "Native"])) &&
             (FStar_Util.starts_with t1 "tuple")
           ->
-          let uu____4446 = FStar_List.map (translate_type env) args in
+          let uu____4446 = FStar_List.map (translate_type env) args  in
           TTuple uu____4446
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,lid) ->
           if (FStar_List.length args) > (Prims.parse_int "0")
           then
             let uu____4455 =
-              let uu____4468 = FStar_List.map (translate_type env) args in
-              (lid, uu____4468) in
+              let uu____4468 = FStar_List.map (translate_type env) args  in
+              (lid, uu____4468)  in
             TApp uu____4455
           else TQualified lid
       | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
-          let uu____4477 = FStar_List.map (translate_type env) ts in
+          let uu____4477 = FStar_List.map (translate_type env) ts  in
           TTuple uu____4477
-and translate_binders:
+
+and (translate_binders :
   env ->
     (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-      FStar_Pervasives_Native.tuple2 Prims.list -> binder Prims.list
+      FStar_Pervasives_Native.tuple2 Prims.list -> binder Prims.list)
   = fun env  -> fun args  -> FStar_List.map (translate_binder env) args
-and translate_binder:
+
+and (translate_binder :
   env ->
     (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-      FStar_Pervasives_Native.tuple2 -> binder
+      FStar_Pervasives_Native.tuple2 -> binder)
   =
   fun env  ->
     fun uu____4493  ->
       match uu____4493 with
       | (name,typ) ->
-          let uu____4500 = translate_type env typ in
+          let uu____4500 = translate_type env typ  in
           { name; typ = uu____4500; mut = false }
-and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
+
+and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
   fun env  ->
     fun e  ->
       match e.FStar_Extraction_ML_Syntax.expr with
       | FStar_Extraction_ML_Syntax.MLE_Tuple [] -> EUnit
       | FStar_Extraction_ML_Syntax.MLE_Const c -> translate_constant c
       | FStar_Extraction_ML_Syntax.MLE_Var name ->
-          let uu____4505 = find env name in EBound uu____4505
+          let uu____4505 = find env name  in EBound uu____4505
       | FStar_Extraction_ML_Syntax.MLE_Name ("FStar"::m::[],op) when
           (is_machine_int m) && (is_op op) ->
           let uu____4510 =
-            let uu____4515 = FStar_Util.must (mk_op op) in
-            let uu____4516 = FStar_Util.must (mk_width m) in
-            (uu____4515, uu____4516) in
+            let uu____4515 = FStar_Util.must (mk_op op)  in
+            let uu____4516 = FStar_Util.must (mk_width m)  in
+            (uu____4515, uu____4516)  in
           EOp uu____4510
       | FStar_Extraction_ML_Syntax.MLE_Name ("Prims"::[],op) when
           is_bool_op op ->
           let uu____4520 =
-            let uu____4525 = FStar_Util.must (mk_bool_op op) in
-            (uu____4525, Bool) in
+            let uu____4525 = FStar_Util.must (mk_bool_op op)  in
+            (uu____4525, Bool)  in
           EOp uu____4520
       | FStar_Extraction_ML_Syntax.MLE_Name n1 -> EQualified n1
       | FStar_Extraction_ML_Syntax.MLE_Let
@@ -1460,7 +1624,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
               (fun uu___39_4553  ->
                  match uu___39_4553 with
                  | FStar_Extraction_ML_Syntax.Mutable  -> true
-                 | uu____4554 -> false) flags1 in
+                 | uu____4554 -> false) flags1
+             in
           let uu____4555 =
             if is_mut
             then
@@ -1468,16 +1633,19 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                 match typ with
                 | FStar_Extraction_ML_Syntax.MLTY_Named (t::[],p) when
                     let uu____4569 =
-                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p  in
                     uu____4569 = "FStar.ST.stackref" -> t
                 | uu____4570 ->
                     let uu____4571 =
                       let uu____4572 =
-                        FStar_Extraction_ML_Code.string_of_mlty ([], "") typ in
+                        FStar_Extraction_ML_Code.string_of_mlty ([], "") typ
+                         in
                       FStar_Util.format1
                         "unexpected: bad desugaring of Mutable (typ is %s)"
-                        uu____4572 in
-                    failwith uu____4571 in
+                        uu____4572
+                       in
+                    failwith uu____4571
+                 in
               let uu____4575 =
                 match body with
                 | {
@@ -1487,23 +1655,24 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                     FStar_Extraction_ML_Syntax.mlty = uu____4578;
                     FStar_Extraction_ML_Syntax.loc = uu____4579;_} -> body1
                 | uu____4582 ->
-                    failwith "unexpected: bad desugaring of Mutable" in
+                    failwith "unexpected: bad desugaring of Mutable"
+                 in
               (uu____4564, uu____4575)
-            else (typ, body) in
+            else (typ, body)  in
           (match uu____4555 with
            | (typ1,body1) ->
                let binder =
-                 let uu____4587 = translate_type env typ1 in
-                 { name; typ = uu____4587; mut = is_mut } in
-               let body2 = translate_expr env body1 in
-               let env1 = extend env name is_mut in
-               let continuation1 = translate_expr env1 continuation in
+                 let uu____4587 = translate_type env typ1  in
+                 { name; typ = uu____4587; mut = is_mut }  in
+               let body2 = translate_expr env body1  in
+               let env1 = extend env name is_mut  in
+               let continuation1 = translate_expr env1 continuation  in
                ELet (binder, body2, continuation1))
       | FStar_Extraction_ML_Syntax.MLE_Match (expr,branches) ->
           let uu____4613 =
-            let uu____4624 = translate_expr env expr in
-            let uu____4625 = translate_branches env branches in
-            (uu____4624, uu____4625) in
+            let uu____4624 = translate_expr env expr  in
+            let uu____4625 = translate_branches env branches  in
+            (uu____4624, uu____4625)  in
           EMatch uu____4613
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1517,7 +1686,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4642;
              FStar_Extraction_ML_Syntax.loc = uu____4643;_},uu____4644)
           when
-          let uu____4653 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4653 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4653 = "Prims.admit" -> EAbort
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1531,7 +1700,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4658;
              FStar_Extraction_ML_Syntax.loc = uu____4659;_},arg::[])
           when
-          let uu____4667 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4667 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4667 = "FStar.HyperStack.All.failwith" ->
           (match arg with
            | {
@@ -1546,16 +1715,20 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                    let uu____4674 =
                      let uu____4675 =
                        FStar_Ident.lid_of_str
-                         "FStar.HyperStack.IO.print_string" in
-                     FStar_Extraction_ML_Syntax.mlpath_of_lident uu____4675 in
-                   FStar_Extraction_ML_Syntax.MLE_Name uu____4674 in
+                         "FStar.HyperStack.IO.print_string"
+                        in
+                     FStar_Extraction_ML_Syntax.mlpath_of_lident uu____4675
+                      in
+                   FStar_Extraction_ML_Syntax.MLE_Name uu____4674  in
                  FStar_Extraction_ML_Syntax.with_ty
-                   FStar_Extraction_ML_Syntax.MLTY_Top uu____4673 in
+                   FStar_Extraction_ML_Syntax.MLTY_Top uu____4673
+                  in
                let print8 =
                  FStar_Extraction_ML_Syntax.with_ty
                    FStar_Extraction_ML_Syntax.MLTY_Top
-                   (FStar_Extraction_ML_Syntax.MLE_App (print7, [arg])) in
-               let t = translate_expr env print8 in ESequence [t; EAbort])
+                   (FStar_Extraction_ML_Syntax.MLE_App (print7, [arg]))
+                  in
+               let t = translate_expr env print8  in ESequence [t; EAbort])
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -1571,9 +1744,9 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                                                               FStar_Extraction_ML_Syntax.loc
                                                                 = uu____4685;_}::[])
           when
-          (let uu____4690 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          (let uu____4690 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
            uu____4690 = "FStar.HyperStack.ST.op_Bang") && (is_mutable env v1)
-          -> let uu____4691 = find env v1 in EBound uu____4691
+          -> let uu____4691 = find env v1  in EBound uu____4691
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -1589,15 +1762,15 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                                                               FStar_Extraction_ML_Syntax.loc
                                                                 = uu____4697;_}::e1::[])
           when
-          (let uu____4703 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          (let uu____4703 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
            uu____4703 = "FStar.HyperStack.ST.op_Colon_Equals") &&
             (is_mutable env v1)
           ->
           let uu____4704 =
             let uu____4709 =
-              let uu____4710 = find env v1 in EBound uu____4710 in
-            let uu____4711 = translate_expr env e1 in
-            (uu____4709, uu____4711) in
+              let uu____4710 = find env v1  in EBound uu____4710  in
+            let uu____4711 = translate_expr env e1  in
+            (uu____4709, uu____4711)  in
           EAssign uu____4704
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1611,15 +1784,16 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4716;
              FStar_Extraction_ML_Syntax.loc = uu____4717;_},e1::e2::[])
           when
-          (let uu____4728 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          (let uu____4728 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
            uu____4728 = "FStar.Buffer.index") ||
-            (let uu____4730 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            (let uu____4730 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4730 = "FStar.Buffer.op_Array_Access")
           ->
           let uu____4731 =
-            let uu____4736 = translate_expr env e1 in
-            let uu____4737 = translate_expr env e2 in
-            (uu____4736, uu____4737) in
+            let uu____4736 = translate_expr env e1  in
+            let uu____4737 = translate_expr env e2  in
+            (uu____4736, uu____4737)  in
           EBufRead uu____4731
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1633,11 +1807,11 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4742;
              FStar_Extraction_ML_Syntax.loc = uu____4743;_},e1::[])
           when
-          let uu____4751 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4751 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4751 = "FStar.HyperStack.ST.op_Bang" ->
           let uu____4752 =
-            let uu____4757 = translate_expr env e1 in
-            (uu____4757, (EConstant (UInt32, "0"))) in
+            let uu____4757 = translate_expr env e1  in
+            (uu____4757, (EConstant (UInt32, "0")))  in
           EBufRead uu____4752
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1651,12 +1825,12 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4762;
              FStar_Extraction_ML_Syntax.loc = uu____4763;_},e1::e2::[])
           when
-          let uu____4772 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4772 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4772 = "FStar.Buffer.create" ->
           let uu____4773 =
-            let uu____4780 = translate_expr env e1 in
-            let uu____4781 = translate_expr env e2 in
-            (Stack, uu____4780, uu____4781) in
+            let uu____4780 = translate_expr env e1  in
+            let uu____4781 = translate_expr env e2  in
+            (Stack, uu____4780, uu____4781)  in
           EBufCreate uu____4773
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1670,11 +1844,11 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4786;
              FStar_Extraction_ML_Syntax.loc = uu____4787;_},_rid::init1::[])
           when
-          let uu____4796 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4796 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4796 = "FStar.HyperStack.ST.ralloc" ->
           let uu____4797 =
-            let uu____4804 = translate_expr env init1 in
-            (Eternal, uu____4804, (EConstant (UInt32, "1"))) in
+            let uu____4804 = translate_expr env init1  in
+            (Eternal, uu____4804, (EConstant (UInt32, "1")))  in
           EBufCreate uu____4797
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1688,12 +1862,12 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4809;
              FStar_Extraction_ML_Syntax.loc = uu____4810;_},_e0::e1::e2::[])
           when
-          let uu____4820 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4820 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4820 = "FStar.Buffer.rcreate" ->
           let uu____4821 =
-            let uu____4828 = translate_expr env e1 in
-            let uu____4829 = translate_expr env e2 in
-            (Eternal, uu____4828, uu____4829) in
+            let uu____4828 = translate_expr env e1  in
+            let uu____4829 = translate_expr env e2  in
+            (Eternal, uu____4828, uu____4829)  in
           EBufCreate uu____4821
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1707,7 +1881,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4834;
              FStar_Extraction_ML_Syntax.loc = uu____4835;_},e2::[])
           when
-          let uu____4843 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4843 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4843 = "FStar.Buffer.createL" ->
           let rec list_elements acc e21 =
             match e21.FStar_Extraction_ML_Syntax.expr with
@@ -1718,13 +1892,14 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                 FStar_List.rev acc
             | uu____4881 ->
                 failwith
-                  "Argument of FStar.Buffer.createL is not a string literal!" in
-          let list_elements1 = list_elements [] in
+                  "Argument of FStar.Buffer.createL is not a string literal!"
+             in
+          let list_elements1 = list_elements []  in
           let uu____4889 =
             let uu____4896 =
-              let uu____4899 = list_elements1 e2 in
-              FStar_List.map (translate_expr env) uu____4899 in
-            (Stack, uu____4896) in
+              let uu____4899 = list_elements1 e2  in
+              FStar_List.map (translate_expr env) uu____4899  in
+            (Stack, uu____4896)  in
           EBufCreateL uu____4889
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1738,12 +1913,12 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4908;
              FStar_Extraction_ML_Syntax.loc = uu____4909;_},e1::e2::_e3::[])
           when
-          let uu____4919 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4919 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4919 = "FStar.Buffer.sub" ->
           let uu____4920 =
-            let uu____4925 = translate_expr env e1 in
-            let uu____4926 = translate_expr env e2 in
-            (uu____4925, uu____4926) in
+            let uu____4925 = translate_expr env e1  in
+            let uu____4926 = translate_expr env e2  in
+            (uu____4925, uu____4926)  in
           EBufSub uu____4920
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1757,7 +1932,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4931;
              FStar_Extraction_ML_Syntax.loc = uu____4932;_},e1::e2::[])
           when
-          let uu____4941 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4941 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4941 = "FStar.Buffer.join" -> translate_expr env e1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1771,12 +1946,12 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4946;
              FStar_Extraction_ML_Syntax.loc = uu____4947;_},e1::e2::[])
           when
-          let uu____4956 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____4956 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4956 = "FStar.Buffer.offset" ->
           let uu____4957 =
-            let uu____4962 = translate_expr env e1 in
-            let uu____4963 = translate_expr env e2 in
-            (uu____4962, uu____4963) in
+            let uu____4962 = translate_expr env e1  in
+            let uu____4963 = translate_expr env e2  in
+            (uu____4962, uu____4963)  in
           EBufSub uu____4957
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1790,16 +1965,17 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4968;
              FStar_Extraction_ML_Syntax.loc = uu____4969;_},e1::e2::e3::[])
           when
-          (let uu____4981 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          (let uu____4981 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
            uu____4981 = "FStar.Buffer.upd") ||
-            (let uu____4983 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            (let uu____4983 = FStar_Extraction_ML_Syntax.string_of_mlpath p
+                in
              uu____4983 = "FStar.Buffer.op_Array_Assignment")
           ->
           let uu____4984 =
-            let uu____4991 = translate_expr env e1 in
-            let uu____4992 = translate_expr env e2 in
-            let uu____4993 = translate_expr env e3 in
-            (uu____4991, uu____4992, uu____4993) in
+            let uu____4991 = translate_expr env e1  in
+            let uu____4992 = translate_expr env e2  in
+            let uu____4993 = translate_expr env e3  in
+            (uu____4991, uu____4992, uu____4993)  in
           EBufWrite uu____4984
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1813,12 +1989,12 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____4998;
              FStar_Extraction_ML_Syntax.loc = uu____4999;_},e1::e2::[])
           when
-          let uu____5008 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5008 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5008 = "FStar.HyperStack.ST.op_Colon_Equals" ->
           let uu____5009 =
-            let uu____5016 = translate_expr env e1 in
-            let uu____5017 = translate_expr env e2 in
-            (uu____5016, (EConstant (UInt32, "0")), uu____5017) in
+            let uu____5016 = translate_expr env e1  in
+            let uu____5017 = translate_expr env e2  in
+            (uu____5016, (EConstant (UInt32, "0")), uu____5017)  in
           EBufWrite uu____5009
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1827,7 +2003,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5019;
              FStar_Extraction_ML_Syntax.loc = uu____5020;_},uu____5021::[])
           when
-          let uu____5024 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5024 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5024 = "FStar.HyperStack.ST.push_frame" -> EPushFrame
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1836,7 +2012,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5026;
              FStar_Extraction_ML_Syntax.loc = uu____5027;_},uu____5028::[])
           when
-          let uu____5031 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5031 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5031 = "FStar.HyperStack.ST.pop_frame" -> EPopFrame
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1850,15 +2026,15 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5036;
              FStar_Extraction_ML_Syntax.loc = uu____5037;_},e1::e2::e3::e4::e5::[])
           when
-          let uu____5049 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5049 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5049 = "FStar.Buffer.blit" ->
           let uu____5050 =
-            let uu____5061 = translate_expr env e1 in
-            let uu____5062 = translate_expr env e2 in
-            let uu____5063 = translate_expr env e3 in
-            let uu____5064 = translate_expr env e4 in
-            let uu____5065 = translate_expr env e5 in
-            (uu____5061, uu____5062, uu____5063, uu____5064, uu____5065) in
+            let uu____5061 = translate_expr env e1  in
+            let uu____5062 = translate_expr env e2  in
+            let uu____5063 = translate_expr env e3  in
+            let uu____5064 = translate_expr env e4  in
+            let uu____5065 = translate_expr env e5  in
+            (uu____5061, uu____5062, uu____5063, uu____5064, uu____5065)  in
           EBufBlit uu____5050
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1872,13 +2048,13 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5070;
              FStar_Extraction_ML_Syntax.loc = uu____5071;_},e1::e2::e3::[])
           when
-          let uu____5081 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5081 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5081 = "FStar.Buffer.fill" ->
           let uu____5082 =
-            let uu____5089 = translate_expr env e1 in
-            let uu____5090 = translate_expr env e2 in
-            let uu____5091 = translate_expr env e3 in
-            (uu____5089, uu____5090, uu____5091) in
+            let uu____5089 = translate_expr env e1  in
+            let uu____5090 = translate_expr env e2  in
+            let uu____5091 = translate_expr env e3  in
+            (uu____5089, uu____5090, uu____5091)  in
           EBufFill uu____5082
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1887,7 +2063,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5093;
              FStar_Extraction_ML_Syntax.loc = uu____5094;_},uu____5095::[])
           when
-          let uu____5098 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5098 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5098 = "FStar.HyperStack.ST.get" -> EUnit
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1896,10 +2072,10 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5100;
              FStar_Extraction_ML_Syntax.loc = uu____5101;_},e1::[])
           when
-          let uu____5105 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          let uu____5105 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____5105 = "Obj.repr" ->
           let uu____5106 =
-            let uu____5111 = translate_expr env e1 in (uu____5111, TAny) in
+            let uu____5111 = translate_expr env e1  in (uu____5111, TAny)  in
           ECast uu____5106
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1908,8 +2084,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5114;
              FStar_Extraction_ML_Syntax.loc = uu____5115;_},args)
           when (is_machine_int m) && (is_op op) ->
-          let uu____5123 = FStar_Util.must (mk_width m) in
-          let uu____5124 = FStar_Util.must (mk_op op) in
+          let uu____5123 = FStar_Util.must (mk_width m)  in
+          let uu____5124 = FStar_Util.must (mk_op op)  in
           mk_op_app env uu____5123 uu____5124 args
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1918,7 +2094,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.mlty = uu____5126;
              FStar_Extraction_ML_Syntax.loc = uu____5127;_},args)
           when is_bool_op op ->
-          let uu____5135 = FStar_Util.must (mk_bool_op op) in
+          let uu____5135 = FStar_Util.must (mk_bool_op op)  in
           mk_op_app env Bool uu____5135 args
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1939,7 +2115,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                                                                 = uu____5141;_}::[])
           when is_machine_int m ->
           let uu____5156 =
-            let uu____5161 = FStar_Util.must (mk_width m) in (uu____5161, c) in
+            let uu____5161 = FStar_Util.must (mk_width m)  in (uu____5161, c)
+             in
           EConstant uu____5156
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1960,7 +2137,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                                                                 = uu____5167;_}::[])
           when is_machine_int m ->
           let uu____5182 =
-            let uu____5187 = FStar_Util.must (mk_width m) in (uu____5187, c) in
+            let uu____5187 = FStar_Util.must (mk_width m)  in (uu____5187, c)
+             in
           EConstant uu____5182
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -2018,146 +2196,153 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
                  || (FStar_Util.starts_with c "int8"))
                 || (FStar_Util.starts_with c "int16"))
                || (FStar_Util.starts_with c "int32"))
-              || (FStar_Util.starts_with c "int64") in
+              || (FStar_Util.starts_with c "int64")
+             in
           if (FStar_Util.ends_with c "uint64") && is_known_type
           then
             let uu____5219 =
-              let uu____5224 = translate_expr env arg in
-              (uu____5224, (TInt UInt64)) in
+              let uu____5224 = translate_expr env arg  in
+              (uu____5224, (TInt UInt64))  in
             ECast uu____5219
           else
             if (FStar_Util.ends_with c "uint32") && is_known_type
             then
               (let uu____5226 =
-                 let uu____5231 = translate_expr env arg in
-                 (uu____5231, (TInt UInt32)) in
+                 let uu____5231 = translate_expr env arg  in
+                 (uu____5231, (TInt UInt32))  in
                ECast uu____5226)
             else
               if (FStar_Util.ends_with c "uint16") && is_known_type
               then
                 (let uu____5233 =
-                   let uu____5238 = translate_expr env arg in
-                   (uu____5238, (TInt UInt16)) in
+                   let uu____5238 = translate_expr env arg  in
+                   (uu____5238, (TInt UInt16))  in
                  ECast uu____5233)
               else
                 if (FStar_Util.ends_with c "uint8") && is_known_type
                 then
                   (let uu____5240 =
-                     let uu____5245 = translate_expr env arg in
-                     (uu____5245, (TInt UInt8)) in
+                     let uu____5245 = translate_expr env arg  in
+                     (uu____5245, (TInt UInt8))  in
                    ECast uu____5240)
                 else
                   if (FStar_Util.ends_with c "int64") && is_known_type
                   then
                     (let uu____5247 =
-                       let uu____5252 = translate_expr env arg in
-                       (uu____5252, (TInt Int64)) in
+                       let uu____5252 = translate_expr env arg  in
+                       (uu____5252, (TInt Int64))  in
                      ECast uu____5247)
                   else
                     if (FStar_Util.ends_with c "int32") && is_known_type
                     then
                       (let uu____5254 =
-                         let uu____5259 = translate_expr env arg in
-                         (uu____5259, (TInt Int32)) in
+                         let uu____5259 = translate_expr env arg  in
+                         (uu____5259, (TInt Int32))  in
                        ECast uu____5254)
                     else
                       if (FStar_Util.ends_with c "int16") && is_known_type
                       then
                         (let uu____5261 =
-                           let uu____5266 = translate_expr env arg in
-                           (uu____5266, (TInt Int16)) in
+                           let uu____5266 = translate_expr env arg  in
+                           (uu____5266, (TInt Int16))  in
                          ECast uu____5261)
                       else
                         if (FStar_Util.ends_with c "int8") && is_known_type
                         then
                           (let uu____5268 =
-                             let uu____5273 = translate_expr env arg in
-                             (uu____5273, (TInt Int8)) in
+                             let uu____5273 = translate_expr env arg  in
+                             (uu____5273, (TInt Int8))  in
                            ECast uu____5268)
                         else
                           (let uu____5275 =
                              let uu____5282 =
-                               let uu____5285 = translate_expr env arg in
-                               [uu____5285] in
+                               let uu____5285 = translate_expr env arg  in
+                               [uu____5285]  in
                              ((EQualified (["FStar"; "Int"; "Cast"], c)),
-                               uu____5282) in
+                               uu____5282)
+                              in
                            EApp uu____5275)
       | FStar_Extraction_ML_Syntax.MLE_App (head1,args) ->
           let uu____5296 =
-            let uu____5303 = translate_expr env head1 in
-            let uu____5304 = FStar_List.map (translate_expr env) args in
-            (uu____5303, uu____5304) in
+            let uu____5303 = translate_expr env head1  in
+            let uu____5304 = FStar_List.map (translate_expr env) args  in
+            (uu____5303, uu____5304)  in
           EApp uu____5296
       | FStar_Extraction_ML_Syntax.MLE_TApp (head1,ty_args) ->
           let uu____5315 =
-            let uu____5322 = translate_expr env head1 in
-            let uu____5323 = FStar_List.map (translate_type env) ty_args in
-            (uu____5322, uu____5323) in
+            let uu____5322 = translate_expr env head1  in
+            let uu____5323 = FStar_List.map (translate_type env) ty_args  in
+            (uu____5322, uu____5323)  in
           ETypApp uu____5315
       | FStar_Extraction_ML_Syntax.MLE_Coerce (e1,t_from,t_to) ->
           let uu____5331 =
-            let uu____5336 = translate_expr env e1 in
-            let uu____5337 = translate_type env t_to in
-            (uu____5336, uu____5337) in
+            let uu____5336 = translate_expr env e1  in
+            let uu____5337 = translate_type env t_to  in
+            (uu____5336, uu____5337)  in
           ECast uu____5331
       | FStar_Extraction_ML_Syntax.MLE_Record (uu____5338,fields) ->
           let uu____5356 =
-            let uu____5367 = assert_lid env e.FStar_Extraction_ML_Syntax.mlty in
+            let uu____5367 = assert_lid env e.FStar_Extraction_ML_Syntax.mlty
+               in
             let uu____5368 =
               FStar_List.map
                 (fun uu____5387  ->
                    match uu____5387 with
                    | (field,expr) ->
-                       let uu____5398 = translate_expr env expr in
-                       (field, uu____5398)) fields in
-            (uu____5367, uu____5368) in
+                       let uu____5398 = translate_expr env expr  in
+                       (field, uu____5398)) fields
+               in
+            (uu____5367, uu____5368)  in
           EFlat uu____5356
       | FStar_Extraction_ML_Syntax.MLE_Proj (e1,path) ->
           let uu____5407 =
             let uu____5414 =
-              assert_lid env e1.FStar_Extraction_ML_Syntax.mlty in
-            let uu____5415 = translate_expr env e1 in
-            (uu____5414, uu____5415, (FStar_Pervasives_Native.snd path)) in
+              assert_lid env e1.FStar_Extraction_ML_Syntax.mlty  in
+            let uu____5415 = translate_expr env e1  in
+            (uu____5414, uu____5415, (FStar_Pervasives_Native.snd path))  in
           EField uu____5407
       | FStar_Extraction_ML_Syntax.MLE_Let uu____5418 ->
           failwith "todo: translate_expr [MLE_Let]"
       | FStar_Extraction_ML_Syntax.MLE_App (head1,uu____5430) ->
           let uu____5435 =
             let uu____5436 =
-              FStar_Extraction_ML_Code.string_of_mlexpr ([], "") head1 in
+              FStar_Extraction_ML_Code.string_of_mlexpr ([], "") head1  in
             FStar_Util.format1 "todo: translate_expr [MLE_App] (head is: %s)"
-              uu____5436 in
+              uu____5436
+             in
           failwith uu____5435
       | FStar_Extraction_ML_Syntax.MLE_Seq seqs ->
-          let uu____5442 = FStar_List.map (translate_expr env) seqs in
+          let uu____5442 = FStar_List.map (translate_expr env) seqs  in
           ESequence uu____5442
       | FStar_Extraction_ML_Syntax.MLE_Tuple es ->
-          let uu____5448 = FStar_List.map (translate_expr env) es in
+          let uu____5448 = FStar_List.map (translate_expr env) es  in
           ETuple uu____5448
       | FStar_Extraction_ML_Syntax.MLE_CTor ((uu____5451,cons1),es) ->
           let uu____5468 =
-            let uu____5477 = assert_lid env e.FStar_Extraction_ML_Syntax.mlty in
-            let uu____5478 = FStar_List.map (translate_expr env) es in
-            (uu____5477, cons1, uu____5478) in
+            let uu____5477 = assert_lid env e.FStar_Extraction_ML_Syntax.mlty
+               in
+            let uu____5478 = FStar_List.map (translate_expr env) es  in
+            (uu____5477, cons1, uu____5478)  in
           ECons uu____5468
       | FStar_Extraction_ML_Syntax.MLE_Fun (args,body) ->
-          let binders = translate_binders env args in
-          let env1 = add_binders env args in
+          let binders = translate_binders env args  in
+          let env1 = add_binders env args  in
           let uu____5501 =
-            let uu____5510 = translate_expr env1 body in
+            let uu____5510 = translate_expr env1 body  in
             let uu____5511 =
-              translate_type env1 body.FStar_Extraction_ML_Syntax.mlty in
-            (binders, uu____5510, uu____5511) in
+              translate_type env1 body.FStar_Extraction_ML_Syntax.mlty  in
+            (binders, uu____5510, uu____5511)  in
           EFun uu____5501
       | FStar_Extraction_ML_Syntax.MLE_If (e1,e2,e3) ->
           let uu____5521 =
-            let uu____5528 = translate_expr env e1 in
-            let uu____5529 = translate_expr env e2 in
+            let uu____5528 = translate_expr env e1  in
+            let uu____5529 = translate_expr env e2  in
             let uu____5530 =
               match e3 with
               | FStar_Pervasives_Native.None  -> EUnit
-              | FStar_Pervasives_Native.Some e31 -> translate_expr env e31 in
-            (uu____5528, uu____5529, uu____5530) in
+              | FStar_Pervasives_Native.Some e31 -> translate_expr env e31
+               in
+            (uu____5528, uu____5529, uu____5530)  in
           EIfThenElse uu____5521
       | FStar_Extraction_ML_Syntax.MLE_Raise uu____5532 ->
           failwith "todo: translate_expr [MLE_Raise]"
@@ -2165,7 +2350,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
           failwith "todo: translate_expr [MLE_Try]"
       | FStar_Extraction_ML_Syntax.MLE_Coerce uu____5554 ->
           failwith "todo: translate_expr [MLE_Coerce]"
-and assert_lid: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
+
+and (assert_lid : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env  ->
     fun t  ->
       match t with
@@ -2173,25 +2359,27 @@ and assert_lid: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
           if (FStar_List.length ts) > (Prims.parse_int "0")
           then
             let uu____5569 =
-              let uu____5582 = FStar_List.map (translate_type env) ts in
-              (lid, uu____5582) in
+              let uu____5582 = FStar_List.map (translate_type env) ts  in
+              (lid, uu____5582)  in
             TApp uu____5569
           else TQualified lid
       | uu____5588 -> failwith "invalid argument: assert_lid"
-and translate_branches:
+
+and (translate_branches :
   env ->
     (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
                                             FStar_Pervasives_Native.option,
       FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3
-      Prims.list -> (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list
+      Prims.list -> (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
   =
   fun env  -> fun branches  -> FStar_List.map (translate_branch env) branches
-and translate_branch:
+
+and (translate_branch :
   env ->
     (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
                                             FStar_Pervasives_Native.option,
       FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3 ->
-      (pattern,expr) FStar_Pervasives_Native.tuple2
+      (pattern,expr) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun uu____5614  ->
@@ -2199,15 +2387,16 @@ and translate_branch:
       | (pat,guard,expr) ->
           if guard = FStar_Pervasives_Native.None
           then
-            let uu____5640 = translate_pat env pat in
+            let uu____5640 = translate_pat env pat  in
             (match uu____5640 with
              | (env1,pat1) ->
-                 let uu____5651 = translate_expr env1 expr in
+                 let uu____5651 = translate_expr env1 expr  in
                  (pat1, uu____5651))
           else failwith "todo: translate_branch"
-and translate_width:
+
+and (translate_width :
   (FStar_Const.signedness,FStar_Const.width) FStar_Pervasives_Native.tuple2
-    FStar_Pervasives_Native.option -> width
+    FStar_Pervasives_Native.option -> width)
   =
   fun uu___40_5657  ->
     match uu___40_5657 with
@@ -2228,10 +2417,11 @@ and translate_width:
         -> UInt32
     | FStar_Pervasives_Native.Some (FStar_Const.Unsigned ,FStar_Const.Int64 )
         -> UInt64
-and translate_pat:
+
+and (translate_pat :
   env ->
     FStar_Extraction_ML_Syntax.mlpattern ->
-      (env,pattern) FStar_Pervasives_Native.tuple2
+      (env,pattern) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun p  ->
@@ -2244,14 +2434,14 @@ and translate_pat:
           (FStar_Extraction_ML_Syntax.MLC_Int (s,sw)) ->
           let uu____5721 =
             let uu____5722 =
-              let uu____5727 = translate_width sw in (uu____5727, s) in
-            PConstant uu____5722 in
+              let uu____5727 = translate_width sw  in (uu____5727, s)  in
+            PConstant uu____5722  in
           (env, uu____5721)
       | FStar_Extraction_ML_Syntax.MLP_Var name ->
-          let env1 = extend env name false in
+          let env1 = extend env name false  in
           (env1, (PVar { name; typ = TAny; mut = false }))
       | FStar_Extraction_ML_Syntax.MLP_Wild  ->
-          let env1 = extend env "_" false in
+          let env1 = extend env "_" false  in
           (env1, (PVar { name = "_"; typ = TAny; mut = false }))
       | FStar_Extraction_ML_Syntax.MLP_CTor ((uu____5731,cons1),ps) ->
           let uu____5748 =
@@ -2260,9 +2450,10 @@ and translate_pat:
                  fun p1  ->
                    match uu____5768 with
                    | (env1,acc) ->
-                       let uu____5788 = translate_pat env1 p1 in
+                       let uu____5788 = translate_pat env1 p1  in
                        (match uu____5788 with
-                        | (env2,p2) -> (env2, (p2 :: acc)))) (env, []) ps in
+                        | (env2,p2) -> (env2, (p2 :: acc)))) (env, []) ps
+             in
           (match uu____5748 with
            | (env1,ps1) -> (env1, (PCons (cons1, (FStar_List.rev ps1)))))
       | FStar_Extraction_ML_Syntax.MLP_Record (uu____5817,ps) ->
@@ -2272,10 +2463,11 @@ and translate_pat:
                  fun uu____5870  ->
                    match (uu____5869, uu____5870) with
                    | ((env1,acc),(field,p1)) ->
-                       let uu____5939 = translate_pat env1 p1 in
+                       let uu____5939 = translate_pat env1 p1  in
                        (match uu____5939 with
                         | (env2,p2) -> (env2, ((field, p2) :: acc))))
-              (env, []) ps in
+              (env, []) ps
+             in
           (match uu____5835 with
            | (env1,ps1) -> (env1, (PRecord (FStar_List.rev ps1))))
       | FStar_Extraction_ML_Syntax.MLP_Tuple ps ->
@@ -2285,33 +2477,37 @@ and translate_pat:
                  fun p1  ->
                    match uu____6021 with
                    | (env1,acc) ->
-                       let uu____6041 = translate_pat env1 p1 in
+                       let uu____6041 = translate_pat env1 p1  in
                        (match uu____6041 with
-                        | (env2,p2) -> (env2, (p2 :: acc)))) (env, []) ps in
+                        | (env2,p2) -> (env2, (p2 :: acc)))) (env, []) ps
+             in
           (match uu____6001 with
            | (env1,ps1) -> (env1, (PTuple (FStar_List.rev ps1))))
       | FStar_Extraction_ML_Syntax.MLP_Const uu____6068 ->
           failwith "todo: translate_pat [MLP_Const]"
       | FStar_Extraction_ML_Syntax.MLP_Branch uu____6073 ->
           failwith "todo: translate_pat [MLP_Branch]"
-and translate_constant: FStar_Extraction_ML_Syntax.mlconstant -> expr =
+
+and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
   fun c  ->
     match c with
     | FStar_Extraction_ML_Syntax.MLC_Unit  -> EUnit
     | FStar_Extraction_ML_Syntax.MLC_Bool b -> EBool b
     | FStar_Extraction_ML_Syntax.MLC_String s ->
         ((let uu____6084 =
-            let uu____6085 = FStar_String.list_of_string s in
+            let uu____6085 = FStar_String.list_of_string s  in
             FStar_All.pipe_right uu____6085
               (FStar_Util.for_some
                  (fun c1  ->
-                    c1 = (FStar_Char.char_of_int (Prims.parse_int "0")))) in
+                    c1 = (FStar_Char.char_of_int (Prims.parse_int "0"))))
+             in
           if uu____6084
           then
             let uu____6097 =
               FStar_Util.format1
                 "Refusing to translate a string literal that contains a null character: %s"
-                s in
+                s
+               in
             failwith uu____6097
           else ());
          EString s)
@@ -2327,14 +2523,15 @@ and translate_constant: FStar_Extraction_ML_Syntax.mlconstant -> expr =
         failwith "todo: translate_expr [MLC_Bytes]"
     | FStar_Extraction_ML_Syntax.MLC_Int (s,FStar_Pervasives_Native.None ) ->
         EConstant (CInt, s)
-and mk_op_app:
-  env -> width -> op -> FStar_Extraction_ML_Syntax.mlexpr Prims.list -> expr
+
+and (mk_op_app :
+  env -> width -> op -> FStar_Extraction_ML_Syntax.mlexpr Prims.list -> expr)
   =
   fun env  ->
     fun w  ->
       fun op  ->
         fun args  ->
           let uu____6137 =
-            let uu____6144 = FStar_List.map (translate_expr env) args in
-            ((EOp (op, w)), uu____6144) in
+            let uu____6144 = FStar_List.map (translate_expr env) args  in
+            ((EOp (op, w)), uu____6144)  in
           EApp uu____6137
