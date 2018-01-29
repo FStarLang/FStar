@@ -2,4 +2,4 @@ module UnitTests
 
 open FStar.Tactics
 
-let testnat (n:nat) : tactic unit = idtac
+let testnat (n:nat) : tactic nat = return 42
