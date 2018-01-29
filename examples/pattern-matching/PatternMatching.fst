@@ -8,6 +8,8 @@
 
 module PatternMatching
 
+#set-options "--use_two_phase_tc false"
+
 /// Contents
 /// ========
 ///
@@ -239,7 +241,7 @@ let term_head t : string =
   | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let b t t -> "Tv_Let"
+  | Tv_Let b t1 t2 -> "Tv_Let"
   | Tv_Match t branches -> "Tv_Match"
   | Tv_Unknown -> "Tv_Unknown"
 
@@ -313,8 +315,8 @@ let string_of_bindings (bindings: bindings) =
 (** Match a pattern against a term.
 `cur_bindings` is a list of bindings collected while matching previous parts of
 the pattern.  Returns a result in the exception monad. **)
-let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
-    : term -> match_res bindings =
+let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
+    : match_res bindings =
   let interp_any () cur_bindings tm =
     return [] in
   let interp_var (v: varname) cur_bindings tm =
@@ -339,7 +341,6 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
       with_arg <-- interp_pattern_aux p_arg with_hd arg;
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
-  fun (tm: term) ->
     match pat with
     | PAny -> interp_any () cur_bindings tm
     | PVar var -> interp_var var cur_bindings tm
@@ -367,7 +368,7 @@ let match_term pat : term -> Tac bindings =
 /// Generalizing past single-term single-pattern problems, we obtain the
 /// following notions of pattern-matching problems and solutions:
 
-let debug msg : Tac unit = print msg ()
+let debug msg : Tac unit = () // print msg ()
 
 /// Definitions
 /// -----------
@@ -894,7 +895,7 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 let example #a #b #c: unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
     (repeat'
-      (dump "";;
+      (idtac;; //work around #1287
        gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
                     clear h () <: Tac unit) `or_else`
        gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->

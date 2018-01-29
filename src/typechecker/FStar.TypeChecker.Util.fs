@@ -1792,7 +1792,8 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Inline_for_extraction ->
           quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x
                                               || reification x || inferred x
-                                              || (env.is_iface && x=Assumption))
+                                              || (env.is_iface && x=Assumption)
+                                              || x=NoExtract)
 
         | Unfold_for_unification_and_vcgen
         | Visible_default

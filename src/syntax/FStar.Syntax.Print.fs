@@ -149,29 +149,6 @@ let lbname_to_string = function
   | Inl l -> bv_to_string l
   | Inr l -> lid_to_string l.fv_name.v
 
-let tag_of_term (t:term) = match t.n with
-  | Tm_bvar x -> "Tm_bvar: "   ^ db_to_string x
-  | Tm_name x -> "Tm_name: " ^ nm_to_string x
-  | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string x.fv_name.v
-  | Tm_uinst _ -> "Tm_uinst"
-  | Tm_constant _ -> "Tm_constant"
-  | Tm_type _ -> "Tm_type"
-  | Tm_abs _ -> "Tm_abs"
-  | Tm_arrow _ -> "Tm_arrow"
-  | Tm_refine _ -> "Tm_refine"
-  | Tm_app _ -> "Tm_app"
-  | Tm_match _ -> "Tm_match"
-  | Tm_ascribed _ -> "Tm_ascribed"
-  | Tm_let _ -> "Tm_let"
-  | Tm_uvar _ -> "Tm_uvar"
-  | Tm_delayed(_, m) ->
-    begin match !m with
-        | None -> "Tm_delayed"
-        | Some _ -> "Tm_delayed-resolved"
-    end
-  | Tm_meta _ -> "Tm_meta"
-  | Tm_unknown -> "Tm_unknown"
-
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
 let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_of_int v.minor)
 let univ_uvar_to_string u =
@@ -247,7 +224,30 @@ let quals_to_string' quals =
    function in normalize.fs instead, since elaboration
    (higher-order unification) produces types containing lots of
    redexes that should first be reduced. *)
-let rec term_to_string x =
+let rec tag_of_term (t:term) = match t.n with
+  | Tm_bvar x -> "Tm_bvar: "   ^ db_to_string x
+  | Tm_name x -> "Tm_name: " ^ nm_to_string x
+  | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string x.fv_name.v
+  | Tm_uinst _ -> "Tm_uinst"
+  | Tm_constant _ -> "Tm_constant"
+  | Tm_type _ -> "Tm_type"
+  | Tm_abs _ -> "Tm_abs"
+  | Tm_arrow _ -> "Tm_arrow"
+  | Tm_refine _ -> "Tm_refine"
+  | Tm_app _ -> "Tm_app"
+  | Tm_match _ -> "Tm_match"
+  | Tm_ascribed _ -> "Tm_ascribed"
+  | Tm_let _ -> "Tm_let"
+  | Tm_uvar _ -> "Tm_uvar"
+  | Tm_delayed(_, m) ->
+    begin match !m with
+        | None -> "Tm_delayed"
+        | Some _ -> "Tm_delayed-resolved"
+    end
+  | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
+  | Tm_unknown -> "Tm_unknown"
+
+and term_to_string x =
   if not (Options.ugly()) then
     let e = Resugar.resugar_term x in
     let d = ToDocument.term_to_document e in
@@ -388,11 +388,14 @@ and lcomp_to_string lc =
 //       (kind_to_string k)
 //   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
-and imp_to_string s = function
-  | Some (Implicit false) -> "#" ^ s
-  | Some (Implicit true) -> "#." ^ s
-  | Some Equality -> "$" ^ s
-  | _ -> s
+and aqual_to_string = function
+  | Some (Implicit false) -> "#"
+  | Some (Implicit true) -> "#."
+  | Some Equality -> "$"
+  | _ -> ""
+
+and imp_to_string s aq =
+    aqual_to_string aq ^ s
 
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
@@ -497,6 +500,29 @@ and subst_elt_to_string = function
    | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
 
 and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
+
+and metadata_to_string = function
+    | Meta_pattern ps ->
+        let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
+        U.format1 "{Meta_pattern %s}" pats
+
+    | Meta_named lid ->
+        U.format1 "{Meta_named %s}" (sli lid)
+
+    | Meta_labeled (l, r, _) ->
+        U.format2 "{Meta_labeled (%s, %s)}" l (Range.string_of_range r)
+
+    | Meta_desugared msi ->
+        "{Meta_desugared}"
+
+    | Meta_monadic (m, t) ->
+        U.format2 "{Meta_monadic(%s @ %s)}" (sli m) (term_to_string t)
+
+    | Meta_monadic_lift (m, m', t) ->
+        U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
+
+    | Meta_alien (_, s, t) ->
+        U.format2 "{Meta_alien (%s, %s)}" s (term_to_string t)
 
 let binder_to_json b =
 

@@ -27,7 +27,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
 	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.uver \
 	 Pruning.uver NormVsSMT.uver Unit1.TopLevelPats.uver AssumeRequires.uver TwoPhaseTC.uver \
-	 IntNormalization.uver Subtyping.uver Test.HyperStack.uver
+	 IntNormalization.uver Subtyping.uver Test.HyperStack.uver Raising.uver
 	#TestHasEq.uver #temporarily removed from mac_universes branch
 
 basictests: $(VERFILES)

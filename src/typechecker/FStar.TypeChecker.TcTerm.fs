@@ -402,13 +402,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let head, _ = U.head_and_args top in
     mk (Tm_app (head, [(e, None)])) None top.pos, (Util.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
 
-  | Tm_app({n=Tm_constant Const_set_range_of}, (a1, None)::(a2, None)::[]) ->
+  | Tm_app({n=Tm_constant Const_set_range_of}, (t, None)::(r, None)::[]) ->
     let head, _ = U.head_and_args top in
     let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
-    let e1, _, g1 = tc_term env' a1 in
-    let e2, t2, g2 = tc_term env a2 in
-    let g = Rel.conj_guard g1 g2 in
-    mk_Tm_app head [S.as_arg a1; S.as_arg a2] None top.pos, t2, g
+    let er, _, gr = tc_term env' r in
+    let t, tt, gt = tc_term env t in
+    let g = Rel.conj_guard gr gt in
+    mk_Tm_app head [S.as_arg t; S.as_arg r] None top.pos, tt, g
 
   | Tm_app({n=Tm_constant Const_range_of}, _)
   | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
@@ -1416,7 +1416,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 | Some (Implicit _), Some (Implicit _)
                 | None, None
                 | Some Equality, None -> ()
-                | _ -> raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifier") e.pos in
+                | _ -> raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                                     (BU.format4 "Inconsistent implicit qualifier; %s vs %s\nfor bvar %s and term %s"
+                                               (Print.aqual_to_string aqual)
+                                               (Print.aqual_to_string aq)
+                                               (Print.bv_to_string x)
+                                               (Print.term_to_string e))) e.pos in
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
             if debug env Options.Extreme then  BU.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
@@ -1930,7 +1935,7 @@ and check_inner_let env e =
          TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
-       let lb = U.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
+       let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in

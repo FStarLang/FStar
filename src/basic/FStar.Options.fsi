@@ -142,6 +142,7 @@ val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
 val output_dir                  : unit    -> option<string>
+val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string

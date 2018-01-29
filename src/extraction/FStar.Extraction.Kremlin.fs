@@ -78,6 +78,7 @@ and fsdoc = string
 and lifetime =
   | Eternal
   | Stack
+  | ManuallyManaged
 
 and expr =
   | EBound of var
@@ -115,6 +116,8 @@ and expr =
   | EString of string
   | EFun of list<binder> * expr * typ
   | EAbortS of string
+  | EBufFree of expr
+
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -522,7 +525,7 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"  ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.m_rref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"    
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg; _], p) when
@@ -533,10 +536,10 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mreference" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||    
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||        
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||        
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"       
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg], p) when
@@ -546,19 +549,19 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.mmstackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.mmref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.reference" ||    
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||        
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||            
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||                
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.reference" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref"
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([_;arg], p) when
     Syntax.string_of_mlpath p = "FStar.HyperStack.s_ref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"    
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
     ->
       TBuf (translate_type env arg)
-      
+
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named ([], (path, type_name)) ->
@@ -634,8 +637,18 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
-  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _) when (string_of_mlpath p = "Prims.admit") ->
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _)
+    when string_of_mlpath p = "Prims.admit" ->
       EAbort
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, [arg])
+    when string_of_mlpath p = "FStar.HyperStack.All.failwith" ->
+      (match arg with
+       | {expr=MLE_Const (MLC_String msg)} -> EAbortS msg
+       | _ ->
+         let print = with_ty MLTY_Top (MLE_Name (mlpath_of_lident (Ident.lid_of_str "FStar.HyperStack.IO.print_string"))) in
+         let print = with_ty MLTY_Top (MLE_App (print, [arg])) in
+         let t = translate_expr env print in
+         ESequence [t; EAbort])
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v } ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" && is_mutable env v) ->
       EBound (find env v)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v }; e ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" && is_mutable env v) ->
@@ -652,6 +665,8 @@ and translate_expr env e: expr =
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate_mm") ->
+      EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
       let rec list_elements acc e2 =
         match e2.expr with
@@ -664,6 +679,8 @@ and translate_expr env e: expr =
       in
       let list_elements = list_elements [] in
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree") ->
+      EBufFree (translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
@@ -868,12 +885,16 @@ and translate_constant c: expr =
       |> BU.for_some (fun (c:Char.char) -> c = Char.char_of_int 0)
       then failwith (BU.format1 "Refusing to translate a string literal that contains a null character: %s" s);
       EString s
+  | MLC_Char c ->
+      let i = BU.int_of_char c in
+      let s = BU.string_of_int i in
+      let c = EConstant (UInt32, s) in
+      let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
+      EApp(char_of_int, [c])
   | MLC_Int (s, Some _) ->
       failwith "impossible: machine integer not desugared to a function call"
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
-  | MLC_Char _ ->
-      failwith "todo: translate_expr [MLC_Char]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
   | MLC_Int (s, None) ->

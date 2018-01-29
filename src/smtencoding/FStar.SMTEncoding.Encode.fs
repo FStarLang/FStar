@@ -916,7 +916,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 
-        | Tm_constant Const_set_range_of, [(rng, _); (arg, _)] ->
+        | Tm_constant Const_set_range_of, [(arg, _); (rng, _)] ->
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->

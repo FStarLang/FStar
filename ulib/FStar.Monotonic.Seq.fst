@@ -113,7 +113,7 @@ let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
   : GTot (s:seq a{p s})
   = HS.sel h m
 
-let i_read (#r:rid) (#a:Type) (#p:Seq.seq a -> Type) (m:i_seq r a p)
+let i_read (#a:Type) (#p:Seq.seq a -> Type) (#r:rid) (m:i_seq r a p)
   : ST (s:seq a{p s})
        (requires (fun h -> True))
        (ensures (fun h0 x h1 -> h0==h1 /\ x == i_sel h0 m))
@@ -123,7 +123,7 @@ let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
   : GTot Type0
   = HS.contains h m
 
-let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:a)
+let i_write_at_end (#a:Type) (#p:seq a -> Type) (#rgn:rid) (r:i_seq rgn a p) (x:a)
   : ST unit
        (requires (fun h -> p (Seq.snoc (i_sel h r) x)))
        (ensures (fun h0 _ h1 ->
@@ -369,9 +369,7 @@ let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
   : Lemma (stable_on_t l (at_most_log_len x l))
   = ()
 
-(* assume val gcut : f:(unit -> GTot Type){f ()} -> Tot unit *)
-
-let new_seqn (#l:rid) (#a:Type) (#max:nat)
+let new_seqn (#a:Type) (#l:rid) (#max:nat)
   	     (i:rid) (init:nat) (log:log_t l a)
   : ST (seqn i log max)
        (requires (fun h ->
@@ -388,7 +386,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
     mr_witness log (at_most_log_len init log);
     ralloc i init
 
-let increment_seqn (#l:rid) (#a:Type) (#max:nat)
+let increment_seqn (#a:Type) (#l:rid) (#max:nat)
 	           (#i:rid) (#log:log_t l a) ($c:seqn i log max)
   : ST unit
        (requires (fun h ->
@@ -405,7 +403,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
     mr_witness log (at_most_log_len n log);
     c := n
 
-let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
+let testify_seqn (#a:Type0) (#i:rid) (#l:rid) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
   : ST unit
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->

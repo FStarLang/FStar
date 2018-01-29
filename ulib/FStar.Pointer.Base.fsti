@@ -513,7 +513,7 @@ val is_mm
 (* // TODO: recover with addresses?
 val recall
   (#value: Type)
-  (p: pointer value {HS.is_eternal_region (frameOf p) && not (is_mm p)})
+  (p: pointer value {is_eternal_region (frameOf p) && not (is_mm p)})
 : HST.Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0 == m1 /\ live m1 p))
@@ -2061,7 +2061,7 @@ val ecreate
   (r:HS.rid)
   (s: option (type_of_typ t))
 : HST.ST (pointer t)
-  (requires (fun h -> HS.is_eternal_region r /\ HST.witnessed (region_contains_pred r)))
+  (requires (fun h -> is_eternal_region r /\ HST.witnessed (region_contains_pred r)))
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
     /\ frameOf b == r

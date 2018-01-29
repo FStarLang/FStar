@@ -9,6 +9,8 @@ unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
 let is_eternal_color c = c <= 0
+
+[@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
 let is_eternal_region r  = is_eternal_color (color r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
@@ -80,8 +82,9 @@ let lemma_map_invariant (m:mem) (r s:rid)
 
 let lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` m.h /\ s `is_above` r))
-         (ensures  (is_eternal_region r == is_eternal_region s /\ is_stack_region r == is_stack_region s))
-         [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_region s)];
+         (ensures  (is_eternal_color (color r) == is_eternal_color (color s) /\
+	            is_stack_region r == is_stack_region s))
+         [SMTPatOr [[SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_color (color s))];
                     [SMTPat (m.h `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
                     ]]
   = ()
@@ -126,7 +129,7 @@ let empty_mem (m:hmap) =
   assume (rid_last_component root == 0);
   HS 1 h tip
 
-let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
+let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_color (color r) /\ not (disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
   : Lemma (requires True)
           (ensures (~ (r `is_in` m.h)))
   = root_has_color_zero()
@@ -201,13 +204,13 @@ let mstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }
 
 let mref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_region (frameOf s) && not (is_mm s) }
+  s:mreference a rel{ is_eternal_color (color (frameOf s)) && not (is_mm s) }
 
 let mmmstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s) && is_mm s }
 
 let mmmref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_region (frameOf s) && is_mm s }
+  s:mreference a rel{ is_eternal_color (color (frameOf s)) && is_mm s }
 
 //NS: Why do we need this one?
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
@@ -239,7 +242,7 @@ let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem)
 let fresh_region (i:rid) (m0 m1:mem) =
   not (m0.h `Map.contains` i) /\ m1.h `Map.contains` i
 
-abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
+private val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
                                -> m0:mem{map_invariant m0.h} -> m1:mem{map_invariant m1.h} ->
   Lemma (requires (fresh_region i m0 m1
                   /\ fresh_region j m0 m1
@@ -249,10 +252,6 @@ abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:ri
                   /\ extends j jpar
                   /\ i<>j))
         (ensures (disjoint i j))
-        [SMTPat (fresh_region i m0 m1);
-         SMTPat (fresh_region j m0 m1);
-         SMTPat (extends i ipar);
-         SMTPat (extends j jpar)]
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
 (*
@@ -301,7 +300,7 @@ let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
   = let new_tip_rid = extend m.tip m.rid_ctr 1 in
     HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
 
-let new_eternal_region (m:mem) (parent:rid{is_eternal_region parent /\ m.h `Map.contains` parent})
+let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ m.h `Map.contains` parent})
                        (c:option int{None? c \/ is_eternal_color (Some?.v c)})
   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
   = let new_rid =
@@ -357,29 +356,26 @@ let modifies_one id h0 h1 = modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
   Heap.modifies s (Map.sel h0.h id) (Map.sel h1.h id)
 
-let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
+private let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (contains h x))
   (ensures (contains h x
             /\ modifies_one (frameOf x) h (upd h x v)
             /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
             /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPat (contains h x)]
   = ()
 
-let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
+private let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (frameOf x = h.tip /\ x `unused_in` h))
   (ensures (frameOf x = h.tip
             /\ modifies_one h.tip h (upd h x v)
             /\ modifies_ref h.tip Set.empty h (upd h x v)
             /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPat (x `unused_in` h)]
   = ()
 
-val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
+private val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
                   -> h:mem -> x:mreference a rel -> x':mreference a' rel' -> Lemma
   (requires (contains h x /\ x' `unused_in` h))
   (ensures  (frameOf x <> frameOf x' \/ ~ (as_ref x === as_ref x')))
-  [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
 let lemma_live_1 #a #a' #rel #rel' h x x' = ()
 
 let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) : Lemma
@@ -392,63 +388,50 @@ noeq type some_ref =
 
 let some_refs = list some_ref
 
-let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) =
+[@"opaque_to_smt"]
+private let rec regions_of_some_refs (rs:some_refs) :Tot (Set.set rid) =
   match rs with
-  | [] -> Set.empty
+  | []         -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton (frameOf r)) (regions_of_some_refs tl)
 
-let rec refs_in_region (r:rid) (rs:some_refs) : GTot (Set.set nat) =
+[@"opaque_to_smt"]
+private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
   match rs with
   | []         -> Set.empty
   | (Ref x)::tl ->
-    Set.union (if frameOf x=r then Set.singleton (as_addr x) else Set.empty)
+    Set.union (if frameOf x = r then Set.singleton (as_addr x) else Set.empty)
               (refs_in_region r tl)
 
-unfold let mods (rs:some_refs) h0 h1 =
-    modifies (normalize_term (regions_of_some_refs rs)) h0 h1
-  /\ (forall (r:rid). modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1)
+[@"opaque_to_smt"]
+private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot Type0 =
+  match i with
+  | []         -> True
+  | (Ref x)::tl ->
+    (modifies_ref (frameOf x) (refs_in_region (frameOf x) rs) h0 h1) /\
+    (modifies_some_refs tl rs h0 h1)
+
+[@"opaque_to_smt"]
+unfold private let norm_steps :list norm_step =
+  //iota for reducing match
+  [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
+                            "FStar.Monotonic.HyperStack.refs_in_region";
+                            "FStar.Monotonic.HyperStack.modifies_some_refs"];
+   primops]
+
+[@"opaque_to_smt"]
+unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
+  (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
+  (norm norm_steps (modifies_some_refs rs rs h0 h1))
 
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
-                              (r:rid{is_eternal_region r /\
+                              (r:rid{is_eternal_color (color r) /\
                                      r<>root /\
                                      r `is_in` h.h})
    : Lemma (disjoint h.tip r)
    = ()
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
- //--------------------------------------------------------------------------------
-  //assert (sel h0 x' == sel h1 x')
-
-(* let f2 (a:Type0) (b:Type0) (x:reference a) (y:reference b) *)
-(*                         (h0:mem) (h1:mem) =  *)
-(*   assume (HH.disjoint (frameOf x) (frameOf y)); *)
-(*   assume (mods [Ref x; Ref y] h0 h1); *)
-(*  //-------------------------------------------------------------------------------- *)
-(*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
-
-(* let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) : GTot Type0 = *)
-(*   match i with *)
-(*   | [] -> True *)
-(*   | Ref x::tl -> *)
-(*     let r = x.id in *)
-(*     (modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1 /\ *)
-(*      modifies_some_refs tl rs h0 h1) *)
-
-(* unfold let mods_2 (rs:some_refs) h0 h1 = *)
-(*     modifies (normalize_term (regions_of_some_refs rs)) h0 h1 *)
-(*   /\ modifies_some_refs rs rs h0 h1 *)
-
-(* #reset-options "--log_queries --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
-(* #set-options "--debug FStar.HyperStack --debug_level print_normalized_terms" *)
-(* let f3 (a:Type0) (b:Type0) (x:reference a) *)
-(*                         (h0:mem) (h1:mem) =  *)
-(*   assume (mods_2 [Ref x] h0 h1); *)
-(*  //-------------------------------------------------------------------------------- *)
-(*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
-
 
 (*** Untyped views of references *)
 

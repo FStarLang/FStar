@@ -1,4 +1,4 @@
-module FStar.Tactics.Sequences
+module Sequences
 
 open FStar.Tactics
 open FStar.Reflection

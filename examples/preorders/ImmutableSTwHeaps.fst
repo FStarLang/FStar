@@ -2,6 +2,7 @@ module ImmutableSTwHeaps
 
 open FStar.Heap
 open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 //giving ourselves two non-ghost versions of the heap sel/upd functions
 assume val sel: h:heap -> r:ref 'a -> Tot (x:'a{x == Heap.sel h r})
@@ -56,7 +57,7 @@ effect IST    (a:Type)
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed: p:predicate heap{stable p heap_rel} -> Type0
+let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed heap_rel p
 
 
 (* Generic effects (operations) for IST. *)

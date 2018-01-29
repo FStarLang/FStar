@@ -741,6 +741,15 @@ let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
+let and_match m1 m2 =
+    match m1 with
+    | MisMatch (i, j) -> MisMatch (i, j)
+    | HeadMatch -> begin match m2 () with
+                   | MisMatch (i,j) -> MisMatch (i, j)
+                   | _ -> HeadMatch
+                   end
+    | FullMatch -> m2 ()
+
 let fv_delta_depth env fv = match fv.fv_delta with
     | Delta_abstract d ->
       if env.curmodule.str = fv.fv_name.v.nsstr
@@ -794,11 +803,36 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
+    | Tm_match (t1, bs1), Tm_match (t2, bs2) ->
+        if List.length bs1 = List.length bs2
+        then List.fold_right (fun (b1, b2) a -> and_match a (fun () -> branch_matches env b1 b2))
+                             (List.zip bs1 bs2)
+                             (head_matches env t1 t2) |> head_match
+        else MisMatch (None, None)
+
     | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
     | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
     | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
+
+and branch_matches env (b1 : branch) (b2 : branch) : match_result =
+    let related_by f o1 o2 =
+        match o1, o2 with
+        | None, None -> true
+        | Some x, Some y -> f x y
+        | _, _ -> false
+    in
+    let (p1, w1, t1) = b1 in
+    let (p2, w2, t2) = b2 in
+    if eq_pat p1 p2
+    then begin
+         // We check the `when` branches too, even if unsupported for now
+         if U.eq_tm t1 t2 = U.Equal && related_by (fun t1 t2 -> U.eq_tm t1 t2 = U.Equal) w1 w2
+         then FullMatch
+         else MisMatch (None, None)
+         end
+    else MisMatch (None, None)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
@@ -2408,8 +2442,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
-              // TODO: GM: shouldn't we fail immediately if `eq_tm`
+              // GM: shouldn't we fail immediately if `eq_tm`
               // returns `NotEqual`?
+              // GM: No. We could be in a contradictory environment.
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
                                else Some <| mk_eq2 env t1 t2 in
@@ -2897,7 +2932,16 @@ let resolve_implicits' must_total forcelax g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let g = env.check_type_of must_total env tm k in
+               let g = 
+                 try 
+                   env.check_type_of must_total env tm k
+                 with | e ->
+                    Errors.add_errors [Error_BadImplicit,
+                                       BU.format2 "Failed while checking implicit %s set to %s"
+                                               (Print.uvar_to_string u)
+                                               (N.term_to_string env tm), r];
+                    raise e
+               in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in

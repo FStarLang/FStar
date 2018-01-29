@@ -8,11 +8,11 @@ let (embed_unit :
   FStar_Range.range -> Prims.unit -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun u  ->
-      let uu___37_26 = FStar_Syntax_Util.exp_unit  in
+      let uu___38_26 = FStar_Syntax_Util.exp_unit  in
       {
-        FStar_Syntax_Syntax.n = (uu___37_26.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___38_26.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___37_26.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___38_26.FStar_Syntax_Syntax.vars)
       }
   
 let (__unembed_unit :
@@ -51,11 +51,11 @@ let (embed_bool :
         if b
         then FStar_Syntax_Util.exp_true_bool
         else FStar_Syntax_Util.exp_false_bool  in
-      let uu___38_81 = t  in
+      let uu___39_81 = t  in
       {
-        FStar_Syntax_Syntax.n = (uu___38_81.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___39_81.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___38_81.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___39_81.FStar_Syntax_Syntax.vars)
       }
   
 let (__unembed_bool :
@@ -91,11 +91,11 @@ let (embed_char :
   fun rng  ->
     fun c  ->
       let t = FStar_Syntax_Util.exp_char c  in
-      let uu___39_134 = t  in
+      let uu___40_134 = t  in
       {
-        FStar_Syntax_Syntax.n = (uu___39_134.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___40_134.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___39_134.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___40_134.FStar_Syntax_Syntax.vars)
       }
   
 let (__unembed_char :
@@ -134,11 +134,11 @@ let (embed_int :
       let t =
         let uu____189 = FStar_BigInt.string_of_big_int i  in
         FStar_Syntax_Util.exp_int uu____189  in
-      let uu___40_190 = t  in
+      let uu___41_190 = t  in
       {
-        FStar_Syntax_Syntax.n = (uu___40_190.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___41_190.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___40_190.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___41_190.FStar_Syntax_Syntax.vars)
       }
   
 let (__unembed_int :

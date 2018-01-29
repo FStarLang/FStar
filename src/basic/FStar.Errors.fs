@@ -292,11 +292,16 @@ type raw_error =
   | Warning_ConstructorBuildsUnexpectedType
   | Warning_ModuleOrFileNotFoundWarning
   | Error_NoLetMutable
+  | Error_BadImplicit
+  | Warning_DeprecatedDefinition
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
   | CError | CFatal | CWarning | CSilent
 
+// This list should be considered STABLE
+// Which means, if you need to add an error, APPEND it, to keep old error numbers the same
+// If an error is deprecated, do not remove it! Change its name (if needed)
 let default_flags =
  [(Error_DependencyAnalysisFailed                    , CError);
   (Error_IDETooManyPops                              , CError);
@@ -581,7 +586,9 @@ let default_flags =
   (Warning_Z3InvocationWarning                       , CWarning);
   (Warning_MissingInterfaceOrImplementation          , CWarning);
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
-  (Warning_ModuleOrFileNotFoundWarning               , CWarning)]
+  (Warning_ModuleOrFileNotFoundWarning               , CWarning);
+  (Error_BadImplicit                                 , CError);
+  (Warning_DeprecatedDefinition                      , CWarning)]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range

@@ -42,12 +42,7 @@ let test5 (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preor
   assume (frameOf x == frameOf x');
   assume (frameOf x <> frameOf y);
   assume (frameOf x <> frameOf z);
-  //assert (Set.equal (normalize_term (refs_in_region x.id [Ref x])) (normalize_term (Set.singleton (as_addr x))))
   assume (mods [Ref x; Ref y; Ref z] h0 h1);
-  //AR: TODO: this used to be an assert, but this no longer goers through
-  //since now we have set of nats, which plays badly with normalize_term
-  //on one side it remains nat, on the other side the normalizer normalizes it to a refinement type
-  //see for example the assertion above that doesn't succeed
   assume (modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1);
   assert (modifies (Set.union (Set.singleton (frameOf x))
                               (Set.union (Set.singleton (frameOf y))
@@ -222,7 +217,7 @@ let test_st_function_with_inline_2 () =
   pop_frame();
   ()
 
-val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> Stack a pre post)
+val with_frame: #a:Type -> #pre:st_pre -> #post:(s0:mem -> Tot (st_post' a (pre s0))) -> $f:(unit -> Stack a pre post)
 	     -> Stack a (fun s0 -> forall (s1:mem). fresh_frame s0 s1 ==> pre s1)
 		     (fun s0 x s1 ->
 			exists (s0' s1':mem). fresh_frame s0 s0'
@@ -297,3 +292,37 @@ let mm_tests _ =
   //this fails because recall of mm refs is not allowed
   //let _ = recall r3 in
   ()
+
+(*
+ * set up: x and y are in different regions.
+ *         x and z are in same region but have different addresses
+ *         w is in a region different from x and y
+ *         mods_test1 mods [x; y]
+ *         we prove that z and w remain same, and usual modifies clauses
+ *         we use `mods` to specify the mods_test1
+ *)
+assume val mods_test1 (a:Type0) (rel:preorder a) (x y z w:mref a rel)
+  :ST unit (fun h0 -> True)
+	   (fun h0 _ h1 -> mods [ Ref x; Ref y ] h0 h1)
+
+let mods_test2 (a:Type0) (rel:preorder a) (x y z w:mref a rel)
+  :ST unit (fun h0 -> frameOf x =!= frameOf y /\ 
+                   frameOf z == frameOf x  /\
+                   as_addr z =!= as_addr x /\
+    	           frameOf w =!= frameOf x /\
+	           frameOf w =!= frameOf y)
+	   (fun h0 _ h1 -> sel h0 z == sel h1 z /\ sel h0 w == sel h1 w /\
+	                modifies (Set.union (Set.singleton (frameOf x))
+			                    (Set.singleton (frameOf y))) h0 h1 /\
+			modifies_ref (frameOf x) (Set.singleton (as_addr x)) h0 h1 /\
+			modifies_ref (frameOf y) (Set.singleton (as_addr y)) h0 h1)
+  = recall x; recall y; recall z; recall w;
+    mods_test1 a rel x y z w
+
+let test_logical_operators_on_witnessed (p q:mem_predicate)
+  = lemma_witnessed_and p q;
+    assert (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q));
+    lemma_witnessed_or p q;
+    assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
+    lemma_witnessed_nested p;
+    assert (witnessed (fun _ -> witnessed p) <==> witnessed p)

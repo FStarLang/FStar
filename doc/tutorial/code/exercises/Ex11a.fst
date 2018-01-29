@@ -60,7 +60,7 @@ type robot_inv (b:bot) (h:mem) =
 
 // BEGIN: Build
 val new_point: r0:rid{is_eternal_region r0} -> x:int -> y:int -> z:int -> ST point
-  (requires (fun h0 -> witnessed (region_contains_pred r0)))
+  (requires (fun h0 -> True))
   (ensures (fun h0 p h1 ->
               modifies empty h0 h1
             /\ extends (Point?.r p) r0
@@ -76,7 +76,7 @@ let new_point r0 x y z =
   Point r x y z
 
 val new_arm: r0:rid{is_eternal_region r0} -> ST arm
-  (requires (fun h0 -> witnessed (region_contains_pred r0)))
+  (requires (fun h0 -> True))
   (ensures (fun h0 x h1 ->
               modifies empty h0 h1
             /\ extends (Arm?.r x) r0
@@ -88,7 +88,7 @@ let new_arm r0 =
   Arm r p a
 
 val new_robot: r0:rid{is_eternal_region r0} -> ST bot
-  (requires (fun h0 -> witnessed (region_contains_pred r0)))
+  (requires (fun h0 -> True))
   (ensures (fun h0 x h1 ->
 	      modifies empty h0 h1
             /\ extends (Bot?.r x) r0

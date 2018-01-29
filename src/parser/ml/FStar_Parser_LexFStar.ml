@@ -122,27 +122,84 @@ let () =
   Hashtbl.add constructors "ℤ"         (IDENT "int");
   Hashtbl.add constructors "𝔹"         (IDENT "bool");
   let l =
-    ["~", TILDE "~"; "-", MINUS; "/\\", CONJUNCTION; "\\/", DISJUNCTION;
-     "<:", SUBTYPE; "<@", SUBKIND; "(|", LENS_PAREN_LEFT; "|)", LENS_PAREN_RIGHT;
-     "#", HASH; "u#", UNIV_HASH; "&", AMP; "()", LPAREN_RPAREN; "(", LPAREN;
-     ")", RPAREN; ",", COMMA; "~>", SQUIGGLY_RARROW; "->", RARROW;
-     "<--", LONG_LEFT_ARROW; "<-", LARROW; "<==>", IFF; "==>", IMPLIES;
-     ".", DOT; "?.", QMARK_DOT; "?", QMARK; ".[", DOT_LBRACK; ".(", DOT_LPAREN;
-     "{:pattern", LBRACE_COLON_PATTERN; ":", COLON; "::", COLON_COLON;
-     ":=", COLON_EQUALS; ";;", SEMICOLON_SEMICOLON; ";", SEMICOLON; "=", EQUALS;
-     "%[", PERCENT_LBRACK; "!{", BANG_LBRACE; "[@", LBRACK_AT; "[", LBRACK;
-     "[|", LBRACK_BAR; "|>", PIPE_RIGHT; "]", RBRACK; "|]", BAR_RBRACK;
-     "{", LBRACE; "|", BAR; "}", RBRACE; "$", DOLLAR;
+  ["~", TILDE "~";
+   "-", MINUS;
+   "/\\", CONJUNCTION;
+   "\\/", DISJUNCTION;
+   "<:", SUBTYPE;
+   "<@", SUBKIND;
+   "(|", LENS_PAREN_LEFT;
+   "|)", LENS_PAREN_RIGHT;
+   "#", HASH;
+   "u#", UNIV_HASH;
+   "&", AMP;
+   "()", LPAREN_RPAREN;
+   "(", LPAREN;
+   ")", RPAREN;
+   ",", COMMA;
+   "~>", SQUIGGLY_RARROW;
+   "->", RARROW;
+   "<--", LONG_LEFT_ARROW;
+   "<-", LARROW;
+   "<==>", IFF;
+   "==>", IMPLIES;
+   ".", DOT;
+   "?.", QMARK_DOT;
+   "?", QMARK;
+   ".[", DOT_LBRACK;
+   ".(|", DOT_LENS_PAREN_LEFT;
+   ".(", DOT_LPAREN;
+   ".[|", DOT_LBRACK_BAR;   
+   "{:pattern", LBRACE_COLON_PATTERN;
+   ":", COLON;
+   "::", COLON_COLON;
+   ":=", COLON_EQUALS;
+   ";;", SEMICOLON_SEMICOLON;
+   ";", SEMICOLON;
+   "=", EQUALS;
+   "%[", PERCENT_LBRACK;
+   "!{", BANG_LBRACE;
+   "[@", LBRACK_AT;
+   "[", LBRACK;
+   "[|", LBRACK_BAR;
+   "|>", PIPE_RIGHT;
+   "]", RBRACK;
+   "|]", BAR_RBRACK;
+   "{", LBRACE;
+   "|", BAR;
+   "}", RBRACE;
+   "$", DOLLAR;
      (* New Unicode equivalents *)
-     "∀", FORALL; "∃", EXISTS; "⊤", NAME "True"; "⊥", NAME "False";
-     "⟹", IMPLIES; "⟺", IFF; "→", RARROW; "←", LARROW;
-     "⟵", LONG_LEFT_ARROW; "↝", SQUIGGLY_RARROW; "≔", COLON_EQUALS;
-     "∧", CONJUNCTION; "∨", DISJUNCTION; "¬", TILDE "~";
-     "⸬", COLON_COLON; "▹", PIPE_RIGHT; "÷", OPINFIX3 "÷";
-     "‖", OPINFIX0a "||"; "×", IDENT "op_Multiply"; "∗", OPINFIX3 "*";
-     "⇒", OPINFIX0c "=>"; "≥", OPINFIX0c ">="; "≤", OPINFIX0c "<=";
-     "≠", OPINFIX0c "<>"; "≪", OPINFIX0c "<<"; "◃", OPINFIX0c "<|";
-     "±", OPPREFIX "±"; "∁", OPPREFIX "∁"; "∂", OPPREFIX "∂"; "√", OPPREFIX "√";
+   "∀", FORALL;
+   "∃", EXISTS;
+   "⊤", NAME "True";
+   "⊥", NAME "False";
+   "⟹", IMPLIES;
+   "⟺", IFF;
+   "→", RARROW;
+   "←", LARROW;
+   "⟵", LONG_LEFT_ARROW;
+   "↝", SQUIGGLY_RARROW;
+   "≔", COLON_EQUALS;
+   "∧", CONJUNCTION;
+   "∨", DISJUNCTION;
+   "¬", TILDE "~";
+   "⸬", COLON_COLON;
+   "▹", PIPE_RIGHT;
+   "÷", OPINFIX3 "÷";
+   "‖", OPINFIX0a "||";
+   "×", IDENT "op_Multiply";
+   "∗", OPINFIX3 "*";
+   "⇒", OPINFIX0c "=>";
+   "≥", OPINFIX0c ">=";
+   "≤", OPINFIX0c "<=";
+   "≠", OPINFIX0c "<>";
+   "≪", OPINFIX0c "<<";
+   "◃", OPINFIX0c "<|";
+   "±", OPPREFIX "±";
+   "∁", OPPREFIX "∁";
+   "∂", OPPREFIX "∂";
+   "√", OPPREFIX "√";
     ] in
    List.iter (fun (k,v) -> Hashtbl.add operators k v) l
 
@@ -217,12 +274,12 @@ let maybe_trim_lines start_column comment =
 let comment_buffer = Buffer.create 128
 
 let start_comment lexbuf =
-  Buffer.add_bytes comment_buffer "(*" ;
+  Buffer.add_string comment_buffer "(*" ;
   (false, comment_buffer, fst (L.range lexbuf))
 
 let terminate_comment buffer startpos lexbuf =
   let endpos = snd (L.range lexbuf) in
-  Buffer.add_bytes buffer "*)" ;
+  Buffer.add_string buffer "*)" ;
   let comment = Buffer.contents buffer in
   let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
@@ -442,6 +499,14 @@ let rec token = lexer
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
  | op_infix3  symbolchar* -> OPINFIX3 (L.lexeme lexbuf)
  | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
+ | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".(||)<-"                -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".[||]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
+ | ".[]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
+ | ".()"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
+ | ".(||)"                 -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
+ | ".[||]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
 
  (* Unicode Operators *)
  | uoperator -> let id = L.lexeme lexbuf in
@@ -462,7 +527,7 @@ and string buffer = lexer
    Buffer.add_string buffer (BatUTF8.init 1 (fun _ -> unescape (L.ulexeme lexbuf) |> BatUChar.chr));
    string buffer lexbuf
  | '"' -> STRING (Buffer.contents buffer)
- | '"''B' -> BYTEARRAY (ba_of_string (Buffer.to_bytes buffer))
+ | '"''B' -> BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    string buffer lexbuf
