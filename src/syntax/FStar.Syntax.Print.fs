@@ -284,6 +284,8 @@ and term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
+      | Tm_meta(t, Meta_quoted(s, _)) -> U.format1 "(Meta_quoted \"%s\")" (term_to_string s)
+
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
@@ -325,7 +327,8 @@ and term_to_string x =
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
         else term_to_string t
-      | _ -> tag_of_term x
+
+      | Tm_unknown -> "_"
   end
 
 and pat_to_string x =
@@ -510,8 +513,8 @@ and metadata_to_string = function
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
 
-    | Meta_alien (_, s, t) ->
-        U.format2 "{Meta_alien (%s, %s)}" s (term_to_string t)
+    | Meta_quoted (qt, qi) ->
+        "`(" ^ term_to_string qt ^ ")"
 
 let binder_to_json b =
 

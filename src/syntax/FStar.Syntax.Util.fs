@@ -96,6 +96,9 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
+        // Do not remove these
+        | Tm_meta(_, Meta_quoted _) -> e
+
         | Tm_meta(e, _)
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
@@ -107,6 +110,7 @@ let rec unmeta_safe e =
             begin match m with
             | Meta_monadic _
             | Meta_monadic_lift _
+            | Meta_quoted _
             | Meta_alien _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
@@ -483,6 +487,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Unknown, _
       | _, Unknown -> Unknown
     in
+    let notq t =
+        match t.n with
+        | Tm_meta (_, Meta_quoted _) -> false
+        | _ -> true
+    in
     let equal_data f1 args1 f2 args2 =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
@@ -540,10 +549,13 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
 
-    | Tm_meta(t1, _), _ ->
-      eq_tm t1 t2
+    | Tm_meta(t1', _), _ when notq t1 ->
+      eq_tm t1' t2
 
-    | _, Tm_meta(t2, _) ->
+    | _, Tm_meta(t2', _) when notq t2 ->
+      eq_tm t1 t2'
+
+    | Tm_meta (_, Meta_quoted (t1, _)), Tm_meta (_, Meta_quoted (t2, _)) ->
       eq_tm t1 t2
 
     | _ -> Unknown

@@ -678,6 +678,8 @@ tmEqWith(X):
       { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmEqWith(X)
       { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
+  | BACKTICK e=tmEqWith(X)
+      { mk_term (Quote e) (rhs2 parseState 1 3) Un }
   | e=tmNoEqWith(X)
       { e }
 

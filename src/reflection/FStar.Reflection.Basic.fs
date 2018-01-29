@@ -6,6 +6,7 @@ open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Order
+open FStar.Errors
 
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
@@ -42,21 +43,6 @@ module Z = FStar.BigInt
   * We should really allow for some metaprogramming in F*. Oh wait....
   *)
 
-let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
-let fstar_refl_embed = lid_as_tm PC.fstar_refl_embed_lid
-
-let protect_embedded_term (t:typ) (x:term) =
-    S.mk_Tm_app fstar_refl_embed [S.iarg t; S.as_arg x] None x.pos
-
-let un_protect_embedded_term (t : term) : option<term> =
-    let head, args = U.head_and_args (U.unmeta t) in
-    match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [_; (x, _)] when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
-        Some x
-    | _ ->
-        Err.log_issue t.pos (Err.Warning_UnprotectedTerm, (BU.format1 "Not an protected term: %s" (Print.term_to_string t)));
-        None
-
 let embed_binder (rng:Range.range) (b:binder) : term =
     U.mk_alien fstar_refl_binder b "reflection.embed_binder" (Some rng)
 
@@ -70,11 +56,15 @@ let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (rng:Range.range) (t:term) : term =
-    let t = protect_embedded_term S.tun t in
-    { t with pos = rng }
+    S.mk (Tm_meta (tun, Meta_quoted (t, ()))) None rng
 
-let unembed_term (t:term) : option<term> =
-    un_protect_embedded_term t
+let rec unembed_term (t:term) : option<term> =
+    let t = U.unmeta_safe t in
+    match t.n with
+    | Tm_meta ({n = _}, Meta_quoted (qt, qi)) -> Some qt
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term: %s" (Print.term_to_string t)));
+        None
 
 let embed_fvar (rng:Range.range) (fv:fv) : term =
     U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" (Some rng)

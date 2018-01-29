@@ -73,6 +73,7 @@ and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
+type quoteinfo     = unit
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
@@ -163,6 +164,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
+  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
   | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
   | Data_app

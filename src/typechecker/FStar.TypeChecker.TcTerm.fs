@@ -304,6 +304,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
+  // quoted terms are of type `term`
+  | Tm_meta ({n = _}, Meta_quoted (_, _)) ->
+    value_check_expected_typ env top (Inl S.t_term) Rel.trivial_guard
+
   // aliens and lazy terms have whichever type they're annotated with
   | Tm_meta ({n = Tm_unknown}, Meta_alien (_, _, ty)) ->
     value_check_expected_typ env top (Inl ty) Rel.trivial_guard

@@ -760,6 +760,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "alien term (%s)" desc)) in
         t, [decl]
 
+      | Tm_meta({n = _}, Meta_quoted (qt, qi)) ->
+        let tsym = varops.fresh "t", Term_sort in
+        let t = mkFreeV tsym in
+        let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "quoted term -- %s" (Print.term_to_string qt))) in
+        t, [decl]
+
       | Tm_meta(t, _) ->
         encode_term t env
 

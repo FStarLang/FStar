@@ -2246,7 +2246,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if debug env (Options.Other "RelCheck")
         then BU.print1 "Attempting %s\n" (string_of_int problem.pid) in
     let r = Env.get_range env in
-
+    let not_quote t =
+        match (SS.compress t).n with
+        | Tm_meta (_, Meta_quoted _) -> false
+        | _ -> true
+    in
     match t1.n, t2.n with
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
@@ -2257,13 +2261,22 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         // this works (I couldn't figure it out).
         failwith "Impossible: terms were not compressed"
 
-      | Tm_ascribed _, _
-      | Tm_meta _, _ ->
+      | Tm_ascribed _, _ ->
+        solve_t' env ({problem with lhs=U.unascribe t1}) wl
+
+      | Tm_meta _, _ when not_quote t1 ->
         solve_t' env ({problem with lhs=U.unmeta t1}) wl
 
-      | _, Tm_ascribed _
-      | _, Tm_meta _ ->
+      | _, Tm_ascribed _ ->
+        solve_t' env ({problem with rhs=U.unascribe t2}) wl
+
+      | _, Tm_meta _ when not_quote t2 ->
         solve_t' env ({problem with rhs=U.unmeta t2}) wl
+
+      | Tm_meta (_, Meta_quoted (t1, _)), Tm_meta (_, Meta_quoted (t2, _)) ->
+        (* solve_prob orig None [] wl *)
+        solve env (solve_prob orig None [] wl)
+        (* solve_t' env ({problem with lhs = t1; rhs = t2}) wl *)
 
       | Tm_bvar _, _
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"

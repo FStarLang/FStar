@@ -41,6 +41,8 @@ module PC = FStar.Parser.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
+module R  = FStar.Reflection.Basic
+module RD = FStar.Reflection.Data
 
 exception Un_extractable
 
@@ -235,6 +237,9 @@ let rec is_type_aux env t =
           is_type_aux env e
         | _ -> false
       end
+
+    | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, qi)) ->
+      false
 
     | Tm_meta(t, _) ->
       is_type_aux env t
@@ -846,6 +851,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_refine _
         | Tm_arrow _ ->
           ml_unit, E_PURE, ml_unit_ty
+
+        | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, qi)) ->
+          let tv = R.embed_term_view t.pos (R.inspect qt) in
+          let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
+          term_as_mlexpr' g t
 
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
             raise_err (Error_NoLetMutable, "let-mutable no longer supported")

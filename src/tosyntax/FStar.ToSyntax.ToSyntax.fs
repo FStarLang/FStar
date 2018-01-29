@@ -250,6 +250,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Match _
   | TryWith _
   | Bind _
+  | Quote _
   | Seq _ -> []
 
 let head_and_args t =
@@ -1246,6 +1247,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | NamedTyp(_, e) ->
         desugar_term env e
     | Paren e -> failwith "impossible"
+
+    | Quote e ->
+      mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, ()))
 
     | _ when (top.level=Formula) -> desugar_formula env top
 

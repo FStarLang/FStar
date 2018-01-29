@@ -459,7 +459,7 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
         bind (map t2) (fun _ -> ret ()))
     )
 
-let intro : tac<binder> =
+let intro : tac<binder> = wrap_err "intro" <|
     bind cur_goal (fun goal ->
     match U.arrow_one goal.goal_ty with
     | Some (b, c) ->
@@ -473,10 +473,10 @@ let intro : tac<binder> =
                                                  goal_ty = bnorm env' typ';
                                                  witness = bnorm env' u})) (fun _ ->
                   ret b)
-             else fail "intro: unification failed"
+             else fail "unification failed"
              )
     | None ->
-        fail1 "intro: goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
+        fail1 "goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
     )
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
@@ -521,12 +521,13 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
     mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
+    mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
     bind (__tc e t) (fun (t, _, guard) ->
     Rel.force_trivial_guard e guard;
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    )))
+    ))))
 
 let refine_intro : tac<unit> = wrap_err "refine_intro" <|
     bind cur_goal (fun g ->
@@ -607,10 +608,12 @@ exception NoUnif
 // TODO: this should probably be made into a user tactic
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
+    mlog (fun () -> BU.print1 ">>> Calling __exact(%s)\n" (Print.term_to_string tm)) (fun () ->
     bind (trytac (t_exact false true tm)) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
+        mlog (fun () -> BU.print1 ">>> typ = %s\n" (Print.term_to_string typ)) (fun () ->
         match U.arrow_one typ with
         | None -> raise NoUnif
         | Some ((bv, aq), c) ->
@@ -619,7 +622,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
             if not (U.is_total_comp c) then fail "apply: not total codomain" else
             bind (new_uvar "apply" goal.context bv.sort) (fun u ->
             (* BU.print1 "__apply: witness is %s\n" (Print.term_to_string u); *)
-            let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
+            let tm' = mk_Tm_app tm [(u, aq)] None tm.pos in
             let typ' = SS.subst [S.NT (bv, u)] <| comp_to_typ c in
             bind (__apply uopt tm' typ') (fun _ ->
             let u = bnorm goal.context u in
@@ -640,7 +643,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                 (* BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u); *)
                 ret ()
                 end
-            )))))
+            )))))))
 
 // The exception is thrown only when the tactic runs, not when it's defined,
 // so we need to do this to catch it

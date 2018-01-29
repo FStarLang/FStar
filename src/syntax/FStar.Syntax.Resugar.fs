@@ -734,6 +734,7 @@ let rec resugar_term (t : S.term) : A.term =
         mk (A.Ascribed(resugar_term e,
                        mk (A.Construct(name,[resugar_term t, A.Nothing])),
                        None))
+      | Meta_quoted (qt, _) -> mk (A.Quote (resugar_term qt))
       end
 
     | Tm_unknown -> mk A.Wild

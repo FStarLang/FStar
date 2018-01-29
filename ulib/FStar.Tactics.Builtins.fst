@@ -8,6 +8,9 @@ open FStar.Tactics.Effect
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
+assume private val __embed  : a:Type -> a -> __tac term
+unfold let quote #a (x:a) : tactic term = fun () -> TAC?.reflect (__embed a x)
+
 assume private val __fail : a:Type -> string -> __tac a
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
@@ -36,19 +39,6 @@ assume private val __refine_intro : __tac unit
 (** [refine_intro] will turn a goal of shape [w : x:t{phi}]
 into [w : t] and [phi{w/x}] *)
 let refine_intro = fun () -> TAC?.reflect __refine_intro
-
-(*
- * This is the way we inspect goals and any other term. We can quote them
- * to turn them into a representation of them. Having a total function
- * that does this is completely unsound (1 + 1 == 2, but not syntactically,
- * contradiction).
- *
- * So, we encapsulate the syntax inspection effect as a tactic (in the TAC effect)
- * so it cannot taint user code (pure or impure!). The cleanest way would be to directly
- * assume __embed as a `a -> tactic term` computation (TODO?)
- *)
-assume private val __embed  : #a:Type -> a -> term
-unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
 assume private val __tc : term -> __tac term
 (** [tc] returns the type of a term in the current environment,

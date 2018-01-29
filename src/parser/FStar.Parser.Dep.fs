@@ -685,6 +685,7 @@ let collect_one
     | Ensures (t, _)
     | Labeled (t, _, _) ->
         collect_term t
+    | Quote _ -> ()
     | Attributes cattributes  ->
         List.iter collect_term cattributes
 

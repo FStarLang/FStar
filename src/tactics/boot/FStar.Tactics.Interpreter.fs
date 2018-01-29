@@ -338,6 +338,9 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term S.t_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
+
+      mktac2 "__embed"         (fun _ x -> ret x) get get embed_term S.t_term;
+
       decr_depth_step;
       incr_depth_step;
       tracepoint_step;
