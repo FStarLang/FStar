@@ -70,6 +70,11 @@ let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term (s:string)  = tconst (fstar_refl_data_lid s)
 let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
+let fstar_refl_inspect_lid = fstar_refl_basic_lid "inspect"
+let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
+let fstar_refl_pack_lid    = fstar_refl_basic_lid "pack"
+let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
+
 (* types *)
 let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"

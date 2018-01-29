@@ -38,6 +38,8 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Const = FStar.Parser.Const
+module R  = FStar.Reflection.Basic
+module RD = FStar.Reflection.Data
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -761,10 +763,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         t, [decl]
 
       | Tm_meta({n = _}, Meta_quoted (qt, qi)) ->
-        let tsym = varops.fresh "t", Term_sort in
-        let t = mkFreeV tsym in
-        let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "quoted term -- %s" (Print.term_to_string qt))) in
-        t, [decl]
+        // Inspect the term and encode its view, recursively.
+        // Quoted terms are, in a way, simply an optimization.
+        // They should be equivalent to a fully spelled out view.
+        //
+        // Actual encoding: `q ~> pack qv where qv is the view of q
+        let tv = R.embed_term_view t.pos (R.inspect qt) in
+        let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
+        encode_term t env
 
       | Tm_meta(t, _) ->
         encode_term t env
