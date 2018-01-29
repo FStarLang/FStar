@@ -198,7 +198,6 @@ install: all
 	# Then the binary library
 	$(call install_fstarlib,bin/fstarlib,fstarlib.cma)
 	$(call install_fstarlib,bin/fstarlib,fstarlib.cmxa)
-	$(call install_fstarlib,ulib/ml,fstarlib.ml)
 	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
         # Then the rest of the static files.
 	$(call install_dir,examples,share/fstar/examples)
