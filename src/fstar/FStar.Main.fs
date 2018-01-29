@@ -112,7 +112,7 @@ let init_native_tactics () =
 let init_warn_error() =
   Errors.init_warn_error_flags;
   let s = Options.warn_error() in
-  if s <> "" then 
+  if s <> "" then
     FStar.Parser.ParseIt.parse_warn_error s
 
 (****************************************************************************)
@@ -162,10 +162,12 @@ let go _ =
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
+          report_errors module_names_and_times; //codegen errors
           (match Options.gen_native_tactics () with
           | Some dir ->
               gen_native_tactics (fmods |> List.map fst, env) dir
           | None -> ());
+          report_errors module_names_and_times; //native tactic errors
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
