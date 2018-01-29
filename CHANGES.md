@@ -283,13 +283,18 @@ Guidelines for the changelog:
 
   https://github.com/mitls/hacl-star/commit/f83c49860afc94f16a01994dff5f77760ccd2169#diff-17012d38a1adb8c50367e0adb69c471fR55
 
-
-## C Extraction
+## Extraction
 
 * [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
   `inline_for_extraction` on a type annotation now unfolds it at extraction
   time. This can help to reveal first-order code for C extraction;
   see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
+
+* Pure terms are extracted while preserving their local `let`-structure.
+This avoids code blow-up problems observed in both HACL and miTLS.
+To recover the old behavior, at the cost of larger code size, 
+use the option `--normalize_pure_terms_for_extraction`.
+Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
 
 ## Command line options
 
