@@ -138,10 +138,10 @@
       in
       aux (pos + 1)
     in
-    let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
+    let rest = String.sub (Bytes.to_string lexbuf.lex_buffer) lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
     if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
     let lookahead =
-      String.sub lexbuf.lex_buffer
+      String.sub (Bytes.to_string lexbuf.lex_buffer)
                  (lexbuf.lex_last_pos - 1)
                  (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1)
     in
@@ -190,12 +190,12 @@
   let comment_buffer = Buffer.create 1024
 
   let start_comment lexbuf =
-    Buffer.add_bytes comment_buffer "(*" ;
+    Buffer.add_bytes comment_buffer (Bytes.of_string "(*") ;
     (false, comment_buffer, fst (L.range lexbuf))
 
   let terminate_comment buffer startpos lexbuf =
     let endpos = snd (L.range lexbuf) in
-    Buffer.add_bytes buffer "*)" ;
+    Buffer.add_bytes buffer (Bytes.of_string "*)") ;
     let comment = Buffer.contents buffer in
     let comment = maybe_trim_lines (startpos.pos_cnum - startpos.pos_bol) comment in
     Buffer.clear buffer ;
@@ -475,7 +475,7 @@ and string buffer = parse
 and comment inner buffer startpos = parse
 
  | "(*"
-    { Buffer.add_bytes buffer "(*" ;
+    { Buffer.add_bytes buffer (Bytes.of_string "(*") ;
       let _close_eof = comment true buffer startpos lexbuf in
       comment inner buffer startpos lexbuf }
 
