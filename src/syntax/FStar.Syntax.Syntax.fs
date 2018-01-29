@@ -156,6 +156,8 @@ and cflags =
   | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
   | DECREASES of term
@@ -219,7 +221,7 @@ and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -229,6 +231,18 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+let mk_lcomp eff_name res_typ cflags comp_thunk =
+    { eff_name = eff_name;
+      res_typ = res_typ;
+      cflags = cflags;
+      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+let lcomp_comp lc =
+    match !(lc.comp_thunk) with
+    | Inl thunk ->
+      let c = thunk () in
+      lc.comp_thunk := Inr c;
+      c
+    | Inr c -> c
 type tscheme = list<univ_name> * typ
 
 type freenames_l = list<bv>
@@ -547,6 +561,22 @@ let has_simple_attribute (l: list<term>) s =
     | _ ->
         false
   ) l
+
+// Compares the SHAPE of the patterns, *ignoring bound variables*
+let rec eq_pat (p1 : pat) (p2 : pat) : bool =
+    match p1.v, p2.v with
+    | Pat_constant c1, Pat_constant c2 -> eq_const c1 c2
+    | Pat_cons (fv1, as1), Pat_cons (fv2, as2) ->
+        if fv_eq fv1 fv2
+        then begin assert(List.length as1 = List.length as2);
+                   List.zip as1 as2 |>
+                   List.for_all (fun ((p1, b1), (p2, b2)) -> b1 = b2 && eq_pat p1 p2)
+             end
+        else false
+    | Pat_var _, Pat_var _ -> true
+    | Pat_wild _, Pat_wild _ -> true
+    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | _, _ -> false
 
 ///////////////////////////////////////////////////////////////////////
 //Some common constants

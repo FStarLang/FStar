@@ -110,7 +110,7 @@ let default_ds_hooks =
     ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
 
 type foundname =
-  | Term_name of typ * bool // indicates if mutable
+  | Term_name of typ * bool * list<attribute> // bool indicates if mutable
   | Eff_name  of sigelt * lident
 
 let set_iface env b = {env with iface=b}
@@ -526,11 +526,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false, se.sigattrs))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false, se.sigattrs))
           | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
-            Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
+            Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false, se.sigattrs))
           | Sig_declare_typ(lid, _, _) ->
             let quals = se.sigquals in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
@@ -544,8 +544,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
-                        Some (Term_name (refl_const, false))
-                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                        Some (Term_name (refl_const, false, se.sigattrs))
+                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false, se.sigattrs))
                  end
             else None
           | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
@@ -553,16 +553,16 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           | _ -> None
         end in
 
-  let k_local_binding r = Some (Term_name (found_local_binding (range_of_lid lid) r))
+  let k_local_binding r = let (t, mut) = found_local_binding (range_of_lid lid) r in Some (Term_name (t, mut, []))
   in
 
-  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false))
+  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false, []))
   in
 
   let found_unmangled = match lid.ns with
   | [] ->
     begin match unmangleOpName lid.ident with
-    | Some f -> Some (Term_name f)
+    | Some (t, mut) -> Some (Term_name (t, mut, []))
     | _ -> None
     end
   | _ -> None
@@ -656,11 +656,18 @@ let try_lookup_definition env (lid:lident) =
 let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
 let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
 
-let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * bool)> =
+let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * bool * list<attribute>)> =
   match try_lookup_name any_val exclude_interface env lid with
-    | Some (Term_name (e, mut)) -> Some (e, mut)
+    | Some (Term_name (e, mut, attrs)) -> Some (e, mut, attrs)
     | _ -> None
-let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
+
+let drop_attributes (x:option<(term * bool * list<attribute>)>) :option<(term * bool)> =
+  match x with
+  | Some (t, mut, _) -> Some (t, mut)
+  | None             -> None
+
+let try_lookup_lid_with_attributes (env:env) (l:lident) :(option<(term * bool * list<attribute>)>) = try_lookup_lid' env.iface false env l
+let try_lookup_lid (env:env) l = try_lookup_lid_with_attributes env l |> drop_attributes
 let resolve_to_fully_qualified_name (env:env) (l:lident) =
     match try_lookup_lid env l with
     | None -> None
@@ -669,10 +676,12 @@ let resolve_to_fully_qualified_name (env:env) (l:lident) =
       | Tm_fvar fv -> Some fv.fv_name.v
       | _ -> None
 
-let try_lookup_lid_no_resolve (env: env) l =
+let try_lookup_lid_with_attributes_no_resolve (env: env) l :option<(term * bool * list<attribute>)> =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
   in
-  try_lookup_lid env' l
+  try_lookup_lid_with_attributes env' l
+
+let try_lookup_lid_no_resolve (env: env) l :option<(term * bool)> = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
 
 let try_lookup_doc (env: env) (l:lid) =
   BU.smap_try_find env.docs l.str

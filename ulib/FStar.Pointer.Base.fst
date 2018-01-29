@@ -2045,7 +2045,7 @@ let is_mm
 (* // TODO: recover with addresses?
 let recall
   (#value: Type)
-  (p: pointer value {HS.is_eternal_region (frameOf p) && not (is_mm p)})
+  (p: pointer value {is_eternal_region (frameOf p) && not (is_mm p)})
 : HST.Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0 == m1 /\ live m1 p))
@@ -4178,10 +4178,10 @@ let modifies_loc_addresses_intro_weak
     loc_disjoint l (loc_regions (Set.singleton r))
   ))
   (ensures (modifies (loc_union (loc_addresses r s) l) h1 h2))
-= Classical.forall_intro_2 HS.lemma_reveal_tip_top
+= Classical.forall_intro_2 HS.lemma_tip_top
 
 let modifies_pointer_elim s h1 h2 #a' p' =
-  Classical.forall_intro_2 HS.lemma_reveal_tip_top;
+  Classical.forall_intro_2 HS.lemma_tip_top;
   loc_disjoint_sym (loc_pointer p') s;
   let r = frameOf p' in
   let a = as_addr p' in
@@ -4196,7 +4196,7 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 #set-options "--z3rlimit 256"
 
 let modifies_buffer_elim #t1 b p h h' =
-  Classical.forall_intro_2 HS.lemma_reveal_tip_top;
+  Classical.forall_intro_2 HS.lemma_tip_top;
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
   begin
@@ -4236,7 +4236,7 @@ let modifies_buffer_elim #t1 b p h h' =
   end
 
 let modifies_reference_elim #t b p h h' =
-  Classical.forall_intro_2 HS.lemma_reveal_tip_top;
+  Classical.forall_intro_2 HS.lemma_tip_top;
   loc_disjoint_sym (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p
 
 let modifies_refl s h = ()
@@ -4318,7 +4318,7 @@ let modifies_only_live_regions_weak
     (forall r . Set.mem r rs ==> (~ (HS.live_region h r)))
   ))
   (ensures (modifies l h h'))
-= Classical.forall_intro_2 HS.lemma_reveal_tip_top
+= Classical.forall_intro_2 HS.lemma_tip_top
 #set-options "--z3rlimit 40"
 
 let modifies_regions_elim rs h h' = ()

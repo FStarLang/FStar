@@ -8,6 +8,7 @@ module SnapshotST
 *)
 
 open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 (* The original type of states and a preorder on it *)
 
@@ -75,7 +76,7 @@ effect MST (a:Type) (pre:mst_pre) (post:(t -> Tot (mst_post a)))
 
 (* The logical witnessed capability for the richer type of states *)
 
-assume type witnessed : p:predicate t -> Type0
+let witnessed (p:predicate t) = witnessed rel_t p
 
 (* Actions of MST. *)
 

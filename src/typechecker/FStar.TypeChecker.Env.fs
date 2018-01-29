@@ -722,6 +722,12 @@ let is_interpreted =
             //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
+let is_irreducible env l =
+    match lookup_qname env l with
+    | Some (Inr (se, _), _) ->
+      BU.for_some (function Irreducible -> true | _ -> false) se.sigquals
+    | _ -> false
+
 let is_type_constructor env lid =
     let mapper x =
         match fst x with

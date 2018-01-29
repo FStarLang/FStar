@@ -8,23 +8,25 @@
       1,
       [
         "@query",
-        "FStar.Integers_pretyping_86a3501364cba672e9d2365a0f8fa657",
+        "FStar.Integers_pretyping_524bfc1e1b9b646503733842578812c4",
+        "FStar.Integers_pretyping_d70a4712ef5ffa432abf45910e822a6a",
         "assumption_Prims.HasEq_int",
         "constructor_distinct_FStar.Integers.Signed",
+        "constructor_distinct_FStar.Integers.Winfinite",
         "data_typing_intro_FStar.Integers.Unsigned@tok",
+        "data_typing_intro_FStar.Integers.W16@tok",
         "equality_tok_FStar.Integers.Signed@tok",
-        "equation_FStar.Integers.int_t", "equation_FStar.Integers.ok",
-        "equation_FStar.Integers.v", "int_typing",
+        "equality_tok_FStar.Integers.Winfinite@tok",
+        "equation_FStar.Integers.int_t", "int_typing",
         "primitive_Prims.op_Addition",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "true_interp"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "09c6647ad637a46a5bbf955d78bfa58c"
+      "ef20022fa722c16f003f53f5f4da6e8d"
     ],
     [
-      "Pruning.uu___140",
+      "Pruning.uu___144",
       1,
       4,
       2,
@@ -39,10 +41,10 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "20a6f819e9d0604e4f0e8f3fd6cf8ef1"
+      "de72d2845e9ffc38d59153ebc55e075f"
     ],
     [
-      "Pruning.uu___141",
+      "Pruning.uu___145",
       1,
       4,
       2,
@@ -57,7 +59,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "f7cebfc5869378bf8afcdbdd900143f7"
+      "d9e4b6cf6113016376fa1c26bd29e8a5"
     ]
   ]
 ]

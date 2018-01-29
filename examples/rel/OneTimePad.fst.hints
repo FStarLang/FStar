@@ -8,16 +8,7 @@
       4,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "7b8248576864f6e3f75cc78770713a57"
-    ],
-    [
-      "OneTimePad.xor",
-      1,
-      0,
-      4,
-      [ "@query" ],
-      0,
-      "f9c4a9acc2efe527332311e1fad34810"
+      "28762eca2c461bc92d6a5bcf3c0702a8"
     ],
     [
       "OneTimePad.xor_properties",
@@ -44,43 +35,7 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "3d2ebdf2965add1906bbb2d25402a01e"
-    ],
-    [
-      "OneTimePad.bind",
-      1,
-      0,
-      4,
-      [ "@query" ],
-      0,
-      "e97eb65768989c83149fdba3d1ddab39"
-    ],
-    [
-      "OneTimePad.rand",
-      1,
-      0,
-      4,
-      [ "@query" ],
-      0,
-      "09674c56dbf8e63deb0084612c7acba4"
-    ],
-    [
-      "OneTimePad._dm4f_RANDOM_lift_from_pure",
-      1,
-      0,
-      4,
-      [ "@query" ],
-      0,
-      "0dc75110ebc22e5ba8f73d90fe70351f"
-    ],
-    [
-      "OneTimePad._dm4f_RANDOM_return_wp",
-      1,
-      0,
-      4,
-      [ "@query" ],
-      0,
-      "7ffe2194afad24f4866df1c1cf3a7975"
+      "3f5d86d1eb76adc9e1b1aea34b8dc7ab"
     ]
   ]
 ]

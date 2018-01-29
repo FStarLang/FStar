@@ -218,6 +218,7 @@ let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
+let with_type_lid  = pconst "with_type"
 
 (* Constants for marking terms with normalization hints *)
 let normalize      = pconst "normalize"
@@ -225,14 +226,17 @@ let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl      = pconst "Simpl"
-let steps_weak       = pconst "Weak"
-let steps_hnf        = pconst "HNF"
-let steps_primops    = pconst "Primops"
-let steps_zeta       = pconst "Zeta"
-let steps_iota       = pconst "Iota"
-let steps_delta      = pconst "Delta"
-let steps_unfoldonly = pconst "UnfoldOnly"
+let steps_simpl      = pconst "simplify"
+let steps_weak       = pconst "weak"
+let steps_hnf        = pconst "hnf"
+let steps_primops    = pconst "primops"
+let steps_zeta       = pconst "zeta"
+let steps_iota       = pconst "iota"
+let steps_delta      = pconst "delta"
+let steps_unfoldonly = pconst "delta_only"
+
+(* attributes *)
+let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
 
 let gen_reset =
     let x = U.mk_ref 0 in

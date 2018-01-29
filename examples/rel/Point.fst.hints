@@ -2,24 +2,6 @@
   "™¿\u0018≠Ï=&¿\u007f¬Å:ë\u0013;Ï",
   [
     [
-      "Point.__proj__C__item__inv",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a03554e62f964db3944c755e5ee68a1e"
-    ],
-    [
-      "Point.__proj__C__item__fp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2ea0c8a3497536cfc1d408bcc8858494"
-    ],
-    [
       "Point.__proj__C__item__p",
       1,
       2,
@@ -29,7 +11,7 @@
         "projection_inverse_Point.C_inv"
       ],
       0,
-      "b276e699b0f8ccbb325fee214383f93c"
+      "6264ced3aef9b5400a03cb51011def71"
     ],
     [
       "Point.move",
@@ -43,7 +25,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-      "824456668b857d8ddcbedd6d884cab2f"
+      "bc2426dc9ab0bc14b2e2c44df490876f"
     ],
     [
       "Point.get",
@@ -57,7 +39,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-      "dfffe42e1ed4597de8d66759e3c31b38"
+      "e5730e0d36253554f1888f60e61a4df1"
     ],
     [
       "Point.inv_point",
@@ -82,7 +64,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c0805772d205e7213c3c30b9807b755e"
+      "f50303b88aefd45aede68aab43dcbbdf"
     ],
     [
       "Point.get_point",
@@ -113,7 +95,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "469ee35cf81686b6458cee971bde3dc4"
+      "000b176510dee10da19191e80c5e3287"
     ],
     [
       "Point.move_point",
@@ -151,7 +133,7 @@
         "typing_FStar.DM4F.Heap.ref", "unit_typing"
       ],
       0,
-      "017bd18dc837216f7740092d68531387"
+      "b280249b047bd323d6ec478d2c8cbb8a"
     ],
     [
       "Point.init_point",
@@ -192,7 +174,7 @@
         "typing_FStar.DM4F.Heap.addr_of"
       ],
       0,
-      "9885efd1073cc08e547f0e583e795170"
+      "9158caeae431549029fe963ec13189d5"
     ],
     [
       "Point.inv_colored_point",
@@ -220,7 +202,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "4fea4d73d6f844e632e090b3f2b34d7c"
+      "8c349cee205b51b1474054eba2cfe009"
     ],
     [
       "Point.move_colored_point",
@@ -250,7 +232,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "e16dd9fcd875a8b52a869bfb637805df"
+      "0b3c6bec475e37d659a6ec8d7485ed60"
     ],
     [
       "Point.get_colored_point",
@@ -281,7 +263,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "c4363548bab196151e37cd6661765c28"
+      "1676fccf6c3e256ba4f269b3e00af947"
     ],
     [
       "Point.init_colored_point",
@@ -322,7 +304,7 @@
         "typing_FStar.DM4F.Heap.addr_of"
       ],
       0,
-      "e6ce64d4689f488217b2f8aa31c06ece"
+      "dc77c84a6b495ca78cc20bef07e6a3d9"
     ],
     [
       "Point.ref_not_in_fp",
@@ -334,7 +316,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9739c12c64ec6486c26dddca8f6a6a7c"
+      "b9e002f63adaf489bd29da31a763e081"
     ],
     [
       "Point.lemma",
@@ -431,7 +413,7 @@
         "typing_Point.__proj__C__item__fp", "unit_inversion", "unit_typing"
       ],
       0,
-      "e2debf244b670bc80d2de594b8be446e"
+      "12e554e4a8463c0c3f7fe09442392c91"
     ]
   ]
 ]

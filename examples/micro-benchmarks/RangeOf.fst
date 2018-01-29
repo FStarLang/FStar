@@ -14,14 +14,14 @@ let r2 : range = range_of y
 (* let _ = assert (r1 == r2) *)
 (* let _ = assert (r1 =!= r2) *)
 
-let z = set_range_of (range_of x) y
+let z = set_range_of y (range_of x)
 
 let r3 = set_range_of r1 r2
 
 (* Setting ranges has no observable behaviour *)
 let _ = assert (z == y)
 let _ = assert (z =!= x)
-let _ = assert (r2 == r3) // Succeeds, even if opaque they are definitionally equal.
+let _ = assert (r1 == r3) // Succeeds, even if opaque they are definitionally equal.
 
 (* These two fail since they are only typeable if fully applied *)
 (* let r = range_of *)

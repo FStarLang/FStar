@@ -23,12 +23,13 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug213.fst bug215.fst bug237b.fst bug238.fst bug244.fst bug251.fst bug252.fst bug254.fst bug256.fst\
   bug257.fst bug260.fst bug264.fst bug274.fst bug275.fst bug279.fst bug281.fst bug283.fst bug290.fst bug292.fst\
   bug293.fst bug311.fst bug316.fst bug363.fst bug367.fst bug375.fst bug397.fst bug398.fst bug399.fst bug405.fst\
-  bug413.fst bug416.fst bug422.fst bug424.fst bug433.fst bug445.fst bug463b.fst bug482.fst bug493.fst\
+  bug413.fst bug416.fst bug417.fst bug422.fst bug424.fst bug433.fst bug445.fst bug463b.fst bug482.fst bug493.fst\
   bug516.fst bug516b.fst bug517.fst bug540.fst bug552.fst bug566.fst bug574.fst bug577.fst bug579.fst bug581.fst\
   bug590.fst bug601.fst bug605.fst bug609.fst bug613.fst bug686.fst bug705.fst bug706.fst bug707.fst bug709.fst\
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug836.fst bug844.fst bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
-  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst
+  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1362.fst bug1291.fst \
+  bug1287.fst bug1347.fst bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
@@ -44,7 +45,7 @@ SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
-SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug607.fst bug812.fst bug853.fst bug1042.fst
+SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug607.fst bug812.fst bug853.fst bug1042.fst bug1360.fst
 
 # These examples cannot be verified with the current version of F* because of problems unrelated to those
 # described in their corresponding GitHub issue.
@@ -60,14 +61,14 @@ SHOULD_VERIFY_NOT_WORKING=bug015.fst bug021.fst bug023.fst  bug060.fst bug062.fs
 # These will be checked as part of the F* regressions.
 SHOULD_NOT_VERIFY_CLOSED=bug035.fst bug043.fst bug044.fst bug063.fst bug120.fst bug154.fst bug154b.fst bug154c.fst\
   bug156.fst bug163.fst bug176.fst bug177.fst bug183.fst bug250.fst bug253.fst bug253b.fst bug262.fst bug284.fst\
-  bug319.fst bug320.fst bug362.fst bug379.fst bug406.fst bug417.fst bug446.fst bug612.fst bug623.fst bug655.fst\
+  bug319.fst bug320.fst bug362.fst bug379.fst bug406.fst bug446.fst bug612.fst bug623.fst bug655.fst\
   bug769.fst bug769b.fst bug769d.fst bug1017.fst bug1043.fst bug1043b.fst bug1106.fst bug1106b.fst bug174.fst\
   bug193.fst bug208.fst bug208.fst bug378.fst bug696.fst bug1090.fst bug1187.fst bug380_1.fst bug380_2.fst
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.
 SHOULD_NOT_VERIFY_BROKEN=
-SHOULD_NOT_VERIFY_OPEN=bug151.fst bug1041.fst bug1056.fst
+SHOULD_NOT_VERIFY_OPEN=bug151.fst bug1041.fst bug1056.fst bug1368.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_NOT_VERIFY_CLOSED.

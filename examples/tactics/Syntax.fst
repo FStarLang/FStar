@@ -98,9 +98,9 @@ let _ = assert_by_tactic True
                                  return ()
                          )
 
+open FStar.Tactics
+
 let arith_test1 =
-    let bind = FStar.Tactics.bind in
-    let fail = FStar.Tactics.fail in
     assert_by_tactic True
                     (t <-- quote (1 + 2);
                              match run_tm (is_arith_expr t) with
@@ -109,8 +109,6 @@ let arith_test1 =
                              | Inl s -> fail ("oops: " ^ s))
 
 let arith_test2 (x : int) =
-    let bind = FStar.Tactics.bind in
-    let fail = FStar.Tactics.fail in
     assert_by_tactic True
                     (t <-- quote (x + x);
                              match run_tm (is_arith_expr t) with

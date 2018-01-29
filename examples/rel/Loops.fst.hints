@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1a2b4823f33c318dbf70d98f7821083b"
+      "f85671701931da41925b0cb4ab77fabf"
     ],
     [
       "Loops.sum_up_eq",
@@ -75,7 +75,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "454c95e93f46d0e9cee8057e72f905f3"
+      "184b4e38bcf01c6d62fc61f556c35f98"
     ],
     [
       "Loops.sum_up_commute",
@@ -147,7 +147,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9106173ac53c2a2677ede0ae474eeebd"
+      "b839c1c45645df9d40a56c8b0d6ed9f4"
     ],
     [
       "Loops.sum_dn",
@@ -166,7 +166,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "32b7bc97792a7e3a54e5b33f7031dc43"
+      "795afca9cbb3e0b97e592347959fb209"
     ],
     [
       "Loops.sum_dn_eq",
@@ -222,7 +222,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "f83c77ec9246bdc8bb0e52ecb7dad757"
+      "7ff8ca02a451ff978971d5456acb36df"
     ],
     [
       "Loops.sum_dn_commute",
@@ -279,7 +279,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "450f33f103cdbbadebfa729abcd01ccd"
+      "2709b5a040695a3a2a1e6068d8cb8fe8"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -288,7 +288,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9d8ec069aa0c040f732621895d2f03f4"
+      "58bd17eec9792fbd41110c8f25f99f8a"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -301,7 +301,7 @@
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "1890b049ffca129bba5f2d5318106dc1"
+      "2bfbbc0704d253e6b2d38467e81d2660"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -369,7 +369,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "543378a5cb241fbf6a919b1a37c82cf9"
+      "250c7e105e06dbd5da66471659a6b85d"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -412,7 +412,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "0db7daec05f90cb8e2d6d33225f20680"
+      "034ef13950f7a376db4b3a34bb715a36"
     ]
   ]
 ]

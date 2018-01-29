@@ -69,3 +69,4 @@ let op_Less_Equals_Hat = lte
 
 let to_string s = string_of_int (cmod s)
 let int_to_t s = int_to_int8 s
+let __int_to_t = int_to_t

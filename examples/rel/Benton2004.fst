@@ -761,6 +761,8 @@ let d_bre
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c1))
 *)
 
+let mention (#a:Type) (x:a) = True
+
 let d_bre
   (c1 c2 c0: computation)
   (phi phi' : sttype)
@@ -772,5 +774,4 @@ let d_bre
   ))
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c0))
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c0)]
-= let ec = reify_exp b in // TODO: WHY is this necessary?
-  ()
+= assert (mention (reify_exp b)) //Just mentioning `reify_exp b` triggers the necessary reduction; not sure exactly why though

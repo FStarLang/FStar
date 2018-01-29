@@ -652,13 +652,13 @@ and star_type' env t =
           is_tuple_constructor (SS.compress head)
         ) ->
             true
-        | Tm_fvar fv -> 
+        | Tm_fvar fv ->
              let (_, ty), _ = Env.lookup_lid env.env fv.fv_name.v in
              if is_non_dependent_arrow ty (List.length args)
-             then 
+             then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
-                begin match res.n with
+                let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
+                begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
                     Errors.log_issue head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head))) ;
@@ -714,6 +714,10 @@ and star_type' env t =
       mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
       (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (Print.term_to_string t)))*)
+
+ | Tm_ascribed (_, (_, Some _), _) ->
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Ascriptions with tactics are outside of the definition language: %s"
+        (Print.term_to_string t)))
 
   | Tm_refine _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_refine is outside of the definition language: %s"
@@ -1091,8 +1095,7 @@ and infer (env: env) (e: term): nm * term * term =
         // binders and stuff
         match (SS.compress bv.sort).n with
         | Tm_type _ ->
-            let arg = arg, q in
-            arg, [ arg ]
+            (star_type' env arg, q), [ (arg, q) ]
         | _ ->
             let _, s_arg, u_arg = check_n env arg in
             (s_arg, q),

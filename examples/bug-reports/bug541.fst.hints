@@ -2,15 +2,6 @@
   "ŠJ4Òæ\u0013\u0019å¿\u000fp'®\u001a\u0005Ü",
   [
     [
-      "Bug541.__proj__Bla__item__t",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4464a01101e5235161d4ca5af6fe7207"
-    ],
-    [
       "Bug541.__proj__Bla__item__b",
       1,
       2,
@@ -20,7 +11,7 @@
         "projection_inverse_Bug541.Bla_t"
       ],
       0,
-      "9a8476be547e5754c4994c9fe6d2e6b7"
+      "eb18132e8053e1937046a5a40e0a33ab"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "a∑®ØÈ\u001f®Ù\u0010¢\t\u0018ù£Ç`",
+  "X?k$f¢§\u0003ªÇdjs\\{ñ",
   [
     [
       "FStar.Tactics.Effect.__bind",
@@ -16,7 +16,7 @@
         "typing_FStar.Tactics.Types.incr_depth"
       ],
       0,
-      "a9612ad88d3bc40f327824deafe3e70a"
+      "9be2634d6353a5aaff84c3bd1e3e60a2"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -30,30 +30,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "d685ad39c20b67cc19b5c7ae6a21ac87"
-    ],
-    [
-      "FStar.Tactics.Effect.assert_by_tactic",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Tactics.Effect.__by_tactic", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
-      ],
-      0,
-      "ce759cf46f89a615439e8141d1b624be"
-    ],
-    [
-      "FStar.Tactics.Effect.by_tactic_seman",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7d775695826e05a8fdd14b7daa99df7a"
+      "37c7eed7a25cc99074a9a140d2cb09e3"
     ]
   ]
 ]

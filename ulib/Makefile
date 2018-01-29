@@ -30,6 +30,8 @@ fstarlib.mgen: *.fst *.fsti
 	OUTPUT_DIRECTORY=ml/extracted \
 	EXTRACT_MODULES='$(FSTAR_DEFAULT_ARGS)' \
 	$(MAKE) -f Makefile.extract all-ml
+	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
+	# we could follow this style for other files too, e.g., FStar_Option.ml
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
 	touch fstarlib.mgen
 

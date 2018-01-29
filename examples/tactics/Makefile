@@ -18,6 +18,7 @@ all:	Apply.uver		\
 	Normalization.uver	\
 	GRewrite.uver		\
 	Rename.uver		\
+	Imp.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	DependentSynth.uver	\
@@ -38,6 +39,7 @@ all:	Apply.uver		\
 	Setopts.uver		\
 	Simplifier.uver		\
 	Neg.uver		\
+	Sequences.uver		\
 	Caller.uver		\
 	Retype.uver		\
 	Unify.uver		\

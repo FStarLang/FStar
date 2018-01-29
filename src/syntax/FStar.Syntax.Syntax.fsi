@@ -137,6 +137,8 @@ and cflags =
   | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
   | DECREASES of term
@@ -196,11 +198,11 @@ and free_vars = {
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = {
+and lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -400,6 +402,12 @@ val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
 val mk_Comp:        comp_typ -> comp
+val mk_lcomp:
+    eff_name: lident ->
+    res_typ: typ ->
+    cflags: list<cflags> ->
+    comp_thunk: (unit -> comp) -> lcomp
+val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 
@@ -457,6 +465,8 @@ val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
+
+val eq_pat : pat -> pat -> bool
 
 ///////////////////////////////////////////////////////////////////////
 //Some common constants

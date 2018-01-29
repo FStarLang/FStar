@@ -686,7 +686,25 @@ and desugar_machine_integer env repr (signedness, width) range =
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
 and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
-    let tm, mut = fail_or env ((if resolve then Env.try_lookup_lid else Env.try_lookup_lid_no_resolve) env) l in
+    let tm, mut, attrs = fail_or env ((if resolve then Env.try_lookup_lid_with_attributes else Env.try_lookup_lid_with_attributes_no_resolve) env) l in
+    let warn_if_deprecated (attrs:list<attribute>) :unit =
+      List.iter (fun a -> match a.n with
+        | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
+          let msg = (Print.term_to_string tm) ^ " is deprecated" in
+          let msg =
+            if List.length args > 0 then
+              (match (fst (List.hd args)).n with
+               | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
+               | _ -> msg)
+            else msg
+          in
+          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+        | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
+          let msg = (Print.term_to_string tm) ^ " is deprecated" in
+          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+        | _ -> ()) attrs
+    in
+    warn_if_deprecated attrs;
     let tm = setpos tm in
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
@@ -979,10 +997,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       aux [] top
 
     | Bind(x, t1, t2) ->
+      let tac_bind_lid = Ident.lid_of_path ["FStar"; "Tactics"; "Effect"; "bind"] x.idRange in
       let xpat = AST.mk_pattern (AST.PatVar(x, None)) x.idRange in
       let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
-      let bind = AST.mk_term (AST.Var(Ident.lid_of_path ["bind"] x.idRange)) x.idRange AST.Expr in
-      desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
+      let bind_lid = Ident.lid_of_path ["bind"] x.idRange in
+      let bind = AST.mk_term (AST.Var bind_lid) x.idRange AST.Expr in
+      begin match Env.resolve_to_fully_qualified_name env bind_lid with
+      | Some flid when lid_equals flid tac_bind_lid ->
+        let r = AST.mk_term (Const (Const_range t2.range)) t2.range AST.Expr in
+        desugar_term env (AST.mkExplicitApp bind [r; t1; k] top.range)
+      | _ ->
+        desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
+      end
 
     | Seq(t1, t2) ->
       mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
@@ -2208,6 +2234,7 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
   let attrs = mk_comment_attr d :: attrs in
+  let s = List.fold_left (fun s a -> s ^ "; " ^ (Print.term_to_string a)) "" attrs in
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
@@ -2280,11 +2307,18 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                             {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
                     else lbs in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
+          (*
+           * AR: we first deguar the term with no attributes and then add attributes in the end, see desugar_decl above
+           *     this used to be fine, because subsequent typechecker then works on terms that have attributes
+           *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
+           *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms 
+           *)
+          let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = [] } in
+                    sigattrs = attrs } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in

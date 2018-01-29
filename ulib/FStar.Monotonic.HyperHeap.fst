@@ -223,10 +223,6 @@ abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (ensures (j<>root))
 let lemma_include_cons i j = ()
 
-let map_invariant (m:hmap) =
-  forall r. Map.contains m r ==>
-      (forall s. includes s r ==> Map.contains m s)
-
 let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
 

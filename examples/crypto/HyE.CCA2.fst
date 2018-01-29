@@ -2,7 +2,6 @@ module HyE.CCA2  (* intuitively, parameterized by both PlainPKE and RSA *)
 open FStar.HyperStack.All
 open FStar.HyperStack.ST
 open FStar.HyperStack
-open FStar.Monotonic.RRef
 open FStar.Seq
 open FStar.Monotonic.Seq
 
@@ -11,6 +10,7 @@ open HyE.PlainPKE
 module RSA = HyE.RSA
 module PlainPKE = HyE.PlainPKE
 
+type rid = erid
 type cipher = RSA.cipher
 noeq type entry =
   | Entry : c:RSA.cipher
@@ -48,7 +48,7 @@ let encrypt pk (p:PlainPKE.t) : ML RSA.cipher =
 
 
 let decrypt sk (c:RSA.cipher) : ML (option (PlainPKE.t)) =
-  let log = m_read (PKey?.log sk.pk) in
+  let log = !(PKey?.log sk.pk) in
   match HyE.Ideal.ind_cca, seq_find (function Entry c' _ -> c=c') log with
   | true,  Some t  -> Some(Entry?.p t)
   | _,  _       -> None
