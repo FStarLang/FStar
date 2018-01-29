@@ -110,7 +110,8 @@ type cfg = {
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
     primitive_steps:list<primitive_step>;
     strong : bool;                       // under a binder
-    memoize_lazy : bool
+    memoize_lazy : bool;
+    normalize_pure_lets: bool;
 }
 
 type branches = list<(pat * option<term> * term)>
@@ -1235,9 +1236,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps |> List.contains NoDeltaSteps)
-            && ((U.is_pure_effect n
-                 && (not (cfg.steps |> List.contains PureSubtermsWithinComputations)
-                     || Options.normalize_pure_terms_for_extraction()))
+            && ((U.is_pure_effect n && cfg.normalize_pure_lets)
                 || (U.is_ghost_effect n
                     && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
@@ -1948,7 +1947,10 @@ let config s e =
      delta_level=d;
      primitive_steps=built_in_primitive_steps;
      strong=false;
-     memoize_lazy=true}
+     memoize_lazy=true;
+     normalize_pure_lets=
+       (Options.normalize_pure_terms_for_extraction()
+        || not (s |> List.contains PureSubtermsWithinComputations))}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in
