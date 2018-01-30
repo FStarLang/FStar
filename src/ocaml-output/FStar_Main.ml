@@ -263,21 +263,23 @@ let go: 'Auu____384 . 'Auu____384 -> Prims.unit =
                                                   FStar_Pervasives_Native.fst) in
                                            (uu____558, env) in
                                          codegen uu____551);
-                                        (let uu____576 =
+                                        report_errors module_names_and_times;
+                                        (let uu____577 =
                                            FStar_Options.gen_native_tactics
                                              () in
-                                         match uu____576 with
+                                         match uu____577 with
                                          | FStar_Pervasives_Native.Some dir
                                              ->
-                                             let uu____580 =
-                                               let uu____587 =
+                                             let uu____581 =
+                                               let uu____588 =
                                                  FStar_All.pipe_right fmods
                                                    (FStar_List.map
                                                       FStar_Pervasives_Native.fst) in
-                                               (uu____587, env) in
-                                             gen_native_tactics uu____580 dir
+                                               (uu____588, env) in
+                                             gen_native_tactics uu____581 dir
                                          | FStar_Pervasives_Native.None  ->
                                              ());
+                                        report_errors module_names_and_times;
                                         finished_message
                                           module_names_and_times
                                           (Prims.parse_int "0")))))
@@ -285,26 +287,26 @@ let go: 'Auu____384 . 'Auu____384 -> Prims.unit =
                             FStar_Errors.log_issue FStar_Range.dummyRange
                               (FStar_Errors.Error_MissingFileName,
                                 "no file provided\n")))))))
-let main: 'Auu____607 . Prims.unit -> 'Auu____607 =
-  fun uu____611  ->
+let main: 'Auu____609 . Prims.unit -> 'Auu____609 =
+  fun uu____613  ->
     try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
     with
     | e ->
         let trace = FStar_Util.trace_of_exn e in
         (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____630 = FStar_Options.trace_error () in
-          if uu____630
+         (let uu____632 = FStar_Options.trace_error () in
+          if uu____632
           then
-            let uu____631 = FStar_Util.message_of_exn e in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____631
+            let uu____633 = FStar_Util.message_of_exn e in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____633
               trace
           else
             if Prims.op_Negation (FStar_Errors.handleable e)
             then
-              (let uu____633 = FStar_Util.message_of_exn e in
+              (let uu____635 = FStar_Util.message_of_exn e in
                FStar_Util.print1_error
                  "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____633)
+                 uu____635)
             else ());
          cleanup ();
          report_errors [];
