@@ -1625,7 +1625,9 @@ and reify_lift cfg e msrc mtgt t : term =
                             (Ident.text_of_lid msrc)
                             (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=None}} ->
-      failwith "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
+      failwith (BU.format2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
+                            (Ident.text_of_lid msrc)
+                            (Ident.text_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
       (* We don't have any reasonable wp to provide so we just pass unknow *)
       (* Usually the wp is only necessary to typecheck, so this should not *)
