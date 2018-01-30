@@ -26,6 +26,9 @@ let collect f s =
 let lowercase = BatString.lowercase
 let uppercase = BatString.uppercase
 let index = get
+let index_of s c =
+    try BatString.index s (BatUChar.chr c)
+    with _ -> Z.to_int (-1)
 let sub = substring
 let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
 let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))
