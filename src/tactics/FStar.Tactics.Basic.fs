@@ -501,7 +501,7 @@ let intro_rec : tac<(binder * binder)> =
 let norm (s : list<EMB.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
     // Translate to actual normalizer steps
-    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps goal.context s) in
+    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let w = normalize steps goal.context goal.witness in
     let t = normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty = t; witness = w})
@@ -511,7 +511,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
     bind get (fun ps ->
     bind (__tc e t) (fun (t, _, guard) ->
     Rel.force_trivial_guard e guard;
-    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps ps.main_context s) in
+    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
     ))
@@ -834,7 +834,7 @@ let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> =
     match split_env bv goal.context with
     | None -> fail "binder_retype: binder is not present in environment"
     | Some (e0, bvs) -> begin
-        let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps e0 s) in
+        let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
         let sort' = normalize steps e0 bv.sort in
         let bv' = { bv with sort = sort' } in
         let env' = push_bvs e0 (bv'::bvs) in

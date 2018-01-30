@@ -500,7 +500,7 @@ let try_lookup_lid_aux env lid =
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
-//        val lookup_sigelt_with_attr: env -> attribute -> list<sigelt>
+//        val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 //        val try_lookup_effect_lid  : env -> lident -> option<term>
 //        val lookup_effect_lid      : env -> lident -> term
 //        val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -596,16 +596,10 @@ let lookup_definition delta_levels env lid =
     end
   | _ -> None
 
-let lookup_sigelt_with_attr env (a:attribute) : list<sigelt> =
-  let sigelt_with_attr se ses =
-    if (List.existsML (function a' ->  match U.eq_tm a a' with
-       | U.Equal -> true
-       | _ -> false) se.sigattrs) then se::ses else ses in
-  let l = BU.smap_fold (sigtab env) (fun _ v ses -> sigelt_with_attr v ses) [] in
-  BU.smap_fold (gamma_cache env) (fun _ v ses -> 
-    match v with 
-    | (Inr (se, _), _) -> sigelt_with_attr se ses
-    | _ -> ses ) l
+let lookup_attrs_of_lid env lid : option<list<attribute>> =
+  match lookup_qname env lid with
+  | Some (Inr (se, _), _) -> Some se.sigattrs
+  | _ -> None
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
