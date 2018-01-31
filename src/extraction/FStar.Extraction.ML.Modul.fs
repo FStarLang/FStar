@@ -466,10 +466,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
        | Sig_pragma (p) ->
-        if p = S.LightOff
-        then Options.set_ml_ish();
-//        U.process_pragma p se.sigrng;
-        g, []
+         U.process_pragma p se.sigrng;
+         g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
