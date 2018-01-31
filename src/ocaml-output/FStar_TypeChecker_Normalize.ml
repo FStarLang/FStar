@@ -2823,7 +2823,7 @@ let rec norm:
                    primitive_steps = (uu___116_11226.primitive_steps);
                    strong = (uu___116_11226.strong);
                    memoize_lazy = (uu___116_11226.memoize_lazy);
-                   normalize_pure_lets = (uu___116_11226.normalize_pure_lets)
+                   normalize_pure_lets = true
                  } in
                let uu____11235 = get_norm_request (norm cfg' env []) args in
                (match uu____11235 with
@@ -2851,8 +2851,7 @@ let rec norm:
                         primitive_steps = (uu___117_11266.primitive_steps);
                         strong = (uu___117_11266.strong);
                         memoize_lazy = (uu___117_11266.memoize_lazy);
-                        normalize_pure_lets =
-                          (uu___117_11266.normalize_pure_lets)
+                        normalize_pure_lets = true
                       } in
                     let stack' =
                       let tail1 = (Cfg cfg) :: stack in

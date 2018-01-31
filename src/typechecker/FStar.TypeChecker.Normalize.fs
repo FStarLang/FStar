@@ -1019,13 +1019,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
             let cfg' = {cfg with steps=(List.filter (function | UnfoldOnly _ | NoDeltaSteps -> false | _ -> true) cfg.steps);
-                                 delta_level=[Unfold Delta_constant]} in
+                                 delta_level=[Unfold Delta_constant];
+                                 normalize_pure_lets=true} in
             let s, tm = get_norm_request (norm cfg' env []) args in
             let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
-            let cfg' = {cfg with steps=s; delta_level=delta_level} in
+            let cfg' = {cfg with steps=s; delta_level=delta_level; normalize_pure_lets=true} in
             let stack' =
               let tail = (Cfg cfg)::stack in
               if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
