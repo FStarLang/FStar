@@ -289,24 +289,38 @@ let go: 'Auu____384 . 'Auu____384 -> Prims.unit =
                                 "no file provided\n")))))))
 let main: 'Auu____609 . Prims.unit -> 'Auu____609 =
   fun uu____613  ->
-    try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
+    try
+      let uu____621 = FStar_Util.record_time go in
+      match uu____621 with
+      | (uu____626,time) ->
+          ((let uu____629 = FStar_Options.query_stats () in
+            if uu____629
+            then
+              let uu____630 = FStar_Util.string_of_int time in
+              let uu____631 =
+                let uu____632 = FStar_Getopt.cmdline () in
+                FStar_String.concat " " uu____632 in
+              FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____630 uu____631
+            else ());
+           cleanup ();
+           FStar_All.exit (Prims.parse_int "0"))
     with
     | e ->
         let trace = FStar_Util.trace_of_exn e in
         (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____632 = FStar_Options.trace_error () in
-          if uu____632
+         (let uu____649 = FStar_Options.trace_error () in
+          if uu____649
           then
-            let uu____633 = FStar_Util.message_of_exn e in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____633
+            let uu____650 = FStar_Util.message_of_exn e in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____650
               trace
           else
             if Prims.op_Negation (FStar_Errors.handleable e)
             then
-              (let uu____635 = FStar_Util.message_of_exn e in
+              (let uu____652 = FStar_Util.message_of_exn e in
                FStar_Util.print1_error
                  "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____635)
+                 uu____652)
             else ());
          cleanup ();
          report_errors [];

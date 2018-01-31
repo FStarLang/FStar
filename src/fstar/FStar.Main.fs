@@ -176,7 +176,11 @@ let go _ =
 
 let main () =
   try
-    go ();
+    let _, time = FStar.Util.record_time go in
+    if FStar.Options.query_stats()
+    then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
+              (FStar.Util.string_of_int time)
+              (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0
   with | e ->
