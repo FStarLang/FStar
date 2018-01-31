@@ -176,7 +176,10 @@ let go _ =
 
 let main () =
   try
-    go ();
+    let _, time = FStar.Util.record_time go in
+    FStar.Util.print2 "TIMING (%s ms): fstar %s\n"
+              (FStar.Util.string_of_int time)
+              (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0
   with | e ->
