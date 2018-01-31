@@ -466,7 +466,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
        | Sig_pragma (p) ->
+         let codegen_opt = Options.codegen () in
          U.process_pragma p se.sigrng;
+         (match codegen_opt with
+          | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
+          | _ -> ());
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
