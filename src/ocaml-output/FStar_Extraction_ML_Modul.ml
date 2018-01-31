@@ -1312,7 +1312,7 @@ let rec extract_sig:
        | FStar_Syntax_Syntax.Sig_effect_abbrev uu____3110 -> (g, [])
        | FStar_Syntax_Syntax.Sig_pragma p ->
           FStar_Syntax_Util.process_pragma p se.FStar_Syntax_Syntax.sigrng;
-            (g, [])))
+            (g, []))
 let extract_iface:
   FStar_Extraction_ML_UEnv.env -> FStar_Syntax_Syntax.modul -> env_t =
   fun g  ->
