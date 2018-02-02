@@ -236,6 +236,9 @@ let steps_delta      = pconst "delta"
 let steps_unfoldonly = pconst "delta_only"
 let steps_unfoldattr = pconst "delta_attr"
 
+(* attributes *)
+let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
+
 let gen_reset =
     let x = U.mk_ref 0 in
     let gen () = U.incr x; U.read x in

@@ -101,8 +101,10 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
-     ==> (wp1 (fun ra1 -> (V? ra1 ==> wp2 (V?.v ra1) k)
-			/\ (E? ra1 ==> k (E (E?.e ra1)))))
+     ==> (wp1 (function
+               | V ra1 -> wp2 ra1 k
+               | E e -> k (E e)
+               | Err m -> k (Err m)))
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
@@ -272,3 +274,10 @@ type __internal_ocaml_attributes =
   | Substitute
   | Gc
   | Comment of string
+
+(*
+ * to be used in attributes
+ * s is the altertive function that should be printed in the warning
+ * it can be omitted if the use case has no such function
+ *)
+irreducible let deprecated (s:string) = ()

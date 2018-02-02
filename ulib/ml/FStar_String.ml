@@ -26,6 +26,11 @@ let collect f s =
 let lowercase = BatString.lowercase
 let uppercase = BatString.uppercase
 let index = get
+exception Found of int
+let index_of s c =
+    let c = BatUChar.chr c in
+    try let _ = BatUTF8.iteri (fun c' i -> if c = c' then raise (Found i) else ()) in Z.of_int (-1)
+    with Found i -> Z.of_int i
 let sub = substring
 let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
 let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))

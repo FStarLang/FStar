@@ -111,7 +111,8 @@ type cfg = {
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
     primitive_steps:list<primitive_step>;
     strong : bool;                       // under a binder
-    memoize_lazy : bool
+    memoize_lazy : bool;
+    normalize_pure_lets: bool;
 }
 
 type branches = list<(pat * option<term> * term)>
@@ -629,6 +630,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.gt_big_int x y)));
              (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.ge_big_int x y)));
              (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
+             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
@@ -1020,13 +1022,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
             let cfg' = {cfg with steps=(List.filter (function | UnfoldOnly _ | NoDeltaSteps -> false | _ -> true) cfg.steps);
-                                 delta_level=[Unfold Delta_constant]} in
+                                 delta_level=[Unfold Delta_constant];
+                                 normalize_pure_lets=true} in
             let s, tm = get_norm_request (norm cfg' env []) args in
             let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
-            let cfg' = {cfg with steps=s; delta_level=delta_level} in
+            let cfg' = {cfg with steps=s; delta_level=delta_level; normalize_pure_lets=true} in
             let stack' =
               let tail = (Cfg cfg)::stack in
               if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
@@ -1247,8 +1250,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps |> List.contains NoDeltaSteps)
-            && (U.is_pure_effect n
-            || (U.is_ghost_effect n && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
+            && ((U.is_pure_effect n && cfg.normalize_pure_lets)
+                || (U.is_ghost_effect n
+                    && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
@@ -1957,7 +1961,10 @@ let config s e =
      delta_level=d;
      primitive_steps=built_in_primitive_steps;
      strong=false;
-     memoize_lazy=true}
+     memoize_lazy=true;
+     normalize_pure_lets=
+       (Options.normalize_pure_terms_for_extraction()
+        || not (s |> List.contains PureSubtermsWithinComputations))}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in

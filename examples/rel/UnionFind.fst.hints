@@ -38,7 +38,7 @@
         "typing_UnionFind.Forest.elt", "unit_typing"
       ],
       0,
-      "b1f5d889f4a906da950272963da7eae3"
+      "38731c8341d7d5bb1701706c0598d2a4"
     ],
     [
       "UnionFind.lemma_find_height_independence",
@@ -101,7 +101,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "de3b01caaff0577ea2a7ca3c594f8c85"
+      "8789976edfd12d55ace35e1626187ab7"
     ],
     [
       "UnionFind.lemma_find_opt_helper",
@@ -157,7 +157,7 @@
         "typing_UnionFind.Forest.id", "unit_inversion", "unit_typing"
       ],
       0,
-      "f9de2de96d4d6fc6d0f2a017d7d5117a"
+      "eb521e938cc4a0cd2053da04978cd915"
     ],
     [
       "UnionFind.lemma_find_find_opt_same_result",
@@ -222,7 +222,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "0a264acf8099e31817e7c25700aa25f9"
+      "92a2788a778e83149187a3f6db9b8ae0"
     ],
     [
       "UnionFind.lemma_find_opt_parent_same_as_find_root",
@@ -293,7 +293,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "4c5084af86849f6b4079341afcea6ed7"
+      "176bb26f7d9c02900dd08478d3ef1ddf"
     ],
     [
       "UnionFind.lemma_find_find_opt_equivalence",
@@ -355,7 +355,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "a3a6451e7819c23c5ffe03a941fdb1db"
+      "9142a2f345771f1aa42becd318fda049"
     ],
     [
       "UnionFind.lemma_merge_helper",
@@ -428,7 +428,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "8e2c7c3ea624f176c030a80bb65da3ee"
+      "539f8960b3e51a122c37d38c80313dd8"
     ],
     [
       "UnionFind.lemma_merge_opt_helper",
@@ -523,7 +523,7 @@
         "unit_typing"
       ],
       0,
-      "e27586f5685e4a5ae6deb72e82ad19af"
+      "5bb700e596a52e8a0237649628358305"
     ],
     [
       "UnionFind.lemma_merge_height_independence",
@@ -582,7 +582,7 @@
         "typing_UnionFind.Forest.id", "unit_inversion", "unit_typing"
       ],
       0,
-      "da460a0c80e55e38ae103639f2373823"
+      "847a723857cfc75276027ef86261926b"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_diff",
@@ -662,7 +662,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6fe9a6e3b969efa2e23af6d85bdc36b5"
+      "4cb8e728691ae4e9237f0812baaa94b2"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_same",
@@ -730,7 +730,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "736aac91d3c4772da621d1a31aaea9ed"
+      "904474c162fa8e5b5999e17c4cce5761"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence",
@@ -783,7 +783,7 @@
         "typing_UnionFind.Forest.elt", "unit_inversion", "unit_typing"
       ],
       0,
-      "be65a3e0b89b68259104ac96bd607b18"
+      "4ebf0ac15de8ebafd9ead9bc50431717"
     ]
   ]
 ]

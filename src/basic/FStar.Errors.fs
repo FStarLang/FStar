@@ -293,6 +293,7 @@ type raw_error =
   | Warning_ModuleOrFileNotFoundWarning
   | Error_NoLetMutable
   | Error_BadImplicit
+  | Warning_DeprecatedDefinition
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -586,7 +587,8 @@ let default_flags =
   (Warning_MissingInterfaceOrImplementation          , CWarning);
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
   (Warning_ModuleOrFileNotFoundWarning               , CWarning);
-  (Error_BadImplicit                                 , CError)]
+  (Error_BadImplicit                                 , CError);
+  (Warning_DeprecatedDefinition                      , CWarning)]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range

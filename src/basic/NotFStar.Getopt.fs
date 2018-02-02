@@ -93,3 +93,8 @@ let parse_string specs others (str:string) =
     | None -> Error("Failed to parse options; unmatched quote \"'\"")
     | Some args ->
       parse specs others args 0 (args.Length - 1) 0
+
+let cmdline () =
+  let argv = System.Environment.GetCommandLineArgs() in
+  List.ofArray argv
+  

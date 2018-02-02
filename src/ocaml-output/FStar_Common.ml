@@ -9,7 +9,7 @@ let has_cygpath: Prims.bool =
 let try_convert_file_name_to_mixed: Prims.string -> Prims.string =
   let cache = FStar_Util.smap_create (Prims.parse_int "20") in
   fun s  ->
-    if has_cygpath
+    if has_cygpath && (FStar_Util.starts_with s "/")
     then
       let uu____27 = FStar_Util.smap_try_find cache s in
       match uu____27 with
