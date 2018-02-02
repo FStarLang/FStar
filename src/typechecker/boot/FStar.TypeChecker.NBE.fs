@@ -61,6 +61,7 @@ and t = //JUST FSHARP
   | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
+  | Univ of universe
 
 type head = t
 type annot = option<t>
@@ -72,6 +73,7 @@ let rec t_to_string (x:t) =
     | Construct (fv, us, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^ (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
     | Unit -> "Unit"
     | Bool b -> if b then "Bool true" else "Bool false"
+    | Univ u -> "Universe " ^ (P.univ_to_string u)
 
 and atom_to_string (a: atom) =
     match a with
@@ -159,23 +161,6 @@ let rec count_abstractions (t : term) : int =
     | Tm_ascribed (t, _, _) -> count_abstractions t
 
 
-(* XXX unused *)
-// let rec mkBranches branches cont =
-//   match branches with
-//   | ({ v = (Pat_cons (fv, pats))}, _, _) :: branches' ->
-//     (* a new binder for each argument *)
-//     let (args, binders) =
-//       List.fold_right
-//         (fun (p : pat * bool) ((args:list<t>), (bs:list<(pat * bool)>)) ->
-//            let x = S.new_bv None S.tun in
-//            (mkAccuVar x :: args, (S.withinfo (Pat_var x) Range.dummyRange, snd p) :: bs)
-//         ) pats ([], []) in
-//     let value = Construct (fv, args) in
-//     let pat = S.withinfo (Pat_cons (fv, binders)) Range.dummyRange  in
-//     let branch = (pat, None, cont value) in
-//     branch :: mkBranches branches' cont
-//   | _ -> failwith "Unexpected pattern"
-
 let find_sigelt_in_gamma (env: Env.env) (lid:lident): option<sigelt> =
   let mapper (lr, rng) =
     match lr with
@@ -200,15 +185,22 @@ let translate_univ (env: Env.env) (bs: list<t>) (u: universe): t =
     | _ ->
         mkAccuTyp u
 
+let is_univ (tm : t)=
+  match tm with 
+  | Univ _ -> true
+  | _ -> false
+
 (* We are not targeting tagless normalization at this point *)
 let rec app (f:t) (x:t) (q:aqual) =
   debug (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
   match f with
   | Lam (f, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
-  | Construct (i, us, ts) -> Construct (i, us, (x,q)::ts)
-  | Unit
-  | Bool _ -> failwith "Ill-typed application"
+  | Construct (i, us, ts) ->
+    (match x with 
+     | Univ u -> Construct (i, u::us, ts) 
+     | _ -> Construct (i, us, (x,q)::ts))
+  | Unit | Bool _ | Univ _ -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
@@ -233,7 +225,7 @@ and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
              // let x = (S.new_bv None S.tun, None) in
              // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
              // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
-             translate env [] lb.lbdef
+             translate_letbinding env [] lb
           end
       | Some { sigel = Sig_datacon(_, _, _, lid, _, []) } ->
           debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_datacon\n" (P.lid_to_string lid));
@@ -250,7 +242,15 @@ and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
    | None ->
        mkConstruct fvar us [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
 
-
+(* translate a let-binding - local or global *)
+and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
+  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t = 
+    match us with
+    | [] -> translate env bs def 
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving univers binder qualifier none for now
+  in
+  make_univ_abst lb.lbunivs bs lb.lbdef
+  
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
     debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
@@ -275,22 +275,30 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_uinst (t, [u]) ->
       debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (P.univ_to_string u));
-      (match (SS.compress t).n with
-       | Tm_fvar fv ->
-          translate_fv env bs [u] fv
-          // let tr = translate env bs t in
-          // //t is always an fv
-          // // specialize the definition of t for u (if it has one, i.e. not a constructor)
-          // // don't do this here, but when looking up def of fv; if it's a constructor, just mkConstructor
-          // (match tr with
-          //  | Lam _ ->
-          //      let x = (S.new_bv None S.tun, None) in
-          //      let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
-          //      app (translate env bs t') (translate_univ env bs u) None
-          //  | _ ->
-          //      app tr (translate_univ env bs u) None)
+      app (translate env bs t) (Univ u) None
+     
+    | Tm_uinst (t, u :: us) -> 
+      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (P.univ_to_string u));
+      let first = S.mk (Tm_uinst(t, [u])) None Range.dummyRange in
+      let tm = S.mk (Tm_uinst(first, us)) None e.pos in
+      translate env bs tm
+      
+      // (match (SS.compress t).n with
+      //  | Tm_fvar fv ->
+      //     translate_fv env bs [u] fv
+      //     // let tr = translate env bs t in
+      //     // //t is always an fv
+      //     // // specialize the definition of t for u (if it has one, i.e. not a constructor)
+      //     // // don't do this here, but when looking up def of fv; if it's a constructor, just mkConstructor
+      //     // (match tr with
+      //     //  | Lam _ ->
+      //     //      let x = (S.new_bv None S.tun, None) in
+      //     //      let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
+      //     //      app (translate env bs t') (translate_univ env bs u) None
+      //     //  | _ ->
+      //     //      app tr (translate_univ env bs u) None)
 
-       | _ -> failwith "Expected an fv")
+      //  | _ -> failwith "Expected an fv")
 
     | Tm_uinst (t, _) ->
       debug (fun () -> BU.print1 "Term with univs: %s\n" (P.term_to_string t));
@@ -351,20 +359,12 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       case (translate env bs scrut)
 
     | Tm_let((false, [lb]), body) -> // non-recursive let
-      let def = translate env bs lb.lbdef in
+      let def = translate_letbinding env bs lb in
       translate env (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
       let f = mkAccuRec lb bs in
       translate env (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
-
-      // this will loop infinitely when the recursive argument is symbolic
-      // let def = lb.lbdef in
-      // let fnorm f = translate (f::bs) def in
-      // let rec f = fnorm f in
-      // translate (f::bs) body
-      //failwith "Not yet implemented"
-
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (env:Env.env) (x:t) : term =
@@ -372,6 +372,8 @@ and readback (env:Env.env) (x:t) : term =
     match x with
     | Unit -> S.unit_const
 
+    | Univ u -> failwith "Readback of universes should not occur"
+    
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
 
@@ -382,12 +384,14 @@ and readback (env:Env.env) (x:t) : term =
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) args in
-      (match args with
-       | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
-       | _ ->
-         (match us with
-          | u::us -> U.mk_app (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (u::us)) args
-          | [] -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args))
+      let apply tm = 
+        match args with
+         | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
+         | _ ->  U.mk_app tm args
+      in
+      (match us with
+       | u::us -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (u::us))
+       | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv
@@ -418,7 +422,7 @@ and readback (env:Env.env) (x:t) : term =
        let args_no = count_abstractions lb.lbdef in
        // Printf.printf "Args no. %d\n" args_no;
        if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
-         readback env (curry (translate env ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
+         readback env (curry (translate_letbinding env ((mkAccuRec lb bs) :: bs) lb) ts)
        else (* otherwise do not unfold *)
          let head =
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
