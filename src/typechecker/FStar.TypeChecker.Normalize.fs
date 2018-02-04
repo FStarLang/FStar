@@ -897,6 +897,12 @@ let maybe_simplify_aux cfg env stack tm =
            | _ ->
              reduce_equality cfg env stack tm
       end
+    | Tm_refine (bv, t) ->
+        begin match simp_t t with
+        | Some true -> bv.sort
+        | Some false -> tm
+        | None -> tm
+        end
     | _ -> tm
 
 let maybe_simplify cfg env stack tm =
