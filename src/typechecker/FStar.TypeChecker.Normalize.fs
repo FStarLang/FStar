@@ -1692,6 +1692,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
+  let t = maybe_simplify cfg env stack t in
   match stack with
   | [] -> t
 
@@ -1789,7 +1790,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
   | App(env, head, aq, r)::stack ->
     let t = S.extend_app head (t,aq) None r in
-    rebuild cfg env stack (maybe_simplify cfg env stack t)
+    rebuild cfg env stack t
 
   | Match(env, branches, r) :: stack ->
     log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
