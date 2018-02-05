@@ -171,6 +171,7 @@ let steps_zeta: FStar_Ident.lident = pconst "zeta"
 let steps_iota: FStar_Ident.lident = pconst "iota"
 let steps_delta: FStar_Ident.lident = pconst "delta"
 let steps_unfoldonly: FStar_Ident.lident = pconst "delta_only"
+let steps_unfoldattr: FStar_Ident.lident = pconst "delta_attr"
 let deprecated_attr: FStar_Ident.lident =
   p2l ["FStar"; "Pervasives"; "deprecated"]
 let gen_reset:

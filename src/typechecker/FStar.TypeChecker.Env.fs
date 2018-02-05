@@ -521,6 +521,7 @@ let try_lookup_lid_aux us_opt env lid =
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
+//        val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 //        val try_lookup_effect_lid  : env -> lident -> option<term>
 //        val lookup_effect_lid      : env -> lident -> term
 //        val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -622,6 +623,11 @@ let lookup_definition delta_levels env lid =
               else None)
       | _ -> None
     end
+  | _ -> None
+
+let lookup_attrs_of_lid env lid : option<list<attribute>> =
+  match lookup_qname env lid with
+  | Some (Inr (se, _), _) -> Some se.sigattrs
   | _ -> None
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =

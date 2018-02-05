@@ -64,6 +64,7 @@ type step =
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
   | UnfoldOnly of list<I.lid>
+  | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -935,6 +936,8 @@ let tr_norm_step = function
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | EMB.UnfoldAttr t ->
+        [UnfoldUntil Delta_constant; UnfoldAttr t]
 
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
@@ -1067,9 +1070,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.false_lid)
                 then false
                 else begin
-                    match cfg.steps |> List.tryFind (function UnfoldOnly _ -> true | _ -> false) with
-                    | Some (UnfoldOnly lids) -> should_delta && BU.for_some (fv_eq_lid f) lids
-                    | _ -> should_delta
+                  match cfg.steps |> List.tryFind (function UnfoldOnly _ | UnfoldAttr _ -> true | _ -> false) with
+                  | Some _ ->
+                    let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
+                    should_delta && List.fold_left (fun acc x ->
+                      match x with
+                      | UnfoldOnly lids -> acc || BU.for_some (fv_eq_lid f) lids
+                      | UnfoldAttr attr -> begin
+                        match lookup_attrs_of_lid cfg.tcenv f.fv_name.v with
+                        | Some attrs -> acc || BU.for_some (attr_eq attr) attrs
+                        | _ -> acc
+                        end
+                      | _ -> acc) false cfg.steps
+                  | _ -> should_delta
                 end
             in
 
