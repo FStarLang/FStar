@@ -1445,6 +1445,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
 
 and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
+    let head0 = head in
     let head = U.unascribe head in
     log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
     match (SS.compress head).n with
@@ -1519,7 +1520,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                   as_arg S.tun; as_arg body]))
                 None rng
               in
-              log cfg (fun () -> BU.print1 "Reified to %s\n"  (Print.term_to_string reified));
+              log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
       end
@@ -1581,7 +1582,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         let mk tm = S.mk tm None head.pos in
         let body = mk (Tm_app(head_app, args)) in
         let body = match found_action with
-          (* This is not an action let's just reify it *)
+          (* This is not an action let's just keep the reify marker *)
           | None -> U.mk_reify body
 
           (* The action was found but not unfolded (maybe abstract ?) *)
@@ -1590,6 +1591,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
           (* An action was found and successfully unfolded *)
           | Some true -> body
         in
+        log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string body));
         norm cfg env (List.tl stack) body
 
     // Doubly-annotated effect.. just take the outmost one. (unsure..)
