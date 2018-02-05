@@ -71,6 +71,8 @@ let with_tcenv:
                  (uu___56_61.FStar_TypeChecker_Env.type_of);
                FStar_TypeChecker_Env.universe_of =
                  (uu___56_61.FStar_TypeChecker_Env.universe_of);
+               FStar_TypeChecker_Env.check_type_of =
+                 (uu___56_61.FStar_TypeChecker_Env.check_type_of);
                FStar_TypeChecker_Env.use_bv_sorts =
                  (uu___56_61.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qname_and_index =
@@ -166,7 +168,8 @@ let init_env: FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env =
     let env =
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
-        FStar_TypeChecker_TcTerm.universe_of solver1
+        FStar_TypeChecker_TcTerm.universe_of
+        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver1
         FStar_Parser_Const.prims_lid in
     let env1 =
       let uu___58_242 = env in
@@ -220,6 +223,8 @@ let init_env: FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env =
           (uu___58_242.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
           (uu___58_242.FStar_TypeChecker_Env.universe_of);
+        FStar_TypeChecker_Env.check_type_of =
+          (uu___58_242.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___58_242.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qname_and_index =
@@ -290,6 +295,8 @@ let init_env: FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env =
           (uu___59_244.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
           (uu___59_244.FStar_TypeChecker_Env.universe_of);
+        FStar_TypeChecker_Env.check_type_of =
+          (uu___59_244.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___59_244.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qname_and_index =
@@ -746,6 +753,8 @@ let push_context:
           (uu___60_1349.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
           (uu___60_1349.FStar_TypeChecker_Env.universe_of);
+        FStar_TypeChecker_Env.check_type_of =
+          (uu___60_1349.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___60_1349.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qname_and_index =

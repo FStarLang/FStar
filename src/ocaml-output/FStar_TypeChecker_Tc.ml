@@ -63,6 +63,8 @@ let set_hint_correlator:
               (uu___60_13.FStar_TypeChecker_Env.type_of);
             FStar_TypeChecker_Env.universe_of =
               (uu___60_13.FStar_TypeChecker_Env.universe_of);
+            FStar_TypeChecker_Env.check_type_of =
+              (uu___60_13.FStar_TypeChecker_Env.check_type_of);
             FStar_TypeChecker_Env.use_bv_sorts =
               (uu___60_13.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qname_and_index =
@@ -145,6 +147,8 @@ let set_hint_correlator:
               (uu___61_29.FStar_TypeChecker_Env.type_of);
             FStar_TypeChecker_Env.universe_of =
               (uu___61_29.FStar_TypeChecker_Env.universe_of);
+            FStar_TypeChecker_Env.check_type_of =
+              (uu___61_29.FStar_TypeChecker_Env.check_type_of);
             FStar_TypeChecker_Env.use_bv_sorts =
               (uu___61_29.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qname_and_index =
@@ -1214,6 +1218,9 @@ let tc_eff_decl:
                                                      FStar_TypeChecker_Env.universe_of
                                                        =
                                                        (uu___65_1399.FStar_TypeChecker_Env.universe_of);
+                                                     FStar_TypeChecker_Env.check_type_of
+                                                       =
+                                                       (uu___65_1399.FStar_TypeChecker_Env.check_type_of);
                                                      FStar_TypeChecker_Env.use_bv_sorts
                                                        =
                                                        (uu___65_1399.FStar_TypeChecker_Env.use_bv_sorts);
@@ -1408,6 +1415,9 @@ let tc_eff_decl:
                                                   FStar_TypeChecker_Env.universe_of
                                                     =
                                                     (uu___66_1532.FStar_TypeChecker_Env.universe_of);
+                                                  FStar_TypeChecker_Env.check_type_of
+                                                    =
+                                                    (uu___66_1532.FStar_TypeChecker_Env.check_type_of);
                                                   FStar_TypeChecker_Env.use_bv_sorts
                                                     =
                                                     (uu___66_1532.FStar_TypeChecker_Env.use_bv_sorts);
@@ -3835,6 +3845,8 @@ let tc_decl:
                                 (uu___77_5173.FStar_TypeChecker_Env.type_of);
                               FStar_TypeChecker_Env.universe_of =
                                 (uu___77_5173.FStar_TypeChecker_Env.universe_of);
+                              FStar_TypeChecker_Env.check_type_of =
+                                (uu___77_5173.FStar_TypeChecker_Env.check_type_of);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___77_5173.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qname_and_index =
@@ -4430,6 +4442,8 @@ let tc_decl:
                            (uu___86_6479.FStar_TypeChecker_Env.type_of);
                          FStar_TypeChecker_Env.universe_of =
                            (uu___86_6479.FStar_TypeChecker_Env.universe_of);
+                         FStar_TypeChecker_Env.check_type_of =
+                           (uu___86_6479.FStar_TypeChecker_Env.check_type_of);
                          FStar_TypeChecker_Env.use_bv_sorts =
                            (uu___86_6479.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qname_and_index =
@@ -5289,6 +5303,8 @@ let tc_partial_modul:
                (uu___96_8385.FStar_TypeChecker_Env.type_of);
              FStar_TypeChecker_Env.universe_of =
                (uu___96_8385.FStar_TypeChecker_Env.universe_of);
+             FStar_TypeChecker_Env.check_type_of =
+               (uu___96_8385.FStar_TypeChecker_Env.check_type_of);
              FStar_TypeChecker_Env.use_bv_sorts =
                (uu___96_8385.FStar_TypeChecker_Env.use_bv_sorts);
              FStar_TypeChecker_Env.qname_and_index =
@@ -5414,6 +5430,8 @@ let check_exports:
               (uu___99_8492.FStar_TypeChecker_Env.type_of);
             FStar_TypeChecker_Env.universe_of =
               (uu___99_8492.FStar_TypeChecker_Env.universe_of);
+            FStar_TypeChecker_Env.check_type_of =
+              (uu___99_8492.FStar_TypeChecker_Env.check_type_of);
             FStar_TypeChecker_Env.use_bv_sorts =
               (uu___99_8492.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qname_and_index =
@@ -5718,6 +5736,8 @@ let check_module:
              (uu___101_8826.FStar_TypeChecker_Env.type_of);
            FStar_TypeChecker_Env.universe_of =
              (uu___101_8826.FStar_TypeChecker_Env.universe_of);
+           FStar_TypeChecker_Env.check_type_of =
+             (uu___101_8826.FStar_TypeChecker_Env.check_type_of);
            FStar_TypeChecker_Env.use_bv_sorts =
              (uu___101_8826.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qname_and_index =

@@ -76,7 +76,8 @@ let init_once: Prims.unit -> Prims.unit =
       FStar_TypeChecker_Env.initial_env FStar_Parser_Dep.empty_deps
         FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
-        FStar_TypeChecker_TcTerm.universe_of solver1
+        FStar_TypeChecker_TcTerm.universe_of
+        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver1
         FStar_Parser_Const.prims_lid in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let uu____212 =
@@ -138,6 +139,8 @@ let init_once: Prims.unit -> Prims.unit =
                (uu___56_222.FStar_TypeChecker_Env.type_of);
              FStar_TypeChecker_Env.universe_of =
                (uu___56_222.FStar_TypeChecker_Env.universe_of);
+             FStar_TypeChecker_Env.check_type_of =
+               (uu___56_222.FStar_TypeChecker_Env.check_type_of);
              FStar_TypeChecker_Env.use_bv_sorts =
                (uu___56_222.FStar_TypeChecker_Env.use_bv_sorts);
              FStar_TypeChecker_Env.qname_and_index =
@@ -253,6 +256,8 @@ let tc: Prims.string -> FStar_Syntax_Syntax.term =
           (uu___59_328.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
           (uu___59_328.FStar_TypeChecker_Env.universe_of);
+        FStar_TypeChecker_Env.check_type_of =
+          (uu___59_328.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___59_328.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qname_and_index =
