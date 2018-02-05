@@ -644,7 +644,9 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Prims.admit" ->
       EAbort
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, [arg])
-    when string_of_mlpath p = "FStar.HyperStack.All.failwith" ->
+    when string_of_mlpath p = "FStar.HyperStack.All.failwith"
+      ||  string_of_mlpath p = "FStar.Error.unexpected"
+      ||  string_of_mlpath p = "FStar.Error.unreachable" ->
       (match arg with
        | {expr=MLE_Const (MLC_String msg)} -> EAbortS msg
        | _ ->
