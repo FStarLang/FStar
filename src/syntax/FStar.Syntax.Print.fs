@@ -253,21 +253,9 @@ and term_to_string x =
     let d = ToDocument.term_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else begin
-//      let x = Subst.compress x in
-//      let x = if Options.print_implicits() then x else unmeta x in
+      let x = Subst.compress x in
+      let x = if Options.print_implicits() then x else unmeta x in
       match x.n with
-      | Tm_delayed((t, s), m) ->
-        begin match !m with
-              | Some t ->
-                U.format1 "Memo_delayed(%s)" (term_to_string t)
-              | None ->
-                U.format3 "Tm_delayed([%s],%s)(%s)"
-                    (if Options.print_implicits()
-                     then (List.map subst_to_string (fst s) |> String.concat "\n;;")
-                     else "...")
-                    (match snd s with None -> "none" | Some r -> "Some " ^ (Range.string_of_use_range r))
-                    (term_to_string t)
-        end
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
 
@@ -492,15 +480,6 @@ and cflags_to_string c =
        only locally detecting certain patterns *)
 and formula_to_string phi = term_to_string phi
 
-and subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
-   | NT(x, t) -> U.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
-
-and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
-
 and metadata_to_string = function
     | Meta_pattern ps ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
@@ -694,6 +673,14 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
 let rec modul_to_string (m:modul) =
   U.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
+let subst_elt_to_string = function
+   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
+   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | NT(x, t) -> U.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t)
+   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
+
+let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 let abs_ascription_to_string ascription =
   let strb = U.new_string_builder () in
