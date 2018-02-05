@@ -14,17 +14,17 @@ private val substring : s:string -> i:nat -> l:nat{i + l <= String.length s} -> 
 let substring s i l = substringImpl s i l
   (* String.make l (String.sub s i l) *)
 
-private val splitStr : #l:secLevel -> #l':secLevel -> s:string -> p:(option (secString l * secString l')) -> Tot bool
+private val splitStr : #l:secrecy_level -> #l':secrecy_level -> s:string -> p:(option (secret_string l * secret_string l')) -> Tot bool
 let splitStr #l #l' s p =
   match p with 
-  | Some (fst, snd) -> (String.length s) > (length snd) 
+  | Some (fst, snd) -> (String.length s) > (secret_string_length snd) 
   | None -> true
 
 private val getStringScheme : s:string -> n:nat -> Tot (p:(option (sc:string * string)){splitStr #PublicVal #PublicVal s p}) (decreases (String.length s - n))
 let rec getStringScheme s n =
   if (String.length s <= (n+3)) then None
   else if (substring s n 3 =  "://") then 
-    let scheme = substring s 0 n in Some (scheme , substring s (n+3) ((String.length s) - (n+3)))
+    let origin_protocol = substring s 0 n in Some (origin_protocol , substring s (n+3) ((String.length s) - (n+3)))
   else getStringScheme s (n+1)
 
 private val getStringDom : s:string -> n:nat -> Tot (p:(option (string * string)){splitStr #PublicVal #PublicVal s p}) (decreases (String.length s - n))
@@ -49,43 +49,43 @@ let rec stringContains s1 s2 n =
   else if (substring s1 n l2 = s2) then Some n
   else stringContains s1 s2 (n+1)
 
-private val splitHDom : string -> Tot (list string * option port)
+private val splitHDom : string -> Tot (list string * option origin_port)
 let rec splitHDom ts =
   let s = trim ts in 
   match (stringContains s ":" 0) with
   | None -> (splitDom s, None)
   | Some p -> (splitDom (substring s 0 p), Some (int_of_string (substring s (p+1) ((String.length s) - (p+1)))))
 
-private val getStringPath : l:secLevel -> s:string -> n:nat -> Tot (p:(option (secString l * pubString)){splitStr #l #PublicVal s p}) (decreases (String.length s - n))
+private val getStringPath : l:secrecy_level -> s:string -> n:nat -> Tot (p:(option (secret_string l * public_string)){splitStr #l #PublicVal s p}) (decreases (String.length s - n))
 let rec getStringPath l s n =
   if (String.length s <= n) then None
   else if (substring s n 1 = "/") then (
     if n = 0 then 
       getStringPath l (substring s (n+1) ((String.length s) - (n+1))) 0 (* avoid spurious / *)
     else 
-      Some (classify #PublicVal (substring s 0 n) l, substring s (n+1) ((String.length s) - (n+1))))
+      Some (classify_secret_string #PublicVal (substring s 0 n) l, substring s (n+1) ((String.length s) - (n+1))))
   else getStringPath l s (n+1)
 
-(* Takes a string and returns a list of strings with delimiter being ";" in the string *)
-val splitPath : l:secLevel -> s:string -> Tot (path l) (decreases (String.length s))
+(* Takes a string and returns a list of strings with delimiter being "/" in the string *)
+val splitPath : l:secrecy_level -> s:string -> Tot (path l) (decreases (String.length s))
 let rec splitPath l s =
   match getStringPath l s 0 with
-    | None -> [classify #PublicVal s l]
+    | None -> [classify_secret_string #PublicVal s l]
     | Some (f,r) -> f::(splitPath l r)
 
-private val getStringQuery : l:secLevel -> s:string -> n:nat -> Tot (p:(option (secString l * secString l)){splitStr #l #l s p}) (decreases (String.length s - n))
+private val getStringQuery : l:secrecy_level -> s:string -> n:nat -> Tot (p:(option (secret_string l * secret_string l)){splitStr #l #l s p}) (decreases (String.length s - n))
 let rec getStringQuery l s n =
   if (String.length s <= n) then None
-  else if (substring s n 1 = "=") then Some (classify #PublicVal (substring s 0 n) l, classify #PublicVal (substring s (n+1) ((String.length s) - (n+1))) l)
+  else if (substring s n 1 = "=") then Some (classify_secret_string #PublicVal (substring s 0 n) l, classify_secret_string #PublicVal (substring s (n+1) ((String.length s) - (n+1))) l)
   else getStringQuery l s (n+1)
 
-private val getStringQS : s:string -> n:nat -> Tot (p:(option (pubString * pubString)){splitStr #PublicVal #PublicVal s p}) (decreases (String.length s - n))
+private val getStringQS : s:string -> n:nat -> Tot (p:(option (public_string * public_string)){splitStr #PublicVal #PublicVal s p}) (decreases (String.length s - n))
 let rec getStringQS s n =
   if (String.length s <= n) then None
   else if (substring s n 1) = "&" then Some ((substring s 0 n), substring s (n+1) ((String.length s) - (n+1)))
   else getStringQS s (n+1)
 
-private val splitQueryString : l:secLevel -> s:string -> Tot (querystring l) (decreases (String.length s))
+private val splitQueryString : l:secrecy_level -> s:string -> Tot (querystring l) (decreases (String.length s))
 let rec splitQueryString l s =
   match getStringQS s 0 with
   | None -> (match (getStringQuery l s 0) with
@@ -95,29 +95,29 @@ let rec splitQueryString l s =
 			| None -> (splitQueryString l r)
 			| Some (q,v) -> (q,v)::(splitQueryString l r))
 
-private val splitOrigPath : l:secLevel -> s:string -> n:nat{n < String.length s} -> slash:nat{slash >= (n+3) && slash < String.length s} -> Tot (torigin * path l)
+private val splitOrigPath : l:secrecy_level -> s:string -> n:nat{n < String.length s} -> slash:nat{slash >= (n+3) && slash < String.length s} -> Tot (origin_tuple * path l)
 let splitOrigPath l s n slash =
-  if (n = 0) then (TOrigin "" [] None None, [])
+  if (n = 0) then (Origin "" [] None None, [])
   else 
-    let scheme = (substring s 0 n) in 
-    if isProtocol scheme then 
+    let origin_protocol = (substring s 0 n) in 
+    if is_origin_protocol origin_protocol then 
       let (hdom,pv) = splitHDom (substring s (n+3) (slash - (n+3))) in
       let p = splitPath l (substring s (slash+1) ((String.length s)-(slash+1))) in
-      (TOrigin scheme hdom pv None, p)
-    else (TOrigin "" [] None None, [])
+      (Origin origin_protocol hdom pv None, p)
+    else (Origin "" [] None None, [])
 
-private val splitOrigin : s:string -> n:nat{n < String.length s} -> Tot (torigin)
+private val splitOrigin : s:string -> n:nat{n < String.length s} -> Tot (origin_tuple)
 let splitOrigin s n =
-  if (n = 0) then (TOrigin "" [] None None)
+  if (n = 0) then (Origin "" [] None None)
   else 
     match getStringScheme s n with
-    | None -> (TOrigin "" [] None None)
-    | Some (scheme,dom) -> if (isProtocol scheme) then
+    | None -> (Origin "" [] None None)
+    | Some (scheme,dom) -> if (is_origin_protocol scheme) then
 			     let (hdom,pv) = splitHDom dom (* (substring s (n+3) ((String.length s) - (n+3))) *) in
-			     (TOrigin scheme hdom pv None)
-			  else (TOrigin "" [] None None)
+			     (Origin scheme hdom pv None)
+			  else (Origin "" [] None None)
 
-private val getStringPathPub : s:string -> n:nat -> Tot (p:(option (pubString * pubString)){splitStr #PublicVal #PublicVal s p}) (decreases (String.length s - n))
+private val getStringPathPub : s:string -> n:nat -> Tot (p:(option (public_string * public_string)){splitStr #PublicVal #PublicVal s p}) (decreases (String.length s - n))
 let rec getStringPathPub s n =
   if (String.length s <= n) then None
   else if (substring s n 1 = "/") then Some (substring s 0 n, substring s (n+1) ((String.length s) - (n+1)))
@@ -130,20 +130,20 @@ let rec splitPathPub s =
     | None -> [s]
     | Some (f,r) -> f::(splitPathPub r)
     
-private val splitOriginPath : s:string -> n:nat{n < String.length s} -> slash:nat{slash >= (n+3) && slash < String.length s} -> Tot origpath
+private val splitOriginPath : s:string -> n:nat{n < String.length s} -> slash:nat{slash >= (n+3) && slash < String.length s} -> Tot csp_origin_path
 let splitOriginPath s n slash =
-  if (n = 0) then {op_prot=""; op_host=[]; op_port=None; op_dom=None; op_path=[];op_em=false}
+  if (n = 0) then {op_protocol=""; op_host=[]; op_port=None; op_domain=None; op_path=[];op_exact_match_flag=false}
   else
     let scheme = (substring s 0 n) in
-    if isProtocol scheme then 
+    if is_origin_protocol scheme then 
       let (hdom,pv) = splitHDom (substring s (n+3) (slash - (n+3))) in
       let p = splitPathPub (substring s (slash+1) ((String.length s) - (slash + 1))) in
-      let em = ((substring s ((String.length s) - 1) 1) = "/") in (* check for last character *)
-      ({op_prot=scheme;op_host=hdom;op_port=pv;op_dom=None;op_path=p;op_em=em})
+      let em = ((substring s ((String.length s) - 1) 1) = "/") in (* check for last c.aracter *)
+      ({op_protocol=scheme;op_host=hdom;op_port=pv;op_domain=None;op_path=p;op_exact_match_flag=em})
     else 
-      ({op_prot=""; op_host=[]; op_port=None; op_dom=None; op_path=[];op_em=false})
+      ({op_protocol=""; op_host=[]; op_port=None; op_domain=None; op_path=[];op_exact_match_flag=false})
             
-private val getDirValue : string -> Tot (dirValue)
+private val getDirValue : string -> Tot (csp_directive_value)
 let getDirValue s = 
   let ts = (trim s) in 
   let ns = String.length ts in 
@@ -155,7 +155,7 @@ let getDirValue s =
   else if (ts = "'unsafe-eval'") then DV_U_Eval
   else if (ts = "'strict-dynamic'") then DV_St_Dynamic
   else if (ts = "'unsafe-hashed-attributes'") then DV_U_Hashed  
-  else if (substring ts (ns - 1) 1 = ":") then let scheme = (substring ts 0 (ns - 1)) in if isProtocol scheme then DV_Scheme scheme else DV_None
+  else if (substring ts (ns - 1) 1 = ":") then let origin_protocol = (substring ts 0 (ns - 1)) in if is_origin_protocol origin_protocol then DV_Scheme origin_protocol else DV_None
   else if (ns > 6 && (substring ts 0 6) = "nonce-") then DV_Nonce (substring ts 6 (ns - 6))
   else if (ns > 7 && (substring ts 0 7) = "sha256-")  then DV_Hash (substring ts 7 (ns - 7))
   else if (ns > 7 && (substring ts 0 7) = "sha384-") then DV_Hash (substring ts 7 (ns - 7))
@@ -167,20 +167,20 @@ let getDirValue s =
 					   | None -> DV_Domain (splitDom ts)
 					   | Some slash -> DV_None))
        | Some num -> (match stringContains ts "/" (num+3) with
-			   | None -> DV_None (*should we also parse normal origins?*)
+			   | None -> DV_None (*should we also .arse normal origins?*)
 			   | Some slash -> DV_Origin (splitOriginPath ts num slash))
 
-private val getDirValList : s:string -> n:nat -> Tot (list dirValue) (decreases (String.length s - n))
+private val getDirValList : s:string -> n:nat -> Tot (list csp_directive_value) (decreases (String.length s - n))
 let rec getDirValList s n =
   if (String.length s <= n) then []
   else if (substring s n 1) = " " then 
       (getDirValue (substring s 0 n))::(getDirValList (substring s (n+1) ((String.length s)-(n+1))) 0) 
   else getDirValList s (n+1)
 
-private val getSubStringVal : string -> Tot (list dirValue)
+private val getSubStringVal : string -> Tot (list csp_directive_value)
 let getSubStringVal s = getDirValList (s) 0
 
-private val getDirName : string -> Tot (option csp_dir_name)
+private val getDirName : string -> Tot (option csp_directive_name)
 let getDirName s = 
   if s = "child-src" then Some CSP_child_src
   else if s = "connect-src" then Some CSP_connect_src
@@ -203,7 +203,7 @@ let getDirName s =
   else if s = "navigate-to" then Some CSP_navigate_to
   else None 
   
-private val getSubStringCSP : s:string -> n:nat -> Tot (p:(option (csp_dir_name * list dirValue))) (decreases (String.length s - n))
+private val getSubStringCSP : s:string -> n:nat -> Tot (p:(option (csp_directive_name * list csp_directive_value))) (decreases (String.length s - n))
 let rec getSubStringCSP s n =
   if (String.length s <= n) then None
   else if (substring s n 1) = " " then 
@@ -219,32 +219,32 @@ let getDirectiveFromStringAll s =
   else let f = getSubStringCSP ns 0 in
       match f with
       | None -> None
-      | Some (n,v) -> Some ({dir_name=n;dir_value=v})
+      | Some (n,v) -> Some ({directive_name=n;directive_value=v})
       
 (* Rather than checking for isOriginSec, do it statically *)
-val hstring_to_curi_ml : l:secLevel -> string -> Tot (option (torigin * a_uri l))
+val hstring_to_curi_ml : l:secrecy_level -> string -> Tot (option (origin_tuple * a_uri l))
 let hstring_to_curi_ml l s = 
   match stringContains s "://" 0 with 
   | None -> None 
   | Some num -> (
       match stringContains s "/" (num+3) with
       | None -> let orig = (splitOrigin s num) in 
-	       if (isOriginSec orig l) then (* check if the origin is part of the secLevel - either PublicVal or SecretVal list containing origin *)
-		 Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=[];c_querystring=[];c_fragment=(emptyString l)}))
+	       if (is_origin_in_secrecy_level orig l) then (* check if the origin is .art of the secrecy_level - either PublicVal or SecretVal list containing origin *)
+		 Some (orig, ({uri_origin=orig;uri_username=(empty_secret_string l);uri_password=(empty_secret_string l);uri_path=[];uri_querystring=[];uri_fragment=(empty_secret_string l)}))
 	       else None
       | Some slash -> (
 	  match stringContains s "?" (slash+1) with
 	  | None -> (
 	      match stringContains s "#" (slash+1) with
 	      | None -> let (orig,p) = (splitOrigPath l s num slash) in 
-		       if (isOriginSec orig l) then
-			 Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=p;c_querystring=[];c_fragment=(emptyString l)}))
+		       if (is_origin_in_secrecy_level orig l) then
+			 Some (orig, ({uri_origin=orig;uri_username=(empty_secret_string l);uri_password=(empty_secret_string l);uri_path=p;uri_querystring=[];uri_fragment=(empty_secret_string l)}))
 		       else None
    	      | Some fragp -> let ns = (substring s 0 fragp) in
 			    let (orig, p) = (splitOrigPath l ns num slash) in 
-			    let frag = classify #PublicVal (substring s (fragp+1) ((String.length s) - (fragp+1))) l in
-			    if (isOriginSec orig l) then
-			      Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=p;c_querystring=[];c_fragment=frag}))
+			    let frag = classify_secret_string #PublicVal (substring s (fragp+1) ((String.length s) - (fragp+1))) l in
+			    if (is_origin_in_secrecy_level orig l) then
+			      Some (orig, ({uri_origin=orig;uri_username=(empty_secret_string l);uri_password=(empty_secret_string l);uri_path=p;uri_querystring=[];uri_fragment=frag}))
 			    else None
 	      )
 	  | Some ques -> (
@@ -252,30 +252,30 @@ let hstring_to_curi_ml l s =
 	      match stringContains s "#" (ques+1) with
 	      | None -> let (orig,p) = (splitOrigPath l ns num slash) in 
 		       let qs = splitQueryString l (substring s (ques+1) ((String.length s)-(ques+1))) in
-		       if (isOriginSec orig l) then
-			 Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=p;c_querystring=qs;c_fragment=(emptyString l)}))
+		       if (is_origin_in_secrecy_level orig l) then
+			 Some (orig, ({uri_origin=orig;uri_username=(empty_secret_string l);uri_password=(empty_secret_string l);uri_path=p;uri_querystring=qs;uri_fragment=(empty_secret_string l)}))
 		       else None
   	      | Some fragp -> let (orig,p) = (splitOrigPath l ns num slash) in 
 			    let qs = splitQueryString l (substring s (ques+1) (fragp-(ques+1))) in
-			    let frag = classify #PublicVal (substring s (fragp+1) ((String.length s)-(fragp+1))) l in
-			    if (isOriginSec orig l) then
-			      Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=p;c_querystring=qs;c_fragment=frag}))
+			    let frag = classify_secret_string #PublicVal (substring s (fragp+1) ((String.length s)-(fragp+1))) l in
+			    if (is_origin_in_secrecy_level orig l) then
+			      Some (orig, ({uri_origin=orig;uri_username=(empty_secret_string l);uri_password=(empty_secret_string l);uri_path=p;uri_querystring=qs;uri_fragment=frag}))
 			    else None)
 	))
 
-val stringLemma : l:secLevel -> s:string -> Lemma (requires (True)) 
-		  (ensures (match hstring_to_curi_ml l s with | None -> true | Some (o, u) -> o = u.c_origin)) [SMTPat (hstring_to_curi_ml l s)]
+val stringLemma : l:secrecy_level -> s:string -> Lemma (requires (True)) 
+		  (ensures (match hstring_to_curi_ml l s with | None -> true | Some (o, u) -> o = u.uri_origin)) [SMTPat (hstring_to_curi_ml l s)]
 let stringLemma l s = ()
 
-private val getSubStrHead : #l:secLevel -> s:(secString l) -> c:string -> n:nat -> Tot (p:(option (secString l * secString l)){splitStr (declassify s) p}) 
-					(decreases (length s - n))
+private val getSubStrHead : #l:secrecy_level -> s:(secret_string l) -> c:string -> n:nat -> Tot (p:(option (secret_string l * secret_string l)){splitStr (declassify_secret_string s) p}) 
+					(decreases (secret_string_length s - n))
 let rec getSubStrHead #l s c n =
-  if (length s <= n) then None
-  else if (substring (declassify s) n 1) = c then Some (substr s 0 (n) , substr s (n+1) ((length s) - (n+1)))
+  if (secret_string_length s <= n) then None
+  else if (substring (declassify_secret_string s) n 1) = c then Some (secret_string_substring s 0 (n) , secret_string_substring s (n+1) ((secret_string_length s) - (n+1)))
   else getSubStrHead s c (n+1)
 
 (* Determine commands for substring operations *)
-private val getSubStringHead : s:(string) -> n:nat -> Tot (p:(option (pubString * pubString)){splitStr #PublicVal #PublicVal s p}) 
+private val getSubStringHead : s:(string) -> n:nat -> Tot (p:(option (public_string * public_string)){splitStr #PublicVal #PublicVal s p}) 
 					(decreases (String.length s - n))
 let rec getSubStringHead s n =
   if (String.length s <= n) then None
@@ -296,7 +296,7 @@ let rec getDomain s =
     | None -> [s]
     | Some (f,r) -> f::(getDomain r)
     
-private val getAttribute : s:string -> n:nat -> Tot (p:(option cookieAttribute)) (decreases (String.length s - n))
+private val getAttribute : s:string -> n:nat -> Tot (option cookie_header_attributes) (decreases (String.length s - n))
 let rec getAttribute s n =
   if (String.length s <= n) then (
       if s = "secure" then Some SecureOnly
@@ -304,16 +304,16 @@ let rec getAttribute s n =
       else None )
   else if (substring s n 1) = "=" then (
       let (name,value) = (substring s 0 n, substring s (n+1) ((String.length s) - (n+1))) in 
-      if name = "path" then Some (Cpath (splitPathPub value))
-      else if name = "domain" then Some (Cdomain (getDomain value))
+      if name = "path" then Some (CookiePath (splitPathPub value))
+      else if name = "domain" then Some (CookieDomain (getDomain value))
       else if name = "expires" then Some (Expires value)
       else if name = "max-age" then Some (Max_age value)
       else None )
   else getAttribute s (n+1)
 
-private val parseAttributes : list string -> Tot (p:(list cookieAttribute))
-let rec parseAttributes l = 
-  match l with
+private val parseAttributes : list string -> Tot (list cookie_header_attributes)
+let rec parseAttributes ls = 
+  match ls with
   | [] -> []
   | hd::tl -> match (getAttribute hd 0) with
 	    | None -> (parseAttributes tl)
@@ -332,47 +332,53 @@ let getCookieData s =
   | Some (n, v) -> (n, v)
 
 (* FORMAT -- "mt_mop=4:1481209291; domain=.mathtag.com; path=/; expires=Wed, 11-Jan-2017 15:01:05 GMT" *)
-val getCookieFromStringAll : l:secLevel -> string -> Tot (option (cookieHeader' l))
+val getCookieFromStringAll : l:secrecy_origin_list -> string -> Tot (option (cookie_header l))
 let getCookieFromStringAll l s = 
   let ns = trim s in 
+  let sec = SecretVal l in 
   if (String.length ns = 0) then None
   else 
     match (getSubStringHead ns 0) with
     | None -> let (n,v) = (getCookieData ns) in     
-	     Some ({cookie_name=(classify #PublicVal n l);cookie_value=(classify #PublicVal v l);cookie_attr=[]})
+	     Some ({cookie_header_name=(classify_secret_string #PublicVal n sec);
+		  cookie_header_value=(classify_secret_string #PublicVal v sec);
+		  cookie_header_attributes_list=[]})
     | Some (f,a) -> 
 	let (n,v) = (getCookieData f) in     
 	let attr = (parseAttributes (parseAttributesList a)) in
-	Some ({cookie_name=(classify #PublicVal n l);cookie_value=(classify #PublicVal v l);cookie_attr=attr})
+	Some ({cookie_header_name=(classify_secret_string #PublicVal n sec);
+	     cookie_header_value=(classify_secret_string #PublicVal v sec);
+	     cookie_header_attributes_list=attr})
 
 (* Get cookies' name value *)
-val getReqCookie : s:list string -> Tot (list (pubString * pubString))
+val getReqCookie : s:list string -> Tot (list (public_string * public_string))
 let rec getReqCookie s =
   match s with
   | [] -> []
   | hd::tl -> (match (getCookieNameVal hd 0) with | None -> (hd,"") | Some (q,v) -> (q,v))::(getReqCookie tl)
 
 (* Multiple cookies *)
-(* private val getSubCookie : #l:secLevel -> s:(secString l) -> n:nat -> Tot (p:(option (secString l * secString l)){splitStr (declassify s) p})  *)
-(* 					(decreases (length s - n)) *)
+(* private val getSubCookie : #l:secrecy_level -> s:(secret_string l) -> n:nat -> Tot (p:(option (secret_string l * secret_string l)){splitStr (declassify_secret_string s) p})  *)
+(* 					(decreases (secret_string_length s - n)) *)
 (* let rec getSubCookie #l s n = *)
-(*   if (length s <= n) then None *)
-(*   else if substring (declassify s) n 1 = "," then Some (substr s 0 (n) , substr s (n+1) ((length s) - (n+1))) *)
+(*   if (secret_string_length s <= n) then None *)
+(*   else if substring (declassify_secret_string s) n 1 = "," then Some (secret_string_substring s 0 (n) , secret_string_substring s (n+1) ((secret_string_length s) - (n+1))) *)
 (*   else getSubCookie s (n+1) *)
 
-val parseSerialCookie : #l:secLevel -> s:secString l -> Tot (list (secString l)) (decreases (length s))
+val parseSerialCookie : #l:secrecy_level -> s:secret_string l -> Tot (list (secret_string l)) (decreases (secret_string_length s))
 let rec parseSerialCookie #l s =
   match getSubStrHead s "," 0 with
     | None -> [s]
     | Some (f,r) -> [f] (* ::(parseSerialCookie r) *) (* browsers only parse 1st cookie and ignore others -- add others if required *)
 
 (* Takes a string and returns a list of strings with delimiter being ";" in the string *)
-val parseSerialAll : #l:secLevel -> s:secString l -> Tot (list (secString l)) (decreases (length s))
+val parseSerialAll : #l:secrecy_level -> s:secret_string l -> Tot (list (secret_string l)) (decreases (secret_string_length s))
 let rec parseSerialAll #l s =
   match getSubStrHead s ";" 0 with
     | None -> [s]
     | Some (f,r) -> f::(parseSerialAll r)
 
 (* Return the form data from the body *)
-val getFormData : #l:secLevel -> (secString l) -> Tot (querystring l)
-let getFormData #l s = splitQueryString l (declassify s)
+val getFormData : #l:secrecy_level -> (secret_string l) -> Tot (querystring l)
+let getFormData #l s = splitQueryString l (declassify_secret_string s)
+

@@ -12,57 +12,103 @@ open AuxiliaryFunctions
 
 module List = FStar.List.Tot
 
+(* Secrecy origins are the indices to secrets - can either be an origin or a origin* with wildcard checks, e.g., cookies *)
+type secrecy_origin = 
+| SecOrigin : orig:origin -> secrecy_origin
+| OriginStar : host:origin_domain -> secrecy_origin
+
+type secrecy_origin_list = lo:list secrecy_origin{not (list_is_empty lo)}
+type origin_star = o:secrecy_origin{OriginStar? o}
+
 (* Secrecy level *)
-type secLevel = 
-| PublicVal : secLevel
-| SecretVal : seco:list origin{not (emptyList seco)} -> secLevel
+type secrecy_level = 
+| PublicVal : secrecy_level
+| SecretVal : sec_origin_list:secrecy_origin_list -> secrecy_level
 
 (* abstract *) 
-type a_string (ol:list origin) = 
+type a_string (ol:secrecy_origin_list) = 
      | AString : string -> a_string ol
 
-let secString (s:secLevel): Tot Type0 =
+let secret_string (s:secrecy_level): Tot Type0 =
      match s with
      | PublicVal -> string
      | SecretVal ol -> a_string ol
 
-type pubString = secString PublicVal
+type public_string = secret_string PublicVal
 
-(* all secrets with possible list of origins for a particular user *)
-type secretOriginList = list ((l:secLevel & secString l) * list origin)
+(* all secrets with possible list of origins for a particular user -- "&" represents dependent type *)
+type global_secrets_list_origins = list (secret_value:(l:secrecy_level & secret_string l) * indexed_origins:secrecy_origin_list)
 
-let secList : secretOriginList = []
+let secret_list : global_secrets_list_origins = []
 
 (* Ghost function to return the content of the secret string *)
-let content (#l:secLevel) (s:secString l) : GTot string =
+let secret_content (#l:secrecy_level) (s:secret_string l) : GTot string =
     match l with
     | PublicVal -> s
     | SecretVal ol ->
       let (AString #ol v) = s in v
 
 (* Function to return the content of the secret string *)
-private val getSecString : #l:secLevel -> s:secString l -> Tot (ns:string{ns = content s})
-let getSecString #l s =
+private val get_string_from_secret : #l:secrecy_level -> s:secret_string l -> Tot (ns:string{ns = secret_content s})
+let get_string_from_secret #l s =
     match l with
     | PublicVal -> s
     | SecretVal ol ->
       let (AString #ol v) = s in v
 
+(* check if origin "o" is in list of secrecy_origins "l" *)
+val is_origin_in_list_secrecy_origins : o:origin -> l:list secrecy_origin -> Tot (bool)
+let rec is_origin_in_list_secrecy_origins o l =
+    match l with
+    | [] -> false
+    | (SecOrigin hd)::tl -> (o = hd) || (is_origin_in_list_secrecy_origins o tl)
+    | (OriginStar host)::tl -> (is_origin_match_origin_domain o host) || (is_origin_in_list_secrecy_origins o tl)
+
+(* check if origin "o" is in list of secrecy_origins "l" *)
+val is_origin_domain_in_list_secrecy_origins : o:origin_domain -> l:list secrecy_origin -> Tot (bool)
+let rec is_origin_domain_in_list_secrecy_origins h l =
+    match l with
+    | [] -> false
+    | (OriginStar host)::tl -> (origin_domain_match h host) || (is_origin_domain_in_list_secrecy_origins h tl)
+    | _::tl -> (is_origin_domain_in_list_secrecy_origins h tl)
+
+(* Checks if an origin (including domain checks for OriginStar) is a part of the secrecy level *)
+val is_origin_secret_mem: o:origin -> l:secrecy_level{SecretVal? l} -> Tot (bool)
+let is_origin_secret_mem o l = 		
+    match l with
+    | SecretVal ol -> is_origin_in_list_secrecy_origins o ol
+
+(* is l a sublist of l' *)
+val is_secrecy_origin_list_sublist : list secrecy_origin -> list secrecy_origin -> Tot bool
+let rec is_secrecy_origin_list_sublist l l' =
+  match l with 
+  | [] -> true
+  | (SecOrigin o)::tl -> is_origin_in_list_secrecy_origins o l' && is_secrecy_origin_list_sublist tl l'
+  | hd::tl -> List.mem hd l' && is_secrecy_origin_list_sublist tl l'
+
 (* Ghost function that checks if a secrecy level can be restricted to a more secret level *)
-val restricts: secLevel -> secLevel -> GTot bool
-let restricts l1 l2 =
-    match l1,l2 with
+val can_restrict_secrecy_level : secrecy_level -> secrecy_level -> GTot bool
+let can_restrict_secrecy_level l1 l2 = 
+    (l1 = l2) ||
+    (match l1,l2 with
     | PublicVal, l2 -> true
-    | SecretVal ol, SecretVal [o] -> List.mem o ol
-    | SecretVal ol, SecretVal ol' -> isSublist ol' ol
-    | _, _ -> false
+    | SecretVal ol, SecretVal ol' -> (if (List.length ol >= List.length ol') then list_is_sublist ol' ol else false) || is_secrecy_origin_list_sublist ol' ol
+    | _, _ -> false)
 
-val restrict_lemma : l1:secLevel -> l2:secLevel -> Lemma (requires (l1 = l2)) (ensures (restricts l1 l2)) [SMTPat (restricts l1 l2)]
-let restrict_lemma l1 l2 = () 
+(* a secrecy level can be restricted to itself *)
+val restrict_secrecy_level_lemma : l1:secrecy_level -> 
+				   l2:secrecy_level -> 
+				   Lemma (requires (l1 = l2)) 
+					 (ensures (can_restrict_secrecy_level l1 l2)) 
+					 [SMTPat (can_restrict_secrecy_level l1 l2)]
+let restrict_secrecy_level_lemma l1 l2 = ()
 
-(* Function to classify a string to a more secret level *)
-val classify: #l:secLevel -> s:secString l -> l':secLevel{restricts l l'} -> Tot (t:secString l'{content t = content s})
-let classify #l s l' =
+(* Function to classify_secret_string a string to a more secret level *)
+val classify_secret_string : #l:secrecy_level -> 
+			     s:secret_string l -> 
+			     l':secrecy_level{can_restrict_secrecy_level l l'} -> 
+			     Tot (t:secret_string l'{secret_content t = secret_content s})
+let classify_secret_string #l s l' =
     match l,l' with
     | PublicVal,PublicVal -> s
     | PublicVal,SecretVal ol ->
@@ -79,13 +125,27 @@ let classify #l s l' =
 	  let a:a_string ol' = AString #ol' s in
 	  a)
 
+(* Checks if the origin is a part of the secrecy level or if the secrecy level is public *)
+val is_origin_in_secrecy_level : origin -> s:secrecy_level -> Tot bool
+let is_origin_in_secrecy_level t s =
+  match s with
+  | PublicVal -> true
+  | SecretVal sec -> is_origin_secret_mem t s
 
-val validSingleSecLevel : secLevel -> Tot bool
-let validSingleSecLevel l = match l with | PublicVal -> true | SecretVal [o] -> true | _ -> false
 
-(* Checks if two secret strings of the same secrecy level are equal *)
-val equal: #l:secLevel -> s:secString l -> t:secString l -> Tot (bool)
-let equal #l s t =
+
+
+
+(* create a new secrecy level by adding a new origin *)
+val add_origin_to_secrecy_level : s:secrecy_level -> o:secrecy_origin -> Tot (ns:secrecy_level{can_restrict_secrecy_level ns s})
+let add_origin_to_secrecy_level s o = 
+  match s with 
+  | PublicVal -> PublicVal (* if the secrecy level was public, then remain public as we are decreasing the secrecy level *)
+  | SecretVal ol -> let ol' = List.append ol [o] in SecretVal ol'
+
+(* Checks if two secret strings of the same secrecy level are is_equal_secret_string *)
+val is_equal_secret_string: #l:secrecy_level -> s:secret_string l -> t:secret_string l -> Tot (bool)
+let is_equal_secret_string #l s t =
   match l with
   | PublicVal -> s = t
   | SecretVal ol ->
@@ -93,9 +153,9 @@ let equal #l s t =
       let (AString #ol v2) = t in
       v1 = v2
       
-(* Returns the length of the secret string *)
-val length: #l:secLevel -> s:secString l -> Tot (r:nat{r = String.length(content #l s)})
-let length #l s = 
+(* Returns the secret_string_length of the secret string *)
+val secret_string_length: #l:secrecy_level -> s:secret_string l -> Tot (r:nat{r = String.length(secret_content #l s)})
+let secret_string_length #l s = 
     match l with
     | PublicVal -> String.length s
     | SecretVal ol -> 
@@ -103,8 +163,8 @@ let length #l s =
        | AString #ol v -> String.length v)
 
 (* Returns the substring of the secret string *)
-val substr : #l:secLevel -> s:secString l -> i:nat -> n:nat{i + n <= length s} -> Tot (ns:(secString l){length ns = n})
-let substr #l s i n =
+val secret_string_substring : #l:secrecy_level -> s:secret_string l -> i:nat -> n:nat{i + n <= secret_string_length s} -> Tot (ns:(secret_string l){secret_string_length ns = n})
+let secret_string_substring #l s i n =
     match l with
     | PublicVal -> substringImpl s i n (* String.make n (String.sub s i n) *)
     | SecretVal ol -> 
@@ -112,117 +172,94 @@ let substr #l s i n =
        | AString #ol v -> AString #ol (substringImpl v i n (* String.make n (String.sub v i n) *)))
 
 (* Concatenates two secret strings of the same secrecy level *)
-val strcat: #l:secLevel -> s:secString l -> t:secString l
-    	    -> Tot (st:secString l{content st = String.strcat (content s) (content t)})
-let strcat #l s t = 		
+val secret_string_strcat: #l:secrecy_level -> s:secret_string l -> t:secret_string l
+    	    -> Tot (st:secret_string l{secret_content st = String.strcat (secret_content s) (secret_content t)})
+let secret_string_strcat #l s t = 		
     match l with
     | PublicVal -> String.strcat s t
     | SecretVal ol -> 
       let (AString #ol v1) = s in
       let (AString #ol v2) = t in
            AString #ol (String.strcat v1 v2)
-      
-(* assume val randomString: (l:secLevel) -> (n:UInt32.t) -> ST (secString l) *)
+
+(* assume val randomString: (l:secrecy_level) -> (n:UInt32.t) -> ST (secret_string l) *)
 (*        	   (requires (fun _ -> true)) *)
 (* 	   (ensures  (fun h0 s h1 -> h0 == h1 /\ length #l s = UInt32.v n)) *)
 
-(* s1 contains a sublist of s2 *)
-val equalSubLevels : s1:secLevel -> s2:secLevel -> GTot (b:bool)
-let equalSubLevels s1 s2 = 
-  (match s1,s2 with 
-  | PublicVal, PublicVal -> true
-  | SecretVal sec, PublicVal -> true (* public is less secret than sec *)
-  | SecretVal sec, SecretVal sec' -> isSublist sec sec'
-  | _, _ -> false
-  )
-
-val subLevel_lemma : s1:secLevel -> s2:secLevel -> Lemma (requires (equalSubLevels s1 s2)) (ensures (restricts s2 s1)) [SMTPat (equalSubLevels s1 s2)]
-let subLevel_lemma s1 s2 = ()
-  
-(* val eqSecLevel : s1:secLevel -> s2:secLevel -> Tot bool *)
+(* val eqSecLevel : s1:secrecy_level -> s2:secrecy_level -> Tot bool *)
 (* let eqSecLevel s1 s2 =  *)
 (*   (s1 = s2) ||  *)
 (*   (match s1 with  *)
 (*   | PublicVal -> if (s2 = PublicVal) then true else false *)
 (*   | SecretVal sec -> match s2 with *)
 (* 		  | PublicVal -> false *)
-(* 		  | SecretVal sec2 -> isSameOriginList sec sec2) *)
+(* 		  | SecretVal sec2 -> is_same_origin_in_list sec sec2) *)
 
-val emptyString : l:secLevel -> Tot (secString l)
-let emptyString l = (classify #PublicVal "" l)
+val empty_secret_string : l:secrecy_level -> Tot (secret_string l)
+let empty_secret_string l = (classify_secret_string #PublicVal "" l)
 
-val eqString : #l:secLevel -> (s:secString l) -> p:(pubString) -> Tot (b:bool{b = (content #PublicVal p = content #l s)})
-let eqString #l s p =
+val is_secret_equal_public_string : #l:secrecy_level -> (s:secret_string l) -> p:(public_string) -> Tot (b:bool{b = (secret_content #PublicVal p = secret_content #l s)})
+let is_secret_equal_public_string #l s p =
   match l with
   | PublicVal -> (s = p)
   | SecretVal ol ->
       let (AString #ol v) = s in (v = p)
       
-val mk_list_string : #s:secLevel -> list string -> Tot (list (secString s))
-let rec mk_list_string #s l =
+val mk_list_secret_string : #s:secrecy_level -> list string -> Tot (list (secret_string s))
+let rec mk_list_secret_string #s l =
   match l with
   | [] -> []
-  | hd::tl -> (classify #PublicVal hd s)::(mk_list_string tl)
+  | hd::tl -> (classify_secret_string #PublicVal hd s)::(mk_list_secret_string tl)
 
-(* Checks if the origin is a part of the secrecy level or if the secrecy level is public *)
-val isOriginSec : origin -> s:secLevel -> Tot bool
-let isOriginSec t s =
-  match s with
-  | PublicVal -> true
-  | SecretVal sec -> List.mem t sec
-
-private val getSecretOrigin : #l:secLevel -> secString l -> secretOriginList -> Tot (list origin)
-let rec getSecretOrigin #l s ls =
+private val get_secret_origins_global_list : #l:secrecy_level -> secret_string l -> global_secrets_list_origins -> Tot (list secrecy_origin)
+let rec get_secret_origins_global_list #l s ls =
   match ls with
   | [] -> []
-  | ((|hl,hs|),lo)::tl -> if (hl = l && hs = s) then lo else getSecretOrigin s tl
+  | ((|hl,hs|),lo)::tl -> if (hl = l && hs = s) then lo else get_secret_origins_global_list s tl
 
-(* Reclassify the string to an unrelated secrecy level *)
-val canReclassify : #l:secLevel -> secString l -> l':secLevel -> Tot bool
-let canReclassify #l s l' =
+(* Reclassify_secret_string the string to an unrelated secrecy level *)
+val can_reclassify_secret_string : #l:secrecy_level -> secret_string l -> l':secrecy_level -> GTot bool
+let can_reclassify_secret_string #l s l' =
   (l = PublicVal) || (* If l is public already, it can be classified to any level *)
-  (let lo = getSecretOrigin #l s secList in 
+  (let lo = get_secret_origins_global_list #l s secret_list in 
   match l' with
   | PublicVal -> false
   | SecretVal ol' -> (List.for_all (fun x -> List.mem x lo) ol'))
 
-val addSecretOrigins : #l:secLevel -> s:secString l -> ol:list origin -> ls:secretOriginList -> Tot (nls:secretOriginList)
-let rec addSecretOrigins #l s ol ls = 
+val add_secret_origins_global_list : #l:secrecy_level -> s:secret_string l -> ol:secrecy_origin_list -> ls:global_secrets_list_origins -> Tot (nls:global_secrets_list_origins)
+let rec add_secret_origins_global_list #l s ol ls = 
   match ls with
   | [] -> [((|l, s|), ol)]
-  | ((|hl,hs|),lo)::tl -> if (hl = l && hs = s) then ((|hl,hs|), (List.append ol lo))::tl else ((|hl,hs|),lo)::(addSecretOrigins s ol tl)
+  | ((|hl,hs|),lo)::tl -> if (hl = l && hs = s) then ((|hl,hs|), (List.append ol lo))::tl else ((|hl,hs|),lo)::(add_secret_origins_global_list s ol tl)
 
-val reclassify : #l:secLevel -> s:secString l -> l':(secLevel){canReclassify #l s l'} -> Tot (t:(secString l'){content t = content s})
-let reclassify #l s l' =
+(* *** TODO - ALLOW restriction of subdomain to domain and http to https *** *)
+val reclassify_secret_string : #l:secrecy_level -> s:secret_string l -> 
+			       l':(secrecy_level){can_reclassify_secret_string #l s l'} -> 
+			       Tot (t:(secret_string l'){secret_content t = secret_content s})
+let reclassify_secret_string #l s l' =
     match l,l' with
     | PublicVal, PublicVal -> s
-    | PublicVal, SecretVal ol -> classify s l'	
+    | PublicVal, SecretVal ol -> classify_secret_string s l'	
     | SecretVal ol, PublicVal -> (match s with | AString #ol t -> t)
     | SecretVal ol, SecretVal ol' -> 
 	(match s with | AString #ol s -> let a:a_string ol' = AString #ol' s in a)
 
 (* Checks if the origin is a part of the secrecy level or if the secrecy level is public *)
-let declassify (#l:secLevel) (s:secString l) : Tot string = 
+let declassify_secret_string (#l:secrecy_level) (s:secret_string l) : Tot string = 
     match l with
     | PublicVal -> s
     | SecretVal ol -> 
       let (AString #ol v) = s in v
 
-(* Server-side declassify --- the server should be able to properly guess the secLevel for declassify to succeed *)
-let s_declassify (l:secLevel) (s:secString l) : Tot string = 
+(* Server-side declassify_secret_string --- the server should be able to properly guess the secrecy_level for declassify_secret_string to succeed *)
+let s_declassify_secret_string (l:secrecy_level) (s:secret_string l) : Tot string = 
     match l with
     | PublicVal -> s
     | SecretVal ol -> let (AString #ol v) = s in v
 
-let rec declassify_list  (#l:secLevel) (s:list (secString l)) : Tot (list string) = 
+let rec declassify_list_secret_string  (#l:secrecy_level) (s:list (secret_string l)) : Tot (list string) = 
   match s with 
   | [] -> []
-  | hd::tl -> (declassify #l hd)::(declassify_list tl)
+  | hd::tl -> (declassify_secret_string #l hd)::(declassify_list_secret_string tl)
 
-(* for printing and logging *)
-val getOriginString : list origin -> Tot (string)
-let rec getOriginString l =
-  match l with 
-  | [] -> ""
-  | hd::tl -> "Origin: " ^ (origin_to_string hd) ^ "\n" ^ (getOriginString tl)
 
