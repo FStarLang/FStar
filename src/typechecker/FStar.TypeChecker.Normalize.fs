@@ -1256,6 +1256,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
+            else if List.contains Weak cfg.steps
+            then (log cfg (fun () -> BU.print_string "+++ Not touching Tm_let\n");
+                  rebuild cfg env stack (closure_as_term cfg env t))
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type\n");
                  let ty = norm cfg env [] lb.lbtyp in
