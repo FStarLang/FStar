@@ -207,7 +207,7 @@ and iapp (f:t) (args:list<(t * aqual)>) =
   | [] -> f
   | _ -> iapp (app f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
 
-and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
+and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
   let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
   //VD: for now, also search in local environment (local definitions are not part of env.sigtab)
   match List.find BU.is_some [find_sigelt_in_gamma env fvar.fv_name.v; find_in_sigtab env fvar.fv_name.v] with
@@ -229,25 +229,25 @@ and translate_fv (env: Env.env) (bs:list<t>) (us:list<universe>) (fvar:fv): t =
           end
       | Some { sigel = Sig_datacon(_, _, _, lid, _, []) } ->
           debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_datacon\n" (P.lid_to_string lid));
-          mkConstruct fvar us []
+          mkConstruct fvar [] []
       | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
           debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_inductive_type\n" (P.lid_to_string lid));
-          mkConstruct fvar us []
+          mkConstruct fvar [] []
       | None ->
           debug (fun() -> BU.print "Translate fv: it's not in the environment\n" []);
-          mkConstruct fvar us [] (* Zoe : Treat all other cases as type/data constructors for now. *)
+          mkConstruct fvar [] [] (* Zoe : Treat all other cases as type/data constructors for now. *)
       | Some s ->
           BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
      )
    | None ->
-       mkConstruct fvar us [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
+       mkConstruct fvar [] [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t = 
     match us with
     | [] -> translate env bs def 
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving univers binder qualifier none for now
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving universe binder qualifier none for now
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
   
@@ -331,7 +331,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       translate env bs tm
 
     | Tm_fvar fvar ->
-        translate_fv env bs [] fvar
+      translate_fv env bs fvar
 
     | Tm_app (e, [arg]) ->
       debug (fun () -> BU.print2 "Application %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
@@ -386,11 +386,11 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) args in
       let apply tm = 
         match args with
-         | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
+         | [] -> tm
          | _ ->  U.mk_app tm args
       in
       (match us with
-       | u::us -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (u::us))
+       | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
        | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
 
     | Accu (Var bv, []) ->

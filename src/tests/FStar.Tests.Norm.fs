@@ -181,8 +181,8 @@ let tests =
   ; (302, (tc_nbe "recons_m [T; F]"), (tc_nbe "[T; F]"))
   ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
   ; (304, (tc_nbe "select_hb (H F)"), (tc_nbe "F"))
-  ; (305, (tc_nbe "idd T"), (tc_nbe "T"));
-  (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
+  ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
+  ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
   // ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
   // ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
   ]
