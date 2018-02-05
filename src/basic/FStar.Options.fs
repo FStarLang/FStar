@@ -157,6 +157,8 @@ let defaults =
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
       ("no_tactics"                   , Bool false);
+      ("normalize_pure_terms_for_extraction"
+                                      , Bool false);
       ("odir"                         , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -265,6 +267,8 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_normalize_pure_terms_for_extraction
+                                ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
@@ -695,6 +699,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
 
        ( noshort,
+        "normalize_pure_terms_for_extraction",
+        Const (mk_bool true),
+        "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
+
+       ( noshort,
         "odir",
         PostProcessed (pp_validate_dir, PathStr "dir"),
         "Place output in directory <dir>");
@@ -997,6 +1006,7 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "no_tactics"
+    | "normalize_pure_terms_for_extraction"
     | "tactic_raw_binders"
     | "tactic_trace"
     | "tactic_trace_d"
@@ -1213,6 +1223,8 @@ let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = let s = String.lowercase s in
     get_no_extract() |> FStar.Util.for_some (fun f -> String.lowercase f = s)
+let normalize_pure_terms_for_extraction
+                                 () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()

@@ -18,19 +18,22 @@ module FStar.String
 type char = FStar.Char.char
 
 (* Not much in here; we should extend and refine this interface *)
+val strlen:  string -> Tot nat
+unfold let length s = strlen s
 
-val length:  string -> Tot nat
 val make: l:nat -> char -> Tot (s:string {length s = l})
 val split:   list char -> string -> Tot (list string)
 val strcat:  s0:string -> s1:string -> Tot (s:string{length s = length s0 + length s1})
 unfold let (^) s0 s1 = strcat s0 s1
 val concat:  string -> list string -> Tot string
 val compare: string -> string -> Tot int
-val strlen:  string -> Tot nat
+
 val lowercase:  string -> Tot string
 val uppercase:  string -> Tot string
 
 val index: s:string -> n:nat {n < length s} -> Tot char
+//index_of: returns -1 if the char is not found, for compatibility with C
+val index_of: string -> char -> Tot int
 val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot char
 
 (* may fail with index out of bounds *)

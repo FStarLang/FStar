@@ -81,3 +81,6 @@ let parse_string specs others (str:string) =
     | Some args ->
       let args = Array.of_list args in
       parse specs others args 0 (Array.length args - 1) 0
+
+let cmdline () =
+   Array.to_list (Sys.argv)
