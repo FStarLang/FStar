@@ -56,7 +56,7 @@ let live #a (h:mem) (b:buffer a) : GTot Type0 = HS.contains h b.content
 let unmapped_in #a (b:buffer a) (h:mem) : GTot Type0 = unused_in b h
 
 val recall: #a:Type
-  -> b:buffer a{is_eternal_region (frameOf b) && not (is_mm b.content)} -> Stack unit
+  -> b:buffer a{is_eternal_region (frameOf b) /\ not (is_mm b.content)} -> Stack unit
   (requires (fun m -> True))
   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 let recall #a b = recall b.content
@@ -806,7 +806,7 @@ let create #a init len =
 
 unfold let p (#a:Type0) (init:list a) : GTot Type0 =
   normalize (0 < FStar.List.Tot.length init) /\
-  normalize (FStar.List.Tot.length init < UInt.max_int 32)
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
 unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
   normalize (length buf == len)
@@ -845,26 +845,51 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h (HS.frameOf x)}) (v
     let m' = Map.upd m (HS.frameOf x) (Heap.upd (Map.sel m (HS.frameOf x)) (HS.as_ref x) v) in
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
-val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
-  (requires (fun h -> is_eternal_region r /\ witnessed (region_contains_pred r)))
-  (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
+unfold let rcreate_post_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (b:buffer a) (h0 h1:mem) :Type0
+  = b `unused_in` h0
     /\ live h1 b /\ idx b == 0 /\ length b == v len
     /\ Map.domain h1.h == Map.domain h0.h
     /\ h1.tip == h0.tip
     /\ modifies (Set.singleton r) h0 h1
     /\ modifies_ref r Set.empty h0 h1
     /\ as_seq h1 b == Seq.create (v len) init
-    /\ ~(is_mm b.content)))
-let rcreate #a r init len =
-  let h0 = HST.get() in
-  let s = Seq.create (v len) init in
-  let content: reference (s:seq a{Seq.length s == v len}) = ralloc r s in
-  let b = MkBuffer len content 0ul len in
-  let h1 = HST.get() in
-  assert (Seq.equal (as_seq h1 b) (sel h1 b));
-  lemma_upd h0 content s;
-  b
 
+private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
+  :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\
+		                        is_mm b.content == mm))
+  = let h0 = HST.get() in
+    let s = Seq.create (v len) init in
+    let content: reference (s:seq a{Seq.length s == v len}) =
+      if mm then ralloc_mm r s else ralloc r s
+    in
+    let b = MkBuffer len content 0ul len in
+    let h1 = HST.get() in
+    assert (Seq.equal (as_seq h1 b) (sel h1 b));
+    lemma_upd h0 content s;
+    b
+
+(** This function allocates a buffer in an "eternal" region, i.e. a region where memory is
+ * automatically-managed. One does not need to call rfree on such a buffer. It
+ * translates to C as a call to malloc and assumes a conservative garbage
+ * collector is runnning. *)
+val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
+  (requires (fun h            -> is_eternal_region r))
+  (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
+let rcreate #a r init len = rcreate_common r init len false
+
+(** This function allocates a buffer into a manually-managed region, meaning that the client must
+ * call rfree in order to avoid memory leaks. It translates to C as a straight malloc. *)
+let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
+  :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
+  = rcreate_common r init len true
+
+(** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
+let rfree (#a:Type) (b:buffer a)
+  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
+           (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
+  = rfree b.content
 
 (* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
 

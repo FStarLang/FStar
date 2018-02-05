@@ -181,7 +181,7 @@ let file_of_dep_aux
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
-         if use_checked_file then f ^ ".source" else f)
+         if use_checked_file then FStar.Options.prepend_cache_dir (f ^ ".source") else f)
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
@@ -935,7 +935,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
           //                 touch $@
           if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
-                                             norm_f
+                                             (norm_path (FStar.Options.prepend_cache_dir norm_f))
                                              norm_f
                                              files;
           //this one prints:

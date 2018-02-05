@@ -1029,28 +1029,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     ses, projectors_ses
 
   | Sig_pragma(p) ->
-    let set_options t s = match Options.set_options t s with
-      | Getopt.Success -> ()
-      | Getopt.Help  -> raise_error (Errors.Fatal_FailToProcessPragma, ("Failed to process pragma: use 'fstar --help' to see which options are available")) r
-      | Getopt.Error s -> raise_error (Errors.Fatal_FailToProcessPragma,  ("Failed to process pragma: " ^s)) r
-    in
-    begin match p with
-      | LightOff ->
-        if p = LightOff
-        then Options.set_ml_ish();
-        [se], []
-      | SetOptions o ->
-        set_options Options.Set o;
-        [se], []
-      | ResetOptions sopt ->
-        Options.restore_cmd_line_options false |> ignore;
-        let _ = match sopt with
-          | None -> ()
-          | Some s -> set_options Options.Reset s
-        in
-        [se], []
-    end
-
+    U.process_pragma p r;
+    [se], []
 
   | Sig_new_effect_for_free (ne) ->
       (* This is only an elaboration rule not a typechecking one *)
