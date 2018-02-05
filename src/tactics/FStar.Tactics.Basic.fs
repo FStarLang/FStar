@@ -52,11 +52,7 @@ type tac<'a> = {
 let mk_tac (f : proofstate -> __result<'a>) : tac<'a> =
     { tac_f = f }
 
-let run t p =
-//    printfn "TACTICS.RUN START";
-    let r = t.tac_f p in
-//    printfn "TACTICS.RUN END";
-    r
+let run t p = t.tac_f p
 
 (* monadic return *)
 let ret (x:'a) : tac<'a> =
@@ -771,8 +767,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                             (tts goal.context (U.mk_squash U_zero post))
                             (tts goal.context goal.goal_ty)
     else
-//NS: 01/24 ... looks redundant
-//        let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
+       //NS: 01/24 ... looks redundant
+       //let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
         bind (add_implicits implicits.implicits) (fun _ ->
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve goal U.exp_unit) (fun _ ->
@@ -794,16 +790,19 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | Tm_uvar _ ->
                 ret ([{ goal with
                         witness = bnorm goal.context term;
-                        goal_ty =
-                          //NS: 01/24 ...expensive
-                          //bnorm goal.context typ
-                          typ}], [])
+                        goal_ty = bnorm goal.context typ //NS: 01/24 ...expensive
+                       }], [])
             | _ ->
-                //NS:01/24: use the fast path instead
                 let g_typ =
-                    FStar.TypeChecker.TcTerm.check_type_of_well_typed_term false env term typ in
-                // let term = bnorm env term in
-                // let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
+                  if Options.__temp_fast_implicits()
+                  then // NS:01/24: use the fast path instead, knowing that term is at least well-typed
+                       // NS:05/25: protecting it under this option,
+                       //           since it causes a regression in examples/vale/*Math_i.fst
+                       FStar.TypeChecker.TcTerm.check_type_of_well_typed_term false env term typ
+                  else let term = bnorm env term in
+                       let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
+                       g_typ
+                in
                 bind (goal_from_guard "apply_lemma solved arg" goal.context g_typ goal.opts) (function
                 | None -> ret ([], [])
                 | Some g -> ret ([], [g])
