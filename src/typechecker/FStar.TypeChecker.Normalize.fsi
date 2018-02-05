@@ -46,6 +46,7 @@ type step =
   | NoFullNorm
   | CheckNoUvars
   | Unmeta
+  | Unascribe
 and steps = list<step>
 type closure =
   | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint

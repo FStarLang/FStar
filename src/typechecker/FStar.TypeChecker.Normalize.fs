@@ -74,6 +74,7 @@ type step =
   | NoFullNorm
   | CheckNoUvars
   | Unmeta          //remove all non-monadic metas.
+  | Unascribe
 and steps = list<step>
 
 type psc = {
@@ -1197,6 +1198,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
+
+          | Tm_ascribed(t1, (tc, tacopt), l) when List.contains Unascribe cfg.steps ->
+            norm cfg env stack t1
 
           | Tm_ascribed(t1, (tc, tacopt), l) ->
             begin match stack with
