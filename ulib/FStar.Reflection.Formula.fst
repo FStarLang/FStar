@@ -6,7 +6,7 @@ open FStar.Reflection.Basic
 open FStar.Reflection.Syntax
 open FStar.Reflection.Syntax.Lemmas
 
-type comparison =
+noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
   | BoolEq of option typ  (* Decidable, boolean equality (eq), maybe annotated *)
   | Lt | Le | Gt | Ge     (* Orderings, at type `int` (and subtypes) *)
