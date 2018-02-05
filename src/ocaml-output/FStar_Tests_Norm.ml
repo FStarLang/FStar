@@ -152,13 +152,13 @@ let (pred_nat :
       let uu____269 =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_bvar
-             (let uu___80_274 = FStar_Tests_Util.x  in
+             (let uu___74_274 = FStar_Tests_Util.x  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___80_274.FStar_Syntax_Syntax.ppname);
+                  (uu___74_274.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index = (Prims.parse_int "0");
                 FStar_Syntax_Syntax.sort =
-                  (uu___80_274.FStar_Syntax_Syntax.sort)
+                  (uu___74_274.FStar_Syntax_Syntax.sort)
               })) FStar_Pervasives_Native.None FStar_Range.dummyRange
          in
       (uu____211, FStar_Pervasives_Native.None, uu____269)  in
