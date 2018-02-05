@@ -365,7 +365,12 @@ and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
     if !tacdbg then
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
-    match E.unembed_result result unembed_b with
+
+    // F* requires more annotations.
+    // IN F*: let res : option<either<(b * proofstate), (string * proofstate)>> = E.unembed_result result unembed_b in
+    let res = E.unembed_result result unembed_b in //JUST FSHARP
+
+    match res with
     | Some (Inl (b, ps)) ->
         bind (set ps) (fun _ -> ret b)
 

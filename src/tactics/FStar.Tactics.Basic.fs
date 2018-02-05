@@ -29,6 +29,9 @@ module EMB = FStar.Syntax.Embeddings
 module Err = FStar.Errors
 module Z = FStar.BigInt
 
+// working around #1374
+type goal = FStar.Tactics.Types.goal
+
 type name = bv
 type env = Env.env
 type implicits = Env.implicits
@@ -851,17 +854,6 @@ let revert : tac<unit> =
         let w' = U.abs [(x, None)] goal.witness None in
         replace_cur ({ goal with context = env'; witness = w'; goal_ty = typ' })
     )
-
-let revert_hd (x : name) : tac<unit> =
-    bind cur_goal (fun goal ->
-    match Env.pop_bv goal.context with
-    | None -> fail "Cannot revert_hd; empty context"
-    | Some (y, env') ->
-        if not (S.bv_eq x y)
-        then fail2 "Cannot revert_hd %s; head variable mismatch ... egot %s"
-                              (Print.bv_to_string x)
-                              (Print.bv_to_string y)
-        else revert)
 
 let free_in bv t =
     Util.set_mem bv (SF.names t)
