@@ -359,7 +359,7 @@ noeq type norm_step =
   | Delta
   | Zeta
   | Iota
-	| UnfoldAttr:#t:Type -> a:t -> norm_step
+  | UnfoldAttr:#t:Type0 -> a:t -> norm_step
   | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
 
 // Helpers, so we don't expose the actual inductive
