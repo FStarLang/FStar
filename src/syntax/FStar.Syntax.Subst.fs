@@ -84,36 +84,42 @@ let delay t s =
     mk_Tm_delayed ((t, s)) t.pos
 
 (*
-    force_uvar' (t:term)
+    force_uvar' (t:term) : term * bool
         replaces any unification variable at the head of t
         with the term that it has been fixed to, if any.
+
+        Also returns `true`, if it actually resolved the uvar at the head
+                     `false` otherwise
 *)
 let rec force_uvar' t =
   match t.n with
   | Tm_uvar (uv,_) ->
-      begin
-        match Unionfind.find uv with
-          | Some t' -> force_uvar' t'
-          | _ -> t
-      end
-  | _ -> t
+      (match Unionfind.find uv with
+          | Some t' -> fst (force_uvar' t'), true
+          | _ -> t, false)
+  | _ -> t, false
 
 //wraps force_uvar' to propagate any position information
 //from the uvar to anything it may have been resolved to
 let force_uvar t =
-  let t' = force_uvar' t in
-  if U.physical_equality t t'
-  then t
-  else delay t' ([], Some t.pos)
+  let t', forced = force_uvar' t in
+  if not forced
+  then t, forced
+  else delay t' ([], Some t.pos), forced
 
 //If a delayed node has already been memoized, then return the memo
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
-let rec force_delayed_thunk t = match t.n with
+let rec try_read_memo_aux t =
+  match t.n with
   | Tm_delayed(f, m) ->
     (match !m with
-      | None -> t
-      | Some t' -> let t' = force_delayed_thunk t' in m := Some t'; t')
-  | _ -> t
+      | None -> t, false
+      | Some t' ->
+        let t', shorten = try_read_memo_aux t' in
+        if shorten then m := Some t';
+        t', true)
+  | _ -> t, false
+let try_read_memo t = fst (try_read_memo_aux t)
 
 let rec compress_univ u = match u with
     | U_unif u' ->
@@ -192,7 +198,7 @@ let rec subst' (s:subst_ts) t =
   | [], None
   | [[]], None -> t
   | _ ->
-    let t0 = force_delayed_thunk t in
+    let t0 = try_read_memo t in
     match t0.n with
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
@@ -376,18 +382,32 @@ let push_subst s t =
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))
 
+(* compress:
+      This is used pervasively, throughout the codebase
+
+      The recommended use for inspecting a term
+      is to first call compress on it, which should
+         1. push delayed substitutions down one level
+
+         2. eliminate any top-level (Tm_uvar uv) node,
+            when uv has been assigned a solution already
+
+      Internally, compress should memoize the result of any
+      delayed substitution (i.e., step 1 above), but not
+      memoize the result of uvar solutions (since those
+      could be reverted).
+*)
 let rec compress (t:term) =
-    let t = force_delayed_thunk t in
+    let t = try_read_memo t in
     match t.n with
-    | Tm_delayed((t, s), memo) ->
-        let t' = compress (push_subst s t) in
-//        Unionfind.update_in_tx memo (Some t');
-//        memo := Some t';
-        t'
-    | _ -> let t' = force_uvar t in
-           match t'.n with
-           | Tm_delayed _ -> compress t'
-           | _ -> t'
+    | Tm_delayed((t', s), memo) ->
+        memo := Some (push_subst s t');
+        compress t
+    | _ ->
+        let t', forced = force_uvar t in
+        match t'.n with
+        | Tm_delayed _ -> compress t'
+        | _ -> t'
 
 
 let subst s t = subst' ([s], None) t
