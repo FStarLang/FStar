@@ -89,7 +89,9 @@ val empty_unique:
 val get:
     b:bytes
   -> pos:u32{U32.v pos < length b}
-  -> byte
+  -> Pure byte
+    (requires True)
+    (ensures (fun y -> y == S.index (reveal b) (U32.v pos)))
 
 unfold let op_String_Access = get
 
@@ -107,15 +109,9 @@ val reveal_set_byte:
   -> x:byte
   -> Lemma
     (reveal (set_byte b pos x) == Seq.upd (reveal b) (U32.v pos) x)
-    [SMTPat (reveal (set_byte b pos x))]
+    [SMTPat (set_byte b pos x)]
 
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
-
-val index_reveal:
-    b: bytes
-  -> (i: nat { i < length b })
-  -> Lemma
-    (S.index (reveal b) i == index b i)
 
 let equal b1 b2 =
   length b1 = length b2 /\
