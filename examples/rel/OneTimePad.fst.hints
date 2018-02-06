@@ -8,7 +8,7 @@
       4,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "28762eca2c461bc92d6a5bcf3c0702a8"
+      "d80c83eefc4e222abeee9bc01ef1e956"
     ],
     [
       "OneTimePad.xor_properties",
@@ -35,7 +35,7 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "3f5d86d1eb76adc9e1b1aea34b8dc7ab"
+      "8fccedfa200b89372d5947204c85e94c"
     ]
   ]
 ]
