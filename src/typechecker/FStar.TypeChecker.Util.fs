@@ -681,9 +681,16 @@ let strengthen_precondition
                   strengthen,
        {g0 with guard_f=Trivial}
 
+let stable_lcomp lc =
+    U.is_tot_or_gtot_lcomp lc
+    || U.is_tac_lcomp lc
+
+let stable_comp c =
+    U.is_tot_or_gtot_comp c
+    || U.is_tac_comp c
 
 let lcomp_has_trivial_postcondition lc =
-    U.is_tot_or_gtot_lcomp lc
+    stable_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
 
@@ -717,11 +724,10 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               if U.is_total_lcomp lc1
               then if U.is_total_lcomp lc2
                    then [TOTAL]
-                   else if U.is_tot_or_gtot_lcomp lc2
+                   else if stable_lcomp lc2
                    then [SOMETRIVIAL]
                    else []
-              else if U.is_tot_or_gtot_lcomp lc1
-                   && U.is_tot_or_gtot_lcomp lc2
+              else if stable_lcomp lc1 && stable_lcomp lc2
               then [SOMETRIVIAL]
               else []
           in
@@ -775,8 +781,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
-            then if U.is_tot_or_gtot_comp c1
-                 && U.is_tot_or_gtot_comp c2
+            then if stable_comp c1
+                 && stable_comp c2
                  then Inl (c2, "Early in prims; we don't have bind yet")
                  else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
@@ -787,6 +793,15 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
+            else if stable_comp c1
+                 && stable_comp c2
+            then let ty = U.comp_result c2 in
+                 Inl (S.mk_Comp ({ comp_univs = [env.universe_of env ty]
+                                 ; effect_name = C.effect_Tac_lid
+                                 ; result_typ = ty
+                                 ; effect_args = []
+                                 ; flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION]
+                                 }), "both Tac")
             else match e1opt, b with
                    | Some e, Some x ->
                      if U.is_total_comp c1
