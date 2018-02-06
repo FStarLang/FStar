@@ -8,8 +8,6 @@
 
 module PatternMatching
 
-#set-options "--use_two_phase_tc false"
-
 /// Contents
 /// ========
 ///
@@ -108,7 +106,6 @@ let _ =
 // Many of the tactics are written in the ``Tac`` effect, which isn't
 // well-supported in SMT.  FIXME: remove this once ``Tac`` is marked as a stable
 // effect.
-#set-options "--admit_smt_queries true"
 
 /// Some utility functions
 /// ======================
@@ -373,7 +370,7 @@ let debug msg : Tac unit = () // print msg ()
 /// Definitions
 /// -----------
 
-let absvar : eqtype = binder
+let absvar = binder
 type hypothesis = binder
 
 /// A matching problem is composed of holes (``mp_vars``), hypothesis patterns
@@ -430,7 +427,6 @@ let ms_locate_hyp (a: Type) (solution: matching_solution)
 
 let ms_locate_var (a: Type) (solution: matching_solution)
                   (name: varname) : Tac a =
-  admit ();
   unquote #a (assoc_varname_fail name solution.ms_vars) ()
 
 let ms_locate_unit (a: Type) _solution _binder_name : Tac unit =
@@ -465,7 +461,6 @@ let rec solve_mp_for_single_hyp #a
                                 (body: matching_solution -> Tac a)
                                 (part_sol: matching_solution)
     : Tac a =
-  admit ();
   match hypotheses with
   | [] ->
     fail #a "No matching hypothesis" ()
@@ -564,7 +559,6 @@ let beta_reduce (tm: term) : Tac term =
 
 (** Compile a term `tm` into a pattern. **)
 let pattern_of_term tm : Tac pattern =
-  admit ();
   lift_exn_tac pattern_of_term_ex tm
 
 /// Problem notations
@@ -617,7 +611,6 @@ type abspat_continuation =
   list abspat_argspec * term
 
 let classify_abspat_binder binder : Tot (abspat_binder_kind * term) =
-  admit ();
   let varname = "v" in
   let hyp_pat = PApp (PQn hyp_qn) (PVar varname) in
   let goal_pat = PApp (PQn goal_qn) (PVar varname) in
@@ -657,7 +650,6 @@ The continuation returned can't directly be applied to a pattern-matching
 solution; see ``interp_abspat_continuation`` below for that. **)
 let matching_problem_of_abs (tm: term)
     : Tac (matching_problem * abspat_continuation) =
-  admit ();
 
   let binders, body = binders_and_body_of_abs (cleanup_abspat tm) in
   debug ("Got binders: " ^ (String.concat ", "
@@ -724,7 +716,6 @@ let locate_fn_of_binder_kind binder_kind =
 matching solution ``solution_term``. **)
 let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
     : Tac term =
-  admit ();
   let loc_fn = locate_fn_of_binder_kind argspec.asa_kind in
   let name_tm = pack (Tv_Const (C_String (inspect_bv argspec.asa_name))) in
   let locate_args = [(arg_type_of_binder_kind argspec.asa_kind, Q_Explicit);
@@ -737,7 +728,6 @@ quoted solution to be passed in. **)
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)
     : Tac term =
-  admit ();
   let mk_arg argspec =
     (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
   let argspecs, body = continuation in
@@ -748,7 +738,6 @@ quoted function taking a matching solution and running its body with appropriate
 bindings. **)
 let specialize_abspat_continuation (continuation: abspat_continuation)
     : Tac term =
-  admit ();
   let solution_binder = fresh_binder (quote matching_solution ()) in
   let solution_term = pack (Tv_Var solution_binder) in
   let applied = specialize_abspat_continuation' continuation solution_term in
@@ -762,7 +751,7 @@ let specialize_abspat_continuation (continuation: abspat_continuation)
 (** Interpret a continuation of type ``abspat_continuation``.
 This yields a function taking a matching solution and running the body of the
 continuation with appropriate bindings. **)
-let interp_abspat_continuation a (continuation: abspat_continuation)
+let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
   admit ();
   let applied = specialize_abspat_continuation continuation in
@@ -771,7 +760,6 @@ let interp_abspat_continuation a (continuation: abspat_continuation)
 (** Like ``interp_abspat_continuation`` for tactic-producing continuations. **)
 let tinterp_abspat_continuation a (continuation: abspat_continuation)
     : Tac (matching_solution -> tactic a) =
-  admit ();
   let applied = specialize_abspat_continuation continuation in
   unquote #(matching_solution -> tactic a) applied ()
 
@@ -783,7 +771,6 @@ let tinterp_abspat_continuation a (continuation: abspat_continuation)
 (** Construct a matching problem from an abspat. **)
 let interp_abspat #a (abspat: a)
     : Tac (matching_problem * abspat_continuation) =
-  admit ();
   let abs = quote abspat () in
   matching_problem_of_abs abs
 
@@ -808,8 +795,9 @@ let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
   admit ();
   match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
 
-let tpair #a #b : a -> Tac (b -> Tac (a * b)) =
-  fun (x: a) -> (fun (y: b) -> (x, y) <: Tac _) <: Tac _
+let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
+  admit ();
+  fun (y: b) -> (x, y)
 
 /// Our first convenient entry point!
 ///
@@ -826,8 +814,8 @@ let tpair #a #b : a -> Tac (b -> Tac (a * b)) =
 (** Solve a greedy pattern-matching problem and run its continuation.
 This if for pattern-matching problems in the ``Tac`` effect. **)
 let gpm #b #a (abspat: a) : tactic b =
-  admit ();
   fun () ->
+    admit ();
     let continuation, solution = match_abspat abspat tpair in
     interp_abspat_continuation b continuation solution
 
@@ -866,6 +854,7 @@ let _ =
      print (term_to_string l ^ " / " ^ term_to_string r))
 
 let _ =
+  admit (); // typing a term fails due to #1269 while running the tactic
   assert_by_tactic (1 + 1 == 2)
     (gpm (fun (left right: int) (g: goal (squash (left == right))) ->
             let l, r = quote left (), quote right () in
