@@ -503,21 +503,23 @@ let intro_rec : tac<(binder * binder)> =
 
 let norm (s : list<EMB.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
+    mlog (fun () -> BU.print1 "norm: witness = %s\n" (Print.term_to_string goal.witness)) (fun _ ->
     // Translate to actual normalizer steps
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let w = normalize steps goal.context goal.witness in
     let t = normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty = t; witness = w})
-    )
+    ))
 
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
+    mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
     bind (__tc e t) (fun (t, _, guard) ->
     Rel.force_trivial_guard e guard;
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    ))
+    )))
 
 let refine_intro : tac<unit> = wrap_err "refine_intro" <|
     bind cur_goal (fun g ->
@@ -554,7 +556,7 @@ let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
                     (tts goal.context goal.goal_ty)))))
 
 let t_exact set_expected_typ force_guard tm : tac<unit> = wrap_err "exact" <|
-    mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+    mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (trytac' (__exact_now set_expected_typ force_guard tm)) (function
     | Inr r -> ret r
     | Inl e ->
