@@ -49,7 +49,6 @@ type sort = int
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
-  | Type of universe (* Zoe: Not sure why this needs to be an atom, just following the paper *)
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *)
   | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
@@ -61,6 +60,7 @@ and t = //JUST FSHARP
   | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
+  | Type of universe
   | Univ of universe
 
 type head = t
@@ -74,11 +74,11 @@ let rec t_to_string (x:t) =
     | Unit -> "Unit"
     | Bool b -> if b then "Bool true" else "Bool false"
     | Univ u -> "Universe " ^ (P.univ_to_string u)
+    | Type u -> "Type " ^ (P.univ_to_string u)
 
 and atom_to_string (a: atom) =
     match a with
     | Var v -> "Var " ^ (P.bv_to_string v)
-    | Type u -> "Type " ^ (P.univ_to_string u)
     | Match (t, _) -> "Match " ^ (t_to_string t)
     | Rec (_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
@@ -92,17 +92,11 @@ let mkConstruct i us ts = Construct(i, us, ts)
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
 let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
-let mkAccuTyp (u:universe) = Accu(Type u, [])
 //let mkAccUniv (u:universe) = Accu(Univ u, [])
 
 let isAccu (trm:t) =
   match trm with
   | Accu _ -> true
-  | _ -> false
-
-let isAccuTyp (x:t) =
-  match x with
-  | Accu(Type _, _) -> true
   | _ -> false
 
 let rec pickBranch (c : fv) (branches : list<branch>) (args: list<t * aqual>): term * list<t * aqual>  =
@@ -171,24 +165,39 @@ let find_sigelt_in_gamma (env: Env.env) (lid:lident): option<sigelt> =
     | _ -> None in
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
-let translate_univ (env: Env.env) (bs: list<t>) (u: universe): t =
-    let u = SS.compress_univ u in
-    match u with
-    | U_bvar i ->
-        // BU.print1 "%%% In universe translation for %s:\n" (P.univ_to_string u);
-        // BU.print1 "%%% BS list: %s\n" (String.concat ",\n " (List.map (fun x -> t_to_string x) bs));
-        // BU.print2 "%%% Index: %s - List length: %s" (BU.string_of_int i) (BU.string_of_int (List.length bs));
-        // List.nth bs i
+let translate_univ (bs:list<t>) (u:universe) : t =
+    let rec aux u =
+        let u = SS.compress_univ u in
+        match u with
+        | U_bvar i ->
+          let Univ u = List.nth bs i in //it has to be a Univ term at position i
+          u
 
-        //VD: Not binding any universe variable
-        mkAccuTyp U_unknown
-    | _ ->
-        mkAccuTyp u
+        | U_succ u ->
+          U_succ (aux u)
+
+        | U_max us ->
+          U_max (List.map aux us)
+
+        | U_name _
+        | U_zero ->
+          u
+
+        | U_unif _
+        | U_unknown ->
+          failwith "Unknown or unconstrained universe"
+    in
+    Univ (aux u)
 
 let is_univ (tm : t)=
-  match tm with 
+  match tm with
   | Univ _ -> true
   | _ -> false
+
+let un_univ (tm:t) : universe =
+    match tm with
+    | Univ u -> u
+    | _ -> failwith "Not a universe"
 
 (* We are not targeting tagless normalization at this point *)
 let rec app (f:t) (x:t) (q:aqual) =
@@ -197,8 +206,8 @@ let rec app (f:t) (x:t) (q:aqual) =
   | Lam (f, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
   | Construct (i, us, ts) ->
-    (match x with 
-     | Univ u -> Construct (i, u::us, ts) 
+    (match x with
+     | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
   | Unit | Bool _ | Univ _ -> failwith "Ill-typed application"
 
@@ -244,21 +253,23 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
-  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t = 
+  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
-    | [] -> translate env bs def 
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving universe binder qualifier none for now
+    | [] -> translate env bs def
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving universe binder qualifier none for now; NS: makes sense
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
-  
+
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
     debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
 
     match (SS.compress e).n with
-    | Tm_delayed (_, _) -> failwith "Tm_delayed: Impossible"
+    | Tm_delayed (_, _) ->
+      failwith "Tm_delayed: Impossible"
 
-    | Tm_unknown -> failwith "Tm_unknown: Impossible"
+    | Tm_unknown ->
+      failwith "Tm_unknown: Impossible"
 
     | Tm_constant (FStar.Const.Const_unit) ->
       Unit
@@ -273,16 +284,12 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
 
-    | Tm_uinst (t, [u]) ->
-      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (P.univ_to_string u));
-      app (translate env bs t) (Univ u) None
-     
-    | Tm_uinst (t, u :: us) -> 
-      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (P.univ_to_string u));
-      let first = S.mk (Tm_uinst(t, [u])) None Range.dummyRange in
-      let tm = S.mk (Tm_uinst(first, us)) None e.pos in
-      translate env bs tm
-      
+    | Tm_uinst(t, us) ->
+      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (List.map P.univ_to_string us |> String.concat ", "));
+      List.fold_left (fun head u -> app head u None)
+                     (translate env bs t)
+                     (List.map (translate_univ bs) us)
+
       // (match (SS.compress t).n with
       //  | Tm_fvar fv ->
       //     translate_fv env bs [u] fv
@@ -300,13 +307,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
       //  | _ -> failwith "Expected an fv")
 
-    | Tm_uinst (t, _) ->
-      debug (fun () -> BU.print1 "Term with univs: %s\n" (P.term_to_string t));
-      // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (translate_univ x))) u;
-      // translate ((map_rev (fun x -> mkAccuUniv (translate_univ x)) u) @ bs) t
-      debug_term e; failwith "Not yet implemented Tm_uinst"
-
-    | Tm_type u -> failwith "Unreachable?" //mkAccuTyp u
+    | Tm_type u ->
+      Type (un_univ (translate_univ bs u))
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
@@ -373,9 +375,12 @@ and readback (env:Env.env) (x:t) : term =
     | Unit -> S.unit_const
 
     | Univ u -> failwith "Readback of universes should not occur"
-    
+
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
+
+    | Type u ->
+      S.mk (Tm_type u) None Range.dummyRange
 
     | Lam (f, q) ->
       let x = S.new_bv None S.tun in
@@ -384,7 +389,7 @@ and readback (env:Env.env) (x:t) : term =
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) args in
-      let apply tm = 
+      let apply tm =
         match args with
          | [] -> tm
          | _ ->  U.mk_app tm args
@@ -398,12 +403,6 @@ and readback (env:Env.env) (x:t) : term =
     | Accu (Var bv, ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
-
-    | Accu (Type u, []) ->
-      S.mk (Tm_type u) None Range.dummyRange
-    | Accu (Type u, ts) ->
-      let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
-      U.mk_app (S.mk (Tm_type u) None Range.dummyRange) args
 
     | Accu (Match (scrut, cases), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
