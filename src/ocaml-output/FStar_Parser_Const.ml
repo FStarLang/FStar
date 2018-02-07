@@ -178,6 +178,7 @@ let (steps_zeta : FStar_Ident.lident) = pconst "zeta"
 let (steps_iota : FStar_Ident.lident) = pconst "iota" 
 let (steps_delta : FStar_Ident.lident) = pconst "delta" 
 let (steps_unfoldonly : FStar_Ident.lident) = pconst "delta_only" 
+let (steps_unfoldattr : FStar_Ident.lident) = pconst "delta_attr" 
 let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (gen_reset :
@@ -312,7 +313,7 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s  -> fstar_tactics_lid' [s] 
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"] 
 let (u_tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "__tac"] 
-let (tac_effect_lid : FStar_Ident.lid) = fstar_tactics_lid "TAC" 
+let (tac_effect_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 
 let (by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "__by_tactic"] 
 let (synth_lid : FStar_Ident.lid) =
