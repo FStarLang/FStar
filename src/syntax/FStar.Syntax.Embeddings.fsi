@@ -67,6 +67,7 @@ type norm_step =
     | Zeta
     | Iota
     | UnfoldOnly of list<string>
+    | UnfoldAttr of attribute
 
 val steps_Simpl : term
 val steps_Weak : term

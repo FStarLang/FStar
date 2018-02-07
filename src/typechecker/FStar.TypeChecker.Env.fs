@@ -104,6 +104,7 @@ type env = {
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
@@ -176,7 +177,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of universe_of solver module_lid =
+let initial_env deps tc_term type_of universe_of check_type_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -201,6 +202,7 @@ let initial_env deps tc_term type_of universe_of solver module_lid =
     nosynth=false;
     tc_term=tc_term;
     type_of=type_of;
+    check_type_of=check_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
@@ -424,7 +426,13 @@ let try_lookup_bv env (bv:bv) =
       Some (id.sort, id.ppname.idRange)
     | _ -> None)
 
-let lookup_type_of_let se lid = match se.sigel with
+let lookup_type_of_let us_opt se lid =
+    let inst_tscheme ts =
+      match us_opt with
+      | None -> inst_tscheme ts
+      | Some us -> inst_tscheme_with ts us
+    in
+    match se.sigel with
     | Sig_let((_, [lb]), _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
@@ -438,7 +446,12 @@ let lookup_type_of_let se lid = match se.sigel with
 
     | _ -> None
 
-let effect_signature se =
+let effect_signature us_opt se =
+    let inst_tscheme ts =
+       match us_opt with
+       | None -> inst_tscheme ts
+       | Some us -> inst_tscheme_with ts us
+    in
     match se.sigel with
     | Sig_new_effect(ne) ->
         Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)), se.sigrng)
@@ -448,7 +461,12 @@ let effect_signature se =
 
     | _ -> None
 
-let try_lookup_lid_aux env lid =
+let try_lookup_lid_aux us_opt env lid =
+  let inst_tscheme ts =
+      match us_opt with
+      | None -> inst_tscheme ts
+      | Some us -> inst_tscheme_with ts us
+  in
   let mapper (lr, rng) =
     match lr with
     | Inl t ->
@@ -478,8 +496,11 @@ let try_lookup_lid_aux env lid =
 
     | Inr se ->
       begin match se with // FIXME why does this branch not use rng?
-        | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
-        | _ -> effect_signature (fst se)
+        | { sigel = Sig_let _ }, None ->
+          lookup_type_of_let us_opt (fst se) lid
+
+        | _ ->
+          effect_signature us_opt (fst se)
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
@@ -500,6 +521,7 @@ let try_lookup_lid_aux env lid =
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
+//        val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 //        val try_lookup_effect_lid  : env -> lident -> option<term>
 //        val lookup_effect_lid      : env -> lident -> term
 //        val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -530,12 +552,20 @@ let lookup_bv env bv =
                      Range.set_use_range r (Range.use_range bvr)
 
 let try_lookup_lid env l =
-    match try_lookup_lid_aux env l with
+    match try_lookup_lid_aux None env l with
     | None -> None
     | Some ((us, t), r) ->
       let use_range = range_of_lid l in
       let r = Range.set_use_range r (Range.use_range use_range) in
       Some ((us, Subst.set_use_range use_range t), r)
+
+let try_lookup_and_inst_lid env us l =
+    match try_lookup_lid_aux (Some us) env l with
+    | None -> None
+    | Some ((_, t), r) ->
+      let use_range = range_of_lid l in
+      let r = Range.set_use_range r (Range.use_range use_range) in
+      Some (Subst.set_use_range use_range t, r)
 
 let lookup_lid env l =
     match try_lookup_lid env l with
@@ -595,10 +625,15 @@ let lookup_definition delta_levels env lid =
     end
   | _ -> None
 
+let lookup_attrs_of_lid env lid : option<list<attribute>> =
+  match lookup_qname env lid with
+  | Some (Inr (se, _), _) -> Some se.sigattrs
+  | _ -> None
+
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
-      begin match effect_signature se with
+      begin match effect_signature None se with
         | None -> None
         | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end

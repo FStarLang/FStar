@@ -64,6 +64,7 @@ type step =
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
   | UnfoldOnly of list<I.lid>
+  | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -653,18 +654,33 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let bounded_arith_ops
         =
-        let bounded_int_types =
-           [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
+        let bounded_signed_int_types =
+           [ "Int8"; "Int16"; "Int32"; "Int64" ]
+        in
+        let bounded_unsigned_int_types =
+           [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
         in
         let int_as_bounded r int_to_t n =
             let c = EMB.embed_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
-        bounded_int_types |> List.collect (fun m ->
-        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
-         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
-         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)))])
+        let add_sub_mul_v =
+          (bounded_signed_int_types @ bounded_unsigned_int_types)
+          |> List.collect (fun m ->
+            [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
+             (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
+             (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)));
+             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> EMB.embed_int r x))])
+        in
+        let div_mod_unsigned =
+          bounded_unsigned_int_types
+          |> List.collect (fun m ->
+            [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)));
+             (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)))])
+        in
+       add_sub_mul_v
+       @ div_mod_unsigned
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
@@ -944,6 +960,8 @@ let tr_norm_step = function
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | EMB.UnfoldAttr t ->
+        [UnfoldUntil Delta_constant; UnfoldAttr t]
 
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
@@ -978,23 +996,23 @@ let should_reify cfg stack = match stack with
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
-        let t = compress t in
-        log cfg  (fun () -> BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
+        let t =
+            if Env.debug cfg.tcenv (Options.Other "NormDelayed")
+            then (match t.n with
+                  | Tm_delayed _ ->
+                    BU.print1 "NORM delayed: %s\n" (Print.term_to_string t)
+                  | _ -> ());
+            compress t
+        in
+        log cfg  (fun () -> 
+          let t = compress t in
+          BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
         match t.n with
-          | Tm_delayed _ ->
-            failwith "Impossible: got a delayed substitution"
-
-          | Tm_uvar _ when cfg.steps |> List.contains CheckNoUvars ->
-            failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                            (Range.string_of_range t.pos)
-                            (Print.term_to_string t))
-
           | Tm_unknown
-          | Tm_uvar _
           | Tm_constant _
           | Tm_name _
 
@@ -1076,9 +1094,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.false_lid)
                 then false
                 else begin
-                    match cfg.steps |> List.tryFind (function UnfoldOnly _ -> true | _ -> false) with
-                    | Some (UnfoldOnly lids) -> should_delta && BU.for_some (fv_eq_lid f) lids
-                    | _ -> should_delta
+                  match cfg.steps |> List.tryFind (function UnfoldOnly _ | UnfoldAttr _ -> true | _ -> false) with
+                  | Some _ ->
+                    let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
+                    should_delta && List.fold_left (fun acc x ->
+                      match x with
+                      | UnfoldOnly lids -> acc || BU.for_some (fv_eq_lid f) lids
+                      | UnfoldAttr attr -> begin
+                        match lookup_attrs_of_lid cfg.tcenv f.fv_name.v with
+                        | Some attrs -> acc || BU.for_some (attr_eq attr) attrs
+                        | _ -> acc
+                        end
+                      | _ -> acc) false cfg.steps
+                  | _ -> should_delta
                 end
             in
 
@@ -1367,7 +1395,26 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let t = mk (Tm_meta(head, m)) t.pos in
                     rebuild cfg env stack t
                 end
-        end
+        end //Tm_meta
+
+        | Tm_delayed _ ->
+          let t = SS.compress t in
+          norm cfg env stack t
+
+        | Tm_uvar _ ->
+          let t = SS.compress t in
+          match t.n with
+          | Tm_uvar _ ->
+            if cfg.steps |> List.contains CheckNoUvars
+            then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                                    (Range.string_of_range t.pos)
+                                    (Print.term_to_string t))
+            else rebuild cfg env stack t
+
+          | _ ->
+            norm cfg env stack t
+
+
 
 and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
     //preserve the range info on the returned def
@@ -2092,8 +2139,121 @@ let eta_expand (env:Env.env) (t:term) : term =
       end
 
 //////////////////////////////////////////////////////////////////
-//Eliminating all unification variables in a sigelt
+//Eliminating all unification variables and delayed substitutions in a sigelt
 //////////////////////////////////////////////////////////////////
+
+let rec elim_delayed_subst_term (t:term) : term =
+    let mk x = S.mk x None t.pos in
+    let t = SS.compress t in
+    let elim_bv x = {x with sort=elim_delayed_subst_term x.sort} in
+    match t.n with
+    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_fvar _
+    | Tm_uinst _
+    | Tm_constant _
+    | Tm_type _
+    | Tm_unknown -> t
+
+    | Tm_abs(bs, t, rc_opt) ->
+      let elim_rc rc =
+        {rc with
+            residual_typ=BU.map_opt rc.residual_typ elim_delayed_subst_term;
+            residual_flags=elim_delayed_subst_cflags rc.residual_flags}
+      in
+      mk (Tm_abs(elim_delayed_subst_binders bs,
+                 elim_delayed_subst_term t,
+                 BU.map_opt rc_opt elim_rc))
+
+    | Tm_arrow(bs, c) ->
+      mk (Tm_arrow(elim_delayed_subst_binders bs, elim_delayed_subst_comp c))
+
+    | Tm_refine(bv, phi) ->
+      mk (Tm_refine(elim_bv bv, elim_delayed_subst_term phi))
+
+    | Tm_app(t, args) ->
+      mk (Tm_app(elim_delayed_subst_term t, elim_delayed_subst_args args))
+
+    | Tm_match(t, branches) ->
+      let rec elim_pat (p:pat) =
+        match p.v with
+        | Pat_var x ->
+          {p with v=Pat_var (elim_bv x)}
+        | Pat_wild x ->
+          {p with v=Pat_wild (elim_bv x)}
+        | Pat_dot_term(x, t0) ->
+          {p with v=Pat_dot_term(elim_bv x, elim_delayed_subst_term t0)}
+        | Pat_cons (fv, pats) ->
+          {p with v=Pat_cons(fv, List.map (fun (x, b) -> elim_pat x, b) pats)}
+        | _ -> p
+      in
+      let elim_branch (pat, wopt, t) =
+          (elim_pat pat,
+           BU.map_opt wopt elim_delayed_subst_term,
+           elim_delayed_subst_term t)
+      in
+      mk (Tm_match(elim_delayed_subst_term t, List.map elim_branch branches))
+
+    | Tm_ascribed(t, a, lopt) ->
+      let elim_ascription (tc, topt) =
+        (match tc with
+         | Inl t -> Inl (elim_delayed_subst_term t)
+         | Inr c -> Inr (elim_delayed_subst_comp c)),
+        BU.map_opt topt elim_delayed_subst_term
+      in
+      mk (Tm_ascribed(elim_delayed_subst_term t, elim_ascription a, lopt))
+
+    | Tm_let(lbs, t) ->
+      let elim_lb lb =
+         {lb with
+             lbtyp = elim_delayed_subst_term lb.lbtyp;
+             lbdef = elim_delayed_subst_term lb.lbdef }
+      in
+      mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
+                  elim_delayed_subst_term t))
+
+    | Tm_uvar(uv, t) ->
+      mk (Tm_uvar(uv, elim_delayed_subst_term t))
+
+    | Tm_meta(t, md) ->
+      mk (Tm_meta(elim_delayed_subst_term t, elim_delayed_subst_meta md))
+
+and elim_delayed_subst_cflags flags =
+    List.map
+        (function
+        | DECREASES t -> DECREASES (elim_delayed_subst_term t)
+        | f -> f)
+        flags
+
+and elim_delayed_subst_comp (c:comp) : comp =
+    let mk x = S.mk x None c.pos in
+    match c.n with
+    | Total(t, uopt) ->
+      mk (Total(elim_delayed_subst_term t, uopt))
+    | GTotal(t, uopt) ->
+      mk (GTotal(elim_delayed_subst_term t, uopt))
+    | Comp ct ->
+      let ct =
+        {ct with
+            result_typ=elim_delayed_subst_term ct.result_typ;
+            effect_args=elim_delayed_subst_args ct.effect_args;
+            flags=elim_delayed_subst_cflags ct.flags} in
+      mk (Comp ct)
+
+and elim_delayed_subst_meta = function
+  | Meta_pattern args -> Meta_pattern(List.map elim_delayed_subst_args args)
+  | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
+  | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
+  | Meta_alien(d, s, t) -> Meta_alien(d, s, elim_delayed_subst_term t)
+  | m -> m
+
+and elim_delayed_subst_args args =
+    List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
+
+and elim_delayed_subst_binders bs =
+    List.map (fun (x, q) -> {x with sort=elim_delayed_subst_term x.sort}, q) bs
+
 let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
     let t =
       match binders, tc with
@@ -2105,6 +2265,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
+    let t = elim_delayed_subst_term t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -2146,7 +2307,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t)) in
+        let elim t = elim_delayed_subst_term (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;
@@ -2178,20 +2339,15 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let n = List.length univs in
       let n_binders = List.length binders in
       let elim_tscheme (us, t) =
-//        printfn "0. elim_tscheme %s" (Print.tscheme_to_string (us, t));
         let n_us = List.length us in
         let us, t = SS.open_univ_vars us t in
-//        printfn "1. elim_tscheme %s" (Print.tscheme_to_string (us, t));
         let b_opening, b_closing =
             b_opening |> SS.shift_subst n_us,
             b_closing |> SS.shift_subst n_us in
         let univs_opening, univs_closing =
             univs_opening |> SS.shift_subst n_us,
             univs_closing |> SS.shift_subst n_us in
-//        let opening = univs_opening @ b_opening in
-//        printfn "univs_opening = %A" univs_opening;
         let t = SS.subst univs_opening (SS.subst b_opening t) in
-//        printfn "2. elim_tscheme opened to %s" (Print.term_to_string t);
         let _, _, t = elim_uvars_aux_t env [] [] t in
         let t = SS.subst univs_closing (SS.subst b_closing (SS.close_univ_vars us t)) in
         us, t

@@ -81,7 +81,16 @@ let init_env deps : TcEnv.env =
     if Options.lax()
     then SMT.dummy
     else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
-  let env = TcEnv.initial_env deps TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
+  let env =
+      TcEnv.initial_env
+        deps
+        TcTerm.tc_term
+        TcTerm.type_of_tot_term
+        TcTerm.universe_of
+        TcTerm.check_type_of_well_typed_term
+        solver
+        Const.prims_lid
+  in
   (* Set up some tactics callbacks *)
   let env = { env with synth = FStar.Tactics.Interpreter.synth } in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in

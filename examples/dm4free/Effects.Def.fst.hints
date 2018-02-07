@@ -16,7 +16,7 @@
         "typing_Effects.Def_Tm_abs_bb024be3a42bf719d69858a7cf22c46a"
       ],
       0,
-      "c0a9214ab60fd573c3c1fa545571ae4a"
+      "29a76fe5e44762ce22c57c0434034e97"
     ],
     [
       "Effects.Def.morphism_laws_via_eq",
@@ -33,7 +33,7 @@
         "typing_Effects.Def_Tm_abs_5f3d3f8c665d1ee3f1ea417cc2cac42f"
       ],
       0,
-      "b29d8a77f0e146ad92ad7c683a30549e"
+      "2df7f2a08c7dd59bacfdf5f05ad67b39"
     ],
     [
       "Effects.Def.st_laws",
@@ -60,7 +60,7 @@
         "token_correspondence_Effects.Def.return_st"
       ],
       0,
-      "759fd97971fd06c6070990a4b7c09255"
+      "ce79958ee1336dd2dd0ea9c17e5e4c4f"
     ],
     [
       "Effects.Def.bind_ex",
@@ -79,7 +79,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0,
-      "2bc6cf01e491c9d637e3fe6cbfd30b67"
+      "916ebdce966bf61de6560c153c198a34"
     ],
     [
       "Effects.Def.handle",
@@ -98,7 +98,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_inversion"
       ],
       0,
-      "0604c28d99025ce480ef9515e7ea333c"
+      "08f6ddf956631583c01f34a37f9dfa8b"
     ],
     [
       "Effects.Def.ex_laws",
@@ -134,7 +134,7 @@
         "typing_Effects.Def.bind_ex", "unit_inversion", "unit_typing"
       ],
       0,
-      "e4d6b7920911018a51b3ebfc5da40ffa"
+      "fac40d80772e8a8c32de3869781ca7b0"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -155,7 +155,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "3b90a1234939ed5232e5b54c77836af1"
+      "c81a379f3ba8fc533b3d9a4732b14a14"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -191,7 +191,7 @@
         "typing_Effects.Def_Tm_abs_bbe3be4d3977c6339d220885afd5e1d7"
       ],
       0,
-      "ddb02b273399a7110937cb4fce1e24aa"
+      "be6e6bec367b6b5958a0b7400ddb4e31"
     ],
     [
       "Effects.Def.return_exnst",
@@ -200,7 +200,7 @@
       1,
       [ "@query" ],
       0,
-      "41f604f788208a54cdb5d4b07a911d62"
+      "17e783c26a5aef267a9846ea8333dc00"
     ],
     [
       "Effects.Def.bind_exnst",
@@ -219,7 +219,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "9908e69bda2fc9f38aff9e213e4cc2c6"
+      "33d74dc7189a55304fee870c46b978f1"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -255,7 +255,7 @@
         "typing_Effects.Def.bind_exnst"
       ],
       0,
-      "9661c1d8faae9d4437d2ac397ab3a2d8"
+      "52c10f5a8094e2f2337793197d7ca9e7"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -294,7 +294,7 @@
         "typing_Effects.Def_Tm_abs_43e91cf0409a8a3325c36ce917eb2bf5"
       ],
       0,
-      "603114543ab506ab82793a3ee9ed3c28"
+      "e8e99a1cfee594f33680651b415f317c"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -334,7 +334,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "b134f02524588333c58e47880f7b9e23"
+      "48d2a1a714f2cfb0de7276a52b47247b"
     ],
     [
       "Effects.Def.lift_st_exnst",
@@ -343,7 +343,7 @@
       1,
       [ "@query" ],
       0,
-      "57e068ed8ce5a7fe3c65aa6006f5b9a9"
+      "bdfddee0bbccefa4739a4a61914021a8"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -386,7 +386,7 @@
         "unit_inversion"
       ],
       0,
-      "2bbe14101f4d903508f06d013609308f"
+      "a74fd529b97abbed528d09d7d8e5ede7"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -405,7 +405,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0,
-      "42af1cb0227541d20764a7b555447e60"
+      "8dbab97da892fc703d74be2ada80dc05"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -455,7 +455,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "f9cfc98df97dd1c20cb813ce5569ef6b"
+      "585fd19494974ebb008bb7ec1b6269df"
     ]
   ]
 ]

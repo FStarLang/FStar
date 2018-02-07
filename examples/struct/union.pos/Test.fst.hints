@@ -37,7 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "627de1d8d41da1f9f5ba3ef16e21ffb9"
+      "b7ba87c0e99f174520dc54e5a26e2571"
     ],
     [
       "Test.u",
@@ -83,7 +83,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "2e1bb4e299e86c0704becc015474c543"
+      "2ec53d8a52488dea523ede0b2d6fc020"
     ],
     [
       "Test.f",
@@ -112,6 +112,7 @@
         "constructor_distinct_FStar.Pointer.Base.TUnit",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_FStar.Pointer.Base.TUnion", "data_elim_Prims.Cons",
+        "data_typing_intro_FStar.Pointer.Base.TBase@tok",
         "disc_equation_Prims.Cons",
         "equality_tok_FStar.Pointer.Base.TBool@tok",
         "equality_tok_FStar.Pointer.Base.TUInt32@tok",
@@ -184,10 +185,10 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Test_Tm_refine_26a581c70e3202681e61035ecb1778ba",
+        "refinement_interpretation_Test_Tm_refine_10673c24268a439437a1b39e629fd497",
+        "refinement_interpretation_Test_Tm_refine_134cdc6df38d6a6e0b6e845584775a8c",
         "refinement_interpretation_Test_Tm_refine_35927a15e9516018e6643fa65a3f830c",
-        "refinement_interpretation_Test_Tm_refine_74cdcb6b5fbf012e50ffff467881b824",
-        "refinement_interpretation_Test_Tm_refine_94d63147f2f7651be16176941a2da7a0",
+        "refinement_interpretation_Test_Tm_refine_7f6c12d81b2df628a0bc32f5d11d32f7",
         "string_inversion", "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -196,10 +197,13 @@
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
-        "typing_FStar.UInt32.uint_to_t", "typing_Prims.uu___is_Cons"
+        "typing_FStar.Pointer.Base.typ_of_struct_field",
+        "typing_FStar.UInt32.uint_to_t", "typing_Prims.uu___is_Cons",
+        "typing_tok_FStar.Pointer.Base.TBool@tok",
+        "typing_tok_FStar.Pointer.Base.TUnit@tok"
       ],
       0,
-      "389a66b77e259ec2064bcb2a5bfeaf3a"
+      "690b98a57ea3bf52be5f94a2f5989139"
     ]
   ]
 ]

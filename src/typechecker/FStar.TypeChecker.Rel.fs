@@ -2927,17 +2927,15 @@ let resolve_implicits' must_total forcelax g =
           let (_, env, u, tm, k, r) = hd in
           if unresolved u
           then until_fixpoint (hd::out, changed) tl
-          else let env = Env.set_expected_typ env k in
-               let tm = N.normalize [N.Beta] env tm in
+          else let tm = N.normalize [N.Beta] env tm in
+               let env = if forcelax then {env with lax=true} else env in
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let env = if forcelax then {env with lax=true} else env in
-               let g =
-                try if must_total
-                    then let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in g
-                    else let _, _, g = env.tc_term ({env with use_bv_sorts=true}) tm in g
-                with | e ->
+               let g = 
+                 try 
+                   env.check_type_of must_total env tm k
+                 with | e ->
                     Errors.add_errors [Error_BadImplicit,
                                        BU.format2 "Failed while checking implicit %s set to %s"
                                                (Print.uvar_to_string u)

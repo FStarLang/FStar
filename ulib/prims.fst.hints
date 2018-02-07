@@ -1,5 +1,5 @@
 [
-  "çºï¶ËÃ,á&‡Zœù˙)É",
+  "\u001fï»∏ªëÅÏÓ‹\u001e Ó%µ°",
   [
     [
       "Prims.Ghost",
@@ -108,25 +108,13 @@
       "ae8be1406d07d34d18639d8ad345bfd6"
     ],
     [
-      "Prims.norm_step",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
-      ],
-      0,
-      "cc4b43e127eb699934f56209ddfd43b9"
-    ],
-    [
       "Prims.assert_norm",
       1,
       2,
       1,
       [ "@query", "equation_Prims.normalize" ],
       0,
-      "3673897d64e344eb76472eec809c3c4c"
+      "4cb39878ac4fabca39995e0777f6810c"
     ]
   ]
 ]
