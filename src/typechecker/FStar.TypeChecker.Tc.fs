@@ -1736,3 +1736,41 @@ let check_module env m =
   end;
 
   m, env
+
+let extract_interface (m:modul) :modul =
+  let is_abstract = List.contains Abstract in
+  let is_irreducible = List.contains Irreducible in
+
+  let filter_out_abstract = List.filter (fun q -> not (q = Abstract)) in
+
+  let mk_typ_for_abstract_inductive (bs:binders) (t:typ) (r:Range.range) :typ =
+    match bs with
+    | [] -> t
+    | _  ->
+      (match t.n with
+       | Tm_arrow (bs', c ) -> mk (Tm_arrow (bs@bs', c)) None r  //flattening arrows?
+       | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
+  in
+
+  let extract_sigelt (s:sigelt) :list<sigelt> =
+    match s.sigel with
+    | Sig_inductive_typ _
+    | Sig_datacon _ -> failwith "Impossible! Bare data constructor"
+    
+    | Sig_bundle (sigelts, lidents) ->
+      if is_abstract s.sigquals then
+        //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
+        List.fold_left (fun sigelts s -> 
+          match s.sigel with
+          | Sig_inductive_typ (lid, uvs, bs, t, _, _) -> 
+            let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
+            ({ s with sigel = s'; sigquals = filter_out_abstract s.sigquals })::sigelts  //filter out the abstract qualifier
+          | _ -> sigelts  //datacon case, we don't add datacons
+        ) [] sigelts
+      else [s]  //if it is not abstract, retain as is
+    | Sig_declare_typ (lid, uvs, t) ->
+      //val remains as val, except we filter out the abstract qualifier
+      [{ s with sigquals = filter_out_abstract s.sigquals }]
+    | Sig_let (lbs, lids) ->
+  in
+  m
