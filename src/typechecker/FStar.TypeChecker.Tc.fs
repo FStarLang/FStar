@@ -1709,34 +1709,6 @@ let tc_modul env modul =
   let modul, non_private_decls, env = tc_partial_modul env modul true in
   finish_partial_modul true env modul non_private_decls
 
-let check_module env m =
-  if Options.debug_any()
-  then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
-
-  let env = {env with lax=not (Options.should_verify m.name.str)} in
-  let m, env = tc_modul env m in
-
-  (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
-  if Options.dump_module m.name.str
-  then BU.print1 "%s\n" (Print.modul_to_string m);
-  if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
-  then begin
-    let normalize_toplevel_lets = fun se -> match se.sigel with
-        | Sig_let ((b, lbs), ids) ->
-            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
-            let update lb =
-                let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
-                { lb with lbdef = n (Env.push_univ_vars env univnames) e }
-            in
-            { se with sigel = Sig_let ((b, List.map update lbs), ids) }
-        | _ -> se
-    in
-    let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
-    BU.print1 "%s\n" (Print.modul_to_string normalized_module)
-  end;
-
-  m, env
-
 let extract_interface (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
@@ -1749,6 +1721,26 @@ let extract_interface (m:modul) :modul =
       (match t.n with
        | Tm_arrow (bs', c ) -> mk (Tm_arrow (bs@bs', c)) None r  //flattening arrows?
        | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
+  in
+
+  let missing_top_level_annotation =
+    List.existsb (fun lb ->
+      match lb.lbtyp.n with
+      | Tm_unknown -> true
+      | _ -> false)
+  in
+
+  let is_pure_or_ghost_function_with_non_unit_type = List.existsb (fun lb -> is_pure_or_ghost_function lb.lbtyp && not (is_unit lb.lbtyp)) in
+  let is_unit = List.for_all (fun lb -> is_unit lb.lbtyp) in
+
+  let vals_of_lbs (s:sigelt) :list<sigelt> =
+    match s.sigel with
+    | Sig_let (lbs, lids) ->
+      let quals = if is_abstract s.sigquals then filter_out_abstract s.sigquals else s.sigquals in
+        List.map2 (fun lb lid ->
+          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, lb.lbtyp); sigquals = quals }
+        ) (snd lbs) lids
+    | _ -> failwith "Impossible!"
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1771,11 +1763,49 @@ let extract_interface (m:modul) :modul =
       //val remains as val, except we filter out the abstract qualifier
       [{ s with sigquals = filter_out_abstract s.sigquals }]
     | Sig_let (lbs, lids) ->
-      if is_abstract s.sigquals then  //CP: add cases for irreducible
-        //add a val declaration for each of the letbinding
-        List.map2 (fun lb lid ->
-          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, lb.lbtyp); sigquals = filter_out_abstract s.sigquals }
-        ) (snd lbs) lids
-      else [s]
+      if is_abstract s.sigquals || is_irreducible s.sigquals then
+        //add a val declaration for each of the letbinding, retain the irreducible qualifier, Q. why aren't all vals irreducible already?
+        vals_of_lbs s
+      else if missing_top_level_annotation (snd lbs) then [s]  //if top level annotation is missing, retain as is
+      else if not (is_unit (snd lbs)) then [s]  //non-unit types are retained as is
+      else if is_pure_or_ghost_function_with_non_unit_type (snd lbs) then [s]  //pure or ghost functions with non-unit types are retained as is
+      else vals_of_lbs s  //TODO: add case for functions with reifiable effects
+    | Sig_main t -> failwith "Did not anticipate this would arise"
+    | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]  //should we not permit abstract with assumes anyway?
+    | Sig_new_effect _
+    | Sig_new_effect_for_free _
+    | Sig_sub_effect _
+    | Sig_effect_abbrev _
+    | Sig_pragma _ -> [s]
   in
-  m
+  
+  { m with declarations = List.flatten (List.map extract_sigelt m.declarations); exports = []; is_interface = true }
+
+let check_module env m =
+  if Options.debug_any()
+  then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
+
+  let env = {env with lax=not (Options.should_verify m.name.str)} in
+  let m, env = tc_modul env m in
+
+  (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
+  if Options.dump_module m.name.str
+  then BU.print1 "%s\n" (Print.modul_to_string (extract_interface m));  //TODO: FIXME: revert it back before merge!!!!
+  if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+  then begin
+    let normalize_toplevel_lets = fun se -> match se.sigel with
+        | Sig_let ((b, lbs), ids) ->
+            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+            let update lb =
+                let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
+                { lb with lbdef = n (Env.push_univ_vars env univnames) e }
+            in
+            { se with sigel = Sig_let ((b, List.map update lbs), ids) }
+        | _ -> se
+    in
+    let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
+    BU.print1 "%s\n" (Print.modul_to_string normalized_module)
+  end;
+
+  m, env
+
