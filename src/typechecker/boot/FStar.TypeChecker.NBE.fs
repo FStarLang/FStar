@@ -60,7 +60,7 @@ and t = //JUST FSHARP
   | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
-  | Type of universe
+  | Type_t of universe
   | Univ of universe
 
 type head = t
@@ -74,7 +74,7 @@ let rec t_to_string (x:t) =
     | Unit -> "Unit"
     | Bool b -> if b then "Bool true" else "Bool false"
     | Univ u -> "Universe " ^ (P.univ_to_string u)
-    | Type u -> "Type " ^ (P.univ_to_string u)
+    | Type_t u -> "Type_t " ^ (P.univ_to_string u)
 
 and atom_to_string (a: atom) =
     match a with
@@ -104,10 +104,17 @@ let rec pickBranch (c : fv) (branches : list<branch>) (args: list<t * aqual>): t
   | [] -> failwith "Branch not found"
   | ({v = Pat_cons (c', pats')}, _, e) :: bs when (fv_eq c c') ->
       assert (List.length args = List.length pats');
-      debug (fun () -> BU.print1 ">>>> args: %s\n" (String.concat "; " (List.map (fun (x, _) -> t_to_string x) args)));
-      let args_filtered = List.filter_map (fun x -> x) <| List.map2 (fun (p,_) (a,q) -> match p.v with Pat_dot_term _ -> None | _ (*Nik:  when it's not a universe*)  -> Some (a, q)) pats' args in
+      debug (fun () -> BU.print1 ">>>> args: %s\n"
+            (String.concat ";; " (List.map (fun (x, _) -> t_to_string x) args)));
+      let args_filtered =
+        List.filter_map (fun x -> x)
+        <| List.map2 (fun (p,_) (a,q) ->
+            match p.v with
+            | Pat_dot_term _ -> None
+            | _ (*Nik:  when it's not a universe*)  -> Some (a, q))
+           pats' (List.rev args) in
       debug (fun () -> BU.print1 ">>>> args (filtered): %s\n" (String.concat "; " (List.map (fun (x, _) -> t_to_string x) args_filtered)));
-      (e, args)
+      (e, args_filtered)
   | b :: bs -> pickBranch c bs args
 
 (* Tests is the application is full and if none of the arguments is symbolic *)
@@ -209,7 +216,7 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
-  | Unit | Bool _ | Univ _ -> failwith "Ill-typed application"
+  | Unit | Bool _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
@@ -308,7 +315,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       //  | _ -> failwith "Expected an fv")
 
     | Tm_type u ->
-      Type (un_univ (translate_univ bs u))
+      Type_t (un_univ (translate_univ bs u))
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
@@ -354,7 +361,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           (* XXX : is rev needed?  VD: I don't think so *)
           debug (fun () -> BU.print1 "Match args: %s\n" (String.concat "; " (List.map (fun (x, q) -> (if BU.is_some q then "#" else "") ^(t_to_string x)) args)));
           let branch, args = (pickBranch c branches args) in
-          translate env ((List.map (fun (x, _) -> x) args) @ bs) branch
+          translate env (List.fold_left (fun bs (x, _) -> x::bs) bs args) branch
         | _ ->
           mkAccuMatch scrut case
       in
@@ -379,7 +386,7 @@ and readback (env:Env.env) (x:t) : term =
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
 
-    | Type u ->
+    | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
     | Lam (f, q) ->

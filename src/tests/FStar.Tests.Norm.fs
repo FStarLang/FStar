@@ -164,7 +164,7 @@ let tests =
   //// ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
   //// ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
   //// ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
-  //// ; (1062, (Pars.tc_nbe "f (B 5 3)"), (Pars.tc_nbe "2")) 
+  //// ; (1062, (Pars.tc_nbe "f (B 5 3)"), (Pars.tc_nbe "2"))
   // Type defs not yet implemented for NBE
   //// ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))") (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
 
@@ -213,10 +213,10 @@ let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
   (i, snd (FStar.Util.return_execution_time nbe))
 
-let run_tests run = 
+let run_tests run =
   Options.__set_unit_tests();
   let l = List.map (function (no, test, res) -> run no test res) tests in
-  Options.__clear_unit_tests(); 
+  Options.__clear_unit_tests();
   l
 
 let run_all_nbe () =
@@ -238,7 +238,7 @@ let run_all_nbe_with_time () =
 let run_all_interpreter_with_time () =
   BU.print_string "Testing the normalizer\n";
   let l = run_tests run_interpreter_with_time in
-  BU.print_string "Normalizer ok\n"; 
+  BU.print_string "Normalizer ok\n";
   l
 
 
@@ -251,7 +251,7 @@ let run_both_with_time i r expected =
   FStar.Util.measure_execution_time "normalizer" norm;
   BU.print_string "\n"
 
-let compare () =   
+let compare () =
   BU.print_string "Comparing times for normalization and nbe\n";
   run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
@@ -323,14 +323,14 @@ let run_nbe_tac () =
 
 let compare_times l_int l_nbe =
   BU.print_string "Comparing times for normalization and nbe\n";
-  List.iter2 (fun res1 res2 -> 
+  List.iter2 (fun res1 res2 ->
                 let (t1, time_int) = res1 in
                 let (t2, time_nbe) = res2 in
                 if (t1 = t2) // sanity check
-                then 
+                then
                   BU.print3 "Test %s\nNBE %s\nInterpreter %s\n"
                   // Figure out if there is division compatible with both F* and F#
-                  //BU.print4 "%s: NBE %s    Interpreter %s    Ratio %s\n" 
+                  //BU.print4 "%s: NBE %s    Interpreter %s    Ratio %s\n"
                     (BU.string_of_int t1)
                     (BU.string_of_float time_nbe)
                     (BU.string_of_float time_int)
