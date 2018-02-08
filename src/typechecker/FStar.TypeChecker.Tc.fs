@@ -1740,7 +1740,6 @@ let check_module env m =
 let extract_interface (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
-
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract)) in
 
   let mk_typ_for_abstract_inductive (bs:binders) (t:typ) (r:Range.range) :typ =
@@ -1762,15 +1761,21 @@ let extract_interface (m:modul) :modul =
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
         List.fold_left (fun sigelts s -> 
           match s.sigel with
-          | Sig_inductive_typ (lid, uvs, bs, t, _, _) -> 
+          | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
             let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
             ({ s with sigel = s'; sigquals = filter_out_abstract s.sigquals })::sigelts  //filter out the abstract qualifier
-          | _ -> sigelts  //datacon case, we don't add datacons
+          | _ -> sigelts  //nothing to do for datacons
         ) [] sigelts
       else [s]  //if it is not abstract, retain as is
     | Sig_declare_typ (lid, uvs, t) ->
       //val remains as val, except we filter out the abstract qualifier
       [{ s with sigquals = filter_out_abstract s.sigquals }]
     | Sig_let (lbs, lids) ->
+      if is_abstract s.sigquals then  //CP: add cases for irreducible
+        //add a val declaration for each of the letbinding
+        List.map2 (fun lb lid ->
+          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, lb.lbtyp); sigquals = filter_out_abstract s.sigquals }
+        ) (snd lbs) lids
+      else [s]
   in
   m
