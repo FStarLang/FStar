@@ -485,7 +485,7 @@ let intro_rec : tac<(binder * binder)> =
              let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
              let env' = Env.push_binders goal.context bs in
              bind (new_uvar "intro_rec" env' (comp_to_typ c)) (fun u ->
-             let lb = U.mk_letbinding (Inl bv) [] goal.goal_ty PC.effect_Tot_lid (U.abs [b] u None) in
+             let lb = U.mk_letbinding (Inl bv) [] goal.goal_ty PC.effect_Tot_lid (U.abs [b] u None) [] in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) None goal.witness.pos in

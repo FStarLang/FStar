@@ -598,7 +598,8 @@ let collect_one
     | App (t1, t2, _) ->
         collect_term t1;
         collect_term t2
-    | Let (_, patterms, t) ->
+    | Let (attrs_opt, _, patterms, t) ->
+        ignore (BU.map_opt attrs_opt (List.iter collect_term));
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms;
         collect_term t
     | LetOpen (lid, t) ->

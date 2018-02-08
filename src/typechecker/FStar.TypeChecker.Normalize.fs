@@ -1004,7 +1004,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | _ -> ());
             compress t
         in
-        log cfg  (fun () -> 
+        log cfg  (fun () ->
           let t = compress t in
           BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)
@@ -1277,7 +1277,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps |> List.contains NoDeltaSteps)
-            && ((U.is_pure_effect n && cfg.normalize_pure_lets)
+            && ((U.is_pure_effect n &&
+                (cfg.normalize_pure_lets || BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs))
                 || (U.is_ghost_effect n
                     && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in

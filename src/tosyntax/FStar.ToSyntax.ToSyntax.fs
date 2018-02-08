@@ -350,7 +350,14 @@ type env_t = Env.env
 type lenv_t = list<bv>
 
 (* TODO : shouldn't this be Tot by default ? *)
-let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
+let mk_lb (attrs, n, t, e) = {
+    lbname=n;
+    lbunivs=[];
+    lbeff=C.effect_ALL_lid;
+    lbtyp=t;
+    lbdef=e;
+    lbattrs=attrs
+}
 let no_annot_abs bs t = U.abs bs t None
 
 let mk_ref_read tm =
@@ -1011,15 +1018,19 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Seq(t1, t2) ->
-      mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
+      mk (Tm_meta(desugar_term env (mk_term (Let(None,NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
                   Meta_desugared Sequence))
 
     | LetOpen (lid, e) ->
       let env = Env.push_namespace env lid in
       (if Env.expect_typ env then desugar_typ else desugar_term) env e
 
-    | Let(qual, ((pat, _snd)::_tl), body) ->
+    | Let(attrs_opt, qual, ((pat, _snd)::_tl), body) ->
       let is_rec = qual = Rec in
+      let attrs = match attrs_opt with
+        | None -> []
+        | Some l -> List.map (desugar_term env) l
+      in
       let ds_let_rec_or_app () =
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
@@ -1105,7 +1116,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 | Inl x -> Inl x
                 | Inr l -> Inr (S.lid_as_fv l (incr_delta_qualifier body) None) in
             let body = if is_rec then Subst.close rec_bindings body else body in
-            mk_lb (lbname, tun, body) in
+            mk_lb (attrs, lbname, tun, body)
+        in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_term env' body in
         mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body))
@@ -1126,7 +1138,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             | LetBinder(l, t) ->
               let body = desugar_term env t2 in
               let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
-              mk <| Tm_let((false, [({lbname=Inr fv; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
+              mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1)]), body)
 
             | LocalBinder (x,_) ->
               let body = desugar_term env t2 in
@@ -1135,7 +1147,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 | [{v=Pat_wild _}] -> body
                 | _ ->
                   S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range in
-              mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
+              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
         in
         if is_mutable
         then mk <| Tm_meta (tm, Meta_desugared Mutable_alloc)
@@ -1210,7 +1222,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           let x = FStar.Ident.gen e.range in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(NoLetQualifier, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
+          Let(None, NoLetQualifier, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_term env recterm in
@@ -1239,7 +1251,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | _ ->
       raise_error (Fatal_UnexpectedTerm, ("Unexpected term" ^ term_to_string top)) top.range
-    | Let(_, _, _) -> failwith "Not implemented yet"
+    | Let(_, _, _, _) -> failwith "Not implemented yet"
     | QForall(_, _, _) -> failwith "Not implemented yet"
     | QExists(_, _, _) -> failwith "Not implemented yet"
   end
@@ -1641,7 +1653,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                 lbunivs=[];
                 lbtyp=tun;
                 lbeff=C.effect_Tot_lid;
-                lbdef=tun
+                lbdef=tun;
+                lbattrs=[]
             } in
             let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                          sigquals = quals;
@@ -1689,6 +1702,7 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbdef=no_annot_abs typars t;
         lbtyp=U.arrow typars (S.mk_Total k);
         lbeff=C.effect_Tot_lid;
+        lbattrs=[]
     } in
     { sigel = Sig_let((false, [lb]), lids);
       sigquals = quals;
@@ -2286,7 +2300,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     if not expand_toplevel_pattern
     then begin
       let as_inner_let =
-        mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr
+        mk_term (Let(None, isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr
       in
       let ds_lets = desugar_term_maybe_top true env as_inner_let in
       match (Subst.compress <| ds_lets).n with
@@ -2311,7 +2325,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            * AR: we first deguar the term with no attributes and then add attributes in the end, see desugar_decl above
            *     this used to be fine, because subsequent typechecker then works on terms that have attributes
            *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
-           *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms 
+           *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
            *)
           let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);

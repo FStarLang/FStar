@@ -135,10 +135,14 @@ pragma:
   | PRAGMA_RESET_OPTIONS s_opt=string?
       { ResetOptions s_opt }
 
+attribute:
+  | LBRACK_AT x = list(atomicTerm) RBRACK
+      { x }
+
 decoration:
   | x=FSDOC
       { Doc x }
-  | LBRACK_AT x = list(atomicTerm) RBRACK
+  | x=attribute
       { DeclAttributes x }
   | x=qualifier
       { Qualifier x }
@@ -538,10 +542,11 @@ noSeqTerm:
       }
   | LET OPEN uid=quident IN e=term
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
-  | LET q=letqualifier lbs=separated_nonempty_list(AND,letbinding) IN e=term
+  | attrs=ioption(attribute)
+    LET q=letqualifier lbs=separated_nonempty_list(AND,letbinding) IN e=term
       {
         let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+        mk_term (Let(attrs, q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {

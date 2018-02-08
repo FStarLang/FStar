@@ -62,7 +62,7 @@ type term' =
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of let_qualifier * list<(pattern * term)> * term
+  | Let       of option<attributes_> * let_qualifier * list<(pattern * term)> * term
   | LetOpen   of lid * term
   | Seq       of term * term
   | Bind      of ident * term * term
@@ -87,6 +87,8 @@ type term' =
   | Attributes of list<term>   (* attributes decorating a term *)
 
 and term = {tm:term'; range:range; level:level}
+
+and attributes_ = list<term>
 
 and binder' =
   | Variable of ident
@@ -156,7 +158,6 @@ type qualifier =
 
 type qualifiers = list<qualifier>
 
-type attributes_ = list<term>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
@@ -220,7 +221,7 @@ let check_id id =
     let first_char = String.substring id.idText 0 1 in
     if String.lowercase first_char = first_char
     then ()
-    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange 
+    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
@@ -476,11 +477,11 @@ let compile_op arity s r =
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"
     | ".[||]<-" -> "op_Brack_Lens_Assignment"
-    | ".(||)<-" -> "op_Lens_Assignment"    
+    | ".(||)<-" -> "op_Lens_Assignment"
     | ".[]" -> "op_String_Access"
     | ".()" -> "op_Array_Access"
     | ".[||]" -> "op_Brack_Lens_Access"
-    | ".(||)" -> "op_Lens_Access"    
+    | ".(||)" -> "op_Lens_Access"
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
 let compile_op' s r =
@@ -519,10 +520,18 @@ let rec term_to_string (x:term) = match x.tm with
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let (Rec, lbs, body) ->
-    Util.format2 "let rec %s in %s" (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs) (body|> term_to_string)
-  | Let (q, [(pat,tm)], body) ->
-    Util.format4 "let %s %s = %s in %s" (string_of_let_qualifier q) (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
+  | Let (attrs, Rec, lbs, body) ->
+    Util.format3 "%slet rec %s in %s"
+        (attrs_opt_to_string attrs)
+        (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs)
+        (body|> term_to_string)
+  | Let (attrs, q, [(pat,tm)], body) ->
+    Util.format5 "%slet %s %s = %s in %s"
+        (attrs_opt_to_string attrs)
+        (string_of_let_qualifier q)
+        (pat|> pat_to_string)
+        (tm|> term_to_string)
+        (body|> term_to_string)
   | Seq(t1, t2) ->
     Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
   | If(t1, t2, t3) ->
@@ -602,6 +611,10 @@ and pat_to_string x = match x.pat with
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+
+and attrs_opt_to_string = function
+  | None -> ""
+  | Some attrs -> Util.format1 "[@ %s]" (List.map term_to_string attrs |> String.concat "; ")
 
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]

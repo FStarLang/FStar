@@ -281,3 +281,4 @@ type __internal_ocaml_attributes =
  * it can be omitted if the use case has no such function
  *)
 irreducible let deprecated (s:string) = ()
+irreducible let inline_let = ()

@@ -462,7 +462,7 @@ let rec resugar_term (t : S.term) : A.term =
           let handler = resugar_term (decomp handler) in
           let rec resugar_body t = match (t.tm) with
             | A.Match(e, [(_,_,b)]) -> b
-            | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
+            | A.Let(None, _, _, b) -> b  // One branch Match that is resugared as Let
             | A.Ascribed(t1, t2, t3) ->
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               mk (A.Ascribed(resugar_body t1, t2, t3))
@@ -559,7 +559,7 @@ let rec resugar_term (t : S.term) : A.term =
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
       let bnds = [(resugar_pat pat, resugar_term e)] in
       let body = resugar_term t in
-      mk (A.Let(A.NoLetQualifier, bnds, body))
+      mk (A.Let(None, A.NoLetQualifier, bnds, body))
 
     | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
       mk (A.If(resugar_term e, resugar_term t1, resugar_term t2))
@@ -583,9 +583,9 @@ let rec resugar_term (t : S.term) : A.term =
       let tac_opt = Option.map resugar_term tac_opt in
       mk (A.Ascribed(resugar_term e, term, tac_opt))
 
-    | Tm_let((is_rec, bnds), body) ->
+    | Tm_let((is_rec, source_lbs), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
-      let bnds, body = SS.open_let_rec bnds body in
+      let source_lbs, body = SS.open_let_rec source_lbs body in
       let resugar_one_binding bnd =
         (* TODO : some stuff are open twice there ! (may have already been opened in open_let_rec) *)
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
@@ -612,7 +612,7 @@ let rec resugar_term (t : S.term) : A.term =
         else
           ((pat, resugar_term term), (universe_to_string univs))
       in
-      let r = List.map (resugar_one_binding) bnds in
+      let r = List.map (resugar_one_binding) source_lbs in
       let bnds =
           let f =
             if not (Options.print_universes ()) then fst
@@ -623,7 +623,13 @@ let rec resugar_term (t : S.term) : A.term =
           List.map f r
       in
       let body = resugar_term body in
-      mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
+      let attrs =
+        let {lbattrs=attrs} = List.hd source_lbs in
+        match attrs with
+        | [] -> None
+        | _ -> Some (List.map resugar_term attrs)
+      in
+      mk (A.Let(attrs, (if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
       let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
@@ -669,8 +675,9 @@ let rec resugar_term (t : S.term) : A.term =
             mk (A.Construct(head, args))
           | Sequence ->
               let term = resugar_term e in
-              let rec resugar_seq t = match t.tm with
-                | A.Let(_, [p, t1], t2) ->
+              let rec resugar_seq t =
+                match t.tm with
+                | A.Let(_, _, [p, t1], t2) ->
                    mk (A.Seq(t1, t2))
                 | A.Ascribed(t1, t2, t3) ->
                    (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -689,7 +696,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Mutable_alloc ->
               let term = resugar_term e in
               begin match term.tm with
-                | A.Let(A.NoLetQualifier,l,t) -> mk (A.Let(A.Mutable, l, t))
+                | A.Let(attrs,A.NoLetQualifier,l,t) -> mk (A.Let(attrs,A.Mutable, l, t))
                 | _ -> failwith "mutable_alloc should have let term with no qualifier"
               end
           | Mutable_rval ->
@@ -1079,7 +1086,7 @@ let resugar_sigelt se : option<A.decl> =
       let desugared_let = mk (Tm_let(lbs, dummy)) in
       let t = resugar_term desugared_let in
       begin match t.tm with
-        | A.Let(isrec, lets, _) ->
+        | A.Let(_, isrec, lets, _) ->
           Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
         | _ -> failwith "Should not happen hopefully"
       end

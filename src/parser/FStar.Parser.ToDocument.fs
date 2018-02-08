@@ -887,10 +887,17 @@ and p_noSeqTerm' e = match (unparen e).tm with
       group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
-  | Let(q, lbs, e) ->
+  | Let(attrs_opt, q, lbs, e) ->
     let let_doc = str "let" ^^ p_letqualifier q in
-    group (precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in") ^/^
-      p_term e
+    let l =
+        group (precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in") ^/^
+              p_term e
+    in
+    (match attrs_opt with
+     | None -> l
+     | Some terms ->
+       let attrs = group (str "[@" ^/^ (separate_map semi p_term terms) ^/^ str "]")in
+       attrs ^/^ hardline ^/^ l)
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     group (str "function" ^/^ separate_map hardline p_patternBranch branches)
   | Assign (id, e) ->
