@@ -19,6 +19,7 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module ToSyntax = FStar.ToSyntax.ToSyntax
 module BU = FStar.Util
 module D = FStar.Parser.Driver
+module Rel = FStar.TypeChecker.Rel
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let tcenv_ref: ref<option<TcEnv.env>> = mk_ref None
@@ -99,11 +100,20 @@ let pars s =
     with
         | e when not ((Options.trace_error())) -> raise e
 
-let tc s =
+let tc' s =
     let tm = pars s in
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
-    let tm, _, _ = TcTerm.tc_tot_or_gtot_term tcenv tm in
+    let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
+    tm, g, tcenv
+
+let tc s =
+    let tm, _, _ = tc' s in
+    tm
+
+let tc_nbe s =
+    let tm, g, tcenv = tc' s in
+    Rel.force_trivial_guard tcenv g;
     tm
 
 let pars_and_tc_fragment (s:string) =

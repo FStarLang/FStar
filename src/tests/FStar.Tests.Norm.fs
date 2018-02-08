@@ -102,11 +102,26 @@ let tests =
                                        | A x y \
                                        | B y x -> y - x" in
   let _ = Pars.pars_and_tc_fragment "type tb = | T | F" in
+  let _ = Pars.pars_and_tc_fragment "type rb = | A1 | A2 | A3" in
+  let _ = Pars.pars_and_tc_fragment "type hb = | H : tb -> hb" in
+  let _ = Pars.pars_and_tc_fragment "let select (i:tb) (x:'a) (y:'a) : Tot 'a = \
+                                         match i with \
+                                          | T -> x \
+                                          | F -> y" in
+  let _ = Pars.pars_and_tc_fragment "let select_hb (h:hb) : Tot tb = \
+                                         match h with \
+                                          | H t -> t" in
+  let _ = Pars.pars_and_tc_fragment "let recons_m (x:list tb) = \
+                                         match x with \
+                                          | [] -> []  \
+                                          | hd::tl -> hd::tl" in
+
   let _ = Pars.pars_and_tc_fragment "let idd (x: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let revtb (x: tb) = match x with | T -> F | F -> T" in
   let _ = Pars.pars_and_tc_fragment "let id_tb (x: tb) = x" in
   let _ = Pars.pars_and_tc_fragment "let fst_a (x: 'a) (y: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let id_list (x: list 'a) = x" in
+  let _ = Pars.pars_and_tc_fragment "let id_list_m (x: list tb) = x" in //same as recons_m, but no pattern matching
   [ (0, (app apply [one; id; nm n]), (nm n))
   ; (1, (app id [nm x]), (nm x))
   ; (1, (app apply [tt; nm n; nm m]), (nm n))
@@ -116,13 +131,14 @@ let tests =
   ; (5, (minus one z), one)
   ; (6, (app pred [one]), z)
   ; (7, (minus one one), z)
-  ; (8, (app mul [one; one]), one)
-  ; (9, (app mul [two; one]), two)
-  ; (10, (app mul [app succ [one]; one]), two)
-  ; (11, (minus (encode 10) (encode 10)), z)
-  ; (12, (minus (encode 100) (encode 100)), z)
-  ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
-  ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
+  // ; (8, (app mul [one; one]), one)
+  // ; (9, (app mul [two; one]), two)
+  // ; (10, (app mul [app succ [one]; one]), two)
+  // ; (11, (minus (encode 10) (encode 10)), z)
+  // ; (12, (minus (encode 100) (encode 100)), z)
+  // ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
+
+  //// ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
   ; (15, (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                (let_ h (app mul [nm y; nm y])
@@ -135,44 +151,52 @@ let tests =
             (let_ y (app mul [nm x; nm x])
                (let_ h (app mul [nm y; nm y])
                        (minus (nm h) (nm h))))), z)
-  ; (18, (pred_nat (snat (snat znat))), (snat znat))
-  ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
-  ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
-  ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  //; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
-  //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
-  // The following do not work for NBE because ints are not handled
-  // ; (24, (tc "recons [0;1]"), (tc "[0;1]"))
-  // ; (25, (tc "copy [0;1]"), (tc "[0;1]"))
-  // ; (26, (tc "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc "[10;9;8;7;6;5;4;3;2;1;0]"))
-  // ; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
+  // ; (18, (pred_nat (snat (snat znat))), (snat znat))
+  // ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
+  // ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
+  // ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
+
+  //// ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  //// ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
+  // The following do not work for NBE because of type allications.
+    // Prims.Int not found
+  //// ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
+  //// ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
+  //// ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
+  //// ; (1062, (Pars.tc_nbe "f (B 5 3)"), (Pars.tc_nbe "2"))
   // Type defs not yet implemented for NBE
-  // ; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
-  ; (28, (tc "(fun x y z q -> z) T T F T"), (tc "F"))
-  ; (29, (tc "[T; F]"), (tc "[T; F]"))
-  ; (31, (tc "id_tb T"), (tc "T"))
-  ; (32, (tc "(fun #a x -> x) #tb T"), (tc "T"))
-  ; (33, (tc "revtb T"), (tc "F"))
-  ; (34, (tc "(fun x y -> x) T F"), (tc "T"))
-  ; (35, (tc "fst_a T F"), (tc "T"))
-  ; (36, (tc "idd T"), (tc "T"))
-  ; (301,(tc "id_list [T; F]"), (tc "[T; F]"))
-  // ; (302,(tc "recons [T]"), (tc "[T]"))
-  // ; (30, (tc "rev [T]"), (tc "[T]")) // failure of universe variable unification
+  //// ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))") (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+
+  // ; (28, (tc_nbe "(fun x y z q -> z) T T F T"), (tc_nbe "F"))
+  // ; (29, (tc_nbe "[T; F]"), (tc_nbe "[T; F]"))
+  // ; (31, (tc_nbe "id_tb T"), (tc_nbe "T"))
+  // ; (32, (tc_nbe "(fun #a x -> x) #tb T"), (tc_nbe "T"))
+  // ; (33, (tc_nbe "revtb T"), (tc_nbe "F"))
+  // ; (34, (tc_nbe "(fun x y -> x) T F"), (tc_nbe "T"))
+  // ; (35, (tc_nbe "fst_a T F"), (tc_nbe "T"))
+  // ; (36, (tc_nbe "idd T"), (tc_nbe "T"))
+  // ; (301, (tc_nbe "id_list [T]"), (tc_nbe "[T]"))
+  // ; (3012, (tc_nbe "id_list_m [T]"), (tc_nbe "[T]"))
+  ; (302, (tc_nbe "recons_m [T; F]"), (tc_nbe "[T; F]"))
+  ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
+  ; (304, (tc_nbe "select_hb (H F)"), (tc_nbe "F"))
+  ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
+  ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
+  // ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
+  // ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
   ]
 
 
 let run_either i r expected normalizer =
 //    force_term r;
-    BU.print1 "%s: ... \n" (BU.string_of_int i);
+    BU.print1 "%s: ... \n\n" (BU.string_of_int i);
     let tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
-//    BU.print1 "result = %s\n" (P.term_to_string x);
-//    BU.print1 "expected = %s\n\n" (P.term_to_string expected);
+    // ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
 let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops])
@@ -186,10 +210,10 @@ let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
   (i, snd (FStar.Util.return_execution_time nbe))
 
-let run_tests run = 
+let run_tests run =
   Options.__set_unit_tests();
   let l = List.map (function (no, test, res) -> run no test res) tests in
-  Options.__clear_unit_tests(); 
+  Options.__clear_unit_tests();
   l
 
 let run_all_nbe () =
@@ -211,7 +235,7 @@ let run_all_nbe_with_time () =
 let run_all_interpreter_with_time () =
   BU.print_string "Testing the normalizer\n";
   let l = run_tests run_interpreter_with_time in
-  BU.print_string "Normalizer ok\n"; 
+  BU.print_string "Normalizer ok\n";
   l
 
 
@@ -228,17 +252,16 @@ let compare () =
   BU.print_string "Comparing times for normalization and nbe\n";
   run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
-
 let compare_times l_int l_nbe =
   BU.print_string "Comparing times for normalization and nbe\n";
-  List.iter2 (fun res1 res2 -> 
+  List.iter2 (fun res1 res2 ->
                 let (t1, time_int) = res1 in
                 let (t2, time_nbe) = res2 in
                 if (t1 = t2) // sanity check
-                then 
+                then
                   BU.print3 "Test %s\nNBE %s\nInterpreter %s\n"
                   // Figure out if there is division compatible with both F* and F#
-                  //BU.print4 "%s: NBE %s    Interpreter %s    Ratio %s\n" 
+                  //BU.print4 "%s: NBE %s    Interpreter %s    Ratio %s\n"
                     (BU.string_of_int t1)
                     (BU.string_of_float time_nbe)
                     (BU.string_of_float time_int)
