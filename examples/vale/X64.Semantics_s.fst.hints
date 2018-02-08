@@ -1136,7 +1136,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f85982fd14a7c5f5a7a1622940f780f9"
+      "7f040263ac170a9a8ce7bdf1e06afbe3"
     ],
     [
       "X64.Semantics_s.add_mod64",
@@ -1166,7 +1166,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2fd3a0381945d09221e312d864f346dd"
+      "b74387e6c8c73f7c4e2953be741685e2"
     ],
     [
       "X64.Semantics_s.sub_mod64",
@@ -1196,7 +1196,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "742144b3434f81568fa363cef90dae26"
+      "b4b08ecdcca58d89063449ed132b319a"
     ],
     [
       "X64.Semantics_s.mul_mod64",
@@ -1226,7 +1226,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f76df97e37ee9db52654f75313b7009d"
+      "bad34b86ec052424ce671af4b219a8d2"
     ],
     [
       "X64.Semantics_s.mul_div64",

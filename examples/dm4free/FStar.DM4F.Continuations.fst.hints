@@ -106,15 +106,6 @@
       ],
       0,
       "57d1dd5f696aaca0c7a93ef3eeebe692"
-    ],
-    [
-      "FStar.DM4F.Continuations.em",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3573ed6a621da1d981cc79be6841a7d4"
     ]
   ]
 ]

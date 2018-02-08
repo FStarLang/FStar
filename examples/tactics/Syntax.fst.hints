@@ -1,5 +1,5 @@
 [
-  "â-\u001bq¾}`{[³+¼bpŒŒ",
+  "ý’\u0013*\u0001­i(—±…›ð¯ä\u0002",
   [
     [
       "Syntax.quote_sanity_check",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8f62f951fa437c7a9275613853dd0a20"
+      "0f6c12ec931889bf644df9621ee761c4"
     ],
     [
       "Syntax.goal_sanity_check",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "77446dde988c5af43ab789b3bf73c866"
+      "8abcac4875d482ffefb5d3177cfbc7ef"
     ],
     [
       "Syntax.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "3bc3ef451e721c108724d2b62f679cb5"
+      "bf593d781778ec95888e160ae7acda34"
     ],
     [
       "Syntax.blah",
@@ -72,7 +72,7 @@
         "typing_FStar.Reflection.Basic.__inspect"
       ],
       0,
-      "2f11c3df1c3aa24ac83aa862362d4191"
+      "6e4b70c0d5fc0a50f61b92e3d74a4701"
     ],
     [
       "Syntax.uu___123",
@@ -81,7 +81,7 @@
       1,
       [ "@query" ],
       0,
-      "b6a404373b8f920db1718dfc47d1992a"
+      "914b54b27fa2e50488b6b0d021559af6"
     ],
     [
       "Syntax.uu___124",
@@ -90,7 +90,7 @@
       1,
       [ "@query" ],
       0,
-      "b680aff4f50cd9c908a11cb3f04231aa"
+      "1810410b2c874aeb5621426f5a56bf87"
     ],
     [
       "Syntax.uu___125",
@@ -99,7 +99,7 @@
       1,
       [ "@query" ],
       0,
-      "cebdb510dd2a29921ac6684b40363994"
+      "e81a94dabc7560443c418138ec465a93"
     ],
     [
       "Syntax.uu___126",
@@ -108,7 +108,7 @@
       1,
       [ "@query" ],
       0,
-      "719d88a7dffbb2621fd525444d4181b1"
+      "5b44fd29d1d911d3196aa10b30f33363"
     ],
     [
       "Syntax.uu___127",
@@ -117,7 +117,7 @@
       1,
       [ "@query" ],
       0,
-      "b4a6a3325b7406d6047e93762d7aaa7d"
+      "d7d4fba0e94500443911381dc9486aa6"
     ],
     [
       "Syntax.uu___128",
@@ -126,7 +126,7 @@
       1,
       [ "@query" ],
       0,
-      "021bbe5f5ac4b173786e786f5b21d736"
+      "92c449985058a7aed9dcf1e3377983cd"
     ],
     [
       "Syntax.arith_test1",
@@ -144,7 +144,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "c30dacc3050dcd688acaed563fab8f33"
+      "8053a23ae062998057e2c2496ab6d181"
     ],
     [
       "Syntax.arith_test2",
@@ -162,7 +162,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "ebc65936f89cc2e3ab9fd814e3dd2557"
+      "6fee3cf89e62b165f90a4d0fa89f3901"
     ],
     [
       "Syntax.uu___129",
@@ -171,7 +171,7 @@
       1,
       [ "@query" ],
       0,
-      "7e092e0b979378bbe35058d7dcff4e65"
+      "85a71634b45c2ade0e03ee414e434cac"
     ]
   ]
 ]

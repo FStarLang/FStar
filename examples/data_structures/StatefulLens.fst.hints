@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "a01357ed260ea75208d5f817c6e37def"
+      "73c7ed09ac9454976498df6934810afc"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "50f179c04abb85cd1a77808b03d322bd"
+      "53c7a5fcabb5b5bbc849d1b271a3eae2"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "2922eb7164520fe1565ec8d89e0ec884"
+      "9399a87bbd8ec56f641636575a29d32f"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "84261fedb912626b0cae7992a71ef528"
+      "7b1b9245173a475501ac73cbd0dcb7a8"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "4d41744f73aae2e0d057d32135061594"
+      "ac31633bed57c2c8a715485e5f267d05"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "631e4c8918e25450228b085dfa9d3170"
+      "7b9138611c1d2d6e3815c26bdb1f7f7e"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "f9fbf9ff8e415d4934ce7ba0973b1a39"
+      "c07addacf221e5a3da5d8d9b2699a536"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "194907402397be00137af9e1132859e1"
+      "a8e0d59bfec4e6e3d89d70d3a5a556ac"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "cef01f8cebe182cf466f1fd82b158379"
+      "cc10abc55847365a362e65a98fe07d37"
     ]
   ]
 ]

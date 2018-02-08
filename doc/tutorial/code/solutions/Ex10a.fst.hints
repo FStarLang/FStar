@@ -83,7 +83,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
       0,
-      "e24c84e71a27d54bdda5cad0548ad001"
+      "395f626af5de9810642e21d78089e850"
     ],
     [
       "Ex10a.grant",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "6fc8c23c009e506cf60dda42b23a073f"
+      "db73fb0cf1497fce47ee16cf6e173f09"
     ],
     [
       "Ex10a.revoke",
@@ -124,7 +124,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "6dd35f3a331cc3795505aa1c13e3b06f"
+      "f3a1ab549e63b34c978b13ccd72ec7a5"
     ],
     [
       "Ex10a.safe_delete",
@@ -146,7 +146,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "e9c69aa064c6e2e791c7da62ce02dafb"
+      "5f3919777d4b983cda7efb1b5da1ce9c"
     ],
     [
       "Ex10a.test_acls",
@@ -175,7 +175,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "d7ed9e228281293a809e1a43e92bf355"
+      "cb40dc5c6b699d128017905a39f2098c"
     ]
   ]
 ]

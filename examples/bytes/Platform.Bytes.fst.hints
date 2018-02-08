@@ -878,7 +878,7 @@
         "subterm_ordering_Prims.Cons", "typing_Platform.Bytes.sum_length"
       ],
       0,
-      "cb23500cc0f479faa99b2b6c123e8917"
+      "487bed123706a0865bed0de6405af964"
     ],
     [
       "Platform.Bytes.lemma_getBytes",
