@@ -36,6 +36,7 @@ type step =
   | NoDeltaSteps
   | UnfoldUntil of delta_depth
   | UnfoldOnly of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -46,6 +47,7 @@ type step =
   | NoFullNorm
   | CheckNoUvars
   | Unmeta
+  | Unascribe
 and steps = list<step>
 type closure =
   | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
@@ -82,3 +84,5 @@ val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
 val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
+
+val remove_uvar_solutions: Env.env -> term -> term

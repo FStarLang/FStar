@@ -19,6 +19,8 @@ open FStar.TSet
 open FStar.Heap
 open FStar.Preorder
 
+module W = FStar.Monotonic.Witnessed
+
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
 new_effect GST = STATE_h heap
@@ -43,14 +45,15 @@ type heap_predicate = heap -> Type0
 let stable (p:heap_predicate) =
   forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2
 
-assume type witnessed: (p:heap_predicate{stable p}) -> Type0
+abstract let witnessed (p:heap_predicate{stable p}) = W.witnessed heap_rel p
 
 assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
 
-assume val lemma_functoriality
-  (p:heap_predicate{stable p /\ witnessed p}) (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
+val lemma_functoriality (p:heap_predicate{stable p /\ witnessed p}) 
+                        (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
   :Lemma (ensures (witnessed q))
+let lemma_functoriality p q = W.lemma_witnessed_weakening heap_rel p q
 
 (***** ST effect *****)
 
@@ -72,7 +75,7 @@ effect St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 
 let contains_pred (#a:Type0) (#rel:preorder a) (r:mref a rel) = fun h -> h `contains` r
 
-type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{witnessed (contains_pred r)}
+type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{is_mm r = false /\ witnessed (contains_pred r)}
 
 abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
   = gst_recall (contains_pred r)
@@ -82,7 +85,7 @@ abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
       (fun h -> True)
       (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
   = let h0 = gst_get () in
-    let r, h1 = alloc rel h0 init true in
+    let r, h1 = alloc rel h0 init false in
     gst_put h1;
     gst_witness (contains_pred r);
     r
@@ -101,6 +104,8 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()

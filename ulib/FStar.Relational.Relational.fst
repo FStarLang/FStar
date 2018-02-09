@@ -50,7 +50,7 @@ let snd_rel = rel_map1T snd
 (* Some convenient boolean functions *)
 let and_rel = rel_map2T (fun x y -> x && y)
 let or_rel = rel_map2T (fun x y -> x || y)
-let eq_rel = rel_map2Teq (fun x y -> x = y)
+let eq_rel = rel_map2Teq (fun (x y:bool) -> x = y)
 
 (* Some convenient functions combining left and right side (for specification only) *)
 let and_irel (R a b) = a && b

@@ -82,11 +82,11 @@ let z3hash_warning_message () =
         with _ -> None
     in
     match run_proc_result with
-    | None -> Some (FStar.Errors.EError, "Could not run Z3")
+    | None -> Some (FStar.Errors.Error_Z3InvocationError, "Could not run Z3")
     | Some (_, out, _) ->
         begin match parse_z3_version_lines out with
         | None -> None
-        | Some msg -> Some (FStar.Errors.EWarning, msg)
+        | Some msg -> Some (FStar.Errors.Warning_Z3InvocationWarning, msg)
         end
 
 let check_z3hash () =
@@ -95,7 +95,7 @@ let check_z3hash () =
         _z3hash_checked := true;
         match z3hash_warning_message () with
         | None -> ()
-        | Some (level, msg) ->
+        | Some (e, msg) ->
           let msg =
               BU.format4
                   "%s\n%s\n%s\n%s\n"
@@ -104,14 +104,14 @@ let check_z3hash () =
                   _z3url
                   "and add the bin/ subdirectory into your PATH"
           in
-          FStar.Errors.add_one (FStar.Errors.mk_issue level None msg)
+          FStar.Errors.log_issue Range.dummyRange (e, msg)
     end
 
 let ini_params () =
   check_z3hash ();
   (String.concat " "
                 (List.append
-                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
+                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2 smt.case_split=3";
                    (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
                  (Options.z3_cliopt())))
 
@@ -302,11 +302,11 @@ let smt_output_sections (lines:list<string>) : smt_output =
         match remaining with
         | [] -> ()
         | _ ->
-            FStar.Errors.warn
+            FStar.Errors.log_issue
                     Range.dummyRange
-                    (BU.format2 "%s: Unexpected output from Z3: %s\n"
+                    (Errors.Warning_UnexpectedZ3Output, (BU.format2 "%s: Unexpected output from Z3: %s\n"
                                     (query_logging.get_module_name())
-                                    (String.concat "\n" remaining)) in
+                                    (String.concat "\n" remaining))) in
     {smt_result = BU.must result_opt;
      smt_reason_unknown = reason_unknown;
      smt_unsat_core = unsat_core;

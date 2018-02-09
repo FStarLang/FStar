@@ -394,7 +394,8 @@ let unicode_of_string (string:string) =
   let i = ref 0 in
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
-
+let base64_encode s = BatBase64.str_encode s
+let base64_decode s = BatBase64.str_decode s
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
 let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
@@ -855,8 +856,15 @@ let load_value_from_file (fname:string) =
 let print_exn e =
   Printexc.to_string e
 
-let digest_of_file (fname:string) =
-  BatDigest.file fname
+let digest_of_file =
+  let cache = smap_create (Z.of_int 101) in
+  fun (fname:string) ->
+    match smap_try_find cache fname with
+    | Some dig -> dig
+    | None ->
+      let dig = BatDigest.file fname in
+      smap_add cache fname dig;
+      dig
 
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)

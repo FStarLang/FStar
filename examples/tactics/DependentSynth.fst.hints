@@ -1,5 +1,5 @@
 [
-  "\u007f#”hçÀ·ŒXý¨\u0015µó.‰",
+  "\u001d¥ƒÂñ\u0019(ò3´ˆ\u001eKŽ\u001bÓ",
   [
     [
       "DependentSynth.myty",
@@ -11,16 +11,7 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
       ],
       0,
-      "d695625f7bf565ee73a17eb90e221684"
-    ],
-    [
-      "DependentSynth.mk_if",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "61050c91444ae9d5afefe36aa0d1383e"
+      "09b6851abaee80e56ff0fa050fd6d5a9"
     ],
     [
       "DependentSynth.f",
@@ -33,7 +24,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_typing"
       ],
       0,
-      "e9331862e4b0cfbdadcd4b2542c6475b"
+      "7dd4c6f46fe43e2a11b73836273502a7"
     ]
   ]
 ]

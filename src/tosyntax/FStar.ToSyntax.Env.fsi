@@ -101,7 +101,7 @@ type dsenv_hooks =
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 type foundname =
-  | Term_name of typ * bool // indicates if mutable
+  | Term_name of typ * bool * list<attribute> // bool indicates if mutable
   | Eff_name  of sigelt * lident
 
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
@@ -128,6 +128,8 @@ val try_lookup_id: env -> ident -> option<(term*bool)>
 val shorten_module_path: env -> list<ident> -> bool -> (list<ident> * list<ident>)
 val shorten_lid: env -> lid -> lid
 val try_lookup_lid: env -> lident -> option<(term*bool)>
+val try_lookup_lid_with_attributes: env -> lident -> option<(term*bool*list<attribute>)>
+val try_lookup_lid_with_attributes_no_resolve: env -> lident -> option<(term * bool * list<attribute>)>
 val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
@@ -171,7 +173,7 @@ val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
 val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env * bool //pop the context when done desugaring
 
-(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
+(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool*list<attribute>)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
 (* private *) val check_admits: env -> unit
 (* private *) val finish:  env -> modul -> env

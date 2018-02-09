@@ -1,10 +1,11 @@
 open Prims
+let id: 'Aa . 'Aa -> 'Aa = fun x  -> x
 type 'Aheap st_pre_h = 'Aheap -> Obj.t[@@deriving show]
 type ('Aheap,'Aa,'Apre) st_post_h' = 'Aa -> 'Aheap -> Obj.t[@@deriving show]
 type ('Aheap,'Aa) st_post_h = ('Aheap,'Aa,Prims.unit) st_post_h'[@@deriving
                                                                   show]
 type ('Aheap,'Aa) st_wp_h = Prims.unit -> 'Aheap st_pre_h[@@deriving show]
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___38_78) st_return = 'Ap[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___37_85) st_return = 'Ap[@@deriving show]
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) st_bind_wp = 'Awp1[@@deriving
                                                                     show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) st_if_then_else =
@@ -21,16 +22,16 @@ type 'Aa result =
   | E of Prims.exn
   | Err of Prims.string[@@deriving show]
 let uu___is_V: 'Aa . 'Aa result -> Prims.bool =
-  fun projectee  -> match projectee with | V v -> true | uu____605 -> false
+  fun projectee  -> match projectee with | V v -> true | uu____602 -> false
 let __proj__V__item__v: 'Aa . 'Aa result -> 'Aa =
   fun projectee  -> match projectee with | V v -> v
 let uu___is_E: 'Aa . 'Aa result -> Prims.bool =
-  fun projectee  -> match projectee with | E e -> true | uu____635 -> false
+  fun projectee  -> match projectee with | E e -> true | uu____632 -> false
 let __proj__E__item__e: 'Aa . 'Aa result -> Prims.exn =
   fun projectee  -> match projectee with | E e -> e
 let uu___is_Err: 'Aa . 'Aa result -> Prims.bool =
   fun projectee  ->
-    match projectee with | Err msg -> true | uu____665 -> false
+    match projectee with | Err msg -> true | uu____662 -> false
 let __proj__Err__item__msg: 'Aa . 'Aa result -> Prims.string =
   fun projectee  -> match projectee with | Err msg -> msg
 type ex_pre = Obj.t[@@deriving show]
@@ -55,7 +56,7 @@ type ('Ah,'Aa,'Apre) all_post_h' = 'Aa result -> 'Ah -> Obj.t[@@deriving
 type ('Ah,'Aa) all_post_h = ('Ah,'Aa,Prims.unit) all_post_h'[@@deriving show]
 type ('Ah,'Aa) all_wp_h = Prims.unit -> 'Ah all_pre_h[@@deriving show]
 type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = Prims.unit[@@deriving show]
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___40_1283) all_return = 'Ap[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___40_1277) all_return = 'Ap[@@deriving show]
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1[@@deriving
                                                                     show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else =
@@ -68,18 +69,18 @@ type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = Prims.unit[@@deriving show]
 type ('Aheap,'Aa,'Awp) all_trivial = Prims.unit[@@deriving show]
 type 'Aa inversion = Prims.unit[@@deriving show]
 let allow_inversion: 'Aa . Prims.unit = ()
-let invertOption: 'Aa . Prims.unit -> Prims.unit = fun uu____1705  -> ()
+let invertOption: 'Aa . Prims.unit -> Prims.unit = fun uu____1689  -> ()
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b[@@deriving show]
 let uu___is_Inl: 'a 'b . ('a,'b) either -> Prims.bool =
   fun projectee  ->
-    match projectee with | Inl v -> true | uu____1748 -> false
+    match projectee with | Inl v -> true | uu____1732 -> false
 let __proj__Inl__item__v: 'a 'b . ('a,'b) either -> 'a =
   fun projectee  -> match projectee with | Inl v -> v
 let uu___is_Inr: 'a 'b . ('a,'b) either -> Prims.bool =
   fun projectee  ->
-    match projectee with | Inr v -> true | uu____1792 -> false
+    match projectee with | Inr v -> true | uu____1776 -> false
 let __proj__Inr__item__v: 'a 'b . ('a,'b) either -> 'b =
   fun projectee  -> match projectee with | Inr v -> v
 let dfst: 'Aa 'Ab . ('Aa,'Ab) Prims.dtuple2 -> 'Aa =
@@ -124,26 +125,29 @@ type __internal_ocaml_attributes =
   | Comment of Prims.string[@@deriving show]
 let uu___is_PpxDerivingShow: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____2361 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____2346 -> false
 let uu___is_PpxDerivingShowConstant:
   __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____2366 -> false
+    | uu____2351 -> false
 let __proj__PpxDerivingShowConstant__item___0:
   __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0
 let uu___is_CInline: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | CInline  -> true | uu____2377 -> false
+    match projectee with | CInline  -> true | uu____2362 -> false
 let uu___is_Substitute: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | Substitute  -> true | uu____2381 -> false
+    match projectee with | Substitute  -> true | uu____2366 -> false
 let uu___is_Gc: __internal_ocaml_attributes -> Prims.bool =
-  fun projectee  -> match projectee with | Gc  -> true | uu____2385 -> false
+  fun projectee  -> match projectee with | Gc  -> true | uu____2370 -> false
 let uu___is_Comment: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | Comment _0 -> true | uu____2390 -> false
+    match projectee with | Comment _0 -> true | uu____2375 -> false
 let __proj__Comment__item___0: __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | Comment _0 -> _0
+type attribute = Prims.unit[@@deriving show]
+let deprecated: Prims.string -> attribute = fun s  -> ()
+let inline_let: attribute = ()

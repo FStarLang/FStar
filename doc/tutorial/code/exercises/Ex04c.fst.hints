@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "42ef35d3b468b7ecab5e98df3e39b4fb"
+      "a5fee0423955ba612cb3e53d7e634b91"
     ],
     [
       "Ex04c.mem",
@@ -28,21 +28,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e90197b9dc29a86216432a9ec7d130f1"
-    ],
-    [
-      "Ex04c.mem",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
-        "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "d1608c6b51bf615717af8fe35666cc5d"
+      "d61b0b09bf638e868bc531f571baddaf"
     ]
   ]
 ]

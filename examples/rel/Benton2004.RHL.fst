@@ -459,6 +459,7 @@ let rec r_while_correct
     r_while_correct b b' c c' p s1 s1' (fuel - 1)
   else ()
 
+#set-options "--use_two_phase_tc false"  //AR: pattern of forall_intro_2
 let rec r_while
   (b b' : exp bool)
   (c c' : computation)
@@ -472,7 +473,7 @@ let rec r_while
   ))
 = Classical.forall_intro_2 (fun x -> Classical.move_requires (r_while_terminates b b' c c' p x));
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (r_while_correct b b' c c' p x y))
-
+#set-options "--use_two_phase_tc true"  //AR: reenable
 
 let is_per (p: gexp bool) = Benton2004.is_per (interp p)
 

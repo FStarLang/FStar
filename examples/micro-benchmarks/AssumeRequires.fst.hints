@@ -1,5 +1,5 @@
 [
-  "Ü¡M(Ž®FŒ\u0002Öì¦º¡™7",
+  " á\u007f¤ÃÕ\u0011=´úX\u0004»¼\u001b³",
   [
     [
       "AssumeRequires.well_typed",
@@ -11,7 +11,7 @@
         "refinement_interpretation_AssumeRequires_Tm_refine_55be818f8bfa7783140f53c8c7dfdd82"
       ],
       0,
-      "9bea247f79274fe11143ea76ad6c68ef"
+      "1a88a8aa8489bc4631f51b4f958d3061"
     ],
     [
       "AssumeRequires.get",
@@ -23,7 +23,7 @@
         "refinement_interpretation_AssumeRequires_Tm_refine_144a6a0ab6d16765be3cfaffe72cbb4b"
       ],
       0,
-      "1dd2b1c9aea8d497893c31c190fa83bd"
+      "e2daa8c07d44dcf87db74def53e02bda"
     ],
     [
       "AssumeRequires.get",
@@ -39,7 +39,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "c16a9199e12d342d35d9e4efdf5df88b"
+      "9475bc53a6274b353256fa20104f6f92"
     ],
     [
       "AssumeRequires.get_div",
@@ -51,7 +51,7 @@
         "refinement_interpretation_AssumeRequires_Tm_refine_144a6a0ab6d16765be3cfaffe72cbb4b"
       ],
       0,
-      "1a566e77f2fff3d5f00a10a4025ba14d"
+      "1f4924ca96a503efe5150e95c752de20"
     ],
     [
       "AssumeRequires.get_div",
@@ -68,7 +68,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "eb325a40957adca413d17a385153b5e4"
+      "baa73fbcc6cee6802ac2d486a83f9b14"
     ],
     [
       "AssumeRequires.lem",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "bb6915a18c4ca78afe256a3d268f36aa"
+      "267ab149f2088b22683b63a5cd765e22"
     ],
     [
       "AssumeRequires.lem",
@@ -97,7 +97,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion", "unit_typing"
       ],
       0,
-      "5e40196e4138c4d6b1e0d59f3cf471cf"
+      "3b9459b820a0d0faced227deb3c5b9ee"
     ],
     [
       "AssumeRequires.get_ghost",
@@ -109,7 +109,7 @@
         "refinement_interpretation_AssumeRequires_Tm_refine_144a6a0ab6d16765be3cfaffe72cbb4b"
       ],
       0,
-      "4b9bc71fec07af325d07d8f8c07c95a7"
+      "f17dfd3754617c86ed392806573e7ae1"
     ],
     [
       "AssumeRequires.get_ghost",
@@ -125,7 +125,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "89a2e1f120285b9dff62da9d6690081b"
+      "92902c00b0fc3135f6f3bb400fd19fc6"
     ],
     [
       "AssumeRequires.get_exn",
@@ -137,7 +137,7 @@
         "refinement_interpretation_AssumeRequires_Tm_refine_1aa4ddd9449a841d91645885e773d708"
       ],
       0,
-      "e93d51036f76aeaaab97a2e3c99efba8"
+      "ebb8279a8683353d50f9dac8617e7e7f"
     ],
     [
       "AssumeRequires.get_exn",
@@ -154,7 +154,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0debb2c95655208253bf7e35ff84667b"
+      "9e47c4348a2b66dab0fd6b51b4197251"
     ],
     [
       "AssumeRequires.get_st",
@@ -166,7 +166,7 @@
         "refinement_interpretation_AssumeRequires_Tm_refine_55be818f8bfa7783140f53c8c7dfdd82"
       ],
       0,
-      "be1f3261cd658f7b4e5e0cf9a0a274c9"
+      "77705beeede2d2d98edbe26c9a27cf81"
     ],
     [
       "AssumeRequires.get_st",
@@ -183,7 +183,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "541d94e1070160ae3a1c3dba04c9d1f1"
+      "46c69a03bde84d5722077e26af435fd3"
     ],
     [
       "AssumeRequires.get_all",
@@ -192,11 +192,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.HyperHeap.t",
-        "refinement_interpretation_AssumeRequires_Tm_refine_55be818f8bfa7783140f53c8c7dfdd82"
+        "refinement_interpretation_AssumeRequires_Tm_refine_7d6cce771b4c73ce62cb5d6b4190154a"
       ],
       0,
-      "6e18f890b37aa9e27b2219b4539711fc"
+      "1122803221178ae685d5dbd62bfe731f"
     ],
     [
       "AssumeRequires.get_all",
@@ -207,15 +206,15 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "data_typing_intro_FStar.Pervasives.V@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_FStar.Monotonic.HyperHeap.t",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_AssumeRequires_Tm_refine_55be818f8bfa7783140f53c8c7dfdd82",
+        "refinement_interpretation_AssumeRequires_Tm_refine_7d6cce771b4c73ce62cb5d6b4190154a",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "05d1a0e57ed4b88926d484385f186925"
+      "c2c1df407ff007f500878ce7f64ef853"
     ]
   ]
 ]

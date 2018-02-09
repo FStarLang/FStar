@@ -4,7 +4,6 @@ open FStar.HyperStack.ST
 open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes
-open FStar.HyperHeap
 open FStar.HyperStack
 
 module B = Platform.Bytes
@@ -19,7 +18,7 @@ module RSA = HyE.RSA
 type rid = FStar.Monotonic.Seq.rid
 
 noeq abstract type pkey =
-  | PKey: #region:rid -> rawpk:RSA.pkey -> cca_pk:C.pkey  -> pkey
+  | PKey: #region:rid{HyperStack.ST.witnessed (region_contains_pred region)} -> rawpk:RSA.pkey -> cca_pk:C.pkey  -> pkey
 
 let access_pkraw (pk:pkey) =
   PKey?.rawpk pk
@@ -29,12 +28,12 @@ noeq abstract type skey =
 
 type c = C.cipher * A.cipher //lbytes(C.ciphersize + A.ciphersize)
 
-val keygen: rid -> ML (pkey * skey)
+val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey * skey)
 val encrypt: pkey -> p -> ML c
 val decrypt: skey -> c -> ML (option p )
 
 
-let keygen (parent:rid) =
+let keygen parent =
   let cca_pk, cca_sk = C.keygen parent in
   let region = new_region parent in
   let pkey = PKey #region (C.access_pk_raw cca_pk) cca_pk in

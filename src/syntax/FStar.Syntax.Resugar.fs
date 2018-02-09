@@ -362,6 +362,11 @@ let rec resugar_term (t : S.term) : A.term =
       let b = BU.must (resugar_binder (List.hd x) t.pos) in
       mk (A.Refine(b, resugar_term phi))
 
+    | Tm_app({n=Tm_fvar fv}, [(e, _)])
+      when not (Options.print_implicits())
+           && S.fv_eq_lid fv C.b2t_lid ->
+      resugar_term e
+
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function
@@ -385,9 +390,9 @@ let rec resugar_term (t : S.term) : A.term =
         let res_impl desugared_tm qual =
           match resugar_imp qual with
           | Some imp -> imp
-          | None -> Errors.warn t.pos
-                     (BU.format1 "Inaccessible argument %s in function application"
-                                 (parser_term_to_string desugared_tm));
+          | None -> Errors.log_issue t.pos
+                     (Errors.Warning_InaccessibleArgument, (BU.format1 "Inaccessible argument %s in function application"
+                                 (parser_term_to_string desugared_tm)));
                    A.Nothing in
         List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, res_impl x qual))) e args
       in
@@ -457,7 +462,7 @@ let rec resugar_term (t : S.term) : A.term =
           let handler = resugar_term (decomp handler) in
           let rec resugar_body t = match (t.tm) with
             | A.Match(e, [(_,_,b)]) -> b
-            | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
+            | A.Let(None, _, _, b) -> b  // One branch Match that is resugared as Let
             | A.Ascribed(t1, t2, t3) ->
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               mk (A.Ascribed(resugar_body t1, t2, t3))
@@ -495,11 +500,9 @@ let rec resugar_term (t : S.term) : A.term =
                 let pats, body = match (SS.compress body).n with
                   | Tm_meta(e, m) ->
                     let body = resugar_term e in
-                    let pats = match m with
-                      | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats
-                      | Meta_labeled (s, r, _) ->
-                        // this case can occur in typechecker when a failure is wrapped in meta_labeled
-                        [[mk (name s r)]]
+                    let pats, body = match m with
+                      | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats, body
+                      | Meta_labeled (s, r, p) -> [], mk (A.Labeled(body, s, p))
                       | _ -> failwith "wrong pattern format for QForall/QExists"
                     in
                     pats, body
@@ -556,7 +559,7 @@ let rec resugar_term (t : S.term) : A.term =
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
       let bnds = [(resugar_pat pat, resugar_term e)] in
       let body = resugar_term t in
-      mk (A.Let(A.NoLetQualifier, bnds, body))
+      mk (A.Let(None, A.NoLetQualifier, bnds, body))
 
     | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
       mk (A.If(resugar_term e, resugar_term t1, resugar_term t2))
@@ -580,9 +583,9 @@ let rec resugar_term (t : S.term) : A.term =
       let tac_opt = Option.map resugar_term tac_opt in
       mk (A.Ascribed(resugar_term e, term, tac_opt))
 
-    | Tm_let((is_rec, bnds), body) ->
+    | Tm_let((is_rec, source_lbs), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
-      let bnds, body = SS.open_let_rec bnds body in
+      let source_lbs, body = SS.open_let_rec source_lbs body in
       let resugar_one_binding bnd =
         (* TODO : some stuff are open twice there ! (may have already been opened in open_let_rec) *)
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
@@ -609,7 +612,7 @@ let rec resugar_term (t : S.term) : A.term =
         else
           ((pat, resugar_term term), (universe_to_string univs))
       in
-      let r = List.map (resugar_one_binding) bnds in
+      let r = List.map (resugar_one_binding) source_lbs in
       let bnds =
           let f =
             if not (Options.print_universes ()) then fst
@@ -620,7 +623,13 @@ let rec resugar_term (t : S.term) : A.term =
           List.map f r
       in
       let body = resugar_term body in
-      mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
+      let attrs =
+        let {lbattrs=attrs} = List.hd source_lbs in
+        match attrs with
+        | [] -> None
+        | _ -> Some (List.map resugar_term attrs)
+      in
+      mk (A.Let(attrs, (if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
       let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
@@ -639,7 +648,7 @@ let rec resugar_term (t : S.term) : A.term =
                 let h, uvs, args' = head_fv_universes_args head in
                 h, uvs, args' @ args
               | _ ->
-                raise (E.Err (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h))))
+                Errors.raise_error (Errors.Fatal_NotApplicationOrFv, (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h)))) e.pos
             in
             let head, universes, args =
               (* the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker *)
@@ -647,7 +656,7 @@ let rec resugar_term (t : S.term) : A.term =
               (* TODO : report this Meta_monadic if the right options are set *)
               try head_fv_universes_args (U.unmeta e) with
                 | E.Err _ ->
-                  raise (E.Error ((BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e))), e.pos))
+                  Errors.raise_error (Errors.Fatal_WrongDataAppHeadFormat, (BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e)))) e.pos
             in
             let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
             let args =
@@ -666,8 +675,9 @@ let rec resugar_term (t : S.term) : A.term =
             mk (A.Construct(head, args))
           | Sequence ->
               let term = resugar_term e in
-              let rec resugar_seq t = match t.tm with
-                | A.Let(_, [p, t1], t2) ->
+              let rec resugar_seq t =
+                match t.tm with
+                | A.Let(_, _, [p, t1], t2) ->
                    mk (A.Seq(t1, t2))
                 | A.Ascribed(t1, t2, t3) ->
                    (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -686,7 +696,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Mutable_alloc ->
               let term = resugar_term e in
               begin match term.tm with
-                | A.Let(A.NoLetQualifier,l,t) -> mk (A.Let(A.Mutable, l, t))
+                | A.Let(attrs,A.NoLetQualifier,l,t) -> mk (A.Let(attrs,A.Mutable, l, t))
                 | _ -> failwith "mutable_alloc should have let term with no qualifier"
               end
           | Mutable_rval ->
@@ -712,7 +722,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Tm_unknown ->
               mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
           | _ ->
-              E.warn e.pos "Meta_alien was not a Tm_unknown";
+              E.log_issue e.pos (E.Warning_MetaAlienNotATmUnknown, "Meta_alien was not a Tm_unknown");
               resugar_term e
           end
       | Meta_named t ->
@@ -1076,7 +1086,7 @@ let resugar_sigelt se : option<A.decl> =
       let desugared_let = mk (Tm_let(lbs, dummy)) in
       let t = resugar_term desugared_let in
       begin match t.tm with
-        | A.Let(isrec, lets, _) ->
+        | A.Let(_, isrec, lets, _) ->
           Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
         | _ -> failwith "Should not happen hopefully"
       end

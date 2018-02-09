@@ -6,54 +6,156 @@
       1,
       2,
       1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.logand", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt64.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt64.n", "int_inversion",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt.logand"
+      ],
+      0,
+      "c141ad2a700427efedab84734206a96a"
+    ],
+    [
+      "TestBV.test1",
+      2,
+      2,
+      1,
       [ "@query" ],
       0,
-      "e7d19b0cdeef1c416cd9995c7624e505"
+      "1ca86779b047126bbaa05242f9928f41"
     ],
     [
       "TestBV.test2",
       1,
       2,
       1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.logand", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt64.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt64.n", "int_inversion",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt.logand"
+      ],
+      0,
+      "c0422dae383c79fadad846f560eb51d1"
+    ],
+    [
+      "TestBV.test2",
+      2,
+      2,
+      1,
       [ "@query" ],
       0,
-      "8e7e369c30bc744d52e02ddbd9c77418"
+      "eb6a8ee11300335be733033ee5d4aa5a"
     ],
     [
       "TestBV.test3",
       1,
       2,
       1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.logand", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt64.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt64.n", "int_inversion",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt.logand"
+      ],
+      0,
+      "9663d4b51019e95c64ac2f419011084f"
+    ],
+    [
+      "TestBV.test3",
+      2,
+      2,
+      1,
       [ "@query" ],
       0,
-      "875f40c3b7d5b6e375c743fef44b33a1"
+      "3e452d9f9928b5d868e604fbc031dd0b"
     ],
     [
       "TestBV.test4",
       1,
       2,
       1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.logand", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt64.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt64.n", "int_inversion",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt.logand", "typing_FStar.UInt.logxor"
+      ],
+      0,
+      "9ad10c0700198b9715281b5486b23e3a"
+    ],
+    [
+      "TestBV.test4",
+      2,
+      2,
+      1,
       [ "@query" ],
       0,
-      "552289d60097b83a0c8e5e717b90cfe2"
+      "45aab1cb918aefc881bb27681ce6bbb2"
     ],
     [
       "TestBV.test5",
       1,
       2,
       1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.logand", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt64.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt64.n",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt.logand", "typing_FStar.UInt64.v"
+      ],
+      0,
+      "289cd32f9b4b317c2437032911c72836"
+    ],
+    [
+      "TestBV.test5",
+      2,
+      2,
+      1,
       [ "@query" ],
       0,
-      "770e828108d74896139d49ef5a50590f"
+      "37a0c0f0b65d904a4a414cc4a0d30e70"
     ],
     [
       "TestBV.v64_eq",
       1,
       2,
       1,
-      [ "@query", "lemma_FStar.UInt64.uv_inv" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
+        "function_token_typing_FStar.UInt64.n", "lemma_FStar.UInt64.uv_inv",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "typing_FStar.UInt64.v"
+      ],
       0,
-      "8e35e4a6ab861b4e9ea697995c2c3c5d"
+      "fb91b55bec6ca668a8dfac313add56a7"
     ],
     [
       "TestBV.unfold_logand64",
@@ -67,7 +169,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "7c08cfab14001eb02ea23d239d4fad75"
+      "45448b53a2bf9d713b1fe969eb45de6c"
     ],
     [
       "TestBV.unfold_logor64",
@@ -81,7 +183,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "b400f85ca7af249552cb4f3a840fb09d"
+      "f67d387752d7270cf76812d4c9c3eaf0"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -95,7 +197,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "5c466f4c48021e6b1e141a0e2bd94830"
+      "b02869a0b9ad118713b607f6d674db9d"
     ],
     [
       "TestBV.bv64_tac",
@@ -112,7 +214,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "4bc0fe207f6a063d191f68c1ec8bbc79"
+      "ecee175666b774948d0de27340b95452"
     ],
     [
       "TestBV.test6",
@@ -121,7 +223,7 @@
       1,
       [ "@query" ],
       0,
-      "c280d153d7e45ce7b9b474edc1658e76"
+      "b23bf44f9e95685c348cea41c13ceb8f"
     ],
     [
       "TestBV.test6",
@@ -130,7 +232,7 @@
       1,
       [ "@query" ],
       0,
-      "e8bebe785173e9a367d1b91e483cbe38"
+      "7b7e2d2bd45baf605fe135d007d3f741"
     ],
     [
       "TestBV.test6",
@@ -139,7 +241,7 @@
       1,
       [ "@query" ],
       0,
-      "71c614478fd11ec200a1bf2a9acc3078"
+      "a70db300d0318e35d3649414bc91fdc2"
     ],
     [
       "TestBV.test7",
@@ -148,7 +250,7 @@
       1,
       [ "@query" ],
       0,
-      "905ba8ea49202e6adbac3ec4dc0d4157"
+      "859b6149da5d7872f43ed54d236fd80d"
     ],
     [
       "TestBV.test7",
@@ -157,7 +259,7 @@
       1,
       [ "@query" ],
       0,
-      "dc02af1c18fd952826a97af7cd5ad72e"
+      "aad17ae5804da1f9a93f6e219bf5540e"
     ],
     [
       "TestBV.test7",
@@ -166,7 +268,7 @@
       1,
       [ "@query" ],
       0,
-      "bc44b29b8c26c309a95a14d32612529a"
+      "9c8421797d470356f028187e1152e768"
     ],
     [
       "TestBV.test7",
@@ -175,7 +277,7 @@
       1,
       [ "@query" ],
       0,
-      "6af61a330c2bdd80bed751cc178048e4"
+      "d7567d81ab586c07d349bcd52e907c34"
     ],
     [
       "TestBV.test7",
@@ -184,7 +286,7 @@
       1,
       [ "@query" ],
       0,
-      "41f8deb65cb47ac4a7f4ea79166f04cc"
+      "99d7c3601474a6120aee38b4430078ea"
     ],
     [
       "TestBV.test7",
@@ -193,7 +295,7 @@
       1,
       [ "@query" ],
       0,
-      "5262c9247034318fed8283d4e6a9a36f"
+      "a4bb5e9ceb76b5fada9633435c61f6d2"
     ]
   ]
 ]

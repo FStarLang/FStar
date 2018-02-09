@@ -274,5 +274,5 @@ let rec preservation #e #t h =
            then let TyLam t_x hbody = h1 in
                 (extend_gen_0 t_x empty;
                  substitution_preserves_typing 0 h2 hbody)
-           else TyApp #_ #_ #(Some?.v (step e2)) #_ #_ h1 (preservation h2))
-     else TyApp #_ #(Some?.v (step e1)) #_ #_ #_ (preservation h1) h2
+           else TyApp h1 (preservation h2))
+     else TyApp (preservation h1) h2

@@ -1,0 +1,38 @@
+[
+  "}¢W,\u001a­Ê«œB\biøÓF5",
+  [
+    [
+      "Bug405.g",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_unit" ],
+      0,
+      "fe54cbf5d6216dc5276f3434f813f5cb"
+    ],
+    [
+      "Bug405.g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Bug405_Tm_refine_09f9639b0c7f89229aa439805b8ba40b",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "0db96672634c6f22e0788231035ce5f8"
+    ],
+    [
+      "Bug405.v",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_unit" ],
+      0,
+      "91cd8c52c6174ea816aab9d2deeb7cd8"
+    ]
+  ]
+]

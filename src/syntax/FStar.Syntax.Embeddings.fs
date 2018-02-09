@@ -31,7 +31,7 @@ let __unembed_unit (w:bool) (t0:term) : option<unit> =
     | S.Tm_constant C.Const_unit -> Some ()
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
         None
 
 (* These two, and every other unembedder, need to be eta-expanded
@@ -49,7 +49,7 @@ let __unembed_bool (w:bool) (t0:term) : option<bool> =
     | Tm_constant(FStar.Const.Const_bool b) -> Some b
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded bool: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded bool: %s" (Print.term_to_string t0));
         None
 
 let unembed_bool      t = __unembed_bool true  t
@@ -65,7 +65,7 @@ let __unembed_char (w:bool) (t0:term) : option<char> =
     | Tm_constant(FStar.Const.Const_char c) -> Some c
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded char: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded char: %s" (Print.term_to_string t0));
         None
 
 let unembed_char      t = __unembed_char true  t
@@ -82,7 +82,7 @@ let __unembed_int (w:bool) (t0:term) : option<Z.t> =
         Some (Z.big_int_of_string s)
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0)));
         None
 
 let unembed_int      t = __unembed_int true  t
@@ -99,7 +99,7 @@ let __unembed_string (w:bool) (t0:term) : option<string> =
     | Tm_constant(FStar.Const.Const_string(s, _)) -> Some s
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded string: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded string: %s" (Print.term_to_string t0)));
         None
 
 let unembed_string      t = __unembed_string true  t
@@ -129,7 +129,7 @@ let __unembed_pair (w:bool)
         Some (a, b)))
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
         None
 
 let unembed_pair      ul ur t = __unembed_pair true  ul ur t
@@ -155,7 +155,7 @@ let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t0:term) : option<opti
          BU.bind_opt (unembed_a a) (fun a -> Some (Some a))
     | _ ->
          if w then
-         Err.warn t0.pos (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0));
+         Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0)));
          None
 
 let unembed_option      ua t = __unembed_option true  ua t
@@ -189,7 +189,7 @@ let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t0:term) : option<l
         Some (hd :: tl)))
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded list: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded list: %s" (Print.term_to_string t0));
         None
 
 let unembed_list      ua t = __unembed_list true  ua t
@@ -209,6 +209,7 @@ type norm_step =
     | Zeta
     | Iota
     | UnfoldOnly of list<string>
+    | UnfoldAttr of attribute
 
 (* the steps as terms *)
 let steps_Simpl      = tdataconstr PC.steps_simpl
@@ -219,6 +220,7 @@ let steps_Delta      = tdataconstr PC.steps_delta
 let steps_Zeta       = tdataconstr PC.steps_zeta
 let steps_Iota       = tdataconstr PC.steps_iota
 let steps_UnfoldOnly = tdataconstr PC.steps_unfoldonly
+let steps_UnfoldAttr = tdataconstr PC.steps_unfoldattr
 
 let embed_norm_step (rng:range) (n:norm_step) : term =
     match n with
@@ -239,6 +241,8 @@ let embed_norm_step (rng:range) (n:norm_step) : term =
     | UnfoldOnly l ->
         S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string rng l)]
                     None rng
+    | UnfoldAttr a ->
+        S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
 
 let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
     let t = U.unmeta_safe t0 in
@@ -261,9 +265,11 @@ let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
     | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
         BU.bind_opt (unembed_list unembed_string l) (fun ss ->
         Some <| UnfoldOnly ss)
+    | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
+        Some (UnfoldAttr a)
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));
         None
 
 let unembed_norm_step      t = __unembed_norm_step true  t
@@ -278,7 +284,7 @@ let __unembed_range (w:bool) (t0:term) : option<range> =
     | Tm_constant (C.Const_range r) -> Some r
     | _ ->
         if w then
-        Err.warn t0.pos (BU.format1 "Not an embedded range: %s" (Print.term_to_string t0));
+        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded range: %s" (Print.term_to_string t0)));
         None
 
 let unembed_range      t = __unembed_range true  t

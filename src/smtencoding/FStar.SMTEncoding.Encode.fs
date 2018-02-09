@@ -42,9 +42,6 @@ module Const = FStar.Parser.Const
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
-let subst_lcomp_opt s l = match l with
-    | Some (BU.Inl l) -> Some (BU.Inl (U.lcomp_of_comp <| SS.subst_comp s (l.comp())))
-    | _ -> l
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -481,7 +478,7 @@ let rec encode_const c env =
     | Const_unit -> mk_Term_unit, []
     | Const_bool true -> boxBool mkTrue, []
     | Const_bool false -> boxBool mkFalse, []
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_char c -> mkApp("FStar.Char.__char_of_int", [boxInt (mkInteger' (BU.int_of_char c))]), []
     | Const_int (i, None)  -> boxInt (mkInteger i), []
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
@@ -655,8 +652,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
-	 (Const.bv_add_lid, bv_add);
-	 (Const.bv_sub_lid, bv_sub);
+         (Const.bv_add_lid, bv_add);
+         (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
@@ -919,7 +916,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 
-        | Tm_constant Const_set_range_of, [(rng, _); (arg, _)] ->
+        | Tm_constant Const_set_range_of, [(arg, _); (rng, _)] ->
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
@@ -1027,9 +1024,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           begin match lopt with
             | None ->
               //we don't even know if this is a pure function, so give up
-              Errors.warn t0.pos (BU.format1
+              Errors.log_issue t0.pos (Errors.Warning_FunctionLiteralPrecisionLoss, (BU.format1
                 "Losing precision when encoding a function literal: %s\n\
-                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0));
+                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0)));
               fallback ()
 
             | Some rc ->
@@ -1215,7 +1212,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let list_elements (e:S.term) : list<S.term> =
       match U.list_elements e with
       | Some l -> l
-      | None -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
+      | None -> Errors.log_issue e.pos (Errors.Warning_NonListLiteralSMTPattern, "SMT pattern is not a list literal; ignoring the pattern"); [] in
 
     let one_pat p =
         let head, args = U.unmeta p |> U.head_and_args in
@@ -1256,7 +1253,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let vars, guards, env, decls, _ = encode_binders None binders env in
 
     let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun t ->  encode_term t env) |> List.unzip in
+        let pats, decls = branch |> List.map (fun t ->  encode_smt_pattern t env) |> List.unzip in
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
@@ -1269,6 +1266,18 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let post, decls''' = encode_formula (U.unmeta post) env in
     let decls = decls@(List.flatten decls')@decls''@decls''' in
     mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
+
+and encode_smt_pattern t env =
+    let head, args = U.head_and_args t in
+    let head = U.un_uinst head in
+    match head.n, args with
+    | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
+      let x, decls = encode_term x env in
+      let t, decls' = encode_term t env in
+      mk_HasType x t, decls@decls'
+
+    | _ ->
+      encode_term t env
 
 and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
     let debug phi =
@@ -1375,6 +1384,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                   fallback phi
               end
 
+            | Tm_fvar fv, [(t, _)]
+              when S.fv_eq_lid fv Const.squash_lid
+                 || S.fv_eq_lid fv Const.auto_squash_lid ->
+              encode_formula t env
+
             | _ when head_redex env head ->
               encode_formula (whnf env phi) env
 
@@ -1390,7 +1404,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (fun p ->
-          let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
+          let p, decls = p |> List.map (fun (t, _) -> encode_smt_pattern t ({env with use_zfuel_name=true})) |> List.unzip in
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
     let guards = match pats with
@@ -1411,7 +1425,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           | None -> ()
           | Some (x,_) ->
             let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-            Errors.warn pos (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x))
+            Errors.log_issue pos (Errors.Warning_SMTPatternMissingBoundVar, (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
         end
     in
     match U.destruct_typ_as_formula phi with
@@ -1673,8 +1687,31 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let body =
           let hastypeZ = mk_HasTypeZ x t in
           let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
-          mkForall([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS)) in
-        [Util.mkAssume(mkForall([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")] in
+          mkForall([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS))
+        in
+        [Util.mkAssume(mkForall([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
+   in
+   let mk_with_type_axiom : env -> string -> term -> decls_t = fun env with_type tt ->
+        (* (assert (forall ((t Term) (e Term))
+                           (! (and (= (Prims.with_type t e)
+                                       e)
+                                   (HasType (Prims.with_type t e) t))
+                            :weight 0
+                            :pattern ((Prims.with_type t e)))))
+         *)
+        let tt = ("t", Term_sort) in
+        let t = mkFreeV tt in
+        let ee = ("e", Term_sort) in
+        let e = mkFreeV ee in
+        let with_type_t_e = mkApp(with_type, [t; e]) in
+        [Util.mkAssume(mkForall'([[with_type_t_e]],
+                                 Some 0, //weight
+                                 [tt;ee],
+                                 mkAnd(mkEq(with_type_t_e, e),
+                                       mk_HasType with_type_t_e t)),
+                       Some "with_type primitive axiom",
+                       "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
+   in
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1691,7 +1728,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
-                 (Const.inversion_lid,mk_inversion_axiom)
+                 (Const.inversion_lid,mk_inversion_axiom);
+                 (Const.with_type_lid, mk_with_type_axiom)
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
         match BU.find_opt (fun (l, _) -> lid_equals l t) prims with
@@ -2478,12 +2516,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
-                         raise (FStar.Errors.Error (
+                         Errors.raise_error (Errors.Fatal_NonVariableInductiveTypeParameter,
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
-                                      (FStar.Syntax.Print.term_to_string orig_arg),
-                           orig_arg.pos
-                           ))
+                                      (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
                     in
                     let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
@@ -2541,8 +2577,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Errors.warn se.sigrng (BU.format2 "Constructor %s builds an unexpected type %s\n"
-                        (Print.lid_to_string d) (Print.term_to_string head));
+                  Errors.log_issue se.sigrng (Errors.Warning_ConstructorBuildsUnexpectedType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
+                        (Print.lid_to_string d) (Print.term_to_string head)));
                   [], [] in
         let decls2, elim = encode_elim () in
         let g = binder_decls

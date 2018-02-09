@@ -384,7 +384,8 @@ let unicodeEncoding = new System.Text.UnicodeEncoding()
 let asciiEncoding = new System.Text.ASCIIEncoding()
 let string_of_unicode (bytes:byte []) = unicodeEncoding.GetString(bytes)
 let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
-
+let base64_encode (s:string) = System.Convert.ToBase64String(unicode_of_string s)
+let base64_decode (s:string) = System.Convert.FromBase64String(s) |> string_of_unicode
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
 let safe_int_of_string (s:string) =

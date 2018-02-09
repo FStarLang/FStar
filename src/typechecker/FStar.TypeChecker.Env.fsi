@@ -44,8 +44,8 @@ type delta_level =
 (* computations [e] of type [Msource.repr t wp] to a computation of type *)
 (* [Mtarget.repr t (lift_wp t wp)] *)
 type mlift = {
-  mlift_wp:typ -> typ -> typ ;
-  mlift_term:option<(typ -> typ -> term -> term)>
+  mlift_wp:universe -> typ -> typ -> typ ;
+  mlift_term:option<(universe -> typ -> typ -> term -> term)>
   (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
   (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
 }
@@ -87,7 +87,7 @@ type env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ)>;         (* mutually recursive names and their types (for termination checking) *)
+  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
@@ -100,6 +100,7 @@ type env = {
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
@@ -139,6 +140,7 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term*lcomp*guard_t) ->
                   (env -> term -> term*typ*guard_t) ->
                   (env -> term -> universe) ->
+                  (bool -> env -> term -> typ -> guard_t) ->
                   solver_t -> lident -> env
 
 (* Some utilities *)
@@ -169,6 +171,7 @@ val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
 val lookup_qname           : env -> lident -> option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
+val try_lookup_and_inst_lid: env -> universes -> lident -> option<(typ * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
 val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
@@ -178,6 +181,7 @@ val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -189,6 +193,7 @@ val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
 val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
+val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> int
 
@@ -199,7 +204,6 @@ val new_u_univ             : unit -> universe
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
-
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "75d56e5b35fd3e600805acfa54334418"
+      "dda7146e6ec8aa2d99d2ccdf0970c6d9"
     ],
     [
       "IfcRecursiveReify.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c6e7ff949bc9e356dc0c614c5100ef31"
+      "253d94804122e7982afd1dadb9e751c7"
     ],
     [
       "IfcRecursiveReify.low_equiv",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e8d083379a9ac18837870af5a98f09a5"
+      "1d45c04e4e96cce6747b5bca34a740d3"
     ],
     [
       "IfcRecursiveReify.p1",
@@ -48,33 +48,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "5291ad97a6aada64f8ab1ad01ee8556b"
-    ],
-    [
-      "IfcRecursiveReify.p1_r",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ab5cc8255c6c4fdb92f9bd8e7d5166ad"
+      "4baad743dafb35dd1d642db8e862766b"
     ],
     [
       "IfcRecursiveReify.ni_p1",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "d546d727659e2b61eca7c34fcf80e7ab"
-    ],
-    [
-      "IfcRecursiveReify.ni_p1",
-      2,
       2,
       1,
       [
@@ -130,7 +108,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "c7ceb0d513b0b64418b627a3ce27c8c2"
+      "fb896f38d1e034c367e44b9da19d0ec5"
     ],
     [
       "IfcRecursiveReify.p2",
@@ -152,33 +130,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "e9a283a593cfd2cfd5796a2280df7a77"
-    ],
-    [
-      "IfcRecursiveReify.p2_r",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "aa4e70a481914bdcfe86b5e3558919d3"
+      "c2946b28414944811a48a5f40f823fe0"
     ],
     [
       "IfcRecursiveReify.ni_p2",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "60349b786464eb4d0b1b2665b9dd6727"
-    ],
-    [
-      "IfcRecursiveReify.ni_p2",
-      2,
       2,
       1,
       [
@@ -235,7 +191,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "ae136e7ff4157d846209cabafb6e79c0"
+      "61d4b6251753ae8dad5be4c206eb68bc"
     ],
     [
       "IfcRecursiveReify.p3_r",
@@ -244,50 +200,11 @@
       1,
       [ "@query" ],
       0,
-      "1d9783b0bf60612bf9bea16f8f0ea82c"
+      "4fe551367df3720aeeabc056dda6ddd4"
     ],
     [
       "IfcRecursiveReify.ni_p3",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "28df417aa09fed5fb6e155934d8266b3"
-    ],
-    [
-      "IfcRecursiveReify.ni_p3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "23f04c1a6f0f0eb7a1b612f6a56f8eee"
-    ],
-    [
-      "IfcRecursiveReify.ni_p3",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "63f3fef5eeab3aee3eb0f85d8068fb93"
-    ],
-    [
-      "IfcRecursiveReify.ni_p3",
-      4,
       2,
       1,
       [
@@ -305,7 +222,7 @@
         "unit_typing"
       ],
       0,
-      "397239e182aa5b94cb9f17b13efc01c3"
+      "b3769b4dfb1821abc013582528bc1a18"
     ]
   ]
 ]

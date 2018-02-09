@@ -34,11 +34,11 @@ let parse_mod mod_name dsenv =
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
         let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
         env', m
-    | ParseError (msg, r) ->
-        raise (Error(msg, r))
+    | ParseError (err, msg, r) ->
+        raise (Error(err, msg, r))
     | ASTFragment (Inr _, _) ->
         let msg = BU.format1 "%s: expected a module\n" mod_name in
-        raise (Error(msg, dummyRange))
+        raise_error (Errors.Fatal_ModuleExpected, msg) dummyRange
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
 
@@ -56,6 +56,7 @@ let init_once () : unit =
                 TcTerm.tc_term
                 TcTerm.type_of_tot_term
                 TcTerm.universe_of
+                TcTerm.check_type_of_well_typed_term
                 solver
                 Const.prims_lid in
   env.solver.init env;
@@ -93,8 +94,8 @@ let pars s =
         match parse (Fragment <| frag_of_text s) with
         | Term t ->
             ToSyntax.desugar_term tcenv.dsenv t
-        | ParseError (msg, r) ->
-            raise (Error(msg, r))
+        | ParseError (e, msg, r) ->
+            raise_error (e, msg) r
         | ASTFragment _ ->
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
@@ -129,7 +130,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise (Err (BU.format1 "%s errors were reported" (string_of_int n))))
-        with e -> report(); raise (Err ("tc_one_fragment failed: " ^s))
+                raise_err (Errors.Fatal_ErrorsReported, BU.format1 "%s errors were reported" (string_of_int n)))
+        with e -> report(); raise_err (Errors.Fatal_TcOneFragmentFailed, "tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e

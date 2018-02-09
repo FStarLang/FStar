@@ -69,6 +69,7 @@ tags
 
 *.checked
 *.checked.lax
+*.source
 
 /.nubuild
 /nucache/

@@ -138,7 +138,7 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
     | Implies lhs rhs ->
         let lhs = term_as_formula' lhs in
         begin match lhs with
-        | Comp Eq _ _ _ -> return (Some (lhs, rhs))
+        | Comp (Eq _) _ _ -> return (Some (lhs, rhs))
         | _ -> return None
         end
     | _ -> return None
@@ -148,7 +148,7 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     | [] -> return ()
     | x_t::bs ->
         begin match term_as_formula (type_of_binder x_t) with
-        | Comp Eq _ y _ ->
+        | Comp (Eq _) y _ ->
             if term_eq x y
             then rewrite x_t
             else try_rewrite_equality x bs
@@ -162,7 +162,7 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
         return ()
     | x_t::bs ->
         begin (match term_as_formula (type_of_binder x_t) with
-        | Comp Eq _ lhs _ ->
+        | Comp (Eq _) lhs _ ->
             begin match inspect lhs with
             | Tv_Var _ -> rewrite x_t
             | _ -> idtac
@@ -185,7 +185,7 @@ let unfold_point (t:term) : tactic unit =
     g <-- cur_goal;
     let f = term_as_formula g in
     match f with
-    | Comp Eq _ l r ->
+    | Comp (Eq _) l r ->
         if term_eq l t
         then (norm [delta];; trefl)
         else trefl
@@ -198,7 +198,7 @@ let unfold_def (t:term) : tactic unit =
 let grewrite' (t1 t2 eq : term) : tactic unit =
     g <-- cur_goal;
     match term_as_formula g with
-    | Comp Eq _ l _ ->
+    | Comp (Eq _) l _ ->
         if term_eq l t1
         then exact (return eq)
         else trefl

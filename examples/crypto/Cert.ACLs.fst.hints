@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "286858ac6387245837254cd3c884916b"
+      "951392a0081a5f14b0fca8a9122d9495"
     ],
     [
       "Cert.ACLs.publicFile",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "4c6e16df253a57102954b5e4f256b436"
+      "73a99fe42c7bf808d74862baa0d82176"
     ],
     [
       "Cert.ACLs.canRead",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "f59781459a132d9c79fc22f90a3b7455"
+      "03f4ab78a5d31e43262b81665736fe91"
     ],
     [
       "Cert.ACLs.test",
@@ -43,7 +43,7 @@
         "typing_Cert.ACLs.canRead"
       ],
       0,
-      "033fe0722d7072b325dbc5c9da154ec5"
+      "7e46de0381ce13ec11e164e1ddfe336b"
     ],
     [
       "Cert.ACLs.rc",
@@ -52,7 +52,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "c962ba736e7f6a3a6e857f417b6e401a"
+      "b46b907fa45407ba6b339dd6ae1bc0a5"
     ]
   ]
 ]

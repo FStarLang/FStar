@@ -47,34 +47,16 @@
         "typing_Prims.__proj__Cons__item__tl", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "320cb608691261b45e7880689b122608"
+      "7900979a46512ab4e76cc842c72bc307"
     ],
     [
       "MergeSort.merge_inv",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "febc95bb20103aa5d1e10df756f6b105"
-    ],
-    [
-      "MergeSort.merge_inv",
-      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5a50b898db801eae2f5a8ad92a6abdfd"
-    ],
-    [
-      "MergeSort.merge_inv",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e3d7bbc245e3760adf4f1149039a0618"
+      "730d10b59c565a4104822219f27f001d"
     ],
     [
       "MergeSort.merge",
@@ -127,7 +109,7 @@
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "fbdea4e8ca00d9ae1b34cfc0fe62ae00"
+      "a635eba5e883816fe5febc5623d95ba9"
     ],
     [
       "MergeSort.mergesort",
@@ -163,7 +145,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "a9e07de0d4d19434a5932dd262c63354"
+      "b7c907a5d63b3502c03490100ec34ac9"
     ]
   ]
 ]

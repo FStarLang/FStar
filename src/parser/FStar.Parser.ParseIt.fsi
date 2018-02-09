@@ -20,6 +20,7 @@ open FStar.All
 open FStar.Parser
 open FStar.Util
 open FStar
+open FStar.Errors
 
 type filename = string
 
@@ -42,7 +43,9 @@ type parse_frag =
 type parse_result =
     | ASTFragment of (AST.inputFragment * list<(string * Range.range)>)
     | Term of AST.term
-    | ParseError of (string * Range.range)
+    | ParseError of (Errors.raw_error * string * Range.range)
 
 val parse: parse_frag -> parse_result // either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
+
+val parse_warn_error: string ->unit

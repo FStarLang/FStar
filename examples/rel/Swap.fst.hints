@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "438fcf73a4cd8c1ef778d2a6d5b77ae2"
+      "3a8868fe3491c38c54237b545acefe82"
     ],
     [
       "Swap.heap_equiv_on",
@@ -23,16 +23,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a6009b3bc19b44ab8b55651ffe5b1579"
-    ],
-    [
-      "Swap.fp_body",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "e6428851b80b843f6489eea574ddb43d"
+      "8409444cede3233c191679f76b94a6d4"
     ],
     [
       "Swap.seq'",
@@ -41,7 +32,7 @@
       0,
       [ "@query" ],
       0,
-      "94f75bbc84ecbe2d416453f92e1fba41"
+      "8ee05c126b595ad4b745311e957dc85f"
     ],
     [
       "Swap.seq'_lem",
@@ -73,69 +64,7 @@
         "unit_typing"
       ],
       0,
-      "254ac68db6c61a96bc596f66d16df0c9"
-    ],
-    [
-      "Swap.seq'_lem",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "d174706b19f8c12b2eb38755ff1ea83d"
-    ],
-    [
-      "Swap.seq'_lem",
-      3,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "a6706ed668e263fc53fb535f908b0143"
-    ],
-    [
-      "Swap.seq'_lem",
-      4,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "e5d8b65537ce39aaeba11dc17869c425"
-    ],
-    [
-      "Swap.seq'_lem",
-      5,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "1249575945a5996578ddbd3e8f5644a8"
-    ],
-    [
-      "Swap.seq'_lem",
-      6,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
-      ],
-      0,
-      "31ab809e0e16cb41740800a6254a3c16"
+      "9170c7686930d8f036e6d5b3946e319c"
     ],
     [
       "Swap.op_Greater_Greater",
@@ -147,28 +76,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b1b4d63ca113ca53f89a3fade684d7fb"
-    ],
-    [
-      "Swap.op_Greater_Greater",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "653ea5164d8d87c595583e5122322eb7"
-    ],
-    [
-      "Swap.equiv_on_h",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "5229e33649f0aafdd868ed974a8185fa"
+      "64911f90d47b5c451d47a6c245a9b43c"
     ],
     [
       "Swap.swap",
@@ -204,43 +112,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "d7398f394c473f14eb24a44c04bc4767"
-    ],
-    [
-      "Swap.swap",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "169c75e97d1e7ba5a2ecf4484ebd4d12"
-    ],
-    [
-      "Swap.swap",
-      3,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "323be6e4445604cb7da37c68e372ec0e"
-    ],
-    [
-      "Swap.swap",
-      4,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "9f84f4cb2c87987106b579c806c62400"
+      "5cb6c443a50b23052b2c54f5f94e6b15"
     ],
     [
       "Swap.idem",
@@ -273,28 +145,7 @@
         "typing_Swap.op_Greater_Greater", "unit_inversion", "unit_typing"
       ],
       0,
-      "de935e331b32f568d7652d1665f95331"
-    ],
-    [
-      "Swap.idem",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "985b7b150d4dd1f0b552aff80215c9be"
-    ],
-    [
-      "Swap.guard_is_readonly",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "aa724e937c5018a83d5854b7c8b1646d"
+      "d808160526ec367f4b7bc1c657599966"
     ],
     [
       "Swap.cond",
@@ -303,7 +154,7 @@
       0,
       [ "@query" ],
       0,
-      "d4884dc4be23caef104130bf66541500"
+      "3bb5d10c3cc6f8810ffbafbcd00f0ef7"
     ],
     [
       "Swap.lemma_replace_cond",
@@ -324,7 +175,7 @@
         "token_correspondence_Swap.cond", "unit_inversion", "unit_typing"
       ],
       0,
-      "1bbcdc948912e24ef0ac458004d770e2"
+      "f9e3a8ab003e2f21d7d29e1dfd9b968b"
     ],
     [
       "Swap.lemma_skip_c1",
@@ -357,40 +208,7 @@
         "typing_Swap.op_Greater_Greater", "unit_inversion", "unit_typing"
       ],
       0,
-      "9f6342a0c065dc37e7120d69d2314d42"
-    ],
-    [
-      "Swap.lemma_skip_c1",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "961c8e56f74a4983ce4db390fe40ba59"
-    ],
-    [
-      "Swap.lemma_skip_c1",
-      3,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "bef5dc8f14f005c1d63da77af282042d"
-    ],
-    [
-      "Swap.footprint2",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "8e70ac26a1f43367ca06745d5155561c"
+      "a4830d219d7bea6bf0ca91b651e6a88a"
     ],
     [
       "Swap.swap_old",
@@ -402,7 +220,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "eb05d6eac7830c21be9c37dcac15c804"
+      "a7da0b2283499d2b95452c2f0bec1227"
     ],
     [
       "Swap.swap_old",
@@ -414,7 +232,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "400a27ee6037919b0c0c124920497a5f"
+      "0a24dcf3c393222091949c374454112c"
     ],
     [
       "Swap.swap_old",
@@ -426,20 +244,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "657dd1e5a242476f0dafdee815f61eb4"
+      "30ec68cf9d377e057f76bf161cc32ecc"
     ],
     [
       "Swap.swap_old",
       4,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "3782d3ddbb7f34707cc868ac41161b61"
-    ],
-    [
-      "Swap.swap_old",
-      5,
       0,
       0,
       [
@@ -452,12 +261,13 @@
         "equation_Swap.no_alloc", "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_typing", "lemma_FStar.Set.disjoint_not_in_both",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.DM4F.Heap.addr_of", "unit_inversion", "unit_typing"
+        "typing_FStar.DM4F.Heap.addr_of"
       ],
       0,
-      "7f547246831f9eb76cc55eeadd9e8f48"
+      "d44c84bc1f6887c99642b5a70955e0ed"
     ],
     [
       "Swap.idem_old",
@@ -480,19 +290,7 @@
         "typing_FStar.DM4F.Heap.addr_of", "unit_inversion", "unit_typing"
       ],
       0,
-      "d00f8eff30998858be088296cfbd6066"
-    ],
-    [
-      "Swap.idem_old",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "1ddd9969dfbb7b16cb7d67deed0ef67c"
+      "0b5a0b422e96668747708c7d860430a4"
     ]
   ]
 ]

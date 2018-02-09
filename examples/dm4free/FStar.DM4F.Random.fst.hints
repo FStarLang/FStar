@@ -2,15 +2,6 @@
   "\u0003\u0019ÅlOc\u001b\u0015Ë:Ç’èôÃJ",
   [
     [
-      "FStar.DM4F.Random.return",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ddd67aaa2407545db8ccb73cff0544b4"
-    ],
-    [
       "FStar.DM4F.Random.bind",
       1,
       2,
@@ -24,25 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "181ade74aa3c6cd9b0c0bc0a427c2ef8"
-    ],
-    [
-      "FStar.DM4F.Random._dm4f_RAND_lift_from_pure",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "773ed04a53c9e010ffea2dcd43b8f0bd"
-    ],
-    [
-      "FStar.DM4F.Random._dm4f_RAND_return_wp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c6b6c5610d69081e58fcb71f747aa5ca"
+      "6c0b93e2f6a090b416f3fdc5657d6eb5"
     ]
   ]
 ]

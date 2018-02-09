@@ -1,0 +1,43 @@
+[
+  "ý¾îA\u0002Åkf­}ð¶¯áEÓ",
+  [
+    [
+      "Bug609.add'",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7070b7aac2136bc64dfe3b69b3b4f747"
+    ],
+    [
+      "Bug609.add''",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "46cf420cf41a5ca1205e22be39e3db6b"
+    ],
+    [
+      "Bug609.test",
+      1,
+      8,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_left.fuel_instrumented",
+        "@query", "assumption_Prims.HasEq_int",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_left.fuel_instrumented",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "token_correspondence_Prims.op_Addition"
+      ],
+      0,
+      "53482077440aeb631a85ed56bc194306"
+    ]
+  ]
+]

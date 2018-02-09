@@ -221,6 +221,20 @@ let comp_set_flags (c:comp) f =
     in
     {c with n=Comp ({comp_to_comp_typ c with flags=f})}
 
+let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
+    let comp_typ_set_flags (c:comp) =
+        match c.n with
+        | Total _
+        | GTotal _ -> c
+        | Comp ct ->
+          let ct = {ct with flags=fs} in
+          {c with n=Comp ct}
+    in
+    Syntax.mk_lcomp lc.eff_name
+                    lc.res_typ
+                    fs
+                    (fun () -> comp_typ_set_flags (lcomp_comp lc))
+
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
@@ -398,6 +412,27 @@ type eq_result =
     | NotEqual
     | Unknown
 
+// Functions that we specially treat as injective, to make normalization
+// (particularly of decidable equality) better. We should make sure they
+// are actually proved to be injective.
+let injectives =
+    ["FStar.Int8.int_to_t";
+     "FStar.Int16.int_to_t";
+     "FStar.Int32.int_to_t";
+     "FStar.Int64.int_to_t";
+     "FStar.UInt8.uint_to_t";
+     "FStar.UInt16.uint_to_t";
+     "FStar.UInt32.uint_to_t";
+     "FStar.UInt64.uint_to_t";
+     "FStar.Int8.__int_to_t";
+     "FStar.Int16.__int_to_t";
+     "FStar.Int32.__int_to_t";
+     "FStar.Int64.__int_to_t";
+     "FStar.UInt8.__uint_to_t";
+     "FStar.UInt16.__uint_to_t";
+     "FStar.UInt32.__uint_to_t";
+     "FStar.UInt64.__uint_to_t"]
+
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let canon_app t =
         let hd, args = head_and_args' (unascribe t) in
@@ -438,6 +473,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         ) else NotEqual
     in
     match t1.n, t2.n with
+    // We sometimes compare open terms, as we get alpha-equivalence
+    // for free.
+    | Tm_bvar bv1, Tm_bvar bv2 ->
+      equal_if (bv1.index = bv2.index)
+
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
@@ -464,7 +504,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       begin match (un_uinst h1).n, (un_uinst h2).n with
       | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
         equal_data f1 args1 f2 args2
-      | _ -> // can only they're equal if they syntactically match, nothing else
+
+      | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
+        equal_data f1 args1 f2 args2
+
+      | _ -> // can only assert they're equal if they syntactically match, nothing else
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
@@ -504,6 +548,7 @@ let rec is_unit t =
     | Tm_fvar fv ->
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
+      || fv_eq_lid fv PC.auto_squash_lid
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 
@@ -715,6 +760,7 @@ let rec arrow_formals_comp k =
             then let bs', k = arrow_formals_comp (comp_result c) in
                 bs@bs', k
             else bs, c
+        | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
 
 let rec arrow_formals k =
@@ -739,14 +785,15 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-let mk_letbinding lbname univ_vars typ eff def =
+let mk_letbinding lbname univ_vars typ eff def lbattrs =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
-     lbdef=def}
+     lbdef=def;
+     lbattrs=lbattrs}
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
+let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
     let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
@@ -757,7 +804,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
     in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
-    mk_letbinding lbname univ_vars typ eff def
+    mk_letbinding lbname univ_vars typ eff def attrs
 
 let open_univ_vars_binders_and_comp uvs binders c =
     match binders with
@@ -912,6 +959,11 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
+let mk_with_type u t e =
+    let t_with_type = fvar PC.with_type_lid Delta_equational None in
+    let t_with_type = mk (Tm_uinst(t_with_type, [u])) None dummyRange in
+    mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
+
 let lex_t    = fvar_const PC.lex_t_lid
 let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid Delta_constant (Some Data_ctor), [U_zero])) None dummyRange
 let lex_pair = fvar PC.lexcons_lid Delta_constant (Some Data_ctor)
@@ -924,10 +976,7 @@ let lcomp_of_comp c0 =
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
-    {eff_name = eff_name;
-     res_typ = comp_result c0;
-     cflags = flags;
-     comp = fun() -> c0}
+    Syntax.mk_lcomp eff_name (comp_result c0) flags (fun () -> c0)
 
 let mk_residual_comp l t f = {
     residual_effect=l;
@@ -975,10 +1024,16 @@ let if_then_else b t1 t2 =
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
-
-let mk_squash p =
+//////////////////////////////////////////////////////////////////////////////////////
+// Operations on squashed and other irrelevant/sub-singleton types
+//////////////////////////////////////////////////////////////////////////////////////
+let mk_squash u p =
     let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
-    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
+    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
+
+let mk_auto_squash u p =
+    let sq = fvar PC.auto_squash_lid (Delta_defined_at_level 2) None in
+    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
     let head, args = head_and_args t in
@@ -1002,6 +1057,49 @@ let un_squash t =
         end
     | _ ->
       None
+
+let is_squash t =
+    let head, args = head_and_args t in
+    match (Subst.compress head).n, args with
+    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
+        when Syntax.fv_eq_lid fv PC.squash_lid ->
+        Some (u, t)
+    | _ -> None
+
+
+let is_auto_squash t =
+    let head, args = head_and_args t in
+    match (Subst.compress head).n, args with
+    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
+        when Syntax.fv_eq_lid fv PC.auto_squash_lid ->
+        Some (u, t)
+    | _ -> None
+
+let is_sub_singleton t =
+    let head, _ = head_and_args (unmeta t) in
+    match (un_uinst head).n with
+    | Tm_fvar fv ->
+          Syntax.fv_eq_lid fv PC.squash_lid
+        || Syntax.fv_eq_lid fv PC.auto_squash_lid
+        || Syntax.fv_eq_lid fv PC.and_lid
+        || Syntax.fv_eq_lid fv PC.or_lid
+        || Syntax.fv_eq_lid fv PC.not_lid
+        || Syntax.fv_eq_lid fv PC.imp_lid
+        || Syntax.fv_eq_lid fv PC.iff_lid
+        || Syntax.fv_eq_lid fv PC.ite_lid
+        || Syntax.fv_eq_lid fv PC.exists_lid
+        || Syntax.fv_eq_lid fv PC.forall_lid
+        || Syntax.fv_eq_lid fv PC.true_lid
+        || Syntax.fv_eq_lid fv PC.false_lid
+        || Syntax.fv_eq_lid fv PC.eq2_lid
+        || Syntax.fv_eq_lid fv PC.eq3_lid
+        || Syntax.fv_eq_lid fv PC.b2t_lid
+        //these are an uninterpreted predicates
+        //which we are better off treating as sub-singleton
+        || Syntax.fv_eq_lid fv PC.haseq_lid
+        || Syntax.fv_eq_lid fv PC.has_type_lid
+        || Syntax.fv_eq_lid fv PC.precedes_lid
+    | _ -> false
 
 let arrow_one (t:typ) : option<(binder * comp)> =
     bind_opt (match (compress t).n with
@@ -1220,14 +1318,14 @@ let unthunk_lemma_post t =
 
 let action_as_lb eff_lid a =
   let lb =
-    close_univs_and_mk_letbinding
-      None
+    close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
       (Inr (lid_as_fv a.action_name Delta_equational None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
       (abs a.action_params a.action_defn None)
+      []
   in
   { sigel = Sig_let((false, [lb]), [a.action_name]);
     sigrng = a.action_defn.pos;
@@ -1416,3 +1514,33 @@ let un_alien (t : term) : dyn =
     match t.n with
     | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"
+
+///////////////////////////////////////////
+// Setting pragmas
+///////////////////////////////////////////
+let process_pragma p r =
+    let set_options t s =
+    match Options.set_options t s with
+      | Getopt.Success -> ()
+      | Getopt.Help  ->
+        Errors.raise_error
+                (Errors.Fatal_FailToProcessPragma,
+                 "Failed to process pragma: use 'fstar --help' to see which options are available")
+                r
+      | Getopt.Error s ->
+        Errors.raise_error
+                (Errors.Fatal_FailToProcessPragma,
+                 "Failed to process pragma: " ^s)
+                r
+    in
+    match p with
+    | LightOff ->
+      if p = LightOff
+      then Options.set_ml_ish()
+    | SetOptions o ->
+      set_options Options.Set o
+    | ResetOptions sopt ->
+      Options.restore_cmd_line_options false |> ignore;
+      match sopt with
+      | None -> ()
+      | Some s -> set_options Options.Reset s

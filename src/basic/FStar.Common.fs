@@ -37,7 +37,8 @@ let has_cygpath =
 let try_convert_file_name_to_mixed =
   let cache = BU.smap_create 20 in
   fun (s:string) ->
-    if has_cygpath then
+    if has_cygpath
+    && BU.starts_with s "/" then
       match BU.smap_try_find cache s with
       | Some s ->
           s

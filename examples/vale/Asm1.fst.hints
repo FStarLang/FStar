@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
       0,
-      "f8247ad6c963576d7790ec66bc328b72"
+      "45d77ec1711a09e673b51beaedf96d6c"
     ],
     [
       "Asm1.__proj__Mkstate__item__regs",
@@ -17,16 +17,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
       0,
-      "f98cf35d0674c647d15350946f07b51e"
+      "69809ae09c208440e2e1166c54408766"
     ],
     [
       "Asm1.__proj__Mkstate__item__regs",
       2,
       1,
       0,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
       0,
-      "cb30db593a14c04d4766887987349b3e"
+      "8391d8a045efcd23d0439a6cc2182db8"
     ],
     [
       "Asm1.__proj__Mkstate__item__mem",
@@ -35,16 +35,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0dff3b05ec74f0b63c3938c6577f9c5a"
+      "82f6fe6f875a9e213956b773a52a9b80"
     ],
     [
       "Asm1.__proj__Mkstate__item__mem",
       2,
       1,
       0,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
       0,
-      "e948ac013c5d78aa4e927bc97cfa0aee"
+      "897012930a03d8167dbda18aaed6f3d9"
     ],
     [
       "Asm1.ins",
@@ -53,7 +53,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
       0,
-      "c53aa98584e43227863fedadbfbe7a94"
+      "4de5308e54d42f4df75699ff73978d2b"
     ],
     [
       "Asm1.uu___is_ILoad",
@@ -62,7 +62,7 @@
       0,
       [ "@query" ],
       0,
-      "ee930e618bc7d1497787d4dd41c71cc1"
+      "3b1686b8e70061b24bb752c6c560a116"
     ],
     [
       "Asm1.__proj__ILoad__item__lDst",
@@ -75,7 +75,7 @@
         "refinement_interpretation_Asm1_Tm_refine_f230ca36ce2a7ff8ae53c124d032312b"
       ],
       0,
-      "429bd38bd020eb8cdd46fdfd7c19c017"
+      "9e36ebcedc5e16818b63fb8e16059f7d"
     ],
     [
       "Asm1.__proj__ILoad__item__lSrc",
@@ -88,7 +88,7 @@
         "refinement_interpretation_Asm1_Tm_refine_f230ca36ce2a7ff8ae53c124d032312b"
       ],
       0,
-      "73e5e1279d481846beb6d4d0945dfa08"
+      "9435743993df7cf96ae91974af699578"
     ],
     [
       "Asm1.__proj__ILoad__item__lOffset",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Asm1_Tm_refine_f230ca36ce2a7ff8ae53c124d032312b"
       ],
       0,
-      "bde1fb04ee836e70a65dc1012bba5742"
+      "7af25c17755d7ac547f9ffeb7b367e39"
     ],
     [
       "Asm1.uu___is_IStore",
@@ -110,7 +110,7 @@
       0,
       [ "@query" ],
       0,
-      "4cb284e8931bbc28d553db212682f1de"
+      "fdac74cef0bf33395d02265301b905b4"
     ],
     [
       "Asm1.__proj__IStore__item__sDst",
@@ -123,7 +123,7 @@
         "refinement_interpretation_Asm1_Tm_refine_999ac40df2c08a5d6e4e4cb66f26d80b"
       ],
       0,
-      "08a7371de6dc803b6183c716437806c6"
+      "007563ec473471a57faa9da1d158acd5"
     ],
     [
       "Asm1.__proj__IStore__item__sOffset",
@@ -136,7 +136,7 @@
         "refinement_interpretation_Asm1_Tm_refine_999ac40df2c08a5d6e4e4cb66f26d80b"
       ],
       0,
-      "927d2d3c1b135fec40e8c16482f4f032"
+      "2a316f386a0a4fac16d1bfdadb87b16a"
     ],
     [
       "Asm1.__proj__IStore__item__sSrc",
@@ -149,7 +149,7 @@
         "refinement_interpretation_Asm1_Tm_refine_999ac40df2c08a5d6e4e4cb66f26d80b"
       ],
       0,
-      "9b476cb765b2de0e60ea93644bfc98aa"
+      "4c0fcb11f9e69ffd0a6c08b5e189e83f"
     ],
     [
       "Asm1.eval_ins",
@@ -157,119 +157,12 @@
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Asm1.ILoad",
-        "disc_equation_Asm1.IStore", "fuel_guarded_inversion_Asm1.ins"
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "disc_equation_Asm1.ILoad", "disc_equation_Asm1.IStore",
+        "equation_Asm1.reg", "fuel_guarded_inversion_Asm1.ins"
       ],
       0,
-      "f12ecf546aedf9627f7b9fe71b79cce4"
-    ],
-    [
-      "Asm1.eval_ins",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "b06afd882d103de2193561f814a8c7f4"
-    ],
-    [
-      "Asm1.eval_ins",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "490f9f124d3a437ec61d12b4a7a2b71f"
-    ],
-    [
-      "Asm1.eval_ins",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "f4e5cc7e1e60253d042d42345b40fc5d"
-    ],
-    [
-      "Asm1.eval_ins",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4d5122596fb6387d93264df16a7c4a71"
-    ],
-    [
-      "Asm1.eval_ins",
-      6,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "c798658a51564dcc51de70a96cf4d79d"
-    ],
-    [
-      "Asm1.eval_ins",
-      7,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "797342c14585384bcd2f7d02da3e457a"
-    ],
-    [
-      "Asm1.eval_ins",
-      8,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "8a56e49f35215ed51019be6111f3e208"
-    ],
-    [
-      "Asm1.eval_ins",
-      9,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "8d228d5548c17d857a287a04c906f2fc"
-    ],
-    [
-      "Asm1.eval_ins",
-      10,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "8505ec902f2fe757309e98fb51cf3812"
-    ],
-    [
-      "Asm1.eval_ins",
-      11,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "3f1bd49aaff16b07c0dea3fe1e05fbbd"
-    ],
-    [
-      "Asm1.eval_ins",
-      12,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e1e691ce9df4eccc1b644abbde73ffd0"
-    ],
-    [
-      "Asm1.eval_ins",
-      13,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "cd17533cd14e97b0a9495ac25fedbb47"
+      "433655f3cfe3be2e3ce3ed22a2f88bcf"
     ],
     [
       "Asm1.eval_block",
@@ -290,7 +183,7 @@
         "typing_Asm1.eval_ins", "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "8383a8a3da12df1da86e618af3dcbf83"
+      "dad4395f1a35e6744c0a7ab5083d8cb0"
     ],
     [
       "Asm1.valid_state",
@@ -299,34 +192,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
       0,
-      "a68fe08673d5495da8b0755a40045e88"
-    ],
-    [
-      "Asm1.valid_state",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "7b42fb753ebc595c2cc47ae8beb661d4"
-    ],
-    [
-      "Asm1.valid_state",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "1d7f1b8c3a5be80474684454a445358b"
-    ],
-    [
-      "Asm1.valid_state",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "3d730958632f77c083c957fa01fb7b20"
+      "9595e9001caec8d367d9ada2eb794dec"
     ],
     [
       "Asm1.lemma_load",
@@ -337,8 +203,11 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Asm1.eval_block.fuel_instrumented",
         "@fuel_irrelevance_Asm1.eval_block.fuel_instrumented", "@query",
+        "Asm1_interpretation_Tm_arrow_71ff103e225169c475064edd2fb305a3",
         "Asm1_pretyping_8d2a371ced49b74ad42c2d4f031a5095",
         "Asm1_pretyping_bc9c2f1fd95279caaea3a34bcc039124",
+        "FStar.Map_interpretation_Tm_arrow_639a4253992331c67e251edc6f8641a3",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
@@ -348,14 +217,12 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Prims.Cons", "equation_Asm1.contains",
         "equation_Asm1.eval_ins", "equation_Asm1.map",
-        "equation_Asm1.op_String_Access",
         "equation_Asm1.op_String_Assignment", "equation_Asm1.reg",
         "equation_Asm1.valid_reg", "equation_Asm1.valid_state",
         "equation_FStar.Set.eqtype", "equation_Prims.l_False",
-        "equation_Prims.l_and",
         "equation_with_fuel_Asm1.eval_block.fuel_instrumented",
         "fuel_guarded_inversion_Asm1.state",
-        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.Map.contains",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "kinding_Asm1.state@tok", "lemma_FStar.Map.lemma_InDomUpd1",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_AmpAmp",
@@ -371,60 +238,20 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_Asm1_Tm_refine_e4b7f19375c6d1bd0ff053f76be31ec7",
+        "refinement_interpretation_Asm1_Tm_refine_84d5bca622f8842b1d465a91b8888512",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Asm1.contains",
+        "token_correspondence_Asm1.op_String_Access",
+        "token_correspondence_Asm1.op_String_Assignment",
+        "token_correspondence_FStar.Map.contains",
+        "token_correspondence_FStar.Map.upd",
         "typing_Asm1.__proj__Mkstate__item__mem",
-        "typing_Asm1.__proj__Mkstate__item__regs", "typing_Asm1.contains",
-        "typing_Asm1.eval_ins", "typing_Asm1.op_String_Access",
-        "typing_Asm1.valid_state"
+        "typing_Asm1.__proj__Mkstate__item__regs", "typing_Asm1.eval_ins",
+        "typing_Asm1.op_String_Access", "typing_Asm1.valid_state",
+        "typing_FStar.Map.contains"
       ],
       0,
-      "6ce7d7a9eb06875ca70f05bca3b706a1"
-    ],
-    [
-      "Asm1.lemma_load",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1461ee8a9175c741d5ebacc420c2b268"
-    ],
-    [
-      "Asm1.lemma_load",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "3c556d6b06f86fd86ee81770153464fd"
-    ],
-    [
-      "Asm1.lemma_load",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "91b0609ad2d53470e821199dd1ffcc2c"
-    ],
-    [
-      "Asm1.lemma_load",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "bec9dda6d0091f786c69a39df027392d"
-    ],
-    [
-      "Asm1.lemma_load",
-      6,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "d68996a021a4acd133c773ac509fb4c4"
+      "32d89ae83ab64fe1ef476e46b877e11f"
     ],
     [
       "Asm1.lemma_store",
@@ -437,6 +264,8 @@
         "@fuel_irrelevance_Asm1.eval_block.fuel_instrumented", "@query",
         "Asm1_pretyping_8d2a371ced49b74ad42c2d4f031a5095",
         "Asm1_pretyping_bc9c2f1fd95279caaea3a34bcc039124",
+        "FStar.Map_interpretation_Tm_arrow_639a4253992331c67e251edc6f8641a3",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
@@ -445,18 +274,19 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Prims.Cons", "equation_Asm1.contains",
-        "equation_Asm1.eval_ins", "equation_Asm1.map", "equation_Asm1.reg",
+        "equation_Asm1.eval_ins", "equation_Asm1.map",
+        "equation_Asm1.op_String_Assignment", "equation_Asm1.reg",
         "equation_Asm1.valid_reg", "equation_Asm1.valid_state",
         "equation_FStar.Set.eqtype", "equation_Prims.l_False",
-        "equation_Prims.l_and",
         "equation_with_fuel_Asm1.eval_block.fuel_instrumented",
         "fuel_guarded_inversion_Asm1.state",
-        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.Map.contains",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "kinding_Asm1.state@tok", "lemma_FStar.Pervasives.invertOption",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
-        "proj_equation_Asm1.Mkstate_regs",
+        "proj_equation_Asm1.Mkstate_mem", "proj_equation_Asm1.Mkstate_regs",
+        "projection_inverse_Asm1.Mkstate_mem",
         "projection_inverse_Asm1.Mkstate_regs",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -466,59 +296,18 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_Asm1_Tm_refine_aafb30f051894719fc3e11eb3bccce1c",
+        "refinement_interpretation_Asm1_Tm_refine_4f278a4dfb03ba8a4553cd6259074142",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Asm1.contains",
+        "token_correspondence_Asm1.op_String_Assignment",
+        "token_correspondence_FStar.Map.contains",
+        "token_correspondence_FStar.Map.upd",
         "typing_Asm1.__proj__Mkstate__item__mem",
-        "typing_Asm1.__proj__Mkstate__item__regs", "typing_Asm1.contains",
-        "typing_Asm1.eval_ins", "typing_Asm1.valid_state"
+        "typing_Asm1.__proj__Mkstate__item__regs", "typing_Asm1.eval_ins",
+        "typing_Asm1.valid_state", "typing_FStar.Map.contains"
       ],
       0,
-      "60bddfdfadbb7234109e7935f9979fe9"
-    ],
-    [
-      "Asm1.lemma_store",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8d2030ce971cf169a48764393d1e5d1a"
-    ],
-    [
-      "Asm1.lemma_store",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "e4261240ba2efcc0ac5ca7fb1940dafd"
-    ],
-    [
-      "Asm1.lemma_store",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "23402c95cd004ffc4565789fc46860a8"
-    ],
-    [
-      "Asm1.lemma_store",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "beb6fe5c310095c20cca7585614e187f"
-    ],
-    [
-      "Asm1.lemma_store",
-      6,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "8880d23496cc045e2dd392d857c1aca4"
+      "cf27f8f3c8aa738a4ab257a62863d2f4"
     ],
     [
       "Asm1.lemma_empty",
@@ -533,7 +322,7 @@
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "7d491a82917308a416a3ffaab1af92d7"
+      "c792c461dbbe55f51289fed118ef6bf2"
     ],
     [
       "Asm1.lemma_copy",
@@ -541,22 +330,25 @@
       1,
       0,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Asm1.eval_block.fuel_instrumented",
-        "@fuel_irrelevance_Asm1.eval_block.fuel_instrumented", "@query",
+        "@MaxIFuel_assumption", "@query",
+        "Asm1_interpretation_Tm_arrow_69eb7aa93528fb903f46087c12a6edb4",
+        "Asm1_interpretation_Tm_arrow_71ff103e225169c475064edd2fb305a3",
+        "Asm1_interpretation_Tm_arrow_ed0d1dbaa01501505019c34825ca2579",
         "Asm1_pretyping_8d2a371ced49b74ad42c2d4f031a5095",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Prims.HasEq_int", "bool_inversion",
         "constructor_distinct_Asm1.ILoad",
         "constructor_distinct_Asm1.IStore",
+        "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "constructor_distinct_Prims.Cons", "equation_Asm1.contains",
-        "equation_Asm1.copy", "equation_Asm1.eval_ins", "equation_Asm1.map",
+        "constructor_distinct_Prims.Cons", "disc_equation_Asm1.ILoad",
+        "disc_equation_Asm1.IStore", "disc_equation_Prims.Cons",
+        "equation_Asm1.contains", "equation_Asm1.copy",
+        "equation_Asm1.eval_ins", "equation_Asm1.map",
         "equation_Asm1.op_String_Access",
         "equation_Asm1.op_String_Assignment", "equation_Asm1.reg",
         "equation_Asm1.valid_reg", "equation_Asm1.valid_state",
-        "equation_FStar.Set.eqtype",
-        "equation_with_fuel_Asm1.eval_block.fuel_instrumented",
-        "fuel_guarded_inversion_Asm1.state",
+        "equation_FStar.Set.eqtype", "fuel_guarded_inversion_Asm1.state",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_SelUpd1",
         "lemma_FStar.Map.lemma_SelUpd2", "primitive_Prims.op_AmpAmp",
@@ -575,149 +367,28 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_Asm1_Tm_refine_00ccdd0f48a1d38e0b78cbbd70f73621",
-        "refinement_interpretation_Asm1_Tm_refine_dc8d17e469ef3f38258d4c1b23aa7dd5",
-        "refinement_interpretation_Asm1_Tm_refine_e9b9a25f125029bed96eead197b901f3",
+        "refinement_interpretation_Asm1_Tm_refine_39868b769f57ef98aff10ca10b8a2985",
+        "refinement_interpretation_Asm1_Tm_refine_44d2d14cc0cb591bfb3b3c37f0dcc833",
+        "refinement_interpretation_Asm1_Tm_refine_ad829bac918295d4f227764e69049729",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Asm1.contains",
+        "token_correspondence_Asm1.op_String_Access",
+        "token_correspondence_Asm1.op_String_Assignment",
+        "token_correspondence_FStar.Map.contains",
+        "token_correspondence_FStar.Map.sel",
+        "token_correspondence_FStar.Map.upd",
         "typing_Asm1.__proj__Mkstate__item__mem",
         "typing_Asm1.__proj__Mkstate__item__regs", "typing_Asm1.contains",
         "typing_Asm1.op_String_Access", "typing_Asm1.op_String_Assignment",
         "typing_Asm1.valid_reg", "typing_Asm1.valid_state",
-        "typing_FStar.Map.sel"
+        "typing_FStar.Map.contains", "typing_FStar.Map.sel"
       ],
       0,
-      "44ff4b34e2690e4f006e2cd77e6db89a"
-    ],
-    [
-      "Asm1.lemma_copy",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "b206e4caf8bb62df5f550b683d6ef104"
-    ],
-    [
-      "Asm1.lemma_copy",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1964a4f138ed8fb0877ff78c0ce849bf"
-    ],
-    [
-      "Asm1.lemma_copy",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "06d4d43a518eefc9ef5195ba82f1e4ef"
-    ],
-    [
-      "Asm1.lemma_copy",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b51bd763c658bb672ed6fa4ede5637a8"
-    ],
-    [
-      "Asm1.lemma_copy",
-      6,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7b9fb35319a0251fee21383f0aed5399"
-    ],
-    [
-      "Asm1.lemma_copy",
-      7,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "cdd7bb26e9e9b282c09c21c837239d12"
-    ],
-    [
-      "Asm1.lemma_copy",
-      8,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1081817dea92b1522622513705727a49"
-    ],
-    [
-      "Asm1.lemma_copy",
-      9,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Asm1.reg" ],
-      0,
-      "164a60a3a9f0a218d1373ff0a44ee5f0"
-    ],
-    [
-      "Asm1.lemma_copy",
-      10,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "07be206cb93ceedab2f1e01695adfaa8"
-    ],
-    [
-      "Asm1.lemma_copy",
-      11,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2304cae1e2dd6d013b3d02e69c04e727"
-    ],
-    [
-      "Asm1.lemma_copy",
-      12,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2ecf5ae5f4f699a0af1a15e075b837d5"
-    ],
-    [
-      "Asm1.lemma_copy",
-      13,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "54bde8577877504ac6ef4fde4abffd98"
-    ],
-    [
-      "Asm1.lemma_copy",
-      14,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d16409b2995611905fe54a55ca1ae427"
-    ],
-    [
-      "Asm1.lemma_copy",
-      15,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "53d999fe924ab057d03515b028ea8e5e"
+      "2502440d9e3e67fce1b4f3753b931da4"
     ]
   ]
 ]

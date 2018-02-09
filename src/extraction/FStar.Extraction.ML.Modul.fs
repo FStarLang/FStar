@@ -85,17 +85,13 @@ let rec extract_meta x =
       Some (PpxDerivingShowConstant s)
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
       Some (Comment s)
+  | { n = Tm_constant (Const_string (data, _)) } when data = "KremlinPrivate" -> Some Private
   // These are only for backwards compatibility, they should be removed at some point.
   | { n = Tm_constant (Const_string (data, _)) } when data = "c_inline" -> Some CInline
   | { n = Tm_constant (Const_string (data, _)) } when data = "substitute" -> Some Substitute
   | { n = Tm_meta (x, _) } ->
       extract_meta x
   | a ->
-      print1_warning "Unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`.\n"
-      (Print.term_to_string a);
-      (* BU.print2 "Unrecognized attribute at extraction: %s (%s)\n" *)
-      (*   (Print.term_to_string a) *)
-      (*   (Print.tag_of_term a); *)
       None
 
 let extract_metadata metas =
@@ -259,10 +255,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 mllb_tysc=None;
                 mllb_add_unit=false;
                 mllb_def=tm;
+                mllb_meta = [];
                 print_typ=false
               }
             in
-            g, MLM_Let(NonRec, [], [lb])
+            g, MLM_Let(NonRec, [lb])
           in
 
           let rec extract_fv tm =
@@ -291,7 +288,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
               BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
             let exp, tysc = match a_let.expr with
-              | MLE_Let((_, _, [mllb]), _) ->
+              | MLE_Let((_, [mllb]), _) ->
                   (match mllb.mllb_tysc with
                   | Some(tysc) -> mllb.mllb_def, tysc
                   | None -> failwith "No type scheme")
@@ -354,7 +351,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
               let tac_arity = List.length bs in
               let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-              match mk_interpretation_fun tac_lid lid_arg t bs with
+              match mk_interpretation_fun g.tcenv tac_lid lid_arg t bs with
               | Some tac_interpretation ->
                   let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
                   [MLM_Top app]
@@ -378,10 +375,41 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
             let ml_let, _, _ = Term.term_as_mlexpr g elet in
             begin match ml_let.expr with
-              | MLE_Let((flavor, _, bindings), _) ->
-                let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} ->
+              | MLE_Let((flavor, bindings), _) ->
+
+                (* Treatment of qualifiers: we synthesize the metadata that goes
+                 * onto each let-binding as follows:
+                 * - F* keywords (qualifiers, such as "inline_for_extraction" or
+                 *   "private") are in [quals] and are distributed on each
+                 *   let-binding in the mutually recursive block of bindings
+                 * - F* attributes (custom arbitrary terms, such as "[@ GcType
+                 *   ]"), are attached to the block of mutually recursive
+                 *   definitions, we don't have syntax YET for attaching these
+                 *   to individual definitions
+                 * - some extra information is looked up here and added as a
+                 *   bonus; in particular, the MustDisappear attribute (that
+                 *   StackInline bestows upon an individual let-binding) is
+                 *   specific to each let-binding! *)
+                let flags = List.choose (function
+                  | Assumption -> Some Assumed
+                  | S.Private -> Some Private
+                  | S.NoExtract -> Some NoExtract
+                  | _ -> None
+                ) quals in
+                let flags' = extract_metadata attrs in
+
+                let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
                 // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
                     let lb_lid = (right lbname).fv_name.v in
+                    let flags'' = match (SS.compress t).n with
+                      | Tm_arrow (_, { n = Comp { effect_name = e }}) when
+                        string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                          [ StackInline ]
+                      | _ ->
+                          []
+                    in
+                    let meta = flags @ flags' @ flags'' in
+                    let ml_lb = { ml_lb with mllb_meta = meta } in
                     let g, ml_lb =
                       if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                       then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
@@ -390,14 +418,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                       else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                    g, ml_lb::ml_lbs)
                 (g, []) bindings (snd lbs) in
-                let flags = List.choose (function
-                  | Assumption -> Some Assumed
-                  | S.Private -> Some Private
-                  | S.NoExtract -> Some NoExtract
-                  | _ -> None
-                ) quals in
-                let flags' = extract_metadata attrs in
-                g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
+                g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, List.rev ml_lbs')] @ tactic_registration_decl
               | _ ->
                 failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
             end
@@ -417,7 +438,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                       lbunivs=[];
                                                       lbtyp=t;
                                                       lbeff=PC.effect_ML_lid;
-                                                      lbdef=imp}]), []) } in
+                                                      lbdef=imp;
+                                                      lbattrs=[]}]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
@@ -445,16 +467,17 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
        | Sig_pragma (p) ->
-         if p = S.LightOff
-         then Options.set_ml_ish();
+         let codegen_opt = Options.codegen () in
+         U.process_pragma p se.sigrng;
+         (match codegen_opt with
+          | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
+          | _ -> ());
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
-let extract (g:env) (m:modul) : env * list<mllib> =
+let extract' (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
-  if Options.debug_any ()
-  then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
   (* since command line options are reset, need to set OCaml extraction for when
@@ -477,3 +500,9 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   end else begin
     g, []
   end
+
+let extract (g:env) (m:modul) =
+  if Options.debug_any ()
+  then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
+       BU.measure_execution_time msg (fun () -> extract' g m)
+  else extract' g m

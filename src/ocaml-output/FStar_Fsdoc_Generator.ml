@@ -67,7 +67,7 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
     match tycon with
     | FStar_Parser_AST.TyconAbstract uu____232 -> "abstract"
     | FStar_Parser_AST.TyconAbbrev uu____243 -> "abbrev"
-    | FStar_Parser_AST.TyconRecord (id,_bb,_ko,fields) ->
+    | FStar_Parser_AST.TyconRecord (id1,_bb,_ko,fields) ->
         let uu____288 =
           let uu____289 =
             let uu____290 =
@@ -76,20 +76,20 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
                   (FStar_List.map
                      (fun uu____330  ->
                         match uu____330 with
-                        | (id1,t,doco) ->
+                        | (id2,t,doco) ->
                             let uu____376 = string_of_fsdoco doco in
                             let uu____377 =
                               let uu____378 =
                                 let uu____379 =
                                   FStar_Parser_AST.term_to_string t in
                                 Prims.strcat ":" uu____379 in
-                              Prims.strcat id1.FStar_Ident.idText uu____378 in
+                              Prims.strcat id2.FStar_Ident.idText uu____378 in
                             Prims.strcat uu____376 uu____377)) in
               FStar_All.pipe_right uu____291 (FStar_String.concat "; ") in
             Prims.strcat uu____290 " }" in
           Prims.strcat " = { " uu____289 in
-        Prims.strcat id.FStar_Ident.idText uu____288
-    | FStar_Parser_AST.TyconVariant (id,_bb,_ko,vars) ->
+        Prims.strcat id1.FStar_Ident.idText uu____288
+    | FStar_Parser_AST.TyconVariant (id1,_bb,_ko,vars) ->
         let uu____422 =
           let uu____423 =
             let uu____424 =
@@ -97,7 +97,7 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
                 (FStar_List.map
                    (fun uu____472  ->
                       match uu____472 with
-                      | (id1,trmo,doco,u) ->
+                      | (id2,trmo,doco,u) ->
                           let uu____527 = string_of_fsdoco doco in
                           let uu____528 =
                             let uu____529 =
@@ -105,11 +105,11 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
                                 string_of_optiont
                                   FStar_Parser_AST.term_to_string "" trmo in
                               Prims.strcat ":" uu____530 in
-                            Prims.strcat id1.FStar_Ident.idText uu____529 in
+                            Prims.strcat id2.FStar_Ident.idText uu____529 in
                           Prims.strcat uu____527 uu____528)) in
             FStar_All.pipe_right uu____424 (FStar_String.concat " | ") in
           Prims.strcat " = " uu____423 in
-        Prims.strcat id.FStar_Ident.idText uu____422
+        Prims.strcat id1.FStar_Ident.idText uu____422
 let string_of_decl': FStar_Parser_AST.decl' -> Prims.string =
   fun d  ->
     match d with
@@ -258,7 +258,8 @@ let document_toplevel:
            | FStar_Pervasives_Native.None  ->
                (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
       | uu____1152 ->
-          FStar_Exn.raise (FStar_Errors.Err "Not a TopLevelModule")
+          FStar_Errors.raise_err
+            (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____1164 =
@@ -300,23 +301,23 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
                    name))
          | FStar_Pervasives_Native.None  ->
              let uu____1270 =
-               let uu____1271 =
+               let uu____1275 =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str in
-               FStar_Errors.Err uu____1271 in
-             FStar_Exn.raise uu____1270)
+               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1275) in
+             FStar_Errors.raise_err uu____1270)
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->
     let modules =
       FStar_List.map
         (fun fn  ->
-           let uu____1285 = FStar_Parser_Driver.parse_file fn in
-           FStar_Pervasives_Native.fst uu____1285) files in
+           let uu____1289 = FStar_Parser_Driver.parse_file fn in
+           FStar_Pervasives_Native.fst uu____1289) files in
     let mods = FStar_List.map document_module modules in
     let on = FStar_Options.prepend_output_dir "index.md" in
     let fd = FStar_Util.open_file_for_writing on in
     FStar_List.iter
       (fun m  ->
-         let uu____1311 = FStar_Util.format "%s\n" [m.FStar_Ident.str] in
-         FStar_Util.append_to_file fd uu____1311) mods;
+         let uu____1315 = FStar_Util.format "%s\n" [m.FStar_Ident.str] in
+         FStar_Util.append_to_file fd uu____1315) mods;
     FStar_Util.close_file fd

@@ -1,0 +1,23 @@
+[
+  "Ë?t³Ûk³\u007f8§|\u001a’Óm ",
+  [
+    [
+      "Bug056.xxx",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "ed1ef91c1dfb159cbaea4138b8b2e905"
+    ],
+    [
+      "Bug056.xxx",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "c779c9e6def25d4653024ec8cf9f8f54"
+    ]
+  ]
+]

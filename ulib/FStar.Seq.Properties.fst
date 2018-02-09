@@ -486,6 +486,13 @@ let rec find_l #a f l =
   else if f (head l) then Some (head l)
   else find_l f (tail l)
 
+val ghost_find_l: #a:Type -> f:(a -> GTot bool) -> l:seq a -> GTot (o:option a{Some? o ==> f (Some?.v o)})
+  (decreases (Seq.length l))
+let rec ghost_find_l #a f l =
+  if Seq.length l = 0 then None
+  else if f (head l) then Some (head l)
+  else ghost_find_l f (tail l)
+
 val find_append_some: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
   (requires (Some? (find_l f s1)))
   (ensures (find_l f (append s1 s2) == find_l f s1))

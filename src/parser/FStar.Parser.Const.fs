@@ -24,33 +24,35 @@ open FStar.Const
 module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
+
 let pconst s       = p2l ["Prims";s]
 let psconst s      = p2l ["FStar"; "Pervasives"; s]
-let psnconst s      = p2l ["FStar"; "Pervasives" ; "Native" ; s]
+let psnconst s     = p2l ["FStar"; "Pervasives" ; "Native" ; s]
 let prims_lid      = p2l ["Prims"]
 let pervasives_lid = p2l ["FStar"; "Pervasives"]
 let fstar_ns_lid   = p2l ["FStar"]
 
 (* Primitive types *)
-let bool_lid     = pconst "bool"
-let unit_lid     = pconst "unit"
-let squash_lid   = pconst "squash"
-let string_lid   = pconst "string"
-let bytes_lid    = pconst "bytes"
-let int_lid      = pconst "int"
-let exn_lid      = pconst "exn"
-let list_lid     = pconst "list"
-let option_lid   = psnconst "option"
-let either_lid   = psconst "either"
-let pattern_lid  = pconst "pattern"
-let precedes_lid = pconst "precedes"
-let lex_t_lid    = pconst "lex_t"
-let lexcons_lid  = pconst "LexCons"
-let lextop_lid   = pconst "LexTop"
-let smtpat_lid   = pconst "smt_pat"
-let smtpatOr_lid = pconst "smt_pat_or"
-let monadic_lid  = pconst "M"
-let spinoff_lid  = pconst "spinoff"
+let bool_lid        = pconst "bool"
+let unit_lid        = pconst "unit"
+let squash_lid      = pconst "squash"
+let auto_squash_lid = pconst "auto_squash"
+let string_lid      = pconst "string"
+let bytes_lid       = pconst "bytes"
+let int_lid         = pconst "int"
+let exn_lid         = pconst "exn"
+let list_lid        = pconst "list"
+let option_lid      = psnconst "option"
+let either_lid      = psconst "either"
+let pattern_lid     = pconst "pattern"
+let precedes_lid    = pconst "precedes"
+let lex_t_lid       = pconst "lex_t"
+let lexcons_lid     = pconst "LexCons"
+let lextop_lid      = pconst "LexTop"
+let smtpat_lid      = pconst "smt_pat"
+let smtpatOr_lid    = pconst "smt_pat_or"
+let monadic_lid     = pconst "M"
+let spinoff_lid     = pconst "spinoff"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
@@ -115,6 +117,7 @@ let list_append_lid = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
 let strcat_lid'     = p2l ["FStar"; "String"; "strcat"]
+let str_make_lid    = p2l ["FStar"; "String"; "make"]
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
@@ -215,6 +218,7 @@ let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
+let with_type_lid  = pconst "with_type"
 
 (* Constants for marking terms with normalization hints *)
 let normalize      = pconst "normalize"
@@ -222,14 +226,19 @@ let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl      = pconst "Simpl"
-let steps_weak       = pconst "Weak"
-let steps_hnf        = pconst "HNF"
-let steps_primops    = pconst "Primops"
-let steps_zeta       = pconst "Zeta"
-let steps_iota       = pconst "Iota"
-let steps_delta      = pconst "Delta"
-let steps_unfoldonly = pconst "UnfoldOnly"
+let steps_simpl      = pconst "simplify"
+let steps_weak       = pconst "weak"
+let steps_hnf        = pconst "hnf"
+let steps_primops    = pconst "primops"
+let steps_zeta       = pconst "zeta"
+let steps_iota       = pconst "iota"
+let steps_delta      = pconst "delta"
+let steps_unfoldonly = pconst "delta_only"
+let steps_unfoldattr = pconst "delta_attr"
+
+(* attributes *)
+let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
+let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -323,7 +332,7 @@ let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
-let tac_effect_lid = fstar_tactics_lid "TAC"
+let tac_effect_lid = fstar_tactics_lid' ["Effect"; "TAC"]
 let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]

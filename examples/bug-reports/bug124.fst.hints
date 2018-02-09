@@ -1,0 +1,45 @@
+[
+  "AÆVÊï®&Q×N^YØ¡f\u0004",
+  [
+    [
+      "Bug124.test",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "eaa72128e1992b2006ef378be6f4a0d9"
+    ],
+    [
+      "Bug124.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e7504529ac1388b597991d33120a67e6"
+    ],
+    [
+      "Bug124.test'",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6c41fd21da8b381c0d0f8d1c92b09dd3"
+    ],
+    [
+      "Bug124.test'",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "01cc0629899a7b603493badb81262cd5"
+    ]
+  ]
+]

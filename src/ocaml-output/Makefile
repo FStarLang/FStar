@@ -13,7 +13,9 @@ OCAMLBUILD=cd ../../ && ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -I src/ocaml-outpu
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml \
   -I src/prettyprint/ml -I src/tactics/ml -I src/tests/ml -I ulib/ml \
   -j 24 -build-dir src/ocaml-output/_build -use-ocamlfind
-COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
+COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
+		FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx	\
+		FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
 GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
@@ -196,7 +198,6 @@ install: all
 	# Then the binary library
 	$(call install_fstarlib,bin/fstarlib,fstarlib.cma)
 	$(call install_fstarlib,bin/fstarlib,fstarlib.cmxa)
-	$(call install_fstarlib,ulib/ml,fstarlib.ml)
 	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
         # Then the rest of the static files.
 	$(call install_dir,examples,share/fstar/examples)

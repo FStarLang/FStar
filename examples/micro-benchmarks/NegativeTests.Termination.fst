@@ -2,9 +2,7 @@
 module NegativeTests.Termination
 val bug15 : m : int -> Tot (z : int ->
             Lemma (ensures (False)))
-let rec bug15 m =
-  match m with
-  | _ -> (fun l -> bug15 m l)
+let rec bug15 m l = bug15 m l
 
 val repeat_diverge : int -> int -> Tot int
 let rec repeat_diverge n count =

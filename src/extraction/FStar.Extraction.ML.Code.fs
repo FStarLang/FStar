@@ -133,10 +133,10 @@ let infix_prim_ops = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let prim_uni_ops () = 
-    let op_minus = if Options.codegen_fsharp() 
-                        then "-" 
-                        else "~-" in 
+let prim_uni_ops () =
+    let op_minus = if Options.codegen_fsharp()
+                        then "-"
+                        else "~-" in
     [ ("op_Negation", "not");
       ("op_Minus", op_minus);
       ("op_Bang","Support.ST.read") ]
@@ -252,7 +252,7 @@ let string_of_mlconstant (sctt : mlconstant) =
 
   | MLC_Bytes bytes ->
       (* A byte buffer. Not meant to be readable. *)
-      "\"" ^ FStar.Bytes.f_encode escape_byte_hex bytes ^ "\""
+      "\"" ^ FStar.Compiler.Bytes.f_encode escape_byte_hex bytes ^ "\""
 
   | MLC_String chars ->
       (* It was a string literal. Escape what was (likely) escaped originally.
@@ -368,7 +368,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         let docs = parens (combine (text ", ") docs) in
         docs
 
-    | MLE_Let ((rec_, _, lets), body) ->
+    | MLE_Let ((rec_, lets), body) ->
         let pre =
             if e.loc <> dummy_loc
             then reduce [hardline; doc_of_loc e.loc]
@@ -711,7 +711,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     | MLM_Ty decls ->
         doc_of_mltydecl currentModule decls
 
-    | MLM_Let (rec_, _, lets) ->
+    | MLM_Let (rec_, lets) ->
       doc_of_lets currentModule (rec_, true, lets)
 
     | MLM_Top e ->

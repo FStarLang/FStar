@@ -99,7 +99,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
             | None ->
               if lid_equals tc_lid FStar.Parser.Const.exn_lid
               then env, [], U_zero
-              else raise (Error("Unexpected data constructor", se.sigrng)) in
+              else raise_error (Errors.Fatal_UnexpectedDataConstructor, ("Unexpected data constructor")) se.sigrng in
 
 
          let arguments, result =
@@ -124,16 +124,16 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
          let result, res_lcomp = tc_trivial_guard env' result in
          begin match (SS.compress res_lcomp.res_typ).n with
                | Tm_type _ -> ()
-               | ty -> raise (Error(BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+               | ty -> raise_error (Errors.Fatal_WrongResultTypeAfterConstrutor, (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
-                                                (Print.term_to_string (res_lcomp.res_typ)), se.sigrng))
+                                                (Print.term_to_string (res_lcomp.res_typ)))) se.sigrng
          end;
          let head, _ = U.head_and_args result in
          let _ = match (SS.compress head).n with
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
-            | _ -> raise (Error(BU.format2 "Expected a constructor of type %s; got %s"
+            | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
-                                        (Print.term_to_string head), se.sigrng)) in
+                                        (Print.term_to_string head))) se.sigrng in
          let g =List.fold_left2 (fun g (x, _) u_x ->
                 Rel.conj_guard g (Rel.universe_inequality u_x u_tc))
             Rel.trivial_guard
@@ -534,12 +534,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
     let _, en, _, _ = acc in
-    //false means don't use SMT solver
-    let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
-    //is this criteria for success/failure ok ?
-    match opt with
-    | None   -> false
-    | Some _ -> true
+    Rel.subtype_nosmt en (fst b).sort  (fst (type_u ()))
   ) bs in
   let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
   //implication
@@ -826,7 +821,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     *)
   let tys, datas = ses |> List.partition (function { sigel = Sig_inductive_typ _ } -> true | _ -> false) in
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
-  then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env));
+  then raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) (Env.get_range env);
   let env0 = env in
 
   (* Check each tycon *)
@@ -860,10 +855,10 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     match se.sigel with
     | Sig_inductive_typ(l, univs, binders, typ, _, _) ->
       let fail expected inferred =
-          raise (Error(BU.format2 "Expected an inductive with type %s; got %s"
+          raise_error (Errors.Fatal_UnexpectedInductivetype, (BU.format2 "Expected an inductive with type %s; got %s"
                                             (Print.tscheme_to_string expected)
-                                            (Print.tscheme_to_string inferred),
-                       se.sigrng))
+                                            (Print.tscheme_to_string inferred)))
+                       se.sigrng
       in
       begin match Env.try_lookup_val_decl env0 l with
             | None -> ()

@@ -1,0 +1,41 @@
+[
+  "Ò\u0003eäâ\u00029áp!_ùty‘w",
+  [
+    [
+      "Bug283.XOR_Laws",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.HasEq_block" ],
+      0,
+      "042b2164d0f27f85df2b064a7681d70e"
+    ],
+    [
+      "Bug283.XOR_Laws",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.HasEq_block" ],
+      0,
+      "9ab949deb841450851f927415893574a"
+    ],
+    [
+      "Bug283.test2",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.HasEq_block" ],
+      0,
+      "d62a6cf8530a120750218e485b104d1d"
+    ],
+    [
+      "Bug283.test2",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.XOR_Laws", "typing_Bug283.xor" ],
+      0,
+      "4d7579da88d261ba1313e835619cfa92"
+    ]
+  ]
+]

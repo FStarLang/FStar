@@ -7,8 +7,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
@@ -18,16 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b49ee882e90de3e002d3b3b532ee55b4"
-    ],
-    [
-      "FirstProofs.factorial",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "72a2f27d792ea3192e0c3d483f32485b"
+      "d3f5cce7e7ffddcbd056b78d37398544"
     ],
     [
       "FirstProofs.factorial_is_positive",
@@ -49,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "588346f19cd77b069d01a41f656e1b73"
+      "aebe7c9f14f23cd65543f563af82649c"
     ],
     [
       "FirstProofs.factorial_is_increasing",
@@ -73,7 +63,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0eb8a9f20dcf22b9fa9b16b20e233ccb"
+      "77a31a774aeff2633e7adec89ab9a7ca"
     ],
     [
       "FirstProofs.factorial_is_doubling",
@@ -97,7 +87,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f70b9e56252848283386c29266484855"
+      "38745c88551996902d3a79380be34678"
     ],
     [
       "FirstProofs.fibonacci",
@@ -115,7 +105,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "af21874d7a5e0683ccab278718f49abb"
+      "1b8e43acd24b949b786fdba35acd4058"
     ],
     [
       "FirstProofs.fibonacci_is_increasing",
@@ -138,7 +128,7 @@
         "typing_FirstProofs.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "3d00d7d004923f5fbc7cc5131c56ea00"
+      "36d2c8a17577d286629b4195b6287319"
     ]
   ]
 ]

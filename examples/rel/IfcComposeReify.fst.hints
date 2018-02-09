@@ -1,5 +1,5 @@
 [
-  " c$ã'\r@xå¬€ÛÙ:õ",
+  "≤JÕ∂U\u0016˝\u007f\u001eN^ˆÅê\u0019Ô",
   [
     [
       "IfcComposeReify.uu___is_Low",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b0950caf7b39d4a4a0b29490d63d3365"
+      "119cec056036e4afe4d9950f4b1114ba"
     ],
     [
       "IfcComposeReify.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "97a38a691f21c125840baed764d2be03"
+      "48a3337cb1e5b9d08caff678475a9043"
     ],
     [
       "IfcComposeReify.low_equiv",
@@ -26,69 +26,38 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "aaecae3e8c36e8c088eef07d73187ef2"
-    ],
-    [
-      "IfcComposeReify.p1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "841aa85023bbbe20e583395a66a78744"
-    ],
-    [
-      "IfcComposeReify.p2",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "828f4dff2fe8b9bed96dd435c4b9e345"
+      "395b264b66a2f97eea2190641e817a7f"
     ],
     [
       "IfcComposeReify.p1_r",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f43afcc76d0acf0f680e98a85f5f8434"
+      "e2418584265fe0fa0c5d963a42654d74"
     ],
     [
       "IfcComposeReify.p2_r",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f65c7b7405f906fbfe654c7224e9d25a"
+      "2b58e86500fd5c0a97259a4ae20e4105"
     ],
     [
       "IfcComposeReify.p3_r",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dcd03e2aa8432f7397865897ebdbb0ff"
+      "a764c07dd8a4d22523012caf26bfb3ee"
     ],
     [
       "IfcComposeReify.ni_p1",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "2f13b42d36f27a63ff943b72f03afaee"
-    ],
-    [
-      "IfcComposeReify.ni_p1",
-      2,
       2,
       1,
       [
@@ -132,29 +101,15 @@
         "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.DM4F.Heap.IntStoreFixed.index",
-        "typing_FStar.DM4F.Heap.IntStoreFixed.sel",
-        "typing_IfcComposeReify.p1_r", "typing_Rel.__proj__R__item__l",
-        "typing_Rel.__proj__R__item__r", "unit_typing"
+        "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
+        "unit_typing"
       ],
       0,
-      "9d71118ec1a9124303a5c29e437db243"
+      "e47dd6c94c0e3f8513ba3e0924abf5b3"
     ],
     [
       "IfcComposeReify.ni_p2",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "14769d5db326a9fa6fd78bcfe6341ffb"
-    ],
-    [
-      "IfcComposeReify.ni_p2",
-      2,
       2,
       1,
       [
@@ -167,6 +122,7 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
         "disc_equation_IfcComposeReify.Low",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.index",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_FStar.DM4F.Heap.IntStoreFixed.upd",
@@ -198,55 +154,15 @@
         "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.DM4F.Heap.IntStoreFixed.index",
-        "typing_FStar.DM4F.Heap.IntStoreFixed.sel",
-        "typing_IfcComposeReify.p2_r", "typing_Rel.__proj__R__item__l",
-        "typing_Rel.__proj__R__item__r", "unit_typing"
+        "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
+        "unit_typing"
       ],
       0,
-      "6019eff286b37175b692dc4a9e78178a"
+      "6db9ba7518cb418b6b91d228a179dd7e"
     ],
     [
       "IfcComposeReify.ni_p3",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "2873c1fe709b376e31a0fdb3bb095041"
-    ],
-    [
-      "IfcComposeReify.ni_p3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "2036280fa077a627910a4a79edf46b49"
-    ],
-    [
-      "IfcComposeReify.ni_p3",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "b47cb94c72e451832c006dc1e82bdec2"
-    ],
-    [
-      "IfcComposeReify.ni_p3",
-      4,
       2,
       1,
       [
@@ -256,8 +172,8 @@
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "disc_equation_IfcComposeReify.Low",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "disc_equation_IfcComposeReify.Low",
         "equation_FStar.DM4F.Heap.IntStoreFixed.index",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
@@ -301,7 +217,7 @@
         "unit_typing"
       ],
       0,
-      "89ac9303a565afaa6972df8c90eef8e7"
+      "4ef55eb6d240215e74b765d98e1f4b2f"
     ]
   ]
 ]

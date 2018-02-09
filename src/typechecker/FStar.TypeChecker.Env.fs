@@ -52,8 +52,8 @@ type delta_level =
   | UnfoldTac
 
 type mlift = {
-  mlift_wp:typ -> typ -> typ ;
-  mlift_term:option<(typ -> typ -> term -> term)>
+  mlift_wp:universe -> typ -> typ -> typ ;
+  mlift_term:option<(universe -> typ -> typ -> term -> term)>
 }
 
 type edge = {
@@ -91,7 +91,7 @@ type env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ)>;         (* mutually recursive names and their types (for termination checking) *)
+  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking) *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
@@ -104,6 +104,7 @@ type env = {
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
@@ -176,7 +177,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of universe_of solver module_lid =
+let initial_env deps tc_term type_of universe_of check_type_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -201,6 +202,7 @@ let initial_env deps tc_term type_of universe_of solver module_lid =
     nosynth=false;
     tc_term=tc_term;
     type_of=type_of;
+    check_type_of=check_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
@@ -302,10 +304,10 @@ let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface &&
 let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (text_of_lid lid)
 
 let name_not_found (l:lid) =
-  format1 "Name \"%s\" not found" l.str
+  (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" l.str))
 
 let variable_not_found v =
-  format1 "Variable \"%s\" not found" (Print.bv_to_string v)
+  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
@@ -424,7 +426,13 @@ let try_lookup_bv env (bv:bv) =
       Some (id.sort, id.ppname.idRange)
     | _ -> None)
 
-let lookup_type_of_let se lid = match se.sigel with
+let lookup_type_of_let us_opt se lid =
+    let inst_tscheme ts =
+      match us_opt with
+      | None -> inst_tscheme ts
+      | Some us -> inst_tscheme_with ts us
+    in
+    match se.sigel with
     | Sig_let((_, [lb]), _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
@@ -438,7 +446,12 @@ let lookup_type_of_let se lid = match se.sigel with
 
     | _ -> None
 
-let effect_signature se =
+let effect_signature us_opt se =
+    let inst_tscheme ts =
+       match us_opt with
+       | None -> inst_tscheme ts
+       | Some us -> inst_tscheme_with ts us
+    in
     match se.sigel with
     | Sig_new_effect(ne) ->
         Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)), se.sigrng)
@@ -448,7 +461,12 @@ let effect_signature se =
 
     | _ -> None
 
-let try_lookup_lid_aux env lid =
+let try_lookup_lid_aux us_opt env lid =
+  let inst_tscheme ts =
+      match us_opt with
+      | None -> inst_tscheme ts
+      | Some us -> inst_tscheme_with ts us
+  in
   let mapper (lr, rng) =
     match lr with
     | Inl t ->
@@ -478,8 +496,11 @@ let try_lookup_lid_aux env lid =
 
     | Inr se ->
       begin match se with // FIXME why does this branch not use rng?
-        | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
-        | _ -> effect_signature (fst se)
+        | { sigel = Sig_let _ }, None ->
+          lookup_type_of_let us_opt (fst se) lid
+
+        | _ ->
+          effect_signature us_opt (fst se)
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
@@ -500,6 +521,7 @@ let try_lookup_lid_aux env lid =
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
+//        val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 //        val try_lookup_effect_lid  : env -> lident -> option<term>
 //        val lookup_effect_lid      : env -> lident -> term
 //        val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -525,21 +547,29 @@ let lid_exists env l =
 let lookup_bv env bv =
     let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
-    | None -> raise (Error(variable_not_found bv, bvr))
+    | None -> raise_error (variable_not_found bv) bvr
     | Some (t, r) -> Subst.set_use_range bvr t,
                      Range.set_use_range r (Range.use_range bvr)
 
 let try_lookup_lid env l =
-    match try_lookup_lid_aux env l with
+    match try_lookup_lid_aux None env l with
     | None -> None
     | Some ((us, t), r) ->
       let use_range = range_of_lid l in
       let r = Range.set_use_range r (Range.use_range use_range) in
       Some ((us, Subst.set_use_range use_range t), r)
 
+let try_lookup_and_inst_lid env us l =
+    match try_lookup_lid_aux (Some us) env l with
+    | None -> None
+    | Some ((_, t), r) ->
+      let use_range = range_of_lid l in
+      let r = Range.set_use_range r (Range.use_range use_range) in
+      Some (Subst.set_use_range use_range t, r)
+
 let lookup_lid env l =
     match try_lookup_lid env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some v -> v
 
 let lookup_univ env x =
@@ -560,13 +590,13 @@ let lookup_val_decl env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
@@ -595,10 +625,15 @@ let lookup_definition delta_levels env lid =
     end
   | _ -> None
 
+let lookup_attrs_of_lid env lid : option<list<attribute>> =
+  match lookup_qname env lid with
+  | Some (Inr (se, _), _) -> Some se.sigattrs
+  | _ -> None
+
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
-      begin match effect_signature se with
+      begin match effect_signature None se with
         | None -> None
         | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
@@ -606,7 +641,7 @@ let try_lookup_effect_lid env (ftv:lident) : option<typ> =
 
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
-    | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
+    | None -> raise_error (name_not_found ftv) (range_of_lid ftv)
     | Some k -> k
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
@@ -722,6 +757,12 @@ let is_interpreted =
             //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
+let is_irreducible env l =
+    match lookup_qname env l with
+    | Some (Inr (se, _), _) ->
+      BU.for_some (function Irreducible -> true | _ -> false) se.sigquals
+    | _ -> false
+
 let is_type_constructor env lid =
     let mapper x =
         match fst x with
@@ -741,7 +782,7 @@ let is_type_constructor env lid =
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) -> List.length tps
-  | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+  | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
@@ -751,12 +792,12 @@ let effect_decl_opt env l =
 
 let get_effect_decl env l =
   match effect_decl_opt env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some md -> fst md
 
 let identity_mlift : mlift =
-  { mlift_wp=(fun t wp -> wp) ;
-    mlift_term=Some (fun t wp e -> return_all e) }
+  { mlift_wp=(fun _ t wp -> wp) ;
+    mlift_term=Some (fun _ t wp e -> return_all e) }
 
 let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
@@ -765,7 +806,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
   then Const.effect_GTot_lid, identity_mlift, identity_mlift
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise (Error(BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
+        | None -> raise_error (Errors.Fatal_EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
@@ -809,10 +850,10 @@ let build_lattice env se = match se.sigel with
   | Sig_sub_effect(sub) ->
     let compose_edges e1 e2 : edge =
       let composed_lift =
-        let mlift_wp r wp1 = e2.mlift.mlift_wp r (e1.mlift.mlift_wp r wp1) in
+        let mlift_wp u r wp1 = e2.mlift.mlift_wp u r (e1.mlift.mlift_wp u r wp1) in
         let mlift_term =
           match e1.mlift.mlift_term, e2.mlift.mlift_term with
-          | Some l1, Some l2 -> Some (fun t wp e -> l2 t (e1.mlift.mlift_wp t wp) (l1 t wp e))
+          | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t (e1.mlift.mlift_wp u t wp) (l1 u t wp e))
           | _ -> None
         in
         { mlift_wp=mlift_wp ; mlift_term=mlift_term}
@@ -822,8 +863,8 @@ let build_lattice env se = match se.sigel with
         mlift=composed_lift }
     in
 
-    let mk_mlift_wp lift_t r wp1 =
-      let _, lift_t = inst_tscheme lift_t in
+    let mk_mlift_wp lift_t u r wp1 =
+      let _, lift_t = inst_tscheme_with lift_t [u] in
       mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
     in
 
@@ -834,8 +875,8 @@ let build_lattice env se = match se.sigel with
           failwith "sub effect should've been elaborated at this stage"
     in
 
-    let mk_mlift_term lift_t r wp1 e =
-      let _, lift_t = inst_tscheme lift_t in
+    let mk_mlift_term lift_t u r wp1 e =
+      let _, lift_t = inst_tscheme_with lift_t [u] in
       mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
     in
 
@@ -861,8 +902,8 @@ let build_lattice env se = match se.sigel with
       let wp = bogus_term "WP" in
       let e = bogus_term "COMP" in
       BU.format2 "{ wp : %s ; term : %s }"
-                 (Print.term_to_string (l.mlift_wp arg wp))
-                 (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l arg wp e))))
+                 (Print.term_to_string (l.mlift_wp U_zero arg wp))
+                 (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
     in
 
     let order = edge::env.effects.order in
@@ -894,8 +935,7 @@ let build_lattice env se = match se.sigel with
     let _ = order |> List.iter (fun edge ->
         if Ident.lid_equals edge.msource Const.effect_DIV_lid
         && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-        then raise (Error(BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str,
-                          get_range env)))
+        then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
     in
     let joins =
       ms |> List.collect (fun i ->
@@ -914,7 +954,7 @@ let build_lattice env se = match se.sigel with
                   begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
                     | true, true ->
                       if Ident.lid_equals k ub
-                      then (BU.print_warning "Looking multiple times at the same upper bound candidate\n" ; bopt)
+                      then (Errors. log_issue Range.dummyRange (Errors.Warning_UpperBoundCandidateAlreadyVisited, "Looking multiple times at the same upper bound candidate") ; bopt)
                       else failwith "Found a cycle in the lattice"
                     | false, false -> bopt
                           (* KM : This seems a little fishy since we could obtain as *)
@@ -962,11 +1002,10 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
-      then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+      then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
-                                (Print.comp_to_string (S.mk_Comp c))
-                            , comp.pos));
+                                (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
@@ -992,14 +1031,14 @@ let effect_repr_aux only_reifiable env c u_c =
               let message = BU.format1 "Not enough arguments for effect %s. " name ^
                 "This usually happens when you use a partially applied DM4F effect, " ^
                 "like [TAC int] instead of [Tac int]." in
-              raise (Error (message, get_range env)) in
+              raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
 
 let reify_comp env c u_c : term =
-    let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l), get_range env)) in
+    let no_reify l = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env) in
     match effect_repr_aux true env c u_c with
     | None -> no_reify (U.comp_effect_name c)
     | Some tm -> tm

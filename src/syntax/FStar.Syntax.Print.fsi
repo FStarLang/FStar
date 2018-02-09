@@ -43,6 +43,7 @@ val binder_to_string  : binder -> string
 val binders_to_string : string -> binders -> string
 val binder_to_json    : binder -> json
 val binders_to_json   : binders -> json
+val aqual_to_string   : aqual -> string
 val args_to_string    : args -> string
 val eff_decl_to_string: bool -> eff_decl -> string
 val subst_to_string   : subst_t -> string
@@ -55,7 +56,8 @@ val set_to_string     : ('a -> string) -> set<'a> -> string
 val list_to_string    : ('a -> string) -> list<'a> -> string
 val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string
+val metadata_to_string : metadata -> string
 
-// VD: just for testing
+// VD: just for NBE testing
 val univ_names_to_string : list<ident> -> string
 val univs_to_string: universes -> string

@@ -1,0 +1,40 @@
+[
+  "`°7z Œ≤Ãÿ:çæ÷X\u0007\u0016",
+  [
+    [
+      "Bug517.new_int",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "437f7186b1c40befba7bd3e971c31fd4"
+    ],
+    [
+      "Bug517.add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+      ],
+      0,
+      "09d5db54aae9fd18485bbe46425d9032"
+    ],
+    [
+      "Bug517.add'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+      ],
+      0,
+      "e8163f45d2a2ac7fb8aedd828e9978d2"
+    ]
+  ]
+]

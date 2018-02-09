@@ -12,6 +12,7 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#set-options "--normalize_pure_terms_for_extraction"
 
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
@@ -420,6 +421,7 @@ let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Lemma (n / pow2 s < pow2 (b - s)) =
   Math.lemma_div_lt n b s
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --z3rlimit 40"
+#set-options "--normalize_pure_terms_for_extraction"
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
@@ -436,7 +438,8 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 s);
   mod_mul_pow2 (U64.v hi) (64 - s) s;
   U64.add high low
-#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3cliopt 'smt.case_split=3'"
+#set-options "--normalize_pure_terms_for_extraction"
 
 
 let div_plus_multiple (a:nat) (b:nat) (k:pos) :
@@ -582,7 +585,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-#set-options "--z3rlimit 5"
+#set-options "--z3rlimit 64"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
@@ -604,7 +607,8 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
   U64.add low high
-
+  
+#set-options "--z3rlimit 10"
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
 let mul_pow2_diff a n1 n2 =

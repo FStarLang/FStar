@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -76,8 +76,8 @@
     <Compile Include="boot/FStar.List.fs" />
     <Compile Include="boot/FStar.Util.fsi" />
     <Compile Include="boot/NotFStar.Util.fs" />
-    <Compile Include="boot/FStar.Bytes.fsi" />
-    <Compile Include="boot/NotFStar.Bytes.fs" />
+    <Compile Include="boot/FStar.Compiler.Bytes.fsi" />
+    <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/NotFStar.Dyn.fs" />
     <Compile Include="boot/FStar.BigInt.fsi" />
@@ -87,6 +87,7 @@
     <Compile Include="FStar.Range.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="NotFStar.Platform.fs" />
+    <Compile Include="FStar.Common.fsi" />
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
     <Compile Include="NotFStar.Getopt.fs" />

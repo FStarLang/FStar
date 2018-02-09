@@ -110,7 +110,7 @@ let modifies_prefix_times (b:bslice) (len1: U32.t) (len2: U32.t{U32.v len1 + U32
 let same_ref (#a:Type) (b1 b2:B.buffer a) =
     B.frameOf b1 == B.frameOf b2 /\
     B.max_length b1 == B.max_length b2 /\
-    B.content b1 == B.content b2
+    B.content b1 === B.content b2
 
 // XXX: why is this not in the standard library?
 let same_ref_equivalence (#a:Type) :

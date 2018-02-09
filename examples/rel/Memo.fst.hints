@@ -8,16 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "063d4e8d27df758e8d82a57f7cb6c3ce"
-    ],
-    [
-      "Memo.bind",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a061c49642ef5f4256099f9fd362b25c"
+      "e8a0d9e19d9658107a3ded983e74a78d"
     ]
   ]
 ]

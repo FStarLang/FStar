@@ -1,0 +1,20 @@
+[
+  "\\‘ÊpwëÏAz¶×Ê:\u0018r\u000e",
+  [
+    [
+      "Bug116.__proj__TyAbs__item___3",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug116.TyAbs_e1",
+        "proj_equation_Bug116.TyAbs_g", "proj_equation_Bug116.TyAbs_x",
+        "projection_inverse_Bug116.TyAbs_e1",
+        "projection_inverse_Bug116.TyAbs_g",
+        "projection_inverse_Bug116.TyAbs_x"
+      ],
+      0,
+      "79efbec25b0e00b3b963d5afdec18bcd"
+    ]
+  ]
+]

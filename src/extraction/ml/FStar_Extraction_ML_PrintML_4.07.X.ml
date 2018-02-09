@@ -87,6 +87,7 @@ let mk_top_mllb (e: mlexpr): mllb =
    mllb_tysc=None;
    mllb_add_unit=false;
    mllb_def=e;
+   mllb_meta=[];
    print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
@@ -96,7 +97,7 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
-  | MLC_Int (v, _) ->
+  | MLC_Int (v, None) ->
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
      Const.integer i
   | MLC_Float v -> Const.float (string_of_float v)
@@ -221,7 +222,7 @@ let rec build_expr (e: mlexpr): expression =
      (match path with
       | (["Prims"], op) -> resugar_prims_ops path
       | _ -> Exp.ident (path_to_ident path))
-  | MLE_Let ((flavour, c_flags, lbs), expr) ->
+  | MLE_Let ((flavour, lbs), expr) ->
      let recf = match flavour with
        | Rec -> Recursive
        | NonRec -> Nonrecursive in
@@ -401,7 +402,7 @@ let build_module1 path (m1: mlmodule1): structure_item option =
      (match build_tydecl tydecl with
       | Some t -> Some (Str.mk t)
       | None   -> None)
-  | MLM_Let (flav, flags, mllbs) ->
+  | MLM_Let (flav, mllbs) ->
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
      let bindings = map (build_binding true) mllbs in
      Some (Str.value recf bindings)

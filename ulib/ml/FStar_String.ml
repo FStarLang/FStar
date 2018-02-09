@@ -1,4 +1,4 @@
-let make i ci = String.make (Z.to_int i) (Char.chr ci)
+let make i c = BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)
 let strcat s t = s ^ t
 let split seps s =
   let rec repeat_split acc = function
@@ -9,6 +9,7 @@ let split seps s =
        repeat_split l seps in
   repeat_split [s] seps
 let compare x y = Z.of_int (BatString.compare x y)
+type char = FStar_Char.char
 let concat = BatString.concat
 let length s = Z.of_int (BatUTF8.length s)
 let strlen s = length s
@@ -25,6 +26,11 @@ let collect f s =
 let lowercase = BatString.lowercase
 let uppercase = BatString.uppercase
 let index = get
+exception Found of int
+let index_of s c =
+    let c = BatUChar.chr c in
+    try let _ = BatUTF8.iteri (fun c' i -> if c = c' then raise (Found i) else ()) s in Z.of_int (-1)
+    with Found i -> Z.of_int i
 let sub = substring
 let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
 let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))
