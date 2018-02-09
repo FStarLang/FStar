@@ -474,9 +474,8 @@ let rec resugar_term (t : S.term) : A.term =
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               (* TODO: where should we keep the information stored in Ascribed? *)
               resugar_branches t1
-            | _ ->
-              (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
-              []
+            | A.Let(A.NoLetQualifier, [(None, (pat, term))], body)  ->
+              [(pat, None, term)]
           in
           let branches = resugar_branches handler in
           mk (A.TryWith(e, branches))
