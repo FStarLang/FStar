@@ -1713,9 +1713,22 @@ let extract_interface (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
-  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Noeq || q = Unopteq)) in
+  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Noeq || q = Unopteq)) in  //abstract inductive should not have noeq and unopteq
 
+  //if the module contains both a val and a let, we will only keep the val
   let added_vals = BU.mk_ref [] in
+
+  //we need to filter out projectors and discriminators of abstract inductive datacons, so keep track of such datacons
+  let abstract_inductive_datacons = BU.mk_ref [] in
+
+  let is_projector_or_discriminator_of_an_abstract_inductive (quals:list<qualifier>) :bool =
+    List.existsb (fun q ->
+      match q with
+      | Discriminator l
+      | Projector (l, _) -> List.existsb (fun l' -> lid_equals l l') !abstract_inductive_datacons
+      | _ -> false
+    ) quals
+  in
 
   let mk_typ_for_abstract_inductive (bs:binders) (t:typ) (r:Range.range) :typ =
     match bs with
@@ -1773,18 +1786,24 @@ let extract_interface (m:modul) :modul =
           | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
             let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
             ({ s with sigel = s'; sigquals = filter_out_abstract_and_noeq s.sigquals })::sigelts  //filter out the abstract qualifier
-          | _ -> sigelts  //nothing to do for datacons
+          | Sig_datacon (lid, _, _, _, _, _) ->
+            abstract_inductive_datacons := lid::!abstract_inductive_datacons;
+            sigelts  //nothing to do for datacons
+          | _ -> failwith "Impossible! Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
         ) [] sigelts
       else [s]  //if it is not abstract, retain as is
     | Sig_declare_typ (lid, uvs, t) ->
       //val remains as val, except we filter out the abstract qualifier
-      added_vals := lid::!added_vals;
-      [{ s with sigquals = filter_out_abstract s.sigquals }]
+      if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
+      else begin
+        added_vals := lid::!added_vals;
+        [{ s with sigquals = filter_out_abstract s.sigquals }]
+      end
     | Sig_let (lbs, lids) ->
       if val_has_already_been_added lids then []
+      else if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       else if is_abstract s.sigquals || is_irreducible s.sigquals then
         //add a val declaration for each of the letbinding, retain the irreducible qualifier, Q. why aren't all vals irreducible already?
-        //TODO: warn if unannotated?
         let _ = if missing_top_level_type (snd lbs) then let _ = BU.print1 "Abstract and irreducible defns must be annotated at the top-level: %s\n\n" (List.hd lids).str in failwith "" else () in
         vals_of_lbs s
       else if missing_top_level_type (snd lbs) then [s]  //if top level annotation is missing, retain as is
@@ -1806,7 +1825,7 @@ let check_module env m =
   //if this file is a dependency, and it is not already an interface, we will extract interface from it and verify that
   let m =
     if ((not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
-      BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
+      //BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
       let m = extract_interface m in
       BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
       m
