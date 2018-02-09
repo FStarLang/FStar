@@ -11,6 +11,7 @@ let (test_mod_ref :
        {
          FStar_Syntax_Syntax.name = test_lid;
          FStar_Syntax_Syntax.declarations = [];
+         FStar_Syntax_Syntax.exports = [];
          FStar_Syntax_Syntax.is_interface = false
        })
   

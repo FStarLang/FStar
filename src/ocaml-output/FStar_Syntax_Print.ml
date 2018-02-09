@@ -1448,7 +1448,7 @@ let rec (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
         FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.declarations
          in
       FStar_All.pipe_right uu____2599 (FStar_String.concat "\n")  in
-    FStar_Util.format2 "module %s\n%s\n" uu____2597 uu____2598
+    FStar_Util.format2 "module %s\n%s" uu____2597 uu____2598
   
 let (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
   fun uu___75_2606  ->
