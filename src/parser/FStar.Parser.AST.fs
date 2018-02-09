@@ -62,7 +62,7 @@ type term' =
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of option<attributes_> * let_qualifier * list<(pattern * term)> * term
+  | Let       of let_qualifier * list<(option<attributes_> * (pattern * term))> * term
   | LetOpen   of lid * term
   | Seq       of term * term
   | Bind      of ident * term * term
@@ -342,6 +342,15 @@ let focusLetBindings lbs r =
               else (fst lb, mkAdmitMagic r)) lbs
         else lbs |> List.map snd
 
+let focusAttrLetBindings lbs r =
+    let should_filter = Util.for_some (fun (attr, (focus, _)) -> focus) lbs in
+    if should_filter
+    then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
+        List.map (fun (attr, (f, lb)) ->
+            if f then attr, lb
+            else (attr, (fst lb, mkAdmitMagic r))) lbs
+    else lbs |> List.map (fun (attr, (_, lb)) -> (attr, lb))
+
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
@@ -520,12 +529,19 @@ let rec term_to_string (x:term) = match x.tm with
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let (attrs, Rec, lbs, body) ->
-    Util.format3 "%slet rec %s in %s"
-        (attrs_opt_to_string attrs)
-        (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs)
+  | Let (Rec, (a,(p,b))::lbs, body) ->
+    Util.format4 "%slet rec %s%s in %s"
+        (attrs_opt_to_string a)
+        (Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
+        (to_string_l " "
+            (fun (a,(p,b)) ->
+                Util.format3 "%sand %s=%s"
+                              (attrs_opt_to_string a)
+                              (p|> pat_to_string)
+                              (b|> term_to_string))
+            lbs)
         (body|> term_to_string)
-  | Let (attrs, q, [(pat,tm)], body) ->
+  | Let (q, [(attrs,(pat,tm))], body) ->
     Util.format5 "%slet %s %s = %s in %s"
         (attrs_opt_to_string attrs)
         (string_of_let_qualifier q)

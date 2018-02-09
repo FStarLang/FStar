@@ -227,6 +227,10 @@ constructorDecl:
   | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
   | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
 
+attr_letbinding:
+  | attr=ioption(attribute) AND lb=letbinding
+    { attr, lb }
+
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
@@ -543,10 +547,11 @@ noSeqTerm:
   | LET OPEN uid=quident IN e=term
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
   | attrs=ioption(attribute)
-    LET q=letqualifier lbs=separated_nonempty_list(AND,letbinding) IN e=term
+    LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(attrs, q, lbs, e)) (rhs2 parseState 1 5) Expr
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {

@@ -887,22 +887,40 @@ and p_noSeqTerm' e = match (unparen e).tm with
       group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
-  | Let(attrs_opt, q, lbs, e) ->
-    let let_doc = str "let" ^^ p_letqualifier q in
-    let l =
-        group (precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in") ^/^
-              p_term e
+  | Let(q, (a0, lb0)::attr_letbindings, e) ->
+    let let_first =
+        p_attrs_opt a0 ^/^
+        group (str "let" ^/^
+               p_letqualifier q ^/^
+               p_letbinding lb0)
     in
-    (match attrs_opt with
-     | None -> l
-     | Some terms ->
-       let attrs = group (str "[@" ^/^ (separate_map semi p_term terms) ^/^ str "]")in
-       attrs ^/^ hardline ^/^ l)
+    let let_rest =
+        match attr_letbindings with
+        | [] -> empty
+        | _ ->
+          group (precede_break_separate_map
+                    empty
+                    empty
+                    p_attr_letbinding
+                    attr_letbindings)
+    in let_first ^/^
+       let_rest  ^/^
+       str "in"  ^/^
+       p_term e
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     group (str "function" ^/^ separate_map hardline p_patternBranch branches)
   | Assign (id, e) ->
       group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
   | _ -> p_typ e
+
+and p_attrs_opt = function
+  | None -> empty
+  | Some terms ->
+    group (str "[@" ^/^ (separate_map semi p_term terms) ^/^ str "]")
+
+and p_attr_letbinding (a, (pat, e)) =
+  let pat_doc = p_letlhs (pat, e) in
+  (prefix2 (p_attrs_opt a ^/^ (group (str "and " ^/^ pat_doc ^/^ equals))) (p_term e))
 
 and p_typ e = with_comment p_typ' e e.range
 
