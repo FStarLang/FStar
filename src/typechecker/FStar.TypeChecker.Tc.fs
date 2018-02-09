@@ -1539,7 +1539,7 @@ let extract_interface (m:modul) :modul =
   let abstract_inductive_datacons = BU.mk_ref [] in
 
   let is_projector_or_discriminator_of_an_abstract_inductive (quals:list<qualifier>) :bool =
-    List.existsb (fun q ->
+    List.existsML (fun q ->
       match q with
       | Discriminator l
       | Projector (l, _) -> List.existsb (fun l' -> lid_equals l l') !abstract_inductive_datacons
@@ -1557,8 +1557,8 @@ let extract_interface (m:modul) :modul =
   in
 
   let val_has_already_been_added (lids:list<lident>) :bool =
-    List.existsb (fun lid ->
-      List.existsb (fun lid' -> lid_equals lid lid') !added_vals  //for a let rec, do we allow vals only for some of the bindings?
+    List.existsML (fun lid ->
+      List.existsML (fun lid' -> lid_equals lid lid') !added_vals  //for a let rec, do we allow vals only for some of the bindings?
     ) lids
   in
 
@@ -1576,9 +1576,9 @@ let extract_interface (m:modul) :modul =
     | _ -> Some lb.lbtyp
   in
 
-  let missing_top_level_type = List.existsb (fun lb -> extract_lb_type lb Range.dummyRange = None) in
+  let missing_top_level_type = List.existsML (fun lb -> extract_lb_type lb Range.dummyRange = None) in
 
-  let is_pure_or_ghost_function_with_non_unit_type = List.existsb (fun lb -> is_pure_or_ghost_function lb.lbtyp && not (is_unit lb.lbtyp)) in
+  let is_pure_or_ghost_function_with_non_unit_type = List.existsML (fun lb -> is_pure_or_ghost_function lb.lbtyp && not (is_unit lb.lbtyp)) in
   let is_unit = List.for_all (fun lb -> is_unit lb.lbtyp) in
 
   let vals_of_lbs (s:sigelt) :list<sigelt> =
