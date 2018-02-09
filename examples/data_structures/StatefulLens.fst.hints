@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "73c7ed09ac9454976498df6934810afc"
+      "486881bc52073b9d0c0ee5542c776e8f"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "53c7a5fcabb5b5bbc849d1b271a3eae2"
+      "ebb6ecf5204160384f11398011e3d854"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "9399a87bbd8ec56f641636575a29d32f"
+      "046958a0891445263e20716bddd8d5e0"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "7b1b9245173a475501ac73cbd0dcb7a8"
+      "911a1f60495d83fd65f5001fd7af5aea"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "ac31633bed57c2c8a715485e5f267d05"
+      "e9aaaffb9700bddff3331b8872e5abac"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "7b9138611c1d2d6e3815c26bdb1f7f7e"
+      "ab851eebe6c3500ba2f458378b64d7fe"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "c07addacf221e5a3da5d8d9b2699a536"
+      "0ec126c87c357c3549adade282a311b1"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "a8e0d59bfec4e6e3d89d70d3a5a556ac"
+      "0873c4c6cdc3f7f248dd7bf3bc3b95a3"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "cc10abc55847365a362e65a98fe07d37"
+      "f79d6910fbea0bcb46672125c6c84263"
     ]
   ]
 ]

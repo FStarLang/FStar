@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "deef675c994de502310d2f7f2b0d184b"
+      "28eada11bc0de7be0c3499119aa6f850"
     ],
     [
       "UserTactics.uu___is_A",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "1760229a39090e8155ab5c1e1bfc36ca"
+      "5fcdf1071c07d626ba96fe47fb2a8200"
     ],
     [
       "UserTactics.uu___is_B",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "a81e8cb479dd32bd5c4c58924d0eaa7f"
+      "5a9bc53784e9ed694a89e1035ffa0bc8"
     ],
     [
       "UserTactics.uu___is_C",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "072414780c4145474c8bd0ccc618e160"
+      "281af9dfd9ab74bc39f54d5ffa2022ee"
     ],
     [
       "UserTactics.uu___is_D",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "03a28084f79d759aa6d793dca3694fd1"
+      "a0e19ccaac84e379263b6590bdb2045b"
     ],
     [
       "UserTactics.f",
@@ -61,7 +61,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "55b8a20f54b37e0ef5ff8a40efe6b860"
+      "ab3c2466f1c8b697e052d66ae546ea02"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -73,7 +73,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "935bff49fa447f3cd3a2ce975a93817d"
+      "757b2b023553d51619a806ffa6e8955f"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -82,7 +82,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "c2742bae9326321090b537a91bb4c277"
+      "a891f7c6f13a06e3ea33daf9ce2460f6"
     ],
     [
       "UserTactics.sqintro",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "68b7a8e8eda72c6df14dc5b2ab124997"
+      "3beeda837266238203e4243491f94daa"
     ],
     [
       "UserTactics.mul_commute_ascription",
@@ -100,7 +100,7 @@
       1,
       [ "@query" ],
       0,
-      "9b1dc94a2ef80641286cbc24e61fdfde"
+      "74c15e23c34fcd8726d9fac05536b2cf"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -109,7 +109,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "34268c3b771012e68e8297ad7be00040"
+      "915bd6f0a27dc25817aa578ebc39ff1c"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -118,7 +118,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "f6d7e7dc6036ec98bb94217ffe48bb43"
+      "51263e9765e4743ce8fb58ceedd89188"
     ],
     [
       "UserTactics.test_inspect",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "7c6b1050be62c631e34d18c1dc45a078"
+      "38d5268799eba862bb63f202cd4581ff"
     ],
     [
       "UserTactics.test_simpl",
@@ -136,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "04cee1ca8b991b323cc31e79cba4c327"
+      "382edb3074484b55740d8a3875e56124"
     ]
   ]
 ]
