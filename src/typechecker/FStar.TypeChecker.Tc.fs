@@ -1671,7 +1671,8 @@ let check_exports env (modul:modul) exports =
     else List.iter check_sigelt exports
 
 let finish_partial_modul must_check_exports env modul exports =
-  let modul = {modul with exports=exports; is_interface=modul.is_interface} in
+  //AR: exports is just non-private decls?
+  let modul = { modul with exports = List.filter (fun se -> not (List.contains Private se.sigquals)) modul.declarations } in
   let env = Env.finish_module env modul in
   if not (Options.lax())
   && must_check_exports
@@ -1768,7 +1769,7 @@ let extract_interface (m:modul) :modul =
     match s.sigel with
     | Sig_let (lbs, lids) ->
         List.map2 (fun lb lid ->
-          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, extract_lb_type lb s.sigrng |> Option.get); sigquals = filter_out_abstract s.sigquals }
+          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, extract_lb_type lb s.sigrng |> Option.get); sigquals = Assumption::(filter_out_abstract s.sigquals) }
         ) (snd lbs) lids
     | _ -> failwith "Impossible! Expected vals_of_lbs to be called only on Sig_let"
   in
@@ -1785,7 +1786,10 @@ let extract_interface (m:modul) :modul =
           match s.sigel with
           | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
             let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
-            ({ s with sigel = s'; sigquals = filter_out_abstract_and_noeq s.sigquals })::sigelts  //filter out the abstract qualifier
+            (*
+             * AR: Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
+             *)
+            ({ s with sigel = s'; sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) })::sigelts  //filter out the abstract qualifier
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons
@@ -1827,7 +1831,7 @@ let check_module env m =
     if ((not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
       //BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
       let m = extract_interface m in
-      BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
+      //BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
       m
     end
     else m
