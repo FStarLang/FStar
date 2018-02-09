@@ -342,6 +342,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_name x ->
       mkAccuVar x
 
+    | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
+
     | Tm_abs ([x], body, _) ->
       debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
       Lam ((fun (y:t) -> translate env (y::bs) body), snd x)
@@ -353,6 +355,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_fvar fvar ->
       translate_fv env bs fvar
+
+    | Tm_app(e, []) -> failwith "Impossible: application with no arguments"
 
     | Tm_app (e, [arg]) ->
       debug (fun () -> BU.print2 "Application %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
@@ -396,6 +400,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
       let f = mkAccuRec lb bs in
       translate env (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+
+    | Tm_let _ -> failwith "Mutual recursion; not yet handled"
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (env:Env.env) (x:t) : term =
