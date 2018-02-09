@@ -1712,7 +1712,10 @@ let tc_modul env modul =
 let extract_interface (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
-  let filter_out_abstract = List.filter (fun q -> not (q = Abstract)) in
+  let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
+  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Noeq || q = Unopteq)) in
+
+  let added_vals = BU.mk_ref [] in
 
   let mk_typ_for_abstract_inductive (bs:binders) (t:typ) (r:Range.range) :typ =
     match bs with
@@ -1723,12 +1726,27 @@ let extract_interface (m:modul) :modul =
        | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
   in
 
-  let missing_top_level_annotation =
-    List.existsb (fun lb ->
-      match lb.lbtyp.n with
-      | Tm_unknown -> true
-      | _ -> false)
+  let val_has_already_been_added (lids:list<lident>) :bool =
+    List.existsb (fun lid ->
+      List.existsb (fun lid' -> lid_equals lid lid') !added_vals  //for a let rec, do we allow vals only for some of the bindings?
+    ) lids
   in
+
+  (*
+   * An annotated letbinding is desugared as: let f : Tm_unknown = fun (xi:ti) -> (e <: C)
+   * This function tries to extract the type
+   *)
+  let extract_lb_type (lb:letbinding) (r:Range.range) :option<typ> =
+    match lb.lbtyp.n with
+    | Tm_unknown ->
+      (match lb.lbdef.n with
+       | Tm_abs (bs, { n = Tm_ascribed (_, (Inr c, _), _) }, _) when List.for_all (fun (b, _) -> not (b.sort.n = Tm_unknown)) bs ->
+         Some (mk (Tm_arrow (bs, c)) None r)
+       | _ -> None)
+    | _ -> Some lb.lbtyp
+  in
+
+  let missing_top_level_type = List.existsb (fun lb -> extract_lb_type lb Range.dummyRange = None) in
 
   let is_pure_or_ghost_function_with_non_unit_type = List.existsb (fun lb -> is_pure_or_ghost_function lb.lbtyp && not (is_unit lb.lbtyp)) in
   let is_unit = List.for_all (fun lb -> is_unit lb.lbtyp) in
@@ -1736,11 +1754,10 @@ let extract_interface (m:modul) :modul =
   let vals_of_lbs (s:sigelt) :list<sigelt> =
     match s.sigel with
     | Sig_let (lbs, lids) ->
-      let quals = if is_abstract s.sigquals then filter_out_abstract s.sigquals else s.sigquals in
         List.map2 (fun lb lid ->
-          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, lb.lbtyp); sigquals = quals }
+          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, extract_lb_type lb s.sigrng |> Option.get); sigquals = filter_out_abstract s.sigquals }
         ) (snd lbs) lids
-    | _ -> failwith "Impossible!"
+    | _ -> failwith "Impossible! Expected vals_of_lbs to be called only on Sig_let"
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1755,18 +1772,22 @@ let extract_interface (m:modul) :modul =
           match s.sigel with
           | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
             let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
-            ({ s with sigel = s'; sigquals = filter_out_abstract s.sigquals })::sigelts  //filter out the abstract qualifier
+            ({ s with sigel = s'; sigquals = filter_out_abstract_and_noeq s.sigquals })::sigelts  //filter out the abstract qualifier
           | _ -> sigelts  //nothing to do for datacons
         ) [] sigelts
       else [s]  //if it is not abstract, retain as is
     | Sig_declare_typ (lid, uvs, t) ->
       //val remains as val, except we filter out the abstract qualifier
+      added_vals := lid::!added_vals;
       [{ s with sigquals = filter_out_abstract s.sigquals }]
     | Sig_let (lbs, lids) ->
-      if is_abstract s.sigquals || is_irreducible s.sigquals then
+      if val_has_already_been_added lids then []
+      else if is_abstract s.sigquals || is_irreducible s.sigquals then
         //add a val declaration for each of the letbinding, retain the irreducible qualifier, Q. why aren't all vals irreducible already?
+        //TODO: warn if unannotated?
+        let _ = if missing_top_level_type (snd lbs) then let _ = BU.print1 "Abstract and irreducible defns must be annotated at the top-level: %s\n\n" (List.hd lids).str in failwith "" else () in
         vals_of_lbs s
-      else if missing_top_level_annotation (snd lbs) then [s]  //if top level annotation is missing, retain as is
+      else if missing_top_level_type (snd lbs) then [s]  //if top level annotation is missing, retain as is
       else if not (is_unit (snd lbs)) then [s]  //non-unit types are retained as is
       else if is_pure_or_ghost_function_with_non_unit_type (snd lbs) then [s]  //pure or ghost functions with non-unit types are retained as is
       else vals_of_lbs s  //TODO: add case for functions with reifiable effects
@@ -1782,6 +1803,17 @@ let extract_interface (m:modul) :modul =
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); exports = []; is_interface = true }
 
 let check_module env m =
+  //if this file is a dependency, and it is not already an interface, we will extract interface from it and verify that
+  let m =
+    if ((not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
+      BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
+      let m = extract_interface m in
+      BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
+      m
+    end
+    else m
+  in
+
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
 
@@ -1790,7 +1822,7 @@ let check_module env m =
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module m.name.str
-  then BU.print1 "%s\n" (Print.modul_to_string (extract_interface m));  //TODO: FIXME: revert it back before merge!!!!
+  then BU.print1 "%s\n" (Print.modul_to_string m);
   if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
@@ -1808,4 +1840,3 @@ let check_module env m =
   end;
 
   m, env
-
