@@ -14,6 +14,7 @@ module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
+module Z = FStar.BigInt
 
 
 (* Utils *)
@@ -60,6 +61,7 @@ and t = //JUST FSHARP
   | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
+  | Int of Z.t
   | Type_t of universe
   | Univ of universe
 
@@ -73,6 +75,7 @@ let rec t_to_string (x:t) =
     | Construct (fv, us, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^ (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
     | Unit -> "Unit"
     | Bool b -> if b then "Bool true" else "Bool false"
+    | Int i -> Z.string_of_big_int i
     | Univ u -> "Universe " ^ (P.univ_to_string u)
     | Type_t u -> "Type_t " ^ (P.univ_to_string u)
 
@@ -278,6 +281,9 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
       | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
           debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_inductive_type\n" (P.lid_to_string lid));
           mkConstruct fvar [] []
+      | Some { sigel = Sig_declare_typ(lid, _, _) } ->
+          debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_declare_typ\n" (P.lid_to_string lid));
+          mkConstruct fvar [] []
       | None ->
           debug (fun() -> BU.print "Translate fv: it's not in the environment\n" []);
           mkConstruct fvar [] [] (* Zoe : Treat all other cases as type/data constructors for now. *)
@@ -312,6 +318,9 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_constant (FStar.Const.Const_bool b) ->
       Bool b
+
+    | Tm_constant (FStar.Const.Const_int (s, None)) ->
+      Int (Z.big_int_of_string s)
 
     | Tm_constant c ->
       let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
@@ -413,6 +422,8 @@ and readback (env:Env.env) (x:t) : term =
 
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
+
+    | Int i -> Z.string_of_big_int i |> U.exp_int
 
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
