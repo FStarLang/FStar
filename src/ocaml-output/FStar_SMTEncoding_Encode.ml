@@ -9945,11 +9945,11 @@ let (encode_modul :
        then
          let uu____26730 =
            FStar_All.pipe_right
-             (FStar_List.length modul.FStar_Syntax_Syntax.exports)
+             (FStar_List.length modul.FStar_Syntax_Syntax.declarations)
              Prims.string_of_int
             in
          FStar_Util.print2
-           "+++++++++++Encoding externals for %s ... %s exports\n" name
+           "+++++++++++Encoding externals for %s ... %s declarations\n" name
            uu____26730
        else ());
       (let env = get_env modul.FStar_Syntax_Syntax.name tcenv  in
@@ -9979,7 +9979,7 @@ let (encode_modul :
               encode_non_total_function_typ =
                 (uu___133_26817.encode_non_total_function_typ);
               current_module_name = (uu___133_26817.current_module_name)
-            }) modul.FStar_Syntax_Syntax.exports
+            }) modul.FStar_Syntax_Syntax.declarations
           in
        match uu____26808 with
        | (decls,env1) ->

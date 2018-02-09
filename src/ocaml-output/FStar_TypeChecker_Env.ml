@@ -4319,7 +4319,7 @@ let (push_let_binding :
 let (push_module : env -> FStar_Syntax_Syntax.modul -> env) =
   fun env  ->
     fun m  ->
-      add_sigelts env m.FStar_Syntax_Syntax.exports;
+      add_sigelts env m.FStar_Syntax_Syntax.declarations;
       (let uu___104_14022 = env  in
        {
          solver = (uu___104_14022.solver);
@@ -4498,7 +4498,7 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
                     | uu____14157 -> []))
              in
           FStar_All.pipe_right uu____14138 FStar_List.rev
-        else m.FStar_Syntax_Syntax.exports  in
+        else m.FStar_Syntax_Syntax.declarations  in
       add_sigelts env sigs;
       (let uu___107_14164 = env  in
        {
