@@ -98,23 +98,54 @@ let isAccu (trm:t) =
   | Accu _ -> true
   | _ -> false
 
-let rec pickBranch (c : fv) (branches : list<branch>) (args: list<t * aqual>): term * list<t * aqual>  =
-  match branches with
-  | [] -> failwith "Branch not found"
-  | ({v = Pat_cons (c', pats')}, _, e) :: bs when (fv_eq c c') ->
-      assert (List.length args = List.length pats');
-      debug (fun () -> BU.print1 ">>>> args: %s\n"
-            (String.concat ";; " (List.map (fun (x, _) -> t_to_string x) args)));
-      let args_filtered =
-        List.filter_map (fun x -> x)
-        <| List.map2 (fun (p,_) (a,q) ->
-            match p.v with
-            | Pat_dot_term _ -> None
-            | _ (*Nik:  when it's not a universe*)  -> Some (a, q))
-           pats' (List.rev args) in
-      debug (fun () -> BU.print1 ">>>> args (filtered): %s\n" (String.concat "; " (List.map (fun (x, _) -> t_to_string x) args_filtered)));
-      (e, args_filtered)
-  | b :: bs -> pickBranch c bs args
+let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t>)>  =
+    //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
+    let rec matches_pat (scrutinee:t) (p:pat)
+        : BU.either<list<t>, bool> =
+        (* Inl ts: p matches t and ts are bindings for the branch *)
+        (* Inr false: p definitely does not match t *)
+        (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
+        match p.v with
+        | Pat_var bv
+        | Pat_wild bv ->
+            BU.Inl [scrutinee]
+
+        | Pat_dot_term _ ->
+            BU.Inl []
+
+        | Pat_constant s ->
+            failwith "Constant patterns are not yet supported; should be easy"
+
+        | Pat_cons(fv, arg_pats) ->
+            let rec matches_args out (a:list<(t * aqual)>) (p:list<(pat * bool)>)
+                : BU.either<list<t>, bool> =
+                match a, p with
+                | [], [] -> BU.Inl out
+                | (t, _)::rest_a, (p, _)::rest_p ->
+                  (match matches_pat t p with
+                   | BU.Inl s -> matches_args (out@s) rest_a rest_p
+                   | m -> m)
+                | _ ->
+                BU.Inr false
+            in
+            match scrutinee with
+            | Construct(fv', _us, args_rev) ->
+                if fv_eq fv fv'
+                then matches_args [] (List.rev args_rev) arg_pats
+                else BU.Inr false
+
+            | _ -> //must be a variable
+            BU.Inr true
+    in
+    match branches with
+    | [] -> failwith "Branch not found"
+    | (p, _wopt, e)::branches ->
+      match matches_pat scrut p with
+      | BU.Inl matches -> Some (e, matches)
+      | BU.Inr false -> //definitely did not match
+        pickBranch scrut branches
+      | BU.Inr true -> //maybe matches; stop
+        None
 
 (* Tests is the application is full and if none of the arguments is symbolic *)
 let rec test_args ts cnt =
@@ -336,13 +367,23 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
         match scrut with
+        //TODO: handle constants, Bool, etc.
         | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
              are binders -- i.e. no nested patterns for now *)
-          (* XXX : is rev needed?  VD: I don't think so *)
-          debug (fun () -> BU.print1 "Match args: %s\n" (String.concat "; " (List.map (fun (x, q) -> (if BU.is_some q then "#" else "") ^(t_to_string x)) args)));
-          let branch, args = (pickBranch c branches args) in
-          translate env (List.fold_left (fun bs (x, _) -> x::bs) bs args) branch
+          debug (fun () ->
+                 BU.print1 "Match args: %s\n"
+                            (args
+                             |> List.map (fun (x, q) -> (if BU.is_some q then "#" else "") ^ t_to_string x)
+                             |> String.concat "; "));
+          begin
+          match pickBranch scrut branches with
+          | Some (branch, args) ->
+            translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
+          | None -> //no branch is determined
+            mkAccuMatch scrut case
+          end
+
         | _ ->
           mkAccuMatch scrut case
       in

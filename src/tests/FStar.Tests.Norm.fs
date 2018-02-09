@@ -115,6 +115,16 @@ let tests =
                                          match x with \
                                           | [] -> []  \
                                           | hd::tl -> hd::tl" in
+  let _ = Pars.pars_and_tc_fragment "let rec copy_tb_list_2 (x:list tb) : Tot (list tb) = \
+                                         match x with \
+                                          | [] -> []  \
+                                          | [hd] -> [hd]
+                                          | hd1::hd2::tl -> hd1::hd2::copy_tb_list_2 tl" in
+  let _ = Pars.pars_and_tc_fragment "let rec copy_list_2 (x:list 'a) : Tot (list 'a) = \
+                                         match x with \
+                                          | [] -> []  \
+                                          | [hd] -> [hd]
+                                          | hd1::hd2::tl -> hd1::hd2::copy_list_2 tl" in
 
   let _ = Pars.pars_and_tc_fragment "let idd (x: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let revtb (x: tb) = match x with | T -> F | F -> T" in
@@ -182,6 +192,9 @@ let tests =
   ; (304, (tc_nbe "select_hb (H F)"), (tc_nbe "F"))
   ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
   ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
+  ; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
+  ; (308, (tc_nbe "copy_list_2    [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
+
   // ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
   // ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
   ]
