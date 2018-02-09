@@ -671,8 +671,7 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
-  U.format3 "module %s\n Declarations: %s\n\n Exports: %s\n\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
-                                                                            (List.map sigelt_to_string m.exports |> String.concat "\n")
+  U.format2 "module %s\n%s\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
 let subst_elt_to_string = function
    | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)

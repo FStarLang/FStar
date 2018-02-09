@@ -1402,111 +1402,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         [se_assm; se_refl], []
     | None -> [se], []
 
-
-let for_export hidden se : list<sigelt> * list<lident> =
-   (* Exporting symbols based on whether they have been marked 'abstract'
-
-
-        -- NB> Symbols marked 'private' are restricted by the visibility rules enforced during desugaring.
-           i.e., if a module A marks symbol x as private, then a module B simply cannot refer to A.x
-           OTOH, if A marks x as abstract, B can refer to A.x, but cannot see its definition.
-
-      Here, if a symbol is abstract, we only export its declaration, not its definition.
-      The reason we export the declaration of private symbols is to account for cases like this:
-
-        module A
-           abstract let x = 0
-           let y = x
-
-        When encoding A to the SMT solver, we need to encode the definition of y.
-        If we simply eliminated x altogether when exporting it, the body of y would no longer be well formed.
-        So, instead, in effect, we export A as
-
-        module A
-            assume val x : int
-            let y = x
-
-   *)
-   let is_abstract quals = quals |> BU.for_some (function Abstract-> true | _ -> false) in
-   let is_hidden_proj_or_disc q = match q with
-      | Projector(l, _)
-      | Discriminator l -> hidden |> BU.for_some (lid_equals l)
-      | _ -> false
-   in
-   match se.sigel with
-  | Sig_pragma         _ -> [], hidden
-
-  | Sig_inductive_typ _
-  | Sig_datacon _ -> failwith "Impossible (Already handled)"
-
-  | Sig_bundle(ses, _) ->
-    if is_abstract se.sigquals
-    then
-      let for_export_bundle se (out, hidden) = match se.sigel with
-        | Sig_inductive_typ(l, us, bs, t, _, _) ->
-          let dec = { se with sigel = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t));
-                              sigquals=Assumption::New::se.sigquals } in
-          dec::out, hidden
-
-        (* logically, each constructor just becomes an uninterpreted function *)
-        | Sig_datacon(l, us, t, _, _, _) ->
-          let dec = { se with sigel = Sig_declare_typ(l, us, t);
-                              sigquals = [Assumption] } in
-          dec::out, l::hidden
-
-        | _ ->
-          out, hidden
-      in
-      List.fold_right for_export_bundle ses ([], hidden)
-    else [se], hidden
-
-  | Sig_assume(_, _, _) ->
-    if is_abstract se.sigquals
-    then [], hidden
-    else [se], hidden
-
-  | Sig_declare_typ(l, us, t) ->
-    if se.sigquals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
-    then [{se with sigel = Sig_declare_typ(l, us, t);
-                   sigquals = [Assumption] }],
-         l::hidden
-    else if se.sigquals |> BU.for_some (function
-      | Assumption
-      | Projector _
-      | Discriminator _ -> true
-      | _ -> false)
-    then [se], hidden //Assumptions, Intepreted proj/disc are retained
-    else [], hidden   //other declarations vanish
-                      //they will be replaced by the definitions that must follow
-
-  | Sig_main  _ -> [], hidden
-
-  | Sig_new_effect     _
-  | Sig_new_effect_for_free _
-  | Sig_sub_effect     _
-  | Sig_effect_abbrev  _ -> [se], hidden
-
-  | Sig_let((false, [lb]), _)
-        when se.sigquals |> BU.for_some is_hidden_proj_or_disc ->
-    let fv = right lb.lbname in
-    let lid = fv.fv_name.v in
-    if hidden |> BU.for_some (S.fv_eq_lid fv)
-    then [], hidden //this projector definition already has a declare_typ
-    else let dec = { sigel = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp);
-                     sigquals =[Assumption];
-                     sigrng = Ident.range_of_lid lid;
-                     sigmeta = default_sigmeta;
-                     sigattrs = [] } in
-          [dec], lid::hidden
-
-  | Sig_let(lbs, l) ->
-    if is_abstract se.sigquals
-    then (snd lbs |>  List.map (fun lb ->
-           { se with sigel = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp);
-                     sigquals = Assumption::se.sigquals}),
-          hidden)
-    else [se], hidden
-
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
 let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
@@ -1528,7 +1423,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
 
 
 let tc_decls env ses =
-  let rec process_one_decl (ses, exports, env, hidden) se =
+  let rec process_one_decl (ses, env) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
@@ -1560,29 +1455,21 @@ let tc_decls env ses =
 
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
-    let exports, hidden =
-      let accum_exports_hidden (exports, hidden) se =
-        let se_exported, hidden = for_export hidden se in
-        List.rev_append se_exported exports, hidden
-      in
-      List.fold_left accum_exports_hidden (exports, hidden) ses'
-    in
-
     let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in
 
-    (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
+    (List.rev_append ses' ses, env), ses_elaborated
   in
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
-    let (_, _, env, _) = acc in
+    let (_, env) = acc in
     let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
     if Env.debug env (Options.Other "TCDeclTime")
     then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
     r
   in
 
-  let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
-  List.rev_append ses [], List.rev_append exports [], env
+  let ses, env = BU.fold_flatten process_one_decl_timed ([], env) ses in
+  List.rev_append ses [], env
 
 let tc_partial_modul env modul push_before_typechecking =
   let verify = Options.should_verify modul.name.str in
@@ -1596,87 +1483,16 @@ let tc_partial_modul env modul push_before_typechecking =
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   if push_before_typechecking then env.solver.push msg;
   let env = Env.set_current_module env modul.name in
-  let ses, exports, env = tc_decls env modul.declarations in
-  {modul with declarations=ses}, exports, env
+  let ses, env = tc_decls env modul.declarations in
+  {modul with declarations=ses}, env
 
 let tc_more_partial_modul env modul decls =
-  let ses, exports, env = tc_decls env decls in
+  let ses, env = tc_decls env decls in
   let modul = {modul with declarations=modul.declarations@ses} in
-  modul, exports, env
+  modul, env
 
-(* Consider the module:
-        module Test
-        abstract type t = nat
-        let f (x:t{x > 0}) : Tot t = x
-
-   The type of f : x:t{x>0} -> t
-   from the perspective of a client of Test
-   is ill-formed, since it the sub-term `x > 0` requires x:int, not x:t
-
-   `check_exports` checks the publicly visible symbols exported by a module
-   to make sure that all of them have types that are well-formed from a client's
-   perspective.
-*)
-open FStar.TypeChecker.Err
-let check_exports env (modul:modul) exports =
-    let env = {env with lax=true; lax_universes=true; top_level=true} in
-    let check_term lid univs t =
-        let univs, t = SS.open_univ_vars univs t in
-        if Env.debug (Env.set_current_module env modul.name) <| Options.Other "Exports"
-        then BU.print3 "Checking for export %s <%s> : %s\n"
-                (Print.lid_to_string lid)
-                (univs |> List.map (fun x -> Print.univ_to_string (U_name x)) |> String.concat ", ")
-                (Print.term_to_string t);
-        let env = Env.push_univ_vars env univs in
-        TcTerm.tc_trivial_guard env t |> ignore
-    in
-    let check_term lid univs t =
-        let _ = Errors.message_prefix.set_prefix
-                (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
-                        (Print.lid_to_string modul.name)
-                        (Print.lid_to_string lid)) in
-        check_term lid univs t;
-        Errors.message_prefix.clear_prefix()
-    in
-    let rec check_sigelt = fun se -> match se.sigel with
-        | Sig_bundle(ses, _) ->
-          if not (se.sigquals |> List.contains Private)
-          then ses |> List.iter check_sigelt
-        | Sig_inductive_typ (l, univs, binders, typ, _, _) ->
-          let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None se.sigrng in
-          check_term l univs t
-        | Sig_datacon(l , univs, t, _, _, _) ->
-          check_term l univs t
-        | Sig_declare_typ(l, univs, t) ->
-          if not (se.sigquals |> List.contains Private)
-          then check_term l univs t
-        | Sig_let((_, lbs), _) ->
-          if not (se.sigquals |> List.contains Private)
-          then lbs |> List.iter (fun lb ->
-               let fv = right lb.lbname in
-               check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
-        | Sig_effect_abbrev(l, univs, binders, comp, flags) ->
-          if not (se.sigquals |> List.contains Private)
-          then let arrow = S.mk (Tm_arrow(binders, comp)) None se.sigrng in
-               check_term l univs arrow
-        | Sig_main _
-        | Sig_assume _
-        | Sig_new_effect _
-        | Sig_new_effect_for_free _
-        | Sig_sub_effect _
-        | Sig_pragma _ -> ()
-    in
-    if Ident.lid_equals modul.name PC.prims_lid
-    then ()
-    else List.iter check_sigelt exports
-
-let finish_partial_modul must_check_exports env modul exports =
-  //AR: exports is just non-private decls?
-  let modul = { modul with exports = List.filter (fun se -> not (List.contains Private se.sigquals)) modul.declarations } in
+let finish_partial_modul env modul =
   let env = Env.finish_module env modul in
-  if not (Options.lax())
-  && must_check_exports
-  then check_exports env modul exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
@@ -1704,11 +1520,11 @@ let load_checked_module env modul =
              modul.declarations in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  snd (finish_partial_modul false env modul modul.exports)
+  snd (finish_partial_modul env modul)
 
 let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul true in
-  finish_partial_modul true env modul non_private_decls
+  let modul, env = tc_partial_modul env modul true in
+  finish_partial_modul env modul
 
 let extract_interface (m:modul) :modul =
   let is_abstract = List.contains Abstract in
@@ -1823,7 +1639,7 @@ let extract_interface (m:modul) :modul =
     | Sig_pragma _ -> [s]
   in
   
-  { m with declarations = List.flatten (List.map extract_sigelt m.declarations); exports = []; is_interface = true }
+  { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
 
 let check_module env m =
   //if this file is a dependency, and it is not already an interface, we will extract interface from it and verify that

@@ -371,7 +371,6 @@ type sigelts = list<sigelt>
 type modul = {
   name: lident;
   declarations: sigelts;
-  exports: sigelts;
   is_interface:bool;
 }
 val mod_name: modul -> lident

@@ -135,7 +135,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
     end;
-    let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
+    let modul, env = if DsEnv.syntax_only env.dsenv then (modul, env)
                         else Tc.tc_partial_modul env modul false in
     (Some modul, env)
   | Parser.Driver.Decls ast_decls ->
@@ -155,7 +155,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
               env
               ast_decls in
       let sigelts, env = with_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
-      let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
+      let modul, env  = if DsEnv.syntax_only env.dsenv then (modul, env)
                            else Tc.tc_more_partial_modul env modul sigelts in
       (Some modul, env)
 
