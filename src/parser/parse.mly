@@ -374,7 +374,7 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | LPAREN pat=tuplePattern COLON t=typ phi_opt=refineOpt RPAREN
+  | LPAREN pat=tuplePattern COLON t=appTerm phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
         let pos = rhs2 parseState 1 6 in
@@ -412,7 +412,7 @@ fieldPattern:
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=appTerm r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
@@ -430,7 +430,7 @@ binder:
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=appTerm r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids

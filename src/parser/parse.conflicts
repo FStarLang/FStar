@@ -1,123 +1,5 @@
 
-** Conflict (shift/reduce) in state 702.
-** Token involved: ASSUME
-** This state is reached from inputFragment after reading:
-
-option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON 
-
-** The derivations that appear below have the following common factor:
-** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
-
-inputFragment 
-option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
-                                      mainDecl 
-                                      (?)
-
-** In state 702, looking ahead at ASSUME, reducing production
-** list(decoration) -> 
-** is permitted because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
-                    . 
-
-** In state 702, looking ahead at ASSUME, shifting is permitted
-** because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term 
-                    qualifier list(decoration) 
-                    . ASSUME 
-
-** Conflict (shift/reduce) in state 540.
-** Token involved: ASSUME
-** This state is reached from inputFragment after reading:
-
-option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON qualifier 
-
-** The derivations that appear below have the following common factor:
-** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
-
-inputFragment 
-option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
-                                      mainDecl 
-                                      (?)
-
-** In state 540, looking ahead at ASSUME, reducing production
-** list(decoration) -> 
-** is permitted because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
-                    qualifier list(decoration) // lookahead token is inherited
-                              . 
-
-** In state 540, looking ahead at ASSUME, shifting is permitted
-** because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term 
-                    qualifier list(decoration) 
-                              qualifier list(decoration) 
-                              . ASSUME 
-
-** Conflict (shift/reduce) in state 536.
-** Token involved: ASSUME
-** This state is reached from inputFragment after reading:
-
-option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON FSDOC 
-
-** The derivations that appear below have the following common factor:
-** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
-
-inputFragment 
-option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
-                                      mainDecl 
-                                      (?)
-
-** In state 536, looking ahead at ASSUME, reducing production
-** list(decoration) -> 
-** is permitted because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
-                    FSDOC list(decoration) // lookahead token is inherited
-                          . 
-
-** In state 536, looking ahead at ASSUME, shifting is permitted
-** because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term 
-                    FSDOC list(decoration) 
-                          qualifier list(decoration) 
-                          . ASSUME 
-
-** Conflict (shift/reduce) in state 532.
-** Token involved: ASSUME
-** This state is reached from inputFragment after reading:
-
-option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON LBRACK_AT list(atomicTerm) RBRACK 
-
-** The derivations that appear below have the following common factor:
-** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
-
-inputFragment 
-option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
-                                      mainDecl 
-                                      (?)
-
-** In state 532, looking ahead at ASSUME, reducing production
-** list(decoration) -> 
-** is permitted because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
-                    LBRACK_AT list(atomicTerm) RBRACK list(decoration) // lookahead token is inherited
-                                                      . 
-
-** In state 532, looking ahead at ASSUME, shifting is permitted
-** because of the following sub-derivation:
-
-SEMICOLON_SEMICOLON list(decoration) term 
-                    LBRACK_AT list(atomicTerm) RBRACK list(decoration) 
-                                                      qualifier list(decoration) 
-                                                      . ASSUME 
-
-** Conflict (shift/reduce) in state 528.
+** Conflict (shift/reduce) in state 600.
 ** Token involved: BAR
 ** This state is reached from term after reading:
 
@@ -131,7 +13,7 @@ noSeqTerm
 FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
          (?)
 
-** In state 528, looking ahead at BAR, reducing production
+** In state 600, looking ahead at BAR, reducing production
 ** noSeqTerm -> TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
 ** is permitted because of the following sub-derivation:
 
@@ -141,7 +23,7 @@ disjunctivePattern maybeFocusArrow term // lookahead token is inherited
                                    noSeqTerm // lookahead token is inherited
                                    TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) . 
 
-** In state 528, looking ahead at BAR, shifting is permitted
+** In state 600, looking ahead at BAR, shifting is permitted
 ** because of the following sub-derivation:
 
 patternBranch 
@@ -150,11 +32,30 @@ disjunctivePattern maybeFocusArrow term
                                    TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
                                                  reverse_left_flexible_nonempty_list(BAR,patternBranch) . BAR patternBranch 
 
-** Conflict (shift/reduce) in state 513.
+--------------------------------------------------------------------------------
+Notes:
+function
+   | P -> try _ with | Q | R
+
+   This seems ok for the pretty printer;
+   it will also "shift"
+
+But, this:
+
+function
+   | P -> (try _ with | Q) | R
+
+will be printed without parens and will be incorrect
+
+Except, both are printed with a begin/end by fstar --indent
+Note, fstar --dump_module omits the begin/end on the first example
+--------------------------------------------------------------------------------
+
+** Conflict (shift/reduce) in state 584.
 ** Token involved: BAR
 ** This state is reached from term after reading:
 
-FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH BAR patternBranch 
+FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
@@ -164,33 +65,35 @@ noSeqTerm
 FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
          (?)
 
-** In state 513, looking ahead at BAR, reducing production
-** list(__anonymous_5) -> 
+** In state 584, looking ahead at BAR, reducing production
+** noSeqTerm -> MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
 ** is permitted because of the following sub-derivation:
 
 reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
 patternBranch // lookahead token is inherited
 disjunctivePattern maybeFocusArrow term // lookahead token is inherited
                                    noSeqTerm // lookahead token is inherited
-                                   MATCH term WITH list(__anonymous_5) // lookahead token is inherited
-                                                   BAR patternBranch list(__anonymous_5) // lookahead token is inherited
-                                                                     . 
+                                   MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) . 
 
-** In state 513, looking ahead at BAR, shifting is permitted
+** In state 584, looking ahead at BAR, shifting is permitted
 ** because of the following sub-derivation:
 
 patternBranch 
 disjunctivePattern maybeFocusArrow term 
                                    noSeqTerm 
-                                   MATCH term WITH list(__anonymous_5) 
-                                                   BAR patternBranch list(__anonymous_5) 
-                                                                     . BAR patternBranch list(__anonymous_5) 
+                                   MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
+                                                   reverse_left_flexible_list(BAR,__anonymous_6) . BAR patternBranch 
 
-** Conflict (shift/reduce) in state 511.
-** Token involved: BAR
+--------------------------------------------------------------------------------
+Notes:
+same as above, but with match
+--------------------------------------------------------------------------------
+
+** Conflict (shift/reduce) in state 583.
+** Token involved: LBRACE
 ** This state is reached from term after reading:
 
-FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH 
+FUNCTION LPAREN tuplePattern COLON FUN nonempty_list(patternOrMultibinder) RARROW MATCH term WITH 
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
@@ -198,29 +101,55 @@ FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH
 term 
 noSeqTerm 
 FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         patternBranch 
+         disjunctivePattern maybeFocusArrow term 
+         separated_nonempty_list(BAR,tuplePattern) 
+         tuplePattern 
+         separated_nonempty_list(COMMA,constructorPattern) 
+         constructorPattern 
+         atomicPattern 
          (?)
 
-** In state 511, looking ahead at BAR, reducing production
-** list(__anonymous_5) -> 
-** is permitted because of the following sub-derivation:
-
-reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
-patternBranch // lookahead token is inherited
-disjunctivePattern maybeFocusArrow term // lookahead token is inherited
-                                   noSeqTerm // lookahead token is inherited
-                                   MATCH term WITH list(__anonymous_5) // lookahead token is inherited
-                                                   . 
-
-** In state 511, looking ahead at BAR, shifting is permitted
+** In state 583, looking ahead at LBRACE, shifting is permitted
 ** because of the following sub-derivation:
 
-patternBranch 
-disjunctivePattern maybeFocusArrow term 
-                                   noSeqTerm 
-                                   MATCH term WITH list(__anonymous_5) 
-                                                   . BAR patternBranch list(__anonymous_5) 
+LPAREN tuplePattern COLON typ refineOpt RPAREN 
+                          simpleTerm 
+                          FUN nonempty_list(patternOrMultibinder) RARROW term 
+                                                                         noSeqTerm 
+                                                                         MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
+                                                                                         patternBranch 
+                                                                                         disjunctivePattern maybeFocusArrow term 
+                                                                                         separated_nonempty_list(BAR,tuplePattern) 
+                                                                                         tuplePattern 
+                                                                                         separated_nonempty_list(COMMA,constructorPattern) 
+                                                                                         constructorPattern 
+                                                                                         atomicPattern 
+                                                                                         . LBRACE separated_nonempty_list(SEMICOLON,fieldPattern) RBRACE 
 
-** Conflict (shift/reduce) in state 390.
+** In state 583, looking ahead at LBRACE, reducing production
+** reverse_left_flexible_list(BAR,__anonymous_6) -> 
+** is permitted because of the following sub-derivation:
+
+LPAREN tuplePattern COLON typ refineOpt RPAREN // lookahead token appears because refineOpt can begin with LBRACE
+                          simpleTerm // lookahead token is inherited
+                          FUN nonempty_list(patternOrMultibinder) RARROW term // lookahead token is inherited
+                                                                         noSeqTerm // lookahead token is inherited
+                                                                         MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) // lookahead token is inherited
+                                                                                         . 
+--------------------------------------------------------------------------------
+Notes:
+
+let weird1 (x : fun y -> match e with {f=t} -> e) = ()
+let weird2 (x : fun y -> match e with) = ()
+
+weird1 Could be parsed as
+let weird2 (x : (fun y -> match e with) {f=t} ...)
+ which eventually fails
+ 
+--------------------------------------------------------------------------------
+
+** Conflict (shift/reduce) in state 537.
 ** Token involved: BAR
 ** This state is reached from term after reading:
 
@@ -234,7 +163,7 @@ noSeqTerm
 FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
          (?)
 
-** In state 390, looking ahead at BAR, reducing production
+** In state 537, looking ahead at BAR, reducing production
 ** noSeqTerm -> FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
 ** is permitted because of the following sub-derivation:
 
@@ -244,7 +173,7 @@ disjunctivePattern maybeFocusArrow term // lookahead token is inherited
                                    noSeqTerm // lookahead token is inherited
                                    FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) . 
 
-** In state 390, looking ahead at BAR, shifting is permitted
+** In state 537, looking ahead at BAR, shifting is permitted
 ** because of the following sub-derivation:
 
 patternBranch 
@@ -253,7 +182,11 @@ disjunctivePattern maybeFocusArrow term
                                    FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
                                             reverse_left_flexible_nonempty_list(BAR,patternBranch) . BAR patternBranch 
 
-** Conflict (shift/reduce) in state 317.
+--------------------------------------------------------------------------------
+Notes: Same as conflicts 1 and 2, but with function/function
+--------------------------------------------------------------------------------
+
+** Conflict (shift/reduce) in state 475.
 ** Token involved: LBRACE
 ** This state is reached from term after reading:
 
@@ -274,8 +207,8 @@ FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch)
          atomicPattern 
          (?)
 
-** In state 317, looking ahead at LBRACE, reducing production
-** option(__anonymous_6) -> 
+** In state 475, looking ahead at LBRACE, reducing production
+** option(__anonymous_7) -> 
 ** is permitted because of the following sub-derivation:
 
 LPAREN tuplePattern COLON typ refineOpt RPAREN // lookahead token appears because refineOpt can begin with LBRACE
@@ -290,10 +223,10 @@ LPAREN tuplePattern COLON typ refineOpt RPAREN // lookahead token appears becaus
                           tmEq // lookahead token is inherited
                           tmNoEq // lookahead token is inherited
                           lidentOrUnderscore COLON appTerm refineOpt // lookahead token is inherited
-                                                           option(__anonymous_6) // lookahead token is inherited
+                                                           option(__anonymous_7) // lookahead token is inherited
                                                            . 
 
-** In state 317, looking ahead at LBRACE, shifting is permitted
+** In state 475, looking ahead at LBRACE, shifting is permitted
 ** because of the following sub-derivation:
 
 LPAREN tuplePattern COLON typ refineOpt RPAREN 
@@ -308,11 +241,28 @@ LPAREN tuplePattern COLON typ refineOpt RPAREN
                           tmEq 
                           tmNoEq 
                           lidentOrUnderscore COLON appTerm refineOpt 
-                                                           option(__anonymous_6) 
+                                                           option(__anonymous_7) 
                                                            . LBRACE noSeqTerm RBRACE 
 
-** Conflict (shift/reduce) in state 292.
-** Token involved: SEMICOLON
+--------------------------------------------------------------------------------
+Notes:
+ Consider:
+ 
+   let refinements ( x : y:t{phi} ) = ()
+
+ One parse is:
+    let refinements ( x : (y:t{phi}) ) = ()
+ Another is
+     let refinements ( x : (y:t){phi} ) = ()
+
+fstar --indent correctly prints these two back as written:
+      let refinements1 ( x : y:t{phi} ) = ()
+      let refinements2 ( x : (y:t){phi} ) = ()
+--------------------------------------------------------------------------------
+
+** Conflict (shift/reduce) in state 318.
+** Tokens involved: SEMICOLON_SEMICOLON SEMICOLON
+** The following explanations concentrate on token SEMICOLON_SEMICOLON.
 ** This state is reached from term after reading:
 
 FUNCTION disjunctivePattern maybeFocusArrow noSeqTerm 
@@ -323,21 +273,39 @@ FUNCTION disjunctivePattern maybeFocusArrow noSeqTerm
 term 
 (?)
 
-** In state 292, looking ahead at SEMICOLON, reducing production
+** In state 318, looking ahead at SEMICOLON_SEMICOLON, reducing production
 ** term -> noSeqTerm 
 ** is permitted because of the following sub-derivation:
 
-noSeqTerm SEMICOLON term // lookahead token appears
+noSeqTerm SEMICOLON_SEMICOLON term // lookahead token appears
 FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) // lookahead token is inherited
          patternBranch // lookahead token is inherited
          disjunctivePattern maybeFocusArrow term // lookahead token is inherited
                                             noSeqTerm . 
 
-** In state 292, looking ahead at SEMICOLON, shifting is permitted
+** In state 318, looking ahead at SEMICOLON_SEMICOLON, shifting is permitted
 ** because of the following sub-derivation:
 
 noSeqTerm 
 FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
          patternBranch 
          disjunctivePattern maybeFocusArrow term 
-                                            noSeqTerm . SEMICOLON term 
+                                            noSeqTerm . SEMICOLON_SEMICOLON term 
+
+--------------------------------------------------------------------------------
+Notes:
+
+let function_seq1 =
+  function
+    | 0 -> e1 ; e2
+
+let function_seq2 =
+  (function
+    | 0 -> e1) ; e2
+
+Both printed as
+
+let function_seq1 = function | 0 -> e1; e2
+let function_seq2 = function | 0 -> e1; e2
+
+--------------------------------------------------------------------------------
