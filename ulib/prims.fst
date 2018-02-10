@@ -119,7 +119,7 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 assume type has_type : #a:Type -> a -> Type -> Type0
   
 (* forall (x:a). p x : specialized to Type#0 *)
-type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
+type l_Forall (#a:Type) (p:(a -> GTot Type0))x = squash (x:a -> GTot (p x))
 
 (* The type of squashed types *)
 type prop = a:Type0{ forall (x:a). x === () }
@@ -132,7 +132,7 @@ unopteq type dtuple2 (a:Type)
             -> dtuple2 a b
 
 (* exists (x:a). p x : specialized to Type#0 *)
-type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
+type l_Exists (#a:Type) (p:(a -> GTot Type0)) = squash (x:a & p x)
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
@@ -277,7 +277,7 @@ assume type decreases : #a:Type -> a -> Type0
    precondition for the *well-formedness* of the postcondition.
    C.f. #57.
 *)
-effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
+effect Lemma (a:Type) (pre:Type) (post:(squash pre -> Type)) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",

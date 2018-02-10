@@ -440,7 +440,7 @@ let rec memP_existsb #a f xs =
 
 let rec memP_map_intro
   (#a #b: Type)
-  (f: a -> Tot b)
+  (f: (a -> Tot b))
   (x: a)
   (l: list a)
 : Lemma
@@ -453,7 +453,7 @@ let rec memP_map_intro
 
 let rec memP_map_elim
   (#a #b: Type)
-  (f: a -> Tot b)
+  (f: (a -> Tot b))
   (y: b)
   (l: list a)
 : Lemma
@@ -624,9 +624,9 @@ let rec fold_left_invar
 
 let rec fold_left_map
   (#a #b #c: Type)
-  (f_aba: a -> b -> Tot a)
-  (f_bc:  b -> Tot c)
-  (f_aca: a -> c -> Tot a)
+  (f_aba: (a -> b -> Tot a))
+  (f_bc:  (b -> Tot c))
+  (f_aca: (a -> c -> Tot a))
   (l: list b)
   : Lemma
   (requires forall (x: a) (y: b) . f_aba x y == f_aca x (f_bc y) )
@@ -638,7 +638,7 @@ let rec fold_left_map
 
 let rec map_append
   (#a #b: Type)
-  (f: a -> Tot b)
+  (f: (a -> Tot b))
   (l1 l2: list a)
 :
   Lemma
@@ -650,7 +650,7 @@ let rec map_append
 
 let rec fold_left_append
   (#a #b: Type)
-  (f: a -> b -> Tot a)
+  (f: (a -> b -> Tot a))
   (l1 l2: list b)
   : Lemma
   (ensures forall x . fold_left f x (l1 @ l2) == fold_left f (fold_left f x l1) l2)

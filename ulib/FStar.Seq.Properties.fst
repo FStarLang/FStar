@@ -586,7 +586,7 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 let seq_find #a f l =
   seq_find_aux f l (Seq.length l)
 
-let find_mem (#a:eqtype) (s:seq a) (f:a -> Tot bool) (x:a{f x})
+let find_mem (#a:eqtype) (s:seq a) (f:(a -> Tot bool)) (x:a{f x})
    : Lemma (requires (mem x s))
            (ensures (Some? (seq_find f s) /\ f (Some?.v (seq_find f s))))
    = match seq_find f s with
@@ -721,7 +721,7 @@ val contains_snoc : #a:Type -> s:Seq.seq a -> x:a ->
 let contains_snoc #a s x =
   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
 
-let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
+let rec lemma_find_l_contains (#a:Type) (f:(a -> Tot bool)) (l:seq a)
   : Lemma (requires True) (ensures Some? (find_l f l) ==> l `contains` (Some?.v (find_l f l)))
           (decreases (Seq.length l))
   = if length l = 0 then ()
