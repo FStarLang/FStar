@@ -610,7 +610,7 @@ let rec extract_one_pat (imp : bool)
                         (g:env)
                         (p:S.pat)
                         (expected_topt:option<mlty>)
-                        (term_as_mlexpr:env -> S.term -> (mlexpr * e_tag * mlty))
+                        (term_as_mlexpr:(env -> S.term -> (mlexpr * e_tag * mlty)))
     : env * option<(mlpattern * list<mlexpr>)> * bool =
     let ok t =
         match expected_topt with
@@ -696,7 +696,7 @@ let rec extract_one_pat (imp : bool)
         g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
 
 let extract_pat (g:env) (p:S.pat) (expected_t:mlty)
-                (term_as_mlexpr: env -> S.term -> (mlexpr * e_tag * mlty))
+                (term_as_mlexpr: (env -> S.term -> (mlexpr * e_tag * mlty)))
     : (env * list<(mlpattern * option<mlexpr>)> * bool) =
     let extract_one_pat g p expected_t =
         match extract_one_pat false g p expected_t term_as_mlexpr with

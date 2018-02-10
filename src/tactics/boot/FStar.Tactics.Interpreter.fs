@@ -55,7 +55,7 @@ let mk_tactic_interpretation_0 (t:tac<'r>) (embed_r:embedder<'r>) (t_r:typ)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
 
-let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
+let mk_tactic_interpretation_1 (t:('a -> tac<'r>)) (unembed_a:unembedder<'a>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
   match args with
@@ -72,7 +72,7 @@ let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_1_env (t:N.psc -> 'a -> tac<'r>) (unembed_a:unembedder<'a>)
+let mk_tactic_interpretation_1_env (t:(N.psc -> 'a -> tac<'r>)) (unembed_a:unembedder<'a>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
   match args with
@@ -89,7 +89,7 @@ let mk_tactic_interpretation_1_env (t:N.psc -> 'a -> tac<'r>) (unembed_a:unembed
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
+let mk_tactic_interpretation_2 (t:('a -> 'b -> tac<'r>))
                                (unembed_a:unembedder<'a>) (unembed_b:unembedder<'b>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
@@ -108,7 +108,7 @@ let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
+let mk_tactic_interpretation_3 (t:('a -> 'b -> 'c -> tac<'r>))
                                (unembed_a:unembedder<'a>)
                                (unembed_b:unembedder<'b>)
                                (unembed_c:unembedder<'c>)
@@ -130,7 +130,7 @@ let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
+let mk_tactic_interpretation_5 (t:('a -> 'b -> 'c -> 'd -> 'e -> tac<'r>))
                                (unembed_a:unembedder<'a>)
                                (unembed_b:unembedder<'b>)
                                (unembed_c:unembedder<'c>)
@@ -178,22 +178,22 @@ let rec primitive_steps () : list<N.primitive_step> =
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
         mk name 1 (mk_tactic_interpretation_0 f e_r tr)
     in
-    let mktac1 (name : string) (f : 'a -> tac<'r>)
+    let mktac1 (name : string) (f : ('a -> tac<'r>))
                (u_a : unembedder<'a>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
         mk name 2 (mk_tactic_interpretation_1 f u_a e_r tr)
     in
-    let mktac2 (name : string) (f : 'a -> 'b -> tac<'r>)
+    let mktac2 (name : string) (f : ('a -> 'b -> tac<'r>))
                (u_a : unembedder<'a>) (u_b : unembedder<'b>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
         mk name 3 (mk_tactic_interpretation_2 f u_a u_b e_r tr)
     in
-    let mktac3 (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
+    let mktac3 (name : string) (f : ('a -> 'b -> 'c -> tac<'r>))
                (u_a : unembedder<'a>) (u_b : unembedder<'b>) (u_c : unembedder<'c>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
         mk name 4 (mk_tactic_interpretation_3 f u_a u_b u_c e_r tr)
     in
-    let mktac5 (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
+    let mktac5 (name : string) (f : ('a -> 'b -> 'c -> 'd -> 'e -> tac<'r>))
                (u_a : unembedder<'a>) (u_b : unembedder<'b>) (u_c : unembedder<'c>)
                (u_d : unembedder<'d>) (u_e : unembedder<'e>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
@@ -510,12 +510,12 @@ let explode (t : tres_m<'a>) : 'a * 'a * list<goal> =
     | Simplified (t, gs) -> (t, t, gs)
     | Dual (tn, tp, gs) -> (tn, tp, gs)
 
-let comb1 (f : 'a -> 'b) : tres_m<'a> -> tres_m<'b> = function
+let comb1 (f : ('a -> 'b)) : tres_m<'a> -> tres_m<'b> = function
     | Unchanged t -> Unchanged (f t)
     | Simplified (t, gs) -> Simplified (f t, gs)
     | Dual (tn, tp, gs) -> Dual (f tn, f tp, gs)
 
-let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m<'a>) (y : tres_m<'b>) : tres_m<'c> =
+let comb2 (f : ('a -> 'b -> 'c )) (x : tres_m<'a>) (y : tres_m<'b>) : tres_m<'c> =
     match x, y with
     | Unchanged t1, Unchanged t2 ->
         Unchanged (f t1 t2)
@@ -543,7 +543,7 @@ let comb_list (rs : list<tres_m<'a>>) : tres_m<list<'a>> =
 let emit (gs : list<goal>) (m : tres_m<'a>) : tres_m<'a> =
     comb2 (fun () x -> x) (Simplified ((), gs)) m
 
-let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:term) : tres =
+let rec traverse (f: (pol -> Env.env -> term -> tres)) (pol:pol) (e:Env.env) (t:term) : tres =
     let r =
         match (SS.compress t).n with
         | Tm_uinst (t,us) -> let tr = traverse f pol e t in

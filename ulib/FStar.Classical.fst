@@ -12,7 +12,7 @@ let get_squashed #b a =
 val get_equality (#t:Type) (a b:t) : Pure (a == b) (requires (a == b)) (ensures (fun _ -> True))
 let get_equality #t a b = get_squashed #(equals a b) (a == b)
 
-val get_forall (#a:Type) (p:a -> GTot Type0) : Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))
+val get_forall (#a:Type) (p:(a -> GTot Type0)) : Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))
 let get_forall #a p =
   get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x)
 
@@ -87,9 +87,9 @@ let forall_to_exists_2 (#a:Type) (#p:(a -> Type)) (#b:Type) (#q:(b -> Type)) (#r
   : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
   = forall_intro_2 f
 
-let impl_intro_gtot (#p:Type0) (#q:Type0) ($f:p -> GTot q) : GTot (p ==> q) = return_squash f
+let impl_intro_gtot (#p:Type0) (#q:Type0) ($f:(p -> GTot q)) : GTot (p ==> q) = return_squash f
 
-let impl_intro (#p:Type0) (#q:Type0) ($f: p -> Lemma q) : Lemma (p ==> q)  =
+let impl_intro (#p:Type0) (#q:Type0) ($f:(p -> Lemma q)) : Lemma (p ==> q)  =
     give_witness #(p ==> q) (squash_double_arrow (return_squash (lemma_to_squash_gtot f)))
 
 val exists_elim: goal:Type -> #a:Type -> #p:(a -> Type) -> $have:squash (exists (x:a). p x) -> f:(x:a{p x} -> GTot (squash goal)) ->
@@ -98,7 +98,7 @@ let exists_elim goal #a #p have f =
   let open FStar.Squash in
   bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
 
-let move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
+let move_requires (#a:Type) (#p:(a -> Type)) (#q:(a -> Type))
   ($f:(x:a -> Lemma (requires (p x)) (ensures (q x)))) (x:a)
   : Lemma (p x ==> q x) =
       give_proof
@@ -123,8 +123,8 @@ let forall_impl_intro #a #p #q $f =
 // Thanks KM, CH and SZ
 val impl_intro_gen
   (#p: Type0)
-  (#q: (h: squash p) -> Tot Type0)
-  (f: (x: squash p) -> Lemma (q ()))
+  (#q: (h:squash p -> Tot Type0))
+  (f: (x:squash p -> Lemma (q ())))
 : Lemma (p ==> q ())
 let impl_intro_gen #p #q f =
   let g () : Lemma
@@ -154,8 +154,8 @@ let ghost_lemma #a #p #q $f =
 let or_elim
   (#l #r: Type0)
   (#goal: (squash (l \/ r) -> Tot Type0))
-  (hl: squash l -> Lemma (goal ()))
-  (hr: squash r -> Lemma (goal ()))
+  (hl: (squash l -> Lemma (goal ())))
+  (hr: (squash r -> Lemma (goal ())))
 : Lemma
   ((l \/ r) ==> goal ())
 = impl_intro_gen #l #(fun _ -> goal ()) hl;

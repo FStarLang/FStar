@@ -611,7 +611,7 @@ let cache_hit
         false
 
 let ask_1_core
-    (filter_theory:decls_t -> decls_t * bool)
+    (filter_theory:(decls_t -> decls_t * bool))
     (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
@@ -624,7 +624,7 @@ let ask_1_core
         run_job ({job=z3_job false label_messages input qhash; callback=cb})
 
 let ask_n_cores
-    (filter_theory:decls_t -> decls_t * bool)
+    (filter_theory:(decls_t -> decls_t * bool))
     (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
@@ -641,7 +641,7 @@ let ask_n_cores
         enqueue ({job=z3_job true label_messages input qhash; callback=cb})
 
 let ask
-    (filter:decls_t -> decls_t * bool)
+    (filter:(decls_t -> decls_t * bool))
     (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)

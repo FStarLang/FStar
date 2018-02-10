@@ -1121,7 +1121,7 @@ and encode_let
         ee2, decls1@decls2
 
 and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
-                 (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
+                 (encode_br:(S.term -> env_t -> (term * decls_t))) : term * decls_t =
     let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown None Range.dummyRange)) in
     let scr, decls = encode_term e env in
     let match_tm, decls =
@@ -1285,7 +1285,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
        then BU.print2 "Formula (%s)  %s\n"
                      (Print.tag_of_term phi)
                      (Print.term_to_string phi) in
-    let enc (f:list<term> -> term) : Range.range -> args -> (term * decls_t) = fun r l ->
+    let enc (f:(list<term> -> term)) : Range.range -> args -> (term * decls_t) = fun r l ->
         let decls, args = BU.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         ({f args with rng=r}, decls) in
 

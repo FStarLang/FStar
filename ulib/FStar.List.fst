@@ -316,7 +316,7 @@ let rec splitAt n l =
 (** [filter_map f l] returns the list of [y] for all elements [x]
 appearing in [l] such that [f x = Some y] for some [y]. (Implemented
 here as a tail-recursive version of [choose] *)
-let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
+let filter_map (f:('a -> ML (option 'b))) (l:list 'a) : ML (list 'b) =
   let rec filter_map_acc (acc:list 'b) (l:list 'a) : ML (list 'b) =
     match l with
     | [] ->

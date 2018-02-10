@@ -15,7 +15,7 @@ let lt (o : order) : bool = o = Lt
 let eq (o : order) : bool = o = Eq
 
 // Lexicographical combination, thunked to be lazy
-let lex (o1 : order) (o2 : unit -> order) : order =
+let lex (o1 : order) (o2 : (unit -> order)) : order =
     match o1, o2 with
     | Lt, _ -> Lt
     | Eq, _ -> o2 ()
@@ -28,7 +28,7 @@ let order_from_int (i : int) : order =
 
 let compare_int (i : int) (j : int) : order = order_from_int (i - j)
 
-let rec compare_list (f : 'a -> 'a -> order) (l1 : list<'a>) (l2 : list<'a>) : order =
+let rec compare_list (f : ('a -> 'a -> order)) (l1 : list<'a>) (l2 : list<'a>) : order =
     match l1, l2 with
     | [], [] -> Eq
     | [], _ -> Lt

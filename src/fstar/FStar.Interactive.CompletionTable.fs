@@ -53,7 +53,7 @@ let rec add_priorities n acc = function
 (** Merge ‘lists’, a list of increasing (according to ‘key_fn’) lists.
     Keeps a single copy of each key that appears in more than one list (earlier
     lists take precedence when chosing which value to keep). *)
-let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
+let merge_increasing_lists_rev (key_fn: ('a -> string)) (lists: list<list<'a>>) =
   let cmp v1 v2 =
     match v1, v2 with
     | (_, []), _ | _, (_, []) -> failwith "impossible"
@@ -179,7 +179,7 @@ let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
       matches in
   aux bt prefix []
 
-let rec btree_fold (bt: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
+let rec btree_fold (bt: btree<'a>) (f: (string -> 'a -> 'b -> 'b)) (acc: 'b) =
   match bt with
   | StrEmpty -> acc
   | StrBranch (k, v, lbt, rbt) ->
@@ -239,14 +239,14 @@ let names_insert (name_collections: names<'a>) (id: string) (v: 'a) : names<'a> 
 
 let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string) (q: query)
                           (rev_acc: query)
-                          (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
-                          (mut_leaf: trie<'a> -> query -> trie<'a>)=
+                          (mut_node: (trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>))
+                          (mut_leaf: (trie<'a> -> query -> trie<'a>))=
   let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie q rev_acc mut_node mut_leaf)
 
 and trie_mutate (tr: trie<'a>) (q: query) (rev_acc: query)
-                (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
-                (mut_leaf: trie<'a> -> query -> trie<'a>) : trie<'a> =
+                (mut_node: (trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>))
+                (mut_leaf: (trie<'a> -> query -> trie<'a>)) : trie<'a> =
   match q with
   | [] ->
     mut_leaf tr rev_acc
@@ -261,7 +261,7 @@ let trie_insert (tr: trie<'a>) (ns_query: query) (id: string) (v: 'a) : trie<'a>
   trie_mutate_leaf tr ns_query (fun tr _ -> { tr with bindings = names_insert tr.bindings id v })
 
 let trie_import (tr: trie<'a>) (host_query: query) (included_query: query)
-                (mutator: trie<'a> -> trie<'a> -> string -> trie<'a>) =
+                (mutator: (trie<'a> -> trie<'a> -> string -> trie<'a>)) =
   let label = query_to_string included_query in
   let included_trie = Util.dflt trie_empty (trie_descend_exact tr included_query) in
   trie_mutate_leaf tr host_query (fun tr _ -> mutator tr included_trie label)
@@ -285,7 +285,7 @@ let trie_add_alias (tr: trie<'a>) (key: string)
       trie_mutate_leaf tr [key] (fun _ignored_overwritten_trie _ ->
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
-let names_revmap (fn: btree<'a> -> 'b) (name_collections: names<'a> (* ↓ priority *))
+let names_revmap (fn: (btree<'a> -> 'b)) (name_collections: names<'a> (* ↓ priority *))
     : list<(list<string> (* imports *) * 'b)> (* ↑ priority *) =
   let rec aux (acc: list<(list<string> * 'b)>)
               (imports: list<string>) (name_collections: names<'a>)
@@ -483,7 +483,7 @@ let find_module_or_ns (tbl:table) (query:query) =
 let autocomplete_lid (tbl: table) (query: query) =
   List.map completion_result_of_lid (trie_find_prefix tbl.tbl_lids query)
 
-let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path * mod_symbol) -> option<(path * mod_symbol)>) =
+let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: ((path * mod_symbol) -> option<(path * mod_symbol)>)) =
   trie_find_prefix tbl.tbl_mods query
   |> List.filter_map filter
   |> List.map completion_result_of_ns_or_mod

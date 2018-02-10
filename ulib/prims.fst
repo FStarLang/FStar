@@ -119,7 +119,7 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 assume type has_type : #a:Type -> a -> Type -> Type0
   
 (* forall (x:a). p x : specialized to Type#0 *)
-type l_Forall (#a:Type) (p:(a -> GTot Type0))x = squash (x:a -> GTot (p x))
+type l_Forall (#a:Type) (p:(a -> GTot Type0)) = squash (x:a -> GTot (p x))
 
 (* The type of squashed types *)
 type prop = a:Type0{ forall (x:a). x === () }

@@ -1543,7 +1543,7 @@ and desugar_formula env (f:term) : S.term =
 
       | _ -> failwith "impossible" in
 
- let push_quant (q:(list<AST.binder> * list<(list<AST.term>)> * AST.term) -> AST.term') (binders:list<AST.binder>) pats (body:term) =
+ let push_quant (q:(list<AST.binder> * list<(list<AST.term>)> * AST.term -> AST.term')) (binders:list<AST.binder>) pats (body:term) =
     match binders with
     | b::(b'::_rest) ->
       let rest = b'::_rest in
@@ -2594,7 +2594,7 @@ let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
         let env, modul = desugar_partial_modul modul env a_modul in
         modul, env
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:S.term -> S.term) : withenv<unit> =
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:(S.term -> S.term)) : withenv<unit> =
   fun en ->
       let erase_univs_ed ed =
           let erase_binders bs =

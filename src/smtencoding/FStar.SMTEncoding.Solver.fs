@@ -372,9 +372,9 @@ let process_result settings result : option<errors> =
     errs
 
 let fold_queries (qs:list<query_settings>)
-                 (ask:query_settings -> (z3result -> unit) -> unit)
-                 (f:query_settings -> z3result -> option<errors>)
-                 (report:list<errors> -> unit) : unit =
+                 (ask:(query_settings -> (z3result -> unit) -> unit))
+                 (f:(query_settings -> z3result -> option<errors>))
+                 (report:(list<errors> -> unit)) : unit =
     let rec aux acc qs =
         match qs with
         | [] -> report acc
@@ -468,7 +468,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @ max_fuel_max_ifuel
     in
 
-    let check_one_config config (k:z3result -> unit) : unit =
+    let check_one_config config (k:(z3result -> unit)) : unit =
           if used_hint config || Options.z3_refresh() then Z3.refresh();
           Z3.ask (filter_assertions config.query_env config.query_hint)
                   config.query_hash

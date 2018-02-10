@@ -696,7 +696,7 @@ private let rec index_extensionality_aux
   (#a: Type)
   (l1 l2: list a)
   (l_len: (l_len: unit { length l1 == length l2 } ))
-  (l_index: (i: (i: nat {i < length l1})) -> Tot (l_index: unit {index l1 i == index l2 i}))
+  (l_index: (i: nat {i < length l1} -> Tot (l_index: unit {index l1 i == index l2 i})))
 : Lemma
   (ensures (l1 == l2))
 = match (l1, l2) with
@@ -762,7 +762,7 @@ let rec strict_prefix_of_correct (#a) (l1 l2: list a)
   | _ :: q ->
     strict_prefix_of_correct l1 q
 
-let rec map_strict_prefix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: list a) :
+let rec map_strict_prefix_of (#a #b: Type) (f: (a -> Tot b)) (l1: list a) (l2: list a) :
  Lemma
  (requires True)
  (ensures (strict_prefix_of l1 l2 ==> strict_prefix_of (map f l1) (map f l2)))

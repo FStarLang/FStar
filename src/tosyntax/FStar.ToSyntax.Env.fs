@@ -202,7 +202,7 @@ type cont_t<'a> =
     | Cont_fail      (* not found, do not retry *)
     | Cont_ignore    (* not found, retry *)
 
-let option_of_cont (k_ignore: unit -> option<'a>) = function
+let option_of_cont (k_ignore: (unit -> option<'a>)) = function
     | Cont_ok a -> Some a
     | Cont_fail -> None
     | Cont_ignore -> k_ignore ()
@@ -237,7 +237,7 @@ let string_of_exported_id_kind = function
 
 let find_in_module_with_includes
     (eikind: exported_id_kind)
-    (find_in_module: lident -> cont_t<'a>)
+    (find_in_module: (lident -> cont_t<'a>))
     (find_in_module_default: cont_t<'a>)
     env
     (ns: lident)
@@ -280,11 +280,11 @@ let try_lookup_id''
   env
   (id: ident)
   (eikind: exported_id_kind)
-  (k_local_binding: local_binding -> cont_t<'a>)
-  (k_rec_binding:   rec_binding   -> cont_t<'a>)
-  (k_record: (record_or_dc) -> cont_t<'a>)
-  (find_in_module: lident -> cont_t<'a>)
-  (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>)
+  (k_local_binding: (local_binding -> cont_t<'a>))
+  (k_rec_binding:   (rec_binding   -> cont_t<'a>))
+  (k_record: (record_or_dc -> cont_t<'a>))
+  (find_in_module: (lident -> cont_t<'a>))
+  (lookup_default_id: (cont_t<'a> -> ident -> cont_t<'a>))
   =
     let check_local_binding_id : local_binding -> bool = function
       (id', _, _) -> id'.idText=id.idText
@@ -353,7 +353,7 @@ let try_lookup_id env (id:ident) =
 let lookup_default_id
     env
     (id: ident)
-    (k_global_def: lident -> sigelt * bool -> cont_t<'a>)
+    (k_global_def: (lident -> sigelt * bool -> cont_t<'a>))
     (k_not_found: cont_t<'a>)
   =
   let find_in_monad = match env.curmonad with
@@ -460,11 +460,11 @@ let resolve_in_open_namespaces''
   env
   lid
   (eikind: exported_id_kind)
-  (k_local_binding: local_binding -> cont_t<'a>)
-  (k_rec_binding:   rec_binding   -> cont_t<'a>)
-  (k_record: (record_or_dc) -> cont_t<'a>)
-  (f_module: lident -> cont_t<'a>)
-  (l_default: cont_t<'a> -> ident -> cont_t<'a>)
+  (k_local_binding: (local_binding -> cont_t<'a>))
+  (k_rec_binding:   (rec_binding   -> cont_t<'a>))
+  (k_record: (record_or_dc -> cont_t<'a>))
+  (f_module: (lident -> cont_t<'a>))
+  (l_default: (cont_t<'a> -> ident -> cont_t<'a>))
   : option<'a> =
   match lid.ns with
   | _ :: _ ->
@@ -483,9 +483,9 @@ let cont_of_option (k_none: cont_t<'a>) = function
 let resolve_in_open_namespaces'
   env
   lid
-  (k_local_binding: local_binding -> option<'a>)
-  (k_rec_binding:   rec_binding   -> option<'a>)
-  (k_global_def: lident -> (sigelt * bool) -> option<'a>)
+  (k_local_binding: (local_binding -> option<'a>))
+  (k_rec_binding:   (rec_binding   -> option<'a>))
+  (k_global_def: (lident -> (sigelt * bool) -> option<'a>))
   : option<'a> =
   let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
   let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in

@@ -515,19 +515,19 @@ let built_in_primitive_steps : list<primitive_step> =
         requires_binder_substitution=false;
         interpretation=f
     } in
-    let unary_int_op (f:Z.t -> Z.t) =
+    let unary_int_op (f:(Z.t -> Z.t)) =
         unary_op arg_as_int (fun r x -> EMB.embed_int r (f x))
     in
-    let binary_int_op (f:Z.t -> Z.t -> Z.t) =
+    let binary_int_op (f:(Z.t -> Z.t -> Z.t)) =
         binary_op arg_as_int (fun r x y -> EMB.embed_int r (f x y))
     in
-    let unary_bool_op (f:bool -> bool) =
+    let unary_bool_op (f:(bool -> bool)) =
         unary_op arg_as_bool (fun r x -> EMB.embed_bool r (f x))
     in
-    let binary_bool_op (f:bool -> bool -> bool) =
+    let binary_bool_op (f:(bool -> bool -> bool)) =
         binary_op arg_as_bool (fun r x y -> EMB.embed_bool r (f x y))
     in
-    let binary_string_op (f : string -> string -> string) =
+    let binary_string_op (f :(string -> string -> string)) =
         binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
     in
     let mixed_binary_op
@@ -966,7 +966,7 @@ let tr_norm_step = function
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
-let get_norm_request (full_norm:term -> term) args =
+let get_norm_request (full_norm:(term -> term)) args =
     let parse_steps s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps in
     match args with
     | [_; (tm, _)]

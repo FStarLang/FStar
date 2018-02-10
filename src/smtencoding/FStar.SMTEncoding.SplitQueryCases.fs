@@ -26,7 +26,7 @@ open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
 
 (* return: if is ite all the way, ite for n cases, neg guards conj, rest of t *)
-let rec get_next_n_ite (n:int) (t:term) (negs:term) (f:term -> term) :bool * term * term * term =
+let rec get_next_n_ite (n:int) (t:term) (negs:term) (f:(term -> term)) :bool * term * term * term =
     if n <= 0 then true, f (mkTrue), negs, t
     else
         match t.tm with
@@ -52,7 +52,7 @@ let rec is_ite_all_the_way (n:int) (t:term) (negs:term) (l:list<term>) :bool * l
                 false, [], mkFalse
 
 (* return: if can split, the query context, list of queries, neg of all guards *)
-let rec parse_query_for_split_cases (n:int) (t:term) (f:term -> term) :bool * ((term -> term) * list<term> * term) = match t.tm with
+let rec parse_query_for_split_cases (n:int) (t:term) (f:(term -> term)) :bool * ((term -> term) * list<term> * term) = match t.tm with
     | Quant (Forall, l, opt, l', t) ->
       parse_query_for_split_cases n t (fun x -> f ((mkForall'' (l, opt, l', x))))
 
@@ -80,7 +80,7 @@ let strip_not (t:term) :term = match t.tm with
     | App (Not, hd::_) -> hd
     | _                -> t
 
-//let rec check_split_cases (f:term -> term) (l:list<term>) (check:decl -> unit) :unit =
+//let rec check_split_cases (f:(term -> term)) (l:list<term>) (check:decl -> unit) :unit =
 //    List.iter (fun t -> check (Assume (mkNot (f t), None, None))) (List.rev l)
 //
 //let check_exhaustiveness (f:term -> term) (negs:term) (check:decl -> unit) :unit =
@@ -91,7 +91,7 @@ let strip_not (t:term) :term = match t.tm with
 //        | Assume(q', _, _) -> parse_query_for_split_cases n (strip_not q') (fun x -> x)
 //        | _ -> false, ((fun x -> x), [], mkFalse)
 
-let handle_query ((f, l, negs):((term -> term) * list<term> * term)) (check:decl -> unit) :unit =
+let handle_query ((f, l, negs):((term -> term) * list<term> * term)) (check:(decl -> unit)) :unit =
     failwith "SplitQueryCases is not currently supported"
 //    let l = check_split_cases f l check in
 //    check_exhaustiveness f negs check

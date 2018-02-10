@@ -170,7 +170,7 @@ let decl_documented (d:decl) =
         | _ -> false
         end
 
-let document_decl (w:string->unit) (d:decl) =
+let document_decl (w:(string->unit)) (d:decl) =
   if decl_documented d then
     // This expr is OK F# code, but we need a few {begin, '('}s to make it OCaml as well.
         // print the decl

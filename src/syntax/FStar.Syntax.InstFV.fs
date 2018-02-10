@@ -30,7 +30,7 @@ type inst_t = list<(lident * universes)>
 
 let mk t s = S.mk s None t.pos
 
-let rec inst (s:term -> fv -> term) t =
+let rec inst (s:(term -> fv -> term)) t =
     let t = SS.compress t in
     let mk = mk t in
     match t.n with

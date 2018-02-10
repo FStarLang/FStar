@@ -13,7 +13,7 @@ open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
 module BU = FStar.Util
 
-let int1 (m:lid) (f:'a -> 'b) (ua:unembedder<'a>) (em:embedder<'b>)
+let int1 (m:lid) (f:('a -> 'b)) (ua:unembedder<'a>) (em:embedder<'b>)
                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _)] ->
@@ -21,7 +21,7 @@ let int1 (m:lid) (f:'a -> 'b) (ua:unembedder<'a>) (em:embedder<'b>)
         Some (em r (f a)))
     | _ -> None
 
-let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:unembedder<'a>) (ub:unembedder<'b>) (em:embedder<'c>)
+let int2 (m:lid) (f:('a -> 'b -> 'c)) (ua:unembedder<'a>) (ub:unembedder<'b>) (em:embedder<'c>)
                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _); (b, _)] ->
@@ -32,7 +32,7 @@ let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:unembedder<'a>) (ub:unembedder<'b>) (em:
 
 let reflection_primops : list<N.primitive_step> =
     let mklid (nm : string) : lid = fstar_refl_basic_lid nm in
-    let mk (l : lid) (arity : int) (fn : Range.range -> args -> option<term>) : N.primitive_step =
+    let mk (l : lid) (arity : int) (fn : (Range.range -> args -> option<term>)) : N.primitive_step =
         {
             N.name = l;
             N.arity = arity;
@@ -42,8 +42,8 @@ let reflection_primops : list<N.primitive_step> =
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets
-    let mk1 nm (f : 'a -> 'b)       u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
-    let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
+    let mk1 nm (f : ('a -> 'b))       u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
+    let mk2 nm (f : ('a -> 'b -> 'c)) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
     [
         mk1 "__inspect" inspect unembed_term embed_term_view;
         mk1 "__pack"    pack    unembed_term_view embed_term;

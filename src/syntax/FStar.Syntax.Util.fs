@@ -1405,23 +1405,23 @@ let uvar_from_id (id : int) (t : typ)=
     mk (Tm_uvar (Unionfind.from_id id, t)) None Range.dummyRange
 
 // Some generic equalities
-let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
+let rec eqlist (eq : ('a -> 'a -> bool)) (xs : list<'a>) (ys : list<'a>) : bool =
     match xs, ys with
     | [], [] -> true
     | x::xs, y::ys -> eq x y && eqlist eq xs ys
     | _ -> false
 
-let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either<'a,'b>) (y : either<'a,'b>) : bool =
+let eqsum (e1 : ('a -> 'a -> bool)) (e2 : ('b -> 'b -> bool)) (x : either<'a,'b>) (y : either<'a,'b>) : bool =
     match x, y with
     | Inl x, Inl y -> e1 x y
     | Inr x, Inr y -> e2 x y
     | _ -> false
 
-let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a * 'b) : bool =
+let eqprod (e1 : ('a -> 'a -> bool)) (e2 : ('b -> 'b -> bool)) (x : 'a * 'b) (y : 'a * 'b) : bool =
     match x, y with
     | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
 
-let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
+let eqopt (e : ('a -> 'a -> bool)) (x : option<'a>) (y : option<'a>) : bool =
     match x, y with
     | Some x, Some y -> e x y
     | _ -> false
@@ -1469,7 +1469,7 @@ and comp_eq c1 c2 = match c1.n, c2.n with
 and eq_flags f1 f2 = false // TODO
 and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
 
-let rec bottom_fold (f : term -> term) (t : term) : term =
+let rec bottom_fold (f : (term -> term)) (t : term) : term =
     let ff = bottom_fold f in
     let tn = (compress t).n in
     let tn = match tn with

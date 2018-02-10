@@ -1560,7 +1560,7 @@ and solve_flex_rigid_join  (env:env) (tp:tprob) (wl:worklist) : option<worklist>
       | _ -> failwith "Impossible: Not a flex-rigid"
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
-                  (rhs:binders -> Env.env -> list<subst_elt> -> prob) : solution =
+                  (rhs:(binders -> Env.env -> list<subst_elt> -> prob)) : solution =
 
    let rec aux scope env subst (xs:binders) (ys:binders) : either<(probs * formula), string> =
         match xs, ys with

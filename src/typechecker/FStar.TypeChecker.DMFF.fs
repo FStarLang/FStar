@@ -1200,8 +1200,8 @@ and mk_match env e0 branches f =
   end
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)
-    (proceed: env_ -> term -> nm * term * term)
-    (ensure_m: env_ -> term -> term * term * term) =
+    (proceed: (env_ -> term -> nm * term * term))
+    (ensure_m: (env_ -> term -> term * term * term)) =
   let mk x = mk x None e2.pos in
   let e1 = binding.lbdef in
   // This is [let x = e1 in e2]. Open [x] in [e2].

@@ -52,7 +52,7 @@ type tac<'a> = {
     tac_f : proofstate -> __result<'a>;
 }
 
-let mk_tac (f : proofstate -> __result<'a>) : tac<'a> =
+let mk_tac (f : (proofstate -> __result<'a>)) : tac<'a> =
     { tac_f = f }
 
 let run t p = t.tac_f p
@@ -62,7 +62,7 @@ let ret (x:'a) : tac<'a> =
     mk_tac (fun p -> Success (x, p))
 
 (* monadic bind *)
-let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
+let bind (t1:tac<'a>) (t2:('a -> tac<'b>)) : tac<'b> =
     mk_tac (fun p ->
             match run t1 p with
             | Success (a, q)  -> run (t2 a) q
@@ -165,7 +165,7 @@ let rec log ps f : unit =
     | Some true -> f ()
     | Some false -> ()
 
-let mlog f (cont : unit -> tac<'a>) : tac<'a> =
+let mlog f (cont : (unit -> tac<'a>)) : tac<'a> =
     bind get (fun ps -> log ps f; cont ())
 
 let fail (msg:string) =
@@ -574,7 +574,7 @@ let uvar_free_in_goal (u:uvar) (g:goal) =
 let uvar_free (u:uvar) (ps:proofstate) : bool =
     List.existsML (uvar_free_in_goal u) ps.goals
 
-let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
+let rec mapM (f : ('a -> tac<'b>)) (l : list<'a>) : tac<list<'b>> =
     match l with
     | [] -> ret []
     | x::xs ->
@@ -738,7 +738,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         let smt_goals = List.flatten (List.map snd goals_) in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. TODO: maybe keep and check later?
-        let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
+        let rec filter' (f : ('a -> list<'a> -> bool)) (xs : list<'a>) : list<'a> =
              match xs with
              | [] -> []
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
@@ -917,7 +917,7 @@ let addns (s:string) : tac<unit> =
     let g' = { g with context = ctx' } in
     bind dismiss (fun _ -> add_goals [g']))
 
-let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
+let rec tac_fold_env (d : direction) (f : (env -> term -> tac<term>)) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in
     bind (if d = TopDown
           then f env ({ t with n = tn })
