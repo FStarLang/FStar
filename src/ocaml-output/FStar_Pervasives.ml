@@ -148,4 +148,6 @@ let uu___is_Comment: __internal_ocaml_attributes -> Prims.bool =
     match projectee with | Comment _0 -> true | uu____2375 -> false
 let __proj__Comment__item___0: __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | Comment _0 -> _0
-let deprecated: Prims.string -> Prims.unit = fun s  -> ()
+type attribute = Prims.unit[@@deriving show]
+let deprecated: Prims.string -> attribute = fun s  -> ()
+let inline_let: attribute = ()

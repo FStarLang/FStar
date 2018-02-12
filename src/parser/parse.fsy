@@ -375,6 +375,13 @@ list_atomicTerm_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
+list_attr_letbinding_:
+  
+    {    ( [] )}
+| attr_letbinding list_attr_letbinding_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 list_constructorDecl_:
   
     {    ( [] )}
@@ -670,12 +677,17 @@ in
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
 
+attribute:
+  LBRACK_AT list_atomicTerm_ RBRACK
+    {let (_1, x, _3) = ((), $2, ()) in
+      ( x )}
+
 decoration:
   FSDOC
     {let x = $1 in
       ( Doc x )}
-| LBRACK_AT list_atomicTerm_ RBRACK
-    {let (_1, x, _3) = ((), $2, ()) in
+| attribute
+    {let x = $1 in
       ( DeclAttributes x )}
 | qualifier
     {let x = $1 in
@@ -798,6 +810,21 @@ constructorDecl:
 | BAR option_FSDOC_ uident option___anonymous_2_
     {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
                                                              ( (uid, t_opt, doc_opt, true) )}
+
+attr_letbinding:
+  AND letbinding
+    {let (_2, lb) = ((), $2) in
+let attr =
+      ( None )
+in
+    ( attr, lb )}
+| attribute AND letbinding
+    {let (x0, _2, lb) = ($1, (), $3) in
+let attr =
+  let x = x0 in
+      ( Some x )
+in
+    ( attr, lb )}
 
 letbinding:
   maybeFocus lidentOrOperator nonempty_list_patternOrMultibinder_ option_ascribeTyp_ EQUALS term
@@ -1616,10 +1643,25 @@ in
 | LET OPEN quident IN term
     {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
       ( mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr )}
-| LET letqualifier separated_nonempty_list_AND_letbinding_ IN term
-    {let (_1, q, lbs, _4, e) = ($1, $2, $3, (), $5) in
+| LET letqualifier letbinding list_attr_letbinding_ IN term
+    {let (_2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, (), $6) in
+let attrs =
+      ( None )
+in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+      )}
+| attribute LET letqualifier letbinding list_attr_letbinding_ IN term
+    {let (x0, _2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, $5, (), $7) in
+let attrs =
+  let x = x0 in
+      ( Some x )
+in
+      (
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       )}
 | FUNCTION reverse_left_flexible_nonempty_list_BAR_patternBranch_

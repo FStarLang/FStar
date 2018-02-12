@@ -557,7 +557,7 @@ let rec resugar_term (t : S.term) : A.term =
       (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
         it would be better to print it as `let P = e in e1`. *)
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
-      let bnds = [(resugar_pat pat, resugar_term e)] in
+      let bnds = [None, (resugar_pat pat, resugar_term e)] in
       let body = resugar_term t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
@@ -583,11 +583,16 @@ let rec resugar_term (t : S.term) : A.term =
       let tac_opt = Option.map resugar_term tac_opt in
       mk (A.Ascribed(resugar_term e, term, tac_opt))
 
-    | Tm_let((is_rec, bnds), body) ->
+    | Tm_let((is_rec, source_lbs), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
-      let bnds, body = SS.open_let_rec bnds body in
+      let source_lbs, body = SS.open_let_rec source_lbs body in
       let resugar_one_binding bnd =
         (* TODO : some stuff are open twice there ! (may have already been opened in open_let_rec) *)
+        let attrs_opt =
+            match bnd.lbattrs with
+            | [] -> None
+            | tms -> Some (List.map resugar_term tms)
+        in
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
         let typ, def = match (SS.compress td).n with
           | Tm_app(_, [(t, _); (d, _)]) -> t, d
@@ -605,20 +610,20 @@ let rec resugar_term (t : S.term) : A.term =
           | Inl bv ->
             mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
         in
-        if is_pat_app then
+        attrs_opt,
+        (if is_pat_app then
           let args = binders |> map_opt (fun (bv, q) ->
             BU.map_opt (resugar_arg_qual q) (fun q -> mk_pat(A.PatVar (bv_as_unique_ident bv, q)))) in
           ((mk_pat (A.PatApp (pat, args)), resugar_term term), (universe_to_string univs))
-        else
-          ((pat, resugar_term term), (universe_to_string univs))
+         else
+          ((pat, resugar_term term), (universe_to_string univs)))
       in
-      let r = List.map (resugar_one_binding) bnds in
+      let r = List.map (resugar_one_binding) source_lbs in
       let bnds =
-          let f =
-            if not (Options.print_universes ()) then fst
+          let f (attrs, (pb, univs)) =
+            if not (Options.print_universes ()) then attrs, pb
             (* Print bound universes as a comment *)
-            else function ((pat, body), univs) ->
-              pat, label univs body
+            else attrs, (fst pb, label univs (snd pb))
           in
           List.map f r
       in
@@ -669,8 +674,9 @@ let rec resugar_term (t : S.term) : A.term =
             mk (A.Construct(head, args))
           | Sequence ->
               let term = resugar_term e in
-              let rec resugar_seq t = match t.tm with
-                | A.Let(_, [p, t1], t2) ->
+              let rec resugar_seq t =
+                match t.tm with
+                | A.Let(_, [None, (p, t1)], t2) ->
                    mk (A.Seq(t1, t2))
                 | A.Ascribed(t1, t2, t3) ->
                    (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -1080,7 +1086,7 @@ let resugar_sigelt se : option<A.decl> =
       let t = resugar_term desugared_let in
       begin match t.tm with
         | A.Let(isrec, lets, _) ->
-          Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
+          Some (decl'_to_decl se (TopLevelLet (isrec, List.map snd lets)))
         | _ -> failwith "Should not happen hopefully"
       end
 

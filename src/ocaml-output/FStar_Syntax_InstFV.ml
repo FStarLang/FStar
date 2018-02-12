@@ -118,7 +118,9 @@ let rec inst:
                         FStar_Syntax_Syntax.lbtyp = uu____759;
                         FStar_Syntax_Syntax.lbeff =
                           (uu___26_758.FStar_Syntax_Syntax.lbeff);
-                        FStar_Syntax_Syntax.lbdef = uu____762
+                        FStar_Syntax_Syntax.lbdef = uu____762;
+                        FStar_Syntax_Syntax.lbattrs =
+                          (uu___26_758.FStar_Syntax_Syntax.lbattrs)
                       })) in
             ((FStar_Pervasives_Native.fst lbs), uu____744) in
           let uu____769 =

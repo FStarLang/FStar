@@ -174,6 +174,8 @@ let steps_unfoldonly: FStar_Ident.lident = pconst "delta_only"
 let steps_unfoldattr: FStar_Ident.lident = pconst "delta_attr"
 let deprecated_attr: FStar_Ident.lident =
   p2l ["FStar"; "Pervasives"; "deprecated"]
+let inline_let_attr: FStar_Ident.lident =
+  p2l ["FStar"; "Pervasives"; "inline_let"]
 let gen_reset:
   (Prims.unit -> Prims.int,Prims.unit -> Prims.unit)
     FStar_Pervasives_Native.tuple2

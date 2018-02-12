@@ -1,5 +1,5 @@
 [
-  "ôPC\b\u000eI$∆ˇæ~Ø%\u001cHe",
+  "\u0010&ò|®‰ª\"Uï\u000f‚ç\u001e\u0001¶",
   [
     [
       "Clear.clear_all_of_type",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
       0,
-      "97ba6681c95cb9181efae84bfd9dba6e"
+      "4c79def316948ff47078372d2b81aaa5"
     ],
     [
       "Clear.l2",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "e13feedca53ca19aeb2b2efa84524f81"
+      "bc48a8247374dfd5a5d2f879a73f789a"
     ],
     [
       "Clear.l2",
@@ -30,16 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "96965cf7c0fb2fe9942f815887b3ad79"
-    ],
-    [
-      "Clear.l2",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "162ee0f48ea1ba5c769c83849e5c7122"
+      "e530f27bcbdbabbe2ef945e0304d9412"
     ]
   ]
 ]

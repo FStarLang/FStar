@@ -129,7 +129,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
-    lbdef  :term             //e
+    lbdef  :term;            //e
+    lbattrs:list<attribute>
 }
 and comp_typ = {
   comp_univs:universes;
@@ -231,6 +232,8 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and attribute = term
+
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
       res_typ = res_typ;
@@ -275,8 +278,6 @@ type qualifier =
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
-
-type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -466,7 +467,7 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
+let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e; lbattrs=[]}
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s

@@ -599,7 +599,11 @@ let collect_one
         collect_term t1;
         collect_term t2
     | Let (_, patterms, t) ->
-        List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms;
+        List.iter (fun (attrs_opt, (pat, t)) ->
+            ignore (BU.map_opt attrs_opt (List.iter collect_term));
+            collect_pattern pat;
+            collect_term t)
+            patterms;
         collect_term t
     | LetOpen (lid, t) ->
         record_open true lid;
