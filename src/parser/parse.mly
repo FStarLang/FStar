@@ -374,7 +374,7 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | LPAREN pat=tuplePattern COLON t=tmEqNoRefinement phi_opt=refineOpt RPAREN
+  | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
         let pos = rhs2 parseState 1 6 in
@@ -412,7 +412,7 @@ fieldPattern:
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=tmEqNoRefinement r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
@@ -430,7 +430,7 @@ binder:
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=tmEqNoRefinement r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
@@ -637,6 +637,21 @@ tmArrow(Tm):
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
   | e=Tm { e }
+
+simpleArrow:
+  | dom=simpleArrowDomain RARROW tgt=simpleArrow
+     {
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     }
+  | e=tmEqNoRefinement { e }
+
+simpleArrowDomain:
+  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
