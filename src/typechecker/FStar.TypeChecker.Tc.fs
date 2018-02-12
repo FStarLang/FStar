@@ -70,15 +70,6 @@ let get_tactic_fv env (tac_lid: lident) (h: term) =
       | _ -> None)
   | _ -> None
 
-let is_builtin_tactic md =
-  let path = Ident.path_of_lid md in
-  if List.length(path) > 2 then
-    match fst (List.splitAt 2 path) with
-    | ["FStar"; "Tactics"]
-    | ["FStar"; "Reflection"] -> true
-    | _ -> false
-  else false
-
 (* This reference keeps a list of modules which contain user-defined tactics. It is only
    modified in tc_decl to add these modules and only read in FStar.Main (via FStar.Universal,
    in order to compile these modules when generating native tactics. *)

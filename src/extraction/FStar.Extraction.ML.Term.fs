@@ -922,6 +922,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           E_PURE,
           term_ty
 
+        | Tm_app(head, _) when U.is_fstar_tactics_embed head && (Options.codegen() = Some "tactics") &&
+                               not (U.is_builtin_tactic (g.currentModule |> string_of_mlpath |> lid_of_str)) ->
+            raise_error (Fatal_FailToExtractNativeTactic, "Quotation not supported in native tactics") t.pos
+
         | Tm_app(head, args) ->
           let is_total rc =
               Ident.lid_equals rc.residual_effect PC.effect_Tot_lid

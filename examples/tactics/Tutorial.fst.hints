@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "97fb97157aa2805d3b94213b5cfa2b5f"
+      "bddf99f2498de91301672653d099901c"
     ],
     [
       "Tutorial.is_conj",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "34bbab39b8af48b3c05af7e889a3fc7f"
+      "4422d6a1891aa51900010f3e11f26df3"
     ],
     [
       "Tutorial.split_all",
@@ -30,7 +30,7 @@
       1,
       [ "@query" ],
       0,
-      "8c6f3ab2483a7d3d16db9b29514dd1ab"
+      "4e3b26cd0b452d8d9598e6b5673d704e"
     ],
     [
       "Tutorial.ex3'",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "51bf0e068ef4be4226d6079cd6263738"
+      "75670ca26f77a62779a8b6341192c4ee"
     ],
     [
       "Tutorial.ex4",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b5d6b7c92239067a512b0cfbff8ef6e0"
+      "0ac5f22e4ff4d956d4396665807f72f1"
     ],
     [
       "Tutorial.ex4",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2b91011295a590d21294e29681d8aefa"
+      "436e0c5cdd74e9bc51c0acb7e1263a0d"
     ]
   ]
 ]

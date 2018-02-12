@@ -71,6 +71,7 @@ type raw_error =
   | Fatal_ExpectTermGotFunction
   | Fatal_ExpectTrivialPreCondition
   | Fatal_FailToCompileNativeTactic
+  | Fatal_FailToExtractNativeTactic
   | Fatal_FailToProcessPragma
   | Fatal_FailToResolveImplicitArgument
   | Fatal_FailToSolveUniverseInEquality
@@ -366,6 +367,7 @@ let default_flags =
   (Fatal_ExpectNormalizedEffect                      , CFatal);
   (Fatal_ExpectTermGotFunction                       , CFatal);
   (Fatal_ExpectTrivialPreCondition                   , CFatal);
+  (Fatal_FailToExtractNativeTactic                   , CFatal);
   (Fatal_FailToCompileNativeTactic                   , CFatal);
   (Fatal_FailToProcessPragma                         , CFatal);
   (Fatal_FailToResolveImplicitArgument               , CFatal);
