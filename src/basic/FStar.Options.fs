@@ -202,7 +202,8 @@ let defaults =
       ("use_two_phase_tc"             , Bool false);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
-      ("warn_error"                   , String "")]
+      ("warn_error"                   , String "");
+      ("use_extracted_interfaces"     , Bool false)]
 
 let init () =
    let o = peek () in
@@ -314,6 +315,7 @@ let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
+let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -956,6 +958,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [+r] enables range [r]\n\t\t\
          - [@r] makes range [r] fatal.");
 
+        ( noshort,
+        "use_extracted_interfaces",
+        BoolStr,
+        "Extract interfaces from the dependencies and use them for verification");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),
@@ -1278,6 +1285,7 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
+let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 
 let should_extract m =
     let m = String.lowercase m in

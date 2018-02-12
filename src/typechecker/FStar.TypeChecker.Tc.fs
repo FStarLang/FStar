@@ -1644,7 +1644,7 @@ let extract_interface (m:modul) :modul =
 let check_module env m =
   //if this file is a dependency, and it is not already an interface, we will extract interface from it and verify that
   let m =
-    if ((not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
+    if (Options.use_extracted_interfaces && (not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
       //BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
       let m = extract_interface m in
       //BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
