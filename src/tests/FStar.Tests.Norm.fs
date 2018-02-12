@@ -109,11 +109,13 @@ let tests =
                                          match i with \
                                           | T -> x \
                                           | F -> y" in
+  let _ = Pars.pars_and_tc_fragment "let select_int3 (i:int) (x:'a) (y:'a) (z:'a) : Tot 'a = \
+                                         match i with \
+                                          | 0 -> x \
+                                          | 1 -> y \
+                                          | _ -> z" in
   let _ = Pars.pars_and_tc_fragment "let select_bool (b:bool) (x:'a) (y:'a) : Tot 'a = \
                                          if b then x else y" in
-  let _ = Pars.pars_and_tc_fragment "let select_hb (h:hb) : Tot tb = \
-                                         match h with \
-                                          | H t -> t" in
   let _ = Pars.pars_and_tc_fragment "let recons_m (x:list tb) = \
                                          match x with \
                                           | [] -> []  \
@@ -151,7 +153,7 @@ let tests =
   ; (12, (minus (encode 100) (encode 100)), z)
   ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
 
-  //// ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
+  // ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
   ; (15, (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                (let_ h (app mul [nm y; nm y])
@@ -169,14 +171,14 @@ let tests =
   ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
   ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
 
-  //// ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
-  //// ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
+  // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  // ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
   ; (241, (tc_nbe "recons [false;true;false]"), (tc_nbe "[false;true;false]"))
   ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
   ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
   // Type defs not yet implemented for NBE
-  //// ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))") (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  // ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))") (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
 
   ; (28, (tc_nbe "(fun x y z q -> z) T T F T"), (tc_nbe "F"))
   ; (29, (tc_nbe "[T; F]"), (tc_nbe "[T; F]"))
@@ -189,16 +191,17 @@ let tests =
   ; (301, (tc_nbe "id_list [T]"), (tc_nbe "[T]"))
   ; (3012, (tc_nbe "id_list_m [T]"), (tc_nbe "[T]"))
   ; (302, (tc_nbe "recons_m [T; F]"), (tc_nbe "[T; F]"))
-  ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
-  ; (304, (tc_nbe "select_hb (H F)"), (tc_nbe "F"))
-  // ; (3041, (tc_nbe "select_bool true 3 4"), (tc_nbe "3"))
+  // ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
+  ; (3041, (tc_nbe "select T 3 4"), (tc_nbe "3"))
+  ; (3042, (tc_nbe "select_bool false 3 4"), (tc_nbe "4"))
+  ; (3046, (tc_nbe "select_int3 1 7 8 9"), (tc_nbe "8"))
   ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
   ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
   ; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
   ; (308, (tc_nbe "copy_list_2    [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
 
-  // ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
-  // ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
+  ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
+  ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
   ]
 
 
