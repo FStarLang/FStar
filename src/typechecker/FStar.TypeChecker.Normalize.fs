@@ -78,6 +78,10 @@ type step =
   | Unascribe
 and steps = list<step>
 
+let cases f d = function
+  | Some x -> f x
+  | None -> d
+
 type fsteps = {
     beta : bool;
     iota : bool;
@@ -1083,6 +1087,10 @@ let should_reify cfg stack = match stack with
         cfg.steps.reify_
     | _ -> false
 
+let attr_eq a a' =
+   let r = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
+   r
+
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
@@ -1093,7 +1101,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | _ -> ());
             compress t
         in
-        log cfg  (fun () -> 
+        log cfg  (fun () ->
           BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
@@ -1171,33 +1179,24 @@ let rec norm : cfg -> env -> stack -> term -> term =
                          | NoDelta -> false
                          | Env.Inlining
                          | Eager_unfolding_only -> true
-                         | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l) in
+                         | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l)
+                 in
                  let should_delta =
-                     if cfg.steps.unfold_tac &&
-                        (  S.fv_eq_lid fv PC.and_lid
-                        || S.fv_eq_lid fv PC.or_lid
-                        || S.fv_eq_lid fv PC.imp_lid
-                        || S.fv_eq_lid fv PC.forall_lid
-                        || S.fv_eq_lid fv PC.squash_lid
-                        || S.fv_eq_lid fv PC.exists_lid
-                        || S.fv_eq_lid fv PC.eq2_lid
-                        || S.fv_eq_lid fv PC.eq3_lid
-                        || S.fv_eq_lid fv PC.true_lid
-                        || S.fv_eq_lid fv PC.false_lid)
-                     then false
-                     else begin
-                         let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
-                         should_delta &&
-                         (match cfg.steps.unfold_only with
-                          | None -> true
-                          | Some lids -> BU.for_some (fv_eq_lid fv) lids) &&
-                         (match cfg.steps.unfold_attr with
-                          | None -> true
-                          | Some attr -> begin match Env.attrs_of_qninfo qninfo with
-                                         | Some attrs -> BU.for_some (attr_eq attr) attrs
-                                         | None -> true
-                                         end)
-                     end
+                     should_delta &&
+                     (match cfg.steps.unfold_only with
+                      | None -> true
+                      | Some lids -> BU.for_some (fv_eq_lid fv) lids)
+                 in
+                 let should_delta = if not should_delta then false else
+                    let tac_opaque_attr = U.exp_string "tac_opaque" in
+                    let attrs = Env.attrs_of_qninfo qninfo in
+                    (match attrs, cfg.steps.unfold_attr with
+                     | None, Some at -> false
+                     | Some ats, Some at -> BU.for_some (attr_eq at) ats
+                     | _, _ -> true)
+                    && (if cfg.steps.unfold_tac
+                        then not <| cases (BU.for_some (attr_eq tac_opaque_attr)) false attrs
+                        else true)
                  in
 
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
@@ -1205,9 +1204,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                  (Range.string_of_range t.pos)
                                  (string_of_bool should_delta));
 
-                 if not should_delta
-                 then rebuild cfg env stack t
-                 else do_unfold_fv cfg env stack t fv
+                 if should_delta
+                 then do_unfold_fv cfg env stack t fv
+                 else rebuild cfg env stack t
 
           | Tm_bvar x ->
             begin match lookup_bvar env x with
