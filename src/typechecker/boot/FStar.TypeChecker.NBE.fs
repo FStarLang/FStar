@@ -52,7 +52,8 @@ type atom = //JUST FSHARP
   | Var of var
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *)
-  | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
+    | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
+  (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t) * aqual
@@ -83,7 +84,7 @@ and atom_to_string (a: atom) =
     match a with
     | Var v -> "Var " ^ (P.bv_to_string v)
     | Match (t, _) -> "Match " ^ (t_to_string t)
-    | Rec (_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+    | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 let is_not_accu (x:t) =
   match x with
@@ -94,7 +95,7 @@ let mkConstruct i us ts = Construct(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
-let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
+let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 let isAccu (trm:t) =
   match trm with
@@ -238,6 +239,16 @@ let un_univ (tm:t) : universe =
     | Univ u -> u
     | _ -> failwith "Not a universe"
 
+
+(* Creates the environment of mutually recursive function definitions *)
+let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> = 
+  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> = 
+  match lbs with 
+  | [] -> bs
+  | lb::lbs' -> aux lbs' lbs0 ((mkAccuRec lb lbs0 bs0) :: bs) bs0
+  in 
+  aux lbs lbs bs bs
+
 (* We are not targeting tagless normalization at this point *)
 let rec app (f:t) (x:t) (q:aqual) =
   debug (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
@@ -263,7 +274,7 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
      (match elt with
       | Some { sigel = Sig_let ((is_rec, [lb]), _) } ->
         if is_rec then
-          mkAccuRec lb []
+          mkAccuRec lb ([lb]) []
         else
           begin
              debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
@@ -402,13 +413,13 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       in
       case (translate env bs scrut)
 
-    | Tm_let((false, [lb]), body) -> // non-recursive let
-      let def = translate_letbinding env bs lb in
-      translate env (def::bs) body
+    | Tm_let((false, lbs), body) -> // non-recursive let
+      let bs' = 
+        List.fold_left (fun bs' lb -> let b = translate_letbinding env bs lb in b :: bs') bs lbs  in
+      translate env bs' body
 
-    | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
-      let f = mkAccuRec lb bs in
-      translate env (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+    | Tm_let((true, lbs), body) -> 
+      translate env (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
     | Tm_let _ -> failwith "Mutual recursion; not yet handled"
 
@@ -457,7 +468,7 @@ and readback (env:Env.env) (x:t) : term =
        | [] -> head
        | _ -> U.mk_app head args)
 
-    | Accu (Rec(lb, bs), ts) ->
+    | Accu (Rec(lb, lbs, bs), ts) ->
        let rec curry hd args =
        match args with
        | [] -> hd
@@ -467,7 +478,7 @@ and readback (env:Env.env) (x:t) : term =
        let args_no = count_abstractions lb.lbdef in
        // Printf.printf "Args no. %d\n" args_no;
        if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
-         readback env (curry (translate_letbinding env ((mkAccuRec lb bs) :: bs) lb) ts)
+         readback env (curry (translate_letbinding env (make_rec_env lbs bs) lb) ts)
        else (* otherwise do not unfold *)
          let head =
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
@@ -475,7 +486,7 @@ and readback (env:Env.env) (x:t) : term =
                    | BU.Inl bv -> S.bv_to_name bv
                    | BU.Inr fv -> failwith "Not yet implemented"
            in
-           S.mk (Tm_let((true, [lb]), f)) None Range.dummyRange
+           S.mk (Tm_let((true, lbs), f)) None Range.dummyRange
          in
          let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
          (match ts with
