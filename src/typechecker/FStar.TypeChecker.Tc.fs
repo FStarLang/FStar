@@ -1526,7 +1526,7 @@ let tc_modul env modul =
   let modul, env = tc_partial_modul env modul true in
   finish_partial_modul env modul
 
-let extract_interface (env:env) (m:modul) :modul =
+let extract_interface (env:env) (m:modul) :modul =  //env is only used when calling extract_let_rec_annotation, so we don't update it at all
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
@@ -1562,18 +1562,19 @@ let extract_interface (env:env) (m:modul) :modul =
     ) lids
   in
 
-  let missing_top_level_type = List.existsML (fun lb -> extract_lb_type lb Range.dummyRange = None) in
+  //TODO: implement it, w.r.t. extract_let_rec_annotation
+  let missing_top_level_type = List.existsML (fun lb -> false) in
 
   //TODO: calling extract_let_rec_annotation multiple times, can call it just once in the main body, and then pass it around
   let is_pure_or_ghost_function_with_non_unit_type =
-    List.existsML (fun lb -> let _, t, _ = extract_let_rec_annotation env lb in is_pure_or_ghost_function t && not (is_unit t)) in
-  let is_unit = List.for_all (fun lb -> let _, t, _ = extract_let_rec_annotation env lb in is_unit t) in
+    List.existsML (fun lb -> let _, t, _ = TcUtil.extract_let_rec_annotation env lb in is_pure_or_ghost_function t && not (is_unit t)) in
+  let is_unit = List.for_all (fun lb -> let _, t, _ = TcUtil.extract_let_rec_annotation env lb in is_unit t) in
 
   let vals_of_lbs (s:sigelt) :list<sigelt> =
     match s.sigel with
     | Sig_let (lbs, lids) ->
         List.map2 (fun lb lid ->
-          let uvs, t, _ = extract_let_rec_annotation env lb in  //the ignored returned component is a boolean for whether the returned type should be checked, ignoring since we always will
+          let uvs, t, _ = TcUtil.extract_let_rec_annotation env lb in  //the ignored returned component is a boolean for whether the returned type should be checked, ignoring since we always will
           { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract s.sigquals) }
         ) (snd lbs) lids
     | _ -> failwith "Impossible! Expected vals_of_lbs to be called only on Sig_let"
@@ -1633,9 +1634,9 @@ let extract_interface (env:env) (m:modul) :modul =
 let check_module env m =
   //if this file is a dependency, and it is not already an interface, we will extract interface from it and verify that
   let m =
-    if (Options.use_extracted_interfaces && (not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
+    if (Options.use_extracted_interfaces () && (not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
       //BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
-      let m = extract_interface m in
+      let m = extract_interface env m in
       //BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
       m
     end
