@@ -610,11 +610,11 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
-let lookup_definition delta_levels env lid =
+let lookup_definition_qninfo delta_levels lid qninfo =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
-  match lookup_qname env lid with
+  match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
       | Sig_let((_, lbs), _) when visible se.sigquals ->
@@ -626,6 +626,9 @@ let lookup_definition delta_levels env lid =
       | _ -> None
     end
   | _ -> None
+
+let lookup_definition delta_levels env lid =
+    lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
 
 let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
   match qninfo with

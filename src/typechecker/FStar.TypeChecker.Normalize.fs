@@ -1170,7 +1170,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                           (Print.term_to_string t)
                                           (string_of_bool b));
                  if b
-                 then do_unfold_fv cfg env (List.tl stack) t fv
+                 then do_unfold_fv cfg env (List.tl stack) t qninfo fv
                  else rebuild cfg env stack t
             else // not an action, common case
                  let should_delta =
@@ -1205,7 +1205,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                  (string_of_bool should_delta));
 
                  if should_delta
-                 then do_unfold_fv cfg env stack t fv
+                 then do_unfold_fv cfg env stack t qninfo fv
                  else rebuild cfg env stack t
 
           | Tm_bvar x ->
@@ -1505,10 +1505,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 
 
-and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
+and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     //preserve the range info on the returned def
     let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
-    match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
+    match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
          rebuild cfg env stack t0
