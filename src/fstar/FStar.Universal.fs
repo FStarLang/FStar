@@ -248,7 +248,7 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
       let tcmod, env =
         let fn, fmod =
           if Parser.Dep.check_or_use_extracted_interface (Dep.all_cmd_line_files env.dep_graph) fn then
-            let _ = Util.print1 "Extracting interface for: %s, will be using it for type checking/caching\n\n" fmod.name.str in
+            let _ = BU.print1 "Extracting interface for: %s, will be using it for type checking/caching\n\n" fmod.name.str in
             Parser.Dep.interface_filename fn, Tc.extract_interface env fmod
           else fn, fmod
         in

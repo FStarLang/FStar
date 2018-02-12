@@ -24,8 +24,14 @@ OCAML_EXE=$(PROGRAM).ocaml.exe
 KREMLIN_EXE=$(PROGRAM).exe
 
 # a.fst.checked is the binary, checked version of a.fst
-%.checked: %
+%.fst.checked: %
 	$(MY_FSTAR) $*
+	touch $@
+
+# a.fsti.checked is the binary, checked version of a.fsti
+# passing the check_interface flag, which is a no-op if invoked with fsti, is there a better way?
+%.fsti.checked: %
+	$(MY_FSTAR) --check_interface $*
 	touch $@
 
 # The _tags file is a directive to ocamlbuild

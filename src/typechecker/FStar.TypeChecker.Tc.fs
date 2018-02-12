@@ -1562,9 +1562,6 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
     ) lids
   in
 
-  //TODO: implement it, w.r.t. extract_let_rec_annotation
-  let missing_top_level_type = List.existsML (fun lb -> false) in
-
   //extract the type of the letbinding, boolean indicates whether we were successful
   let extract_lbs_annotations (lbs:list<letbinding>) (r:Range.range) :(list<typ> * bool) =
     List.fold_left (fun (l, b) lb ->
