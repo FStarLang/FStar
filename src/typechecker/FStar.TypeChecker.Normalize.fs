@@ -1094,7 +1094,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             compress t
         in
         log cfg  (fun () -> 
-          let t = compress t in
           BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
