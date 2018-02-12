@@ -1565,19 +1565,35 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   //TODO: implement it, w.r.t. extract_let_rec_annotation
   let missing_top_level_type = List.existsML (fun lb -> false) in
 
-  //TODO: calling extract_let_rec_annotation multiple times, can call it just once in the main body, and then pass it around
-  let is_pure_or_ghost_function_with_non_unit_type =
-    List.existsML (fun lb -> let _, t, _ = TcUtil.extract_let_rec_annotation env lb in is_pure_or_ghost_function t && not (is_unit t)) in
-  let is_unit = List.for_all (fun lb -> let _, t, _ = TcUtil.extract_let_rec_annotation env lb in is_unit t) in
+  //extract the type of the letbinding, boolean indicates whether we were successful
+  let extract_lbs_annotations (lbs:list<letbinding>) (r:Range.range) :(list<typ> * bool) =
+    List.fold_left (fun (l, b) lb ->
+      match lb.lbtyp.n with
+      | Tm_unknown ->
+        (match lb.lbdef.n with
+         | Tm_ascribed (_, (Inr c, _), _) ->  //top-level term, NOTE: possibly with effect
+           (U.comp_result c)::l, b  //it's fine to not keep the body as we have the type
+         | Tm_ascribed (_, (Inl t, _), _) -> t::l, b
+         | Tm_abs (bs, e, _) ->
+           (match e.n with
+            | Tm_ascribed (_, (Inr c, _), _) -> (mk (Tm_arrow (bs, c)) None r)::l, b
+            | Tm_ascribed (_, (Inl t, _), _) ->
+              let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
+              (mk (Tm_arrow (bs, c)) None r)::l, b
+            | _ -> lb.lbtyp::l, true)  //can't get the type of the letbinding, so must keep the body
+         | _ -> lb.lbtyp::l, true)  //can't get the type, so must keep the body
+      | _ -> lb.lbtyp::l, b  //take whatever is annotated
+    ) ([], false) lbs
+  in
 
-  let vals_of_lbs (s:sigelt) :list<sigelt> =
-    match s.sigel with
-    | Sig_let (lbs, lids) ->
-        List.map2 (fun lb lid ->
-          let uvs, t, _ = TcUtil.extract_let_rec_annotation env lb in  //the ignored returned component is a boolean for whether the returned type should be checked, ignoring since we always will
-          { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract s.sigquals) }
-        ) (snd lbs) lids
-    | _ -> failwith "Impossible! Expected vals_of_lbs to be called only on Sig_let"
+  //TODO: calling extract_let_rec_annotation multiple times, can call it just once in the main body, and then pass it around
+  let is_pure_or_ghost_function_with_non_unit_type (typs:list<typ>) :bool = List.existsML (fun t -> is_pure_or_ghost_function t && not (is_unit t)) typs in
+  let is_unit (typs:list<typ>) = List.for_all (fun t -> is_unit t) typs in
+
+  let vals_of_lbs (s:sigelt) (lbs:list<letbinding>) (lids:list<lident>) (typs:list<typ>) (quals:list<qualifier>) :list<sigelt> =
+    List.map3 (fun lb lid typ ->
+      { s with sigel = Sig_declare_typ (lid, lb.lbunivs, typ); sigquals = Assumption::(filter_out_abstract quals) }
+    ) lbs lids typs
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1612,14 +1628,15 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
     | Sig_let (lbs, lids) ->
       if val_has_already_been_added lids then []
       else if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
-      else if is_abstract s.sigquals || is_irreducible s.sigquals then
-        //add a val declaration for each of the letbinding, retain the irreducible qualifier, Q. why aren't all vals irreducible already?
-        let _ = if missing_top_level_type (snd lbs) then let _ = BU.print1 "Abstract and irreducible defns must be annotated at the top-level: %s\n\n" (List.hd lids).str in failwith "" else () in
-        vals_of_lbs s
-      else if missing_top_level_type (snd lbs) then [s]  //if top level annotation is missing, retain as is
-      else if not (is_unit (snd lbs)) then [s]  //non-unit types are retained as is
-      else if is_pure_or_ghost_function_with_non_unit_type (snd lbs) then [s]  //pure or ghost functions with non-unit types are retained as is
-      else vals_of_lbs s  //TODO: add case for functions with reifiable effects
+      else
+        let typs, b = extract_lbs_annotations (snd lbs) s.sigrng in
+        if (is_abstract s.sigquals || is_irreducible s.sigquals) then
+          if b then failwith ("Abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str ^ "\n\n")
+          else vals_of_lbs s (snd lbs) lids typs s.sigquals
+      else if b then [s]  //if top level annotation is missing, retain as is
+      else if is_pure_or_ghost_function_with_non_unit_type typs then [s]  //pure or ghost functions with non-unit types are retained as is
+      else if not (is_unit typs) then [s]  //non-unit types are retained as is
+      else vals_of_lbs s (snd lbs) lids typs s.sigquals  //TODO: add case for functions with reifiable effects
     | Sig_main t -> failwith "Did not anticipate this would arise"
     | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]  //should we not permit abstract with assumes anyway?
     | Sig_new_effect _
