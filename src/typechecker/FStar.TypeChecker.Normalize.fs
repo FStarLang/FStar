@@ -190,9 +190,18 @@ let closure_to_string = function
     | Univ _ -> "Univ"
     | Dummy -> "dummy"
 
+type debug_switches = {
+    gen : bool;
+    primop : bool;
+    b380 : bool;
+    norm_delayed : bool;
+    print_normalized : bool;
+}
+
 type cfg = {
     steps: fsteps;
     tcenv: Env.env;
+    debug: debug_switches;
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
     primitive_steps:list<primitive_step>;
     strong : bool;                       // under a binder
@@ -242,15 +251,10 @@ let stack_to_string s =
     List.map stack_elt_to_string s |> String.concat "; "
 
 let log cfg f =
-    if Env.debug cfg.tcenv (Options.Other "Norm")
-    then f()
-    else ()
+    if cfg.debug.gen then f () else ()
 
 let log_primops cfg f =
-    if Env.debug cfg.tcenv (Options.Other "Norm")
-    || Env.debug cfg.tcenv (Options.Other "Primops")
-    then f()
-    else ()
+    if cfg.debug.primop then f () else ()
 
 let is_empty = function
     | [] -> true
@@ -358,7 +362,7 @@ let norm_universe cfg (env:env) u =
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
 let rec closure_as_term cfg (env:env) t =
-    log cfg  (fun () -> BU.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
+    log cfg (fun () -> BU.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
     match env with
         | [] when not <| cfg.steps.compress_uvars -> t
         | _ ->
@@ -1013,7 +1017,7 @@ let maybe_simplify_aux cfg env stack tm =
 
 let maybe_simplify cfg env stack tm =
     let tm' = maybe_simplify_aux cfg env stack tm in
-    if Env.debug cfg.tcenv <| Options.Other "380"
+    if cfg.debug.b380
     then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
                    (if cfg.steps.simplify then "" else "NOT ")
                    (Print.term_to_string tm) (Print.term_to_string tm');
@@ -1082,7 +1086,7 @@ let should_reify cfg stack = match stack with
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
-            if Env.debug cfg.tcenv (Options.Other "NormDelayed")
+            if cfg.debug.norm_delayed
             then (match t.n with
                   | Tm_delayed _ ->
                     BU.print1 "NORM delayed: %s\n" (Print.term_to_string t)
@@ -1144,7 +1148,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                ; normalize_pure_lets = true } in
             let stack' =
               let tail = (Cfg cfg)::stack in
-              if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+              if cfg.debug.print_normalized
               then Debug(t, BU.now())::tail
               else tail in
             norm cfg' env stack' tm
@@ -1855,7 +1859,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   | [] -> t
 
   | Debug (tm, time_then) :: stack ->
-    if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+    if cfg.debug.print_normalized
     then begin
       let time_now = BU.now () in
       BU.print3 "Normalized (%s ms) %s\n\tto %s\n"
@@ -2100,6 +2104,11 @@ let config s e =
         | [] -> [Env.NoDelta]
         | _ -> d in
     {tcenv=e;
+     debug = { gen = Env.debug e (Options.Other "Norm")
+             ; primop = Env.debug e (Options.Other "Primops")
+             ; b380 = Env.debug e (Options.Other "380")
+             ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
+             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
      delta_level=d;
      primitive_steps=built_in_primitive_steps;
