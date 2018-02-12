@@ -595,6 +595,11 @@ let eff_decl_to_string' for_free r q ed =
 let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
 
+let paren s = "(" ^ s ^ ")"
+
+let attrs_to_string attrs =
+    U.format1 "[@%s]" (attrs |> List.map (fun t -> paren (term_to_string t)) |> String.concat " ")
+
 let rec sigelt_to_string (x: sigelt) =
  if not (Options.ugly()) then
     let e = Resugar.resugar_sigelt x in
@@ -660,9 +665,7 @@ let rec sigelt_to_string (x: sigelt) =
       in
       match x.sigattrs with
       | [] -> basic
-      | _ ->
-        let attrs = x.sigattrs |> List.map term_to_string in
-        U.format2 "[@%s]\n%s" (attrs |> String.concat " ") basic
+      | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
