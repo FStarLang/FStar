@@ -1110,16 +1110,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          // we don't unfold dm4f actions unless reifying
-          | Tm_fvar fv when Env.is_action cfg.tcenv (S.lid_of_fv fv) ->
-            let b = should_reify cfg stack in
-            log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
-                                     (Print.term_to_string t)
-                                     (string_of_bool b));
-            if b
-            then do_unfold_fv cfg env (List.tl stack) t fv
-            else rebuild cfg env stack t
-
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
               || (U.is_fstar_tactics_quote hd && cfg.steps.no_delta_steps)
@@ -1163,6 +1153,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let stack = us::stack in
                  norm cfg env stack t'
 
+          // we don't unfold dm4f actions unless reifying
+          | Tm_fvar fv when Env.is_action cfg.tcenv (S.lid_of_fv fv) ->
+            let b = should_reify cfg stack in
+            log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+                                     (Print.term_to_string t)
+                                     (string_of_bool b));
+            if b
+            then do_unfold_fv cfg env (List.tl stack) t fv
+            else rebuild cfg env stack t
+
           | Tm_fvar f ->
             let should_delta =
                 cfg.delta_level |> BU.for_some (function
@@ -1172,7 +1172,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Eager_unfolding_only -> true
                     | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
             let should_delta =
-                if List.mem Env.UnfoldTac cfg.delta_level &&
+                if cfg.steps.unfold_tac &&
                    (  S.fv_eq_lid f PC.and_lid
                    || S.fv_eq_lid f PC.or_lid
                    || S.fv_eq_lid f PC.imp_lid
@@ -1185,8 +1185,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.false_lid)
                 then false
                 else begin
-                  if not (Option.isSome cfg.steps.unfold_only) || Option.isSome cfg.steps.unfold_attr
-                  then
                     let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
                     should_delta &&
                     (match cfg.steps.unfold_only with
@@ -1198,7 +1196,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                     | Some attrs -> BU.for_some (attr_eq attr) attrs
                                     | None -> true
                                     end)
-                  else should_delta
                 end
             in
 
