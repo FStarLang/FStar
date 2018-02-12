@@ -1526,7 +1526,7 @@ let tc_modul env modul =
   let modul, env = tc_partial_modul env modul true in
   finish_partial_modul env modul
 
-let extract_interface (m:modul) :modul =
+let extract_interface (env:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
@@ -1562,30 +1562,19 @@ let extract_interface (m:modul) :modul =
     ) lids
   in
 
-  (*
-   * An annotated letbinding is desugared as: let f : Tm_unknown = fun (xi:ti) -> (e <: C)
-   * This function tries to extract the type
-   *)
-  let extract_lb_type (lb:letbinding) (r:Range.range) :option<typ> =
-    match lb.lbtyp.n with
-    | Tm_unknown ->
-      (match lb.lbdef.n with
-       | Tm_abs (bs, { n = Tm_ascribed (_, (Inr c, _), _) }, _) when List.for_all (fun (b, _) -> not (b.sort.n = Tm_unknown)) bs ->
-         Some (mk (Tm_arrow (bs, c)) None r)
-       | _ -> None)
-    | _ -> Some lb.lbtyp
-  in
-
   let missing_top_level_type = List.existsML (fun lb -> extract_lb_type lb Range.dummyRange = None) in
 
-  let is_pure_or_ghost_function_with_non_unit_type = List.existsML (fun lb -> is_pure_or_ghost_function lb.lbtyp && not (is_unit lb.lbtyp)) in
-  let is_unit = List.for_all (fun lb -> is_unit lb.lbtyp) in
+  //TODO: calling extract_let_rec_annotation multiple times, can call it just once in the main body, and then pass it around
+  let is_pure_or_ghost_function_with_non_unit_type =
+    List.existsML (fun lb -> let _, t, _ = extract_let_rec_annotation env lb in is_pure_or_ghost_function t && not (is_unit t)) in
+  let is_unit = List.for_all (fun lb -> let _, t, _ = extract_let_rec_annotation env lb in is_unit t) in
 
   let vals_of_lbs (s:sigelt) :list<sigelt> =
     match s.sigel with
     | Sig_let (lbs, lids) ->
         List.map2 (fun lb lid ->
-          { s with sigel = Sig_declare_typ (lid, lb.lbunivs, extract_lb_type lb s.sigrng |> Option.get); sigquals = Assumption::(filter_out_abstract s.sigquals) }
+          let uvs, t, _ = extract_let_rec_annotation env lb in  //the ignored returned component is a boolean for whether the returned type should be checked, ignoring since we always will
+          { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract s.sigquals) }
         ) (snd lbs) lids
     | _ -> failwith "Impossible! Expected vals_of_lbs to be called only on Sig_let"
   in
