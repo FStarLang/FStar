@@ -610,7 +610,7 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
-let lookup_definition_qninfo delta_levels lid qninfo =
+let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in

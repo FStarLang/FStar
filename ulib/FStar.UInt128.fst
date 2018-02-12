@@ -34,7 +34,6 @@ let v_inj (x1 x2: t): Lemma (requires (v x1 == v x2))
  assert (uint_to_t (v x2) == x2);
  ()
 
-[@ Substitute ]
 let constant_time_carry (a b: U64.t) : Tot U64.t =
   let open U64 in
   // CONSTANT_TIME_CARRY macro
@@ -56,7 +55,6 @@ let carry (a b: U64.t) : Pure U64.t
 let carry_sum_ok (a b:U64.t) :
   Lemma (U64.v (carry (U64.add_mod a b) b) == (U64.v a + U64.v b) / (pow2 64)) = ()
 
-[@ Substitute ]
 let add (a b: t) : Pure t
   (requires (v a + v b < pow2 128))
   (ensures (fun r -> v a + v b = v r)) =
@@ -65,7 +63,6 @@ let add (a b: t) : Pure t
   { low = l;
     high = U64.add (U64.add a.high b.high) (carry l b.low); }
 
-[@ Substitute ]
 let add_underspec (a b: t) =
     let l = U64.add_mod a.low b.low in
     begin
@@ -136,7 +133,6 @@ let mod_mod_pat a k k' =
   assert (a % k < k)
 
 #set-options "--z3rlimit 20"
-[@ Substitute ]
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
@@ -174,7 +170,6 @@ let add_mod (a b: t) : Pure t
   r
 #set-options "--z3rlimit 5"
 
-[@ Substitute ]
 let sub (a b: t) : Pure t
   (requires (v a - v b >= 0))
   (ensures (fun r -> v r = v a - v b)) =
@@ -182,13 +177,11 @@ let sub (a b: t) : Pure t
   { low = l;
     high = U64.sub (U64.sub a.high b.high) (carry a.low l); }
 
-[@ Substitute ]
 let sub_underspec (a b: t) =
   let l = U64.sub_mod a.low b.low in
   { low = l;
     high = U64.sub_underspec (U64.sub_underspec a.high b.high) (carry a.low l); }
 
-[@ Substitute ]
 let sub_mod_impl (a b: t) : t =
   let l = U64.sub_mod a.low b.low in
   { low = l;
@@ -248,7 +241,6 @@ let sub_mod_wrap_ok (a b:t) : Lemma
     else sub_mod_wrap2_ok a b
 
 #set-options "--z3rlimit 20"
-[@ Substitute ]
 let sub_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = (v a - v b) % pow2 128)) =
@@ -289,7 +281,6 @@ let logand_vec_append #n1 #n2 a1 b1 a2 b2 =
   Seq.lemma_eq_intro (Seq.append (BV.logand_vec a1 b1) (BV.logand_vec a2 b2))
                      (BV.logand_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 
-[@ Substitute ]
 let logand (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = UInt.logand #128 (v a) (v b))) =
@@ -311,7 +302,6 @@ let logxor_vec_append #n1 #n2 a1 b1 a2 b2 =
   Seq.lemma_eq_intro (Seq.append (BV.logxor_vec a1 b1) (BV.logxor_vec a2 b2))
                      (BV.logxor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 
-[@ Substitute ]
 let logxor (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = UInt.logxor #128 (v a) (v b))) =
@@ -333,7 +323,6 @@ let logor_vec_append #n1 #n2 a1 b1 a2 b2 =
   Seq.lemma_eq_intro (Seq.append (BV.logor_vec a1 b1) (BV.logor_vec a2 b2))
                      (BV.logor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 
-[@ Substitute ]
 let logor (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = UInt.logor #128 (v a) (v b))) =
@@ -355,7 +344,6 @@ let lognot_vec_append #n1 #n2 a1 a2 =
   Seq.lemma_eq_intro (Seq.append (BV.lognot_vec a1) (BV.lognot_vec a2))
                       (BV.lognot_vec #(n1 + n2) (Seq.append a1 a2))
 
-[@ Substitute ]
 let lognot (a: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = UInt.lognot #128 (v a))) =
@@ -486,7 +474,6 @@ let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2
 
 let mul_abc_to_acb (a b c: int) : Lemma (a * b * c == a * c * b) = ()
 
-[@ Substitute ]
 let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r ->
@@ -570,7 +557,6 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   ()
 
 #set-options "--z3rlimit 80"
-[@ Substitute ]
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -588,7 +574,6 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 
-[@ Substitute ]
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -602,12 +587,10 @@ let shift_left_large a s =
   r
 #set-options "--z3rlimit 64"
 
-[@ Substitute ]
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
   else shift_left_large a s
 
-[@ Substitute ]
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -633,7 +616,6 @@ let mul_pow2_diff a n1 n2 =
   mul_div_cancel (a * pow2 (n1 - n2)) (pow2 n2);
   Math.pow2_plus (n1 - n2) n2
 
-[@ Substitute ]
 let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -670,7 +652,6 @@ let u128_div_pow2 a s =
   Math.paren_mul_right (U64.v a.high) (pow2 (64-s)) (pow2 s);
   Math.division_addition_lemma (U64.v a.low) (pow2 s) (U64.v a.high * pow2 (64 - s))
 
-[@ Substitute ]
 let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
@@ -686,7 +667,6 @@ let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   u128_div_pow2 a s;
   r
 
-[@ Substitute ]
 let shift_right_large (a: t) (s: U32.t{U32.v s >= 64 /\ U32.v s < 128}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
@@ -699,7 +679,6 @@ let shift_right_large (a: t) (s: U32.t{U32.v s >= 64 /\ U32.v s < 128}) : Pure t
   div_plus_multiple (U64.v a.low) (U64.v a.high) (pow2 64);
   r
 
-[@ Substitute ]
 let shift_right (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 128))
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
@@ -707,18 +686,13 @@ let shift_right (a: t) (s: U32.t) : Pure t
     then shift_right_small a s
     else shift_right_large a s
 
-[@ Substitute ]
 let eq (a b:t) = U64.eq a.low b.low && U64.eq a.high b.high
-[@ Substitute ]
 let gt (a b:t) = U64.gt a.high b.high ||
                  (U64.eq a.high b.high && U64.gt a.low b.low)
-[@ Substitute ]
 let lt (a b:t) = U64.lt a.high b.high ||
                  (U64.eq a.high b.high && U64.lt a.low b.low)
-[@ Substitute ]
 let gte (a b:t) = U64.gt a.high b.high ||
                   (U64.eq a.high b.high && U64.gte a.low b.low)
-[@ Substitute ]
 let lte (a b:t) = U64.lt a.high b.high ||
                   (U64.eq a.high b.high && U64.lte a.low b.low)
 
@@ -741,7 +715,6 @@ val u64_1s_and (a b:U64.t) :
   [SMTPat (U64.logand a b)]
 let u64_1s_and a b = UInt.logand_lemma_2 (U64.v a)
 
-[@ Substitute ]
 let eq_mask (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a = v b ==> v r = pow2 128 - 1) /\ (v a <> v b ==> v r = 0))) =
@@ -788,7 +761,6 @@ val u64_not_1 (a:U64.t) :
 let u64_not_1 a =
   UInt.nth_lemma (UInt.lognot #64 (UInt.ones 64)) (UInt.zero 64)
 
-[@ Substitute ]
 let gte_mask (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a >= v b ==> v r = pow2 128 - 1) /\ (v a < v b ==> v r = 0))) =
@@ -801,16 +773,13 @@ let gte_mask (a b: t) : Pure t
   lt_characterization a b;
   { low = mask; high = mask; }
 
-[@ Substitute ]
 let uint64_to_uint128 (a:U64.t) = { low = a; high = U64.uint_to_t 0; }
 
-[@ Substitute ]
 let uint128_to_uint64 (a:t) : b:U64.t{U64.v b == v a % pow2 64} = a.low
 
 inline_for_extraction
 let u64_l32_mask: x:U64.t{U64.v x == pow2 32 - 1} = U64.uint_to_t 0xffffffff
 
-[@ Substitute ]
 let u64_mod_32 (a: U64.t) : Pure U64.t
   (requires True)
   (ensures (fun r -> U64.v r = U64.v a % pow2 32)) =
@@ -826,7 +795,6 @@ let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
-[@ Substitute ]
 let u32_combine (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
@@ -855,7 +823,6 @@ val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
 let u32_product_bound a b =
   uint_product_bound #32 a b
 
-[@ Substitute ]
 let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
@@ -883,9 +850,7 @@ let mul32 x y =
   assert (U64.v x * U32.v y == U64.v x1y' * pow2 32 + U64.v x0y);
   r
 
-[@ Substitute ]
 let l32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x % pow2 32
-[@ Substitute ]
 let h32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x / pow2 32
 
 val mul32_bound : x:UInt.uint_t 32 -> y:UInt.uint_t 32 ->
@@ -894,36 +859,27 @@ let mul32_bound x y =
   u32_product_bound x y;
   x * y
 
-[@ Substitute ]
 let pll (x y: U64.t) : n:UInt.uint_t 64{n < pow2 64 - pow2 32 - 1} =
   mul32_bound (l32 (U64.v x)) (l32 (U64.v y))
-[@ Substitute ]
 let plh (x y: U64.t) : n:UInt.uint_t 64{n < pow2 64 - pow2 32 - 1} =
   mul32_bound (l32 (U64.v x)) (h32 (U64.v y))
-[@ Substitute ]
 let phl (x y: U64.t) : n:UInt.uint_t 64{n < pow2 64 - pow2 32 - 1} =
   mul32_bound (h32 (U64.v x)) (l32 (U64.v y))
-[@ Substitute ]
 let phh (x y: U64.t) : n:UInt.uint_t 64{n < pow2 64 - pow2 32 - 1} =
   mul32_bound (h32 (U64.v x)) (h32 (U64.v y))
 
-[@ Substitute ]
 let pll_l (x y: U64.t) : UInt.uint_t 32 =
   l32 (pll x y)
-[@ Substitute ]
 let pll_h (x y: U64.t) : UInt.uint_t 32 =
   h32 (pll x y)
 
-[@ Substitute ]
 let mul_wide_low (x y: U64.t) = (plh x y + (phl x y + pll_h x y) % pow2 32) * pow2 32 % pow2 64 + pll_l x y
 
-[@ Substitute ]
 let mul_wide_high (x y: U64.t) =
   phh x y +
     (phl x y + pll_h x y) / pow2 32 +
     (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32
 
-[@ Substitute ]
 let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
   (requires True)
   (ensures (fun r -> let (u1, w3, x', t') = r in
@@ -947,14 +903,12 @@ let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
   (u1, w3, x', t')
 
 // similar to u32_combine, but use % 2^64 * 2^32
-[@ Substitute ]
 let u32_combine' (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi * pow2 32 % pow2 64 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
 
 #set-options "--z3rlimit 20"
-[@ Substitute ]
 let mul_wide_impl (x: U64.t) (y: U64.t) :
     Tot (r:t{U64.v r.low == mul_wide_low x y /\
              U64.v r.high == mul_wide_high x y % pow2 64}) =
@@ -1127,7 +1081,6 @@ let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   product_bound x y (pow2 n);
   pow2_div_bound #(n+n) (x * y) n
 
-[@ Substitute ]
 let mul_wide (x y:U64.t) : Pure t
   (requires True)
   (ensures (fun r -> v r == U64.v x * U64.v y)) =

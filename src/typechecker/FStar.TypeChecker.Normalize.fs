@@ -1366,7 +1366,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps.no_delta_steps)
-            && ((U.is_pure_effect n && cfg.normalize_pure_lets)
+            && ((U.is_pure_effect n &&
+                (cfg.normalize_pure_lets || BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs))
                 || (U.is_ghost_effect n
                     && not (cfg.steps.pure_subterms_within_computations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in

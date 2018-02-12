@@ -1125,8 +1125,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 
 #reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 
-(** Corresponds to memcpy. Note: the order of arguments it the converse of
- * memcpy, meaning b is the destination buffer. Sigh. *)
+(** Corresponds to memcpy *)
 val blit: #t:Type
   -> a:buffer t
   -> idx_a:UInt32.t{v idx_a <= length a}

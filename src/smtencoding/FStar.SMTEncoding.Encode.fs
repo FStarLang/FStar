@@ -683,8 +683,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
-      | Tm_ascribed(t, k, _) ->
-        encode_term t env
+      | Tm_ascribed(t, (k,_), _) ->
+        if (match k with BU.Inl t -> U.is_unit t | _ -> false)
+        then Term.mk_Term_unit, []
+        else encode_term t env
 
       | Tm_meta ({n = Tm_unknown}, Meta_alien (obj, desc, ty)) ->
         let tsym = varops.fresh "t", Term_sort in
@@ -1113,7 +1115,7 @@ and encode_let
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-        let ee1, decls1 = encode_term e1 env in
+        let ee1, decls1 = encode_term (U.ascribe e1 (BU.Inl t1, None)) env in
         let xs, e2 = SS.open_term [(x, None)] e2 in
         let x, _ = List.hd xs in
         let env' = push_term_var env x ee1 in
@@ -2015,17 +2017,17 @@ let encode_top_level_let :
                 (* Open universes *)
                 let flid = flid_fv.fv_name.v in
                 let env', e, t_norm =
-                let tcenv', _, e_t =
-                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
-                let e, t_norm =
-                    match e_t with
-                    | [e; t_norm] -> e, t_norm
-                    | _ -> failwith "Impossible" in
-                {env with tcenv=tcenv'}, e, t_norm
+                  let tcenv', _, e_t =
+                      Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                  let e, t_norm =
+                      match e_t with
+                      | [e; t_norm] -> e, t_norm
+                      | _ -> failwith "Impossible" in
+                  {env with tcenv=tcenv'}, e, t_norm
                 in
 
                 (* Open binders *)
-                let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
+                let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
@@ -2034,10 +2036,10 @@ let encode_top_level_let :
                 let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
 
                 let body =
-                (* Reify the body if needed *)
-                if is_reifiable_function env'.tcenv t_norm
-                then TcUtil.reify_body env'.tcenv body
-                else body
+                  (* Reify the body if needed *)
+                  if is_reifiable_function env'.tcenv t_norm
+                  then TcUtil.reify_body env'.tcenv body
+                  else U.ascribe body (BU.Inl t_body, None)
                 in
                 let app = mk_app curry f ftok vars in
                 let app, (body, decls2) =

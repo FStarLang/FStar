@@ -785,14 +785,15 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-let mk_letbinding lbname univ_vars typ eff def =
+let mk_letbinding lbname univ_vars typ eff def lbattrs =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
-     lbdef=def}
+     lbdef=def;
+     lbattrs=lbattrs}
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
+let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
     let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
@@ -803,7 +804,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
     in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
-    mk_letbinding lbname univ_vars typ eff def
+    mk_letbinding lbname univ_vars typ eff def attrs
 
 let open_univ_vars_binders_and_comp uvs binders c =
     match binders with
@@ -1324,6 +1325,7 @@ let action_as_lb eff_lid a =
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
       (abs a.action_params a.action_defn None)
+      []
   in
   { sigel = Sig_let((false, [lb]), [a.action_name]);
     sigrng = a.action_defn.pos;
