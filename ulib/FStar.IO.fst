@@ -8,6 +8,7 @@ assume new type fd_write : Type0
 
 assume val print_newline : unit -> ML unit
 assume val print_string : string -> ML unit
+assume val print_bytes : list FStar.UInt8.t -> ML unit
 assume val print_lbytes : nat -> list FStar.UInt8.t -> ML unit
 assume val print_any : 'a -> ML unit
 assume val input_line : unit -> ML string

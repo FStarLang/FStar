@@ -7,6 +7,7 @@ let fpr = Printf.fprintf
 
 let print_newline = print_newline
 let print_string s = pr "%s" s; flush stdout
+let print_bytes s = FStar_List.iter (fun b -> pr "%02x" b; flush stdout) s
 let print_lbytes l s = FStar_List.iteri (fun i b -> if i < l then pr "%02x" b; flush stdout) s
 let print_any s = output_value stdout s; flush stdout
 let input_line = read_line
