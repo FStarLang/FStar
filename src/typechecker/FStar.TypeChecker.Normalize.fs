@@ -1153,60 +1153,61 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let stack = us::stack in
                  norm cfg env stack t'
 
-          // we don't unfold dm4f actions unless reifying
-          | Tm_fvar fv when Env.is_action cfg.tcenv (S.lid_of_fv fv) ->
-            let b = should_reify cfg stack in
-            log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
-                                     (Print.term_to_string t)
-                                     (string_of_bool b));
-            if b
-            then do_unfold_fv cfg env (List.tl stack) t fv
-            else rebuild cfg env stack t
+          | Tm_fvar fv ->
+            let qninfo = Env.lookup_qname cfg.tcenv (S.lid_of_fv fv) in
+            if Env.qninfo_is_action qninfo
+            // we don't unfold dm4f actions unless reifying
+            then let b = should_reify cfg stack in
+                 log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+                                          (Print.term_to_string t)
+                                          (string_of_bool b));
+                 if b
+                 then do_unfold_fv cfg env (List.tl stack) t fv
+                 else rebuild cfg env stack t
+            else // not an action, common case
+                 let should_delta =
+                     cfg.delta_level |> BU.for_some (function
+                         | Env.UnfoldTac
+                         | NoDelta -> false
+                         | Env.Inlining
+                         | Eager_unfolding_only -> true
+                         | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l) in
+                 let should_delta =
+                     if cfg.steps.unfold_tac &&
+                        (  S.fv_eq_lid fv PC.and_lid
+                        || S.fv_eq_lid fv PC.or_lid
+                        || S.fv_eq_lid fv PC.imp_lid
+                        || S.fv_eq_lid fv PC.forall_lid
+                        || S.fv_eq_lid fv PC.squash_lid
+                        || S.fv_eq_lid fv PC.exists_lid
+                        || S.fv_eq_lid fv PC.eq2_lid
+                        || S.fv_eq_lid fv PC.eq3_lid
+                        || S.fv_eq_lid fv PC.true_lid
+                        || S.fv_eq_lid fv PC.false_lid)
+                     then false
+                     else begin
+                         let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
+                         should_delta &&
+                         (match cfg.steps.unfold_only with
+                          | None -> true
+                          | Some lids -> BU.for_some (fv_eq_lid fv) lids) &&
+                         (match cfg.steps.unfold_attr with
+                          | None -> true
+                          | Some attr -> begin match Env.attrs_of_qninfo qninfo with
+                                         | Some attrs -> BU.for_some (attr_eq attr) attrs
+                                         | None -> true
+                                         end)
+                     end
+                 in
 
-          | Tm_fvar f ->
-            let should_delta =
-                cfg.delta_level |> BU.for_some (function
-                    | Env.UnfoldTac
-                    | NoDelta -> false
-                    | Env.Inlining
-                    | Eager_unfolding_only -> true
-                    | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
-            let should_delta =
-                if cfg.steps.unfold_tac &&
-                   (  S.fv_eq_lid f PC.and_lid
-                   || S.fv_eq_lid f PC.or_lid
-                   || S.fv_eq_lid f PC.imp_lid
-                   || S.fv_eq_lid f PC.forall_lid
-                   || S.fv_eq_lid f PC.squash_lid
-                   || S.fv_eq_lid f PC.exists_lid
-                   || S.fv_eq_lid f PC.eq2_lid
-                   || S.fv_eq_lid f PC.eq3_lid
-                   || S.fv_eq_lid f PC.true_lid
-                   || S.fv_eq_lid f PC.false_lid)
-                then false
-                else begin
-                    let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
-                    should_delta &&
-                    (match cfg.steps.unfold_only with
-                     | None -> true
-                     | Some lids -> BU.for_some (fv_eq_lid f) lids) &&
-                    (match cfg.steps.unfold_attr with
-                     | None -> true
-                     | Some attr -> begin match lookup_attrs_of_lid cfg.tcenv f.fv_name.v with
-                                    | Some attrs -> BU.for_some (attr_eq attr) attrs
-                                    | None -> true
-                                    end)
-                end
-            in
+                 log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
+                                 (Print.term_to_string t)
+                                 (Range.string_of_range t.pos)
+                                 (string_of_bool should_delta));
 
-            log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
-                            (Print.term_to_string t)
-                            (Range.string_of_range t.pos)
-                            (string_of_bool should_delta));
-
-            if not should_delta
-            then rebuild cfg env stack t
-            else do_unfold_fv cfg env stack t f
+                 if not should_delta
+                 then rebuild cfg env stack t
+                 else do_unfold_fv cfg env stack t fv
 
           | Tm_bvar x ->
             begin match lookup_bvar env x with

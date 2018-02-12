@@ -165,11 +165,13 @@ val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
 
+type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
 val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
-val lookup_qname           : env -> lident -> option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+val lookup_qname           : env -> lident -> qninfo
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
 val try_lookup_and_inst_lid: env -> universes -> lident -> option<(typ * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
@@ -181,6 +183,7 @@ val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
@@ -191,6 +194,7 @@ val lookup_projector       : env -> lident -> int -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
+val qninfo_is_action       : qninfo -> bool
 val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
