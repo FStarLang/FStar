@@ -27,3 +27,4 @@ val load_checked_module: env -> modul -> env
 val tc_decls: env -> list<sigelt> -> list<sigelt> * env
 val tc_partial_modul: env -> modul -> bool -> modul * env
 val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * env
+val extract_interface: env -> modul -> modul

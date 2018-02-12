@@ -42,6 +42,7 @@ module Pars    = FStar.Parser.ParseIt
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util
+module Dep     = FStar.Parser.Dep
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -178,7 +179,7 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 (***********************************************************************)
 let load_module_from_cache env fn
     : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
-    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let cache_file = Dep.cache_file_name (Dep.all_cmd_line_files env.dep_graph) fn in
     let fail tag =
          FStar.Errors.log_issue
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
@@ -219,7 +220,7 @@ let load_module_from_cache env fn
     else fail "Absent"
 
 let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
-    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let cache_file = FStar.Parser.Dep.cache_file_name (Parser.Dep.all_cmd_line_files env.dep_graph) fn in
     let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
     match digest with
     | Some hashes ->
@@ -239,17 +240,22 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
   Syntax.reset_gensym();
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
-      let check_mod () =
+      let check_mod fmod () =
           let (tcmod, env), time =
             FStar.Util.record_time (fun () -> Tc.check_module env fmod) in
           (tcmod, time), env
       in
       let tcmod, env =
+        let fn, fmod =
+          if Parser.Dep.check_or_use_extracted_interface (Dep.all_cmd_line_files env.dep_graph) fn then
+            Parser.Dep.interface_filename fn, Tc.extract_interface env fmod
+          else fn, fmod
+        in
         if (Options.should_verify fmod.name.str //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
-        then SMT.with_hints_db (Pars.find_file fn) check_mod
-        else check_mod() //don't add a hints file for modules that are not actually verified
+        then SMT.with_hints_db (Pars.find_file fn) (check_mod fmod)
+        else check_mod fmod () //don't add a hints file for modules that are not actually verified
       in
       let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, mii, env
@@ -274,13 +280,6 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          (tcmod,0), env
   else let tcmod, _, env = tc_source_file () in
        tcmod, env
-
-(***********************************************************************)
-(* Checking Prims.fst                                                  *)
-(***********************************************************************)
-let tc_prims (env: TcEnv.env)
-    : (Syntax.modul * int) * TcEnv.env =
-  tc_one_file env None (Options.prims())
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

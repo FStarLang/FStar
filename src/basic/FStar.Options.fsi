@@ -202,6 +202,7 @@ val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val use_extracted_interfaces    : unit    -> bool
+val check_interface             : unit    -> bool
 
 val codegen_fsharp              : unit    -> bool
 

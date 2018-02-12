@@ -80,6 +80,10 @@ let is_interface (f: string): bool =
 let is_implementation f =
   not (is_interface f)
 
+let interface_filename (f:string) :string =
+  if is_interface f then f
+  else check_and_strip_suffix f |> must |> (fun x -> x ^ ".fsti")
+
 let list_of_option = function Some x -> [x] | None -> []
 
 let list_of_pair (intf, impl) =
@@ -119,6 +123,7 @@ let deps_add_dep (Deps m) k v = BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
 let empty_deps = Mk (deps_empty (), BU.smap_create 0, [])
+let all_cmd_line_files = fun (Mk (_, _, fns)) -> fns
 
 let module_name_of_dep = function
     | UseInterface m
@@ -152,7 +157,15 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-let cache_file_name fn =
+let check_or_use_extracted_interface all_cmd_line_files fn =
+  if is_interface fn then false
+  else
+    let is_cmd_line_fn = List.contains fn all_cmd_line_files in
+    (Options.use_extracted_interfaces () && (not is_cmd_line_fn)) ||
+    (Options.check_interface () && is_cmd_line_fn)
+
+let cache_file_name all_cmd_line_files fn =
+    let fn = if check_or_use_extracted_interface all_cmd_line_files fn then interface_filename fn else fn in
     FStar.Options.prepend_cache_dir
         (if Options.lax()
          then fn ^ ".checked.lax"
@@ -171,7 +184,7 @@ let file_of_dep_aux
            key = lowercase_module_name fn)
     in
     let maybe_add_suffix f =
-        if use_checked_file then cache_file_name f else f
+        if use_checked_file then cache_file_name all_cmd_line_files f else f
     in
     match d with
     | UseInterface key ->
@@ -798,7 +811,7 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
         | Some fn -> fn
         | _ -> fn
     in
-    let cache_file = cache_file_name fn in
+    let cache_file = cache_file_name all_cmd_line_files fn in
     let digest_of_file fn =
         if Options.debug_any()
         then BU.print2 "%s: contains digest of %s\n" cache_file fn;
@@ -825,7 +838,7 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let cache_fn = cache_file_name fn in
+          let cache_fn = cache_file_name all_cmd_line_files fn in
           if BU.file_exists cache_fn
           then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
           else (if Options.debug_any()
@@ -921,7 +934,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = norm_path (cache_file_name f) in
+    let cache_file f = norm_path (cache_file_name all_cmd_line_files f) in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in

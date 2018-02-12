@@ -1526,7 +1526,7 @@ let tc_modul env modul =
   let modul, env = tc_partial_modul env modul true in
   finish_partial_modul env modul
 
-let extract_interface (env:env) (m:modul) :modul =  //env is only used when calling extract_let_rec_annotation, so we don't update it at all
+let extract_interface (env:env) (m:modul) :modul =  //env is only used when calling extract_let_rec_annotation, so we don't update it at at all
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
@@ -1558,7 +1558,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
 
   let val_has_already_been_added (lids:list<lident>) :bool =
     List.existsML (fun lid ->
-      List.existsML (fun lid' -> lid_equals lid lid') !added_vals  //for a let rec, do we allow vals only for some of the bindings?
+      List.existsML (fun lid' -> lid_equals lid lid') !added_vals  //TODO: check for a let rec, do we allow vals only for some of the bindings?
     ) lids
   in
 
@@ -1632,17 +1632,6 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
 
 let check_module env m =
-  //if this file is a dependency, and it is not already an interface, we will extract interface from it and verify that
-  let m =
-    if (Options.use_extracted_interfaces () && (not (Options.should_verify m.name.str)) && (not m.is_interface)) then begin
-      //BU.print1 "The module is a dependence, before extracting interface: \n\n%s\n\n" (Print.modul_to_string m);
-      let m = extract_interface env m in
-      //BU.print1 "The module is a dependence, verifying the extracted interface: \n\n%s\n\n" (Print.modul_to_string m);
-      m
-    end
-    else m
-  in
-
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
 
