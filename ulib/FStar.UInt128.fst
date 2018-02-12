@@ -274,7 +274,7 @@ let to_vec_v (a: t) :
   Lemma (vec128 a == Seq.append (vec64 a.high) (vec64 a.low)) =
   to_vec_append (U64.v a.low) (U64.v a.high)
 
-val logand_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logand_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logand_vec a1 b1) (BV.logand_vec a2 b2) ==
          BV.logand_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logand_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -295,7 +295,7 @@ let logand (a b: t) : Pure t
   assert (vec128 r == BV.logand_vec (vec128 a) (vec128 b));
   r
 
-val logxor_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logxor_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logxor_vec a1 b1) (BV.logxor_vec a2 b2) ==
          BV.logxor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logxor_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -316,7 +316,7 @@ let logxor (a b: t) : Pure t
   assert (vec128 r == BV.logxor_vec (vec128 a) (vec128 b));
   r
 
-val logor_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logor_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logor_vec a1 b1) (BV.logor_vec a2 b2) ==
         BV.logor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logor_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -337,7 +337,7 @@ let logor (a b: t) : Pure t
   assert (vec128 r == BV.logor_vec (vec128 a) (vec128 b));
   r
 
-val lognot_vec_append (#n1 #n2: n:nat{n > 0}) (a1: BV.bv_t n1) (a2: BV.bv_t n2) :
+val lognot_vec_append (#n1 #n2: pos) (a1: BV.bv_t n1) (a2: BV.bv_t n2) :
   Lemma (Seq.append (BV.lognot_vec a1) (BV.lognot_vec a2) ==
         BV.lognot_vec #(n1 + n2) (Seq.append a1 a2))
 let lognot_vec_append #n1 #n2 a1 a2 =
