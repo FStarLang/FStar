@@ -420,7 +420,10 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let ps, w = proofstate_of_goal_ty env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
-    match run tau ps with
+    let res, ms = BU.record_time (fun () -> run tau ps) in
+    if !tacdbg then
+        BU.print1 "Tactic ran in %s milliseconds\n" (string_of_int ms);
+    match res with
     | Success (_, ps) ->
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?
