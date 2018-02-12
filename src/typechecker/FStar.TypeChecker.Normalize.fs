@@ -78,6 +78,90 @@ type step =
   | Unascribe
 and steps = list<step>
 
+type fsteps = {
+    beta : bool;
+    iota : bool;
+    zeta : bool;
+    weak : bool;
+    hnf  : bool;
+    primops : bool;
+    eager_unfolding : bool;
+    inlining : bool;
+    no_delta_steps : bool;
+    unfold_until : option<S.delta_depth>;
+    unfold_only : option<list<I.lid>>;
+    unfold_attr : option<attribute>;
+    unfold_tac : bool;
+    pure_subterms_within_computations : bool;
+    simplify : bool;
+    erase_universes : bool;
+    allow_unbound_universes : bool;
+    reify_ : bool; // fun fact: calling it 'reify' won't bootstrap :)
+    compress_uvars : bool;
+    no_full_norm : bool;
+    check_no_uvars : bool;
+    unmeta : bool;
+    unascribe : bool;
+}
+
+let default_steps : fsteps = {
+    beta = true;
+    iota = true;
+    zeta = true;
+    weak = false;
+    hnf  = false;
+    primops = false;
+    eager_unfolding = false;
+    inlining = false;
+    no_delta_steps = false;
+    unfold_until = None;
+    unfold_only = None;
+    unfold_attr = None;
+    unfold_tac = false;
+    pure_subterms_within_computations = false;
+    simplify = false;
+    erase_universes = false;
+    allow_unbound_universes = false;
+    reify_ = false;
+    compress_uvars = false;
+    no_full_norm = false;
+    check_no_uvars = false;
+    unmeta = false;
+    unascribe = false;
+}
+
+let rec to_fsteps (s : list<step>) : fsteps =
+    let add_one s fs = match s with
+    | Beta -> { fs with beta = true }
+    | Iota -> { fs with iota = true }
+    | Zeta -> { fs with zeta = true }
+    | Exclude Beta -> { fs with beta = false }
+    | Exclude Iota -> { fs with iota = false }
+    | Exclude Zeta -> { fs with zeta = false }
+    | Exclude _ -> failwith "Bad exclude"
+    | Weak -> { fs with weak = true }
+    | HNF -> { fs with hnf = true }
+    | Primops -> { fs with primops = true }
+    | Eager_unfolding ->  { fs with eager_unfolding = true }
+    | Inlining ->  { fs with inlining = true }
+    | NoDeltaSteps ->  { fs with no_delta_steps = true }
+    | UnfoldUntil d -> { fs with unfold_until = Some d }
+    | UnfoldOnly lids -> { fs with unfold_only = Some lids }
+    | UnfoldAttr attr -> { fs with unfold_attr = Some attr }
+    | UnfoldTac ->  { fs with unfold_tac = true }
+    | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
+    | Simplify ->  { fs with simplify = true }
+    | EraseUniverses ->  { fs with erase_universes = true }
+    | AllowUnboundUniverses ->  { fs with allow_unbound_universes = true }
+    | Reify ->  { fs with reify_ = true }
+    | CompressUvars ->  { fs with compress_uvars = true }
+    | NoFullNorm ->  { fs with no_full_norm = true }
+    | CheckNoUvars ->  { fs with check_no_uvars = true }
+    | Unmeta ->  { fs with unmeta = true }
+    | Unascribe ->  { fs with unascribe = true }
+    in
+    List.fold_right add_one s default_steps
+
 type psc = {
     psc_range:FStar.Range.range;
     psc_subst: unit -> subst_t // potentially expensive, so thunked
@@ -107,7 +191,7 @@ let closure_to_string = function
     | Dummy -> "dummy"
 
 type cfg = {
-    steps: steps;
+    steps: fsteps;
     tcenv: Env.env;
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
     primitive_steps:list<primitive_step>;
@@ -222,11 +306,11 @@ let norm_universe cfg (env:env) u =
                       | Univ u -> aux u
                       | Dummy -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
-                with _ -> if cfg.steps |> List.contains AllowUnboundUniverses
+                with _ -> if cfg.steps.allow_unbound_universes
                           then [U_unknown]
                           else failwith "Universe variable not found"
             end
-          | U_unif _ when cfg.steps |> List.contains CheckNoUvars ->
+          | U_unif _ when cfg.steps.check_no_uvars ->
             [U_zero]
 //            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
 //                                       (Range.string_of_range (Env.get_range cfg.tcenv))
@@ -255,7 +339,7 @@ let norm_universe cfg (env:env) u =
             end
           | U_succ u ->  List.map U_succ (aux u) in
 
-    if cfg.steps |> List.contains EraseUniverses
+    if cfg.steps.erase_universes
     then U_unknown
     else match aux u with
         | []
@@ -276,7 +360,7 @@ let norm_universe cfg (env:env) u =
 let rec closure_as_term cfg (env:env) t =
     log cfg  (fun () -> BU.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
     match env with
-        | [] when not <| List.contains CompressUvars cfg.steps -> t
+        | [] when not <| cfg.steps.compress_uvars -> t
         | _ ->
         let t = compress t in
         match t.n with
@@ -289,7 +373,7 @@ let rec closure_as_term cfg (env:env) t =
             | Tm_fvar _ -> t
 
             | Tm_uvar _ ->
-              if cfg.steps |> List.contains CheckNoUvars
+              if cfg.steps.check_no_uvars
               then failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
                                 (Range.string_of_range t.pos)
                                 (Print.term_to_string t))
@@ -411,13 +495,13 @@ let rec closure_as_term cfg (env:env) t =
 
 and closure_as_term_delayed cfg env t =
     match env with
-        | [] when not <| List.contains CompressUvars cfg.steps -> t
+        | [] when not <| cfg.steps.compress_uvars -> t
         | _ -> closure_as_term cfg env t
 //            mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos
 
 and closures_as_args_delayed cfg env args =
     match env with
-        | [] when not <| List.contains CompressUvars cfg.steps -> args
+        | [] when not <| cfg.steps.compress_uvars -> args
         | _ -> List.map (fun (x, imp) -> closure_as_term_delayed cfg env x, imp) args
 
 and closures_as_binders_delayed cfg env bs =
@@ -429,7 +513,7 @@ and closures_as_binders_delayed cfg env bs =
 
 and close_comp cfg env c =
     match env with
-        | [] when not <| List.contains CompressUvars cfg.steps -> c
+        | [] when not <| cfg.steps.compress_uvars -> c
         | _ ->
         match c.n with
             | Total (t, uopt) ->
@@ -744,7 +828,7 @@ let mk_psc_subst cfg env =
         env []
 
 let reduce_primops cfg env stack tm =
-    if not <| List.contains Primops cfg.steps
+    if not <| cfg.steps.primops
     then tm
     else begin
          let head, args = U.head_and_args tm in
@@ -807,7 +891,8 @@ let reduce_primops cfg env stack tm =
    end
 
 let reduce_equality cfg tm =
-    reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
+    reduce_primops ({cfg with steps = { default_steps with primops = true };
+                              primitive_steps=equality_ops}) tm
 
 (*******************************************************************)
 (* Simplification steps are not part of definitional equality      *)
@@ -815,7 +900,7 @@ let reduce_equality cfg tm =
 (*******************************************************************)
 let maybe_simplify_aux cfg env stack tm =
     let tm = reduce_primops cfg env stack tm in
-    if not <| List.contains Simplify cfg.steps then tm
+    if not <| cfg.steps.simplify then tm
     else
     let w t = {t with pos=tm.pos} in
     let simp_t t =
@@ -930,7 +1015,7 @@ let maybe_simplify cfg env stack tm =
     let tm' = maybe_simplify_aux cfg env stack tm in
     if Env.debug cfg.tcenv <| Options.Other "380"
     then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
-                   (if List.contains Simplify cfg.steps then "" else "NOT ")
+                   (if cfg.steps.simplify then "" else "NOT ")
                    (Print.term_to_string tm) (Print.term_to_string tm');
     tm'
 
@@ -991,7 +1076,7 @@ let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack = match stack with
     | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
-        cfg.steps |> List.contains Reify
+        cfg.steps.reify_
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -1034,7 +1119,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
-              || (U.is_fstar_tactics_quote hd && List.contains NoDeltaSteps cfg.steps)
+              || (U.is_fstar_tactics_quote hd && cfg.steps.no_delta_steps)
               || U.is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in
@@ -1042,18 +1127,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
-            when not (cfg.steps |> List.contains NoFullNorm)
+            when not (cfg.steps.no_full_norm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
-            let cfg' = {cfg with steps=(List.filter (function | UnfoldOnly _ | NoDeltaSteps -> false | _ -> true) cfg.steps);
-                                 delta_level=[Unfold Delta_constant];
-                                 normalize_pure_lets=true} in
+            let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
+                                                         ; no_delta_steps = false };
+                                  delta_level=[Unfold Delta_constant];
+                                  normalize_pure_lets=true} in
             let s, tm = get_norm_request (norm cfg' env []) args in
             let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
-            let cfg' = {cfg with steps=s; delta_level=delta_level; normalize_pure_lets=true} in
+            let cfg' = {cfg with steps = to_fsteps s
+                               ; delta_level = delta_level
+                               ; normalize_pure_lets = true } in
             let stack' =
               let tail = (Cfg cfg)::stack in
               if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
@@ -1066,7 +1154,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack (mk (Tm_type u) t.pos)
 
           | Tm_uinst(t', us) ->
-            if cfg.steps |> List.contains EraseUniverses
+            if cfg.steps.erase_universes
             then norm cfg env stack t'
             else let us = UnivArgs(List.map (norm_universe cfg env) us, t.pos) in
                  let stack = us::stack in
@@ -1094,19 +1182,20 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.false_lid)
                 then false
                 else begin
-                  match cfg.steps |> List.tryFind (function UnfoldOnly _ | UnfoldAttr _ -> true | _ -> false) with
-                  | Some _ ->
+                  if not (Option.isSome cfg.steps.unfold_only) || Option.isSome cfg.steps.unfold_attr
+                  then
                     let attr_eq a a' = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
-                    should_delta && List.fold_left (fun acc x ->
-                      match x with
-                      | UnfoldOnly lids -> acc || BU.for_some (fv_eq_lid f) lids
-                      | UnfoldAttr attr -> begin
-                        match lookup_attrs_of_lid cfg.tcenv f.fv_name.v with
-                        | Some attrs -> acc || BU.for_some (attr_eq attr) attrs
-                        | _ -> acc
-                        end
-                      | _ -> acc) false cfg.steps
-                  | _ -> should_delta
+                    should_delta &&
+                    (match cfg.steps.unfold_only with
+                     | None -> true
+                     | Some lids -> BU.for_some (fv_eq_lid f) lids) &&
+                    (match cfg.steps.unfold_attr with
+                     | None -> true
+                     | Some attr -> begin match lookup_attrs_of_lid cfg.tcenv f.fv_name.v with
+                                    | Some attrs -> BU.for_some (attr_eq attr) attrs
+                                    | None -> true
+                                    end)
+                  else should_delta
                 end
             in
 
@@ -1124,7 +1213,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                 | Dummy -> failwith "Term variable not found"
                 | Clos(env, t0, r, fix) ->
-                   if not fix || not (List.contains (Exclude Zeta) cfg.steps)
+                   if not fix || cfg.steps.zeta
                    then match !r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
@@ -1182,14 +1271,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | App _ :: _
                 | Abs _ :: _
                 | [] ->
-                  if List.contains Weak cfg.steps //don't descend beneath a lambda if we're just doing weak reduction
+                  if cfg.steps.weak //don't descend beneath a lambda if we're just doing weak reduction
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
                        let lopt = match lopt with
                         | Some rc ->
                           let rct =
-                            if cfg.steps |> List.contains CheckNoUvars
+                            if cfg.steps.check_no_uvars
                             then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
                             else BU.map_opt rc.residual_typ (SS.subst opening) in
                           Some ({rc with residual_typ=rct})
@@ -1206,7 +1295,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg env stack head
 
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
-            if List.contains Weak cfg.steps
+            if cfg.steps.weak
             then match env, stack with
                     | [], [] -> //TODO: Make this work in general!
                       let t_x = norm cfg env [] x.sort in
@@ -1220,14 +1309,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  rebuild cfg env stack t
 
           | Tm_arrow(bs, c) ->
-            if List.contains Weak cfg.steps
+            if cfg.steps.weak
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
 
-          | Tm_ascribed(t1, (tc, tacopt), l) when List.contains Unascribe cfg.steps ->
+          | Tm_ascribed(t1, (tc, tacopt), l) when cfg.steps.unascribe ->
             norm cfg env stack t1
 
           | Tm_ascribed(t1, (tc, tacopt), l) ->
@@ -1259,7 +1348,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let stack = Match(env, branches, t.pos)::stack in
             norm cfg env stack head
 
-          | Tm_let((b, lbs), lbody) when is_top_level lbs && List.contains CompressUvars cfg.steps ->
+          | Tm_let((b, lbs), lbody) when is_top_level lbs && cfg.steps.compress_uvars ->
             let lbs = lbs |> List.map (fun lb ->
               let openings, lbunivs = Subst.univ_var_opening lb.lbunivs in
               let cfg = { cfg with tcenv = Env.push_univ_vars cfg.tcenv lbunivs } in
@@ -1276,15 +1365,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps |> List.contains NoDeltaSteps)
+            if not (cfg.steps.no_delta_steps)
             && ((U.is_pure_effect n && cfg.normalize_pure_lets)
                 || (U.is_ghost_effect n
-                    && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
+                    && not (cfg.steps.pure_subterms_within_computations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
-            else if List.contains Weak cfg.steps
+            else if cfg.steps.weak
             then (log cfg (fun () -> BU.print_string "+++ Not touching Tm_let\n");
                   rebuild cfg env stack (closure_as_term cfg env t))
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
@@ -1304,9 +1393,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
           | Tm_let((true, lbs), body)
-                when List.contains CompressUvars cfg.steps
-                  || (List.contains (Exclude Zeta) cfg.steps &&
-                      List.contains PureSubtermsWithinComputations cfg.steps) -> //no fixpoint reduction allowed
+                when cfg.steps.compress_uvars
+                  || ((not cfg.steps.zeta) &&
+                      cfg.steps.pure_subterms_within_computations) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
@@ -1331,7 +1420,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t = {t with n=Tm_let((true, lbs), body)} in
             rebuild cfg env stack t
 
-          | Tm_let(lbs, body) when List.contains (Exclude Zeta) cfg.steps -> //no fixpoint reduction allowed
+          | Tm_let(lbs, body) when not cfg.steps.zeta -> //no fixpoint reduction allowed
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_let(lbs, body) ->
@@ -1367,7 +1456,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 reduce_impure_comp cfg env stack head (Inr (m, m')) t
 
               | _ ->
-                if List.contains Unmeta cfg.steps
+                if cfg.steps.unmeta
                 then norm cfg env stack head
                 else begin match stack with
                   | _::_ ->
@@ -1405,7 +1494,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           let t = SS.compress t in
           match t.n with
           | Tm_uvar _ ->
-            if cfg.steps |> List.contains CheckNoUvars
+            if cfg.steps.check_no_uvars
             then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
                                     (Range.string_of_range t.pos)
                                     (Print.term_to_string t))
@@ -1428,8 +1517,8 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
-           if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
-            && not (cfg.steps |> List.contains UnfoldTac)
+           if cfg.steps.unfold_until = Some Delta_constant
+            && not cfg.steps.unfold_tac
            //we're really trying to compute here; no point propagating range information
            //which can be expensive (except for tactics: it matters for tracing!)
            then t
@@ -1441,7 +1530,7 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
                 | UnivArgs(us', _)::stack ->
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
                   norm cfg env stack t
-                | _ when (cfg.steps |> List.contains EraseUniverses) ->
+                | _ when cfg.steps.erase_universes ->
                   norm cfg env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
@@ -1470,21 +1559,22 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     let t = norm cfg env [] t in
     let stack = (Cfg cfg)::stack in
     let cfg =
-      if cfg.steps |> List.contains PureSubtermsWithinComputations
+      if cfg.steps.pure_subterms_within_computations
       then
         (* KM : This case should be tailored for extraction but I'm not exactly sure that the logic here is correct *)
         (* Why are we dropping previous steps arbitrarily ? This will silently break any extension of the steps *)
+        (* GM: Also worried about this *)
         { cfg with
-          steps=[PureSubtermsWithinComputations;
-                 Primops;
-                 AllowUnboundUniverses;
-                 EraseUniverses;
-                 Exclude Zeta;
-                 NoDeltaSteps];
+          steps = to_fsteps [PureSubtermsWithinComputations;
+                             Primops;
+                             AllowUnboundUniverses;
+                             EraseUniverses;
+                             Exclude Zeta;
+                             NoDeltaSteps];
           delta_level=[Env.Inlining; Env.Eager_unfolding_only]
         }
       else
-        { cfg with steps=[Exclude Zeta]@cfg.steps }
+        { cfg with steps = { cfg.steps with zeta = false } }
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
     let metadata = match m with
@@ -1810,8 +1900,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
-    if List.contains (Exclude Iota) cfg.steps
-    then if List.contains HNF cfg.steps
+    if not cfg.steps.iota
+    then if cfg.steps.hnf
          then let arg = closure_as_term cfg env_arg tm in
               let t = extend_app t (arg, aq) None r in
               rebuild cfg env_arg stack t
@@ -1819,7 +1909,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               norm cfg env_arg stack tm
     else begin match !m with
       | None ->
-        if List.contains HNF cfg.steps
+        if cfg.steps.hnf
         then let arg = closure_as_term cfg env_arg tm in
              let t = extend_app t (arg, aq) None r in
              rebuild cfg env_arg stack t
@@ -1871,7 +1961,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 (Print.term_to_string scrutinee)
                 (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
       // If either Weak or HNF, then don't descend into branch
-      let whnf = List.contains Weak cfg.steps || List.contains HNF cfg.steps in
+      let whnf = cfg.steps.weak || cfg.steps.hnf in
       let cfg_exclude_iota_zeta =
         let new_delta =
           cfg.delta_level |> List.filter (function
@@ -1879,8 +1969,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Env.Eager_unfolding_only -> true
             | _ -> false)
         in
-        let steps' = [Exclude Zeta] in
-        ({cfg with delta_level=new_delta; steps=steps'@cfg.steps; strong=true})
+        ({cfg with delta_level=new_delta; steps= { cfg.steps with zeta = false }; strong=true})
       in
       let norm_or_whnf env t =
         if whnf
@@ -1996,7 +2085,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             norm cfg env stack (guard_when_clause wopt b rest)
     in
 
-    if cfg.steps |> List.contains (Exclude Iota)
+    if not cfg.steps.iota
     then norm_and_rebuild_match ()
     else matches scrutinee branches
 
@@ -2011,7 +2100,7 @@ let config s e =
         | [] -> [Env.NoDelta]
         | _ -> d in
     {tcenv=e;
-     steps=s;
+     steps=to_fsteps s;
      delta_level=d;
      primitive_steps=built_in_primitive_steps;
      strong=false;
