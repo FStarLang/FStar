@@ -308,7 +308,7 @@
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "8e17e67f9114d34f277aa5a78ac5b278"
+      "7c71a8d847992e1e10254eb1e373a9ba"
     ],
     [
       "FStar.Printf.parse_format",
@@ -413,7 +413,7 @@
         "typing_tok_FStar.Printf.U16@tok", "unit_typing"
       ],
       0,
-      "ec92fb900b9f25a523c4aeeafa9d0e7c"
+      "9f349ee4a7b47732d21a1d6af5b912b5"
     ],
     [
       "FStar.Printf.test",
@@ -496,7 +496,7 @@
         "typing_FStar.String.list_of_string"
       ],
       0,
-      "b5f83642d6c93220e63c4c77f16bc39e"
+      "7a3a9c7ac47dca3391ff46793d4a38a1"
     ],
     [
       "FStar.Printf.uu___is_This",
