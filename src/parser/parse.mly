@@ -208,7 +208,7 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  doc_opt=ioption(FSDOC) lid=lident COLON t=simpleTerm
+  |  doc_opt=ioption(FSDOC) lid=lident COLON t=simpleNonGreedyTerm
       { (lid, t, doc_opt) }
 
 constructorDecl:
@@ -254,7 +254,7 @@ effectDefinition:
     { DefineEffect(lid, bs, typ, eds) }
 
 effectDecl:
-  | lid=lident action_params=binders EQUALS t=simpleTerm
+  | lid=lident action_params=binders EQUALS t=simpleNonGreedyTerm
     { mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
@@ -262,8 +262,8 @@ subEffect:
       { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } }
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident
     LBRACE
-      lift1=separated_pair(IDENT, EQUALS, simpleTerm)
-      lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, simpleTerm))
+      lift1=separated_pair(IDENT, EQUALS, simpleNonGreedyTerm)
+      lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, simpleNonGreedyTerm))
       /* might be nice for homogeneity if possible : ioption(SEMICOLON) */
     RBRACE
      {
@@ -501,17 +501,17 @@ term:
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 nonGreedyTerm:
-  | t=simpleTerm  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=simpleTerm {tactic})
+  | t=simpleNonGreedyTerm  { t }
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=simpleNonGreedyTerm {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=nonGreedyTerm
       {
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
-  | REQUIRES t=simpleTerm
+  | REQUIRES t=simpleNonGreedyTerm
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
-  | ENSURES t=simpleTerm
+  | ENSURES t=simpleNonGreedyTerm
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
@@ -554,7 +554,8 @@ greedyTerm:
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       }
 
-noSeqTerm: | e = greedyTerm { e }
+noSeqTerm:
+  | e = greedyTerm { e }
 
 typ:
   | t=simpleTerm  { t }
@@ -582,11 +583,18 @@ disjunctivePats:
 conjunctivePat:
   | pats=separated_nonempty_list(SEMICOLON, appTerm)          { pats }
 
-simpleTerm:
-  | e=tmIff { e }
-  (* | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term *)
-  (*     { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un } *)
 
+iffOrFunWith(Tm):
+  | e=tmIff { e }
+  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=Tm
+      { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un }
+
+simpleNonGreedyTerm:
+  | e=iffOrFunWith(nonGreedyTerm) { e }
+  
+simpleTerm:
+  | e=iffOrFunWith(term) { e }
+  
 maybeFocusArrow:
   | RARROW          { false }
   | SQUIGGLY_RARROW { true }
