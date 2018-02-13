@@ -32,7 +32,7 @@ let lem3 (a b c d e : int) =
     assert_by_tactic (c + (b + a) == b + (a + c))
                      check_canon
 
-let lem3_nat (a b c d e : x:nat{0 <= x /\ x < 256}) =
+let lem3_nat (a b c d e : (x:nat{0 <= x /\ x < 256})) =
     assert_by_tactic (c + (b + a) == b + (a + c))
                      check_canon
 

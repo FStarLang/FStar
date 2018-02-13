@@ -12,7 +12,7 @@ assume val r : Type0
 assume val f : unit -> Lemma (p ==> r)
 assume val g : unit -> Lemma (q ==> r)
 
-let test_cases (h : p \/ q) : Lemma r =
+let test_cases (h : (p \/ q)) : Lemma r =
     assert_by_tactic r
         (t <-- quote h;
          cases_or t;;
