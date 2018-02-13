@@ -132,6 +132,8 @@ let go _ =
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then let _, deps = Parser.Dep.collect filenames in
              Parser.Dep.print deps
+        else if (Options.use_extracted_interfaces () || Options.check_interface ()) && List.length filenames > 1 then
+          failwith "Only one command line file can be passed with --use_extracted_interfaces and --check_interface"
         else if Options.interactive () then begin
           match filenames with
           | [] ->

@@ -180,6 +180,7 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 let load_module_from_cache env fn
     : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
     let cache_file = Dep.cache_file_name (Dep.all_cmd_line_files env.dep_graph) fn in
+    BU.print1 "Loading module from cache: %s\n\n" cache_file;
     let fail tag =
          FStar.Errors.log_issue
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
@@ -221,6 +222,7 @@ let load_module_from_cache env fn
 
 let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name (Parser.Dep.all_cmd_line_files env.dep_graph) fn in
+    BU.print1 "Storing module to cache: %s\n\n" cache_file;
     let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
     match digest with
     | Some hashes ->

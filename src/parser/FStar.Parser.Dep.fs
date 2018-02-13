@@ -157,6 +157,13 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
+(*
+ * If --use_extracted_interfaces is set, then we load/check extracted depepndency.fsti
+ * If --check_interface is set, we check extracted command_line_file.fsti
+ *
+ * The definition of dependency in this function is a file not passed on the command line
+ * We must already make sure that there was only one command line file in case one of these flags is set
+ *)
 let check_or_use_extracted_interface all_cmd_line_files fn =
   if is_interface fn then false
   else
@@ -164,12 +171,23 @@ let check_or_use_extracted_interface all_cmd_line_files fn =
     (Options.use_extracted_interfaces () && (not is_cmd_line_fn)) ||
     (Options.check_interface () && is_cmd_line_fn)
 
+(*
+ * This function is called by the dependency analysis and main typechecker flow
+ * In the case of dependency analysis, the analysis knows which file is a dependency, and which is not
+ *   and so, this function leaves it to the caller to change fn to interface fn if required
+ *
+ * For the main typechecker flow, we will use check_or_use_extracted_interface to use .fsti if need be
+ *)
 let cache_file_name all_cmd_line_files fn =
-    let fn = if check_or_use_extracted_interface all_cmd_line_files fn then interface_filename fn else fn in
-    FStar.Options.prepend_cache_dir
-        (if Options.lax()
-         then fn ^ ".checked.lax"
-         else fn ^ ".checked")
+  let fn =
+    if Options.dep () <> None then fn  //if --dep is set, that code is required to manipulate fn itself, we can't rely on command line files in case of a --dep invocation
+    else if check_or_use_extracted_interface all_cmd_line_files fn then interface_filename fn
+    else fn
+  in
+  FStar.Options.prepend_cache_dir
+    (if Options.lax()
+     then fn ^ ".checked.lax"
+     else fn ^ ".checked")
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -183,8 +201,10 @@ let file_of_dep_aux
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
-    let maybe_add_suffix f =
-        if use_checked_file then cache_file_name all_cmd_line_files f else f
+    let maybe_add_suffix f =  //f is a dependency, if --use_extracted_interfaces is set, then we will convert f to its interface name
+      if use_checked_file
+      then cache_file_name all_cmd_line_files (if Options.dep () <> None && Options.use_extracted_interfaces () then (interface_filename f) else f)
+      else f
     in
     match d with
     | UseInterface key ->
@@ -957,6 +977,14 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                       (cache_file f)
                       norm_f
                       files;
+          
+          //a.fsti.checked: a.fst b.fsti.checked (or b.fst.checked if --use_extracted_interfaces is not set
+          if is_implementation f && not (has_interface file_system_map (lowercase_module_name f))
+          then Util.print3 "%s: %s \\\n\t%s\n\n"
+                           (cache_file (interface_filename f))
+                           norm_f
+                           files;
+
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then (
