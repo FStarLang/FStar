@@ -1530,7 +1530,9 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
-  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Noeq || q = Unopteq)) in  //abstract inductive should not have noeq and unopteq
+  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
+  let add_assume_if_needed quals = if List.contains Assumption quals then quals else Assumption::quals in
+  let is_unfold_or_inline = List.existsb (fun q -> q = Unfold_for_unification_and_vcgen || q = Inline_for_extraction) in
 
   //if the module contains both a val and a let, we will only keep the val
   let added_vals = BU.mk_ref [] in
@@ -1618,9 +1620,10 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
     | Sig_declare_typ (lid, uvs, t) ->
       //val remains as val, except we filter out the abstract qualifier
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
+      else if is_unfold_or_inline s.sigquals then []
       else begin
         added_vals := lid::!added_vals;
-        [{ s with sigquals = filter_out_abstract s.sigquals }]
+        [{ s with sigquals = add_assume_if_needed (filter_out_abstract s.sigquals) }]
       end
     | Sig_let (lbs, lids) ->
       if val_has_already_been_added lids then []
