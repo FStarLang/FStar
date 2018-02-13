@@ -107,21 +107,9 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) main_opt=mainDecl? EOF
+  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) EOF
       {
-        let decls = match main_opt with
-           | None -> decls
-           | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) decls
-      }
-
-(* TODO : let's try to remove that *)
-mainDecl:
-  | SEMICOLON_SEMICOLON doc=FSDOC? t=term
-      { let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+        as_frag is_light (rhs parseState 1) decls
       }
 
 
@@ -220,7 +208,7 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  doc_opt=ioption(FSDOC) lid=lident COLON t=typ
+  |  doc_opt=ioption(FSDOC) lid=lident COLON t=simpleTerm
       { (lid, t, doc_opt) }
 
 constructorDecl:
@@ -499,41 +487,48 @@ kind:
 
 
 term:
-  | e=noSeqTerm
+  | e=greedyTerm
       { e }
-  | e1=noSeqTerm SEMICOLON e2=term
+  | e1=nonGreedyTerm SEMICOLON e2=term
       { mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr }
 (* Added this form for sequencing; *)
 (* but it results in an additional shift/reduce conflict *)
 (* ... which is actually be benign, since the same conflict already *)
 (*     exists for the previous production *)
-  | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
+  | e1=nonGreedyTerm SEMICOLON_SEMICOLON e2=term
       { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
-  | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
+  | x=lidentOrUnderscore LONG_LEFT_ARROW e1=nonGreedyTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
-noSeqTerm:
-  | t=typ  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=typ {tactic})
+nonGreedyTerm:
+  | t=simpleTerm  { t }
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=simpleTerm {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
-  | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
+  | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=nonGreedyTerm
       {
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
-  | REQUIRES t=typ
+  | REQUIRES t=simpleTerm
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
-  | ENSURES t=typ
+  | ENSURES t=simpleTerm
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
+  | IF e1=noSeqTerm THEN e2=nonGreedyTerm ELSE e3=nonGreedyTerm
       { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm
+  | IF e1=noSeqTerm THEN e2=nonGreedyTerm
       {
         let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       }
+  | ASSUME e=atomicTerm
+      { let a = set_lid_range assume_lid (rhs parseState 1) in
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
+ 
+greedyTerm:
+  | e = nonGreedyTerm { e }
+  | e = quantified { e }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
@@ -558,15 +553,14 @@ noSeqTerm:
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       }
-  | ASSUME e=atomicTerm
-      { let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
-  | id=lident LARROW e=noSeqTerm
-      { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
+
+noSeqTerm: | e = greedyTerm { e }
 
 typ:
   | t=simpleTerm  { t }
+  | e = quantified { e }
 
+quantified: 
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
         match bs with
@@ -590,8 +584,8 @@ conjunctivePat:
 
 simpleTerm:
   | e=tmIff { e }
-  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
-      { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un }
+  (* | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term *)
+  (*     { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un } *)
 
 maybeFocusArrow:
   | RARROW          { false }
@@ -753,7 +747,7 @@ recordExp:
       { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
-  | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
+  | e=separated_pair(qlident, EQUALS, nonGreedyTerm) { e }
   | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
 
 appTerm:
@@ -872,7 +866,8 @@ hasSort:
 
   (* use flexible_list *)
 %inline semiColonTermList:
-  | l=right_flexible_list(SEMICOLON, noSeqTerm) { l }
+  (* Note: could terminate this list with greedyTerm if we wanted to. *)
+  | l=right_flexible_list(SEMICOLON, nonGreedyTerm) { l }
 
 constant:
   | LPAREN_RPAREN { Const_unit }
