@@ -1,3 +1,9 @@
 module B
 
-abstract type set (a:Type0) = a -> Tot prop
+abstract type t1 =
+  | A: t1
+  | B: t1
+
+type t =
+  | C: t
+  | D: t
