@@ -1142,29 +1142,29 @@ let rec path_includes_trans
 
 let rec path_includes_ind
   (#from: typ)
-  (x: (#to1: typ) ->
+  (x:((#to1: typ) ->
       (#to2: typ) ->
       (p1: path from to1) ->
       (p2: path from to2 {path_includes p1 p2} ) ->
-      GTot Type0)
+      GTot Type0))
   (h_step:
-    (#through: typ) ->
+   ((#through: typ) ->
     (#to: typ) ->
     (p: path from through) ->
     (s: step through to { path_includes p (PathStep through to p s) } ) ->
-    Lemma (x p (PathStep through to p s)))
+    Lemma (x p (PathStep through to p s))))
   (h_refl:
-    (#to: typ) ->
+   ((#to: typ) ->
     (p: path from to {path_includes p p}) ->
-    Lemma (x p p))
+    Lemma (x p p)))
   (h_trans:
-    (#to1: typ) ->
+   ((#to1: typ) ->
     (#to2: typ) ->
     (#to3: typ) ->
     (p1: path from to1) ->
     (p2: path from to2) ->
     (p3: path from to3 {path_includes p1 p2 /\ path_includes p2 p3 /\ path_includes p1 p3 /\ x p1 p2 /\ x p2 p3}) ->
-    Lemma (x p1 p3))
+    Lemma (x p1 p3)))
   (#to1: typ)
   (#to2: typ)
   (p1: path from to1)
@@ -1368,23 +1368,23 @@ noeq type path_disjoint_t (#from: typ):
 let rec path_disjoint_t_rect
   (#from: typ)
   (x:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: path from value1) ->
     (p2: path from value2) ->
     (h: path_disjoint_t p1 p2) ->
-    GTot Type)
+    GTot Type))
   (h_step:
-    (#through: typ) ->
+   ((#through: typ) ->
     (#to1: typ) ->
     (#to2: typ) ->
     (p: path from through) ->
     (s1: step through to1) ->
     (s2: step through to2 { step_disjoint s1 s2 } ) ->
     (h: path_disjoint_t (PathStep through to1 p s1) (PathStep through to2 p s2)) ->
-    GTot (x (PathStep through to1 p s1) (PathStep through to2 p s2) h))
+    GTot (x (PathStep through to1 p s1) (PathStep through to2 p s2) h)))
   (h_includes:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: path from value1) ->
     (p2: path from value2) ->
@@ -1395,7 +1395,7 @@ let rec path_disjoint_t_rect
     (h: path_disjoint_t p1 p2) ->
     (h': path_disjoint_t p1' p2') ->
     (ihx: x p1 p2 h) ->
-    GTot (x p1' p2' h'))
+    GTot (x p1' p2' h')))
   (#value1: typ)
   (#value2: typ)
   (p1: path from value1)
@@ -1421,21 +1421,21 @@ let path_disjoint
 let path_disjoint_ind
   (#from: typ)
   (x:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: path from value1) ->
     (p2: path from value2 {path_disjoint p1 p2} ) ->
-    GTot Type)
+    GTot Type))
   (h_step:
-    (#through: typ) ->
+   ((#through: typ) ->
     (#to1: typ) ->
     (#to2: typ) ->
     (p: path from through) ->
     (s1: step through to1) ->
     (s2: step through to2 { step_disjoint s1 s2 /\ path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2) } ) ->
-    Lemma (x (PathStep through to1 p s1) (PathStep through to2 p s2) ))
+    Lemma (x (PathStep through to1 p s1) (PathStep through to2 p s2) )))
   (h_includes:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: path from value1) ->
     (p2: path from value2) ->
@@ -1443,7 +1443,7 @@ let path_disjoint_ind
     (#value2': typ) ->
     (p1': path from value1' {path_includes p1 p1'}) ->
     (p2': path from value2' {path_includes p2 p2' /\ path_disjoint p1 p2 /\ path_disjoint p1' p2' /\ x p1 p2}) ->
-    Lemma (x p1' p2'))
+    Lemma (x p1' p2')))
   (#value1: typ)
   (#value2: typ)
   (p1: path from value1)
@@ -2236,39 +2236,39 @@ let includes_gcell
 = ()
 
 let includes_ind
-  (x: (#value1: typ) ->
+  (x:((#value1: typ) ->
       (#value2: typ) ->
       (p1: pointer value1) ->
       (p2: pointer value2 {includes p1 p2} ) ->
-      GTot Type0)
+      GTot Type0))
   (h_field:
-    (l: struct_typ) ->
+   ((l: struct_typ) ->
     (p: pointer (TStruct l)) ->
     (fd: struct_field l {includes p (gfield p fd)}) ->
-    Lemma (x p (gfield p fd)))
+    Lemma (x p (gfield p fd))))
   (h_ufield:
-    (l: union_typ) ->
+   ((l: union_typ) ->
     (p: pointer (TUnion l)) ->
     (fd: struct_field l {includes p (gufield p fd)}) ->
-    Lemma (x p (gufield p fd)))
+    Lemma (x p (gufield p fd))))
   (h_cell:
-    (#length: array_length_t) ->
+   ((#length: array_length_t) ->
     (#value: typ) ->
     (p: pointer (TArray length value)) ->
     (i: UInt32.t {UInt32.v i < UInt32.v length /\ includes p (gcell p i)}) ->
-    Lemma (x p (gcell p i)))
+    Lemma (x p (gcell p i))))
   (h_refl:
-    (#value: typ) ->
+   ((#value: typ) ->
     (p: pointer value {includes p p}) ->
-    Lemma (x p p))
+    Lemma (x p p)))
   (h_trans:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (#value3: typ) ->
     (p1: pointer value1) ->
     (p2: pointer value2) ->
     (p3: pointer value3 {includes p1 p2 /\ includes p2 p3 /\ includes p1 p3 /\ x p1 p2 /\ x p2 p3}) ->
-    Lemma (x p1 p3))
+    Lemma (x p1 p3)))
   (#value1: typ)
   (#value2: typ)
   (p1: pointer value1)
@@ -3034,33 +3034,33 @@ let disjoint_includes
 
 let disjoint_ind
   (x:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: pointer value1) ->
     (p2: pointer value2 {disjoint p1 p2} ) ->
-    GTot Type0)
+    GTot Type0))
   (h_root:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: pointer value1) ->
     (p2: pointer value2 { frameOf p1 <> frameOf p2 \/ as_addr p1 <> as_addr p2 } ) ->
-    Lemma (x p1 p2))
+    Lemma (x p1 p2)))
   (h_field:
-    (#l: struct_typ) ->
+   ((#l: struct_typ) ->
     (p: pointer (TStruct l)) ->
     (fd1: struct_field l) ->
     (fd2: struct_field l { fd1 <> fd2 /\ disjoint (gfield p fd1) (gfield p fd2) } ) ->
-    Lemma (x (gfield p fd1) (gfield p fd2)))
+    Lemma (x (gfield p fd1) (gfield p fd2))))
   (h_cell:
-    (#length: array_length_t) ->
+   ((#length: array_length_t) ->
     (#value: typ) ->
     (p: pointer (TArray length value)) ->
     (i1: UInt32.t {UInt32.v i1 < UInt32.v length}) ->
     (i2: UInt32.t {UInt32.v i2 < UInt32.v length /\ UInt32.v i1 <> UInt32.v i2 /\ disjoint (gcell p i1) (gcell p i2) }) ->
     Lemma (x (gcell p i1) (gcell p i2))
-  )
+  ))
   (h_includes:
-    (#value1: typ) ->
+   ((#value1: typ) ->
     (#value2: typ) ->
     (p1: pointer value1) ->
     (p2: pointer value2) ->
@@ -3068,7 +3068,7 @@ let disjoint_ind
     (#value2': typ) ->
     (p1': pointer value1' {includes p1 p1'}) ->
     (p2': pointer value2' {includes p2 p2' /\ disjoint p1 p2 /\ disjoint p1' p2' /\ x p1 p2}) ->
-    Lemma (x p1' p2'))
+    Lemma (x p1' p2')))
   (#value1: typ)
   (#value2: typ)
   (p1: pointer value1)
