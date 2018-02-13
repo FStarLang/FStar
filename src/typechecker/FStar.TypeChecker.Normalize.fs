@@ -207,11 +207,17 @@ type cfg = {
     tcenv: Env.env;
     debug: debug_switches;
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-    primitive_steps:list<primitive_step>;
+    primitive_steps:BU.psmap<primitive_step>;
     strong : bool;                       // under a binder
     memoize_lazy : bool;
     normalize_pure_lets: bool;
 }
+
+let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psmap<primitive_step> =
+    List.fold_right (fun p m -> BU.psmap_add m (I.text_of_lid p.name) p) l m
+
+let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
+    add_steps (BU.psmap_empty ()) l
 
 type branches = list<(pat * option<term> * term)>
 
@@ -557,7 +563,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (*******************************************************************)
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
-let built_in_primitive_steps : list<primitive_step> =
+let built_in_primitive_steps : BU.psmap<primitive_step> =
     let arg_as_int    (a:arg) = fst a |> EMB.unembed_int_safe in
     let arg_as_bool   (a:arg) = fst a |> EMB.unembed_bool_safe in
     let arg_as_char   (a:arg) = fst a |> EMB.unembed_char_safe in
@@ -774,9 +780,9 @@ let built_in_primitive_steps : list<primitive_step> =
        add_sub_mul_v
        @ div_mod_unsigned
     in
-    List.map as_primitive_step (basic_ops@bounded_arith_ops)
+    prim_from_list <| List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
-let equality_ops : list<primitive_step> =
+let equality_ops : BU.psmap<primitive_step> =
     let interp_prop (psc:psc) (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
@@ -804,7 +810,7 @@ let equality_ops : list<primitive_step> =
          interpretation = interp_prop}
     in
 
-    [propositional_equality; hetero_propositional_equality]
+    prim_from_list [propositional_equality; hetero_propositional_equality]
 
 // Should match FStar.Reflection.Basic.unembed_binder
 let unembed_binder (t : term) : option<S.binder> =
@@ -836,13 +842,13 @@ let mk_psc_subst cfg env =
         env []
 
 let reduce_primops cfg env stack tm =
-    if not <| cfg.steps.primops
+    if not cfg.steps.primops
     then tm
     else begin
          let head, args = U.head_and_args tm in
          match (U.un_uinst head).n with
          | Tm_fvar fv -> begin
-           match List.tryFind (fun ps -> S.fv_eq_lid fv ps.name) cfg.primitive_steps with
+           match BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v) with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
              if List.length args < prim_step.arity
              then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
@@ -2090,7 +2096,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     then norm_and_rebuild_match ()
     else matches scrutinee branches
 
-let config s e =
+let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
@@ -2108,16 +2114,17 @@ let config s e =
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
      delta_level=d;
-     primitive_steps=built_in_primitive_steps;
+     primitive_steps= add_steps built_in_primitive_steps psteps;
      strong=false;
      memoize_lazy=true;
      normalize_pure_lets=
        (Options.normalize_pure_terms_for_extraction()
         || not (s |> List.contains PureSubtermsWithinComputations))}
 
+let config s e = config' [] s e
+
 let normalize_with_primitive_steps ps s e t =
-    let c = config s e in
-    let c = {config s e with primitive_steps=c.primitive_steps@ps} in
+    let c = config' ps s e in
     norm c [] [] t
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
