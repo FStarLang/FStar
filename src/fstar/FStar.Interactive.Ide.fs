@@ -1396,7 +1396,7 @@ let interactive_mode' (filename: string): unit =
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
-      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
+      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) false (fun () -> go init_st)  //TODO: AR: is this false flag OK??
     else
       go init_st in
   exit exit_code

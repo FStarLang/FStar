@@ -141,7 +141,10 @@ let go _ =
           | _ :: _ :: _ ->
             Errors. log_issue Range.dummyRange (Errors.Error_TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
           | [filename] ->
-            if Options.legacy_interactive () then
+            if Options.check_interface () then begin
+              failwith "--check_interface is not supported in the interactive mode"
+            end
+            else if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
             else
               FStar.Interactive.Ide.interactive_mode filename

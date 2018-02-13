@@ -248,16 +248,16 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
           (tcmod, time), env
       in
       let tcmod, env =
-        let fn, fmod =
+        let checking_or_using_extracted_interface, fmod =
           if Parser.Dep.check_or_use_extracted_interface (Dep.all_cmd_line_files env.dep_graph) fn then
             let _ = BU.print1 "Extracting interface for: %s, will be using it for type checking/caching\n\n" fmod.name.str in
-            Parser.Dep.interface_filename fn, Tc.extract_interface env fmod
-          else fn, fmod
+            true, Tc.extract_interface env fmod
+          else false, fmod
         in
         if (Options.should_verify fmod.name.str //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
-        then SMT.with_hints_db (Pars.find_file fn) (check_mod fmod)
+        then SMT.with_hints_db (Pars.find_file fn) checking_or_using_extracted_interface (check_mod fmod)
         else check_mod fmod () //don't add a hints file for modules that are not actually verified
       in
       let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv (fst tcmod).name in
