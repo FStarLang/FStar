@@ -1533,6 +1533,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
   let add_assume_if_needed quals = if List.contains Assumption quals then quals else Assumption::quals in
   let is_unfold_or_inline = List.existsb (fun q -> q = Unfold_for_unification_and_vcgen || q = Inline_for_extraction) in
+  let is_lemma = List.existsML (fun t -> U.is_lemma t) in
 
   //if the module contains both a val and a let, we will only keep the val
   let added_vals = BU.mk_ref [] in
@@ -1630,7 +1631,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
       else if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       else
         let typs, b = extract_lbs_annotations (snd lbs) s.sigrng in
-        if (is_abstract s.sigquals || is_irreducible s.sigquals) then
+        if (is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma typs) then
           if b then failwith ("Abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str ^ "\n\n")
           else vals_of_lbs s (snd lbs) lids typs s.sigquals
       else if b then [s]  //if top level annotation is missing, retain as is
