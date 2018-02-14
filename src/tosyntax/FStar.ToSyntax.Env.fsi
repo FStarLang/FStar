@@ -163,7 +163,7 @@ val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
 val pop: unit -> env
 val push: env -> env
-val finish_module_or_interface: env -> modul -> env
+val finish_module_or_interface: env -> modul -> (env * modul)
 val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
 
@@ -175,5 +175,5 @@ val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusi
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool*list<attribute>)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
-(* private *) val check_admits: env -> unit
+(* private *) val check_admits: env -> modul -> modul
 (* private *) val finish:  env -> modul -> env

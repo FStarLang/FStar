@@ -1529,6 +1529,7 @@ let tc_modul env modul =
 let extract_interface (env:env) (m:modul) :modul =  //env is only used when calling extract_let_rec_annotation, so we don't update it at at all
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
+  let is_assume = List.contains Assumption in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
   let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
   let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
@@ -1628,7 +1629,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
     | Sig_declare_typ (lid, uvs, t) ->
       //val remains as val, except we filter out the abstract qualifier
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
-      else if is_unfold_or_inline s.sigquals && not (is_abstract s.sigquals) then begin
+      else if (not (is_assume s.sigquals)) then begin  //|| (is_unfold_or_inline s.sigquals && not (is_abstract s.sigquals)) then begin
         val_typs := (lid, (uvs, t))::!val_typs;
         []
       end
@@ -1668,7 +1669,7 @@ let check_module env m =
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module m.name.str
-  then BU.print1 "%s\n" (Print.modul_to_string m);
+  then BU.print1 "Module after type checking:\n%s\n" (Print.modul_to_string m);
   if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with

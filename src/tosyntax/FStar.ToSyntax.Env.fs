@@ -1006,20 +1006,27 @@ let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
     BU.smap_add env.docs l.str doc;
     env
 
-let check_admits env =
-  env.sigaccum |> List.iter (fun se -> match se.sigel with
-    | Sig_declare_typ(l, u, t) ->
-      begin match try_lookup_lid env l with
-        | None ->
-          if not (Options.interactive ()) then
-            FStar.Errors.log_issue (range_of_lid l)
-              (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
-          let quals = Assumption :: se.sigquals in
-          BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
-                                          false)
-        | Some _ -> ()
+let check_admits env m =
+  let admitted_sig_lids =
+    env.sigaccum |> List.fold_left (fun lids se -> match se.sigel with
+      | Sig_declare_typ(l, u, t) ->
+        begin match try_lookup_lid env l with
+          | None ->
+            if not (Options.interactive ()) then
+              FStar.Errors.log_issue (range_of_lid l)
+                (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
+            let quals = Assumption :: se.sigquals in
+            BU.smap_add (sigmap env) l.str ({ se with sigquals = quals }, false);
+            l::lids
+        | Some _ -> lids
       end
-    | _ -> ())
+      | _ -> lids) []
+  in
+  { m with declarations = m.declarations |> List.map (fun s ->
+      match s.sigel with
+      | Sig_declare_typ (lid, _, _) when List.existsb (fun l -> lid_equals l lid) admitted_sig_lids -> BU.print_string "Adding qual\n\n"; { s with sigquals = Assumption::s.sigquals }
+      | _ -> s
+    ) }
 
 let finish env modul =
   modul.declarations |> List.iter (fun se ->
@@ -1120,9 +1127,8 @@ let export_interface (m:lident) env =
     env
 
 let finish_module_or_interface env modul =
-  if not modul.is_interface
-  then check_admits env;
-  finish env modul
+  let modul = if not modul.is_interface then check_admits env modul else modul in
+  finish env modul, modul
 
 type exported_ids = {
     exported_id_terms:list<string>;
