@@ -1939,8 +1939,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
                 S.Discriminator lid ::
-                (if only_decl then [S.Logic] else []) @
-                (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
+                (if only_decl then [S.Logic; S.Assumption] else []) @
+                //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
                 List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
             in
 
