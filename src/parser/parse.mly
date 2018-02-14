@@ -208,11 +208,11 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  doc_opt=ioption(FSDOC) lid=lident COLON t=simpleNonGreedyTerm
+  |  doc_opt=ioption(FSDOC) lid=lident COLON t=nonGreedyTerm
       { (lid, t, doc_opt) }
 
 constructorDecl:
-  | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
+  | BAR doc_opt=FSDOC? uid=uident COLON t=typ      { (uid, Some t, doc_opt, false) }
   | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
 
 attr_letbinding:
@@ -254,7 +254,7 @@ effectDefinition:
     { DefineEffect(lid, bs, typ, eds) }
 
 effectDecl:
-  | lid=lident action_params=binders EQUALS t=simpleNonGreedyTerm
+  | lid=lident action_params=binders EQUALS t=nonGreedyTerm
     { mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
@@ -262,8 +262,8 @@ subEffect:
       { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } }
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident
     LBRACE
-      lift1=separated_pair(IDENT, EQUALS, simpleNonGreedyTerm)
-      lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, simpleNonGreedyTerm))
+      lift1=separated_pair(IDENT, EQUALS, nonGreedyTerm)
+      lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, nonGreedyTerm))
       /* might be nice for homogeneity if possible : ioption(SEMICOLON) */
     RBRACE
      {
@@ -501,64 +501,72 @@ term:
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 nonGreedyTerm:
-  | t=simpleNonGreedyTerm  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=simpleNonGreedyTerm {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
+  | t=tmIff  { t }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=nonGreedyTerm
       {
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
-  | REQUIRES t=simpleNonGreedyTerm
-      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
-  | ENSURES t=simpleNonGreedyTerm
-      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
-  | ATTRIBUTES es=nonempty_list(atomicTerm)
-      { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm THEN e2=nonGreedyTerm ELSE e3=nonGreedyTerm
-      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
-  | IF e1=noSeqTerm THEN e2=nonGreedyTerm
-      {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
-      }
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
- 
+  
 greedyTerm:
   | e = nonGreedyTerm { e }
   | e = quantified { e }
-  | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
+  | e = tryMatchLetOrFunctionTerm(term) { e }
+  | e = ifTerm(greedyTerm)
+      { e }
+  | REQUIRES t=term
+      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
+  | ENSURES t=term
+      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
+  | ATTRIBUTES es=nonempty_list(atomicTerm)
+      { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=term {tactic})
+      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
+
+tryMatchLetOrFunctionTerm(Tm):
+  | e = funTerm(Tm) { e }
+  | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch(Tm))
       {
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch(Tm) {pb})
       {
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
         mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
       }
-  | LET OPEN uid=quident IN e=term
+  | LET OPEN uid=quident IN e=Tm
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
   | attrs=ioption(attribute)
-    LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
+    LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=Tm
       {
         let lbs = (attrs, lb)::lbs in
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
-  | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
+  | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch(Tm))
       {
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
+      }
+
+ifTerm(Tm):
+  | IF e1=noSeqTerm THEN e2=Tm ELSE e3=Tm
+      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
+  | IF e1=noSeqTerm THEN e2=Tm
+      {
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       }
 
 noSeqTerm:
   | e = greedyTerm { e }
 
 typ:
-  | t=simpleTerm  { t }
+  | t = simpleTerm  { t }
   | e = quantified { e }
 
 quantified: 
@@ -584,23 +592,23 @@ conjunctivePat:
   | pats=separated_nonempty_list(SEMICOLON, appTerm)          { pats }
 
 
-iffOrFunWith(Tm):
-  | e=tmIff { e }
+funTerm(Tm):
   | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=Tm
       { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un }
 
-simpleNonGreedyTerm:
-  | e=iffOrFunWith(nonGreedyTerm) { e }
-  
+iffOrFunWith(Tm):
+  | e=tmIff { e }
+
 simpleTerm:
-  | e=iffOrFunWith(term) { e }
+  | e=tmIff  { e }
+  | e=funTerm(term) { e }
   
 maybeFocusArrow:
   | RARROW          { false }
   | SQUIGGLY_RARROW { true }
 
-patternBranch:
-  | pat=disjunctivePattern when_opt=maybeWhen focus=maybeFocusArrow e=term
+patternBranch(Tm):
+  | pat=disjunctivePattern when_opt=maybeWhen focus=maybeFocusArrow e=Tm
       {
         let pat = match pat with
           | [p] -> p
@@ -754,8 +762,13 @@ recordExp:
   | e=appTerm WITH  record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
       { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
+simpleDefTerm:
+  | e = nonGreedyTerm                            { e }
+  | e = tryMatchLetOrFunctionTerm(nonGreedyTerm) { e }
+  | e = ifTerm(simpleDefTerm)                    { e }
+
 simpleDef:
-  | e=separated_pair(qlident, EQUALS, nonGreedyTerm) { e }
+  | e=separated_pair(qlident, EQUALS, simpleDefTerm) { e }
   | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
 
 appTerm:
