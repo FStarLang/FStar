@@ -1236,15 +1236,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
       mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
-    | NamedTyp(_, e)
+    | NamedTyp(_, e) ->
+        desugar_term env e
 
     | _ when (top.level=Formula) -> desugar_formula env top
 
     | _ ->
       raise_error (Fatal_UnexpectedTerm, ("Unexpected term" ^ term_to_string top)) top.range
-    | Let(_, _, _) -> failwith "Not implemented yet"
-    | QForall(_, _, _) -> failwith "Not implemented yet"
-    | QExists(_, _, _) -> failwith "Not implemented yet"
   end
 
 and not_ascribed t =
