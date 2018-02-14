@@ -1573,8 +1573,9 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   //extract the type of the letbinding, boolean indicates whether we were successful
   let extract_lbs_annotations (lbs:list<letbinding>) (lids:list<lident>) (r:Range.range) :(list<(univ_names * typ)> * bool) =
     List.fold_left2 (fun (l, b) lb lid ->
+      BU.print2 "Extracting annotation for: %s with val_typs: %s\n\n" lid.str (List.fold_left (fun s (lid, _) -> s ^ "; " ^ lid.str) "" !val_typs);
       let opt = List.tryFind (fun (l', _) -> lid_equals lid l') !val_typs in
-      if opt <> None then ((snd (opt |> must))::l, b)
+      if opt <> None then let _ = BU.print_string "Found the lid!\n\n" in ((snd (opt |> must))::l, b)
       else
         match lb.lbtyp.n with
         | Tm_unknown ->
@@ -1602,6 +1603,12 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
     List.map3 (fun lb lid typ ->
       { s with sigel = Sig_declare_typ (lid, fst typ, snd typ); sigquals = Assumption::(filter_out_abstract_and_inline quals) }
     ) lbs lids typs
+  in
+
+  let annotate_with_typs (typs:list<(univ_names * typ)>) (s:sigelt) :sigelt =
+    { s with sigel = match s.sigel with
+        | Sig_let (lbs, lids) -> Sig_let ((fst lbs, List.map2 (fun lb (uvs, t) -> { lb with lbunivs = uvs; lbtyp = t }) (snd lbs) typs), lids)
+        | _ -> failwith "Impossible!" }
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1645,10 +1652,10 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
         if (is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma typs) then
           if b then failwith ("Abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str ^ "\n\n")
           else vals_of_lbs s (snd lbs) lids typs s.sigquals
-      else if b then [s]  //if top level annotation is missing, retain as is
-      else if is_pure_or_ghost_function_with_non_unit_type typs then [s]  //pure or ghost functions with non-unit types are retained as is
-      else if not (is_unit typs) then [s]  //non-unit types are retained as is
-      else vals_of_lbs s (snd lbs) lids typs s.sigquals  //TODO: add case for functions with reifiable effects
+        else if b then [annotate_with_typs typs s]  //if top level annotation is missing, retain as is
+        else if is_pure_or_ghost_function_with_non_unit_type typs then [annotate_with_typs typs s]  //pure or ghost functions with non-unit types are retained as is
+        else if not (is_unit typs) then [annotate_with_typs typs s]  //non-unit types are retained as is
+        else vals_of_lbs s (snd lbs) lids typs s.sigquals  //TODO: add case for functions with reifiable effects
     | Sig_main t -> failwith "Did not anticipate this would arise"
     | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]  //should we not permit abstract with assumes anyway?
     | Sig_new_effect _

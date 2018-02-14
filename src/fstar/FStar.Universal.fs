@@ -258,6 +258,7 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
             true, Tc.extract_interface env fmod, { env with is_iface = true }
           else false, fmod, env
         in
+        if checking_or_using_extracted_interface && Options.dump_module fmod.name.str then BU.print1 "Extracted interface: %s\n\n" (Syntax.Print.modul_to_string fmod);
         if (Options.should_verify fmod.name.str //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
