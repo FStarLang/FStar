@@ -212,8 +212,8 @@ recordFieldDecl:
       { (lid, t, doc_opt) }
 
 constructorDecl:
-  | BAR doc_opt=FSDOC? uid=uident COLON t=typ      { (uid, Some t, doc_opt, false) }
-  | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
+  | BAR doc_opt=FSDOC? uid=uident COLON t=nonGreedyTerm      { (uid, Some t, doc_opt, false) }
+  | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=nonGreedyTerm {t}) { (uid, t_opt, doc_opt, true) }
 
 attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
@@ -526,18 +526,8 @@ greedyTerm:
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=term {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
 
-tryMatchLetOrFunctionTerm(Tm):
+letOrFunctionTerm(Tm):
   | e = funTerm(Tm) { e }
-  | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch(Tm))
-      {
-         let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
-         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
-      }
-  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch(Tm) {pb})
-      {
-        let branches = focusBranches pbs (rhs2 parseState 1 4) in
-        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
-      }
   | LET OPEN uid=quident IN e=Tm
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
   | attrs=ioption(attribute)
@@ -547,7 +537,24 @@ tryMatchLetOrFunctionTerm(Tm):
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
-  | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch(Tm))
+
+noNakedMatch:
+  | e = nonGreedyTerm   { e }
+  | e = letOrFunctionTerm(noNakedMatch) { e }
+  
+tryMatchLetOrFunctionTerm(Tm):
+  | e = letOrFunctionTerm(Tm) { e }
+  | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch(noNakedMatch))
+      {
+         let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
+         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
+      }
+  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch(noNakedMatch) {pb})
+      {
+        let branches = focusBranches pbs (rhs2 parseState 1 4) in
+        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+      }
+  | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch(noNakedMatch))
       {
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
