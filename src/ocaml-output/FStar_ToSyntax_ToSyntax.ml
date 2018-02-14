@@ -4034,7 +4034,7 @@ and (desugar_formula :
           desugar_quant FStar_Parser_Const.forall_lid b pats body
       | FStar_Parser_AST.QExists (b::[],pats,body) ->
           desugar_quant FStar_Parser_Const.exists_lid b pats body
-      | uu____11302 -> desugar_formula env f
+      | uu____11302 -> desugar_term env f
 
 and (typars_of_binders :
   FStar_ToSyntax_Env.env ->
