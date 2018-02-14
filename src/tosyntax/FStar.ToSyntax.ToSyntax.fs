@@ -204,7 +204,6 @@ and free_type_vars env t = match t.tm with
   | Discrim _
   | Name _  -> []
 
-  | Assign (_, t)
   | Requires (t, _)
   | Ensures (t, _)
   | NamedTyp(_, t) ->
@@ -807,13 +806,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                                (Ident.text_of_lid eff_name)
                                txt)
       end
-
-    | Assign (ident, t2) ->
-      let t2 = desugar_term env t2 in
-      let t1, mut = fail_or2 (Env.try_lookup_id env) ident in
-      if not mut then
-        raise_error (Errors.Fatal_AssignToImmutableValues, "Can only assign to mutable values") top.range;
-      mk_ref_assign t1 t2 top.range
 
     | Var l
     | Name l ->

@@ -958,7 +958,7 @@ and p_noSeqTerm' ps e = match e.tm with
 and p_attrs_opt = function
   | None -> empty
   | Some terms ->
-    group (str "[@" ^/^ (separate_map semi p_term terms) ^/^ str "]")
+    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
 
 and p_attr_letbinding (a, (pat, e)) =
   let pat_doc = p_letlhs (pat, e) in
@@ -1263,7 +1263,6 @@ and p_projectionLHS e = match e.tm with
   | NamedTyp _  (* p_tmNoEq *)
   | Requires _  (* p_noSeqTerm *)
   | Ensures _   (* p_noSeqTerm *)
-  | Assign _    (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false e)
 
