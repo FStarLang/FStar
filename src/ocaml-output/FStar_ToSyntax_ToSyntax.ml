@@ -7207,29 +7207,15 @@ let (add_modul_to_env :
                   FStar_ToSyntax_Env.set_current_module en1
                     m.FStar_Syntax_Syntax.name
                    in
-                FStar_List.fold_left
-                  (fun en2  ->
-                     fun s  ->
-                       (let uu____19267 =
-                          FStar_Options.dump_module
-                            (m.FStar_Syntax_Syntax.name).FStar_Ident.str
-                           in
-                        if uu____19267
-                        then
-                          let uu____19268 =
-                            FStar_Syntax_Print.sigelt_to_string s  in
-                          FStar_Util.print1 "\n\nPushing to env: %s\n\n"
-                            uu____19268
-                        else ());
-                       push_sigelt1 en2 s) uu____19260
+                FStar_List.fold_left push_sigelt1 uu____19260
                   m.FStar_Syntax_Syntax.declarations
                  in
               let env = FStar_ToSyntax_Env.finish en2 m  in
-              let uu____19271 =
+              let uu____19262 =
                 if pop_when_done
                 then
                   FStar_ToSyntax_Env.export_interface
                     m.FStar_Syntax_Syntax.name env
                 else env  in
-              ((), uu____19271)
+              ((), uu____19262)
   
