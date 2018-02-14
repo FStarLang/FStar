@@ -81,7 +81,6 @@ type term' =
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
-  | Assign    of ident * term
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
 

@@ -70,7 +70,7 @@ let default_or_map n f x =
   | None -> n
   | Some x' -> f x'
 
-(* changing PPrint's ^//^ to ^/+^ since '//' wouldn't work in F# *)
+// changing PPrint's ^//^ to ^/+^ since '//' wouldn't work in F#
 let prefix2 prefix_ body = prefix 2 1 prefix_ body
 
 let ( ^/+^ ) prefix_ body = prefix2 prefix_ body
@@ -133,10 +133,28 @@ let soft_brackets_with_nesting contents =
 let soft_begin_end_with_nesting contents =
   soft_surround 2 1 (str "begin") contents (str "end")
 
+let separate_map_last sep f es =
+  let l = List.length es in
+  let es = List.mapi (fun i e -> f (i <> l - 1) e) es in
+  separate sep es
+
+let separate_break_map_last sep f l =
+    group (separate_map_last (space ^^ sep ^^ break1) f l)
+
 let separate_map_or_flow sep f l =
     if List.length l < 10
     then separate_map sep f l
     else flow_map sep f l
+
+let flow_map_last sep f es =
+  let l = List.length es in
+  let es = List.mapi (fun i e -> f (i <> l - 1) e) es in
+  flow sep es
+
+let separate_map_or_flow_last sep f l =
+    if List.length l < 10
+    then separate_map_last sep f l
+    else flow_map_last sep f l
 
 let soft_surround_separate_map n b void_ opening sep closing f xs =
   if xs = []
@@ -472,7 +490,7 @@ and p_fsdoc (doc, kwd_args) =
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
-      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ false t
   | TopLevelLet (_, lbs) ->
       separate_map hardline (fun lb -> group (str "let" ^/^ p_letlhs lb)) lbs
   | _ ->
@@ -490,7 +508,7 @@ and p_rawDecl d = match d.d with
     group(str "module" ^^ space ^^ p_quident uid)
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
-    surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
+    surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ false t
   | Tycon(false, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
     (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
@@ -500,7 +518,7 @@ and p_rawDecl d = match d.d with
     separate_map_with_comments let_doc (str "and" ^^ space) p_letbinding lbs
       (fun (p, t) -> Range.union_ranges p.prange t.range)
   | Val(lid, t) ->
-    (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+    (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ false t
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -508,9 +526,9 @@ and p_rawDecl d = match d.d with
       then empty
       else str "val" ^^ space
     in
-    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t
+    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ false t
   | Exception(uid, t_opt) ->
-    str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt
+    str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ false t) t_opt
   | NewEffect(ne) ->
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
@@ -543,16 +561,16 @@ and p_typeDecl = function
     let empty' : unit -> document = fun () -> empty in
     p_typeDeclPrefix lid bs typ_opt empty'
   | TyconAbbrev (lid, bs, typ_opt, t) ->
-    let f () = prefix2 equals (p_typ t) in
+    let f () = prefix2 equals (p_typ false t) in
     p_typeDeclPrefix lid bs typ_opt f
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    let p_recordFieldAndComments (lid, t, doc_opt) =
-      with_comment p_recordFieldDecl (lid, t, doc_opt) (extend_to_end_of_line t.range)
+    let p_recordFieldAndComments ps (lid, t, doc_opt) =
+      with_comment (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range)
     in
     let p_fields () =
         equals ^^ space ^^
         braces_with_nesting (
-            separate_map (semi ^^ break1) p_recordFieldAndComments record_field_decls
+            separate_map_last (semi ^^ break1) p_recordFieldAndComments record_field_decls
             )
     in
     p_typeDeclPrefix lid bs typ_opt p_fields
@@ -573,18 +591,18 @@ and p_typeDeclPrefix lid bs typ_opt cont =
   then p_ident lid ^^ space ^^ cont ()
   else
       let binders_doc =
-        p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ t) typ_opt
+        p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ false t) typ_opt
       in surround 2 1 (p_ident lid) binders_doc (cont ())
 
-and p_recordFieldDecl (lid, t, doc_opt) =
+and p_recordFieldDecl ps (lid, t, doc_opt) =
   (* TODO : Should we allow tagging individual field with a comment ? *)
-  group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t)
+  group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ ps t)
 
 and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
   let sep = if use_of then str "of" else colon in
   let uid_doc = p_uident uid in
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
+  optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ false t) t_opt
 
 and p_letlhs (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
@@ -601,7 +619,7 @@ and p_letlhs (pat, _) =
 
 and p_letbinding (pat, e) =
   let pat_doc = p_letlhs (pat, e) in
-  prefix2 (group (pat_doc ^/^ equals)) (p_term e)
+  prefix2 (group (pat_doc ^/^ equals)) (p_term false e)
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -616,17 +634,17 @@ and p_newEffect = function
     p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
-    surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
+    surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm false t))
 
 and p_effectDefinition uid bs t eff_decls =
   braces_with_nesting (
-    group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
-    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls)
+    group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ false t))) ^/^
+    prefix2 (str "with") (separate_break_map_last semi p_effectDecl eff_decls)
     )
 
-and p_effectDecl d = match d.d with
+and p_effectDecl ps d = match d.d with
   | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
-      prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm e)
+      prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
                               (decl_to_string d))
@@ -636,11 +654,11 @@ and p_subEffect lift =
     let lifts =
       match lift.lift_op with
         | NonReifiableLift t -> ["lift_wp", t]
-        | ReifiableLift (t1, t2) -> ["lif_wp", t1 ; "lift", t2]
+        | ReifiableLift (t1, t2) -> ["lift_wp", t1 ; "lift", t2]
         | LiftForFree t -> ["lift", t]
     in
-    let p_lift (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm t) in
-    separate_break_map semi p_lift lifts
+    let p_lift ps (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm ps t) in
+    separate_break_map_last semi p_lift lifts
   in
   prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) ^^
     space ^^ braces_with_nesting lift_op_doc
@@ -721,7 +739,7 @@ and p_atomicPattern p = match p.pat with
     | PatWild, Refine({b = NoName t}, phi) ->
       soft_parens_with_nesting (p_refinement None underscore t phi)
     | _ ->
-        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_typ t)
+        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_typ false t)
     end
   | PatList pats ->
     surround 2 0 lbracket (separate_break_map semi p_tuplePattern pats) rbracket
@@ -781,7 +799,7 @@ and p_binder is_atomic b = match b.b with
 
 and p_refinement aqual_opt binder t phi =
       optional p_aqual aqual_opt ^^ binder ^^ colon ^^
-      p_appTerm t ^^ soft_braces_with_nesting (p_noSeqTerm phi)
+      p_appTerm t ^^ soft_braces_with_nesting (p_noSeqTerm false phi)
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
@@ -825,57 +843,93 @@ and p_lidentOrUnderscore id =
 (*                                                                            *)
 (* ****************************************************************************)
 
-and p_term e = match e.tm with
+(* The grammar has shift-reduce conflicts, meaning that the printer, in addition
+ * to following the structure of the parser, must have extra machinery.
+ * Shift-reduce conflicts arise from two situations:
+ * - e1; e2 where e1 ends with a greedy construct that swallows semicolons (for
+ *   instance, MATCH, LET, an operator that ends with LARROW are greedy -- IF is
+ *   not)
+ * - ... -> e1 | ... -> ... where e1 ends with a greedy construct that swallows
+ *   bars (MATCH, TRY, FUNCTION); note that FUN is not a greedy construct in
+ *    this context; also note that this does not apply to the last branch...
+ *
+ * To deal with this issue, we keep two flags in our series of recursive calls;
+ * "ps" (protect semicolons) and "pb" (protect branches). Whenever we enter a
+ * greedy construct, we wrap it with parentheses to make it non-greedy.
+ *
+ * This is convenient: at every call-site, we need to understand whether we need
+ * to prevent swallowing semicolons or not. For instance, in a record field, we
+ * do. *)
+
+and paren_if b =
+  if b then
+    soft_parens_with_nesting
+  else
+    fun x -> x
+
+and p_term ps e = match e.tm with
   | Seq (e1, e2) ->
-      group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
+      (* Don't swallow semicolons on the left-hand side of a semicolon! *)
+      group (p_noSeqTerm true e1 ^^ semi) ^/^ p_term ps e2
   | Bind(x, e1, e2) ->
-      group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
+      group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm true e1 ^^ space ^^ semi)) ^/^ p_term ps e2
   | _ ->
-      group (p_noSeqTerm e)
+      group (p_noSeqTerm ps e)
 
-and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
+and p_noSeqTerm ps e = with_comment (p_noSeqTerm' ps) e e.range
 
-and p_noSeqTerm' e = match e.tm with
+and p_noSeqTerm' ps e = match e.tm with
   | Ascribed (e, t, None) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ ps t)
   | Ascribed (e, t, Some tac) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t ^/^ str "by" ^/^ p_typ tac)
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ false t ^/^ str "by" ^/^ p_typ ps tac)
   | Op ({idText = ".()<-"}, [ e1; e2; e3 ]) ->
       group (
-        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2)
-          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm e3))
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm ps e3))
   | Op ({idText = ".[]<-"}, [ e1; e2; e3 ]) ->
       group (
-        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term e2)
-          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm e3))
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm ps e3))
   | Requires (e, wtf) ->
       assert (wtf = None);
-      group (str "requires" ^/^ p_typ e)
+      group (str "requires" ^/^ p_typ ps e)
   | Ensures (e, wtf) ->
       assert (wtf = None);
-      group (str "ensures" ^/^ p_typ e)
+      group (str "ensures" ^/^ p_typ ps e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
   | If (e1, e2, e3) ->
+      (* No need to wrap with parentheses here, since if e1 then e2; e3 really
+       * does parse as (if e1 then e2); e3 -- the IF does not swallow
+       * semicolons. We forward our caller's [ps] parameter, though, because
+       * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str "if" ^/+^ p_noSeqTerm e1) ^/^ (str "then" ^/+^ p_noSeqTerm e2))
+      then group ((str "if" ^/+^ p_noSeqTerm false e1) ^/^ (str "then" ^/+^ p_noSeqTerm ps e2))
       else
           let e2_doc =
               match e2.tm with
+                  (* Not protecting, since an ELSE follows. *)
                   | If (_,_,e3) when is_unit e3 ->
-                      soft_parens_with_nesting (p_noSeqTerm e2)
-                  | _ -> p_noSeqTerm e2
+                      (* Dangling else *)
+                      soft_parens_with_nesting (p_noSeqTerm false e2)
+                  | _ -> p_noSeqTerm false e2
           in group (
-              (str "if" ^/+^ p_noSeqTerm e1) ^/^
+              (str "if" ^/+^ p_noSeqTerm false e1) ^/^
               (str "then" ^/+^ e2_doc) ^/^
-              (str "else" ^/+^ p_noSeqTerm e3))
+              (str "else" ^/+^ p_noSeqTerm ps e3))
   | TryWith(e, branches) ->
-      group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^
-            separate_map hardline p_patternBranch branches)
+      paren_if ps (
+        group (prefix2 (str "try") (p_noSeqTerm false e) ^/^ str "with" ^/^
+              separate_map hardline p_patternBranch branches))
   | Match (e, branches) ->
-      group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
+      paren_if ps (
+        group (surround 2 1 (str "match") (p_noSeqTerm false e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
+      )
   | LetOpen (uid, e) ->
-      group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
+      paren_if ps (
+        group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term false e)
+      )
   | Let(q, (a0, lb0)::attr_letbindings, e) ->
     let let_first =
         p_attrs_opt a0 ^/^
@@ -892,15 +946,14 @@ and p_noSeqTerm' e = match e.tm with
                     empty
                     p_attr_letbinding
                     attr_letbindings)
-    in let_first ^/^
+    in paren_if (let_first ^/^
        let_rest  ^/^
        str "in"  ^/^
-       p_term e
+       p_term false e)
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
-    group (str "function" ^/^ separate_map hardline p_patternBranch branches)
-  | Assign (id, e) ->
-      group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
-  | _ -> p_typ e
+    paren_if ps (
+      group (str "function" ^/^ separate_map hardline p_patternBranch branches))
+  | _ -> p_typ ps e
 
 and p_attrs_opt = function
   | None -> empty
@@ -909,17 +962,17 @@ and p_attrs_opt = function
 
 and p_attr_letbinding (a, (pat, e)) =
   let pat_doc = p_letlhs (pat, e) in
-  (prefix2 (p_attrs_opt a ^/^ (group (str "and " ^/^ pat_doc ^/^ equals))) (p_term e))
+  (prefix2 (p_attrs_opt a ^/^ (group (str "and " ^/^ pat_doc ^/^ equals))) (p_term false e))
 
-and p_typ e = with_comment p_typ' e e.range
+and p_typ ps e = with_comment (p_typ' ps) e e.range
 
-and p_typ' e = match e.tm with
+and p_typ' ps e = match e.tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
       prefix2
         (soft_surround 2 0 (p_quantifier e ^^ space) (p_binders true bs) dot)
-        (p_trigger trigger ^^ p_noSeqTerm e1)
-  | _ -> p_simpleTerm e
+        (p_trigger trigger ^^ p_noSeqTerm ps e1)
+  | _ -> p_simpleTerm ps e
 
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
@@ -937,9 +990,11 @@ and p_disjunctivePats pats =
 and p_conjunctivePats pats =
     group (separate_map semi p_appTerm pats)
 
-and p_simpleTerm e = match e.tm with
+and p_simpleTerm ps e = match e.tm with
     | Abs(pats, e) ->
-        (str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow) ^/+^ p_term e
+        paren_if ps (
+          (str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow) ^/+^ p_term false e
+        )
     | _ -> p_tmIff e
 
 and p_maybeFocusArrow b =
@@ -948,14 +1003,19 @@ and p_maybeFocusArrow b =
 (* slight modification here : a patternBranch always begins with a `|` *)
 (* TODO : can we recover the focusing *)
 and p_patternBranch (pat, when_opt, e) =
+  (* p_patternBranch is always called immediately underneath a paren_if; if ps
+   * was true, then we parenthesized and there's a closing parenthesis coming
+   * up, meaning we're not at risk of swallowing a semicolon; if ps was false,
+   * then we can recursively call p_term with false. *)
   group (
       group (bar ^^ space ^^ p_disjunctivePattern pat ^/+^ p_maybeWhen when_opt ^^ rarrow )
-      ^/+^ p_term e)
+      ^/+^ p_term false e)
 
 and p_maybeWhen = function
     | None -> empty
     | Some e -> str "when" ^/+^ p_tmFormula e ^^ space  (*always immediately followed by an arrow*)
 
+(* Nothing underneath tmIff is at risk of swallowing a semicolon. *)
 and p_tmIff e = match e.tm with
     | Op({idText = "<==>"}, [e1;e2]) -> infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
@@ -1035,7 +1095,7 @@ and p_tmNoEq' curr e = match e.tm with
       p_refinedBinder b phi
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
-                            separate_map (semi ^^ break1) p_simpleDef record_fields )
+                            separate_map_last (semi ^^ break1) p_simpleDef record_fields )
   | Op({idText = "~"}, [e]) ->
       group (str "~" ^^ p_atomicTerm e)
   | _ -> p_appTerm e
@@ -1051,9 +1111,9 @@ and p_refinedBinder b phi =
     | TVariable _
     | NoName _ -> failwith (Util.format1 "Imposible : a refined binder ought to be annotated %s" (binder_to_string b))
 
-(* A simple def can be followed by a ';' *)
-and p_simpleDef (lid, e) =
-  group (p_qlident lid ^/^ equals ^/^ p_tmIff e)
+(* A simple def can be followed by a ';'. Protect except for the last one. *)
+and p_simpleDef ps (lid, e) =
+  group (p_qlident lid ^/^ equals ^/^ p_noSeqTerm ps e)
 
 and p_appTerm e = match e.tm with
   | App _ when is_general_application e ->
@@ -1095,18 +1155,19 @@ and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match e.tm with
   | Op({idText = ".()"}, [e1 ; e2]) ->
-        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2))
+        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false e2))
   | Op({idText = ".[]"}, [e1; e2]) ->
-        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term e2))
+        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false e2))
   | _ ->
       exit e
 and p_indexingTerm e = p_indexingTerm_aux p_atomicTerm e
 
 (* p_atomicTermQUident is merged with p_atomicTerm *)
 and p_atomicTerm e = match e.tm with
-  (* already handled higher in the hierarchy *)
   | LetOpen (lid, e) ->
-      p_quident lid ^^ dot ^^ soft_parens_with_nesting (p_term e)
+      (* The second form of let open which is atomic, because it's delimited
+       * with parentheses. *)
+      p_quident lid ^^ dot ^^ soft_parens_with_nesting (p_term false e)
   | Name lid ->
       p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
@@ -1151,18 +1212,19 @@ and p_projectionLHS e = match e.tm with
   (* TODO : We should drop this constructor asa this printer works *)
   | _ when is_array e ->
     let es = extract_from_list e in
-    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow (semi ^^ break1) p_noSeqTerm es) (bar ^^ rbracket)
+    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) p_noSeqTerm es) (bar ^^ rbracket)
   | _ when is_list e ->
-    surround 2 0 lbracket (separate_map_or_flow (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
+    surround 2 0 lbracket (separate_map_or_flow_last (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
   | _ when is_lex_list e ->
-    surround 2 1 (percent ^^ lbracket) (separate_map_or_flow (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
+    surround 2 1 (percent ^^ lbracket) (separate_map_or_flow_last (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   | Labeled (e, s, b) ->
-      str ("(*" ^ s ^ "*)") ^/^ p_term e
+      (* JP: what is this? can we remove it? *)
+      str ("(*" ^ s ^ "*)") ^/^ p_term false e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
@@ -1203,7 +1265,7 @@ and p_projectionLHS e = match e.tm with
   | Ensures _   (* p_noSeqTerm *)
   | Assign _    (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
-    -> soft_parens_with_nesting (p_term e)
+    -> soft_parens_with_nesting (p_term false e)
 
 and p_constant = function
   | Const_effect -> str "Effect"
@@ -1257,7 +1319,7 @@ and p_atomicUniverse u = match u.tm with
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
-let term_to_document e = p_term e
+let term_to_document e = p_term false e
 
 let signature_to_document e = p_justSig e
 
