@@ -561,8 +561,6 @@ noSeqTerm:
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
-  | id=lident LARROW e=noSeqTerm
-      { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
 
 typ:
   | t=simpleTerm  { t }

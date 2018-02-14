@@ -948,17 +948,9 @@ and p_maybeFocusArrow b =
 (* slight modification here : a patternBranch always begins with a `|` *)
 (* TODO : can we recover the focusing *)
 and p_patternBranch (pat, when_opt, e) =
-  let maybe_paren : document -> document =
-    match e.tm with
-    | Match _
-    | TryWith _ -> soft_begin_end_with_nesting
-    | Abs([{pat=PatVar(x, _)}], {tm=Match(maybe_x, _)}) when matches_var maybe_x x ->
-        soft_begin_end_with_nesting
-    | _ -> fun x -> x
-  in
   group (
       group (bar ^^ space ^^ p_disjunctivePattern pat ^/+^ p_maybeWhen when_opt ^^ rarrow )
-      ^/+^ maybe_paren (p_term e))
+      ^/+^ p_term e)
 
 and p_maybeWhen = function
     | None -> empty
