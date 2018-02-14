@@ -1535,7 +1535,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
   let add_assume_if_needed quals = if List.contains Assumption quals then quals else Assumption::quals in
   let is_unfold_or_inline = List.existsb (fun q -> q = Unfold_for_unification_and_vcgen || q = Inline_for_extraction) in
-  let is_lemma = List.existsML (fun (_, t) -> U.is_lemma t) in
+  let is_lemma = List.existsML (fun (_, _, t) -> U.is_lemma t) in
 
   //if the module contains both a val and a let, we will only keep the val
   let added_vals = BU.mk_ref [] in
@@ -1571,42 +1571,42 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   in
 
   //extract the type of the letbinding, boolean indicates whether we were successful
-  let extract_lbs_annotations (lbs:list<letbinding>) (lids:list<lident>) (r:Range.range) :(list<(univ_names * typ)> * bool) =
+  let extract_lbs_annotations (lbs:list<letbinding>) (lids:list<lident>) (r:Range.range) :(list<(bool * univ_names * typ)> * bool) =
     List.fold_left2 (fun (l, b) lb lid ->
       let opt = List.tryFind (fun (l', _) -> lid_equals lid l') !val_typs in
-      if opt <> None then ((snd (opt |> must))::l, b)
+      if opt <> None then (let (t1, t2) = snd (opt |> must) in (true, t1, t2)::l, b)
       else
         match lb.lbtyp.n with
         | Tm_unknown ->
           (match lb.lbdef.n with
            | Tm_ascribed (_, (Inr c, _), _) ->  //top-level term, NOTE: possibly with effect
-             (lb.lbunivs, U.comp_result c)::l, b  //it's fine to not keep the body as we have the type
-           | Tm_ascribed (_, (Inl t, _), _) -> (lb.lbunivs, t)::l, b
+             (false, lb.lbunivs, U.comp_result c)::l, b  //it's fine to not keep the body as we have the type
+           | Tm_ascribed (_, (Inl t, _), _) -> (false, lb.lbunivs, t)::l, b
            | Tm_abs (bs, e, _) ->
              (match e.n with
-              | Tm_ascribed (_, (Inr c, _), _) -> (lb.lbunivs, (mk (Tm_arrow (bs, c)) None r))::l, b
+              | Tm_ascribed (_, (Inr c, _), _) -> (false, lb.lbunivs, (mk (Tm_arrow (bs, c)) None r))::l, b
               | Tm_ascribed (_, (Inl t, _), _) ->
                 let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
-                (lb.lbunivs, (mk (Tm_arrow (bs, c)) None r))::l, b
-              | _ -> (lb.lbunivs, lb.lbtyp)::l, true)  //can't get the type of the letbinding, so must keep the body
-           | _ -> (lb.lbunivs, lb.lbtyp)::l, true)  //can't get the type, so must keep the body
-        | _ -> (lb.lbunivs, lb.lbtyp)::l, b  //take whatever is annotated
+                (false, lb.lbunivs, (mk (Tm_arrow (bs, c)) None r))::l, b
+              | _ -> (false, lb.lbunivs, lb.lbtyp)::l, true)  //can't get the type of the letbinding, so must keep the body
+           | _ -> (false, lb.lbunivs, lb.lbtyp)::l, true)  //can't get the type, so must keep the body
+        | _ -> (false, lb.lbunivs, lb.lbtyp)::l, b  //take whatever is annotated
     ) ([], false) lbs lids
   in
 
   //TODO: calling extract_let_rec_annotation multiple times, can call it just once in the main body, and then pass it around
-  let is_pure_or_ghost_function_with_non_unit_type (typs:list<(univ_names * typ)>) :bool = List.existsML (fun (_, t) -> is_pure_or_ghost_function t && not (is_unit t)) typs in
-  let is_unit (typs:list<(univ_names * typ)>) = List.for_all (fun (_, t) -> is_unit t) typs in
+  let is_pure_or_ghost_function_with_non_unit_type (typs:list<(bool * univ_names * typ)>) :bool = List.existsML (fun (_, _, t) -> is_pure_or_ghost_function t && not (is_unit t)) typs in
+  let is_unit (typs:list<(bool * univ_names * typ)>) = List.for_all (fun (_, _, t) -> is_unit t) typs in
 
-  let vals_of_lbs (s:sigelt) (lbs:list<letbinding>) (lids:list<lident>) (typs:list<(univ_names * typ)>) (quals:list<qualifier>) :list<sigelt> =
-    List.map3 (fun lb lid typ ->
-      { s with sigel = Sig_declare_typ (lid, fst typ, snd typ); sigquals = Assumption::(filter_out_abstract_and_inline quals) }
+  let vals_of_lbs (s:sigelt) (lbs:list<letbinding>) (lids:list<lident>) (typs:list<(bool * univ_names * typ)>) (quals:list<qualifier>) :list<sigelt> =
+    List.map3 (fun lb lid (_, uvs, t) ->
+      { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline quals) }
     ) lbs lids typs
   in
 
-  let annotate_with_typs (typs:list<(univ_names * typ)>) (s:sigelt) :sigelt =
+  let annotate_with_typs (typs:list<(bool * univ_names * typ)>) (s:sigelt) :sigelt =
     { s with sigel = match s.sigel with
-        | Sig_let (lbs, lids) -> Sig_let ((fst lbs, List.map2 (fun lb (uvs, t) -> { lb with lbunivs = uvs; lbtyp = t }) (snd lbs) typs), lids)
+        | Sig_let (lbs, lids) -> Sig_let ((fst lbs, List.map2 (fun lb (b, uvs, t) -> if b then { lb with lbdef = mk (Tm_ascribed (lb.lbdef, (Inl t, None), None)) None s.sigrng } else lb) (snd lbs) typs), lids)
         | _ -> failwith "Impossible!" }
   in
 

@@ -1,4 +1,6 @@
 module A
 
-val foo (x:int) :int
+let rec foo :list int -> Tot int = fun l -> match l with
+  | [] -> 0
+  | _  -> 1
 

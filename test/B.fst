@@ -1,7 +1,6 @@
 module B
 
-abstract type t1 =
-  | A: t1
-  | B: t1
-
-private let foo (x:t1{A? t1}) :int = 0
+val foo: list int -> Tot int
+let rec foo l = match l with
+  | [] -> 0
+  | _  -> 1
