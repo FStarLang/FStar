@@ -1566,7 +1566,7 @@ and desugar_formula env (f:term) : S.term =
     | QExists([b], pats, body) ->
       desugar_quant C.exists_lid b pats body
 
-    | _ -> desugar_term env f
+    | _ -> desugar_formula env f
 
 and typars_of_binders env bs =
     let env, tpars = List.fold_left (fun (env, out) b ->

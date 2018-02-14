@@ -801,7 +801,7 @@ projectionLHS:
       {
         match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) e.level
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK
       {
