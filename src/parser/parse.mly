@@ -801,10 +801,9 @@ projectionLHS:
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
-        let e1 = match sort_opt with
+        match sort_opt with
           | None -> e
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
-        in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK
       {
@@ -928,7 +927,7 @@ atomicUniverse:
       }
   | u=lident { mk_term (Uvar u) u.idRange Expr }
   | LPAREN u=universeFrom RPAREN
-    { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
+    { u }
 
 warn_error_list:
   | e=warn_error EOF { e }

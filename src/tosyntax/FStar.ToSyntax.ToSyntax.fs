@@ -90,10 +90,6 @@ let contains_binder binders =
     | Annotated _ -> true
     | _ -> false)
 
-let rec unparen t = match t.tm with
-  | Paren t -> unparen t
-  | _ -> t
-
 let tm_type_z r = mk_term (Name (lid_of_path ["Type0"] r)) r Kind
 let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 
@@ -104,7 +100,6 @@ let rec is_comp_type env t =
     | Name l
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
-    | Paren t
     | Ascribed(t, _, _)
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
@@ -193,7 +188,7 @@ let rec free_type_vars_b env binder = match binder.b with
     (env, [])
   | NoName t ->
     (env, free_type_vars env t)
-and free_type_vars env t = match (unparen t).tm with
+and free_type_vars env t = match t.tm with
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
   | Tvar a ->
@@ -212,8 +207,8 @@ and free_type_vars env t = match (unparen t).tm with
   | Assign (_, t)
   | Requires (t, _)
   | Ensures (t, _)
-  | NamedTyp(_, t)
-  | Paren t -> free_type_vars env t
+  | NamedTyp(_, t) ->
+      free_type_vars env t
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
@@ -254,7 +249,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Seq _ -> []
 
 let head_and_args t =
-    let rec aux args t = match (unparen t).tm with
+    let rec aux args t = match t.tm with
         | App(t, arg, imp) -> aux ((arg,imp)::args) t
         | Construct(l, args') -> {tm=Name l; range=t.range; level=t.level}, args'@args
         | _ -> t, args in
@@ -273,7 +268,7 @@ let close_fun env t =
   if List.length ftv = 0
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type_level (Some Implicit)) in
-       let t = match (unparen t).tm with
+       let t = match t.tm with
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name C.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
        let result = mk_term (Product(binders, t)) t.range t.level in
@@ -390,7 +385,7 @@ let int_to_universe n = sum_to_universe U_zero n
 let rec desugar_maybe_non_constant_universe t
   : either<int, Syntax.universe>  (* level of universe or desugared universe *)
 =
-  match (unparen t).tm with
+  match t.tm with
       (* TODO : Check how this unification works *)
       (* The unification might introduce universe variables *)
   | Wild -> Inr (U_unif (Unionfind.univ_fresh ()))
@@ -417,7 +412,7 @@ let rec desugar_maybe_non_constant_universe t
       end
   | App _ ->
       let rec aux t univargs  =
-        match (unparen t).tm with
+        match t.tm with
         | App(t, targ, _) ->
             let uarg = desugar_maybe_non_constant_universe targ in
             aux t (uarg::univargs)
@@ -718,7 +713,7 @@ and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
 
 and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflags> =
     let desugar_attribute t =
-        match (unparen t).tm with
+        match t.tm with
             | Var ({str="cps"}) -> CPS
             | _ -> raise_error (Errors.Fatal_UnknownAttribute, "Unknown attribute " ^ term_to_string t) t.range
     in List.map desugar_attribute cattributes
@@ -726,7 +721,7 @@ and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflags> =
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
   let mk e = S.mk e None top.range in
   let setpos e = {e with pos=top.range} in
-  begin match (unparen top).tm with
+  begin match top.tm with
     | Wild -> setpos tun
 
     | Labeled _ -> desugar_formula env top
@@ -760,7 +755,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         | Op({idText = "*"}, [t1;t2]) -> flatten t1 @ [ t2 ]
         | _ -> [t]
       in
-      let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
+      let targs = flatten top |> List.map (fun t -> as_arg (desugar_typ env t)) in
       let tup, _ = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))
 
@@ -984,7 +979,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        aux env [] None binders
 
     | App (_, _, UnivApp) ->
-       let rec aux universes e = match (unparen e).tm with
+       let rec aux universes e = match e.tm with
            | App(e, t, UnivApp) ->
                let univ_arg = desugar_universe t in
                aux (univ_arg::universes) e
@@ -994,7 +989,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        in aux [] top
 
     | App _ ->
-      let rec aux args e = match (unparen e).tm with
+      let rec aux args e = match e.tm with
         | App(e, t, imp) when imp <> UnivApp ->
           let arg = arg_withimp_e imp <| desugar_term env t in
           aux (arg::args) e
@@ -1250,8 +1245,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
     | NamedTyp(_, e)
-    | Paren e ->
-      desugar_term env e
 
     | _ when (top.level=Formula) -> desugar_formula env top
 
@@ -1284,20 +1277,20 @@ and desugar_args env args =
 
 and desugar_comp r env t =
     let fail : (Errors.raw_error * string) -> 'a = fun err -> raise_error err r in
-    let is_requires (t, _) = match (unparen t).tm with
+    let is_requires (t, _) = match t.tm with
       | Requires _ -> true
       | _ -> false
     in
-    let is_ensures (t, _) = match (unparen t).tm with
+    let is_ensures (t, _) = match t.tm with
       | Ensures _ -> true
       | _ -> false
     in
-    let is_app head (t, _) = match (unparen t).tm with
+    let is_app head (t, _) = match t.tm with
       | App({tm=Var d}, _, _) -> d.ident.idText = head
       | _ -> false
     in
     let is_smt_pat (t,_) =
-      match (unparen t).tm with
+      match t.tm with
       // TODO: remove this first match once we fully migrate
       | Construct (cons, [{tm=Construct (smtpat, _)}, _; _]) ->
         Ident.lid_equals cons C.cons_lid &&
@@ -1551,7 +1544,7 @@ and desugar_formula env (f:term) : S.term =
       mk_term (q([b], [], body)) f.range Formula
     | _ -> failwith "impossible" in
 
-  match (unparen f).tm with
+  match f.tm with
     | Labeled(f, l, p) ->
       let f = desugar_formula env f in
       mk <| Tm_meta(f, Meta_labeled(l, f.pos, p))
@@ -1572,9 +1565,6 @@ and desugar_formula env (f:term) : S.term =
 
     | QExists([b], pats, body) ->
       desugar_quant C.exists_lid b pats body
-
-    | Paren f ->
-      desugar_formula env f
 
     | _ -> desugar_term env f
 
@@ -1819,13 +1809,13 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
             if quals |> List.contains S.Effect
             then
                 let t, cattributes =
-                    match (unparen t).tm with
+                    match t.tm with
                         (* TODO : we are only handling the case Effect args (attributes ...) *)
                         | Construct (head, args) ->
                             let cattributes, args =
                                 match List.rev args with
                                     | (last_arg, _) :: args_rev ->
-                                        begin match (unparen last_arg).tm with
+                                        begin match last_arg.tm with
                                             | Attributes ts -> ts, List.rev (args_rev)
                                             | _ -> [], args
                                         end
@@ -2140,7 +2130,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
         let cattributes, args =
             match List.rev args with
             | (last_arg, _) :: args_rev ->
-                begin match (unparen last_arg).tm with
+                begin match last_arg.tm with
                     | Attributes ts -> ts, List.rev (args_rev)
                     | _ -> [], args
                 end

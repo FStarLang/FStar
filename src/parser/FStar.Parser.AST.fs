@@ -78,7 +78,6 @@ type term' =
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
   | NamedTyp  of ident * term
-  | Paren     of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
@@ -406,10 +405,9 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
 
 let rec extract_named_refinement t1  =
     match t1.tm with
-        | NamedTyp(x, t) -> Some (x, t, None)
-        | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
-    | Paren t -> extract_named_refinement t
-        | _ -> None
+    | NamedTyp(x, t) -> Some (x, t, None)
+    | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
+    | _ -> None
 
 (* Some helpers that parse.mly and parse.fsy will want too *)
 
@@ -593,7 +591,6 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
   | NamedTyp(x, t) ->
     Util.format2 "%s:%s" x.idText  (t|> term_to_string)
-  | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
           (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)

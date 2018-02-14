@@ -646,8 +646,6 @@ let collect_one
         collect_term t
     | NamedTyp (_, t) ->
         collect_term t
-    | Paren t ->
-        collect_term t
     | Assign (_, t)
     | Requires (t, _)
     | Ensures (t, _)

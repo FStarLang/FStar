@@ -2298,10 +2298,9 @@ projectionLHS:
 | LPAREN term option_pair_hasSort_simpleTerm__ RPAREN
     {let (_1, e, sort_opt, _4) = ((), $2, $3, ()) in
       (
-        let e1 = match sort_opt with
+        match sort_opt with
           | None -> e
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
-        in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       )}
 | LBRACK_BAR right_flexible_list_SEMICOLON_noSeqTerm_ BAR_RBRACK
     {let (_1, l0, _3) = ((), $2, ()) in
@@ -2497,7 +2496,7 @@ atomicUniverse:
              ( mk_term (Uvar u) u.idRange Expr )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
-    ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
+    ( u )}
 
 warn_error_list:
   warn_error EOF
