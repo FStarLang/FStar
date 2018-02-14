@@ -20,7 +20,7 @@ module FStar.Seq.Base
 
 module List = FStar.List.Tot
 
-abstract type seq (a:Type) =
+abstract type seq (a:Type) :Type0 =
   | MkSeq: l:list a -> seq a
 
 (* Destructors *)
@@ -30,13 +30,13 @@ let length #a s = List.length (MkSeq?.l s)
 abstract val index:  #a:Type -> s:seq a -> i:nat{i < length s} -> Tot a
 let index #a s i = List.index (MkSeq?.l s) i
 
-private val cons: #a:Type -> x:a -> s:seq a -> Tot (seq a)
+private abstract val cons: #a:Type -> x:a -> s:seq a -> Tot (seq a)
 let cons #a x s = MkSeq (x::(MkSeq?.l s))
 
-private val hd: #a:Type -> s:seq a{length s > 0} -> Tot a
+private abstract val hd: #a:Type -> s:seq a{length s > 0} -> Tot a
 let hd #a s = List.hd (MkSeq?.l s)
 
-private val tl: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
+private abstract val tl: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
 let tl #a s = MkSeq (List.tl (MkSeq?.l s))
 
 abstract val create: #a:Type -> nat -> a -> Tot (seq a)
