@@ -94,7 +94,7 @@ type fsteps = {
     no_delta_steps : bool;
     unfold_until : option<S.delta_depth>;
     unfold_only : option<list<I.lid>>;
-    unfold_attr : option<attribute>;
+    unfold_attr : option<list<attribute>>;
     unfold_tac : bool;
     pure_subterms_within_computations : bool;
     simplify : bool;
@@ -135,6 +135,10 @@ let default_steps : fsteps = {
 }
 
 let rec to_fsteps (s : list<step>) : fsteps =
+    let add_opt x = function
+        | None -> Some [x]
+        | Some xs -> Some (x::xs)
+    in
     let add_one s fs = match s with
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
@@ -151,7 +155,7 @@ let rec to_fsteps (s : list<step>) : fsteps =
     | NoDeltaSteps ->  { fs with no_delta_steps = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly lids -> { fs with unfold_only = Some lids }
-    | UnfoldAttr attr -> { fs with unfold_attr = Some attr }
+    | UnfoldAttr attr -> { fs with unfold_attr = add_opt attr fs.unfold_attr }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
@@ -1188,21 +1192,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
                          | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l)
                  in
                  let should_delta =
-                     should_delta &&
-                     (match cfg.steps.unfold_only with
-                      | None -> true
-                      | Some lids -> BU.for_some (fv_eq_lid fv) lids)
-                 in
-                 let should_delta = if not should_delta then false else
-                    let tac_opaque_attr = U.exp_string "tac_opaque" in
-                    let attrs = Env.attrs_of_qninfo qninfo in
-                    (match attrs, cfg.steps.unfold_attr with
-                     | None, Some at -> false
-                     | Some ats, Some at -> BU.for_some (attr_eq at) ats
-                     | _, _ -> true)
-                    && (if cfg.steps.unfold_tac
-                        then not <| cases (BU.for_some (attr_eq tac_opaque_attr)) false attrs
-                        else true)
+                     if not should_delta then false
+                     else let attrs = Env.attrs_of_qninfo qninfo in
+                           // never unfold something marked tac_opaque when reducing tactics
+                          (not cfg.steps.unfold_tac ||
+                           not (cases (BU.for_some (attr_eq U.tac_opaque_attr)) false attrs)) &&
+                          //otherwise, unfold fv if it appears in "Delta_only" or if one of the Delta_attr matches
+                          ( //delta_only l
+                            (match cfg.steps.unfold_only with
+                             | None -> true
+                             | Some lids -> BU.for_some (fv_eq_lid fv) lids) ||
+                           ( //delta_attrs a
+                             match attrs, cfg.steps.unfold_attr with
+                             | None, Some _ -> false
+                             | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (attr_eq at) ats') ats
+                             | _, _ -> false))
                  in
 
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
