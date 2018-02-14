@@ -100,11 +100,11 @@ let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 //Deciding if the t is a computation type
 //based on its head symbol
 let rec is_comp_type env t =
-    match t.tm with
+    match (unparen t).tm with
     | Name l
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
-    | Paren t
+    | Paren t -> failwith "nope"
     | Ascribed(t, _, _)
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
@@ -212,8 +212,8 @@ and free_type_vars env t = match (unparen t).tm with
   | Assign (_, t)
   | Requires (t, _)
   | Ensures (t, _)
-  | NamedTyp(_, t)
-  | Paren t -> free_type_vars env t
+  | NamedTyp(_, t) -> free_type_vars env t
+  | Paren t -> failwith "nope"
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
@@ -1249,9 +1249,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
       mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
-    | NamedTyp(_, e)
-    | Paren e ->
+    | NamedTyp(_, e) ->
       desugar_term env e
+    | Paren e -> failwith "nope"
 
     | _ when (top.level=Formula) -> desugar_formula env top
 
@@ -1573,8 +1573,7 @@ and desugar_formula env (f:term) : S.term =
     | QExists([b], pats, body) ->
       desugar_quant C.exists_lid b pats body
 
-    | Paren f ->
-      desugar_formula env f
+    | Paren f -> failwith "nope"
 
     | _ -> desugar_term env f
 
