@@ -386,6 +386,17 @@ abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
+// Correctness of the normalizers
+
+val normalize_term_spec (#a: Type) (x: a) : Pure unit (requires True) (ensures (fun _ -> normalize_term #a x == x))
+let normalize_term_spec #a x = ()
+
+val normalize_spec (a: Type0) : Pure unit (requires True) (ensures (fun _ -> normalize a == a))
+let normalize_spec a = ()
+
+val norm_spec (s: list norm_step) (#a: Type) (x: a) : Pure unit (requires True) (ensures (fun _ -> norm s #a x == x))
+let norm_spec s #a x = ()
+
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
 
