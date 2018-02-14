@@ -1188,7 +1188,7 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
             let uu____3550 =
               FStar_Pprint.optional
                 (fun t  ->
-                   let uu____3555 = str "of"  in
+                   let uu____3555 = str " of"  in
                    let uu____3556 = p_typ false false t  in
                    op_Hat_Slash_Plus_Hat uu____3555 uu____3556) t_opt
                in

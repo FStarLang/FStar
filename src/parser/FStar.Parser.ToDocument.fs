@@ -528,7 +528,7 @@ and p_rawDecl d = match d.d with
     in
     (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ false false t
   | Exception(uid, t_opt) ->
-    str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ false false t) t_opt
+    str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> break1 ^^ str "of" ^/+^ p_typ false false t) t_opt
   | NewEffect(ne) ->
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
