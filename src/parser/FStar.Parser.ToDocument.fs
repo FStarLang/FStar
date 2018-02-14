@@ -946,7 +946,7 @@ and p_noSeqTerm' ps e = match e.tm with
                     empty
                     p_attr_letbinding
                     attr_letbindings)
-    in paren_if (let_first ^/^
+    in paren_if ps (let_first ^/^
        let_rest  ^/^
        str "in"  ^/^
        p_term false e)
@@ -1046,7 +1046,7 @@ and p_tmTuple' e = match e.tm with
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
 
-and paren_if curr mine doc =
+and paren_if_gt curr mine doc =
   if mine <= curr then
     doc
   else
@@ -1062,7 +1062,7 @@ and p_tmEq' curr e = match e.tm with
   | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || Ident.text_of_id op = "=" || Ident.text_of_id op = "|>" ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
-      paren_if curr mine (infix0 (str <| op) (p_tmEq' left e1) (p_tmEq' right e2))
+      paren_if_gt curr mine (infix0 (str <| op) (p_tmEq' left e1) (p_tmEq' right e2))
   | Op ({idText = ":="}, [ e1; e2 ]) ->
       group (p_tmEq e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEq e2)
   | Op({idText = "-"}, [e]) ->
@@ -1079,16 +1079,16 @@ and p_tmNoEq' curr e = match e.tm with
   | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid && not (is_list e) ->
       let op = "::" in
       let left, mine, right = levels op in
-      paren_if curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
       let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
-      paren_if curr mine (concat_map p_dsumfst binders ^^ p_tmNoEq' right res)
+      paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEq' right res)
   | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
-      paren_if curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
   | NamedTyp(lid, e) ->
       group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
   | Refine(b, phi) ->
