@@ -1573,9 +1573,8 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   //extract the type of the letbinding, boolean indicates whether we were successful
   let extract_lbs_annotations (lbs:list<letbinding>) (lids:list<lident>) (r:Range.range) :(list<(univ_names * typ)> * bool) =
     List.fold_left2 (fun (l, b) lb lid ->
-      BU.print2 "Extracting annotation for: %s with val_typs: %s\n\n" lid.str (List.fold_left (fun s (lid, _) -> s ^ "; " ^ lid.str) "" !val_typs);
       let opt = List.tryFind (fun (l', _) -> lid_equals lid l') !val_typs in
-      if opt <> None then let _ = BU.print_string "Found the lid!\n\n" in ((snd (opt |> must))::l, b)
+      if opt <> None then ((snd (opt |> must))::l, b)
       else
         match lb.lbtyp.n with
         | Tm_unknown ->

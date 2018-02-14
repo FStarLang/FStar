@@ -373,7 +373,7 @@ abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
-val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
 
 irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
