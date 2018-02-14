@@ -116,7 +116,7 @@ let rec try_read_memo_aux t =
       | None -> t, false
       | Some t' ->
         let t', shorten = try_read_memo_aux t' in
-        if shorten then m := Some t';
+        (if shorten then m := Some t');
         t', true)
   | _ -> t, false
 let try_read_memo t = fst (try_read_memo_aux t)

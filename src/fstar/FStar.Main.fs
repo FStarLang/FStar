@@ -177,16 +177,19 @@ let go _ =
 let main () =
   try
     let _, time = FStar.Util.record_time go in
+    begin
     if FStar.Options.query_stats()
-    then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
+    then 
+       FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
               (FStar.Util.string_of_int time)
-              (String.concat " " (FStar.Getopt.cmdline()));
+              (String.concat " " (FStar.Getopt.cmdline()))
+    end;
     cleanup ();
     exit 0
   with | e ->
     let trace = Util.trace_of_exn e in
     begin
-      if FStar.Errors.handleable e then FStar.Errors.err_exn e;
+      (if FStar.Errors.handleable e then FStar.Errors.err_exn e);
       if (Options.trace_error()) then
         Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
       else if not (FStar.Errors.handleable e) then

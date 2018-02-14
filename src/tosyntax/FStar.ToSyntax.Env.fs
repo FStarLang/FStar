@@ -1011,9 +1011,9 @@ let check_admits env =
     | Sig_declare_typ(l, u, t) ->
       begin match try_lookup_lid env l with
         | None ->
-          if not (Options.interactive ()) then
+          (if not (Options.interactive ()) then
             FStar.Errors.log_issue (range_of_lid l)
-              (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
+              (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l))));
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)
@@ -1045,9 +1045,10 @@ let finish env modul =
       then BU.smap_remove (sigmap env) lid.str
 
     | Sig_let((_,lbs), _) ->
+      begin
       if List.contains Private quals
       || List.contains Abstract quals
-      then begin
+      then
            lbs |> List.iter (fun lb -> BU.smap_remove (sigmap env) (right lb.lbname).fv_name.v.str)
       end;
       if List.contains Abstract quals
@@ -1120,8 +1121,8 @@ let export_interface (m:lident) env =
     env
 
 let finish_module_or_interface env modul =
-  if not modul.is_interface
-  then check_admits env;
+  (if not modul.is_interface
+   then check_admits env);
   finish env modul
 
 type exported_ids = {
@@ -1209,8 +1210,8 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     | None ->
         prep env, false
     | Some (_, m) ->
-        if not (Options.interactive ()) && (not m.is_interface || intf)
-        then raise_error (Errors.Fatal_DuplicateModuleOrInterface, (BU.format1 "Duplicate module or interface name: %s" mname.str)) (range_of_lid mname);
+        (if not (Options.interactive ()) && (not m.is_interface || intf)
+         then raise_error (Errors.Fatal_DuplicateModuleOrInterface, (BU.format1 "Duplicate module or interface name: %s" mname.str)) (range_of_lid mname));
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
         prep (push env), true //push a context so that we can pop it when we're done
 

@@ -221,12 +221,12 @@ in
 option___anonymous_5_:
   
     {    ( None )}
-| BY typ
+| BY term
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                              (tactic)
+                                                               (tactic)
 in
     ( Some x )}
 
@@ -265,13 +265,6 @@ option_fsTypeArgs_:
   
     {    ( None )}
 | fsTypeArgs
-    {let x = $1 in
-    ( Some x )}
-
-option_mainDecl_:
-  
-    {    ( None )}
-| mainDecl
     {let x = $1 in
     ( Some x )}
 
@@ -647,22 +640,10 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
-    {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
+  boption___anonymous_0_ list_decl_ EOF
+    {let (is_light, decls, _3) = ($1, $2, ()) in
       (
-        let decls = match main_opt with
-           | None -> decls
-           | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) decls
-      )}
-
-mainDecl:
-  SEMICOLON_SEMICOLON option_FSDOC_ term
-    {let (_1, doc, t) = ((), $2, $3) in
-      ( let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+        as_frag is_light (rhs parseState 1) decls
       )}
 
 pragma:
@@ -789,13 +770,13 @@ typeDefinition:
       ( (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) )}
 
 recordFieldDecl:
-  lident COLON typ
+  lident COLON nonGreedyTerm
     {let (lid, _3, t) = ($1, (), $3) in
 let doc_opt =
       ( None )
 in
       ( (lid, t, doc_opt) )}
-| FSDOC lident COLON typ
+| FSDOC lident COLON nonGreedyTerm
     {let (x0, lid, _3, t) = ($1, $2, (), $4) in
 let doc_opt =
   let x = x0 in
@@ -806,7 +787,7 @@ in
 constructorDecl:
   BAR option_FSDOC_ uident COLON typ
     {let (_1, doc_opt, uid, _4, t) = ((), $2, $3, (), $5) in
-                                                             ( (uid, Some t, doc_opt, false) )}
+                                                   ( (uid, Some t, doc_opt, false) )}
 | BAR option_FSDOC_ uident option___anonymous_2_
     {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
                                                              ( (uid, t_opt, doc_opt, true) )}
@@ -863,7 +844,7 @@ effectDefinition:
     ( DefineEffect(lid, bs, typ, eds) )}
 
 effectDecl:
-  lident binders EQUALS simpleTerm
+  lident binders EQUALS nonGreedyTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
     ( mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
 
@@ -871,7 +852,7 @@ subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
     {let (src_eff, _2, tgt_eff, _4, lift) = ($1, (), $3, (), $5) in
       ( { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } )}
-| quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS simpleTerm RBRACE
+| quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS nonGreedyTerm RBRACE
     {let (src_eff, _2, tgt_eff, _4, x0, _20, y0, _7) = ($1, (), $3, (), $5, (), $7, ()) in
 let lift2_opt =
       ( None )
@@ -902,7 +883,7 @@ in
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
-| quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS simpleTerm SEMICOLON IDENT EQUALS simpleTerm RBRACE
+| quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS nonGreedyTerm SEMICOLON IDENT EQUALS nonGreedyTerm RBRACE
     {let (src_eff, _2, tgt_eff, _4, x0, _20, y0, _1000, id000, _200, y00, _7) = ($1, (), $3, (), $5, (), $7, (), $9, (), $11, ()) in
 let lift2_opt =
   let y0 = y00 in
@@ -1534,27 +1515,24 @@ kind:
                       ( {t with level=Kind} )}
 
 term:
-  noSeqTerm
+  greedyTerm
     {let e = $1 in
       ( e )}
-| noSeqTerm SEMICOLON term
+| nonGreedyTerm SEMICOLON term
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr )}
-| noSeqTerm SEMICOLON_SEMICOLON term
+| nonGreedyTerm SEMICOLON_SEMICOLON term
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr )}
-| lidentOrUnderscore LONG_LEFT_ARROW noSeqTerm SEMICOLON term
+| lidentOrUnderscore LONG_LEFT_ARROW nonGreedyTerm SEMICOLON term
     {let (x, _2, e1, _4, e2) = ($1, (), $3, (), $5) in
       ( mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr )}
 
-noSeqTerm:
-  typ
+nonGreedyTerm:
+  tmIff
     {let t = $1 in
-           ( t )}
-| tmIff SUBTYPE tmIff option___anonymous_5_
-    {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
-      ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
-| atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
+             ( t )}
+| atomicTermNotQUident DOT_LPAREN term RPAREN LARROW nonGreedyTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
   let _3 = _30 in
@@ -1566,7 +1544,7 @@ in
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
-| atomicTermNotQUident DOT_LBRACK term RBRACK LARROW noSeqTerm
+| atomicTermNotQUident DOT_LBRACK term RBRACK LARROW nonGreedyTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
   let _3 = _30 in
@@ -1578,7 +1556,7 @@ in
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
-| atomicTermNotQUident DOT_LBRACK_BAR term RBRACE LARROW noSeqTerm
+| atomicTermNotQUident DOT_LBRACK_BAR term RBRACE LARROW nonGreedyTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
   let _3 = _30 in
@@ -1590,7 +1568,7 @@ in
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
-| atomicTermNotQUident DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT LARROW noSeqTerm
+| atomicTermNotQUident DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT LARROW nonGreedyTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
   let _3 = _30 in
@@ -1602,25 +1580,42 @@ in
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
-| REQUIRES typ
+| ASSUME atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( let a = set_lid_range assume_lid (rhs parseState 1) in
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
+
+greedyTerm:
+  nonGreedyTerm
+    {let e = $1 in
+                      ( e )}
+| quantified
+    {let e = $1 in
+                   ( e )}
+| tryMatchLetOrFunctionTerm_term_
+    {let e = $1 in
+                                        ( e )}
+| ifTerm_greedyTerm_
+    {let e = $1 in
+      ( e )}
+| REQUIRES term
     {let (_1, t) = ((), $2) in
       ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level )}
-| ENSURES typ
+| ENSURES term
     {let (_1, t) = ((), $2) in
       ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
-| IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
-    {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
-      ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
-| IF noSeqTerm THEN noSeqTerm
-    {let (_1, e1, _3, e2) = ((), $2, (), $4) in
-      (
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
-      )}
-| TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_
+| tmIff SUBTYPE tmIff option___anonymous_5_
+    {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
+      ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
+
+tryMatchLetOrFunctionTerm_nonGreedyTerm_:
+  funTerm_nonGreedyTerm_
+    {let e = $1 in
+                    ( e )}
+| TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_nonGreedyTerm__
     {let (_1, e1, _3, xs0) = ((), $2, (), $4) in
 let pbs =
   let xs = xs0 in
@@ -1630,7 +1625,66 @@ in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_6_
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_6_nonGreedyTerm__
+    {let (_1, e, _3, xs0) = ((), $2, (), $4) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
+      (
+        let branches = focusBranches pbs (rhs2 parseState 1 4) in
+        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+      )}
+| LET OPEN quident IN nonGreedyTerm
+    {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
+      ( mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr )}
+| LET letqualifier letbinding list_attr_letbinding_ IN nonGreedyTerm
+    {let (_2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, (), $6) in
+let attrs =
+      ( None )
+in
+      (
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+      )}
+| attribute LET letqualifier letbinding list_attr_letbinding_ IN nonGreedyTerm
+    {let (x0, _2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, $5, (), $7) in
+let attrs =
+  let x = x0 in
+      ( Some x )
+in
+      (
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+      )}
+| FUNCTION reverse_left_flexible_nonempty_list_BAR_patternBranch_nonGreedyTerm__
+    {let (_1, xs0) = ((), $2) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
+      (
+        let branches = focusBranches pbs (rhs2 parseState 1 2) in
+        mk_function branches (lhs parseState) (rhs2 parseState 1 2)
+      )}
+
+tryMatchLetOrFunctionTerm_term_:
+  funTerm_term_
+    {let e = $1 in
+                    ( e )}
+| TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_term__
+    {let (_1, e1, _3, xs0) = ((), $2, (), $4) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
+      (
+         let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
+         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
+      )}
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_6_term__
     {let (_1, e, _3, xs0) = ((), $2, (), $4) in
 let pbs =
   let xs = xs0 in
@@ -1664,7 +1718,7 @@ in
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       )}
-| FUNCTION reverse_left_flexible_nonempty_list_BAR_patternBranch_
+| FUNCTION reverse_left_flexible_nonempty_list_BAR_patternBranch_term__
     {let (_1, xs0) = ((), $2) in
 let pbs =
   let xs = xs0 in
@@ -1674,19 +1728,44 @@ in
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       )}
-| ASSUME atomicTerm
-    {let (_1, e) = ((), $2) in
-      ( let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
-| lident LARROW noSeqTerm
-    {let (id, _2, e) = ($1, (), $3) in
-      ( mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr )}
+
+ifTerm_greedyTerm_:
+  IF noSeqTerm THEN greedyTerm ELSE greedyTerm
+    {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
+      ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
+| IF noSeqTerm THEN greedyTerm
+    {let (_1, e1, _3, e2) = ((), $2, (), $4) in
+      (
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+      )}
+
+ifTerm_simpleDefTerm_:
+  IF noSeqTerm THEN simpleDefTerm ELSE simpleDefTerm
+    {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
+      ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
+| IF noSeqTerm THEN simpleDefTerm
+    {let (_1, e1, _3, e2) = ((), $2, (), $4) in
+      (
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+      )}
+
+noSeqTerm:
+  greedyTerm
+    {let e = $1 in
+                   ( e )}
 
 typ:
   simpleTerm
     {let t = $1 in
-                  ( t )}
-| FORALL binders DOT trigger noSeqTerm
+                    ( t )}
+| quantified
+    {let e = $1 in
+                   ( e )}
+
+quantified:
+  FORALL binders DOT trigger noSeqTerm
     {let (_10, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
 let q =
   let _1 = _10 in
@@ -1726,13 +1805,23 @@ conjunctivePat:
     {let pats = $1 in
                                                               ( pats )}
 
+funTerm_nonGreedyTerm_:
+  FUN nonempty_list_patternOrMultibinder_ RARROW nonGreedyTerm
+    {let (_1, pats, _3, e) = ((), $2, (), $4) in
+      ( mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un )}
+
+funTerm_term_:
+  FUN nonempty_list_patternOrMultibinder_ RARROW term
+    {let (_1, pats, _3, e) = ((), $2, (), $4) in
+      ( mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un )}
+
 simpleTerm:
   tmIff
     {let e = $1 in
-            ( e )}
-| FUN nonempty_list_patternOrMultibinder_ RARROW term
-    {let (_1, pats, _3, e) = ((), $2, (), $4) in
-      ( mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un )}
+             ( e )}
+| funTerm_term_
+    {let e = $1 in
+                    ( e )}
 
 maybeFocusArrow:
   RARROW
@@ -1742,7 +1831,35 @@ maybeFocusArrow:
     {let _1 = () in
                     ( true )}
 
-patternBranch:
+patternBranch_nonGreedyTerm_:
+  disjunctivePattern maybeFocusArrow nonGreedyTerm
+    {let (pat, focus, e) = ($1, $2, $3) in
+let when_opt =
+                           ( None )
+in
+      (
+        let pat = match pat with
+          | [p] -> p
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
+        in
+        (focus, (pat, when_opt, e))
+      )}
+| disjunctivePattern WHEN tmFormula maybeFocusArrow nonGreedyTerm
+    {let (pat, _10, e0, focus, e) = ($1, (), $3, $4, $5) in
+let when_opt =
+  let e = e0 in
+  let _1 = _10 in
+                           ( Some e )
+in
+      (
+        let pat = match pat with
+          | [p] -> p
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
+        in
+        (focus, (pat, when_opt, e))
+      )}
+
+patternBranch_term_:
   disjunctivePattern maybeFocusArrow term
     {let (pat, focus, e) = ($1, $2, $3) in
 let when_opt =
@@ -2194,8 +2311,19 @@ recordExp:
     {let (e, _2, record_fields) = ($1, (), $3) in
       ( mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr )}
 
+simpleDefTerm:
+  nonGreedyTerm
+    {let e = $1 in
+                                                 ( e )}
+| tryMatchLetOrFunctionTerm_nonGreedyTerm_
+    {let e = $1 in
+                                                 ( e )}
+| ifTerm_simpleDefTerm_
+    {let e = $1 in
+                                                 ( e )}
+
 simpleDef:
-  qlident EQUALS noSeqTerm
+  qlident EQUALS simpleDefTerm
     {let (x0, _20, y0) = ($1, (), $3) in
 let e =
   let y = y0 in
@@ -2203,7 +2331,7 @@ let e =
   let x = x0 in
       ( (x, y) )
 in
-                                                 ( e )}
+                                                     ( e )}
 | qlident
     {let lid = $1 in
                 ( lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un )}
@@ -2451,29 +2579,29 @@ projectionLHS:
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
         in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       )}
-| LBRACK_BAR right_flexible_list_SEMICOLON_noSeqTerm_ BAR_RBRACK
+| LBRACK_BAR right_flexible_list_SEMICOLON_nonGreedyTerm_ BAR_RBRACK
     {let (_1, l0, _3) = ((), $2, ()) in
 let es =
   let l = l0 in
-                                                  ( l )
+                                                      ( l )
 in
       (
         let l = mkConsList (rhs2 parseState 1 3) es in
         let pos = (rhs2 parseState 1 3) in
         mkExplicitApp (mk_term (Var (array_mk_array_lid)) pos Expr) [l] pos
       )}
-| LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+| LBRACK right_flexible_list_SEMICOLON_nonGreedyTerm_ RBRACK
     {let (_1, l0, _3) = ((), $2, ()) in
 let es =
   let l = l0 in
-                                                  ( l )
+                                                      ( l )
 in
       ( mkConsList (rhs2 parseState 1 3) es )}
-| PERCENT_LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+| PERCENT_LBRACK right_flexible_list_SEMICOLON_nonGreedyTerm_ RBRACK
     {let (_1, l0, _3) = ((), $2, ()) in
 let es =
   let l = l0 in
-                                                  ( l )
+                                                      ( l )
 in
       ( mkLexList (rhs2 parseState 1 3) es )}
 | BANG_LBRACE loption_separated_nonempty_list_COMMA_appTerm__ RBRACE
@@ -2684,13 +2812,13 @@ some_fsTypeArgs_:
     {let x = $1 in
         ( Some x )}
 
-right_flexible_list_SEMICOLON_noSeqTerm_:
+right_flexible_list_SEMICOLON_nonGreedyTerm_:
   
     {        ( [] )}
-| noSeqTerm
+| nonGreedyTerm
     {let x = $1 in
         ( [x] )}
-| noSeqTerm SEMICOLON right_flexible_list_SEMICOLON_noSeqTerm_
+| nonGreedyTerm SEMICOLON right_flexible_list_SEMICOLON_nonGreedyTerm_
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
@@ -2730,39 +2858,75 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
-reverse_left_flexible_list_BAR___anonymous_6_:
+reverse_left_flexible_list_BAR___anonymous_6_nonGreedyTerm__:
   
     {   ( [] )}
-| patternBranch
+| patternBranch_nonGreedyTerm_
     {let pb0 = $1 in
 let x =
   let pb = pb0 in
-                                                                     (pb)
+                                                                         (pb)
 in
    ( [x] )}
-| reverse_left_flexible_list_BAR___anonymous_6_ BAR patternBranch
+| reverse_left_flexible_list_BAR___anonymous_6_nonGreedyTerm__ BAR patternBranch_nonGreedyTerm_
     {let (xs, _2, pb0) = ($1, (), $3) in
 let x =
   let pb = pb0 in
-                                                                     (pb)
+                                                                         (pb)
 in
    ( x :: xs )}
 
-reverse_left_flexible_nonempty_list_BAR_patternBranch_:
-  patternBranch
+reverse_left_flexible_list_BAR___anonymous_6_term__:
+  
+    {   ( [] )}
+| patternBranch_term_
+    {let pb0 = $1 in
+let x =
+  let pb = pb0 in
+                                                                         (pb)
+in
+   ( [x] )}
+| reverse_left_flexible_list_BAR___anonymous_6_term__ BAR patternBranch_term_
+    {let (xs, _2, pb0) = ($1, (), $3) in
+let x =
+  let pb = pb0 in
+                                                                         (pb)
+in
+   ( x :: xs )}
+
+reverse_left_flexible_nonempty_list_BAR_patternBranch_nonGreedyTerm__:
+  patternBranch_nonGreedyTerm_
     {let x = $1 in
 let _1 =
       ( None )
 in
    ( [x] )}
-| BAR patternBranch
+| BAR patternBranch_nonGreedyTerm_
     {let (x0, x) = ((), $2) in
 let _1 =
   let x = x0 in
       ( Some x )
 in
    ( [x] )}
-| reverse_left_flexible_nonempty_list_BAR_patternBranch_ BAR patternBranch
+| reverse_left_flexible_nonempty_list_BAR_patternBranch_nonGreedyTerm__ BAR patternBranch_nonGreedyTerm_
+    {let (xs, _2, x) = ($1, (), $3) in
+   ( x :: xs )}
+
+reverse_left_flexible_nonempty_list_BAR_patternBranch_term__:
+  patternBranch_term_
+    {let x = $1 in
+let _1 =
+      ( None )
+in
+   ( [x] )}
+| BAR patternBranch_term_
+    {let (x0, x) = ((), $2) in
+let _1 =
+  let x = x0 in
+      ( Some x )
+in
+   ( [x] )}
+| reverse_left_flexible_nonempty_list_BAR_patternBranch_term__ BAR patternBranch_term_
     {let (xs, _2, x) = ($1, (), $3) in
    ( x :: xs )}
 

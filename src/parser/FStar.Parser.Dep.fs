@@ -386,10 +386,10 @@ let collect_one
     match resolve_module_name original_or_working_map key with
     | Some module_name ->
       add_dep deps (PreferInterface module_name);
-      if has_interface original_or_working_map module_name
+     (if has_interface original_or_working_map module_name
       && has_implementation original_or_working_map module_name
       && FStar.Options.dep() = Some "full"
-      then add_dep mo_roots (UseImplementation module_name);
+      then add_dep mo_roots (UseImplementation module_name));
       true
     | _ ->
       false
@@ -410,9 +410,9 @@ let collect_one
       ||  (not let_open && add_dependence_edge original_map lid)
       then true
       else begin
-        if let_open then
+       (if let_open then
            FStar.Errors.log_issue (range_of_lid lid)
-            (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
+            (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true))));
         false
       end
   in
@@ -478,8 +478,8 @@ let collect_one
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
-        if List.length lid.ns > 0 then
-          ignore (enter_namespace original_map working_map (namespace_of_lid lid));
+       (if List.length lid.ns > 0 then
+          ignore (enter_namespace original_map working_map (namespace_of_lid lid)));
         collect_decls decls
 
   and collect_decls decls =
@@ -576,9 +576,9 @@ let collect_one
     | Const c ->
         collect_constant c
     | Op (s, ts) ->
-        if Ident.text_of_id s = "@" then
+       (if Ident.text_of_id s = "@" then
           (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
-          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange)));
         List.iter collect_term ts
     | Tvar _
     | AST.Uvar _ ->
@@ -589,8 +589,8 @@ let collect_one
     | Name lid ->
         record_lid lid
     | Construct (lid, termimps) ->
-        if List.length termimps = 1 then
-          record_lid lid;
+       (if List.length termimps = 1 then
+          record_lid lid);
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
         collect_patterns pats;
@@ -696,10 +696,10 @@ let collect_one
   in
   let ast, _ = Driver.parse_file filename in
   let mname = lowercase_module_name filename in
-  if is_interface filename
+ (if is_interface filename
   && has_implementation original_map mname
   && FStar.Options.dep() = Some "full"
-  then add_dep mo_roots (UseImplementation mname);
+  then add_dep mo_roots (UseImplementation mname));
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
@@ -804,8 +804,8 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     in
     let cache_file = cache_file_name fn in
     let digest_of_file fn =
-        if Options.debug_any()
-        then BU.print2 "%s: contains digest of %s\n" cache_file fn;
+       (if Options.debug_any()
+        then BU.print2 "%s: contains digest of %s\n" cache_file fn);
         BU.digest_of_file fn
     in
     let module_name = lowercase_module_name fn in
@@ -832,8 +832,8 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
           let cache_fn = cache_file_name fn in
           if BU.file_exists cache_fn
           then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
-          else (if Options.debug_any()
-                then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn;
+          else ((if Options.debug_any()
+                 then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn);
                 None)
     in
     hash_deps [] binary_deps
@@ -902,7 +902,8 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                     in
                     aux immediate_deps
               in
-              if should_visit lc_module_name then begin
+              begin
+              if should_visit lc_module_name then
                  let ml_file_opt = mark_visiting lc_module_name in
                  //visit all its dependences
                  visit_file (implementation_of file_system_map lc_module_name);
@@ -938,10 +939,10 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           //this one prints:
           //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
           //                 touch $@
-          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
+          (if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
                                              (norm_path (FStar.Options.prepend_cache_dir norm_f))
                                              norm_f
-                                             files;
+                                             files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
@@ -963,11 +964,11 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                 in
                 extracted_fst_files |> List.map output_cmx_file
             in
-           if Options.should_extract (lowercase_module_name f)
-           then Util.print3 "%s: %s \\\n\t%s\n\n"
+           (if Options.should_extract (lowercase_module_name f)
+            then Util.print3 "%s: %s \\\n\t%s\n\n"
                         (output_cmx_file f)
                         (output_ml_file f)
-                        (String.concat "\\\n\t" cmx_files);
+                        (String.concat "\\\n\t" cmx_files));
            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f)
           ) else if not(has_implementation file_system_map (lowercase_module_name f))
                  && is_interface f then (

@@ -52,7 +52,7 @@ let format_hints_file_name src_filename = BU.format1 "%s.hints" src_filename
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
 let initialize_hints_db src_filename format_filename : unit =
-    if Options.record_hints() then recorded_hints := Some [];
+    (if Options.record_hints() then recorded_hints := Some []);
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
          let val_filename = match Options.hint_file() with
@@ -61,8 +61,9 @@ let initialize_hints_db src_filename format_filename : unit =
          begin match BU.read_hints val_filename with
             | Some hints ->
                 let expected_digest = BU.digest_of_file norm_src_filename in
+                begin
                 if Options.hint_info()
-                then begin
+                then
                     BU.print3 "(%s) digest is %s%s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
@@ -364,7 +365,7 @@ let record_hint settings z3result =
     end
 
 let process_result settings result : option<errors> =
-    if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
+    (if used_hint settings && not (Options.z3_refresh()) then Z3.refresh());
     let errs = query_errors settings result in
     query_info settings result;
     record_hint settings result;
@@ -469,7 +470,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     in
 
     let check_one_config config (k:z3result -> unit) : unit =
-          if used_hint config || Options.z3_refresh() then Z3.refresh();
+          (if used_hint config || Options.z3_refresh() then Z3.refresh());
           Z3.ask (filter_assertions config.query_env config.query_hint)
                   config.query_hash
                   config.query_all_labels

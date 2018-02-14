@@ -1074,7 +1074,7 @@ let restore_cmd_line_options should_clear =
     (* Some options must be preserved because they can't be reset via #pragrams.
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
-    if should_clear then clear() else init();
+    (if should_clear then clear() else init());
     let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
     set_option' ("verify_module", List (List.map mk_string old_verify_module));
     r

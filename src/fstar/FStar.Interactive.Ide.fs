@@ -312,10 +312,10 @@ let deps_and_repl_ld_tasks_of_our_file filename
   let intf_tasks =
     match same_name with
     | [intf; impl] ->
-      if not (Parser.Dep.is_interface intf) then
-         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
-      if not (Parser.Dep.is_implementation impl) then
-         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
+      (if not (Parser.Dep.is_interface intf) then
+         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf));
+      (if not (Parser.Dep.is_implementation impl) then
+         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl));
       [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
     | [impl] ->
       []
@@ -978,8 +978,8 @@ let add_module_completions this_fname deps table =
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 let run_push_with_deps st query =
-  if Options.debug_any () then
-    Util.print_string "Reloading dependencies";
+  (if Options.debug_any () then
+    Util.print_string "Reloading dependencies");
   TcEnv.toggle_id_info st.repl_env false;
   match load_deps st with
   | Inr st ->
@@ -1404,8 +1404,8 @@ let interactive_mode' (filename: string): unit =
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
-  if Option.isSome (Options.codegen ()) then
-    Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
+  (if Option.isSome (Options.codegen ()) then
+    Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen"));
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces

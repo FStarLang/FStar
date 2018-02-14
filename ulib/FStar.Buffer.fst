@@ -1169,8 +1169,8 @@ val fill: #t:Type
         Seq.slice (as_seq h0 b) (v len) (length b) ))
 let rec fill #t b z len =
   let h0 = HST.get () in
-  if len =^ 0ul then ()
-  else
+  (if len =^ 0ul then ()
+   else
     begin
     let len' = len -^ 1ul in
     fill #t b z len';
@@ -1178,7 +1178,7 @@ let rec fill #t b z len =
     let h = HST.get() in
     Seq.snoc_slice_index (as_seq h b) 0 (v len');
     Seq.lemma_tail_slice (as_seq h b) (v len') (length b)
-    end;
+    end);
   let h1 = HST.get() in
   Seq.lemma_eq_intro (Seq.slice (as_seq h1 b) 0 (v len)) (Seq.create (v len) z)
 

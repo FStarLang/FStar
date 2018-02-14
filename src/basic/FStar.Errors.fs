@@ -822,9 +822,9 @@ let update_flags l =
         | _ -> raise_err (Fatal_InvalidWarnErrorSetting,
                           BU.format1 "Malformed warn-error range %s" s)
       in
-      if (l < 0)  || (h >= List.length default_flags)
+     (if (l < 0)  || (h >= List.length default_flags)
       then raise_err (Fatal_InvalidWarnErrorSetting,
-                      BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
+                      BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h)));
       compute_range (result@[(f, (l, h))]) tl
   in
   let range = compute_range [] l in

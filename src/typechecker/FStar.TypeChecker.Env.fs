@@ -337,10 +337,10 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
     match ed.binders with
         | [] ->
           let univs = ed.univs@us in
-          if List.length insts <> List.length univs
-          then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
+          (if List.length insts <> List.length univs
+           then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                             (string_of_int <| List.length univs) (string_of_int <| List.length insts)
-                            (Print.lid_to_string ed.mname) (Print.term_to_string t));
+                            (Print.lid_to_string ed.mname) (Print.term_to_string t)));
           snd (inst_tscheme_with (ed.univs@us, t) insts)
         | _  -> failwith (BU.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
@@ -1001,11 +1001,11 @@ let rec unfold_effect_abbrev env comp =
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
-      if List.length binders <> List.length c.effect_args + 1
-      then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+      (if List.length binders <> List.length c.effect_args + 1
+       then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
-                                (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
+                                (Print.comp_to_string (S.mk_Comp c)))) comp.pos);
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in

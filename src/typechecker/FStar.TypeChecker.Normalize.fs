@@ -762,9 +762,9 @@ let reduce_primops cfg env stack tm =
              else begin log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   let psc = {
                       psc_range = head.pos;
-                      psc_subst = fun () -> if prim_step.requires_binder_substitution
-                                            then mk_psc_subst cfg env
-                                            else []
+                      psc_subst = (fun () -> if prim_step.requires_binder_substitution
+                                             then mk_psc_subst cfg env
+                                             else [])
                   } in
                   match prim_step.interpretation psc args with
                   | None ->
@@ -928,10 +928,10 @@ let maybe_simplify_aux cfg env stack tm =
 
 let maybe_simplify cfg env stack tm =
     let tm' = maybe_simplify_aux cfg env stack tm in
-    if Env.debug cfg.tcenv <| Options.Other "380"
-    then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
+    (if Env.debug cfg.tcenv <| Options.Other "380"
+     then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
                    (if List.contains Simplify cfg.steps then "" else "NOT ")
-                   (Print.term_to_string tm) (Print.term_to_string tm');
+                   (Print.term_to_string tm) (Print.term_to_string tm'));
     tm'
 
 (********************************************************************************************************************)
@@ -997,11 +997,11 @@ let should_reify cfg stack = match stack with
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
-            if Env.debug cfg.tcenv (Options.Other "NormDelayed")
-            then (match t.n with
+            (if Env.debug cfg.tcenv (Options.Other "NormDelayed")
+             then (match t.n with
                   | Tm_delayed _ ->
                     BU.print1 "NORM delayed: %s\n" (Print.term_to_string t)
-                  | _ -> ());
+                  | _ -> ()));
             compress t
         in
         log cfg  (fun () ->
@@ -1766,8 +1766,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   | [] -> t
 
   | Debug (tm, time_then) :: stack ->
+    begin
     if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
-    then begin
+    then
       let time_now = BU.now () in
       BU.print3 "Normalized (%s ms) %s\n\tto %s\n"
                    (BU.string_of_int (snd (BU.time_diff time_then time_now)))

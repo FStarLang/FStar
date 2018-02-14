@@ -218,11 +218,13 @@ let rec simplify_point = fun () -> (
             // After applying the lemma, we might still have more simpl to do,
             // so add an intermediate step.
             step;;
+            begin
                  if is_true p then apply_lemma (quote lem_true_iff_p)
             else if is_true q then apply_lemma (quote lem_p_iff_true)
             else if is_false p then apply_lemma (quote lem_false_iff_p)
             else if is_false q then apply_lemma (quote lem_p_iff_false)
-            else tiff;;
+            else tiff
+            end;;
             simplify_point
 
         | _ -> tiff

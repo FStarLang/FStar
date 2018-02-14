@@ -378,7 +378,7 @@ val nth: #n:pos -> a:uint_t n -> i:nat{i < n} -> Tot bool
 let nth #n a i = index (to_vec #n a) i
 
 val nth_lemma: #n:pos -> a:uint_t n -> b:uint_t n ->
-  Lemma (requires forall (i:nat{i < n}). nth a i = nth b i)
+  Lemma (requires (forall (i:nat{i < n}). nth a i = nth b i))
         (ensures a = b)
 let nth_lemma #n a b =
   assert(forall (i:nat{i < n}). index (to_vec #n a) i = index (to_vec #n b) i);

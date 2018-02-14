@@ -116,7 +116,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
   let t = SS.compress t in
   match t.n with
    | Tm_unknown ->
-     if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
+     (if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown");
      let r = Env.get_range env in
      let mk_binder scope a =
         match (SS.compress a.sort).n with
@@ -152,9 +152,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
               else S.mk_Total t //let rec without annotations default to Tot, except if --MLish
             | Inr c -> c in
         let t = U.arrow bs c in
-        if debug env Options.High
-        then BU.print3 "(%s) Using type %s .... must check = %s\n"
-                (Range.string_of_range r) (Print.term_to_string t) (BU.string_of_bool must_check_ty);
+        (if debug env Options.High
+         then BU.print3 "(%s) Using type %s .... must check = %s\n"
+                (Range.string_of_range r) (Print.term_to_string t) (BU.string_of_bool must_check_ty));
         Inl t, must_check_ty
 
       | _ ->
@@ -337,17 +337,17 @@ let decorate_pattern env p exp =
               pkg p.v
 
             | Pat_var x, Tm_name y ->
-              if not (bv_eq x y)
-              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              if Env.debug env <| Options.Other "Pat"
-              then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
+              (if not (bv_eq x y)
+               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y)));
+              (if Env.debug env <| Options.Other "Pat"
+               then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort));
               let s = Normalize.normalize [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
               pkg (Pat_var x)
 
             | Pat_wild x, Tm_name y ->
-              if bv_eq x y |> not
-              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
+              (if bv_eq x y |> not
+               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y)));
               let s = Normalize.normalize [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
               pkg (Pat_wild x)
@@ -356,15 +356,15 @@ let decorate_pattern env p exp =
               pkg (Pat_dot_term(x, e))
 
             | Pat_cons(fv, []), Tm_fvar fv' ->
-              if not (Syntax.fv_eq fv fv')
-              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+              (if not (Syntax.fv_eq fv fv')
+               then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str));
               pkg (Pat_cons(fv', []))
 
             | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
             | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
-              if fv_eq fv fv' |> not
-              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+              (if fv_eq fv fv' |> not
+              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str));
 
               let fv = fv' in
               let rec match_args matched_pats args argpats = match args, argpats with
@@ -581,11 +581,11 @@ let return_value env u_t_opt t v =
                                        v.pos) in
          mk_comp m u_t t wp [RETURN]
   in
-  if debug env <| Options.Other "Return"
-  then BU.print3 "(%s) returning %s at comp type %s\n"
+  (if debug env <| Options.Other "Return"
+   then BU.print3 "(%s) returning %s at comp type %s\n"
                     (Range.string_of_range v.pos)
                     (P.term_to_string v)
-                    (N.comp_to_string env c);
+                    (N.comp_to_string env c));
   c
 
 let weaken_flags flags =
@@ -669,10 +669,10 @@ let strengthen_precondition
                  match guard_form g0 with
                  | Trivial -> c
                  | NonTrivial f ->
-                   if Env.debug env <| Options.Extreme
-                   then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
+                   (if Env.debug env <| Options.Extreme
+                    then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
                                     (N.term_to_string env e_for_debug_only)
-                                    (N.term_to_string env f);
+                                    (N.term_to_string env f));
                     strengthen_comp env reason c f flags
          in
        S.mk_lcomp (norm_eff_name env lc.eff_name)
@@ -1152,12 +1152,12 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
 
                       | _ ->
                           let c = lcomp_comp lc in
-                          if Env.debug env <| Options.Extreme
-                          then BU.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
+                          (if Env.debug env <| Options.Extreme
+                           then BU.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
                                   (N.term_to_string env lc.res_typ)
                                   (N.term_to_string env t)
                                   (N.comp_to_string env c)
-                                  (N.term_to_string env f);
+                                  (N.term_to_string env f));
 
                           let u_t_opt = comp_univ_opt c in
                           let x = S.new_bv (Some t.pos) t in
@@ -1177,8 +1177,8 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                           let x = {x with sort=lc.res_typ} in
                           let c = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, eq_ret) in
                           let c = lcomp_comp c in
-                          if Env.debug env <| Options.Extreme
-                          then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
+                          (if Env.debug env <| Options.Extreme
+                           then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c));
                           c
                 end
           in
@@ -1232,19 +1232,19 @@ let pure_or_ghost_pre_and_post env comp =
 let reify_body (env:Env.env) (t:S.term) : S.term =
     let tm = U.mk_reify t in
     let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
-    if Env.debug env <| Options.Other "SMTEncodingReify"
-    then BU.print2 "Reified body %s \nto %s\n"
+    (if Env.debug env <| Options.Other "SMTEncodingReify"
+     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
-        (Print.term_to_string tm') ;
+        (Print.term_to_string tm')) ;
     tm'
 
 let reify_body_with_arg (env:Env.env) (head:S.term) (arg:S.arg): S.term =
     let tm = S.mk (S.Tm_app(head, [arg])) None head.pos in
     let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
-    if Env.debug env <| Options.Other "SMTEncodingReify"
-    then BU.print2 "Reified body %s \nto %s\n"
+    (if Env.debug env <| Options.Other "SMTEncodingReify"
+     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
-        (Print.term_to_string tm') ;
+        (Print.term_to_string tm'));
     tm'
 
 let remove_reify (t: S.term): S.term =
@@ -1341,16 +1341,16 @@ let string_of_univs univs =
 let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
     if BU.set_is_empty x then []
     else let s = BU.set_difference x (Env.univ_vars env) |> BU.set_elements in
-         if Env.debug env <| Options.Other "Gen" then
-         BU.print1 "univ_vars in env: %s\n" (string_of_univs (Env.univ_vars env));
+         (if Env.debug env <| Options.Other "Gen" then
+                  BU.print1 "univ_vars in env: %s\n" (string_of_univs (Env.univ_vars env)));
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u ->
             let u_name = Syntax.new_univ_name r in
-            if Env.debug env <| Options.Other "Gen"
-            then BU.print3 "Setting ?%s (%s) to %s\n"
+            (if Env.debug env <| Options.Other "Gen"
+             then BU.print3 "Setting ?%s (%s) to %s\n"
                             (string_of_int <| Unionfind.univ_uvar_id u)
                             (Print.univ_to_string (U_unif u))
-                            (Print.univ_to_string (U_name u_name));
+                            (Print.univ_to_string (U_name u_name)));
             Unionfind.univ_change u (U_name u_name);
             u_name) in
          u_names
@@ -1382,11 +1382,11 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
     let univnames = gather_free_univnames env t in
     let univs = Free.univs t in
-    if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "univs to gen : %s\n" (string_of_univs univs);
+    (if Env.debug env <| Options.Other "Gen"
+     then BU.print1 "univs to gen : %s\n" (string_of_univs univs));
     let gen = gen_univs env univs in
-    if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "After generalization: %s\n"  (Print.term_to_string t);
+    (if Env.debug env <| Options.Other "Gen"
+     then BU.print1 "After generalization: %s\n"  (Print.term_to_string t));
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in
@@ -1397,13 +1397,13 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
   then None
   else
      let norm c =
-        if debug env Options.Medium
-        then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
+        (if debug env Options.Medium
+         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c));
          let c = if Env.should_verify env
                  then Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.Eager_unfolding; N.NoFullNorm] env c
                  else Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm] env c in
-         if debug env Options.Medium then
-            BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
+         (if debug env Options.Medium then
+            BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c));
          c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = BU.set_difference uvs env_uvars |> BU.set_elements in
@@ -1413,24 +1413,24 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
           let t = U.comp_result c in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
-          if Env.debug env <| Options.Other "Gen"
-          then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
+          (if Env.debug env <| Options.Other "Gen"
+           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (BU.set_elements uvt |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                                     (Print.uvar_to_string u)
-                                                                    (Print.term_to_string t)) |> String.concat ", ");
+                                                                    (Print.term_to_string t)) |> String.concat ", "));
           let univs =
             List.fold_left
               (fun univs (_, t) -> BU.set_union univs (Free.univs t))
               univs
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
-          if Env.debug env <| Options.Other "Gen"
-          then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
+          (if Env.debug env <| Options.Other "Gen"
+           then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u)
-                                                        (N.term_to_string env t)) |> String.concat ", ");
+                                                        (N.term_to_string env t)) |> String.concat ", "));
 
          univs, uvs, (lbname, e, c)
      in
@@ -1552,23 +1552,23 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
 let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
-  if debug env Options.Low
-  then BU.print1 "Generalizing: %s\n"
-       (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
+  (if debug env Options.Low
+   then BU.print1 "Generalizing: %s\n"
+       (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", "));
   let univnames_lecs = List.map (fun (l, t, c) -> gather_free_univnames env t) lecs in
   let generalized_lecs =
       match gen env is_rec lecs with
           | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
           | Some luecs ->
-            if debug env Options.Medium
-            then luecs |> List.iter
+            (if debug env Options.Medium
+             then luecs |> List.iter
                     (fun (l, us, e, c, gvs) ->
                          BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
                                           (Range.string_of_range e.pos)
                                           (Print.lbname_to_string l)
                                           (Print.term_to_string (U.comp_result c))
                                           (Print.term_to_string e)
-                                          (Print.binders_to_string ", " gvs));
+                                          (Print.binders_to_string ", " gvs)));
             luecs
    in
    List.map2 (fun univnames (l,generalized_univs, t, c, gvs) ->
@@ -1603,8 +1603,8 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
   match check env t1 t2 with
     | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
     | Some g ->
-        if debug env <| Options.Other "Rel"
-        then BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
+        (if debug env <| Options.Other "Rel"
+         then BU.print1 "Applied guard is %s\n" <| guard_to_string env g);
         decorate e t2, g
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1624,8 +1624,8 @@ let check_top_level env g lc : (bool * comp) =
        let md = Env.get_effect_decl env c.effect_name in
        let u_t, t, wp = destruct_comp c in
        let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] None (Env.get_range env) in
-       if Env.debug env <| Options.Other "Simplification"
-       then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
+       (if Env.debug env <| Options.Other "Simplification"
+        then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc));
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| NonTrivial vc) in
        discharge g, mk_Comp c
 
@@ -1737,10 +1737,10 @@ let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 // return a term that's a suitable reference (a [Tm_fv]) to the definition
 let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Debug
-  if Env.debug env (Options.Other "ED") then begin
+  (if Env.debug env (Options.Other "ED") then begin
     d (text_of_lid lident);
     BU.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def)
-  end;
+   end);
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
   let lbname: lbname = Inr fv in
@@ -1835,14 +1835,14 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                           (Print.quals_to_string quals) msg)) r in
       let err msg = err' (": " ^ msg) in
       let err' () = err' "" in
-      if List.length quals <> List.length no_dup_quals
-      then err "duplicate qualifiers";
-      if not (quals |> List.for_all (quals_combo_ok quals))
-      then err "ill-formed combination";
+      (if List.length quals <> List.length no_dup_quals
+       then err "duplicate qualifiers");
+      (if not (quals |> List.for_all (quals_combo_ok quals))
+       then err "ill-formed combination");
       match se.sigel with
       | Sig_let((is_rec, _), _) -> //let rec
-        if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
-        then err "recursive definitions cannot be marked inline";
+        (if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
+         then err "recursive definitions cannot be marked inline");
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
         then err "definitions cannot be assumed or marked with equality qualifiers"
       | Sig_bundle _ ->
@@ -1956,8 +1956,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                          sigrng = range_of_lid discriminator_name;
                          sigmeta = default_sigmeta;
                          sigattrs = [] } in
-            if Env.debug env (Options.Other "LogTypes")
-            then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
+            (if Env.debug env (Options.Other "LogTypes")
+             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl));
 
             if only_decl
             then [decl]
@@ -1998,8 +1998,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                              sigrng = p;
                              sigmeta = default_sigmeta;
                              sigattrs = []  } in
-                if Env.debug env (Options.Other "LogTypes")
-                then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
+                (if Env.debug env (Options.Other "LogTypes")
+                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl));
                 (* TODO : Are there some cases where we don't want one of these ? *)
                 (* If not the declaration is useless, isn't it ?*)
                 [decl ; impl]
@@ -2047,8 +2047,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                        sigrng = range_of_lid field_name;
                        sigmeta = default_sigmeta;
                        sigattrs = attrs } in
-          if Env.debug env (Options.Other "LogTypes")
-          then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
+          (if Env.debug env (Options.Other "LogTypes")
+           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl));
           if only_decl
           then [decl] //only the signature
           else
@@ -2083,8 +2083,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                            sigrng = p;
                            sigmeta = default_sigmeta;
                            sigattrs = attrs } in
-              if Env.debug env (Options.Other "LogTypes")
-              then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
+              (if Env.debug env (Options.Other "LogTypes")
+               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl));
               if no_decl then [impl] else [decl;impl]) |> List.flatten
     in
     discriminator_ses @ projectors_ses

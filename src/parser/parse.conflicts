@@ -1,38 +1,41 @@
 
-** Conflict (shift/reduce) in state 657.
+** Conflict (shift/reduce) in state 707.
 ** Token involved: BAR
 ** This state is reached from term after reading:
 
-FUNCTION disjunctivePattern maybeFocusArrow TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+FUNCTION disjunctivePattern maybeFocusArrow TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 term 
 greedyTerm 
-FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+tryMatchLetOrFunctionTerm(term) 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
          (?)
 
-** In state 657, looking ahead at BAR, reducing production
-** greedyTerm -> TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
-** is permitted because of the following sub-derivation:
-
-reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
-patternBranch // lookahead token is inherited
-disjunctivePattern maybeFocusArrow term // lookahead token is inherited
-                                   greedyTerm // lookahead token is inherited
-                                   TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) . 
-
-** In state 657, looking ahead at BAR, shifting is permitted
+** In state 707, looking ahead at BAR, shifting is permitted
 ** because of the following sub-derivation:
 
-patternBranch 
+patternBranch(term) 
 disjunctivePattern maybeFocusArrow term 
                                    greedyTerm 
-                                   TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
-                                                 reverse_left_flexible_nonempty_list(BAR,patternBranch) . BAR patternBranch 
+                                   tryMatchLetOrFunctionTerm(term) 
+                                   TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
+                                                 reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) . BAR patternBranch(term) 
 
-** Conflict (shift/reduce) in state 627.
+** In state 707, looking ahead at BAR, reducing production
+** tryMatchLetOrFunctionTerm(term) -> TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) BAR patternBranch(term) // lookahead token appears
+patternBranch(term) // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   greedyTerm // lookahead token is inherited
+                                   tryMatchLetOrFunctionTerm(term) // lookahead token is inherited
+                                   TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) . 
+
+** Conflict (shift/reduce) in state 680.
 ** Token involved: BAR
 ** This state is reached from term after reading:
 
@@ -43,57 +46,63 @@ FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH reverse_left_flexibl
 
 term 
 greedyTerm 
-FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+tryMatchLetOrFunctionTerm(term) 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
          (?)
 
-** In state 627, looking ahead at BAR, reducing production
-** greedyTerm -> MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
-** is permitted because of the following sub-derivation:
-
-reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
-patternBranch // lookahead token is inherited
-disjunctivePattern maybeFocusArrow term // lookahead token is inherited
-                                   greedyTerm // lookahead token is inherited
-                                   MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) . 
-
-** In state 627, looking ahead at BAR, shifting is permitted
+** In state 680, looking ahead at BAR, shifting is permitted
 ** because of the following sub-derivation:
 
-patternBranch 
+patternBranch(term) 
 disjunctivePattern maybeFocusArrow term 
                                    greedyTerm 
+                                   tryMatchLetOrFunctionTerm(term) 
                                    MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
-                                                   reverse_left_flexible_list(BAR,__anonymous_6) . BAR patternBranch 
+                                                   reverse_left_flexible_list(BAR,__anonymous_6) . BAR patternBranch(nonGreedyTerm) 
 
-** Conflict (shift/reduce) in state 610.
+** In state 680, looking ahead at BAR, reducing production
+** tryMatchLetOrFunctionTerm(term) -> MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) BAR patternBranch(term) // lookahead token appears
+patternBranch(term) // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   greedyTerm // lookahead token is inherited
+                                   tryMatchLetOrFunctionTerm(term) // lookahead token is inherited
+                                   MATCH term WITH reverse_left_flexible_list(BAR,__anonymous_6) . 
+
+** Conflict (shift/reduce) in state 663.
 ** Token involved: BAR
 ** This state is reached from term after reading:
 
-FUNCTION disjunctivePattern maybeFocusArrow FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+FUNCTION disjunctivePattern maybeFocusArrow FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 term 
 greedyTerm 
-FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+tryMatchLetOrFunctionTerm(term) 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
          (?)
 
-** In state 610, looking ahead at BAR, reducing production
-** greedyTerm -> FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
-** is permitted because of the following sub-derivation:
-
-reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
-patternBranch // lookahead token is inherited
-disjunctivePattern maybeFocusArrow term // lookahead token is inherited
-                                   greedyTerm // lookahead token is inherited
-                                   FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) . 
-
-** In state 610, looking ahead at BAR, shifting is permitted
+** In state 663, looking ahead at BAR, shifting is permitted
 ** because of the following sub-derivation:
 
-patternBranch 
+patternBranch(term) 
 disjunctivePattern maybeFocusArrow term 
                                    greedyTerm 
-                                   FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
-                                            reverse_left_flexible_nonempty_list(BAR,patternBranch) . BAR patternBranch 
+                                   tryMatchLetOrFunctionTerm(term) 
+                                   FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
+                                            reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) . BAR patternBranch(term) 
+
+** In state 663, looking ahead at BAR, reducing production
+** tryMatchLetOrFunctionTerm(term) -> FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) BAR patternBranch(term) // lookahead token appears
+patternBranch(term) // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   greedyTerm // lookahead token is inherited
+                                   tryMatchLetOrFunctionTerm(term) // lookahead token is inherited
+                                   FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch(term)) . 
