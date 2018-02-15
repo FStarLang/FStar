@@ -24,20 +24,29 @@ unfold let is_below r1 r2          = r2 `is_above` r1
 let is_strictly_below r1 r2 = r1 `is_below` r2 && r1 <> r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1 <> r2
 
-//All regions above a contained region are contained
-abstract let map_invariant (m:hmap) =
+[@"opaque_to_smt"]
+unfold private let map_invariant_predicate (m:hmap) :Type0 =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 
-abstract let downward_closed (h:hmap) =
+//All regions above a contained region are contained
+abstract let map_invariant (m:hmap) = map_invariant_predicate m
+
+[@"opaque_to_smt"]
+unfold private let downward_closed_predicate (h:hmap) :Type0 =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
             \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-abstract let tip_top (tip:rid) (h:hmap) =
+abstract let downward_closed (h:hmap) = downward_closed_predicate h
+
+[@"opaque_to_smt"]
+unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
+
+abstract let tip_top (tip:rid) (h:hmap) = tip_top_predicate tip h
 
 let is_tip (tip:rid) (h:hmap) =
   (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
@@ -50,17 +59,34 @@ let rid_last_component (r:rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
+[@"opaque_to_smt"]
+unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
+  forall (r:rid).{:pattern (h `Map.contains` r)}
+               h `Map.contains` r ==> rid_last_component r < n
+
 (*
  * AR: all live regions have last component less than the rid_ctr
  *     marking it abstract, else it has a high-chance of firing even with a pattern
  *)
-abstract let rid_ctr_pred (h:hmap) (n:int) =
-  forall (r:rid).{:pattern (h `Map.contains` r)}
-               h `Map.contains` r ==> rid_last_component r < n
+abstract let rid_ctr_pred (h:hmap) (n:int) = rid_ctr_pred_predicate h n
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
   = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
-  
+
+private let lemma_is_wf_ctr_and_tip_intro (h:hmap) (ctr:int) (tip:rid)
+  :Lemma (requires (root `is_in` h /\ tip `is_tip` h /\
+                    tip_top_predicate tip h /\ map_invariant_predicate h /\
+                    downward_closed_predicate h /\ rid_ctr_pred_predicate h ctr))
+	 (ensures  (is_wf_with_ctr_and_tip h ctr tip))
+  = ()
+
+private let lemma_is_wf_ctr_and_tip_elim (h:hmap) (ctr:int) (tip:rid)
+  :Lemma (requires (is_wf_with_ctr_and_tip h ctr tip))  
+         (ensures  (root `is_in` h /\ tip `is_tip` h /\
+	            tip_top_predicate tip h /\ map_invariant_predicate h /\
+                    downward_closed_predicate h /\ rid_ctr_pred_predicate h ctr))
+  = ()
+
 noeq type mem =
   | HS : rid_ctr:int
          -> h:hmap
@@ -107,7 +133,7 @@ let lemma_tip_top_smt (m:mem) (r:rid)
          (ensures  (r `is_in` m.h <==> r `is_above` m.tip))
          [SMTPatOr [[SMTPat (is_stack_region r); SMTPat (r `is_above` m.tip)];
                     [SMTPat (is_stack_region r); SMTPat (r `is_in` m.h)]]]
-  = ()
+  = lemma_is_wf_ctr_and_tip_elim m.h m.rid_ctr m.tip
 
 (******)
 
