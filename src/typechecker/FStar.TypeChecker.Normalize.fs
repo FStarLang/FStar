@@ -1070,19 +1070,29 @@ let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
 let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps in
+    let parse_steps s =
+      try
+        Some (EMB.unembed_list_safe EMB.unembed_norm_step s |> BU.must |> tr_norm_steps)
+      with | _ -> None
+    in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil Delta_constant; Reify] in
-      s, tm
+      Some (s, tm)
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if not (List.contains z s) then Exclude z::s else s in
-      let s = Beta::parse_steps (full_norm steps) in
-      let s = add_exclude s Zeta in
-      let s = add_exclude s Iota in
-      s, tm
-    | _ -> failwith "Impossible"
+      begin
+      match parse_steps (full_norm steps) with
+      | None -> None
+      | Some s ->
+        let s = Beta::s in
+        let s = add_exclude s Zeta in
+        let s = add_exclude s Iota in
+        Some (s, tm)
+      end
+    | _ ->
+      None
 
 let is_reify_head = function
     | App(_, {n=Tm_constant FC.Const_reify}, _, _)::_ ->
@@ -1145,20 +1155,33 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                          ; no_delta_steps = false };
                                   delta_level=[Unfold Delta_constant];
                                   normalize_pure_lets=true} in
-            let s, tm = get_norm_request (norm cfg' env []) args in
-            let delta_level =
+            begin
+            match get_norm_request (norm cfg' env []) args with
+            | None -> //just normalize it as a normal application
+              let stack =
+                stack |>
+                List.fold_right
+                  (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+                  args
+              in
+              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+              norm cfg env stack hd
+
+            | Some (s, tm) ->
+              let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
-            let cfg' = {cfg with steps = to_fsteps s
+              let cfg' = {cfg with steps = to_fsteps s
                                ; delta_level = delta_level
                                ; normalize_pure_lets = true } in
-            let stack' =
-              let tail = (Cfg cfg)::stack in
-              if cfg.debug.print_normalized
-              then Debug(t, BU.now())::tail
-              else tail in
-            norm cfg' env stack' tm
+              let stack' =
+                let tail = (Cfg cfg)::stack in
+                if cfg.debug.print_normalized
+                then Debug(t, BU.now())::tail
+                else tail in
+              norm cfg' env stack' tm
+            end
 
           | Tm_type u ->
             let u = norm_universe cfg env u in

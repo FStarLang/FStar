@@ -404,3 +404,7 @@ irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
  *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
  *)
 let with_type (#t:Type) (e:t) = e
+
+let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
+let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
+let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
