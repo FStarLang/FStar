@@ -374,7 +374,7 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | LPAREN pat=tuplePattern COLON t=typ phi_opt=refineOpt RPAREN
+  | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
         let pos = rhs2 parseState 1 6 in
@@ -412,7 +412,7 @@ fieldPattern:
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
@@ -430,7 +430,7 @@ binder:
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
@@ -636,6 +636,21 @@ tmArrow(Tm):
      }
   | e=Tm { e }
 
+simpleArrow:
+  | dom=simpleArrowDomain RARROW tgt=simpleArrow
+     {
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     }
+  | e=tmEqNoRefinement { e }
+
+simpleArrowDomain:
+  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
+
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
@@ -660,28 +675,28 @@ tmTuple:
       }
 
 
-tmEq:
-  | e1=tmEq EQUALS e2=tmEq
+tmEqWith(X):
+  | e1=tmEqWith(X) EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
-  | e1=tmEq COLON_EQUALS e2=tmEq
+  | e1=tmEqWith(X) COLON_EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq PIPE_RIGHT e2=tmEq
+  | e1=tmEqWith(X) PIPE_RIGHT e2=tmEqWith(X)
       { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=operatorInfix0ad12 e2=tmEq
+  | e1=tmEqWith(X) op=operatorInfix0ad12 e2=tmEqWith(X)
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq MINUS e2=tmEq
+  | e1=tmEqWith(X) MINUS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | MINUS e=tmEq
+  | MINUS e=tmEqWith(X)
       { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
-  | e=tmNoEq
+  | e=tmNoEqWith(X)
       { e }
 
-tmNoEq:
-  | e1=tmNoEq COLON_COLON e2=tmNoEq
+tmNoEqWith(X):
+  | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rhs parseState 2) e1 e2 }
-  | e1=tmNoEq AMP e2=tmNoEq
+  | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
@@ -693,12 +708,27 @@ tmNoEq:
             | _ -> [dom], tail in
         mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
-  | e1=tmNoEq op=OPINFIX3 e2=tmNoEq
+  | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmNoEq BACKTICK id=qlident BACKTICK e2=tmNoEq
+  | e1=tmNoEqWith(X) BACKTICK id=qlident BACKTICK e2=tmNoEqWith(X)
       { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
-  | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
+  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | LBRACE e=recordExp RBRACE { e }
+  | op=TILDE e=atomicTerm
+      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
+  | e=X { e }
+
+tmEqNoRefinement:
+  | e=tmEqWith(appTerm) { e }
+
+tmEq:
+  | e=tmEqWith(tmRefinement)  { e }
+
+tmNoEq:
+  | e=tmNoEqWith(tmRefinement) { e }
+
+tmRefinement:
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -706,10 +736,7 @@ tmNoEq:
           | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
         in mk_term t (rhs2 parseState 1 4) Type_level
       }
-  | LBRACE e=recordExp RBRACE { e }
-  | op=TILDE e=atomicTerm
-      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
-  | e=appTerm { e }
+  | e=appTerm  { e }
 
 refineOpt:
   | phi_opt=option(LBRACE phi=formula RBRACE {phi}) {phi_opt}
