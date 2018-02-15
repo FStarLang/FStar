@@ -311,7 +311,7 @@ let level_table =
   let levels_from_associativity (l:int) = function
     | Left -> l, l, l-1
     | Right -> l-1, l, l
-    | NonAssoc -> l, l, l
+    | NonAssoc -> l - 1, l, l - 1
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
@@ -330,7 +330,22 @@ let max_level l =
                                       (String.concat "," (List.map token_to_string (snd level))))
   in List.fold_left find_level_and_max 0 l
 
-let levels = assign_levels level_associativity_spec
+let levels op =
+  (* See comment in parse.fsy: tuples MUST be parenthesized because [t * u * v]
+   * is not the same thing as [(t * u) * v]. So, we are conservative and make an
+   * exception for the "*" operator and treat it as, really, non-associative. If
+   * the AST comes from the user, then the Paren node was there already and no
+   * extra parentheses are added. If the AST comes from some client inside of
+   * the F* compiler that doesn't know about this quirk, then it forces it to be
+   * parenthesized properly. In case the user overrode * to be a truly
+   * associative operator (e.g. multiplication) then we're just being a little
+   * conservative because, unlike ToSyntax.fs, we don't have lexical context to
+   * help us determine which operator this is, really. *)
+  let left, mine, right = assign_levels level_associativity_spec op in
+  if op = "*" then
+    left - 1, mine, right
+  else
+    left, mine, right
 
 let operatorInfix0ad12 = [opinfix0a ; opinfix0b ; opinfix0c ; opinfix0d ; opinfix1 ; opinfix2 ]
 
@@ -1064,7 +1079,7 @@ and p_tmEq e =
 
 and p_tmEq' curr e = match e.tm with
     (* We don't have any information to print `infix` aplication *)
-  | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || Ident.text_of_id op = "=" || Ident.text_of_id op = "|>" ->
+  | Op (op, [ e1; e2 ]) when is_operatorInfix0ad12 op || Ident.text_of_id op = "=" || Ident.text_of_id op = "|>" ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str <| op) (p_tmEq' left e1) (p_tmEq' right e2))
