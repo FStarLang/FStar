@@ -268,13 +268,6 @@ option_fsTypeArgs_:
     {let x = $1 in
     ( Some x )}
 
-option_mainDecl_:
-  
-    {    ( None )}
-| mainDecl
-    {let x = $1 in
-    ( Some x )}
-
 option_pair_hasSort_simpleTerm__:
   
     {    ( None )}
@@ -647,22 +640,10 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
-    {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
+  boption___anonymous_0_ list_decl_ EOF
+    {let (is_light, decls, _3) = ($1, $2, ()) in
       (
-        let decls = match main_opt with
-           | None -> decls
-           | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) decls
-      )}
-
-mainDecl:
-  SEMICOLON_SEMICOLON option_FSDOC_ term
-    {let (_1, doc, t) = ((), $2, $3) in
-      ( let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+        as_frag is_light (rhs parseState 1) decls
       )}
 
 pragma:
