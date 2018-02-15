@@ -116,6 +116,11 @@ let tests =
                                           | _ -> z" in
   let _ = Pars.pars_and_tc_fragment "let select_bool (b:bool) (x:'a) (y:'a) : Tot 'a = \
                                          if b then x else y" in
+  let _ = Pars.pars_and_tc_fragment "let select_string3 (s:string) (x:'a) (y:'a) (z:'a) : Tot 'a = \
+                                         match s with \
+                                         | \"abc\" -> x \
+                                         | \"def\" -> y \
+                                         | _ -> z" in
   let _ = Pars.pars_and_tc_fragment "let recons_m (x:list tb) = \
                                          match x with \
                                           | [] -> []  \
@@ -170,7 +175,6 @@ let tests =
   ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
   ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
   ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-
   // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
   // ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
@@ -178,8 +182,8 @@ let tests =
   ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
   ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
   // Type defs not yet implemented for NBE
-  // ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))") (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
-
+  // ; (271, (tc_nbe "(FStar.String.substring \"abcdef\" 1 2)"), (tc_nbe "\"bc\"")) //VD: Not sure why, but this test fails on the normalizer
+  // ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))"), (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
   ; (28, (tc_nbe "(fun x y z q -> z) T T F T"), (tc_nbe "F"))
   ; (29, (tc_nbe "[T; F]"), (tc_nbe "[T; F]"))
   ; (31, (tc_nbe "id_tb T"), (tc_nbe "T"))
@@ -191,10 +195,13 @@ let tests =
   ; (301, (tc_nbe "id_list [T]"), (tc_nbe "[T]"))
   ; (3012, (tc_nbe "id_list_m [T]"), (tc_nbe "[T]"))
   ; (302, (tc_nbe "recons_m [T; F]"), (tc_nbe "[T; F]"))
-  // ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
-  ; (3041, (tc_nbe "select T 3 4"), (tc_nbe "3"))
-  ; (3042, (tc_nbe "select_bool false 3 4"), (tc_nbe "4"))
-  ; (3046, (tc_nbe "select_int3 1 7 8 9"), (tc_nbe "8"))
+  ; (303, (tc_nbe "select T A1 A3"), (tc_nbe "A1"))
+  ; (3031, (tc_nbe "select T 3 4"), (tc_nbe "3"))
+  ; (3032, (tc_nbe "select_bool false 3 4"), (tc_nbe "4"))
+  ; (3033, (tc_nbe "select_int3 1 7 8 9"), (tc_nbe "8"))
+  ; (3034, (tc_nbe "[5]"), (tc_nbe "[5]"))
+  ; (3035, (tc_nbe "[\"abcd\"]"), (tc_nbe "[\"abcd\"]"))
+  ; (3036, (tc_nbe "select_string3 \"def\" 5 6 7"), (tc_nbe "6"))
   ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
   ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
   ; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))

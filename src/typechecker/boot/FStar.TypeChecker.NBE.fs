@@ -52,6 +52,8 @@ type constant =
   | Unit
   | Bool of bool
   | Int of Z.t
+  | String of string * Range.range
+  | Char of FStar.Char.char
 
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
@@ -77,6 +79,8 @@ let constant_to_string (c: constant) =
   | Unit -> "Unit"
   | Bool b -> if b then "Bool true" else "Bool false"
   | Int i -> Z.string_of_big_int i
+  | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
+  | String (s, _) -> BU.format1 "\"%s\"" s
 
 let rec t_to_string (x:t) =
   match x with
@@ -130,6 +134,8 @@ let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t
                 | Constant (Unit) -> s = C.Const_unit
                 | Constant (Bool b) -> (match s with | C.Const_bool p -> b = p | _ -> false)
                 | Constant (Int i) -> (match s with | C.Const_int (p, None) -> i = Z.big_int_of_string p | _ -> false)
+                | Constant (String (st, _)) -> (match s with | C.Const_string(p, _) -> st = p | _ -> false)
+                | Constant (Char c) -> (match s with | C.Const_char p -> c = p | _ -> false)
                 | _ -> false
             in
             if matches_const scrutinee s then BU.Inl [] else BU.Inr false
@@ -328,14 +334,20 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_unknown ->
       failwith "Tm_unknown: Impossible"
 
-    | Tm_constant (FStar.Const.Const_unit) ->
+    | Tm_constant (C.Const_unit) ->
       Constant Unit
 
-    | Tm_constant (FStar.Const.Const_bool b) ->
+    | Tm_constant (C.Const_bool b) ->
       Constant (Bool b)
 
-    | Tm_constant (FStar.Const.Const_int (s, None)) ->
+    | Tm_constant (C.Const_int (s, None)) ->
       Constant (Int (Z.big_int_of_string s))
+
+    | Tm_constant (C.Const_string (s, r)) ->
+      Constant (String (s,r))
+
+    | Tm_constant (C.Const_char c) ->
+      Constant (Char c)
 
     | Tm_constant c ->
       let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
@@ -443,11 +455,11 @@ and readback (env:Env.env) (x:t) : term =
     | Univ u -> failwith "Readback of universes should not occur"
 
     | Constant Unit -> S.unit_const
-
     | Constant (Bool true) -> U.exp_true_bool
     | Constant (Bool false) -> U.exp_false_bool
-
     | Constant (Int i) -> Z.string_of_big_int i |> U.exp_int
+    | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) None Range.dummyRange
+    | Constant (Char c) -> U.exp_char c
 
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
