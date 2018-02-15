@@ -1,11 +1,13 @@
 ﻿#light "off"
 module FStar.TypeChecker.NBE
 open FStar.All
+open FStar.Exn
 open FStar
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.Errors
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -249,6 +251,14 @@ let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
   in 
   aux lbs lbs bs bs
 
+let find_let (lbs : list<letbinding>) (fvar : fv) = 
+  BU.find_map lbs (fun lb -> match lb.lbname with
+                   | BU.Inl _ -> failwith "impossible"
+                   | BU.Inr name ->
+                     if fv_eq name fvar
+                     then Some lb
+                     else None)
+
 (* We are not targeting tagless normalization at this point *)
 let rec app (f:t) (x:t) (q:aqual) =
   debug (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
@@ -272,20 +282,25 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
   match List.find BU.is_some [find_sigelt_in_gamma env fvar.fv_name.v; find_in_sigtab env fvar.fv_name.v] with
    | Some elt ->
      (match elt with
-      | Some { sigel = Sig_let ((is_rec, [lb]), _) } ->
-        if is_rec then
-          mkAccuRec lb ([lb]) []
-        else
-          begin
-             debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
-             debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
-             debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-             // let t = SS.compress lb.lbdef in
-             // let x = (S.new_bv None S.tun, None) in
-             // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
-             // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
-             translate_letbinding env [] lb
-          end
+      | Some { sigel = Sig_let ((is_rec, lbs), names) } ->
+        let lbm = find_let lbs fvar in 
+        (match lbm with 
+         | Some lb -> 
+           if is_rec then
+             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty 
+                                   since they are already present in the global environment *)
+           else
+             begin
+                debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
+                debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
+                debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
+                // let t = SS.compress lb.lbdef in
+                // let x = (S.new_bv None S.tun, None) in
+                // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
+                // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
+                translate_letbinding env [] lb
+             end
+          | None -> failwith "Could not find mutually recursive definition")
       | Some { sigel = Sig_datacon(_, _, _, lid, _, []) } ->
           debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_datacon\n" (P.lid_to_string lid));
           mkConstruct fvar [] []
@@ -302,7 +317,7 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
           BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
      )
    | None ->
-       mkConstruct fvar [] [] (* Zoe : Z and S dataconstructors from the examples are not in the environment *)
+       mkConstruct fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
@@ -420,8 +435,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_let((true, lbs), body) -> 
       translate env (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
-
-    | Tm_let _ -> failwith "Mutual recursion; not yet handled"
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (env:Env.env) (x:t) : term =
