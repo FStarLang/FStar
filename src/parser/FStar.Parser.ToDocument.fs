@@ -748,14 +748,22 @@ and p_constructorPattern p = match p.pat with
 
 and p_atomicPattern p = match p.pat with
   | PatAscribed (pat, t) ->
+    (* This inverts the first rule of atomicPattern (LPAREN tuplePattern COLON
+     * simpleArrow RPAREN). *)
     begin match pat.pat, t.tm with
     | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
       when lid.idText = lid'.idText ->
+      (* p_refinement jumps into p_appTerm for the annotated type; this is
+       * tighter than simpleArrow (which is what the parser uses), meaning that
+       * this printer may conservatively insert parentheses. TODO fix, but be
+       * aware that there are multiple callers to p_refinement and that
+       * p_appTerm is probably the lower bound of all expected levels. *)
       soft_parens_with_nesting (p_refinement aqual (p_ident lid) t phi)
     | PatWild, Refine({b = NoName t}, phi) ->
       soft_parens_with_nesting (p_refinement None underscore t phi)
     | _ ->
-        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_typ false false t)
+        (* TODO implement p_simpleArrow *)
+        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_tmEqNoRefinement t)
     end
   | PatList pats ->
     surround 2 0 lbracket (separate_break_map semi p_tuplePattern pats) rbracket
@@ -819,6 +827,7 @@ and p_refinement aqual_opt binder t phi =
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
+(* Note: also skipping multiBinder here. *)
 and p_binders is_atomic bs = separate_map_or_flow break1 (p_binder is_atomic) bs
 
 
@@ -1072,52 +1081,61 @@ and paren_if_gt curr mine doc =
   else
     group (lparen ^^ doc ^^ rparen)
 
-and p_tmEq e =
+and p_tmEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
   let n = max_level ([colon_equals ; pipe_right] @ operatorInfix0ad12) in
-  p_tmEq' n e
+  p_tmEqWith' p_X n e
 
-and p_tmEq' curr e = match e.tm with
+and p_tmEqWith' p_X curr e = match e.tm with
     (* We don't have any information to print `infix` aplication *)
   | Op (op, [ e1; e2 ]) when is_operatorInfix0ad12 op || Ident.text_of_id op = "=" || Ident.text_of_id op = "|>" ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
-      paren_if_gt curr mine (infix0 (str <| op) (p_tmEq' left e1) (p_tmEq' right e2))
+      paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
   | Op ({idText = ":="}, [ e1; e2 ]) ->
-      group (p_tmEq e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEq e2)
+      group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
   | Op({idText = "-"}, [e]) ->
       let left, mine, right = levels "-" in
-      minus ^/^ p_tmEq' mine e
-  | _ -> p_tmNoEq e
+      minus ^/^ p_tmEqWith' p_X mine e
+  | _ -> p_tmNoEqWith p_X e
 
-and p_tmNoEq e =
+and p_tmNoEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
   let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in
-  p_tmNoEq' n e
+  p_tmNoEqWith' p_X n e
 
-and p_tmNoEq' curr e = match e.tm with
+and p_tmNoEqWith' p_X curr e = match e.tm with
   | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid && not (is_list e) ->
       let op = "::" in
       let left, mine, right = levels op in
-      paren_if_gt curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' p_X left e1) (p_tmNoEqWith' p_X right e2))
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
       let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
-      paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEq' right res)
+      paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' p_X right res)
   | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
-      paren_if_gt curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
-  | NamedTyp(lid, e) ->
-      group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
-  | Refine(b, phi) ->
-      p_refinedBinder b phi
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' p_X left e1) (p_tmNoEqWith' p_X right e2))
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
                             separate_map_last (semi ^^ break1) p_simpleDef record_fields )
   | Op({idText = "~"}, [e]) ->
       group (str "~" ^^ p_atomicTerm e)
+  | _ -> p_X e
+
+and p_tmEqNoRefinement e = p_tmEqWith p_appTerm e
+
+and p_tmEq e = p_tmEqWith p_tmRefinement e
+
+and p_tmNoEq e = p_tmNoEqWith p_tmRefinement e
+
+and p_tmRefinement e = match e.tm with
+  | NamedTyp(lid, e) ->
+      group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
+  | Refine(b, phi) ->
+      p_refinedBinder b phi
   | _ -> p_appTerm e
 
 and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
