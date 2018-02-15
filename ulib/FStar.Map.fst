@@ -7,7 +7,7 @@ module FStar.Map
 open FStar.Set
 open FStar.FunctionalExtensionality
 
-noeq abstract type t (key:eqtype) (value:Type) = {
+noeq abstract type t (key:eqtype) (value:Type u#a) :Type u#a = {
   mappings: key -> Tot value;
   domain:   set key
 }
