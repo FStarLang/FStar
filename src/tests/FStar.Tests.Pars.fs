@@ -63,7 +63,7 @@ let init_once () : unit =
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod in
-  // only needed by normalization test #24, probably quite expensive otherwise
+  // needed to run tests with chars
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Mul.fst"; "FStar.Squash.fsti";
   //                            "FStar.Classical.fst"; "FStar.List.Tot.Base.fst"; "FStar.List.Tot.Properties.fst"; "FStar.List.Tot.fst";
   //                            "FStar.StrongExcludedMiddle.fst"; "FStar.Seq.Base.fst"; "FStar.Seq.Properties.fst"; "FStar.Seq.fst";

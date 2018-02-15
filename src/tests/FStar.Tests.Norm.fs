@@ -202,6 +202,7 @@ let tests =
   ; (3034, (tc_nbe "[5]"), (tc_nbe "[5]"))
   ; (3035, (tc_nbe "[\"abcd\"]"), (tc_nbe "[\"abcd\"]"))
   ; (3036, (tc_nbe "select_string3 \"def\" 5 6 7"), (tc_nbe "6"))
+  //; (3037, (tc_nbe "['c']"), (tc_nbe "['c']")) //VD: Fails unless FStar.Char is imported (see FStar.Tests.Pars)
   ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
   ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
   ; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
