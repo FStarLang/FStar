@@ -59,6 +59,7 @@ let with_fs_typ_app b printer t =
   should_print_fs_typ_app := b0 ;
   res
 
+
 (* TODO : everything is printed under the assumption of the universe option *)
 
 // abbrev
@@ -1215,7 +1216,10 @@ and p_projectionLHS e = match e.tm with
     p_quident constr_lid ^^ qmark ^^ dot ^^ p_lident field_lid
   | Discrim constr_lid ->
     p_quident constr_lid ^^ qmark
-  (* TODO : We should drop this constructor asa this printer works *)
+  | Paren e ->
+    (* Adding required parentheses for tuple disambiguation in ToSyntax.fs --
+     * see comment in parse.mly *)
+    soft_parens_with_nesting (p_term false false e)
   | _ when is_array e ->
     let es = extract_from_list e in
     surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTerm ps false) es) (bar ^^ rbracket)
@@ -1320,6 +1324,7 @@ and p_atomicUniverse u = match u.tm with
   | Wild -> underscore
   | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
   | Uvar id -> str (text_of_id id)
+  | Paren u -> soft_parens_with_nesting (p_universeFrom u)
   | Op({idText = "+"}, [_ ; _])
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))

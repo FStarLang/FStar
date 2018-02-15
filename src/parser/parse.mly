@@ -799,9 +799,17 @@ projectionLHS:
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
-        match sort_opt with
+        (* Note: we have to keep the parentheses here. Consider t * u * v. This
+         * is parsed as Op2( *, Op2( *, t, u), v). The desugaring phase then looks
+         * up * and figures out that it hasn't been overridden, meaning that
+         * it's a tuple type, and proceeds to flatten out the whole tuple. Now
+         * consider (t * u) * v. We keep the Paren node, which prevents the
+         * flattening from happening, hence ensuring the proper type is
+         * generated. *)
+        let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) e.level
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
+        in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK
       {
@@ -925,7 +933,7 @@ atomicUniverse:
       }
   | u=lident { mk_term (Uvar u) u.idRange Expr }
   | LPAREN u=universeFrom RPAREN
-    { u }
+    { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
 
 warn_error_list:
   | e=warn_error EOF { e }
