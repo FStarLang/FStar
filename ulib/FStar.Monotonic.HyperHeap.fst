@@ -29,9 +29,9 @@ open FStar.Ghost
  *     - Clients don't need to open/know about HyperHeap, they should work only with HyperStack
  *)
 
-abstract type rid = erased (list (int * int))
+abstract type rid :eqtype = erased (list (int * int))
 
-let reveal (r:rid) : GTot (list (int * int)) = reveal r
+abstract let reveal (r:rid) : GTot (list (int * int)) = reveal r
 
 abstract let color (x:rid): GTot int =
   match reveal x with
@@ -59,10 +59,10 @@ let lemma_root_has_color_zero r = ()
 //expose this so that no-one should assume otheriwse
 let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
 
-private let rid_tail (r:rid{Cons? (reveal r)}) :rid =
-  elift1_p Cons?.tl r
+private abstract let rid_length (r:rid) :GTot nat = List.Tot.length (reveal r)
 
-private let rid_length (r:rid) :GTot nat = List.Tot.length (reveal r)
+private abstract let rid_tail (r:rid{rid_length r > 0}) :rid =
+  elift1_p Cons?.tl r
 
 abstract val includes : r1:rid -> r2:rid -> GTot bool (decreases (reveal r2))
 let rec includes r1 r2 =
@@ -147,8 +147,8 @@ abstract val lemma_extends_only_parent: i:rid -> j:rid{extends j i} ->
         [SMTPat (extends j i)]
 let lemma_extends_only_parent i j = ()
 
-private let test0 = assert (includes (hide [(0, 1) ; (1, 0)]) (hide [(2, 2); (0, 1); (1, 0)]))
-private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 (hide ((0,0)::(reveal r2))))
+private abstract let test0 :unit = assert (includes (hide [(0, 1) ; (1, 0)]) (hide [(2, 2); (0, 1); (1, 0)]))
+private abstract let test1 (r1:rid) (r2:rid{includes r1 r2}) :unit = assert (includes r1 (hide ((0,0)::(reveal r2))))
 
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)
