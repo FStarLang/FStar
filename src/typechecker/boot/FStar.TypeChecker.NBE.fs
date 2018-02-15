@@ -62,17 +62,33 @@ type atom = //JUST FSHARP
   | Var of var
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *)
-    | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
+             //NS: add a thunked pattern translations here
+  | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
-  | Lam of (t -> t) * aqual
-  | Accu of atom * list<(t * aqual)>
+  | Lam of (t -> t) * aqual //NS: * ((unit -> t) * aqual)
+  | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
+  | Construct of fv * list<universe> * args (* Zoe: This is used for both type and data constructors*)
   | Constant of constant
   | Type_t of universe
   | Univ of universe
+  // NS:
+  // | Refinement of binder * t
+  // | Arrow of list binder * comp_t
+and args = list<(t * aqual)>
+//NS:  
+// and comp_t =
+//   | Comp of lident * universes * args * flags
+// and binder = ident * t //ident is just for pretty name on readback  
+
+(*
+   (xi:ti) -> C uts (attributes ...)
+
+   x:t{t}
+   
+*)
 
 type head = t
 type annot = option<t>
@@ -512,7 +528,30 @@ and readback (env:Env.env) (x:t) : term =
 
     | Accu (Match (scrut, cases), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
-      let head =  readback env (cases scrut) in
+      (*  When `cases scrut` returns a Accu(Match ..))
+          we need to reconstruct a source match node.
+
+          To do this, we need to decorate that Match node with the
+          patterns in each branch.
+
+          e.g., Consider this source node:
+
+              (match x with
+               | Inl (a:ta) -> e1
+               | Inr (b:tb) -> e2)
+
+          Match([[x]],
+                (cases: t -> t),
+                (patterns:[Inl (a:ta); Inr (b:tb)]))
+
+          let branches =
+            map (fun v -> v, readback (cases (translate v)))
+                patterns
+          in
+          match (readback [[x]])
+                branches
+       *)
+      let head = readback env (cases scrut) in
       (match ts with
        | [] -> head
        | _ -> U.mk_app head args)
