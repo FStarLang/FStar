@@ -17,6 +17,7 @@ module P = FStar.Syntax.Print
 module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
+module C = FStar.Const
 
 
 (* Utils *)
@@ -49,6 +50,13 @@ let debug_sigmap (m : BU.smap<sigelt>) =
 type var = bv
 type sort = int
 
+type constant =
+  | Unit
+  | Bool of bool
+  | Int of Z.t
+  | String of string * Range.range
+  | Char of FStar.Char.char
+
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
@@ -62,25 +70,29 @@ and t = //JUST FSHARP
   | Accu of atom * list<(t * aqual)>
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * list<(t * aqual)> (* Zoe: This is used for both type and data constructors*)
-  | Unit
-  | Bool of bool
-  | Int of Z.t
+  | Constant of constant
   | Type_t of universe
   | Univ of universe
 
 type head = t
 type annot = option<t>
 
+let constant_to_string (c: constant) =
+  match c with
+  | Unit -> "Unit"
+  | Bool b -> if b then "Bool true" else "Bool false"
+  | Int i -> Z.string_of_big_int i
+  | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
+  | String (s, _) -> BU.format1 "\"%s\"" s
+
 let rec t_to_string (x:t) =
-    match x with
-    | Lam _ -> "Lam"
-    | Accu (a, l) -> "Accu (" ^ (atom_to_string a) ^ ") (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
-    | Construct (fv, us, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^ (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
-    | Unit -> "Unit"
-    | Bool b -> if b then "Bool true" else "Bool false"
-    | Int i -> Z.string_of_big_int i
-    | Univ u -> "Universe " ^ (P.univ_to_string u)
-    | Type_t u -> "Type_t " ^ (P.univ_to_string u)
+  match x with
+  | Lam _ -> "Lam"
+  | Accu (a, l) -> "Accu (" ^ (atom_to_string a) ^ ") (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
+  | Construct (fv, us, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^ (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^ (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
+  | Constant c -> constant_to_string c
+  | Univ u -> "Universe " ^ (P.univ_to_string u)
+  | Type_t u -> "Type_t " ^ (P.univ_to_string u)
 
 and atom_to_string (a: atom) =
     match a with
@@ -120,7 +132,16 @@ let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t
             BU.Inl []
 
         | Pat_constant s ->
-            failwith "Constant patterns are not yet supported; should be easy"
+            let matches_const (c: t) (s: S.sconst) =
+                match c with
+                | Constant (Unit) -> s = C.Const_unit
+                | Constant (Bool b) -> (match s with | C.Const_bool p -> b = p | _ -> false)
+                | Constant (Int i) -> (match s with | C.Const_int (p, None) -> i = Z.big_int_of_string p | _ -> false)
+                | Constant (String (st, _)) -> (match s with | C.Const_string(p, _) -> st = p | _ -> false)
+                | Constant (Char c) -> (match s with | C.Const_char p -> c = p | _ -> false)
+                | _ -> false
+            in
+            if matches_const scrutinee s then BU.Inl [] else BU.Inr false
 
         | Pat_cons(fv, arg_pats) ->
             let rec matches_args out (a:list<(t * aqual)>) (p:list<(pat * bool)>)
@@ -269,7 +290,7 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
-  | Unit | Bool _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
+  | Constant _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
@@ -339,14 +360,20 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_unknown ->
       failwith "Tm_unknown: Impossible"
 
-    | Tm_constant (FStar.Const.Const_unit) ->
-      Unit
+    | Tm_constant (C.Const_unit) ->
+      Constant Unit
 
-    | Tm_constant (FStar.Const.Const_bool b) ->
-      Bool b
+    | Tm_constant (C.Const_bool b) ->
+      Constant (Bool b)
 
-    | Tm_constant (FStar.Const.Const_int (s, None)) ->
-      Int (Z.big_int_of_string s)
+    | Tm_constant (C.Const_int (s, None)) ->
+      Constant (Int (Z.big_int_of_string s))
+
+    | Tm_constant (C.Const_string (s, r)) ->
+      Constant (String (s,r))
+
+    | Tm_constant (C.Const_char c) ->
+      Constant (Char c)
 
     | Tm_constant c ->
       let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
@@ -406,7 +433,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
         match scrut with
-        //TODO: handle constants, Bool, etc.
         | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
              are binders -- i.e. no nested patterns for now *)
@@ -422,6 +448,16 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           | None -> //no branch is determined
             mkAccuMatch scrut case
           end
+        | Constant c ->
+          (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
+          (match pickBranch scrut branches with
+           | Some (branch, []) ->
+             translate env bs branch
+           | Some (branch, [arg]) ->
+             translate env (arg::bs) branch
+           | None -> //no branch is determined
+             mkAccuMatch scrut case
+           | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
           mkAccuMatch scrut case
@@ -440,14 +476,14 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 and readback (env:Env.env) (x:t) : term =
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
     match x with
-    | Unit -> S.unit_const
-
     | Univ u -> failwith "Readback of universes should not occur"
 
-    | Bool true -> U.exp_true_bool
-    | Bool false -> U.exp_false_bool
-
-    | Int i -> Z.string_of_big_int i |> U.exp_int
+    | Constant Unit -> S.unit_const
+    | Constant (Bool true) -> U.exp_true_bool
+    | Constant (Bool false) -> U.exp_false_bool
+    | Constant (Int i) -> Z.string_of_big_int i |> U.exp_int
+    | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) None Range.dummyRange
+    | Constant (Char c) -> U.exp_char c
 
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
