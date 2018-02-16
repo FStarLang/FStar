@@ -1398,11 +1398,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps.no_delta_steps)
-            && ((U.is_pure_effect n &&
-                (cfg.normalize_pure_lets || BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs))
-                || (U.is_ghost_effect n
-                    && not (cfg.steps.pure_subterms_within_computations)))
+            if not (cfg.steps.no_delta_steps) //we're allowed to do some delta steps, and ..
+            && ((cfg.steps.pure_subterms_within_computations &&
+                 BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs) //1. we're extracting, and it's marked @inline_let
+             || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
+                                        || BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs)) //it's marked @inline_let
+             || (U.is_ghost_effect n &&                              //Or, 3. it's ghost and we're not extracting
+                    not (cfg.steps.pure_subterms_within_computations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
@@ -1411,7 +1413,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then (log cfg (fun () -> BU.print_string "+++ Not touching Tm_let\n");
                   rebuild cfg env stack (closure_as_term cfg env t))
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
-                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type\n");
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type");
                  let ty = norm cfg env [] lb.lbtyp in
                  let lbname =
                     let x = fst (List.hd bs) in
@@ -1604,7 +1606,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                              AllowUnboundUniverses;
                              EraseUniverses;
                              Exclude Zeta;
-                             NoDeltaSteps];
+                             Inlining];
           delta_level=[Env.Inlining; Env.Eager_unfolding_only]
         }
       else
