@@ -21,7 +21,7 @@ module List = FStar.List.Tot
 #reset-options "--z3rlimit 50" 
 
 (* Return document.domain *)
-val get_document_domain : browser -> window -> Tot origin_domain
+val get_document_domain : b:browser -> w:window{w.wbid = b.bid} -> Tot origin_domain
 let get_document_domain b w =
   let d = w.w.wdoc in 
   (* if (noWindow (mk_adoc d)) then [] *)
@@ -31,7 +31,7 @@ let get_document_domain b w =
        | Some hd -> hd
 
 (* Set document.domain : cannot set opaque origin using this function *)
-val set_document_domain : b:browser -> w:window{w.wbid = b.bid} -> origin_domain -> Tot (result * window * browser)
+val set_document_domain : b:browser -> w:window{w.wbid = b.bid} -> origin_domain -> Tot (result * cw:window{cw.wbid = b.bid} * nb:browser{nb.bid = b.bid})
 let set_document_domain b w h =
   let d = w.w.wdoc in 
   if ((List.find (fun w -> w = SB_Domain) d.dsbox <> None) || h = []) then (Error "document.domain sbox", w, b) (* Security Error *)
@@ -39,7 +39,7 @@ let set_document_domain b w h =
     let ed = (match getEffectiveDomain d with | Some hd -> hd | None -> []) in
     if (h <> ed && (origin_domain_match ed h = false)) then (Error "document.domain domain does not match", w, b)
     else if (not (is_opaqueDoc (mk_adoc d))) then
-	let nw = setDocDomain w h in
+	let nw = setDocDomain #b w h in
 	(Success "domain set", nw, Browser b.bid ({b.br with windows=(replacewin b b.br.windows (win_to_cowin w).cwin (win_to_cowin nw).cwin)}))
     else (Error "document.domain case should not arise", w, b) (* Case does not arise *)
 
@@ -60,7 +60,7 @@ let get_win_location #s b c f =
   else (Error "win location error", None)
 
 (* Get the parent window of the current window(c) *)
-val get_parent : b:browser -> c:cowindow -> Tot cowindow
+val get_parent : b:browser -> c:cowindow{c.cwbid = b.bid} -> Tot (cw:cowindow{cw.cwbid = b.bid})
 let get_parent b c = 
   match c.cwin.cwparent with
   | None -> c
@@ -109,16 +109,16 @@ let set_item_localStorage #s b cw tw key value =
 (* Post message from one window to another. The target origin (to) is the one that can receive this message. 
    Omitting transfer option for now. It deletes the current copy of the object in the current window when sending the message (literally transfer)
 *)
-val post_message : browser -> cowindow -> cowindow -> string -> string -> Tot (result)
+val post_message : b:browser -> cw:cowindow{cw.cwbid = b.bid} -> tw:cowindow{tw.cwbid = b.bid} -> string -> string -> Tot (result)
 let post_message b cw tw msg t_ori =
   let tori = ( match t_ori with
       | "*" -> None (* This allows msg to be passed to any origin. *)
-      | "/" -> Some (getWinURI cw)
-      | l -> hstring_to_uri l
+      | "/" -> Some (getWinURI b cw)
+      | l -> hstring_to_uri b l
     ) in
     match tori with
     | None -> Success "sent msg"
-    | Some o -> if (isSameOriginURI o (getWinURI tw)) then Success "sent msg" else Error "msg not sent"
+    | Some o -> if (isSameOriginURI o (getWinURI b tw)) then Success "sent msg" else Error "msg not sent"
 		  
 (* url.spec.whatwg.org -- 4.4 URL equivalence *)
 
@@ -231,14 +231,14 @@ let processNavigateResponseSub b req oresp ir sw tw ty =
   if (navRespBlockedCSP req ty (oresp) sw tw) then ((Error "navigation response blocked by CSP"), None, b)
   else if oresp.b_response.respcode = 204 || oresp.b_response.respcode = 205 then (Success "done navigate response", Some tw, b)
   else
-      let referrer = (if ir then (match (BrowserRequest?.browser_request req).reqref with | NoReferrer -> blank_uri | Client w -> (getWinURI w) | URLReferrer u -> u) 
+      let referrer = (if ir then (match (BrowserRequest?.browser_request req).reqref with | NoReferrer -> blank_uri | Client w -> w.cwin.cwloc | URLReferrer u -> u) 
 		     else blank_uri) in
       let flags = (match tw.cwin.cwparent with
 		  | None -> join_flags (get_sandbox_from_CSP oresp.b_response.respCSP) tw.cwin.cwsbox
 		  | Some p -> join_flags (join_flags (get_sandbox_from_CSP oresp.b_response.respCSP) tw.cwin.cwsbox) (getSBox p.cwdoc)) in
       let rurl = (List.hd (BrowserRequest?.browser_request req).requrl) in (* Original fetch url is the document's url *)
       let rP = (parse_response_referrer_policy oresp) in
-      let newdoc = mk_adoc ({dloc=rurl; dori=getAOrigin rurl; dref=referrer; dHTTPS=oresp.b_response.respHTTPS; drefPol=rP; dCSP=oresp.b_response.respCSP; dsbox=(flags)}) in
+      let newdoc = ({dloc=rurl; dori=getAOrigin rurl; dref=referrer; dHTTPS=oresp.b_response.respHTTPS; drefPol=rP; dCSP=oresp.b_response.respCSP; dsbox=(flags)}) in
       let nwin = add_doc_hist #b.bid b (save_cur_doc_win b tw.cwin) newdoc in
       (Success "Response processed", Some (CWindow b.bid nwin), (Browser b.bid ({b.br with windows=(replacewin b b.br.windows tw.cwin nwin)}))) (* Add to STS state here?*)
 		   
@@ -261,7 +261,7 @@ let processNavigateFetchSub b req sw targetw ty =
       let tw = targetw.cwin in 
       let nw = (CWindow b.bid ({cwinid=tw.cwinid; cwname=tw.cwname; cwloc=(List.hd req.browser_request.requrl); cwframes=tw.cwframes; cwopener=tw.cwopener; cwparent=tw.cwparent; cwhist=tw.cwhist; cwdoc=tw.cwdoc; cwsbox=tw.cwsbox})) in
       let nb = Browser b.bid ({b.br with windows=(replacewin b b.br.windows tw nw.cwin)}) in
-      let (re, sb) = (fetch_resource nb req false false (sw, nw, ty)) in
+      let (re, _, sb) = (fetch_resource nb req false false (sw, nw, ty)) in (* should we use the request that has come back here? *)
       (re, Some nw, sb) (* Send the newwin *)
 
 (* 7.8.1 -- Process a navigate fetch *)
@@ -271,12 +271,12 @@ private val processNavigateFetch : b:browser -> req:browserRequest{notForbiddenH
 let processNavigateFetch b req sw tw ty =
   let r = req.browser_request in 
   let ruri = (List.hd r.requrl) in 
-  if ((is_uri_equal ruri (getWinURI tw) true) && (not (emptyFragment ruri))) then   (* Clear all history entries *)
+  if ((is_uri_equal ruri (getWinURI b tw) true) && (not (emptyFragment ruri))) then   (* Clear all history entries *)
     (Success "fragment", Some tw, b) (* Happens if its not reload -- Navigate to the fragment *)
   else
     let ori = ((* if ((r.reqm <> "GET" || ty = "form-submission") && (not (is_opaqueWin sw))) then (false, r.reqo) *)
 	      if (tw.cwin.cwparent <> None && hasBrowserScopeOrigin (Some?.v tw.cwin.cwparent)) then 
-		(getAOrigin (getWinURI (CWindow b.bid (Some?.v tw.cwin.cwparent))))
+		(getAOrigin (Some?.v tw.cwin.cwparent).cwloc)
 	      else r.reqo) in
     let nreq = BrowserRequest req.breq_secrecy_level ({r with reqo = ori; reqw = (Some sw); reqdest = "document"; reqtarget = (Some tw); reqredmode = "manual"; reqmode = Navigate; reqcredm = "include"; reqcredflag = true; corsflag = false; corspfflag = false; authflag = false; recflag = false}) in
     processNavigateFetchSub b nreq sw tw ty
@@ -301,11 +301,11 @@ private val processNavigateFetchRespSub : b:browser -> r:browserRequest{notForbi
 							nr.browser_request.reqbrowser = b.bid}) * option (w:cowindow{w.cwbid = b.bid}) * nb:browser{nb.bid = b.bid})
 let processNavigateFetchRespSub b req resp sw tw ty =
   match resp.b_response.resploc with
-  | Some (Failure) -> let (re, sb) = httpRedirectFetch b req resp false (sw, tw, ty) in (* processNavigateFetchResp after getting back new response *)
+  | Some (Failure) -> let (re, _, sb) = httpRedirectFetch b req resp false (sw, tw, ty) in (* processNavigateFetchResp after getting back new response *)
 		     (re, Some req, Some tw, sb)
   | Some (URL u) -> let prot = getScheme u in 
 		   if prot = "http" || prot = "https" then 
-		      let (re, sb) = httpRedirectFetch b req resp false (sw, tw, ty) in
+		      let (re, _, sb) = httpRedirectFetch b req resp false (sw, tw, ty) in
 		      (re, Some req, Some tw, sb)
 		   else if prot = "blob" || prot = "file" || prot = "filesystem" || prot = "javascript" then 
 		      (Error "incorrect protocol", None, None, b) (* Network Error *)
@@ -357,40 +357,43 @@ let processResponse b c r resp =
 (*   let he = (HEntry ouri get_time d) in  *)
 (*   (Window rid "" ouri [] (Some cw) None (History [he] 1) d [])  *)
 
+private val empty_history : bid:origin_opaque -> Tot (history bid)
+let empty_history bid = ({hlhe=[];hcur=0})
+
 (* Section 7.1.5 HTML5.1 - browsing context names*)
 (* Return the window given the window name in context of a current window(w) and return a modified browser if a new window has been created *)
-val get_window_from_name : b:browser -> w:cowindow -> n:string -> Tot (result * cowindow * browser)
+val get_window_from_name : b:browser -> w:cowindow{w.cwbid = b.bid} -> n:string -> Tot (result * cw:cowindow{cw.cwbid = b.bid} * nb:browser{nb.bid = b.bid})
 let get_window_from_name b w n =
   if n = "" then (Success "", w, b)
   else if n = "_self" then (Success "", w, b)
-  else if n = "_parent" then (match (CWindow?.cwparent w) with
+  else if n = "_parent" then (match (w.cwin.cwparent) with
 		  | None -> (Success "", w, b)
-		  | Some wp -> (Success "", wp, b)
+		  | Some wp -> (Success "", CWindow w.cwbid wp, b)
 		  )
-  else if n = "_top" then (Success "", (get_top_window w), b)
+  else if n = "_top" then (Success "", CWindow w.cwbid (get_top_window b w.cwin), b)
   else if n = "_blank" then 
-	  if (getDocFlag (CWindow?.cwdoc w) SB_NewWindow) then (Error "new window error", w, b) 
+	  if (getDocFlag (w.cwin.cwdoc) SB_NewWindow) then (Error "new window error", w, b) 
 	  else 
-	    (let sbo = (if (getDocFlag (CWindow?.cwdoc w) SB_Propagate) then [] else getSBox (CWindow?.cwdoc w)) in
+	    (let sbo = (if (getDocFlag w.cwin.cwdoc SB_Propagate) then [] else getSBox w.cwin.cwdoc) in
 	    let (nid, nb) = set_unique_id b in 
 	    let (opori, sb) = set_op_origin nb in 
 	    let blank_doc = {dloc=blank_uri;dref=blank_uri;dori=opori;dHTTPS="none";drefPol=RP_EmptyPolicy;dCSP=[];(* dwin=noWin; *)dsbox=[]} in
-	    let newwin = win_to_cowin ({winid=nid; wname=""; wloc=blank_uri; wframes=[]; wopener=(Some w); wparent=None; whist=({hlhe=[]; hcur=0}); wdoc=blank_doc; wsbox=sbo}) in
-	    let newb = ({(sb) with windows=newwin::(sb).windows}) in
- 	    (Success "", newwin, newb))      
-  else let win = get_window_name w b.windows n in
+	    let newwin = ({cwinid=nid; cwname=""; cwloc=blank_uri; cwframes=[]; cwopener=(Some w.cwin); cwparent=None; cwhist=mk_ahist (empty_history b.bid); cwdoc=mk_adoc blank_doc; cwsbox=sbo}) in
+	    let newb = Browser sb.bid ({sb.br with windows=newwin::sb.br.windows}) in
+ 	    (Success "", CWindow sb.bid newwin, newb))      
+  else let win = get_window_name b w.cwin b.br.windows n in
       match win with
 	| None -> (*Create a new window with that name and opener set to current window if the current doc's sbox flags permit*)
-	  if (getDocFlag (CWindow?.cwdoc w) SB_NewWindow) then (Error "new win error", w, b) 
+	  if (getDocFlag w.cwin.cwdoc SB_NewWindow) then (Error "new win error", w, b) 
 	  else 
-	    (let sbo = (if (getDocFlag (CWindow?.cwdoc w) SB_Propagate) then [] else getSBox (CWindow?.cwdoc w)) in
+	    (let sbo = (if (getDocFlag w.cwin.cwdoc SB_Propagate) then [] else getSBox w.cwin.cwdoc) in
 	    let (nid, nb) = set_unique_id b in 
 	    let (opori, sb) = set_op_origin nb in 
 	    let blank_doc = {dloc=blank_uri;dref=blank_uri;dori=opori;dHTTPS="none";drefPol=RP_EmptyPolicy;dCSP=[];(* dwin=noWin; *)dsbox=[]} in
-	    let newwin = win_to_cowin ({winid=nid; wname=n; wloc=blank_uri; wframes=[]; wopener=(Some w); wparent=None; whist=({hlhe=[]; hcur=0}); wdoc=blank_doc; wsbox=sbo}) in
-	    let newb = ({(sb) with windows=newwin::(sb).windows}) in
-	    (Success "", newwin, newb))
-	| Some x -> (Success "", x, b) (* Change opener to current window *)
+	    let newwin = ({cwinid=nid; cwname=n; cwloc=blank_uri; cwframes=[]; cwopener=(Some w.cwin); cwparent=None; cwhist=mk_ahist (empty_history b.bid); cwdoc=mk_adoc blank_doc; cwsbox=sbo}) in
+	    let newb = Browser sb.bid ({sb.br with windows=newwin::sb.br.windows}) in
+	    (Success "", CWindow sb.bid newwin, newb))
+	| Some x -> (Success "", CWindow b.bid x, b) (* Change opener to current window *)
 	(* if (winName<>"_blank" && familiar_with w x) then Some x *)
 	(* else (\*Create a new window with that name and opener set to current window*\)  *)
 	(*   (let sbo = (match List.find (fun w -> w = SB_Propagate) w.wdoc.dsbox with | None -> [] | Some x -> w.wdoc.dsbox) in *)
@@ -401,15 +404,16 @@ let get_window_from_name b w n =
    window.opener should be the current window for windows opened using scripts
    TODO - "replace" replaces the current window with new window and places current in history - session history is not yet included
 *)
-val open_window: b:browser -> cw:cowindow -> h:string -> name:string -> 
-		 Tot (result * option (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead}) * cowindow * browser)
+val open_window: b:browser -> cw:cowindow{cw.cwbid = b.bid} -> h:string -> name:string -> 
+		 Tot (result * option (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead /\ 
+				      nr.browser_request.reqbrowser = b.bid}) * tw:cowindow{tw.cwbid = b.bid} * nb:browser{nb.bid = b.bid})
 let open_window b cw h name =
   let wname = if name = "" then "_blank" else name in
   let twres = (get_window_from_name b cw wname) in 
   match twres with 
   | (Error err, _, _) -> (Error err, None, cw, b) (*sandbox check failed*)
   | (Success s, w, nb) -> (
-      let us = hstring_to_uri h in
+      let us = hstring_to_uri nb h in
       match us with 
       | None -> (Success s, None, w, nb)
       | Some u -> 
@@ -426,11 +430,11 @@ let open_window b cw h name =
 (* 	      else hd::(closewin tl w) *)
 	      
 (* Close a window from the script*)
-(* *** Need a way to update the opener for all the windows "w" opened *** *)
-val close_window: b:browser -> cw:window -> w:cowindow -> Tot browser
-let close_window b cw w = 
-  if ((CWindow?.cwopener w) <> None) && (familiar_with (win_to_cowin cw) w) && (allowed_navigation (win_to_cowin cw) w) then
-    ({b with windows=(closewin b.windows w)})
+(* *** Need a way to update the opener for all the windows "cw" opened *** *)
+val close_window: b:browser -> w:window{w.wbid = b.bid} -> cw:cowindow{cw.cwbid = b.bid} -> Tot (nb:browser{nb.bid = b.bid})
+let close_window b w cw = 
+  if (cw.cwin.cwopener <> None) && (familiar_with (win_to_cowin w).cwin cw.cwin) && (allowed_navigation (win_to_cowin w).cwin cw.cwin) then
+    Browser b.bid ({b.br with windows=(closewin b b.br.windows cw.cwin)})
   else b
   
 (* The iframe should also allow sandbox property. 
@@ -445,28 +449,31 @@ let close_window b cw w =
 (*     (Browser (wn::(closewin b.windows cw)) b.cookieStore b.localStorage b.sts b.conn) *)
 
 (* History functions *)
-val forward_window : b:browser -> cw:cowindow -> tw:cowindow{is_equal_secrecy_level (URI?.uri_secrecy_level (CWindow?.cwloc cw)) (URI?.uri_secrecy_level (CWindow?.cwloc tw))} -> Tot (result * browser)
+val forward_window : b:browser -> cw:cowindow{cw.cwbid = b.bid} -> tw:cowindow{tw.cwbid = b.bid} -> Tot (result * nb:browser{nb.bid = b.bid})
 let forward_window b cw tw =
-  if (isSameOriginWin cw tw) then (Success "", forward_history b cw tw)
+  if (isSameOriginWin cw.cwin tw.cwin) then (Success "", forward_history b cw.cwin tw.cwin)
   else ((Error "forward history error"), b)
 
-val back_window : b:browser -> cw:cowindow -> tw:cowindow{is_equal_secrecy_level (URI?.uri_secrecy_level (CWindow?.cwloc cw)) (URI?.uri_secrecy_level (CWindow?.cwloc tw))} -> Tot (result * browser)
+val back_window : b:browser -> cw:cowindow{cw.cwbid = b.bid} -> tw:cowindow{tw.cwbid = b.bid} -> Tot (result * nb:browser{nb.bid = b.bid})
 let back_window b cw tw =
-  if (isSameOriginWin cw tw) then (Success "", back_history b cw tw)
+  if (isSameOriginWin cw.cwin tw.cwin) then (Success "", back_history b cw.cwin tw.cwin)
   else ((Error "back history error"), b)
 
 (* Set window location *)
-val set_win_location : browser -> c:cowindow -> f:cowindow -> u:uri -> 
-		       Tot (result * option (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead}) * option cowindow * browser)
+val set_win_location : b:browser -> c:cowindow{c.cwbid = b.bid} -> f:cowindow{f.cwbid = b.bid} -> u:uri{is_origin_in_secrecy_level b.bid u.uri_secrecy_level} -> 
+		       Tot (result * option (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead /\ 
+					    nr.browser_request.reqbrowser = b.bid}) * option (cw:cowindow{cw.cwbid = b.bid}) * nb:browser{nb.bid = b.bid})
 let set_win_location b c f u = navigateWindow b c f (RequestResource (default_browser_request b f u)) "other"
 
 (* 4.10.22.3 Form submission algorithm - form data is serialized string fd *)
 (* can also have dialog method that does separate processing *)
 (* For similar schemes, the spec proposes using the suitable descriptions *)
-val form_submission : browser -> window -> target_name:string -> m:reqMethod{m="GET" \/ m="POST"} -> u:uri -> fd:list (public_string * public_string) -> 
-		      Tot (result * option (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead}) * option cowindow * browser)
+val form_submission : b:browser -> sw:window{sw.wbid = b.bid} -> target_name:string -> m:reqMethod{m="GET" \/ m="POST"} -> 
+		      u:uri{is_origin_in_secrecy_level b.bid u.uri_secrecy_level} -> fd:list (public_string * public_string) -> 
+		      Tot (result * option (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead /\ 
+					    nr.browser_request.reqbrowser = b.bid}) * option (cw:cowindow{cw.cwbid = b.bid}) * nb:browser{nb.bid = b.bid})
 let form_submission b sw tn m u fd =
-  if (List.find (fun w -> w = SB_Forms) sw.wdoc.dsbox <> None) then ((Error ""), None, None, b)
+  if (List.find (fun w -> w = SB_Forms) sw.w.wdoc.dsbox <> None) then ((Error ""), None, None, b)
   else 
     match (get_window_from_name b (win_to_cowin sw) tn) with
     | (Error e, _, _) -> (Error e, None, None, b)
@@ -483,7 +490,7 @@ let form_submission b sw tn m u fd =
 					uri_fragment=empty_secret_string (URI?.uri_secrecy_level u)}) in
 	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_browser_request nb (win_to_cowin sw) (nuri))) "form-submission") 
 	  else 
-	    let nreq = (BrowserRequest (URI?.uri_secrecy_level u) ({reqb = nb.bid; reqm = "POST"; requrl = [u]; reqhead = []; reqo = (mk_aorigin (URI?.uri_value sw.wloc).uri_origin); reqw = (Some (win_to_cowin sw)); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = Some tw; reqredirect = 0; reqredmode = "follow"; reqref = (Client (win_to_cowin sw)); reqreferrer_policy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (classify_secret_string #PublicVal (serialize_querystring fd) (URI?.uri_secrecy_level u)); corsflag = false; corspfflag = false; authflag = false; recflag = false})) in
+	    let nreq = (BrowserRequest (URI?.uri_secrecy_level u) ({reqbrowser = nb.bid; reqm = "POST"; requrl = [u]; reqhead = []; reqo = (mk_aorigin (URI?.uri_value sw.w.wloc).uri_origin); reqw = (Some (win_to_cowin sw)); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = Some tw; reqredirect = 0; reqredmode = "follow"; reqref = (Client (win_to_cowin sw)); reqreferrer_policy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (classify_secret_string #PublicVal (serialize_querystring fd) (URI?.uri_secrecy_level u)); corsflag = false; corspfflag = false; authflag = false; recflag = false})) in
 	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource nreq) "form-submission") 
 	  )
 	else if ((sch = "data") && (m = "GET")) then
@@ -494,16 +501,17 @@ let form_submission b sw tn m u fd =
 
 (* xhr.spec.whatwg.org - open and send only *)
 (* require the request and response to have similar secrecy_levels; so return the request that contains this information *)
-val xmlHttpRequest : browser -> window -> u:uri -> reqMethod -> string -> 
+val xmlHttpRequest : b:browser -> w:window{w.wbid = b.bid} -> u:uri{is_origin_in_secrecy_level b.bid u.uri_secrecy_level} -> reqMethod -> string -> 
 		     h:header{checkHeaderSecLevel h /\ notForbiddenHeaderfieldInReqHeader (h) /\ (isHeaderVisible h (URI?.uri_secrecy_level u))} -> 
-		     Tot (result * (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead}) * option window * browser)
+		     Tot (result * (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BrowserRequest?.browser_request nr).reqhead /\ 
+					    nr.browser_request.reqbrowser = b.bid}) * option (cw:cowindow{cw.cwbid = b.bid}) * nb:browser{nb.bid = b.bid})
 let xmlHttpRequest b w u m rb h =
 	let body = (if (m="GET" || m="HEAD") then "" else rb) in
 	let urisl = (URI?.uri_secrecy_level u) in
 	let cw = (win_to_cowin w) in
 	(* include more properties as per --- xhr.spec.whatwg.org Section 4.5 *)
 	(* missing sync flag, upload listener flag, withCredentials, username, password *)
-	let req = BrowserRequest urisl ({reqb = b.bid; reqm = m; requrl = [(u)]; reqhead = h; reqo = (mk_aorigin (URI?.uri_value w.wloc).uri_origin); reqw = (Some cw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client cw); reqreferrer_policy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = true; reqpreflight = false; reqsync = false; reqmode = CORS; reqtaint = "basic"; reqcredm = "same-origin"; reqcredflag = false; reqbody = (classify_secret_string #PublicVal body urisl); corsflag = false; corspfflag = false; authflag = false; recflag = false}) in
+	let req = BrowserRequest urisl ({reqbrowser = b.bid; reqm = m; requrl = [(u)]; reqhead = h; reqo = (mk_aorigin w.w.wloc.uri_value.uri_origin); reqw = (Some cw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client cw); reqreferrer_policy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = true; reqpreflight = false; reqsync = false; reqmode = CORS; reqtaint = "basic"; reqcredm = "same-origin"; reqcredflag = false; reqbody = (classify_secret_string #PublicVal body urisl); corsflag = false; corspfflag = false; authflag = false; recflag = false}) in
 	let (re, nreq, sb) = (fetch_resource b req false false (cw, cw, "other")) in
 	(re, nreq, None, sb) (*the window is not required in this case*)
 	

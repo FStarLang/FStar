@@ -14,7 +14,6 @@ Browser.AuxiliaryDatatypes.fst \
 Browser.ContentSecurityPolicy.fst \
 Browser.Datatypes.fst \
 Browser.RequestResponseHeader.fst \
-Browser.HTTPFetch.Auxiliary.fst \
 Browser.HTTPFetch.fst \
 Browser.Model.Interface.fst \
 Example.ContentSecurityPolicy.fst \
@@ -41,7 +40,7 @@ uall: $(ALLFILES:%=verify-%)
 ocaml_oauth: out OAuth.User.fst ulib
 #	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --z3rlimit 100 --odir out --codegen OCaml OAuth.User.fst
-	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/FStar_Classical.ml out/FStar_Ref.ml out/FStar_TSet.ml out/FStar_Preorder.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch_Auxiliary.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/Network_Interface.ml out/OAuth_Datatypes.ml out/OAuth_RP.ml out/OAuth_IP.ml out/OAuth_User.ml -o out/OAuth_User.exe
+	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/FStar_Classical.ml out/FStar_Ref.ml out/FStar_TSet.ml out/FStar_Preorder.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/Network_Interface.ml out/OAuth_Datatypes.ml out/OAuth_RP.ml out/OAuth_IP.ml out/OAuth_User.ml -o out/OAuth_User.exe
 	./out/OAuth_User.exe
 
 ocaml_csp: out Example.ContentSecurityPolicy.fst ulib
@@ -53,13 +52,13 @@ ocaml_csp: out Example.ContentSecurityPolicy.fst ulib
 ocaml_cors: out Example.CORS.fst ulib
 #	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Example.CORS.fst
-	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch_Auxiliary.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/Example_CORS.ml -o out/Example_CORS.exe
+	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/Example_CORS.ml -o out/Example_CORS.exe
 	./out/Example_CORS.exe
 
 ocaml_example: out Example.Request.fst ulib
 #	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Example.Request.fst
-	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch_Auxiliary.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/Network_Interface.ml out/Example_Request.ml -o out/Example_Request.exe
+	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/Network_Interface.ml out/Example_Request.ml -o out/Example_Request.exe
 	./out/Example_Request.exe
 
 LIB=../../ulib

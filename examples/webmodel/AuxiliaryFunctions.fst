@@ -140,10 +140,11 @@ let rec list_append_sublist_lemma #a l l' =
   | hd::tl -> list_append_sublist_lemma tl l'
 
 (* reverse a list *)
-val list_reverse : #a:eqtype -> l:list a -> Tot (fl:list a{List.length fl = List.length l /\ (forall x. List.mem x l ==> List.mem x fl)})
+val list_reverse : #a:eqtype -> l:list a -> Tot (fl:list a{List.length l = List.length fl /\ (forall x. List.mem x l ==> List.mem x fl)})
 let rec list_reverse #a l = match l with
     | [] -> []
     | hd::tl -> list_append_member_lemma (list_reverse tl) [hd]; 
+	      list_append_lemma (list_reverse tl) [hd]; 
 	      List.append (list_reverse tl) [hd]
 
 

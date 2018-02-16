@@ -33,7 +33,7 @@ let block_origin_port r =
 (* 8.3 - Referrer Policy - Determine browserRequest's referrer *)
 val get_referrer : r:browserRequest{(BrowserRequest?.browser_request r).reqref <> NoReferrer} -> rp:referrer_policy{rp <> RP_EmptyPolicy} -> Tot referer
 let get_referrer r rp =
-  let refSource = (match (BrowserRequest?.browser_request r).reqref with | Client w -> (getWinURI w) | URLReferrer u -> u) in
+  let refSource = (match (BrowserRequest?.browser_request r).reqref with | Client w -> w.cwin.cwloc | URLReferrer u -> u) in
   let refOrigin = URLReferrer (getOriginURL (refSource)) in
   let refURL = URLReferrer (getRefURL (refSource)) in
   match rp with
@@ -283,10 +283,10 @@ val getResponse : b:browser -> connection -> resp:browserResponse{resp.b_respons
 		  Tot (option ((nr:browserRequest{b.bid = nr.browser_request.reqbrowser} * 
 			      sw:cowindow{sw.cwbid = b.bid} * tw:cowindow{tw.cwbid = b.bid} * navType) * browserResponse * bool) * nb:browser{nb.bid = b.bid})
 let getResponse b c resp =
-  let rcl = (getResponseConn b.br.conn c) in
+  let rcl = (getResponseConn b c) in
     match rcl with
     | None -> (None, b)
-    | Some (r, f, ncl) -> (Some (r, resp, f), (Browser b.bid ({b.br with conn=ncl})))
+    | Some (r, f, nb) -> (Some (r, resp, f), nb)
 
 (* TODO - process the response body and appropriate changes *)
 (* Return error if processing fails *)
@@ -371,7 +371,7 @@ let processHttpResponse b req resp cf einfo =
 	      if redirect = false then
 		((processFetchResponse b req (BResponse resp) cf), b)
 	      else
-		let (r, b) = httpRedirectFetch b req resp reqf.corsflag einfo in
+		let (r, _, b) = httpRedirectFetch b req resp reqf.corsflag einfo in
 		match r with
 		| Error e -> (NetworkError e, b)
 		| Success s -> (RespSuccess s, b)

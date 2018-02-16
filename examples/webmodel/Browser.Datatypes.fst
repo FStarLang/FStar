@@ -34,36 +34,39 @@ abstract type a_document = document
 
 (* For now, every history entry contains the minimal information, i.e., the url of the page*)
 (* It may also contain state, title, document, form-data, scroll-restoration, scroll position, name etc.*)
-type historyEntry = 
-| HistEntry : hsl:secrecy_level -> heurl:a_uri hsl -> hetime:nat -> hedoc:document -> hewin:wid -> historyEntry
+type historyEntry (bid:origin_opaque) = 
+| HistEntry : hsl:secrecy_level{is_origin_in_secrecy_level bid hsl} -> heurl:a_uri hsl -> hetime:nat -> hedoc:document -> hewin:wid -> historyEntry bid
 
-type historyFormat = {
-  hlhe: list historyEntry;
+type historyFormat (bid:origin_opaque) = {
+  hlhe: list (historyEntry bid);
   hcur: nat;
 }
 
-type history = h:historyFormat{h.hcur <= List.length h.hlhe}
+type history (bid:origin_opaque) = h:(historyFormat bid){h.hcur <= List.length h.hlhe}
 
-abstract type a_history = history
+abstract type a_history (bid:origin_opaque) = history bid
 
-val ahist_to_hist : a_history -> Tot history
-let ahist_to_hist a = a
+val ahist_to_hist : #bid:origin_opaque -> a_history bid -> Tot (history bid)
+let ahist_to_hist #bid a = a
 
-let emptyHistory = {hlhe=[];hcur=0}
+val mk_ahist : #bid:origin_opaque -> history bid -> Tot (a_history bid)
+let mk_ahist #bid h = h
 
 type localStorageEntry = 
 | LocalStorageEntry : lsb:origin_opaque ->
 		      ls_origin:origin_tuple -> 
 		      ldict:(dictionary #(secret_string (SecretVal [SecOrigin ls_origin])) #(secret_string (SecretVal [SecOrigin ls_origin]))) -> localStorageEntry
 
+type uri_browser (bid:origin_opaque) = u:uri{is_origin_in_secrecy_level bid u.uri_secrecy_level} 
+
 type cowindow' (bid:origin_opaque) = {
   cwinid:wid;
   cwname:public_string;
-  cwloc:uri;
+  cwloc:uri_browser bid;
   cwframes:list (cowindow' bid);
   cwopener:option (cowindow' bid);
   cwparent:option (cowindow' bid);
-  cwhist:a_history;
+  cwhist:a_history bid;
   cwdoc:a_document;
   cwsbox:list sandbox_flags;
 }
@@ -77,11 +80,11 @@ type cowindow =
 type window' (bid:origin_opaque) = {
   winid:wid;
   wname:public_string;
-  wloc:uri;
+  wloc:uri_browser bid;
   wframes:list (c:cowindow' bid);
   wopener:option (c:cowindow' bid);
   wparent:option (c:cowindow' bid);
-  whist:history;
+  whist:history bid;
   wdoc:document;
   wsbox:list sandbox_flags;
 }
@@ -171,7 +174,7 @@ type connection = {
 
 type connReq (b:origin_opaque) = {
   connect:connection;
-  creq:list (r:browserRequest{r.browser_request.reqbrowser = b} * cowindow * cowindow * navType); (* windows required for processing response *)
+  creq:list (r:browserRequest{r.browser_request.reqbrowser = b} * sw:cowindow{sw.cwbid = b} * tw:cowindow{tw.cwbid = b} * navType); (* windows  for processing response *)
 }
 
 (* type connectionPool = list connReq (\*contains the list of pending requests for that connection*\) *)
@@ -196,10 +199,10 @@ type browser =
 let init_browser:browser = Browser (OpaqueOrigin 1) ({windows=[];cookieStore=[];localStorage=[];sts=[];conn=[];next_u_id=2})
 
 (* Generate unique ids *)
-val set_unique_id : browser -> Tot (wid * browser)
+val set_unique_id : b:browser -> Tot (wid * nb:browser{nb.bid = b.bid})
 let set_unique_id b = (b.br.next_u_id, Browser b.bid ({b.br with next_u_id=(b.br.next_u_id + 1)}))
 
-val set_op_origin : browser -> Tot (o:a_origin * browser)
+val set_op_origin : b:browser -> Tot (o:a_origin * nb:browser{nb.bid = b.bid})
 let set_op_origin b = (OpaqueOrigin b.br.next_u_id, Browser b.bid ({b.br with next_u_id=(b.br.next_u_id + 1)}))
 
 (* val noWindow : a_document -> Tot bool *)
@@ -274,8 +277,9 @@ let getAOrigin u = u.uri_value.uri_origin
 
 (* can allow restriction of subdomain? 
    a.b.com can be restricted to b.com *)
-private val setDomOrigin : u:uri{Origin? u.uri_value.uri_origin} -> o:a_origin -> Tot uri
-let setDomOrigin u o = 
+private val setDomOrigin : #b:browser -> u:uri{Origin? u.uri_value.uri_origin /\ is_origin_in_secrecy_level b.bid u.uri_secrecy_level} -> o:a_origin -> 
+			   Tot (nu:uri{Origin? nu.uri_value.uri_origin /\ is_origin_in_secrecy_level b.bid nu.uri_secrecy_level})
+let setDomOrigin #b u o = 
   if (Origin? o) then 
     let os = (match u.uri_secrecy_level with
 	     | PublicVal -> (PublicVal) (* Should we keep it Public? *)
@@ -316,17 +320,17 @@ let getPath #s u = u.uri_value.uri_path
 (* let blank_uri wid = URI ({sori=blank_origin;swid=wid}) ({uri_origin=blank_origin;uri_username="";uri_password=None;uri_path=[];uri_querystring=[];uri_fragment=""}) *)
 let blank_uri = URI (PublicVal) ({uri_origin=blank_origin;uri_username="";uri_password="";uri_path=[];uri_querystring=[];uri_fragment=""})
 
-(* Use this to get a URI indexed only by its origin - if it has pre-specified index, use the above function s*)
-val hstring_to_uri : s:string -> Tot (option (uri))
-let hstring_to_uri s = 
+(* Use this to get a URI indexed only by its origin and the current browser - if it has pre-specified index, use the above function s*)
+val hstring_to_uri : b:browser ->  s:string -> Tot (option (u:uri{is_origin_in_secrecy_level b.bid u.uri_secrecy_level}))
+let hstring_to_uri b s = 
   match (hstring_to_curi_ml PublicVal s) with
   | None -> None
   | Some (o, x) -> 
-      let os = (SecretVal [(SecOrigin o)]) in
+      let os = (SecretVal [(SecOrigin o); (SecOrigin b.bid)]) in
       Some (URI os ({uri_origin=x.uri_origin;uri_username=classify_secret_string x.uri_username os;uri_password=classify_secret_string x.uri_password os;uri_path=classify_uri_path x.uri_path os;uri_querystring=classify_uri_querystring x.uri_querystring os;uri_fragment=classify_secret_string #PublicVal x.uri_fragment os}))
   
-val getWinURI : cowindow -> Tot uri
-let getWinURI w = w.cwin.cwloc
+val getWinURI : b:browser -> cw:cowindow{cw.cwbid = b.bid} -> Tot (u:uri{is_origin_in_secrecy_level b.bid u.uri_secrecy_level})
+let getWinURI b w = w.cwin.cwloc
 
 val getOriginURL : uri -> Tot uri
 let getOriginURL u = 
@@ -401,14 +405,14 @@ let mk_origin ao = ao
 val mk_aorigin : o:origin -> Tot a_origin
 let mk_aorigin o = o
 
-val setDocDomain : w:window -> origin_domain -> Tot (nw:window{nw.wbid = w.wbid})
-let setDocDomain w h = 
+val setDocDomain : #b:browser -> w:window{b.bid = w.wbid} -> origin_domain -> Tot (nw:window{nw.wbid = w.wbid /\ nw.wbid = b.bid})
+let setDocDomain #b w h = 
   match (mk_origin w.w.wdoc.dori) with
   | Origin s h p d ->
       (
       let ori = Origin s h p (Some h) in
       let d = w.w.wdoc in
-      let loc = setDomOrigin d.dloc (mk_aorigin ori) in
+      let loc = setDomOrigin #b w.w.wloc (mk_aorigin ori) in
       Window w.wbid ({w.w with wdoc={d with dloc=loc;dori=ori};wloc=(loc)})
       )
   | OpaqueOrigin o -> w
@@ -623,7 +627,8 @@ let save_cur_doc_win #cbid b tw =
 (*   | hd::tl -> lemma_list_app tl l' w *)
 
 (* Add new document to history *)
-val add_doc_hist : #cbid:origin_opaque -> b:browser{b.bid = cbid} -> tw:cowindow' cbid -> d:a_document -> Tot (cowindow' cbid)
+val add_doc_hist : #cbid:origin_opaque -> b:browser{b.bid = cbid} -> tw:cowindow' cbid -> d:document{is_origin_in_secrecy_level b.bid d.dloc.uri_secrecy_level} -> 
+		   Tot (cowindow' cbid)
 let add_doc_hist #cbid b tw d =
   let he = HistEntry d.dloc.uri_secrecy_level d.dloc.uri_value get_time d tw.cwinid in
   let nc = (tw.cwhist.hcur + 1) in
@@ -648,23 +653,24 @@ let load_nth_window #cbid sb tw delta =
   else (tw, sb)
 
 (* Quicksort impl from List.Tot for history sorting *)
-private val partitionHist : nat -> list historyEntry -> Tot (list historyEntry * list historyEntry)
-let rec partitionHist n l = 
+private val partitionHist : #bid:origin_opaque -> nat -> list (historyEntry bid) -> Tot (list (historyEntry bid) * list (historyEntry bid))
+let rec partitionHist #bid n l = 
   match l with 
   | [] -> [], []
   | hd::tl -> let l1, l2 = partitionHist n tl in
 	    if n <= hd.hetime then hd::l1, l2
 	    else l1, hd::l2
 
-val partition_length_lemma: n:nat -> l:list historyEntry -> Lemma (requires True) (ensures (let (f,s) = (partitionHist n l) in List.length (f) + List.length (s) = List.length l)) 
+val partition_length_lemma: #bid:origin_opaque -> n:nat -> l:list (historyEntry bid) -> 
+			    Lemma (requires True) (ensures (let (f,s) = (partitionHist n l) in List.length (f) + List.length (s) = List.length l)) 
 						[SMTPat (partitionHist n l)]
-let rec partition_length_lemma n l = match l with
+let rec partition_length_lemma #bid n l = match l with
   | [] -> ()
   | hd::tl -> partition_length_lemma n tl
   
 (* Sort the history based on the time *)
-private val sortHist : l:list historyEntry -> Tot (list historyEntry) (decreases (List.length l))
-let rec sortHist l =
+private val sortHist : #bid:origin_opaque -> l:list (historyEntry bid) -> Tot (list (historyEntry bid)) (decreases (List.length l))
+let rec sortHist #bid l =
   match l with
   | [] -> []
   | pivot::tl -> 
@@ -674,7 +680,8 @@ let rec sortHist l =
 
 (* **** For now assuming that the window has a joint history only *)  (* {List.length nl = List.length l} *)
 (* Create a joint history from the frames' session history *)
-private val joint_hist_frames : #cbid:origin_opaque -> b:browser{b.bid = cbid} -> lf:list (cowindow' cbid) -> che:historyEntry -> Tot ((list historyEntry) * historyEntry)
+private val joint_hist_frames : #cbid:origin_opaque -> b:browser{b.bid = cbid} -> lf:list (cowindow' cbid) -> che:historyEntry cbid -> 
+				Tot ((list (historyEntry cbid)) * (historyEntry cbid))
 let rec joint_hist_frames #cbid b lf che =
   match lf with
   | [] -> ([], che)
@@ -696,7 +703,7 @@ let rec joint_hist_frames #cbid b lf che =
 	      (List.append jhist (List.append fhl nhl), ne)
 
 (* Create a joint history of the window and its frames *)
-private val create_joint_history : #cbid:origin_opaque -> b:browser{b.bid = cbid} -> (cowindow' cbid) -> Tot (list historyEntry * option historyEntry)
+private val create_joint_history : #cbid:origin_opaque -> b:browser{b.bid = cbid} -> (cowindow' cbid) -> Tot (list (historyEntry cbid) * option (historyEntry cbid))
 let create_joint_history #cbid b w =
   let whist = w.cwhist in
   if (whist.hcur = 0) then (* implies no history and no document *)
@@ -820,7 +827,7 @@ let sendRequest b r cflag einfo =
 	let ncl = (({connect=oconn;creq=(List.append oreq [(r, sw, tw, ty)])})::(list_remove_element b.br.conn ({connect=oconn;creq=oreq}))) in
 	(Success ("LOG: request sent to " ^ (uri_to_string (List.hd r.browser_request.requrl)) ^ "\n"), Browser b.bid ({b.br with conn=ncl}))
 
-val getConnection : browser -> connection' -> Tot (option (connReq'))
+val getConnection : b:browser -> connection -> Tot (option (connReq b.bid))
 let getConnection b c = 
   match (List.tryFind (fun ({connect=x;creq=rl}) -> x=c) b.br.conn) with
   | None -> None
@@ -836,31 +843,17 @@ let getConnection b c =
 (* 	| [] -> (None, Some c.connect.ccred, cl) *)
 (* 	| (req)::tr -> (Some req, Some c.connect.ccred, (({connect=c.connect;creq=tr})::(list_remove_element cl c)))) *)
 
-val getResponseConn : connectionPool -> connection -> Tot (option ((browserRequest * cowindow * cowindow * navType) * bool * connectionPool))
-let getResponseConn cl c =
-  match (List.tryFind (fun ({connect=x;creq=rl}) -> x = c) cl) with
+val getResponseConn : b:browser -> connection -> Tot (option ((r:browserRequest{r.browser_request.reqbrowser = b.bid} * sw:cowindow{sw.cwbid = b.bid} * tw:cowindow{tw.cwbid = b.bid} * navType) * bool * nb:browser{nb.bid = b.bid}))
+let getResponseConn b c =
+  match (List.tryFind (fun ({connect=x;creq=rl}) -> x = c) b.br.conn) with
   | None -> None
   | Some c -> 
       (match c.creq with
 	| [] -> None
-	| (req)::tr -> Some (req, c.connect.ccred, (({connect=c.connect;creq=tr})::(list_remove_element cl c))))
-
+	| (req)::tr -> Some (req, c.connect.ccred, (Browser b.bid ({b.br with conn=(({connect=c.connect;creq=tr})::(list_remove_element b.br.conn c))}))))
  
-(* val option_response_conn_lemma : cl:connectionPool -> c:connection -> Lemma (requires (True))  *)
-(* 			       (ensures (match (getResponseConn cl c) with | Some r, None, _ -> false | _, _, _ -> true)) [SMTPat (getResponseConn cl c)] *)
-(* let option_response_conn_lemma cl c = () *)
-
-val mk_connection : connection' -> Tot connection
-let mk_connection c = c
-
-val mk_conn : connection -> Tot connection'
-let mk_conn c = c
-
-val getConn : connReq -> Tot connReq'
-let getConn c = c
-
-val getConnReq : connReq' -> Tot (option browserRequest)
-let getConnReq c =
+val getConnReq : b:browser -> connReq b.bid -> Tot (option (r:browserRequest{r.browser_request.reqbrowser = b.bid}))
+let getConnReq b c =
   match c.creq with
   | [] -> None
   | (h,_,_,_)::_ -> Some h
