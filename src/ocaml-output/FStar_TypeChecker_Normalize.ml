@@ -5185,12 +5185,18 @@ let rec norm:
                    lb.FStar_Syntax_Syntax.lbeff in
                let uu____15175 =
                  (Prims.op_Negation (cfg.steps).no_delta_steps) &&
-                   (((FStar_Syntax_Util.is_pure_effect n1) &&
-                       (cfg.normalize_pure_lets ||
-                          (FStar_Util.for_some
-                             (FStar_Syntax_Util.is_fvar
-                                FStar_Parser_Const.inline_let_attr)
-                             lb.FStar_Syntax_Syntax.lbattrs)))
+                   ((((cfg.steps).pure_subterms_within_computations &&
+                        (FStar_Util.for_some
+                           (FStar_Syntax_Util.is_fvar
+                              FStar_Parser_Const.inline_let_attr)
+                           lb.FStar_Syntax_Syntax.lbattrs))
+                       ||
+                       ((FStar_Syntax_Util.is_pure_effect n1) &&
+                          (cfg.normalize_pure_lets ||
+                             (FStar_Util.for_some
+                                (FStar_Syntax_Util.is_fvar
+                                   FStar_Parser_Const.inline_let_attr)
+                                lb.FStar_Syntax_Syntax.lbattrs))))
                       ||
                       ((FStar_Syntax_Util.is_ghost_effect n1) &&
                          (Prims.op_Negation
@@ -5240,7 +5246,7 @@ let rec norm:
                         (log cfg
                            (fun uu____15342  ->
                               FStar_Util.print_string
-                                "+++ Normalizing Tm_let -- type\n");
+                                "+++ Normalizing Tm_let -- type");
                          (let ty =
                             norm cfg env [] lb.FStar_Syntax_Syntax.lbtyp in
                           let lbname =
@@ -5636,7 +5642,7 @@ and reduce_impure_comp:
                       AllowUnboundUniverses;
                       EraseUniverses;
                       Exclude Zeta;
-                      NoDeltaSteps] in
+                      Inlining] in
                   {
                     steps = uu____16901;
                     tcenv = (uu___167_16900.tcenv);
