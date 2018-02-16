@@ -125,6 +125,13 @@ let transitive_exported_ids env lid =
     match BU.smap_try_find env.trans_exported_ids module_name with
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
+let all_exported_ids env lid =
+    let module_name = Ident.string_of_lid lid in
+    match BU.smap_try_find env.exported_ids module_name with
+    | None -> []
+    | Some exported_id_set -> 
+      let set_id (k: exported_id_kind) = !(exported_id_set k) |> BU.set_elements in
+      List.map set_id all_exported_id_kinds |> List.flatten
 let open_modules e = e.modules
 let open_modules_and_namespaces env =
   List.filter_map (function

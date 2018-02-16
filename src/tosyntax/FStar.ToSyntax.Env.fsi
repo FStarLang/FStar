@@ -168,6 +168,7 @@ val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
 
 val transitive_exported_ids: env -> lident -> list<string>
+val all_exported_ids: env -> lident -> list<string>
 type module_inclusion_info
 val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info

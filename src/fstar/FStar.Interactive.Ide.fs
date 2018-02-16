@@ -530,6 +530,7 @@ type query' =
 | Lookup of string * lookup_context * option<position> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
+| Exported of string (* exported symbols of the module *)
 | GenericError of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
@@ -537,8 +538,8 @@ and query = { qq: query'; qid: string }
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
-  | GenericError _ | ProtocolViolation _ -> false
-  | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
+  | GenericError _ | ProtocolViolation _ | Exported _ -> false
+  | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _-> true
 
 let interactive_protocol_vernum = 2
 
@@ -607,6 +608,7 @@ let unpack_interactive_query json =
                                   try_arg "rules"
                                     |> Util.map_option (js_list js_reductionrule))
            | "search" -> Search (arg "terms" |> js_str)
+           | "exported" -> Exported (arg "name" |> js_str)
            | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
                                  arg "contents" |> js_str)
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
@@ -1323,6 +1325,37 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
+let run_exported_without_deps st name =
+  let m = Ident.lid_of_str name in
+  let tcenv = st.repl_env in
+  let exported_names = DsEnv.all_exported_ids tcenv.dsenv m in
+  let name_list = JsonList <| List.map JsonStr exported_names in
+  let names = exported_names |> String.concat " "  in
+  ((QueryOK, JsonStr names), Inl st)
+
+let run_exported_with_deps st name =
+  if Options.debug_any () then
+    Util.print_string "Reloading dependencies";
+  TcEnv.toggle_id_info st.repl_env false;
+  match load_deps st with
+  | Inr st ->
+    let errors = List.map rephrase_dependency_error (collect_errors ()) in
+    let js_errors = errors |> List.map json_of_issue in
+    ((QueryNOK, JsonList js_errors), Inl st)
+  | Inl (st, deps) ->
+    Options.restore_cmd_line_options false |> ignore;
+    let names = add_module_completions st.repl_fname deps st.repl_names in
+    TcEnv.toggle_id_info st.repl_env true;
+    let push_kind = if Options.lax () then LaxCheck else FullCheck in    
+    let success, st = run_repl_transaction st push_kind false (LDSingle (dummy_tf_of_fname st.repl_fname)) in
+    run_exported_without_deps ({ st with repl_names = names }) name
+
+let run_exported st name =
+  if nothing_left_to_pop st then
+    run_exported_with_deps st name
+  else
+    run_exported_without_deps st name
+
 let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   match q with // First handle queries that support both partial and full states…
   | Exit -> run_exit st
@@ -1338,6 +1371,7 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
+  | Exported name -> run_exported st name
 
 let validate_query st (q: query) : query =
   match q.qq with
