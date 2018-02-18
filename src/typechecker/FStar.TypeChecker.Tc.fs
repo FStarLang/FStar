@@ -1535,10 +1535,6 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
   let add_assume_if_needed quals = if List.contains Assumption quals then quals else Assumption::quals in
   let is_unfold_or_inline = List.existsb (fun q -> q = Unfold_for_unification_and_vcgen || q = Inline_for_extraction) in
-  let is_lemma = List.existsML (fun (_, _, t) -> U.is_lemma t) in
-
-  //if the module contains both a val and a let, we will only keep the val
-  let added_vals = BU.mk_ref [] in
 
   //in case we need to drop val, keep let, carry over the types from val
   let val_typs = BU.mk_ref [] in
@@ -1564,50 +1560,60 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
        | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
   in
 
-  let val_has_already_been_added (lids:list<lident>) :bool =
-    List.existsML (fun lid ->
-      List.existsML (fun lid' -> lid_equals lid lid') !added_vals  //TODO: check for a let rec, do we allow vals only for some of the bindings?
-    ) lids
+  let val_of_lb (s:sigelt) (lid:lident) ((uvs, c_or_t): univ_names * either<comp,typ>) :sigelt =
+    let t = if c_or_t |> is_left then c_or_t |> left |> U.comp_result else c_or_t |> right in
+    { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals) }
   in
 
-  //extract the type of the letbinding, boolean indicates whether we were successful
-  let extract_lbs_annotations (lbs:list<letbinding>) (lids:list<lident>) (r:Range.range) :(list<(bool * univ_names * typ)> * bool) =
-    List.fold_left2 (fun (l, b) lb lid ->
-      let opt = List.tryFind (fun (l', _) -> lid_equals lid l') !val_typs in
-      if opt <> None then (let (t1, t2) = snd (opt |> must) in (true, t1, t2)::l, b)
-      else
-        match lb.lbtyp.n with
-        | Tm_unknown ->
-          (match lb.lbdef.n with
-           | Tm_ascribed (_, (Inr c, _), _) ->  //top-level term, NOTE: possibly with effect
-             (false, lb.lbunivs, U.comp_result c)::l, b  //it's fine to not keep the body as we have the type
-           | Tm_ascribed (_, (Inl t, _), _) -> (false, lb.lbunivs, t)::l, b
-           | Tm_abs (bs, e, _) ->
-             (match e.n with
-              | Tm_ascribed (_, (Inr c, _), _) -> (false, lb.lbunivs, (mk (Tm_arrow (bs, c)) None r))::l, b
-              | Tm_ascribed (_, (Inl t, _), _) ->
-                let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
-                (false, lb.lbunivs, (mk (Tm_arrow (bs, c)) None r))::l, b
-              | _ -> (false, lb.lbunivs, lb.lbtyp)::l, true)  //can't get the type of the letbinding, so must keep the body
-           | _ -> (false, lb.lbunivs, lb.lbtyp)::l, true)  //can't get the type, so must keep the body
-        | _ -> (false, lb.lbunivs, lb.lbtyp)::l, b  //take whatever is annotated
-    ) ([], false) lbs lids
+  (*
+   * We have lb:letbinding lid:lident r:Range, we have to extract the type of the letbinding
+   * We return (letbinding * option <univ_names * either<comp,typ>>), where the returned letbinding is possibly annotated with type from its val (if both val and let are present)
+   *                                                                  rest is the type annotation we extracted, if at all
+   *)
+  let extract_lb_annotation (lb:letbinding) (lid:lident) (r:Range.range) :letbinding * option<(univ_names * either<comp,typ>)> =
+    //first see if we have seen a val declaration for this let, if so, take the type from there
+    let opt = List.tryFind (fun (l, _, _) -> lid_equals lid l) !val_typs in
+    if is_some opt then
+      let _, uvs, t = opt |> must in
+      //annotate the letbinding with this type, so that if this letbinding is added to the iface later, it has the correct type
+      { lb with lbunivs = uvs; lbdef = ascribe lb.lbdef (Inl t, None) }, Some (uvs, Inr t)  //since we are pre-typechecking, annotating means adding ascription to the lbdef
+    else
+      //look at lbtyp
+      match (SS.compress lb.lbtyp).n with
+      | Tm_unknown ->  //unknown, so get into the body
+        (match (SS.compress lb.lbdef).n with
+         | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inl c)  //comp annotation
+         | Tm_ascribed (_, (Inl t, _), _) -> lb, Some (lb.lbunivs, Inr t)  //typ annotation
+         | Tm_abs (bs, e, _) ->  //it's an abstraction
+           (match (SS.compress e).n with
+            | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has the comp annotation
+            | Tm_ascribed (_, (Inl t, _), _) ->
+              let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
+              lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has t, we add top-level effect
+            | _ -> lb, None)  //can't get the type of the letbinding, so must keep the body
+         | _ -> lb, None)  //can't get the type, so must keep the body
+      | _ -> lb, Some (lb.lbunivs, Inr lb.lbtyp)  //take whatever is annotated
   in
 
-  //TODO: calling extract_let_rec_annotation multiple times, can call it just once in the main body, and then pass it around
-  let is_pure_or_ghost_function_with_non_unit_type (typs:list<(bool * univ_names * typ)>) :bool = List.existsML (fun (_, _, t) -> is_pure_or_ghost_function t && not (is_unit t)) typs in
-  let is_unit (typs:list<(bool * univ_names * typ)>) = List.for_all (fun (_, _, t) -> is_unit t) typs in
-
-  let vals_of_lbs (s:sigelt) (lbs:list<letbinding>) (lids:list<lident>) (typs:list<(bool * univ_names * typ)>) (quals:list<qualifier>) :list<sigelt> =
-    List.map3 (fun lb lid (_, uvs, t) ->
-      { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline quals) }
-    ) lbs lids typs
-  in
-
-  let annotate_with_typs (typs:list<(bool * univ_names * typ)>) (s:sigelt) :sigelt =
-    { s with sigel = match s.sigel with
-        | Sig_let (lbs, lids) -> Sig_let ((fst lbs, List.map2 (fun lb (b, uvs, t) -> if b then { lb with lbdef = mk (Tm_ascribed (lb.lbdef, (Inl t, None), None)) None s.sigrng } else lb) (snd lbs) typs), lids)
-        | _ -> failwith "Impossible!" }
+  (*
+   * When do we keep the body of the letbinding in the interface?
+   *  -- if Inr t, and t is not an arrow, then keep the body
+   *  -- let comp = if Inl then c else result type of Inr t (note t is an arrow at this point)
+   *     -- if comp is Pure or Ghost, and the result type is non-unit, keep the body
+   *     -- if comp is a reifiable effect, and the result type is non-unit, keep the body 
+   *)
+  let should_keep_lbdef (c_or_t:either<comp,typ>) :bool =
+    let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
+      match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
+    in 
+      
+    (is_right c_or_t && (not (U.is_function_typ (c_or_t |> right)))) ||
+    (let c =
+       if is_left c_or_t then c_or_t |> left
+       else (match (SS.compress (c_or_t |> right)).n with | Tm_arrow (_, c) -> c | _ -> failwith "Impossible!")
+     in
+     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit)
+    )
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1622,9 +1628,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
           match s.sigel with
           | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
             let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
-            (*
-             * AR: Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
-             *)
+            //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
             ({ s with sigel = s'; sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) })::sigelts  //filter out the abstract qualifier
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
@@ -1633,28 +1637,47 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
         ) [] sigelts
       else [s]  //if it is not abstract, retain as is
     | Sig_declare_typ (lid, uvs, t) ->
-      //val remains as val, except we filter out the abstract qualifier
+      //if it's a projector or discriminator of an abstract inductive, got to go
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
-      else if (not (is_assume s.sigquals)) then begin  //|| (is_unfold_or_inline s.sigquals && not (is_abstract s.sigquals)) then begin
-        val_typs := (lid, (uvs, t))::!val_typs;
+      //if it's an assumption, no let is coming, so add it as is
+      else if is_assume s.sigquals then [ { s with sigquals = filter_out_abstract s.sigquals } ]
+      //else record the type declaration, leave the decision to let
+      else begin
+        val_typs := (lid, uvs, t)::!val_typs;
         []
       end
-      else begin
-        added_vals := lid::!added_vals;
-        [{ s with sigquals = add_assume_if_needed (filter_out_abstract s.sigquals) }]
-      end
     | Sig_let (lbs, lids) ->
-      if val_has_already_been_added lids then []
-      else if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
+      //if it's a projector or discriminator of an abstract inductive, got to go
+      if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       else
-        let typs, b = extract_lbs_annotations (snd lbs) lids s.sigrng in
-        if (is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma typs) then
-          if b then failwith ("Abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str ^ "\n\n")
-          else vals_of_lbs s (snd lbs) lids typs s.sigquals
-        else if b then [annotate_with_typs typs s]  //if top level annotation is missing, retain as is
-        else if is_pure_or_ghost_function_with_non_unit_type typs then [annotate_with_typs typs s]  //pure or ghost functions with non-unit types are retained as is
-        else if not (is_unit typs) then [annotate_with_typs typs s]  //non-unit types are retained as is
-        else vals_of_lbs s (snd lbs) lids typs s.sigquals  //TODO: add case for functions with reifiable effects
+        //extract the type annotations from all the letbindings
+        let flbs, slbs = lbs in
+        let b, lbs, typs = List.fold_left2 (fun (b, lbs, typs) lb lid ->
+          let lb, t = extract_lb_annotation lb lid s.sigrng in
+          is_some t && b, lb::lbs, t::typs) (true, [], []) slbs lids
+        in
+        let lbs, typs = List.rev_append lbs [], List.rev_append typs [] in 
+        //now boolean b tells us if all the types could be extracted, if b is false, we have to keep the body
+        //in other words, b = true means all typs are some
+
+        let s = { s with sigel = Sig_let ((flbs, lbs), lids) } in
+        if not b then
+          //keep the bindings as is, except if they are marked abstract or irreducible, in that case error out
+          if is_abstract s.sigquals || is_irreducible s.sigquals then failwith ("Abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str ^ "\n\n")
+          else [ s ]
+        else
+          //all let binding types were extracted
+          let is_lemma = List.existsML (fun opt ->
+            let _, c_or_t = opt |> must in
+            is_right c_or_t && (c_or_t |> right |> U.is_lemma)) typs  //no comp lemmas
+          in
+          //if is it abstract or irreducible or lemma, keep just the vals
+          let vals = List.map2 (fun lid opt -> val_of_lb s lid (opt |> must)) lids typs in
+          if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
+          else 
+            let should_keep_defs = List.existsML (fun opt -> should_keep_lbdef (opt |> must |> snd)) typs in
+            if should_keep_defs then [ s ]
+            else vals
     | Sig_main t -> failwith "Did not anticipate this would arise"
     | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]  //should we not permit abstract with assumes anyway?
     | Sig_new_effect _

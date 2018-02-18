@@ -1226,6 +1226,10 @@ let pure_or_ghost_pre_and_post env comp =
 
          end
 
+let is_reifiable (env:env) (effect_name:lident) :bool =
+  let edecl_opt = Env.effect_decl_opt env effect_name in
+  is_some edecl_opt && (edecl_opt |> must |> (fun (_, quals) -> quals |> List.contains Reifiable))
+
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
 (* and returns the result of reifying t *)
