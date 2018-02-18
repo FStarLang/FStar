@@ -20,7 +20,7 @@ module FStar.Seq.Base
 
 module List = FStar.List.Tot
 
-abstract type seq (a:Type) :Type0 =
+abstract type seq (a:Type u#a) :Type u#a =
   | MkSeq: l:list a -> seq a
 
 (* Destructors *)
