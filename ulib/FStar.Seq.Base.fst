@@ -191,7 +191,7 @@ let rec lemma_index_slice #a s i j k =
 val hasEq_lemma: a:Type -> Lemma (requires (hasEq a)) (ensures (hasEq (seq a))) [SMTPat (hasEq  (seq a))]
 let hasEq_lemma a = ()
 
-abstract type equal (#a:Type) (s1:seq a) (s2:seq a) =
+abstract type equal (#a:Type) (s1:seq a) (s2:seq a) :Type0 =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
 

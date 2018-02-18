@@ -11,12 +11,16 @@ open FStar.Mul
 
 (* Except, as compared to [FStar.IntN.fstp], here:
  * - every occurrence of [int_t] has been replaced with [uint_t]
- * - every occurrence of [@%] has been replaced with [%].
+2 * - every occurrence of [@%] has been replaced with [%].
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
-abstract type t =
+abstract type t :Type0 =
   | Mk: v:uint_t n -> t
+
+let lemma_hasEq_t () :Lemma (hasEq t) = ()
+
+assume HasEq_t :hasEq t
 
 abstract
 let v (x:t) : Tot (uint_t n) = x.v

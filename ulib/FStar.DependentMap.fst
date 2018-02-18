@@ -1,6 +1,8 @@
 module FStar.DependentMap
 
-noeq abstract type t (key: eqtype) (value: (key -> Tot Type)) : Type = {
+noeq abstract type t (key:Type u#a{hasEq key}) (value: (key -> Type u#b))
+  :Type u#(max a b) =
+{
   mappings: (k: key) -> Tot (value k)
 }
 
