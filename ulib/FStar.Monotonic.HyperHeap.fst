@@ -29,7 +29,7 @@ open FStar.Ghost
  *     - Clients don't need to open/know about HyperHeap, they should work only with HyperStack
  *)
 
-abstract type rid :eqtype = erased (list (int * int))
+abstract type rid :(a:Type0{hasEq a}) = erased (list (int * int))
 
 abstract let reveal (r:rid) : GTot (list (int * int)) = reveal r
 
