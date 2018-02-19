@@ -5928,3 +5928,210 @@ let (mk_data_operations :
                                     fields))))
           | uu____13317 -> []
   
+let (get_optimized_haseq_axiom :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.sigelt ->
+      FStar_Syntax_Syntax.subst_elt Prims.list ->
+        FStar_Syntax_Syntax.univ_names ->
+          (FStar_Ident.lident,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.binders,
+            FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.term)
+            FStar_Pervasives_Native.tuple5)
+  =
+  fun en  ->
+    fun ty  ->
+      fun usubst  ->
+        fun us  ->
+          let uu____13354 =
+            match ty.FStar_Syntax_Syntax.sigel with
+            | FStar_Syntax_Syntax.Sig_inductive_typ
+                (lid,uu____13368,bs,t,uu____13371,uu____13372) ->
+                (lid, bs, t)
+            | uu____13381 -> failwith "Impossible!"  in
+          match uu____13354 with
+          | (lid,bs,t) ->
+              let bs1 = FStar_Syntax_Subst.subst_binders usubst bs  in
+              let t1 =
+                let uu____13403 =
+                  FStar_Syntax_Subst.shift_subst (FStar_List.length bs1)
+                    usubst
+                   in
+                FStar_Syntax_Subst.subst uu____13403 t  in
+              let uu____13410 = FStar_Syntax_Subst.open_term bs1 t1  in
+              (match uu____13410 with
+               | (bs2,t2) ->
+                   let ibs =
+                     let uu____13434 =
+                       let uu____13435 = FStar_Syntax_Subst.compress t2  in
+                       uu____13435.FStar_Syntax_Syntax.n  in
+                     match uu____13434 with
+                     | FStar_Syntax_Syntax.Tm_arrow (ibs,uu____13445) -> ibs
+                     | uu____13462 -> []  in
+                   let ibs1 = FStar_Syntax_Subst.open_binders ibs  in
+                   let ind =
+                     let uu____13469 =
+                       FStar_Syntax_Syntax.fvar lid
+                         FStar_Syntax_Syntax.Delta_constant
+                         FStar_Pervasives_Native.None
+                        in
+                     let uu____13470 =
+                       FStar_List.map
+                         (fun u  -> FStar_Syntax_Syntax.U_name u) us
+                        in
+                     FStar_Syntax_Syntax.mk_Tm_uinst uu____13469 uu____13470
+                      in
+                   let ind1 =
+                     let uu____13476 =
+                       let uu____13477 =
+                         FStar_List.map
+                           (fun uu____13490  ->
+                              match uu____13490 with
+                              | (bv,aq) ->
+                                  let uu____13501 =
+                                    FStar_Syntax_Syntax.bv_to_name bv  in
+                                  (uu____13501, aq)) bs2
+                          in
+                       FStar_Syntax_Syntax.mk_Tm_app ind uu____13477  in
+                     uu____13476 FStar_Pervasives_Native.None
+                       FStar_Range.dummyRange
+                      in
+                   let ind2 =
+                     let uu____13507 =
+                       let uu____13508 =
+                         FStar_List.map
+                           (fun uu____13521  ->
+                              match uu____13521 with
+                              | (bv,aq) ->
+                                  let uu____13532 =
+                                    FStar_Syntax_Syntax.bv_to_name bv  in
+                                  (uu____13532, aq)) ibs1
+                          in
+                       FStar_Syntax_Syntax.mk_Tm_app ind1 uu____13508  in
+                     uu____13507 FStar_Pervasives_Native.None
+                       FStar_Range.dummyRange
+                      in
+                   let haseq_ind =
+                     let uu____13538 =
+                       let uu____13539 =
+                         let uu____13540 = FStar_Syntax_Syntax.as_arg ind2
+                            in
+                         [uu____13540]  in
+                       FStar_Syntax_Syntax.mk_Tm_app
+                         FStar_Syntax_Util.t_haseq uu____13539
+                        in
+                     uu____13538 FStar_Pervasives_Native.None
+                       FStar_Range.dummyRange
+                      in
+                   let bs' =
+                     FStar_List.filter
+                       (fun b  ->
+                          let uu____13561 =
+                            let uu____13562 = FStar_Syntax_Util.type_u ()  in
+                            FStar_Pervasives_Native.fst uu____13562  in
+                          FStar_TypeChecker_Rel.subtype_nosmt en
+                            (FStar_Pervasives_Native.fst b).FStar_Syntax_Syntax.sort
+                            uu____13561) bs2
+                      in
+                   let haseq_bs =
+                     FStar_List.fold_left
+                       (fun t3  ->
+                          fun b  ->
+                            let uu____13573 =
+                              let uu____13574 =
+                                let uu____13575 =
+                                  let uu____13576 =
+                                    let uu____13577 =
+                                      FStar_Syntax_Syntax.bv_to_name
+                                        (FStar_Pervasives_Native.fst b)
+                                       in
+                                    FStar_Syntax_Syntax.as_arg uu____13577
+                                     in
+                                  [uu____13576]  in
+                                FStar_Syntax_Syntax.mk_Tm_app
+                                  FStar_Syntax_Util.t_haseq uu____13575
+                                 in
+                              uu____13574 FStar_Pervasives_Native.None
+                                FStar_Range.dummyRange
+                               in
+                            FStar_Syntax_Util.mk_conj t3 uu____13573)
+                       FStar_Syntax_Util.t_true bs'
+                      in
+                   let fml = FStar_Syntax_Util.mk_imp haseq_bs haseq_ind  in
+                   let fml1 =
+                     let uu___126_13584 = fml  in
+                     let uu____13585 =
+                       let uu____13586 =
+                         let uu____13593 =
+                           let uu____13594 =
+                             let uu____13605 =
+                               let uu____13608 =
+                                 FStar_Syntax_Syntax.as_arg haseq_ind  in
+                               [uu____13608]  in
+                             [uu____13605]  in
+                           FStar_Syntax_Syntax.Meta_pattern uu____13594  in
+                         (fml, uu____13593)  in
+                       FStar_Syntax_Syntax.Tm_meta uu____13586  in
+                     {
+                       FStar_Syntax_Syntax.n = uu____13585;
+                       FStar_Syntax_Syntax.pos =
+                         (uu___126_13584.FStar_Syntax_Syntax.pos);
+                       FStar_Syntax_Syntax.vars =
+                         (uu___126_13584.FStar_Syntax_Syntax.vars)
+                     }  in
+                   let fml2 =
+                     FStar_List.fold_right
+                       (fun b  ->
+                          fun t3  ->
+                            let uu____13621 =
+                              let uu____13622 =
+                                let uu____13623 =
+                                  let uu____13624 =
+                                    let uu____13625 =
+                                      FStar_Syntax_Subst.close [b] t3  in
+                                    FStar_Syntax_Util.abs
+                                      [((FStar_Pervasives_Native.fst b),
+                                         FStar_Pervasives_Native.None)]
+                                      uu____13625
+                                      FStar_Pervasives_Native.None
+                                     in
+                                  FStar_Syntax_Syntax.as_arg uu____13624  in
+                                [uu____13623]  in
+                              FStar_Syntax_Syntax.mk_Tm_app
+                                FStar_Syntax_Util.tforall uu____13622
+                               in
+                            uu____13621 FStar_Pervasives_Native.None
+                              FStar_Range.dummyRange) ibs1 fml1
+                      in
+                   let fml3 =
+                     FStar_List.fold_right
+                       (fun b  ->
+                          fun t3  ->
+                            let uu____13650 =
+                              let uu____13651 =
+                                let uu____13652 =
+                                  let uu____13653 =
+                                    let uu____13654 =
+                                      FStar_Syntax_Subst.close [b] t3  in
+                                    FStar_Syntax_Util.abs
+                                      [((FStar_Pervasives_Native.fst b),
+                                         FStar_Pervasives_Native.None)]
+                                      uu____13654
+                                      FStar_Pervasives_Native.None
+                                     in
+                                  FStar_Syntax_Syntax.as_arg uu____13653  in
+                                [uu____13652]  in
+                              FStar_Syntax_Syntax.mk_Tm_app
+                                FStar_Syntax_Util.tforall uu____13651
+                               in
+                            uu____13650 FStar_Pervasives_Native.None
+                              FStar_Range.dummyRange) bs2 fml2
+                      in
+                   let axiom_lid =
+                     FStar_Ident.lid_of_ids
+                       (FStar_List.append lid.FStar_Ident.ns
+                          [FStar_Ident.id_of_text
+                             (Prims.strcat
+                                (lid.FStar_Ident.ident).FStar_Ident.idText
+                                "_haseq")])
+                      in
+                   (axiom_lid, fml3, bs2, ibs1, haseq_bs))
+  
