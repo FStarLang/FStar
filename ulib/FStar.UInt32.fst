@@ -18,10 +18,6 @@ open FStar.Mul
 abstract type t :Type0 =
   | Mk: v:uint_t n -> t
 
-let lemma_hasEq_t () :Lemma (hasEq t) = ()
-
-assume HasEq_t :hasEq t
-
 abstract
 let v (x:t) : Tot (uint_t n) = x.v
 
