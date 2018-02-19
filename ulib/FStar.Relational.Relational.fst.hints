@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a387712811fa9c11d78faeb9b70a87dd"
+      "6d63029c7736f0f843e02b9c6abc56c0"
     ],
     [
       "FStar.Relational.Relational.tl_rel",
@@ -21,25 +21,7 @@
         "refinement_interpretation_FStar.Relational.Relational_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
       ],
       0,
-      "e0a5973d5dbbd1b7b8c8b87c8b5d0625"
-    ],
-    [
-      "FStar.Relational.Relational.pair_rel",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "03e532511a761f9b94d1f3fcda039f58"
-    ],
-    [
-      "FStar.Relational.Relational.triple_rel",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6b6070c12e7f0b3040fe513ba8e0fae1"
+      "ed52f570a1d6a7b1caa2e5488f4e3151"
     ],
     [
       "FStar.Relational.Relational.eq_rel",
@@ -48,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "07475abb5bf029cb653772492d249918"
+      "89d56d6b27f661b3b6a1d683711cac72"
     ]
   ]
 ]

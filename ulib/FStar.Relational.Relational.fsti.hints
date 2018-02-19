@@ -1,0 +1,36 @@
+[
+  "\u0018àújß)ÃRè3\u0001;d\u0011%\u0001",
+  [
+    [
+      "FStar.Relational.Relational.rel",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dd0acf756fb1de6d4901d49f5dc1289d"
+    ],
+    [
+      "FStar.Relational.Relational.tl_rel",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Relational.Relational_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
+      ],
+      0,
+      "17b497a6069aff3b5f46fc80a2de1620"
+    ],
+    [
+      "FStar.Relational.Relational.eq_rel",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "a58f64e231910dc5b6b4536d3d4dbd24"
+    ]
+  ]
+]

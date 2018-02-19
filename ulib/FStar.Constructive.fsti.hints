@@ -1,0 +1,165 @@
+[
+  "Û\u000f\u0002ù\u000b\u0015G\u0019 —m\u0007'\u0010+≈",
+  [
+    [
+      "FStar.Constructive.cand",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "94e046fb48cc273ee29bd2a56abc5753"
+    ],
+    [
+      "FStar.Constructive.cor",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "625b72079c94b9fffa5815b02541026c"
+    ],
+    [
+      "FStar.Constructive.uu___is_IntroL",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "95245ee59abf6fd490ddcb83e2cc17a2"
+    ],
+    [
+      "FStar.Constructive.__proj__IntroL__item__h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Constructive.IntroL",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Constructive_Tm_refine_5f96298b0b74547bf135efed6725faec"
+      ],
+      0,
+      "25e08ad833969da70efb6aac27c9a71a"
+    ],
+    [
+      "FStar.Constructive.uu___is_IntroR",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "610276c510f64a50cf23dfd3f015cd25"
+    ],
+    [
+      "FStar.Constructive.__proj__IntroR__item__h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Constructive.IntroR",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Constructive_Tm_refine_7fbfb42f7ce95e0df3d91787685cfbfc"
+      ],
+      0,
+      "10eb1203c3bb43dc01c5fbada713e330"
+    ],
+    [
+      "FStar.Constructive.__proj__ExIntro__item__h",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.Constructive.ExIntro_x",
+        "projection_inverse_FStar.Constructive.ExIntro_x"
+      ],
+      0,
+      "50adbd5ae3735b15f59871cc867132a8"
+    ],
+    [
+      "FStar.Constructive.eq_ind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
+      0,
+      "c196ddc3b531ee7f93c12a3cc6ed80cd"
+    ],
+    [
+      "FStar.Constructive.ceq_congruence",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
+      0,
+      "6663f86ed74fcf2f88cb54d74ebcab19"
+    ],
+    [
+      "FStar.Constructive.ceq_symm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
+      0,
+      "5138b20c000a96dd590916a5f54c172a"
+    ],
+    [
+      "FStar.Constructive.ceq_trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
+      0,
+      "7bfc880995145a98f3b07454aadb05ca"
+    ],
+    [
+      "FStar.Constructive.cfalse_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.cfalse"
+      ],
+      0,
+      "19ac39224819ff0468c0af58da82f7c6"
+    ],
+    [
+      "FStar.Constructive.false_elim2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.cfalse"
+      ],
+      0,
+      "5979fa54ac8681119891a7381dd730ff"
+    ],
+    [
+      "FStar.Constructive.false_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_FStar.Constructive_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+      ],
+      0,
+      "b8c1716381098a30a279533b67937473"
+    ]
+  ]
+]

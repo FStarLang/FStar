@@ -1,0 +1,36 @@
+[
+  "X?k$f¢¤\u0003»‚djs\\{–",
+  [
+    [
+      "FStar.Tactics.Effect.__bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Effect_interpretation_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.Tactics.Effect.__tac",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "typing_FStar.Tactics.Types.incr_depth"
+      ],
+      0,
+      "ece3083be5a5590a95a7188fd0791cb1"
+    ],
+    [
+      "FStar.Tactics.Effect.g_bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "3edc6ec7b948eb0ad7a4ad8d73ad051b"
+    ]
+  ]
+]

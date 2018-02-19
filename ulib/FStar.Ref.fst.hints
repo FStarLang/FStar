@@ -2,40 +2,13 @@
   "‡\u0011þŒðº‚\u0018´ê¦¾\u001aõ„L",
   [
     [
-      "FStar.Ref.sel",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "070177cae6235c25670f5a5eac97b5fa"
-    ],
-    [
-      "FStar.Ref.upd",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6fe96aa45b229952c73712bedcb8e5e9"
-    ],
-    [
-      "FStar.Ref.addr_of",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "840dcf07a7ff621a427f7da9a86b7ef9"
-    ],
-    [
       "FStar.Ref.contains",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "78a2f246e464544c64eb99d4c08ca474"
+      "c47628dd5fe303826fd88ad6c3b296b0"
     ],
     [
       "FStar.Ref.unused_in",
@@ -44,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c69de2c2fb7e052336e171acf85ba813"
+      "bb5314da0c3d20cf76cfc27a4d385cb2"
     ],
     [
       "FStar.Ref.fresh",
@@ -53,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "f06b37485b30f2b5b8543dc4ffd7a297"
+      "432e24d68d391c5a7f7acee9a5a40eea"
     ],
     [
       "FStar.Ref.only",
@@ -65,7 +38,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9733a752fa61d928bbaf95a4f74c268f"
+      "b93dbf11df19348ff9149c92c5c116c1"
     ],
     [
       "FStar.Ref.recall",
@@ -74,7 +47,7 @@
       1,
       [ "@query", "equation_FStar.Ref.contains" ],
       0,
-      "b31c4b901abc2aba979e0a8c7c6c5bb5"
+      "a429f9699572dca1e74eb3a8105bceff"
     ],
     [
       "FStar.Ref.alloc",
@@ -88,7 +61,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1a67db6dd4556b25f31ae7cc67acbf60"
+      "7f676aff0a51a0266ebe64a0a22ae16a"
     ],
     [
       "FStar.Ref.read",
@@ -97,7 +70,7 @@
       1,
       [ "@query", "equation_FStar.Ref.sel" ],
       0,
-      "cf4fecc343b1029c957579ee00ca5977"
+      "d71df1e05df47c2b0735a8a087112927"
     ],
     [
       "FStar.Ref.write",
@@ -117,7 +90,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "79ec565bfe94836270f1179662c660f2"
+      "641538db6fc1796e6e15542bf62d3d32"
     ]
   ]
 ]

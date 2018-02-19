@@ -1,0 +1,94 @@
+[
+  "å\"³pûñ^>ÀËÙ‘U/z\u001a",
+  [
+    [
+      "FStar.ST.gst_witness",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f914adde595b92412e31f6f5874c3590"
+    ],
+    [
+      "FStar.ST.gst_recall",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c399c95b53477172436451584b115b74"
+    ],
+    [
+      "FStar.ST.lemma_functoriality",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a5a0a7e7172f1886158995314cddcbdb"
+    ],
+    [
+      "FStar.ST.mref",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "equation_FStar.ST.contains_pred", "equation_FStar.ST.heap_rel",
+        "equation_FStar.ST.stable",
+        "token_correspondence_FStar.ST.contains_pred"
+      ],
+      0,
+      "9c3ee6010d49eacce5417d3ee612bd75"
+    ],
+    [
+      "FStar.ST.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "abdf8fc5ec07244f85fa97014fb5a3ea"
+    ],
+    [
+      "FStar.ST.write",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "355776ea4a66b8a40225db38c5e9b079"
+    ],
+    [
+      "FStar.ST.op_Colon_Equals",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "f1ed9eef1e0db82ed92a2daa1e9a90ea"
+    ],
+    [
+      "FStar.ST.modifies_none",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "49e9a11bb89f84f9935d1d075f392f37"
+    ]
+  ]
+]

@@ -1,0 +1,109 @@
+[
+  ".µ,I¶©¼HŽ€Ê\u0002*#Cù",
+  [
+    [
+      "FStar.Pervasives.Native.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fef215797a3de5ca8ab6d01dd024876f"
+    ],
+    [
+      "FStar.Pervasives.Native.uu___is_None",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a29c1fba971d1364c95bb86192a320c5"
+    ],
+    [
+      "FStar.Pervasives.Native.uu___is_Some",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ace80b970be66385a4fae6c5a7431284"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__Some__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
+      ],
+      0,
+      "03e73de26cd5ebbde7b1aa4a068f99f2"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "623cf9a78b4abcf84407e3a2888e976f"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5add08592086dc717ab957cd012240de"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fceb36e52030f6e78a7172dbc213b2a0"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5b0785a81dd83e24224a66b9e4a51f41"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1b349102ae9073e0c882e4f443ec1059"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8b1750d389f6ae2b34d8370c84faa847"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "26763faf0264409537ef619cc56e6a65"
+    ]
+  ]
+]
