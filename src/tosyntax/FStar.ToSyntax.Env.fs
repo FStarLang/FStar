@@ -1024,7 +1024,7 @@ let check_admits env m =
   in
   { m with declarations = m.declarations |> List.map (fun s ->
       match s.sigel with
-      | Sig_declare_typ (lid, _, _) when List.existsb (fun l -> lid_equals l lid) admitted_sig_lids -> BU.print_string "Adding qual\n\n"; { s with sigquals = Assumption::s.sigquals }
+      | Sig_declare_typ (lid, _, _) when List.existsb (fun l -> lid_equals l lid) admitted_sig_lids -> { s with sigquals = Assumption::s.sigquals }
       | _ -> s
     ) }
 
