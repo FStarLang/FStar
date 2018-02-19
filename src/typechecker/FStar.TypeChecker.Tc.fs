@@ -1530,6 +1530,8 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let is_assume = List.contains Assumption in
+  let is_noeq = List.contains Noeq in
+  let is_unopteq = List.contains Unopteq in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
   let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
   let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
@@ -1551,13 +1553,31 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
     ) quals
   in
 
-  let mk_typ_for_abstract_inductive (bs:binders) (t:typ) (r:Range.range) :typ =
-    match bs with
-    | [] -> t
-    | _  ->
-      (match t.n with
-       | Tm_arrow (bs', c ) -> mk (Tm_arrow (bs@bs', c)) None r  //flattening arrows?
-       | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
+  let vals_of_abstract_inductive (s:sigelt) :sigelts =
+    let mk_typ_for_abstract_inductive (bs:binders) (t:typ) (r:Range.range) :typ =
+      match bs with
+      | [] -> t
+      | _  ->
+        (match t.n with
+         | Tm_arrow (bs', c ) -> mk (Tm_arrow (bs@bs', c)) None r  //flattening arrows?
+         | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
+    in
+
+    match s.sigel with
+    | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
+      let s1 = { s with sigel = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng);
+                        sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
+      in
+      
+      if not (is_noeq s.sigquals || is_unopteq s.sigquals) then    
+        let usubst, uvs = SS.univ_var_opening uvs in
+        let env = Env.push_univ_vars env uvs in
+        let axiom_lid, fml, _, _, _ = TcUtil.get_optimized_haseq_axiom env s usubst uvs in
+        let uvs, fml = TcUtil.generalize_universes env fml in 
+        let s2 = { s with sigel = Sig_assume (axiom_lid, uvs, fml); sigquals = Assumption::(filter_out_abstract s.sigquals) } in
+        s1::[s2]
+      else [s1]
+    | _ -> failwith "Impossible!"
   in
 
   let val_of_lb (s:sigelt) (lid:lident) ((uvs, c_or_t): univ_names * either<comp,typ>) :sigelt =
@@ -1626,10 +1646,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
         List.fold_left (fun sigelts s -> 
           match s.sigel with
-          | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
-            let s' = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng) in  //we need to make an Tm_arrow to account for inductive type parameters
-            //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
-            ({ s with sigel = s'; sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) })::sigelts  //filter out the abstract qualifier
+          | Sig_inductive_typ (_, _, _, _, _, _) -> (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons

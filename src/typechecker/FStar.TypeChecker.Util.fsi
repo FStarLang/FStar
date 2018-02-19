@@ -94,5 +94,7 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit
 
-//elaborate discriminator and projectors
-val mk_data_operations : list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>
+//inductive types utilities
+
+val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
+val get_optimized_haseq_axiom: env -> sigelt -> list<subst_elt> -> univ_names -> (lident * term * binders * binders * term)
