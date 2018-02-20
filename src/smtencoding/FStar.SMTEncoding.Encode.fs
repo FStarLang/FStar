@@ -2755,14 +2755,14 @@ let encode_sig tcenv se =
 let encode_modul tcenv modul =
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Env.debug tcenv Options.Low
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
+    then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
     let env = get_env modul.name tcenv in
     let encode_signature (env:env_t) (ses:sigelts) =
         ses |> List.fold_left (fun (g, env) se ->
           let g', env = encode_top_level_facts env se in
           g@g', env) ([], env)
     in
-    let decls, env = encode_signature ({env with warn=false}) modul.declarations in
+    let decls, env = encode_signature ({env with warn=false}) modul.exports in
     let caption decls =
     if Options.log_queries()
     then let msg = "Externals for " ^ name in

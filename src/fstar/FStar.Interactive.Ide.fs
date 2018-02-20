@@ -1175,7 +1175,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     fst (FStar.ToSyntax.ToSyntax.decls_to_sigelts decls env.dsenv) in
 
   let typecheck tcenv decls =
-    let ses, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+    let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
   run_and_rewind st (fun st ->
@@ -1396,7 +1396,8 @@ let interactive_mode' (filename: string): unit =
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
-      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) false (fun () -> go init_st)  //TODO: AR: is this false flag OK??
+      //passing false for using_or_checking_extracted_interfaces, since --use_checked_interface is not allowed in interactive mode, and this is for the main file (not a dependency)
+      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) false (fun () -> go init_st)
     else
       go init_st in
   exit exit_code

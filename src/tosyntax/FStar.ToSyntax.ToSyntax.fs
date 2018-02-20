@@ -2546,6 +2546,7 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
   let modul = {
     name = mname;
     declarations = sigelts;
+    exports=[];
     is_interface=intf
   } in
   env, modul, pop_when_done
@@ -2672,6 +2673,6 @@ let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:S
       let en = List.fold_left
                     push_sigelt
                     (Env.set_current_module en m.name)
-                    m.declarations in
+                    m.exports in
       let env = Env.finish en m in
       (), (if pop_when_done then export_interface m.name env else env)
