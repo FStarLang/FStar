@@ -1120,7 +1120,7 @@ let binding_of_lb (x:lbname) t = match x with
 let push_let_binding env lb ts =
     push_local_binding env (binding_of_lb lb ts)
 let push_module env (m:modul) =
-    add_sigelts env m.declarations;
+    add_sigelts env m.exports;
     {env with
       modules=m::env.modules;
       gamma=[];
@@ -1152,7 +1152,7 @@ let finish_module =
         then env.gamma |> List.collect (function
                 | Binding_sig (_, se) -> [se]
                 | _ -> []) |> List.rev
-        else m.declarations  in
+        else m.exports  in
       add_sigelts env sigs;
       {env with
         curmodule=empty_lid;

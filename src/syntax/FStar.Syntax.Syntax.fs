@@ -381,6 +381,7 @@ type sigelts = list<sigelt>
 type modul = {
   name: lident;
   declarations: sigelts;
+  exports: sigelts;
   is_interface:bool
 }
 let mod_name (m: modul) = m.name

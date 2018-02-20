@@ -158,8 +158,8 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     Option.isSome (implementation_of file_system_map key)
 
 (*
+ * If --check_interface is set, we check extracted fsti
  * If --use_extracted_interfaces is set, then we load/check extracted depepndency.fsti
- * If --check_interface is set, we check extracted command_line_file.fsti
  *
  * The definition of dependency in this function is a file not passed on the command line
  * We must already make sure that there was only one command line file in case one of these flags is set
@@ -978,8 +978,8 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                       norm_f
                       files;
           
-          //a.fsti.checked: a.fst b.fsti.checked (or b.fst.checked if --use_extracted_interfaces is not set
-          if is_implementation f && not (has_interface file_system_map (lowercase_module_name f))
+          //emit rule for extracted interface: a.fsti.checked: a.fst b.fsti.checked
+          if Options.use_extracted_interfaces () && is_implementation f && not (has_interface file_system_map (lowercase_module_name f))
           then Util.print3 "%s: %s \\\n\t%s\n\n"
                            (cache_file (interface_filename f))
                            norm_f
