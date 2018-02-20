@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "486881bc52073b9d0c0ee5542c776e8f"
+      "a83d8e3633d89e9574fd6149c1d9ef67"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "ebb6ecf5204160384f11398011e3d854"
+      "227067483fc488e680a752a521058156"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "046958a0891445263e20716bddd8d5e0"
+      "2c2a037dd49e6a36396fc93df072a576"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "911a1f60495d83fd65f5001fd7af5aea"
+      "9a100d2827bdce56a52479a1fc87a483"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "e9aaaffb9700bddff3331b8872e5abac"
+      "995a6e5fb0aff42f645c8516e4195c8f"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "ab851eebe6c3500ba2f458378b64d7fe"
+      "2ba090eecfa7af46f8bf4493ec621a56"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "0ec126c87c357c3549adade282a311b1"
+      "f41fb4b24fb6fe541ca4e674d719cc4b"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "0873c4c6cdc3f7f248dd7bf3bc3b95a3"
+      "7df313835f0d924e7c91596061a058da"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "f79d6910fbea0bcb46672125c6c84263"
+      "0b30031aed6669a7d9cfb390c776d628"
     ]
   ]
 ]

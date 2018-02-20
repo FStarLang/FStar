@@ -1,5 +1,5 @@
 [
-  "У‘Г¬\u001dЬdфъJТ¬‘х­{",
+  "\u0005§УЎ|\\\u0007·\u000b%<4…Ўїа",
   [
     [
       "Prims.Ghost",
@@ -115,6 +115,33 @@
       [ "@query", "equation_Prims.normalize" ],
       0,
       "eac939e65c51eaa26448ff8fb8622b98"
+    ],
+    [
+      "Prims.normalize_term_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize_term" ],
+      0,
+      "d6c6e50e4c07442772d05063d0a964e9"
+    ],
+    [
+      "Prims.normalize_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize" ],
+      0,
+      "2b3c715e01623f330d2799c45d590a04"
+    ],
+    [
+      "Prims.norm_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.norm" ],
+      0,
+      "8882eb3c7c3241fccf6ca316bdaf8638"
     ]
   ]
 ]
