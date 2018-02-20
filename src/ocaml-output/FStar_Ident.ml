@@ -59,14 +59,14 @@ let (gen : FStar_Range.range -> ident) =
        let uu____100 = FStar_ST.op_Bang x  in
        uu____100 + (Prims.parse_int "1")  in
      FStar_ST.op_Colon_Equals x uu____99);
-    (let uu____287 =
-       let uu____292 =
-         let uu____293 =
-           let uu____294 = FStar_ST.op_Bang x  in
-           Prims.string_of_int uu____294  in
-         Prims.strcat reserved_prefix uu____293  in
-       (uu____292, r)  in
-     mk_ident uu____287)
+    (let uu____183 =
+       let uu____188 =
+         let uu____189 =
+           let uu____190 = FStar_ST.op_Bang x  in
+           Prims.string_of_int uu____190  in
+         Prims.strcat reserved_prefix uu____189  in
+       (uu____188, r)  in
+     mk_ident uu____183)
   
 let (id_of_text : Prims.string -> ident) =
   fun str  -> mk_ident (str, FStar_Range.dummyRange) 
@@ -87,8 +87,8 @@ let (lid_of_ns_and_id : ident Prims.list -> ident -> lident) =
   fun ns  ->
     fun id1  ->
       let nsstr =
-        let uu____439 = FStar_List.map text_of_id ns  in
-        FStar_All.pipe_right uu____439 text_of_path  in
+        let uu____283 = FStar_List.map text_of_id ns  in
+        FStar_All.pipe_right uu____283 text_of_path  in
       {
         ns;
         ident = id1;
@@ -101,13 +101,13 @@ let (lid_of_ns_and_id : ident Prims.list -> ident -> lident) =
   
 let (lid_of_ids : ident Prims.list -> lident) =
   fun ids  ->
-    let uu____452 = FStar_Util.prefix ids  in
-    match uu____452 with | (ns,id1) -> lid_of_ns_and_id ns id1
+    let uu____296 = FStar_Util.prefix ids  in
+    match uu____296 with | (ns,id1) -> lid_of_ns_and_id ns id1
   
 let (lid_of_str : Prims.string -> lident) =
   fun str  ->
-    let uu____468 = FStar_List.map id_of_text (FStar_Util.split str ".")  in
-    lid_of_ids uu____468
+    let uu____312 = FStar_List.map id_of_text (FStar_Util.split str ".")  in
+    lid_of_ids uu____312
   
 let (lid_of_path : Prims.string Prims.list -> FStar_Range.range -> lident) =
   fun path  ->
@@ -125,14 +125,14 @@ let (range_of_lid : lid -> FStar_Range.range) =
 let (set_lid_range : lident -> FStar_Range.range -> lident) =
   fun l  ->
     fun r  ->
-      let uu___23_510 = l  in
+      let uu___23_354 = l  in
       {
-        ns = (uu___23_510.ns);
+        ns = (uu___23_354.ns);
         ident =
-          (let uu___24_512 = l.ident  in
-           { idText = (uu___24_512.idText); idRange = r });
-        nsstr = (uu___23_510.nsstr);
-        str = (uu___23_510.str)
+          (let uu___24_356 = l.ident  in
+           { idText = (uu___24_356.idText); idRange = r });
+        nsstr = (uu___23_354.nsstr);
+        str = (uu___23_354.str)
       }
   
 let (lid_add_suffix : lident -> Prims.string -> lident) =
@@ -143,10 +143,10 @@ let (lid_add_suffix : lident -> Prims.string -> lident) =
   
 let (ml_path_of_lid : lident -> Prims.string) =
   fun lid  ->
-    let uu____525 =
-      let uu____528 = path_of_ns lid.ns  in
-      FStar_List.append uu____528 [text_of_id lid.ident]  in
-    FStar_All.pipe_left (FStar_String.concat "_") uu____525
+    let uu____369 =
+      let uu____372 = path_of_ns lid.ns  in
+      FStar_List.append uu____372 [text_of_id lid.ident]  in
+    FStar_All.pipe_left (FStar_String.concat "_") uu____369
   
 let (string_of_lid : lident -> Prims.string) =
-  fun lid  -> let uu____536 = path_of_lid lid  in text_of_path uu____536 
+  fun lid  -> let uu____380 = path_of_lid lid  in text_of_path uu____380 
