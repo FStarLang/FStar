@@ -56,6 +56,10 @@ let initialize_hints_db src_filename checking_or_using_extracted_interface forma
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
+         let src_filename_for_printing =
+           if checking_or_using_extracted_interface then Parser.Dep.interface_filename norm_src_filename
+           else norm_src_filename
+         in
          let val_filename = match Options.hint_file() with
                             | Some fn -> fn
                             | None -> (format_hints_file_name norm_src_filename checking_or_using_extracted_interface) in
@@ -64,7 +68,7 @@ let initialize_hints_db src_filename checking_or_using_extracted_interface forma
                 let expected_digest = BU.digest_of_file norm_src_filename in
                 if Options.hint_info()
                 then begin
-                    BU.print3 "(%s) digest is %s%s.\n" norm_src_filename
+                    BU.print3 "(%s) digest is %s%s.\n" src_filename_for_printing
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
@@ -75,7 +79,7 @@ let initialize_hints_db src_filename checking_or_using_extracted_interface forma
                 replaying_hints := Some hints.hints
             | None ->
                 if Options.hint_info()
-                then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
+                then BU.print1 "(%s) Unable to read hint file.\n" src_filename_for_printing
          end
 
 let finalize_hints_db src_filename checking_or_using_extracted_interface : unit =

@@ -1538,7 +1538,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   let add_assume_if_needed quals = if List.contains Assumption quals then quals else Assumption::quals in
   let is_unfold_or_inline = List.existsb (fun q -> q = Unfold_for_unification_and_vcgen || q = Inline_for_extraction) in
 
-  //in case we need to drop val, keep let, carry over the types from val
+  //in case we need to drop val, and keep let, we should carry over the types from val
   let val_typs = BU.mk_ref [] in
 
   //we need to filter out projectors and discriminators of abstract inductive datacons, so keep track of such datacons
