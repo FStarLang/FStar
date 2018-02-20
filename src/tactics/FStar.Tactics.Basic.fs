@@ -178,6 +178,7 @@ let fail (msg:string) =
 let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
+let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
 let trytac' (t : tac<'a>) : tac<either<string,'a>> =
     mk_tac (fun ps ->
@@ -550,10 +551,11 @@ let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
                                                             (tts goal.context goal.goal_ty)) (fun _ ->
     if do_unify goal.context typ goal.goal_ty
     then solve goal t
-    else fail3 "%s : %s does not exactly solve the goal %s"
+    else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
                     (tts goal.context t)
                     (tts goal.context typ)
-                    (tts goal.context goal.goal_ty)))))
+                    (tts goal.context goal.goal_ty)
+                    (tts goal.context goal.witness)))))
 
 let t_exact set_expected_typ force_guard tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
