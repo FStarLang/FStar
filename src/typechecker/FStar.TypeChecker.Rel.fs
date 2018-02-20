@@ -2226,6 +2226,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let r = Env.get_range env in
 
     match t1.n, t2.n with
+      | Tm_delayed _, _
+      | _, Tm_delayed _ ->
+        // GM: I imagine there is some reason these terms are always
+        // compressed, since the original code didn't call compress and
+        // it never failed. Adding surely implies a performance hit, so
+        // I didn't do that, but it'd be nice to document the reason
+        // this works (I couldn't figure it out).
+        failwith "Impossible: terms were not compressed"
+
       | Tm_ascribed _, _
       | Tm_meta _, _ ->
         solve_t' env ({problem with lhs=U.unmeta t1}) wl
@@ -2453,8 +2462,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
 
       | Tm_let _, _
-      | Tm_delayed _, _
-      | _, Tm_delayed _
       | _, Tm_let _ ->
          raise_error (Errors.Fatal_UnificationNotWellFormed, BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
                             (Print.tag_of_term t1) (Print.tag_of_term t2)
