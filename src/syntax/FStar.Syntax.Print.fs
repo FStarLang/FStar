@@ -219,6 +219,8 @@ let quals_to_string' quals =
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
+let paren s = "(" ^ s ^ ")"
+
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -354,13 +356,17 @@ and lbs_to_string quals lbs =
     (quals_to_string' quals)
     (if fst lbs then "rec" else "")
     (U.concat_l "\n and " (snd lbs |> List.map (fun lb ->
-                                                    U.format4 "%s %s : %s = %s"
+                                                    U.format5 "%s%s %s : %s = %s"
+                                                            (attrs_to_string lb.lbattrs)
                                                             (lbname_to_string lb.lbname)
                                                             (if (Options.print_universes())
                                                              then "<"^univ_names_to_string lb.lbunivs^">"
                                                              else "")
                                                             (term_to_string lb.lbtyp)
                                                             (lb.lbdef |> term_to_string))))
+and attrs_to_string = function
+    | [] -> ""
+    | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
 and lcomp_to_string lc =
     if Options.print_effect_args () then
@@ -660,9 +666,7 @@ let rec sigelt_to_string (x: sigelt) =
       in
       match x.sigattrs with
       | [] -> basic
-      | _ ->
-        let attrs = x.sigattrs |> List.map term_to_string in
-        U.format2 "[@%s]\n%s" (attrs |> String.concat " ") basic
+      | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

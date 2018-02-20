@@ -438,7 +438,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                       lbunivs=[];
                                                       lbtyp=t;
                                                       lbeff=PC.effect_ML_lid;
-                                                      lbdef=imp}]), []) } in
+                                                      lbdef=imp;
+                                                      lbattrs=[]}]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm

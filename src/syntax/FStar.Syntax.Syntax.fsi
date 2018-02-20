@@ -110,7 +110,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
-    lbdef  :term             //e
+    lbdef  :term;            //e
+    lbattrs:list<attribute>
 }
 and comp_typ = {
   comp_univs:universes;
@@ -212,6 +213,8 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and attribute = term
+
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
 type formula = typ
@@ -247,8 +250,6 @@ type qualifier =
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
-
-type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {

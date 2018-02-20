@@ -360,10 +360,10 @@ and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
     let steps = [N.Weak; N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops; N.Unascribe] in
-    if !tacdbg then
+    if Env.debug proof_state.main_context (Options.Other "TacVerbose") then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
-    if !tacdbg then
+    if Env.debug proof_state.main_context (Options.Other "TacVerbose") then
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
 
     // F* requires more annotations.
@@ -420,7 +420,10 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let ps, w = proofstate_of_goal_ty env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
-    match run tau ps with
+    let res, ms = BU.record_time (fun () -> run tau ps) in
+    if !tacdbg then
+        BU.print1 "Tactic ran in %s milliseconds\n" (string_of_int ms);
+    match res with
     | Success (_, ps) ->
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?

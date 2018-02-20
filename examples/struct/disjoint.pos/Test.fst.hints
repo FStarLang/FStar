@@ -31,7 +31,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "7ed627ea54e4e26d3d54d8954205df06"
+      "e9da09080c0ab1f43bbb07da4d55a74b"
     ],
     [
       "Test.callee",
@@ -52,7 +52,6 @@
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TInt",
         "constructor_distinct_Prims.Cons",
-        "data_typing_intro_FStar.Pointer.Base.TBase@tok",
         "equality_tok_FStar.Pointer.Base.TInt@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pointer.Base.equal_values",
@@ -91,18 +90,19 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_b52713f2b4b5a365f2b89ba5a3ee8f0e",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_66592ff7627159635e1169470bf73db1",
+        "refinement_interpretation_Test_Tm_refine_0096210b23c599384de632b1f3995497",
         "refinement_interpretation_Test_Tm_refine_abc25e0ebc5f7440fde89b32fc79589b",
         "string_typing", "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_tok_FStar.Pointer.Base.TInt@tok"
+        "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "da08255f2a28298e2baa13195026f6c0"
+      "a8c0ce4da22e0137c39a7f684f59f105"
     ],
     [
       "Test.more_struct",
@@ -151,7 +151,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "6208e0ea328edb56116a5e729c4c55f3"
+      "3f2095f28114fdce6c285b44ff1c4011"
     ],
     [
       "Test.caller",
@@ -328,7 +328,7 @@
         "typing_FStar.Set.union", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "362193e4b2079a89bc47db282f4890da"
+      "c798f56c6d10f7df09f09fc32f771538"
     ]
   ]
 ]

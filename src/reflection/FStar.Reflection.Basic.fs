@@ -542,7 +542,7 @@ let pack (tv:term_view) : term =
 
     | Tv_Let (b, t1, t2) ->
         let bv = fst b in
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 in
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] in
         S.mk (Tm_let ((false, [lb]), SS.close [b] t2)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->

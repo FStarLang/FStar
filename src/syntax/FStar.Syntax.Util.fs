@@ -785,14 +785,15 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-let mk_letbinding lbname univ_vars typ eff def =
+let mk_letbinding lbname univ_vars typ eff def lbattrs =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
-     lbdef=def}
+     lbdef=def;
+     lbattrs=lbattrs}
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
+let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
     let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
@@ -803,7 +804,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
     in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
-    mk_letbinding lbname univ_vars typ eff def
+    mk_letbinding lbname univ_vars typ eff def attrs
 
 let open_univ_vars_binders_and_comp uvs binders c =
     match binders with
@@ -896,6 +897,15 @@ let is_fstar_tactics_by_tactic t =
     | Tm_fvar fv -> fv_eq_lid fv PC.by_tactic_lid
     | _ -> false
 
+let is_builtin_tactic md =
+  let path = Ident.path_of_lid md in
+  if List.length(path) > 2 then
+    match fst (List.splitAt 2 path) with
+    | ["FStar"; "Tactics"]
+    | ["FStar"; "Reflection"] -> true
+    | _ -> false
+  else false
+
 (********************************************************************************)
 (*********************** Constructors of common terms  **************************)
 (********************************************************************************)
@@ -929,6 +939,7 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
+let tac_opaque_attr = exp_string "tac_opaque"
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -1324,6 +1335,7 @@ let action_as_lb eff_lid a =
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
       (abs a.action_params a.action_defn None)
+      []
   in
   { sigel = Sig_let((false, [lb]), [a.action_name]);
     sigrng = a.action_defn.pos;

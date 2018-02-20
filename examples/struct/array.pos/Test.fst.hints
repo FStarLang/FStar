@@ -37,7 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "8078b9f68bc32ac35394f6c51cd832e1"
+      "fb2086ea54acd0f526eb5f60022d5b4f"
     ],
     [
       "Test.callee",
@@ -58,7 +58,6 @@
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TInt",
         "constructor_distinct_Prims.Cons",
-        "data_typing_intro_FStar.Pointer.Base.TBase@tok",
         "equality_tok_FStar.Pointer.Base.TInt@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pointer.Base.equal_values",
@@ -97,18 +96,19 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_b52713f2b4b5a365f2b89ba5a3ee8f0e",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_66592ff7627159635e1169470bf73db1",
+        "refinement_interpretation_Test_Tm_refine_0096210b23c599384de632b1f3995497",
         "refinement_interpretation_Test_Tm_refine_abc25e0ebc5f7440fde89b32fc79589b",
         "string_typing", "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_tok_FStar.Pointer.Base.TInt@tok"
+        "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "227f1b1590a2e7dd8e19189d08d8e9ec"
+      "a5401a9706dc12d853ec9b4009112dcc"
     ],
     [
       "Test.caller",
@@ -291,7 +291,7 @@
         "typing_Prims.uu___is_Cons"
       ],
       0,
-      "6d24f5a87d1ae987410f72cf025bcdfe"
+      "2758f8375bf714162726548676a1050e"
     ]
   ]
 ]

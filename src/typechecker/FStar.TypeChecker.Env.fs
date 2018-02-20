@@ -363,7 +363,9 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * option<universes>)> * Range.range)>  =
+type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+
+let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
   let cache t = BU.smap_add (gamma_cache env) lid.str t; Some t in
   let found =
@@ -608,11 +610,11 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
-let lookup_definition delta_levels env lid =
+let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
-  match lookup_qname env lid with
+  match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
       | Sig_let((_, lbs), _) when visible se.sigquals ->
@@ -625,10 +627,16 @@ let lookup_definition delta_levels env lid =
     end
   | _ -> None
 
-let lookup_attrs_of_lid env lid : option<list<attribute>> =
-  match lookup_qname env lid with
+let lookup_definition delta_levels env lid =
+    lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
+
+let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
+  match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigattrs
   | _ -> None
+
+let lookup_attrs_of_lid env lid : option<list<attribute>> =
+  attrs_of_qninfo <| lookup_qname env lid
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
@@ -727,11 +735,14 @@ let is_record env lid =
         BU.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) quals
     | _ -> false
 
-let is_action env lid =
-    match lookup_qname env lid with
+let qninfo_is_action (qninfo : qninfo) =
+    match qninfo with
         | Some (Inr ({ sigel = Sig_let(_, _); sigquals = quals }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) quals
         | _ -> false
+
+let is_action env lid =
+    qninfo_is_action <| lookup_qname env lid
 
 let is_interpreted =
     let interpreted_symbols =

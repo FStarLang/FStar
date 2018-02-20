@@ -310,6 +310,7 @@ type nonTerminalId =
     | NONTERM_list___anonymous_8_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
+    | NONTERM_list_attr_letbinding_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
@@ -337,6 +338,7 @@ type nonTerminalId =
     | NONTERM_inputFragment
     | NONTERM_mainDecl
     | NONTERM_pragma
+    | NONTERM_attribute
     | NONTERM_decoration
     | NONTERM_decl
     | NONTERM_rawDecl
@@ -346,6 +348,7 @@ type nonTerminalId =
     | NONTERM_typeDefinition
     | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
+    | NONTERM_attr_letbinding
     | NONTERM_letbinding
     | NONTERM_newEffect
     | NONTERM_effectRedefinition

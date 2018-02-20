@@ -1754,6 +1754,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbtyp = S.tun;
      lbdef = def;
      lbeff = C.effect_Tot_lid; //this will be recomputed correctly
+     lbattrs = []
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
@@ -1993,7 +1994,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbunivs=uvs;
                     lbtyp=lbtyp;
                     lbeff=C.effect_Tot_lid;
-                    lbdef=SS.close_univ_vars uvs imp
+                    lbdef=SS.close_univ_vars uvs imp;
+                    lbattrs=[]
                 } in
                 let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                              sigquals = quals;
@@ -2077,7 +2079,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbunivs=uvs;
                   lbtyp=lbtyp;
                   lbeff=C.effect_Tot_lid;
-                  lbdef=SS.close_univ_vars uvs imp
+                  lbdef=SS.close_univ_vars uvs imp;
+                  lbattrs=[]
               } in
               let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                            sigquals = quals;

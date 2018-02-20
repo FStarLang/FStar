@@ -1,8 +1,14 @@
 module Canon.Test
+module XX = FStar.Tactics.Canon // load it, to get the symbols for the lemmas
 open FStar.Tactics
-open Canon
 open FStar.Mul
-open FStar.Tactics.Canon // load it, to get the symbols for the lemmas
+open Canon
+
+let check_canon =
+    compiled_canon ();;
+    or_else qed
+            (dump "`canon` left the following goals";;
+             fail "")
 
 assume val x : int
 assume val y : int
