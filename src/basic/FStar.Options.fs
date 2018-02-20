@@ -968,7 +968,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "check_interface",
         Const (mk_bool true),
-        "Verify the extracted interface of the module");
+        "Verify the extracted interface of the module. This flag automatically enables --use_extracted_interfaces also.");
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),

@@ -168,8 +168,8 @@ let check_or_use_extracted_interface all_cmd_line_files fn =
   if is_interface fn then false
   else
     let is_cmd_line_fn = List.contains fn all_cmd_line_files in
-    (Options.use_extracted_interfaces () && (not is_cmd_line_fn)) ||
-    (Options.check_interface () && is_cmd_line_fn)
+    Options.check_interface () ||  //check_interface implies use_extracted_interfaces also
+    (Options.use_extracted_interfaces () && (not is_cmd_line_fn))
 
 (*
  * This function is called by the dependency analysis and main typechecker flow
