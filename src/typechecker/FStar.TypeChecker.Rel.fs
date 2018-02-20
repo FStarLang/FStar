@@ -2455,7 +2455,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_let _, _
       | Tm_delayed _, _
       | _, Tm_delayed _
-      | _, Tm_let _ -> failwith (BU.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
+      | _, Tm_let _ ->
+         raise_error (Errors.Fatal_UnificationNotWellFormed, BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
+                            (Print.tag_of_term t1) (Print.tag_of_term t2)
+                            (Print.term_to_string t1) (Print.term_to_string t2)) t1.pos
 
       | _ -> giveup env "head tag mismatch" orig
 
