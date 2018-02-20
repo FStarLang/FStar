@@ -1,6 +1,8 @@
 open List
 open Lexing
-open Parsetree
+open Migrate_parsetree
+open Migrate_parsetree.Ast_404
+open Migrate_parsetree.Ast_404.Parsetree
 open Location
 open Pprintast
 open Ast_helper
@@ -442,8 +444,10 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 
 (* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) =
+  let migration =
+    Versions.migrate Versions.ocaml_404 Versions.ocaml_current in
   Format.set_formatter_out_channel (open_out_bin path);
-  structure Format.std_formatter m;
+  structure Format.std_formatter (migration.copy_structure m);
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) =
