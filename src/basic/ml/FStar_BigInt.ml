@@ -13,8 +13,8 @@ let abs_big_int = Z.abs
 let add_big_int = Z.add
 let mult_big_int = Z.mul
 let sub_big_int = Z.sub
-let div_big_int = Z.div
-let mod_big_int = Z.rem
+let div_big_int = Z.ediv
+let mod_big_int = Z.erem
 
 let eq_big_int = Z.equal
 let le_big_int = Z.leq
