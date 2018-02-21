@@ -158,7 +158,7 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     Option.isSome (implementation_of file_system_map key)
 
 (*
- * If --check_interface is set, we check extracted fsti
+ * If --check_interface is set, we check extracted fsti of all files in the dependence graph and the one we are verifying
  * If --use_extracted_interfaces is set, then we load/check extracted depepndency.fsti
  *
  * The definition of dependency in this function is a file not passed on the command line
@@ -172,7 +172,7 @@ let check_or_use_extracted_interface all_cmd_line_files fn =
     (Options.use_extracted_interfaces () && (not is_cmd_line_fn))
 
 (*
- * This function is called by the dependency analysis and main typechecker flow
+ * This function is called by the dependency analysis and the main typechecker
  * In the case of dependency analysis, the analysis knows which file is a dependency, and which is not
  *   and so, this function leaves it to the caller to change fn to interface fn if required
  *

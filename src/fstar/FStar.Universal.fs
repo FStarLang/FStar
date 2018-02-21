@@ -180,7 +180,6 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 let load_module_from_cache env fn
     : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
     let cache_file = Dep.cache_file_name (Dep.all_cmd_line_files env.dep_graph) fn in
-    BU.print1 "Loading module from cache: %s\n\n" cache_file;
     let fail tag =
          FStar.Errors.log_issue
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
@@ -195,10 +194,7 @@ let load_module_from_cache env fn
          match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
          | Some digest' ->
            if digest=digest'
-           then begin
-             if Options.dump_module tcmod.name.str then BU.print1 "\n\nLoaded from cache: %s\n\n" (Syntax.Print.modul_to_string tcmod);
-             Some (tcmod, mii)
-           end
+           then Some (tcmod, mii)
            else begin
                 if Options.debug_any()
                 then begin
@@ -225,8 +221,6 @@ let load_module_from_cache env fn
 
 let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name (Parser.Dep.all_cmd_line_files env.dep_graph) fn in
-    BU.print1 "Storing module to cache: %s\n\n" cache_file;
-    if Options.dump_module modul.name.str then BU.print1 "\n\nStoring to cache: %s\n\n" (Syntax.Print.modul_to_string modul);
     let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
     match digest with
     | Some hashes ->
@@ -253,12 +247,11 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
       in
       let tcmod, env =
         let checking_or_using_extracted_interface, fmod, env =
+          //see if we need to check or use extracted interface
           if Parser.Dep.check_or_use_extracted_interface (Dep.all_cmd_line_files env.dep_graph) fn then
-            let _ = BU.print1 "Extracting interface for: %s, will be using it for type checking/caching\n\n" fmod.name.str in
             true, Tc.extract_interface env fmod, { env with is_iface = true }
           else false, fmod, env
         in
-        if checking_or_using_extracted_interface && Options.dump_module fmod.name.str then BU.print1 "Extracted interface: %s\n\n" (Syntax.Print.modul_to_string fmod);
         if (Options.should_verify fmod.name.str //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))

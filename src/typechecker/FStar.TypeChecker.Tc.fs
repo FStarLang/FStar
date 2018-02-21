@@ -1671,7 +1671,6 @@ let finish_partial_modul must_check_exports env modul exports =
   && must_check_exports
   then check_exports env modul exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
-  if Options.dump_module modul.name.str then BU.print1 "\n\nEncoding to SMT: %s\n\n" (Print.modul_to_string modul);
   env.solver.encode_modul env modul;
   env.solver.refresh();
   //interactive mode manages it itself
@@ -1704,17 +1703,15 @@ let tc_modul env modul =
   let modul, non_private_decls, env = tc_partial_modul env modul true in
   finish_partial_modul true env modul non_private_decls
 
-let extract_interface (env:env) (m:modul) :modul =  //env is only used when calling extract_let_rec_annotation, so we don't update it at at all
+let extract_interface (env:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let is_assume = List.contains Assumption in
-  let is_noeq = List.contains Noeq in
-  let is_unopteq = List.contains Unopteq in
+  let is_noeq_or_unopteq = List.existsb (fun q -> q = Noeq || q = Unopteq) in
   let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
   let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
   let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
-  let add_assume_if_needed quals = if List.contains Assumption quals then quals else Assumption::quals in
-  let is_unfold_or_inline = List.existsb (fun q -> q = Unfold_for_unification_and_vcgen || q = Inline_for_extraction) in
+  let add_assume_if_needed quals = if is_assume quals then quals else Assumption::quals in
 
   //in case we need to drop val, and keep let, we should carry over the types from val
   let val_typs = BU.mk_ref [] in
@@ -1747,7 +1744,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
                         sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
       
-      if not (is_noeq s.sigquals || is_unopteq s.sigquals) then    
+      if not (is_noeq_or_unopteq s.sigquals) then  //generate the optimized hasEq axiom for the inductive to add to the interface    
         let usubst, uvs = SS.univ_var_opening uvs in
         let env = Env.push_univ_vars env uvs in
         let axiom_lid, fml, _, _, _ = TcUtil.get_optimized_haseq_axiom env s usubst uvs in
@@ -1759,6 +1756,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
   in
 
   let val_of_lb (s:sigelt) (lid:lident) ((uvs, c_or_t): univ_names * either<comp,typ>) :sigelt =
+    //if it's a comp annotation, extract out just the result type
     let t = if c_or_t |> is_left then c_or_t |> left |> U.comp_result else c_or_t |> right in
     { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals) }
   in
@@ -1782,21 +1780,21 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
         (match (SS.compress lb.lbdef).n with
          | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inl c)  //comp annotation
          | Tm_ascribed (_, (Inl t, _), _) -> lb, Some (lb.lbunivs, Inr t)  //typ annotation
-         | Tm_abs (bs, e, _) ->  //it's an abstraction
+         | Tm_abs (bs, e, _) ->  //it's a lambda
            (match (SS.compress e).n with
             | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has the comp annotation
             | Tm_ascribed (_, (Inl t, _), _) ->
               let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
               lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has t, we add top-level effect
-            | _ -> lb, None)  //can't get the type of the letbinding, so must keep the body
-         | _ -> lb, None)  //can't get the type, so must keep the body
+            | _ -> lb, None)  //can't get the type of the letbinding
+         | _ -> lb, None)  //can't get the type
       | _ -> lb, Some (lb.lbunivs, Inr lb.lbtyp)  //take whatever is annotated
   in
 
   (*
    * When do we keep the body of the letbinding in the interface?
    *  -- if Inr t, and t is not an arrow, then keep the body
-   *  -- let comp = if Inl then c else result type of Inr t (note t is an arrow at this point)
+   *  -- let comp = if Inl then c else result comp of Inr t (note t is an arrow at this point)
    *     -- if comp is Pure or Ghost, and the result type is non-unit, keep the body
    *     -- if comp is a reifiable effect, and the result type is non-unit, keep the body 
    *)
@@ -1847,7 +1845,7 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
       else
         //extract the type annotations from all the letbindings
         let flbs, slbs = lbs in
-        let b, lbs, typs = List.fold_left2 (fun (b, lbs, typs) lb lid ->
+        let b, lbs, typs = List.fold_left2 (fun (b, lbs, typs) lb lid ->  //b accumulates if for some let binding, we were unable to extract the annotation
           let lb, t = extract_lb_annotation lb lid s.sigrng in
           is_some t && b, lb::lbs, t::typs) (true, [], []) slbs lids
         in
@@ -1858,7 +1856,8 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
         let s = { s with sigel = Sig_let ((flbs, lbs), lids) } in
         if not b then
           //keep the bindings as is, except if they are marked abstract or irreducible, in that case error out
-          if is_abstract s.sigquals || is_irreducible s.sigquals then failwith ("Abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str ^ "\n\n")
+          if is_abstract s.sigquals || is_irreducible s.sigquals then
+            Errors.raise_error (Errors.Fatal_IllTyped, "For extracting interfaces, abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str) s.sigrng
           else [ s ]
         else
           //all let binding types were extracted
@@ -1873,8 +1872,8 @@ let extract_interface (env:env) (m:modul) :modul =  //env is only used when call
             let should_keep_defs = List.existsML (fun opt -> should_keep_lbdef (opt |> must |> snd)) typs in
             if should_keep_defs then [ s ]
             else vals
-    | Sig_main t -> failwith "Did not anticipate this would arise"
-    | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]  //should we not permit abstract with assumes anyway?
+    | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
+    | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_new_effect_for_free _
     | Sig_sub_effect _

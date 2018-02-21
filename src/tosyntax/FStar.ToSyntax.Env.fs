@@ -1022,6 +1022,8 @@ let check_admits env m =
       end
       | _ -> lids) []
   in
+  //slap on the Assumption qualifier to module declarations that were admitted
+  //the code above does it just for the sigelts in env
   { m with declarations = m.declarations |> List.map (fun s ->
       match s.sigel with
       | Sig_declare_typ (lid, _, _) when List.existsb (fun l -> lid_equals l lid) admitted_sig_lids -> { s with sigquals = Assumption::s.sigquals }
