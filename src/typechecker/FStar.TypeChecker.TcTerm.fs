@@ -1927,6 +1927,16 @@ and check_inner_let env e =
      | Tm_let((false, [lb]), e2) ->
        let env = {env with top_level=false} in
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
+       let _ =
+        if BU.for_some (U.is_fvar FStar.Parser.Const.inline_let_attr) lb.lbattrs
+        && not (U.is_pure_or_ghost_lcomp c1)
+        then raise_error (Errors.Fatal_ExpectedPureExpression,
+                          BU.format2 "Definitions marked @inline_let are expected to be pure or ghost; \
+                                      got an expression \"%s\" with effect \"%s\""
+                                       (Print.term_to_string e1)
+                                       (Print.lid_to_string c1.eff_name))
+                          e1.pos
+       in
        let x = {BU.left lb.lbname with sort=c1.res_typ} in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in

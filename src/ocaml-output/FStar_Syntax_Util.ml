@@ -1905,6 +1905,7 @@ let (b2t_v : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.b2t_lid 
 let (t_not : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.not_lid 
+let (tac_opaque_attr : FStar_Syntax_Syntax.term) = exp_string "tac_opaque" 
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.term ->

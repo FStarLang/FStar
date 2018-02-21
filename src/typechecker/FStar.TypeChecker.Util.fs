@@ -1226,6 +1226,10 @@ let pure_or_ghost_pre_and_post env comp =
 
          end
 
+let is_reifiable (env:env) (effect_name:lident) :bool =
+  let edecl_opt = Env.effect_decl_opt env effect_name in
+  is_some edecl_opt && (edecl_opt |> must |> (fun (_, quals) -> quals |> List.contains Reifiable))
+
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
 (* and returns the result of reifying t *)
@@ -1940,8 +1944,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
                 S.Discriminator lid ::
-                (if only_decl then [S.Logic] else []) @
-                (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
+                (if only_decl then [S.Logic; S.Assumption] else []) @
+                //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
                 List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
             in
 
@@ -2148,3 +2152,61 @@ let mk_data_operations iquals env tcs se =
     mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
 
   | _ -> []
+
+//get the optimized hasEq axiom for this inductive
+//the caller is supposed to open the universes, and pass along the universe substitution and universe names
+//returns -- lid of the hasEq axiom
+//        -- the hasEq axiom for the inductive
+//        -- opened parameter binders
+//        -- opened index binders
+//        -- conjunction of hasEq of the binders
+let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:univ_names) :(lident * term * binders * binders * term) =
+  let lid, bs, t =
+    match ty.sigel with
+    | Sig_inductive_typ (lid, _, bs, t, _, _) -> lid, bs, t
+    | _                                       -> failwith "Impossible!"
+  in
+
+  //apply usubt to bs
+  let bs = SS.subst_binders usubst bs in
+  //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
+  let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
+  //open t with binders bs
+  let bs, t = SS.open_term bs t in
+  //get the index binders, if any
+  let ibs =
+    match (SS.compress t).n with
+    | Tm_arrow (ibs, _) -> ibs
+    | _                 -> []
+  in
+  //open the ibs binders
+  let ibs = SS.open_binders ibs in
+  //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
+  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+  //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
+  //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
+  //haseq of ind
+  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
+  //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
+  //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
+  let bs' = List.filter (fun b ->
+    Rel.subtype_nosmt en (fst b).sort  (fst (U.type_u ()))
+  ) bs in
+  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
+  //implication
+  let fml = U.mk_imp haseq_bs haseq_ind in
+  //attach pattern -- is this the right place ?
+  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+  //fold right with ibs, close and add a forall b
+  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
+  
+  //fold right with bs, close and add a forall b
+  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
+
+  let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
+
+  axiom_lid, fml, bs, ibs, haseq_bs

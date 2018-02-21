@@ -3573,7 +3573,7 @@ let (interactive_mode' : Prims.string -> Prims.unit) =
          let uu____8337 =
            let uu____8338 = FStar_Options.file_list ()  in
            FStar_List.hd uu____8338  in
-         FStar_SMTEncoding_Solver.with_hints_db uu____8337
+         FStar_SMTEncoding_Solver.with_hints_db uu____8337 false
            (fun uu____8342  -> go init_st)
        else go init_st  in
      FStar_All.exit exit_code)

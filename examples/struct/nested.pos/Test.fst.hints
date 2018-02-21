@@ -57,7 +57,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt.fits"
       ],
       0,
-      "e103c7461d15409da7a42b4912d5b954"
+      "7ba221435c7a54327f3911e7cfddd525"
     ],
     [
       "Test.ty",
@@ -119,7 +119,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt.fits"
       ],
       0,
-      "e77c70c54d02014b3492e577dc4c34ae"
+      "16c7531d429588e88f7bb9238ba789b3"
     ],
     [
       "Test.f",
@@ -142,7 +142,6 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
         "assumption_Prims.HasEq_string", "b2t_def", "bool_inversion",
         "bool_typing", "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TUInt32",
@@ -186,6 +185,7 @@
         "function_token_typing_FStar.Monotonic.Heap.emp",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
+        "function_token_typing_FStar.Monotonic.HyperHeap.root",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.string",
@@ -270,7 +270,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "a55e2ef2e768bb945a4ee90d3d48e08d"
+      "7c98650da817ff9f81de5aac54279f8e"
     ]
   ]
 ]

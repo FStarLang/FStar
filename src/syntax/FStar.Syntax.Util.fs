@@ -939,6 +939,7 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
+let tac_opaque_attr = exp_string "tac_opaque"
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
