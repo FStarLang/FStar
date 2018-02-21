@@ -18,8 +18,8 @@ let abs_big_int = Z.abs_big_int
 let add_big_int = Z.add_big_int
 let mult_big_int = Z.mult_big_int
 let sub_big_int = Z.sub_big_int
-let div_big_int = Z.div_big_int
-let mod_big_int = Z.mod_big_int
+let div_big_int x y = fst (Z.quomod_big_int x y)
+let mod_big_int x y = snd (Z.quomod_big_int x y)
 
 let eq_big_int = Z.eq_big_int
 let le_big_int = Z.le_big_int

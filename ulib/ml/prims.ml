@@ -4,12 +4,12 @@ type nonzero  = int
 let ( + )     = Big_int_Z.add_big_int
 let ( - )     = Big_int_Z.sub_big_int
 let ( * )     = Big_int_Z.mult_big_int
-let ( / )     = Big_int_Z.div_big_int
+let ( / ) x y = fst (Big_int_Z.quomod_big_int x y)
 let ( <= )    = Big_int_Z.le_big_int
 let ( >= )    = Big_int_Z.ge_big_int
 let ( < )     = Big_int_Z.lt_big_int
 let ( > )     = Big_int_Z.gt_big_int
-let ( mod )   = Big_int_Z.mod_big_int
+let ( mod ) x y = snd (Big_int_Z.quomod_big_int x y)
 let ( ~- )    = Big_int_Z.minus_big_int
 let abs       = Big_int_Z.abs_big_int
 let parse_int = Big_int_Z.big_int_of_string
