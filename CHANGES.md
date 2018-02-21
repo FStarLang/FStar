@@ -11,6 +11,41 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Syntax
+
+* The syntax of type annotations on binders has changed to eliminate a
+  parsing ambiguity. The annotation on a binder cannot itself begin
+  with a binder. For example, all of the following previously
+  accepted forms are now forbidden:
+
+  ```
+    let g0 (f:x:a -> b) = ()
+    let g1 (f:x:int{x > 0}) = ()
+    let g2 (a b : x:int{x> 0}) = ()
+   ```
+
+  Instead, you must write:
+
+
+  ```
+    let g0 (f: (x:a -> b)) = ()
+    let g1 (f: (x:int{x > 0})) = ()
+    let g2 (a b : (x:int{x> 0})) = ()
+   ```
+
+  In the second case, this version is also supported and is preferred:
+   
+  ```
+    let g1 (f:int{f > 0}) = ()
+  ```
+
+  See the following diffs for some of the changes that were made to
+  existing code:
+  
+  https://github.com/FStarLang/FStar/commit/6bcaedef6d91726540e8969c5f7a6a08ee21b73c
+  https://github.com/FStarLang/FStar/commit/03a7a1be23a904807fa4c92ee006ab9c738375dc
+  https://github.com/FStarLang/FStar/commit/442cf7e4a99acb53fc653ebeaa91306c12c69969
+
 ## Basic type-checking and inference
 
 * A revision to implicit generalization of types
