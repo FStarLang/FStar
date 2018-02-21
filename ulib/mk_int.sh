@@ -6,7 +6,7 @@ for i in 8 16 31 32 63 64 128; do
 module FStar.Int$i
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = $i
+unfold let n = $i
 
 EOF
   cat FStar.IntN.fstp >> $f
@@ -23,13 +23,13 @@ EOF
   fi
 done
 
-for i in 8 16 31 32 63 64 128; do
+for i in 8 16 31 32 63 64; do
   f=FStar.UInt$i.fst
   cat > $f <<EOF
 module FStar.UInt$i
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = $i
+unfold let n = $i
 
 EOF
   cat FStar.UIntN.fstp >> $f

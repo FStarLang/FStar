@@ -1,0 +1,42 @@
+[
+  "\"–<Ù(áo“\u0016\u0010bC$æ",
+  [
+    [
+      "PatternMatching.fetch_eq_side",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "24adedf77f6bd65f93b6c0e57801e1de"
+    ],
+    [
+      "PatternMatching.fetch_eq_side",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "8cd02b061579492fedfdd10ebe233a5e"
+    ],
+    [
+      "PatternMatching.fetch_eq_side",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "af7a096c71cd64a69f783bc57caafce4"
+    ]
+  ]
+]

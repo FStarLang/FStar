@@ -1,1 +1,66 @@
-[ "p-,ê\u0007ˇ˚ \rw\u007fı9T\u0001ç", [] ]
+[
+  "‘g/ÅW!\u0010‡P®”rKmQ!",
+  [
+    [
+      "EtM.Plain.plain",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "36175e44cf59ea01c4b13dfa1f43f299"
+    ],
+    [
+      "EtM.Plain.reveal_hide",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide", "equation_EtM.Plain.reveal" ],
+      0,
+      "c7fb187866f3326d2e5c616ee614aa68"
+    ],
+    [
+      "EtM.Plain.hide_reveal",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide", "equation_EtM.Plain.reveal" ],
+      0,
+      "7864a8afcd9ebf3b0ad5c256b0bd5143"
+    ],
+    [
+      "EtM.Plain.repr",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.reveal" ],
+      0,
+      "ec269c3517ce1efaed73d9853370bbfa"
+    ],
+    [
+      "EtM.Plain.coerce",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide" ],
+      0,
+      "4055977b5d1ae92cc920119a13aba208"
+    ],
+    [
+      "EtM.Plain.length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_EtM.Plain.reveal",
+        "equation_FStar.UInt32.n", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "9afb5dd66ef21e417bf3e4166642671b"
+    ]
+  ]
+]

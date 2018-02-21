@@ -1,0 +1,68 @@
+[
+  "Œt\u007f'Ÿ\u0014\u0014‡„˜ÎqoçÙ\u0013",
+  [
+    [
+      "Unit1.TopLevelPats.uu___12",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Unit1.TopLevelPats.uu___11",
+        "equation_Unit1.TopLevelPats.x",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "0328f0ef98d53ea4d4637058db4abed5"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___13",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Unit1.TopLevelPats.uu___11",
+        "equation_Unit1.TopLevelPats.y",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "5fa896d7935820d2d029781cb34baca2"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___15",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___11",
+        "equation_Unit1.TopLevelPats.uu___14",
+        "equation_Unit1.TopLevelPats.z",
+        "function_token_typing_Unit1.TopLevelPats.z", "int_inversion",
+        "primitive_Prims.op_Division", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "88ff7ea919468dffcabed3fa1fd2517f"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___16",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___11",
+        "equation_Unit1.TopLevelPats.uu___14",
+        "equation_Unit1.TopLevelPats.w",
+        "function_token_typing_Unit1.TopLevelPats.w", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "b1612a06b1847592d90fb9658e398f9a"
+    ]
+  ]
+]

@@ -1,0 +1,3 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Minimal\n","line":1,"column":0}}
+{"query-id":"2","query":"pop","args":{"dummy":null}}
+{"query-id":"3","query":"lookup","args":{"symbol":"hello","requested-info":["type","documentation"],"location":{"filename":"<input>","line":2,"column":4}}}

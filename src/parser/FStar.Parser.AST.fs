@@ -62,7 +62,7 @@ type term' =
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of let_qualifier * list<(pattern * term)> * term
+  | Let       of let_qualifier * list<(option<attributes_> * (pattern * term))> * term
   | LetOpen   of lid * term
   | Seq       of term * term
   | Bind      of ident * term * term
@@ -87,6 +87,8 @@ type term' =
   | Attributes of list<term>   (* attributes decorating a term *)
 
 and term = {tm:term'; range:range; level:level}
+
+and attributes_ = list<term>
 
 and binder' =
   | Variable of ident
@@ -156,7 +158,6 @@ type qualifier =
 
 type qualifiers = list<qualifier>
 
-type attributes_ = list<term>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
@@ -210,20 +211,22 @@ and effect_decl =
 type modul =
   | Module of lid * list<decl>
   | Interface of lid * list<decl> * bool (* flag to mark admitted interfaces *)
-type file = list<modul>
+type file = modul
 type inputFragment = either<file,list<decl>>
+
+let decl_drange decl = decl.drange
 
 (********************************************************************************)
 let check_id id =
     let first_char = String.substring id.idText 0 1 in
     if String.lowercase first_char = first_char
     then ()
-    else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
+    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
   | [] -> None
-  | _ -> raise (Error (Util.format1 "At most one %s is allowed on declarations" s, r))
+  | _ -> raise_error (Fatal_MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
 
 let mk_decl d r decorations =
   let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
@@ -292,14 +295,14 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty_lid, singleton_lid, union_lid =
-      C.tset_empty, C.tset_singleton, C.tset_union in
+  let empty_lid, singleton_lid, union_lid, addr_of_lid =
+      C.set_empty, C.set_singleton, C.set_union, C.heap_addr_of_lid in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
-  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
+  let addr_of = mk_term (Var (set_lid_range addr_of_lid r)) r Expr in
   let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
   let union = mk_term (Var(set_lid_range union_lid r)) r Expr in
   List.fold_right (fun e tl ->
-    let e = mkApp ref_constr [(e, Nothing)] r in
+    let e = mkApp addr_of [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in
     mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
 
@@ -325,7 +328,7 @@ let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
         if should_filter
-        then let _ = Errors.warn r "Focusing on only some cases" in
+        then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases") in
          let focussed = List.filter fst branches |> List.map snd in
                  focussed@[mkWildAdmitMagic r]
         else branches |> List.map snd
@@ -333,11 +336,20 @@ let focusBranches branches r =
 let focusLetBindings lbs r =
     let should_filter = Util.for_some fst lbs in
         if should_filter
-        then let _ = Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+        then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
          List.map (fun (f, lb) ->
               if f then lb
               else (fst lb, mkAdmitMagic r)) lbs
         else lbs |> List.map snd
+
+let focusAttrLetBindings lbs r =
+    let should_filter = Util.for_some (fun (attr, (focus, _)) -> focus) lbs in
+    if should_filter
+    then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
+        List.map (fun (attr, (f, lb)) ->
+            if f then attr, lb
+            else (attr, (fst lb, mkAdmitMagic r))) lbs
+    else lbs |> List.map (fun (attr, (_, lb)) -> (attr, lb))
 
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
@@ -415,19 +427,19 @@ let rec extract_named_refinement t1  =
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<decl>) : list<modul> =
+let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
     let ((m_name, m_decl), cur) = cur in
     match ds with
-    | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
+    | [] -> Module(m_name, m_decl :: List.rev cur)
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
+            raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") d.drange
         | _ ->
-            as_mlist out ((m_name, m_decl), d::cur) ds
+            as_mlist ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (ds:list<decl>) : inputFragment =
   let d, ds = match ds with
     | d :: ds -> d, ds
     | [] -> raise Empty_frag
@@ -435,20 +447,12 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
   match d.d with
   | TopLevelModule m ->
       let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
-      let ms = as_mlist [] ((m,d), []) ds in
-      begin match List.tl ms with
-      | Module (m', _) :: _ ->
-          (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
-          let msg = "Support for more than one module in a file is deprecated" in
-          print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
-      | _ ->
-          ()
-      end;
-      Inl ms
+      let m = as_mlist ((m,d), []) ds in
+      Inl m
   | _ ->
       let ds = d::ds in
       List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
+        | {d=TopLevelModule _; drange=r} -> raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") r
         | _ -> ()
       ) ds;
       Inr ds
@@ -475,13 +479,18 @@ let compile_op arity s r =
       |'?' -> "Question"
       |':' -> "Colon"
       |'$' -> "Dollar"
-      | c -> raise (Error ("Unexpected operator symbol: '" ^ string_of_char c ^ "'" , r))
+      |'.' -> "Dot"
+      | c -> raise_error (Fatal_UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"
+    | ".[||]<-" -> "op_Brack_Lens_Assignment"
+    | ".(||)<-" -> "op_Lens_Assignment"
     | ".[]" -> "op_String_Access"
     | ".()" -> "op_Array_Access"
+    | ".[||]" -> "op_Brack_Lens_Access"
+    | ".(||)" -> "op_Lens_Access"
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
 let compile_op' s r =
@@ -520,10 +529,25 @@ let rec term_to_string (x:term) = match x.tm with
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let (Rec, lbs, body) ->
-    Util.format2 "let rec %s in %s" (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs) (body|> term_to_string)
-  | Let (q, [(pat,tm)], body) ->
-    Util.format4 "let %s %s = %s in %s" (string_of_let_qualifier q) (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
+  | Let (Rec, (a,(p,b))::lbs, body) ->
+    Util.format4 "%slet rec %s%s in %s"
+        (attrs_opt_to_string a)
+        (Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
+        (to_string_l " "
+            (fun (a,(p,b)) ->
+                Util.format3 "%sand %s=%s"
+                              (attrs_opt_to_string a)
+                              (p|> pat_to_string)
+                              (b|> term_to_string))
+            lbs)
+        (body|> term_to_string)
+  | Let (q, [(attrs,(pat,tm))], body) ->
+    Util.format5 "%slet %s %s = %s in %s"
+        (attrs_opt_to_string attrs)
+        (string_of_let_qualifier q)
+        (pat|> pat_to_string)
+        (tm|> term_to_string)
+        (body|> term_to_string)
   | Seq(t1, t2) ->
     Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
   | If(t1, t2, t3) ->
@@ -604,6 +628,10 @@ and pat_to_string x = match x.pat with
   | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
+and attrs_opt_to_string = function
+  | None -> ""
+  | Some attrs -> Util.format1 "[@ %s]" (List.map term_to_string attrs |> String.concat "; ")
+
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]
   | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
@@ -640,13 +668,3 @@ let modul_to_string (m:modul) = match m with
     | Module (_, decls)
     | Interface (_, decls, _) ->
       decls |> List.map decl_to_string |> String.concat "\n"
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Error reporting
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-let error msg tm r =
- let tm = tm |> term_to_string in
- let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- raise (Error(msg^"\n"^tm, r))

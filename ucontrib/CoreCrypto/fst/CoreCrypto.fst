@@ -2,13 +2,13 @@ module CoreCrypto
 
 open Platform.Bytes
 
-(* ------------ Hashing ------------ *) 
-type hash_alg = 
-  | MD5 
-  | SHA1 
-  | SHA224 
-  | SHA256 
-  | SHA384 
+(* ------------ Hashing ------------ *)
+type hash_alg =
+  | MD5
+  | SHA1
+  | SHA224
+  | SHA256
+  | SHA384
   | SHA512
 
 let hashSize = function
@@ -26,8 +26,8 @@ assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hash
 (* Digest functions *)
 assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
 assume val digest_create : hash_alg -> EXT hash_ctx
-assume val digest_update : hash_ctx -> bytes -> EXT unit 
-assume val digest_final : hash_ctx -> EXT bytes  
+assume val digest_update : hash_ctx -> bytes -> EXT unit
+assume val digest_final : hash_ctx -> EXT bytes
 
 (* --------------------------- *)
 
@@ -45,26 +45,26 @@ let blockSize = function
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
 
-(* Authenticated Encryption for TLS.  
+(* Authenticated Encryption for TLS.
    Note that their AAD contents depends on the protocol version. *)
 
-type aead_cipher = 
-  | AES_128_GCM   
+type aead_cipher =
+  | AES_128_GCM
   | AES_256_GCM
-  | CHACHA20_POLY1305 
+  | CHACHA20_POLY1305
   | AES_128_CCM   // "Counter with CBC-Message Authentication Code"
-  | AES_256_CCM   
-  | AES_128_CCM_8 // variant with truncated 8-byte tags 
+  | AES_256_CCM
+  | AES_128_CCM_8 // variant with truncated 8-byte tags
   | AES_256_CCM_8
 
 // the key materials consist of an encryption key, a static IV, and an authentication key.
 
 let aeadKeySize = function
-  | AES_128_CCM       -> 16 
-  | AES_128_CCM_8     -> 16 
+  | AES_128_CCM       -> 16
+  | AES_128_CCM_8     -> 16
   | AES_128_GCM       -> 16
-  | AES_256_CCM       -> 32 
-  | AES_256_CCM_8     -> 32 
+  | AES_256_CCM       -> 32
+  | AES_256_CCM_8     -> 32
   | AES_256_GCM       -> 32
   | CHACHA20_POLY1305 -> 32
 
@@ -82,28 +82,28 @@ let aeadTagSize = function
 
 //16-09-12 added precise concrete spec, matching what we implement in low-level/crypto
 //16-09-12 for robustness, we should at least test it when using external crypto.
-assume val aead_encryptT: 
-  a: aead_cipher -> 
-  k: lbytes (aeadKeySize a) -> 
-  iv:lbytes (aeadRealIVSize a) -> 
-  ad:bytes -> 
-  plain:bytes -> 
+assume val aead_encryptT:
+  a: aead_cipher ->
+  k: lbytes (aeadKeySize a) ->
+  iv:lbytes (aeadRealIVSize a) ->
+  ad:bytes ->
+  plain:bytes ->
   GTot (lbytes (length plain + aeadTagSize a))
 
-assume val aead_encrypt: 
-  a: aead_cipher -> 
-  k: lbytes (aeadKeySize a) -> 
-  iv:lbytes (aeadRealIVSize a) -> 
-  ad:bytes -> 
-  plain:bytes -> 
+assume val aead_encrypt:
+  a: aead_cipher ->
+  k: lbytes (aeadKeySize a) ->
+  iv:lbytes (aeadRealIVSize a) ->
+  ad:bytes ->
+  plain:bytes ->
   EXT (c:bytes {c = aead_encryptT a k iv ad plain})
 
 assume val aead_decrypt:
-  a: aead_cipher -> 
-  k: lbytes (aeadKeySize a) -> 
-  iv:lbytes (aeadRealIVSize a) -> 
-  ad:bytes -> 
-  cipher:bytes{length cipher >= aeadTagSize a} -> 
+  a: aead_cipher ->
+  k: lbytes (aeadKeySize a) ->
+  iv:lbytes (aeadRealIVSize a) ->
+  ad:bytes ->
+  cipher:bytes{length cipher >= aeadTagSize a} ->
   EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher})
     {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p) })
 
@@ -155,8 +155,8 @@ assume val random : l:nat -> EXT (lbytes l)
 assume val rsa_gen_key : int -> EXT (k:rsa_key{Some? k.rsa_prv_exp})
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes
 assume val rsa_decrypt : k:rsa_key{Some? k.rsa_prv_exp} -> rsa_padding -> bytes -> EXT (option bytes)
-assume val rsa_sign : option hash_alg -> k:rsa_key{Some? k.rsa_prv_exp} -> bytes -> EXT bytes
-assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> EXT bool
+assume val rsa_sign : option hash_alg -> k:rsa_key{Some? k.rsa_prv_exp} -> pss:bool -> bytes -> EXT bytes
+assume val rsa_verify : option hash_alg -> rsa_key -> pss:bool -> bytes -> bytes -> EXT bool
 
 assume val dsa_gen_key : int -> EXT (k:dsa_key{Some? k.dsa_private})
 assume val dsa_sign : option hash_alg -> k:dsa_key{Some? k.dsa_private} -> bytes -> EXT bytes

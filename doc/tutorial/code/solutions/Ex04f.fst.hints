@@ -10,10 +10,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "37b25975864e60b25b19f31805cf6cb4"
     ],
     [
       "Ex04f.reverse",
@@ -24,10 +24,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "01c75a502c56b568c3c4157d2275691f"
     ],
     [
       "Ex04f.fold_left",
@@ -41,7 +41,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "946bcc41f86719995f734d8448187b5e"
     ],
     [
       "Ex04f.append_assoc",
@@ -60,9 +61,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "d5496ae2c0ae8f80769d0e55bed0007c"
     ],
     [
       "Ex04f.fold_left_Cons_is_rev",
@@ -76,7 +78,7 @@
         "@fuel_correspondence_Ex04f.reverse.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.fold_left.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.reverse.fuel_instrumented", "@query",
-        "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.Cons@tok",
@@ -87,9 +89,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "98092baf3578d1437a2d85fea45178d9"
     ]
   ]
 ]

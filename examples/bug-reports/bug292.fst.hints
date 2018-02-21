@@ -1,0 +1,49 @@
+[
+  "\u0014š/\u001520µö?–ëf0}.<",
+  [
+    [
+      "Bug292.shared",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7998c718c74a7b9ce6af6ef3d4a44c41"
+    ],
+    [
+      "Bug292.triple_a",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "68dbc4c2ee9000989800a20c04b3cc7a"
+    ],
+    [
+      "Bug292.triple_a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Pervasives.Native_pretyping_4894c30cf477acf9a27e7a844279eb08",
+        "assumption_Prims.HasEq_int", "equation_Bug292.shared",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_FStar.Pervasives.dsnd", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_Prims.Mkdtuple2__2",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
+      ],
+      0,
+      "30a8c5384642dc9679c143f8f900fabe"
+    ]
+  ]
+]

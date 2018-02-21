@@ -20,6 +20,7 @@ module FStar.Options
 open FStar.ST
 open FStar.All
 open FStar.Getopt
+open FStar.BaseTypes
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -44,7 +45,6 @@ type options =
     | Restore
 
 val defaults                    : list<(string * option_val)>
-val docs                        : unit -> list<(string * string)>
 
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
@@ -62,12 +62,42 @@ val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
-
 val add_light_off_file          : string  -> unit
 
+type opt_type =
+| Const of option_val
+  // --cache_checked_modules
+| IntStr of string (* label *)
+  // --z3rlimit 5
+| BoolStr
+  // --admit_smt_queries true
+| PathStr of string (* label *)
+  // --fstar_home /build/fstar
+| SimpleStr of string (* label *)
+  // --admit_except xyz
+| EnumStr of list<string>
+  // --codegen OCaml
+| OpenEnumStr of list<string> (* suggested values (not exhaustive) *) * string (* label *)
+  // --debug_level …
+| PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
+  // For options like --extract_module that require post-processing or validation
+| Accumulated of opt_type (* elem spec *)
+  // For options like --extract_module that can be repeated (LIFO)
+| ReverseAccumulated of opt_type (* elem spec *)
+  // For options like --include that can be repeated (FIFO)
+| WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
+  // For options like --version that have side effects
+
+val desc_of_opt_type            : opt_type -> option<string>
+val all_specs_with_types        : list<(char * string * opt_type * string)>
+val settable                    : string -> bool
+val resettable                  : string -> bool
+
 val __temp_no_proj              : string  -> bool
+val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
+val cache_checked_modules       : unit    -> bool
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
@@ -80,15 +110,14 @@ val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_inference             : unit    -> bool
-val explicit_deps               : unit    -> bool
-val extract_all                 : unit    -> bool
+val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
 val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
-val hide_genident_nums          : unit    -> bool
+val gen_native_tactics          : unit    -> option<string>
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file                   : unit    -> option<string>
@@ -112,7 +141,10 @@ val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
+val normalize_pure_terms_for_extraction
+                                : unit    -> bool
 val output_dir                  : unit    -> option<string>
+val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string
@@ -121,37 +153,42 @@ val pervasives_basename         : unit    -> string
 val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
-val print_fuels                 : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
+val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
-val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
+val should_verify_file          : string  -> bool
 val silent                      : unit    -> bool
-val smtencoding_elim_box        : unit -> bool
-val smtencoding_nl_arith_default: unit -> bool
-val smtencoding_nl_arith_wrapped: unit -> bool
-val smtencoding_nl_arith_native : unit -> bool
-val smtencoding_l_arith_default : unit -> bool
-val smtencoding_l_arith_native  : unit -> bool
-val split_cases                 : unit    -> int
+val smtencoding_elim_box        : unit    -> bool
+val smtencoding_nl_arith_default: unit    -> bool
+val smtencoding_nl_arith_wrapped: unit    -> bool
+val smtencoding_nl_arith_native : unit    -> bool
+val smtencoding_l_arith_default : unit    -> bool
+val smtencoding_l_arith_native  : unit    -> bool
+val tactic_raw_binders          : unit    -> bool
+val tactic_trace                : unit    -> bool
+val tactic_trace_d              : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
+val unsafe_tactic_exec          : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_hint_hashes             : unit    -> bool
+val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> option<list<string>>
-val verify_all                  : unit    -> bool
-val verify_module               : unit    -> list<string>
+val using_facts_from            : unit    -> list<(Ident.path * bool)>
+val vcgen_optimize_bind_as_seq  : unit    -> bool
+val vcgen_decorate_with_type    : unit    -> bool
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
@@ -160,8 +197,14 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
+val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
+val warn_error                  : unit    -> string
+val use_extracted_interfaces    : unit    -> bool
+val check_interface             : unit    -> bool
+
+val codegen_fsharp              : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

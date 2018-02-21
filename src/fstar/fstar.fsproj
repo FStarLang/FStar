@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -28,14 +28,14 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--smt C:\dev\z3-vs-debug\z3\Debug\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics --log_queries foo.fst</StartArguments>
+    <StartArguments>--admit_smt_queries true --cache_checked_modules Bane.Test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
@@ -45,8 +45,8 @@
     <DocumentationFile>bin\Release\fstar.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
-    <StartArguments>--smt c:\dev\z3\bld_rel\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics foo.fst</StartArguments>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
+    <StartArguments>--admit_smt_queries true --cache_checked_modules Bane.Test.fst</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -71,8 +71,10 @@
   <ItemGroup>
     <Compile Include="FStar.Dependencies.fs" />
     <Compile Include="FStar.Universal.fs" />
-    <Compile Include="FStar.Interactive.fs" />
-    <Compile Include="FStar.Legacy.Interactive.fs" />
+    <Compile Include="FStar.Interactive.CompletionTable.fsi" />
+    <Compile Include="FStar.Interactive.CompletionTable.fs" />
+    <Compile Include="FStar.Interactive.Ide.fs" />
+    <Compile Include="FStar.Interactive.Legacy.fs" />
     <Compile Include="FStar.Indent.fs" />
     <Compile Include="FStar.Main.fs" />
     <Compile Include="FStar.Top.fs" />
@@ -132,6 +134,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">

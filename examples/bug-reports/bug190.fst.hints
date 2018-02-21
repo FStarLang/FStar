@@ -1,0 +1,17 @@
+[
+  "\u0014ÉðI+\u0014\nØ9*h€\n$Ô!",
+  [
+    [
+      "Bug190.__proj__DForallElim__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug190.DForallElim_f",
+        "projection_inverse_Bug190.DForallElim_f"
+      ],
+      0,
+      "59fdf1464f5fe9ea07a22695a44dddea"
+    ]
+  ]
+]

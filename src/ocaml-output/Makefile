@@ -1,16 +1,21 @@
 HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
+MENHIR_MIN_VERSION:=20161115
 ifdef HAS_MENHIR
-HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= 20161115)
+HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= $(MENHIR_MIN_VERSION))
 else
 HAS_VALID_MENHIR := 0
 endif
 
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
-OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
-  -I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml -I src/tactics/ml -I ulib/ml -use-ocamlfind
-COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
+FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
+OCAMLBUILD=cd ../../ && ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -I src/ocaml-output -I src/basic/ml \
+  -I src/parser/ml -I src/fstar/ml -I src/extraction/ml \
+  -I src/prettyprint/ml -I src/tactics/ml -I src/tests/ml -I ulib/ml \
+  -j 24 -build-dir src/ocaml-output/_build -use-ocamlfind
+COMPILER_ML_LIB=FStar_Util.cmx FStar_Compiler_Bytes.cmx			\
+		FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx	\
+		FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
 GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
@@ -26,6 +31,7 @@ DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
 DATE_EXEC := $(shell gdate --version 2>/dev/null | cut -c -4 | head -n 1)
+FIND=$(shell which gfind >/dev/null 2>&1 && echo gfind || echo find)
 ifdef INSTALL_EXEC
    INSTALL_EXEC := ginstall
 else
@@ -46,7 +52,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe
+all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe tests.exe install-compiler-lib
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
@@ -62,11 +68,8 @@ ifeq ($(HAS_VALID_MENHIR), 1)
 	# TODO : call menhir directly when positions are fixed instead of
 	# letting OCamlbuild go through ocamlyacc
 	$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
-	# Save a copy of the dumb parse.mly for whoever doesn't have menhir.
-	$(DOS2UNIX) parse.mly
-	cp parse.mly ../parser/ml/
 else
-	cp ../parser/ml/parse.mly ./parse.mly
+	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
 
 # This is about the F# parser, which we sed-transform from the parse.mly
@@ -97,10 +100,16 @@ endif
 	                    -e '/%type.*->.*/d' \
 	                    >> $@
 
+# https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
+fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native
-	cp _build/src/fstar/ml/main.native ../../bin/$@
-	cp _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+	cp -f _build/src/fstar/ml/main.native ../../bin/$@
+	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+
+install-compiler-lib: fstar.exe
+	mkdir -p ../../bin/fstar-compiler-lib/
+	$(FIND) -name "*.cmi" -exec cp {} ../../bin/fstar-compiler-lib/ \;
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
@@ -129,6 +138,11 @@ FStar_Parser_Parse.ml: parse.mly
 	fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
+
+tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+tests.exe: fstar.exe
+	$(OCAMLBUILD) FStar_Tests_Main.native
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native ../../bin/$@
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
@@ -168,12 +182,24 @@ FStar_Version.ml:
 #  installs we cannot assume the user has git installed.)
 install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
+# install the standard library binary files
+install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
+
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	# Then the standard library, but not the ml or fs files
+	cp -p -r ../../ulib ../../ulib-install
+	rm -rf ../../ulib-install/ml
+	rm -rf ../../ulib-install/fs
+	$(call install_dir,ulib-install,lib/fstar)
+	rm -rf ../../ulib-install
+	# Then the binary library
+	$(call install_fstarlib,bin/fstarlib,fstarlib.cma)
+	$(call install_fstarlib,bin/fstarlib,fstarlib.cmxa)
+	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
         # Then the rest of the static files.
-	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
 ifeq ($(MADOKO),Madoko)
@@ -206,26 +232,37 @@ ulib:
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all ulib
+package: all
+	$(MAKE) ulib
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
 	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-        # Then the rest of the static files.
+        # Then the standard library.
 	$(call fexport,ulib)
+	# Do not provide ml/fs sources, however. From ulib/ml, only
+	# preserve Makefile.include
+	mv $(PREFIX)/ulib/ml/Makefile.include $(PREFIX)/ulib/ml_Makefile.include
+	rm -rf $(PREFIX)/ulib/ml $(PREFIX)/ulib/fs
+	mkdir -p $(PREFIX)/ulib/ml
+	mv $(PREFIX)/ulib/ml_Makefile.include $(PREFIX)/ulib/ml/Makefile.include
+	# Only provide the Makefile suited for verification
+	rm -f $(PREFIX)/ulib/Makefile
+	mv $(PREFIX)/ulib/Makefile.verify $(PREFIX)/ulib/Makefile
+	# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 	$(call fexport-all,bin/fstarlib)
-	touch $(PREFIX)/ulib/.mgen
 
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
 else
-	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial in html form."
+	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
+	false
 endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
@@ -234,10 +271,8 @@ endif
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
-        # Because we'll be building fstarlib in the resulting directory, somehow?
-	cp ../../_tags $(PREFIX)
-	mkdir -p $(PREFIX)/bin/fstarlib
-	cp ../../bin/fstarlib/META $(PREFIX)/bin/fstarlib/
+
+	# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
@@ -253,10 +288,12 @@ endif
 # Clean up all files generated by targets in _this_ Makefile
 # Also clean up the standard library
 clean:
-	make -C ../../ulib/ml clean
+	$(MAKE) -C ../../ulib clean
 	rm -rf _build
 	rm -f $(GENERATED_FILES)
 	rm -f *.tar.gz *.zip
+	rm -f ../../bin/fstar-compiler-lib/*.cm[aiox]
+	rm -f ../../bin/fstar-compiler-lib/*.cmx[as]
 
 # Purge (clean + delete *all* automatically generated files)
 # if you do this you'll need to run `make ocaml` in `src` to get them back

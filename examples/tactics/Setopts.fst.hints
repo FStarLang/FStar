@@ -1,25 +1,26 @@
 [
-  "«î\u001b}wﬂ(^jõ¥\u0014_$Z$",
+  "0máßûG∆ßeTØQmŸ\u000fv",
   [
     [
       "Setopts.mult_ass",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "0bfbe9e2c6c9e2766f03f4f0dd117c88"
     ],
     [
       "Setopts.mult_ass",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ef610d910a1bef8c4fa6e6a12ac8f7a3"
     ]
   ]
 ]

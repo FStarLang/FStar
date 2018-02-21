@@ -1,0 +1,41 @@
+[
+  "rÄ\\\u001b˜ıÖÈ´Ÿôš\u001awÒ",
+  [
+    [
+      "Bug086.xor",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "27fcc586ec18d72b06cbb4dad9fab138"
+    ],
+    [
+      "Bug086.repr_bytes",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "98a007126faa87f0c1d047d0f22aeba7"
+    ],
+    [
+      "Bug086.repr_bytes2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "886921db12bed5e43d9dd1768da9b777"
+    ],
+    [
+      "Bug086.grepr_bytes",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "699b6acfe3f0733da4399d4d258ddcf2"
+    ]
+  ]
+]

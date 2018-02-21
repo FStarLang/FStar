@@ -91,7 +91,7 @@ let encrypt_ensures  (#i:id) (st:aead_state i Writer)
        let aad = Buffer.as_seq h1 aad in
        let p = Plain.sel_plain h1 plainlen plain in
        let c = Buffer.as_seq h1 cipher_tagged in
-       HS.sel h1 st.log == Seq.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
+       HS.sel h1 (st_ilog st) == Seq.snoc (HS.sel h0 (st_ilog st)) (AEADEntry n aad (v plainlen) p c)))
 
 let encrypt_modifies (#i:id) (st:aead_state i Writer)
 		     (#plainlen: UInt32.t)

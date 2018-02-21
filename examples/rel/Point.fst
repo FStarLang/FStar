@@ -107,7 +107,10 @@ let lemma (h:heap) =
   let _, h3 = reify (move p) h1 in
   let _, h4 = reify (move cp) h2 in
 
-  assert (fst (reify (get p) h3) = fst (reify (get cp) h4));
+  let v3, _ = reify (get p) h3 in
+  let v4, _ = reify (get cp) h4 in
+
+  assert (v3 == v4);
   assert (equal_heaps_except_fp h3 h4 (append (C?.fp p) (C?.fp cp)))
 
 (*  let rec increment_m *)

@@ -104,6 +104,16 @@ let rec count #a x s =
 val mem: #a:eqtype -> a -> seq a -> Tot bool
 let mem #a x l = count x l > 0
 
+#set-options "--max_fuel 1 --initial_fuel 1"
+let rec mem_index (#a:eqtype) (x:a) (s:seq a)
+    : Lemma (requires (mem x s))
+            (ensures (exists i. index s i == x))
+            (decreases (length s))
+    = if length s = 0 then ()
+      else if head s = x then ()
+      else mem_index x (tail s)
+
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val swap: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{j<length s} -> Tot (seq a)
 let swap #a s i j = upd (upd s j (index s i)) i (index s j)
 
@@ -221,7 +231,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
 #set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 30"
-val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
+abstract val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
             ((length x = 5)
@@ -476,6 +486,13 @@ let rec find_l #a f l =
   else if f (head l) then Some (head l)
   else find_l f (tail l)
 
+val ghost_find_l: #a:Type -> f:(a -> GTot bool) -> l:seq a -> GTot (o:option a{Some? o ==> f (Some?.v o)})
+  (decreases (Seq.length l))
+let rec ghost_find_l #a f l =
+  if Seq.length l = 0 then None
+  else if f (head l) then Some (head l)
+  else ghost_find_l f (tail l)
+
 val find_append_some: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
   (requires (Some? (find_l f s1)))
   (ensures (find_l f (append s1 s2) == find_l f s1))
@@ -518,10 +535,15 @@ let find_snoc #a s x f =
   if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
   else find_append_none s (Seq.create 1 x) f
 
-let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (seq a * a) =
-  let s, a = split s (length s - 1) in
-  s, Seq.index a 0
-  
+let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a * a){s == snoc (fst r) (snd r)}) =
+  let s', a = split s (length s - 1) in
+  assert (Seq.equal (snoc s' (Seq.index a 0)) s);
+  s', Seq.index a 0
+
+let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)) =
+  let s', x = un_snoc (snoc s x) in
+  assert (Seq.equal s s')
+
 val find_r: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{Some? o ==> f (Some?.v o)})
   (decreases (Seq.length l))
 let rec find_r #a f l = 
@@ -563,6 +585,22 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 
 let seq_find #a f l =
   seq_find_aux f l (Seq.length l)
+
+let find_mem (#a:eqtype) (s:seq a) (f:a -> Tot bool) (x:a{f x})
+   : Lemma (requires (mem x s))
+           (ensures (Some? (seq_find f s) /\ f (Some?.v (seq_find f s))))
+   = match seq_find f s with
+     | None -> mem_index x s
+     | Some _ -> ()
+
+let for_all
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: seq a)
+: Pure bool
+  (requires True)
+  (ensures (fun b -> (b == true <==> (forall (i: nat {i < Seq.length l} ) . f (index l i) == true))))
+= None? (seq_find (fun i -> not (f i)) l)
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
 val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} -> 

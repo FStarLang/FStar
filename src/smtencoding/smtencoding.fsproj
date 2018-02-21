@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -28,7 +28,7 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
@@ -64,6 +64,7 @@
     <Compile Include="FStar.SMTEncoding.ErrorReporting.fs" />
     <Compile Include="FStar.SMTEncoding.Encode.fsi" />
     <Compile Include="FStar.SMTEncoding.Encode.fs" />
+    <Compile Include="FStar.SMTEncoding.Solver.fsi" />
     <Compile Include="FStar.SMTEncoding.Solver.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
@@ -82,6 +83,7 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -105,6 +107,11 @@
     <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
       <Name>prettyprint</Name>
       <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
+      <Name>tosyntax</Name>
+      <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

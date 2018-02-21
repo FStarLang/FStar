@@ -18,4 +18,4 @@ let tau : tactic unit =
     apply (quote g);;
     exact (quote vq)
 
-let _ = assert_by_tactic tau r
+let _ = assert_by_tactic r tau

@@ -32,7 +32,8 @@ let issue_read f =
 let redeem_read f t =
   let bs = (utf8 f) in
   if MAC.verify k_read bs t then
-    ()
+    (MAC.from_key_prop k_read bs ;
+    assert (ACLs.canRead f))
   else
     failwith "bad capability"
 
@@ -54,7 +55,8 @@ let issue_write f =
 let redeem_write f t =
   let bs = (utf8 f) in
   if MAC.verify k_write bs t then
-    ()
+    (MAC.from_key_prop k_write bs ;
+    assert(ACLs.canWrite f))
   else
     failwith "bad capability"
 // END: CapImplementation2

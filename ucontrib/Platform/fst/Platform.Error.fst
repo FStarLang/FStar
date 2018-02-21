@@ -8,25 +8,29 @@ type optResult 'a 'b =
 val invertOptResult : a:Type -> b:Type -> Lemma 
   (requires True)
   (ensures (forall (x:optResult a b). Error? x \/ Correct? x))
-  [SMTPatT (optResult a b)]
+  [SMTPat (optResult a b)]
 let invertOptResult a b = allow_inversion (optResult a b)
 
 assume val perror: string -> int -> string -> Tot string
 
 //assume val correct: #a:Type -> #b:Type -> x:a -> Tot (y:(optResult b a){y = Correct(x)})
-assume val correct: #r:Type -> r -> Tot (optResult 'a r)
+let correct (#a:Type) (#r:Type) (x:r) : Tot (optResult a r) = Correct x
 
 (* Both unexpected and unreachable are aliases for failwith;
    they indicate code that should never be executed at runtime.
    This is verified by typing only for the unreachable function;
    this matters e.g. when dynamic errors are security-critical *)
 
-assume val unexpected: string -> Div 'a
+let rec unexpected (#a:Type) (s:string) : Div a
   (requires True)
-  (ensures (fun _ -> True))
+  (ensures (fun _ -> True)) =
+  let _ = FStar.IO.debug_print_string ("Platform.Error.unexpected: " ^ s) in
+  unexpected s
 
-assume val unreachable: string -> Div 'a
+let rec unreachable (#a:Type) (s:string) : Div a
   (requires False)
-  (ensures (fun _ -> False))
+  (ensures (fun _ -> False)) =
+  let _ = FStar.IO.debug_print_string ("Platform.Error.unreachable: " ^ s) in
+  unreachable s
 
 assume val if_ideal: (unit -> 'a) -> 'a -> 'a 

@@ -1,10 +1,7 @@
-module Bug209_EDITED
+module Bug209b
 
-val foo : #t:Type -> x:t -> Lemma (x = x)
-let foo (#t:Type) x = ()
+val foo : #t:Type{hasEq t} -> x:t -> Lemma (x = x)
+let foo (#t:Type{hasEq t}) x = ()
 
-val foo2 : t:Type -> x:t -> Lemma (x = x)
-let foo2 (t:Type) x = ()
-
-val foo3 : x:'a -> Lemma (x = x)
-let foo3 'a x = ()
+val foo2 : t:Type{hasEq t} -> x:t -> Lemma (x = x)
+let foo2 (t:Type{hasEq t}) x = ()

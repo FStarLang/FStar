@@ -40,6 +40,7 @@ open FStar.Errors
 open FStar.Parser
 open FStar.Parser.Parse
 open FStar.BaseTypes
+open FStar.Compiler
 
 let intern_string : string -> string =
   let strings = Util.smap_create 100 in
@@ -48,7 +49,7 @@ let intern_string : string -> string =
       | Some res -> res
       | None -> Util.smap_add strings s s; s
 
-let default_string_finish endm b s = STRING s
+let default_string_finish endm b s = STRING (Bytes.unicode_bytes_as_string s)
 
 let call_string_finish fin buf endm b = fin endm b (Bytes.close buf)
 
@@ -154,7 +155,6 @@ let keywords =
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
     ALWAYS, "false"      ,FALSE;
-    ALWAYS, "False"      ,L_FALSE;
     ALWAYS, "forall"     ,FORALL;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
@@ -176,16 +176,17 @@ let keywords =
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
+    ALWAYS, "range_of"   ,RANGE_OF;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;
     ALWAYS, "reify"      ,REIFY;
     ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
+    ALWAYS, "set_range_of"              ,SET_RANGE_OF;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
-    ALWAYS, "True"       ,L_TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "unfold"     ,UNFOLD;
@@ -229,12 +230,12 @@ let kwd_or_id args (r:Range.range) s =
     | None ->
       match s with
         | "__SOURCE_DIRECTORY__" ->
-          STRING (Bytes.string_as_unicode_bytes (args.getSourceDirectory()))
+          STRING (args.getSourceDirectory())
         | "__SOURCE_FILE__" ->
-          STRING (Bytes.string_as_unicode_bytes (Range.file_of_range r))
+          STRING (Range.file_of_range r)
         | "__LINE__" ->
           INT (Util.string_of_int <| Range.line_of_pos (Range.start_of_range r), false)
         | _ ->
           if Util.starts_with s Ident.reserved_prefix
-          then raise (Error(Ident.reserved_prefix  ^ " is a reserved prefix for an identifier", r))
+          then raise_error (Errors.Fatal_ReservedPrefix, (Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")) r
           else IDENT (intern_string(s))

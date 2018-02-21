@@ -12,10 +12,7 @@ assume val string_length_append: a:string -> b:string -> Lemma
   (requires True)
   (ensures String.length (a ^ b) = String.length a + String.length b)
   [SMTPat (String.length (a ^ b))]
-assume val string_length_empty: unit -> Lemma 
-  (requires True)
-  (ensures String.length "" = 0)
-  [SMTPat (String.length "")]
+assume val string_length_empty: squash (String.length "" = 0)
 assume val append_empty : s:string -> Lemma 
   (requires True)
   (ensures s ^ "" = s)
@@ -31,7 +28,7 @@ assume val append_assoc : a:string -> b:string -> c:string -> Lemma
 assume val length_0_empty : s:string -> Lemma 
   (requires String.length s = 0)
   (ensures s = "")
-  [SMTPat (String.length s = 0)]
+  [SMTPat (String.length s)]
 assume val substring_full : s:string -> Lemma
   (requires True)
   (ensures substringT s 0 (String.length s) = s)
@@ -257,7 +254,7 @@ let rec lemma_getBytes_2 ls =
 val lemma_getBytes_3: ls:list cbytes -> i:nat{i <= sum_length ls} -> n:nat{i + n <= sum_length ls} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
   (requires True)
   (ensures getBytes ls i2 n2 = substringT (getBytes ls i n) (i2 - i) n2)
-  [SMTPat (getBytes ls i2 n2)]
+  // [SMTPat (getBytes ls i2 n2)]
 let rec lemma_getBytes_3 ls i n i2 n2 = 
   match ls with
   | [] ->

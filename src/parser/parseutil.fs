@@ -11,7 +11,7 @@ let pos_of_lexpos (p:Microsoft.FSharp.Text.Lexing.Position) =
     mk_pos p.Line p.Column
 
 let mksyn_range (p1:Microsoft.FSharp.Text.Lexing.Position) p2 =
-    mk_file_idx_range (decode_file_idx p1.FileName) (pos_of_lexpos p1) (pos_of_lexpos p2)
+    mk_range p1.FileName (pos_of_lexpos p1) (pos_of_lexpos p2)
 
 let getLexerRange (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = (* UnicodeLexing.Lexbuf) = *)
   mksyn_range lexbuf.StartPos lexbuf.EndPos
@@ -35,16 +35,6 @@ let rhs2 (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n m =
 let rhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
   let p1,p2 = parseState.InputRange(n) in
   mksyn_range p1 p2
-
-exception WrappedError of exn * range
-exception ReportedError
-exception StopProcessing
-
-let warningHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
-let errorHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
-let errorAndWarningCount = ref 0
-let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
-let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
 
 let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
     lexbuf.EndPos <- lexbuf.EndPos.NextLine

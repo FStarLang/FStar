@@ -28,13 +28,15 @@ type step =
   | Iota            //pattern matching
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | WHNF            //Only produce a weak head normal form
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of delta_depth
   | UnfoldOnly of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -44,13 +46,28 @@ type step =
   | CompressUvars
   | NoFullNorm
   | CheckNoUvars
+  | Unmeta
+  | Unascribe
 and steps = list<step>
+type closure =
+  | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Univ of universe                                //universe terms do not have free variables
+  | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
+and env = list<(option<binder> * closure)>
+type cfg
+type psc // primitive step context
+val null_psc : psc
+val psc_range : psc -> FStar.Range.range
+val psc_subst : psc -> subst_t
 type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(FStar.Range.range -> args -> option<term>)
+    requires_binder_substitution:bool;
+    interpretation:(psc -> args -> option<term>)
 }
+
+val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term
@@ -65,3 +82,7 @@ val normalize_with_primitive_steps : list<primitive_step> -> list<step> -> Env.e
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
+val erase_universes: Env.env -> term -> term
+val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
+
+val remove_uvar_solutions: Env.env -> term -> term

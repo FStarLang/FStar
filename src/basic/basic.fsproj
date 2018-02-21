@@ -29,7 +29,7 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
@@ -68,35 +68,39 @@
     <Compile Include="exn-fake.fs" />
     <Compile Include="all-fake.fs" />
     <Compile Include="mul-fake.fs" />
-    <Compile Include="char.fsi" />
-    <Compile Include="char.fs" />
-    <Compile Include="string.fsi" />
-    <Compile Include="string.fs" />
-    <Compile Include="list.fsi" />
-    <Compile Include="list.fs" />
+    <Compile Include="fs/char.fsi" />
+    <Compile Include="fs/char.fs" />
+    <Compile Include="boot/FStar.String.fsi" />
+    <Compile Include="boot/FStar.String.fs" />
+    <Compile Include="boot/FStar.List.fsi" />
+    <Compile Include="boot/FStar.List.fs" />
+    <Compile Include="boot/FStar.Util.fsi" />
+    <Compile Include="boot/NotFStar.Util.fs" />
+    <Compile Include="boot/FStar.Compiler.Bytes.fsi" />
+    <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
+    <Compile Include="boot/FStar.Dyn.fsi" />
+    <Compile Include="boot/NotFStar.Dyn.fs" />
+    <Compile Include="boot/FStar.BigInt.fsi" />
+    <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="profiling.fs" />
-    <Compile Include="util.fsi" />
-    <Compile Include="util.fs" />
-    <Compile Include="platform.fsi" />
-    <Compile Include="platform.fs" />
-    <Compile Include="bytes.fsi" />
-    <Compile Include="bytes.fs" />
+    <Compile Include="FStar.Range.fsi" />
+    <Compile Include="FStar.Range.fs" />
+    <Compile Include="FStar.Platform.fsi" />
+    <Compile Include="NotFStar.Platform.fs" />
+    <Compile Include="FStar.Common.fsi" />
     <Compile Include="FStar.Common.fs" />
-    <Compile Include="range.fsi" />
-    <Compile Include="range.fs" />
-    <Compile Include="getopt.fsi" />
-    <Compile Include="getopt.fs" />
-    <Compile Include="dyn.fsi" />
-    <Compile Include="dyn.fs" />
+    <Compile Include="FStar.Getopt.fsi" />
+    <Compile Include="NotFStar.Getopt.fs" />
+    <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
-    <Compile Include="unionfind.fsi" />
-    <Compile Include="unionfind.fs" />
-    <Compile Include="FStar.Ident.fs" />
+    <Compile Include="FStar.Unionfind.fsi" />
+    <Compile Include="NotFStar.Unionfind.fs" />
     <Compile Include="FStar.Const.fs" />
+    <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
-    <Compile Include="version.fsi" />
-    <Compile Include="version.fs" />
+    <Compile Include="FStar.Version.fsi" />
+    <Compile Include="FStar.Version.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +109,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

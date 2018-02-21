@@ -53,7 +53,8 @@ let gf128_add a b =
   let h0 = ST.get() in
   gf128_add_loop a b len;
   let h1 = ST.get() in
-  assume (as_seq h1 a == as_seq h0 a +@ as_seq h0 b)
+  admit()
+  //assume (as_seq h1 a == as_seq h0 a +@ as_seq h0 b)
   //16-10-27 TODO: functional correctness.
 
   
@@ -139,7 +140,8 @@ let gf128_mul a b =
   blit tmp 0ul a 0ul 16ul;
   pop_frame();
   let h1 = ST.get() in
-  assume(as_seq h1 a == as_seq h0 a *@ as_seq h0 b)
+  admit()
+  //assume(as_seq h1 a == as_seq h0 a *@ as_seq h0 b)
   //16-10-27 todo: functional correctness.
 
 val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}

@@ -1,0 +1,60 @@
+[
+  "®’ò9\\r.tƒÄ8\u0006ÊåkX",
+  [
+    [
+      "FStar.Tactics.Logic.revert_squash",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "forall-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "1bb9dd9a256ecc6a3154518b4ab1eb92"
+    ],
+    [
+      "FStar.Tactics.Logic.l_revert_all",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1ed654bfaa534f1761692bbafce5b1e2_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "3232c4a9bd4cac32f6468bb878fd2f5e"
+    ],
+    [
+      "FStar.Tactics.Logic.forall_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cdeddb1c2dfb6a3fff087f4c45ee5876"
+    ],
+    [
+      "FStar.Tactics.Logic.split",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4339e76ada7f0c08e79cffb060e5a755"
+    ],
+    [
+      "FStar.Tactics.Logic.implies_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a10bcd6d0ece151bb769f96ab308aa6a"
+    ]
+  ]
+]

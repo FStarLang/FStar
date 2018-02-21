@@ -1,8 +1,9 @@
 module ImmutableST
 
-open FStar.Preorder
 open NatHeap
 
+open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 (* Swapping the reference and heap arguments of (NatHeap.contains_ref) to 
    use it in point-free style in calls to (witness) and (recall). *)
@@ -67,7 +68,7 @@ effect IST    (a:Type)
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed : p:predicate heap{stable p heap_rel} -> Type0
+let ist_witnessed (p:predicate heap{stable p heap_rel}) = witnessed heap_rel p
 
 
 (* Generic effects (operations) for IST. *)

@@ -1,4 +1,4 @@
-module Bug
+module Bug262
 
 open FStar.ST
 
@@ -6,5 +6,5 @@ open FStar.ST
 let log = alloc []
 
 val test : unit -> ST unit (requires (fun h -> Heap.contains h log))
-                           (ensures (fun h0 _ h1 -> modifies !{log} h0 h1))
+                           (ensures (fun h0 _ h1 -> Heap.modifies !{log} h0 h1))
 let test () = log := []

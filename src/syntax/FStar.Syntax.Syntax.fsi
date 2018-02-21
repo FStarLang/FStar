@@ -110,7 +110,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
-    lbdef  :term             //e
+    lbdef  :term;            //e
+    lbattrs:list<attribute>
 }
 and comp_typ = {
   comp_univs:universes;
@@ -137,6 +138,8 @@ and cflags =
   | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
   | DECREASES of term
@@ -150,7 +153,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string                           (* A blob embedded into syntax, with an annotation to print it *)
+  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
   | Data_app
   | Sequence
@@ -191,16 +194,16 @@ and fv = {
     fv_qual :option<fv_qual>
 }
 and free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
+    free_names:list<bv>;
+    free_uvars:list<(uvar*typ)>;
+    free_univs:list<universe_uvar>;
+    free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = {
+and lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -209,6 +212,8 @@ and residual_comp = {
     residual_typ   :option<typ>;           (* second component: result type *)
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
+
+and attribute = term
 
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
@@ -245,8 +250,6 @@ type qualifier =
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
-
-type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -372,6 +375,8 @@ type modul = {
   exports: sigelts;
   is_interface:bool;
 }
+val mod_name: modul -> lident
+
 type path = list<string>
 type subst_t = list<subst_elt>
 type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
@@ -398,6 +403,12 @@ val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
 val mk_Comp:        comp_typ -> comp
+val mk_lcomp:
+    eff_name: lident ->
+    res_typ: typ ->
+    cflags: list<cflags> ->
+    comp_thunk: (unit -> comp) -> lcomp
+val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 
@@ -406,6 +417,7 @@ val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
+val order_univ_name: univ_name -> univ_name -> Tot<int>
 
 val tun:      term
 val teff:     term
@@ -455,6 +467,8 @@ val set_range_of_fv:fv -> range -> fv
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
 
+val eq_pat : pat -> pat -> bool
+
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
@@ -469,8 +483,9 @@ val t_string      : term
 val t_float       : term
 val t_char        : term
 val t_range       : term
+val t_term        : term
 val t_tactic_unit : term
+val t_tac_unit    : term
 val t_list_of     : term -> term
 val t_option_of   : term -> term
 val unit_const    : term
-

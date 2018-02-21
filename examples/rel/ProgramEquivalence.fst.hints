@@ -1,8 +1,6 @@
 [
   "p2\u000eg\u0002³Ú\u0011©„¿êwAiƒ",
   [
-    [ "ProgramEquivalence.__proj__C__item__inv", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ProgramEquivalence.__proj__C__item__fp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ProgramEquivalence.__proj__C__item__c",
       1,
@@ -12,7 +10,8 @@
         "@query", "proj_equation_ProgramEquivalence.C_inv",
         "projection_inverse_ProgramEquivalence.C_inv"
       ],
-      0
+      0,
+      "615eaea1a08c28a52dbf3db6f84518eb"
     ],
     [
       "ProgramEquivalence.increment",
@@ -20,15 +19,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_ProgramEquivalence.live",
-        "fuel_guarded_inversion_ProgramEquivalence.counter",
+        "@query", "equation_ProgramEquivalence.live",
         "proj_equation_ProgramEquivalence.C_fp",
         "proj_equation_ProgramEquivalence.C_inv",
         "projection_inverse_ProgramEquivalence.C_fp",
         "projection_inverse_ProgramEquivalence.C_inv",
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv"
       ],
-      0
+      0,
+      "de0065561a499a9e27f07a3710820cbc"
     ],
     [
       "ProgramEquivalence.get",
@@ -36,15 +35,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_ProgramEquivalence.live",
-        "fuel_guarded_inversion_ProgramEquivalence.counter",
+        "@query", "equation_ProgramEquivalence.live",
         "proj_equation_ProgramEquivalence.C_fp",
         "proj_equation_ProgramEquivalence.C_inv",
         "projection_inverse_ProgramEquivalence.C_fp",
         "projection_inverse_ProgramEquivalence.C_inv",
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv"
       ],
-      0
+      0,
+      "1b793cc4e09745818f65a0176bfa1c0c"
     ],
     [
       "ProgramEquivalence.inv_0",
@@ -52,7 +51,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "0668842dee49d4199caf5fca358c9664"
     ],
     [
       "ProgramEquivalence.incr_0",
@@ -77,7 +77,8 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "5982defee3925b27d50979430c1c135a"
     ],
     [
       "ProgramEquivalence.get_0",
@@ -88,9 +89,13 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "eq2-interp",
-        "equation_FStar.List.Tot.Base.hd", "equation_Prims.nat",
+        "@query",
+        "FStar.DM4F.Heap_pretyping_4394be915457a7f5c0ef45f244d909c3",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_FStar.DM4F.Heap.ref",
+        "constructor_distinct_Prims.unit", "disc_equation_Prims.Cons",
+        "eq2-interp", "equation_FStar.List.Tot.Base.hd",
+        "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
         "equation_ProgramEquivalence.fp",
         "equation_ProgramEquivalence.inv_0",
@@ -99,12 +104,10 @@
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.nat", "l_or-interp",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
+        "projection_inverse_BoxInt_proj_0", "unit_typing"
       ],
-      0
+      0,
+      "66343df07a0fedaf2e086393240d40c9"
     ],
     [
       "ProgramEquivalence.init_counter_0",
@@ -112,9 +115,10 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@MaxFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "eq2-interp", "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
@@ -125,7 +129,6 @@
         "false_interp", "l_or-interp", "primitive_Prims.op_Addition",
         "proj_equation_ProgramEquivalence.C_fp",
         "proj_equation_ProgramEquivalence.C_inv",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
@@ -135,7 +138,8 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv",
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
-      0
+      0,
+      "65bb954f4c25409bc80619aa4bade635"
     ],
     [
       "ProgramEquivalence.inv_1",
@@ -145,40 +149,20 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query",
-        "FStar.DM4F.Heap_pretyping_4394be915457a7f5c0ef45f244d909c3",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_BoxInt",
-        "constructor_distinct_FStar.DM4F.Heap.ref",
-        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "disc_equation_Prims.Cons", "equation_FStar.List.Tot.Base.hd",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "constructor_distinct_BoxInt",
+        "constructor_distinct_Tm_unit", "disc_equation_Prims.Cons",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_typing", "primitive_Prims.op_Addition",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "unit_typing"
+        "projection_inverse_BoxInt_proj_0"
       ],
-      0
-    ],
-    [
-      "ProgramEquivalence.inv_1",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "ProgramEquivalence.inv_1",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      0,
+      "af473463cff25ae723650855afe1901c"
     ],
     [
       "ProgramEquivalence.incr_1",
@@ -191,8 +175,8 @@
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_Tm_unit", "disc_equation_Prims.Cons",
-        "eq2-interp", "equation_FStar.List.Tot.Base.hd",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
@@ -209,7 +193,8 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.DM4F.Heap.ref"
       ],
-      0
+      0,
+      "6ae82251090b132315b37a1fb75d095a"
     ],
     [
       "ProgramEquivalence.get_1",
@@ -222,8 +207,9 @@
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_Tm_unit", "disc_equation_Prims.Cons",
-        "eq2-interp", "equation_FStar.List.Tot.Base.hd",
+        "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
@@ -240,7 +226,8 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.DM4F.Heap.ref"
       ],
-      0
+      0,
+      "e4b21e8ab1053458d817f7df462f8527"
     ],
     [
       "ProgramEquivalence.counter_0",
@@ -252,7 +239,8 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv",
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
-      0
+      0,
+      "859ee52f19851a534c0b45ea5ac2f51c"
     ],
     [
       "ProgramEquivalence.counter_1",
@@ -264,7 +252,8 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv",
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
-      0
+      0,
+      "4fe10194c375429f9d6996765f8db9b7"
     ],
     [
       "ProgramEquivalence.init_counter_1",
@@ -272,46 +261,41 @@
       4,
       2,
       [
-        "@MaxFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "constructor_distinct_Prims.Cons",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "eq2-interp",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
+        "equation_ProgramEquivalence.fp",
         "equation_ProgramEquivalence.inv_1",
         "equation_ProgramEquivalence.live",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "false_interp", "function_token_typing_Prims.nat", "l_or-interp",
+        "false_interp", "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "int_typing", "l_or-interp",
         "primitive_Prims.op_Addition",
         "proj_equation_ProgramEquivalence.C_fp",
         "proj_equation_ProgramEquivalence.C_inv",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "projection_inverse_ProgramEquivalence.C_fp",
         "projection_inverse_ProgramEquivalence.C_inv",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv",
-        "token_correspondence_ProgramEquivalence.inv_1"
+        "token_correspondence_ProgramEquivalence.inv_1",
+        "typing_FStar.DM4F.Heap.ref", "typing_FStar.List.Tot.Base.length",
+        "typing_ProgramEquivalence.__proj__C__item__fp"
       ],
-      0
-    ],
-    [
-      "ProgramEquivalence.init_counter_1",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      0,
+      "fdb9b38af97dd00d2ec663a8da359947"
     ],
     [
       "ProgramEquivalence.increment_m",
@@ -319,23 +303,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
-      0
-    ],
-    [
-      "ProgramEquivalence.increment_m",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "324fcedc1d7810bba95c6ec8e826ae92"
     ],
     [
       "ProgramEquivalence.ref_not_in_fp",
@@ -346,44 +322,12 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "35191d5f8ca4e16844257c3c0c35b80f"
     ],
     [
       "ProgramEquivalence.observational_equivalence'",
       1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "ProgramEquivalence.observational_equivalence'",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "ProgramEquivalence.observational_equivalence'",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_ProgramEquivalence_Tm_refine_62a743791b63ba8269fbb4ad5655e284"
-      ],
-      0
-    ],
-    [
-      "ProgramEquivalence.observational_equivalence'",
-      4,
       4,
       2,
       [
@@ -399,27 +343,24 @@
         "FStar.DM4F.Heap.ST.__proj__STATE__item__get_token_correspondence",
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_equality",
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_token_correspondence",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
         "binder_x_6905fd0192d8db21734857d3fff472a8_1",
         "binder_x_a20f3045e295388ca94d4e434b549145_0",
         "binder_x_e1abf8d70ef080b612ca8cf43cbeae49_2",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_4",
         "binder_x_ffcb47ea43e69e20fb22a4cfa690626f_3",
         "constructor_distinct_BoxInt", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "constructor_distinct_Prims.list",
-        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "data_elim_ProgramEquivalence.C",
-        "disc_equation_Prims.Cons", "eq2-interp",
-        "equality_tok_Prims.LexTop@tok",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
+        "data_elim_ProgramEquivalence.C", "disc_equation_Prims.Cons",
+        "eq2-interp", "equality_tok_Prims.LexTop@tok",
         "equation_FStar.DM4F.Heap.ST.read_weak",
         "equation_FStar.DM4F.Heap.ST.write_weak",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
-        "equation_FStar.Pervasives.Native.fst", "equation_Prims.eq2",
-        "equation_Prims.nat",
+        "equation_FStar.Pervasives.Native.fst", "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
         "equation_ProgramEquivalence.counter_0",
         "equation_ProgramEquivalence.counter_1",
@@ -440,7 +381,9 @@
         "equation_with_fuel_ProgramEquivalence.increment_m.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_ProgramEquivalence.counter",
-        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "int_typing",
         "interpretation_FStar.DM4F.Heap.ST_Tm_abs_42a79cea2f7d589b114020780503b960",
         "interpretation_FStar.DM4F.Heap.ST_Tm_abs_714d83bc16ab055753ca46c02fc167ad",
         "interpretation_FStar.DM4F.ST_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
@@ -486,67 +429,18 @@
         "token_correspondence_ProgramEquivalence.incr_1",
         "token_correspondence_ProgramEquivalence.inv_0",
         "token_correspondence_ProgramEquivalence.inv_1",
-        "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel_tot",
-        "typing_FStar.DM4F.Heap.upd_tot",
-        "typing_FStar.List.Tot.Base.append", "typing_FStar.List.Tot.Base.hd",
-        "typing_FStar.List.Tot.Base.tail", "typing_FStar.List.Tot.Base.tl",
+        "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel",
+        "typing_FStar.DM4F.Heap.sel_tot", "typing_FStar.DM4F.Heap.upd_tot",
+        "typing_FStar.List.Tot.Base.hd", "typing_FStar.List.Tot.Base.tail",
         "typing_ProgramEquivalence.__proj__C__item__fp", "unit_inversion",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
-    ],
-    [
-      "ProgramEquivalence.observational_equivalence'",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "ProgramEquivalence.observational_equivalence'",
-      6,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "ProgramEquivalence.observational_equivalence'",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "ProgramEquivalence.counts_even_numbers",
-      1,
-      1,
       0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      "28b9b599b8700ece0d20b163657f22f4"
     ],
     [
       "ProgramEquivalence.counts_even_numbers",
-      2,
       1,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_ProgramEquivalence_Tm_refine_62a743791b63ba8269fbb4ad5655e284"
-      ],
-      0
-    ],
-    [
-      "ProgramEquivalence.counts_even_numbers",
-      3,
       1,
       0,
       [
@@ -561,6 +455,8 @@
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "ProgramEquivalence_interpretation_Tm_arrow_0f56e2e362ba49ee2aa5a74ab58032d3",
+        "assumption_Prims.HasEq_int",
         "binder_x_a20f3045e295388ca94d4e434b549145_0",
         "binder_x_e1abf8d70ef080b612ca8cf43cbeae49_1",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
@@ -570,7 +466,9 @@
         "equation_FStar.DM4F.Heap.ST.read_weak",
         "equation_FStar.DM4F.Heap.ST.write_weak",
         "equation_FStar.List.Tot.Base.hd",
-        "equation_FStar.Pervasives.Native.fst", "equation_Prims.nat",
+        "equation_FStar.Pervasives.Native.fst", "equation_Prims.as_ensures",
+        "equation_Prims.as_requires", "equation_Prims.l_True",
+        "equation_Prims.nat",
         "equation_ProgramEquivalence.contains_well_typed_refs",
         "equation_ProgramEquivalence.counter_0",
         "equation_ProgramEquivalence.fp", "equation_ProgramEquivalence.get",
@@ -582,7 +480,8 @@
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_ProgramEquivalence.increment_m.fuel_instrumented",
-        "fuel_guarded_inversion_ProgramEquivalence.counter",
+        "forall-interp", "fuel_guarded_inversion_ProgramEquivalence.counter",
+        "function_token_typing_FStar.DM4F.Heap.heap",
         "function_token_typing_Prims.nat", "int_inversion", "int_typing",
         "interpretation_FStar.DM4F.Heap.ST_Tm_abs_42a79cea2f7d589b114020780503b960",
         "interpretation_FStar.DM4F.Heap.ST_Tm_abs_714d83bc16ab055753ca46c02fc167ad",
@@ -590,10 +489,15 @@
         "interpretation_FStar.DM4F.ST_Tm_abs_4e96b01f83e004339dd29f46135d3c51",
         "interpretation_FStar.DM4F.ST_Tm_abs_be1f098a73b727536eabaf253dd83852",
         "interpretation_FStar.DM4F.ST_Tm_abs_eab7ad172dd476e9c4da4b0fb36e2f3b",
+        "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
+        "interpretation_Prims_Tm_abs_cc0ce251c10a6cba9664080c8e806896",
         "interpretation_ProgramEquivalence_Tm_abs_025d8451c09790a30073325b7d219674",
+        "interpretation_ProgramEquivalence_Tm_abs_25bb10f17d12bfe78f920397f50273e0",
         "interpretation_ProgramEquivalence_Tm_abs_273d8a487f3a47d1045a549bd9726c4b",
+        "interpretation_ProgramEquivalence_Tm_abs_42a3673eec7e21d1cd1134264758a994",
+        "interpretation_ProgramEquivalence_Tm_abs_ade836d34b090e9e91a6cd56c55afee7",
         "interpretation_ProgramEquivalence_Tm_abs_cde073d00723c6982cc122bf53e940f2",
-        "l_or-interp",
+        "l_and-interp", "l_imp-interp", "l_not-interp", "l_or-interp",
         "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
         "lemma_FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
         "lemma_FStar.DM4F.Heap.sel_upd1", "primitive_Prims.op_Addition",
@@ -610,33 +514,22 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_ProgramEquivalence_Tm_refine_66594372d057e8e92cecb95f07d084a9",
+        "refinement_interpretation_ProgramEquivalence_Tm_refine_741dd435a2f610a6a11527cdfc8d694f",
         "refinement_interpretation_ProgramEquivalence_Tm_refine_bd608ae7fcafcddc38fe7d300ec408aa",
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv",
         "token_correspondence_ProgramEquivalence.get_0",
         "token_correspondence_ProgramEquivalence.incr_0",
-        "token_correspondence_ProgramEquivalence.inv_0",
+        "token_correspondence_ProgramEquivalence.inv_0", "true_interp",
         "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel_tot",
         "typing_FStar.List.Tot.Base.hd",
-        "typing_ProgramEquivalence.__proj__C__item__fp", "unit_inversion",
+        "typing_FStar.Pervasives.Native.fst",
+        "typing_ProgramEquivalence.__proj__C__item__fp",
+        "typing_ProgramEquivalence.get",
+        "typing_ProgramEquivalence.increment_m", "unit_inversion",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
-    ],
-    [
-      "ProgramEquivalence.counts_even_numbers",
-      4,
-      1,
       0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "ProgramEquivalence.counts_even_numbers",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      "74fa5d49fee324f2531dc6f918c9d78d"
     ]
   ]
 ]

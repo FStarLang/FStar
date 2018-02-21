@@ -14,19 +14,8 @@ cache/
 
 /src/parser/parse.fs
 /src/parser/lex.fs
-/src/parser/parse.ml
-/src/parser/parse.mli
 
-/src/boot_fstis
-/src/boot_fsts
-/src/format/formatml.fsi
-
-/lib/FStar.Util.fsti
-/lib/FStar.GetOpt.fsti
-/lib/FStar.Unionfind.fsti
-
-/ulib/.mgen
-/ulib/ml/extracted
+/src/boot
 
 /bin/*.dll
 /bin/*.pdb
@@ -47,6 +36,7 @@ examples/wysteria/ocaml-output/*
 examples/incl/*.neg/error.log
 
 _build/
+/ulib/ml/_taclib_build/
 
 *.native
 *.byte
@@ -59,6 +49,8 @@ dump
 *.cmo
 *.cmx
 *.cma
+*.cmxs
+*.cmxa
 *.o
 
 .depend
@@ -74,6 +66,10 @@ tags
 *.swp
 
 *.exe
+
+*.checked
+*.checked.lax
+*.source
 
 /.nubuild
 /nucache/

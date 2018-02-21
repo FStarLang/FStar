@@ -7,7 +7,7 @@ type heap = int -> Tot int
 
 type config = heap * exp
 
-type step : config -> Type =
+noeq type step : config -> Type =
   | SApp1 : h:heap ->
             e1:exp ->
             e2:exp ->

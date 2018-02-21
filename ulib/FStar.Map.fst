@@ -1,3 +1,4 @@
+
 (**
 F* standard library Map module. 
 
@@ -7,7 +8,7 @@ module FStar.Map
 open FStar.Set
 open FStar.FunctionalExtensionality
 
-noeq abstract type t (key:eqtype) (value:Type) = {
+noeq abstract type t (key:Type u#a{hasEq key}) (value:Type u#b) :Type u#(max a b) = {
   mappings: key -> Tot value;
   domain:   set key
 }
@@ -87,7 +88,7 @@ abstract val lemma_InDomRestrict: #key:eqtype -> #value:Type -> m:t key value ->
 
 abstract val lemma_ContainsDom: #key:eqtype -> #value:Type -> m:t key value -> k:key -> 
   Lemma (requires True) (ensures (contains m k = mem k (domain m)))
-                      [SMTPat (contains m k)]
+                      [SMTPatOr[[SMTPat (contains m k)]; [SMTPat (mem k (domain m))]]]
 
 abstract val lemma_UpdDomain : #key:eqtype -> #value:Type -> m:t key value -> k:key -> v:value ->
   Lemma (requires True) 
@@ -108,7 +109,7 @@ let lemma_InDomRestrict #key #value m ks k = ()
 let lemma_ContainsDom #key #value m k      = ()
 let lemma_UpdDomain #key #value m k v      = ()
 
-abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) =
+abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) :Type0 =
     feq m1.mappings m2.mappings /\ equal m1.domain m2.domain
 
 
@@ -116,15 +117,15 @@ abstract val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:t key value -> 
                        Lemma (requires (forall k. sel m1 k == sel m2 k /\
                                                   contains m1 k = contains m2 k))
                        (ensures (equal m1 m2))
-                       [SMTPatT (equal m1 m2)]
+                       [SMTPat (equal m1 m2)]
 
 abstract val lemma_equal_elim: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
                       Lemma (requires (equal m1 m2)) (ensures  (m1 == m2))
-                      [SMTPatT (equal m1 m2)]
+                      [SMTPat (equal m1 m2)]
 
 abstract val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
                       Lemma  (requires (m1 == m2)) (ensures  (equal m1 m2))
-		      [SMTPatT (equal m1 m2)]
+		      [SMTPat (equal m1 m2)]
 
 
 let lemma_equal_intro #key #value m1 m2 = ()

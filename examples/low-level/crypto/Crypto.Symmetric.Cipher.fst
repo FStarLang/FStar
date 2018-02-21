@@ -51,7 +51,7 @@ type state a = lbuffer (v (statelen a))
 
 // 16-10-02 an integer value, instead of a lbuffer (v (ivlen)),
 // so that it can be used both in abstract indexes and in real code.
-type iv a    = n:UInt128.t { UInt128.v n < pow2 (v (8ul *^ ivlen a)) } 
+inline_for_extraction type iv a    = n:UInt128.t { UInt128.v n < pow2 (v (8ul *^ ivlen a)) }
 
 let init (#i:id) (k:key (algi i)) (s:state (algi i)) =
   let a = algi i in

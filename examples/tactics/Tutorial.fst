@@ -50,7 +50,7 @@ which takes a tactic to be run on the goal to prove.
 
 val ex1 : unit -> Lemma True
 let ex1 () =
-    assert_by_tactic idtac True
+    assert_by_tactic True idtac
 
 (*
 Here, `idtac` is the identity tactic, which does nothing. Certainly,
@@ -63,7 +63,7 @@ standard output.
 
 val ex2 : unit -> Lemma True
 let ex2 () =
-    assert_by_tactic (dump "Example 2") True
+    assert_by_tactic True (dump "Example 2")
 
 (* Gives:
 
@@ -106,7 +106,7 @@ let tau3 : tactic unit =
   trivial
 
 let ex3 (x : nat) =
-  assert_by_tactic tau3 (x + x >= 0 /\ List.length [4;5;1] == 3)
+  assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3) tau3
 
 (*
 First, we defined tau3 as a custom tactic, composed by applying `split`,
@@ -185,9 +185,11 @@ We can use it for our previous example, or to break down bigger formulas.
 *)
 
 let ex3' (x : nat) =
-  assert_by_tactic split_all (x + x >= 0 /\ List.length [4;5;1] == 3)
+  assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3)
+                   split_all
 
 let ex4 (x : nat) =
-  assert_by_tactic split_all ((1 + 1 == 2) /\ ((-x <= 0 /\ x + x >= 0) /\ List.length [4;5;1] == 3))
+  assert_by_tactic ((1 + 1 == 2) /\ ((-x <= 0 /\ x + x >= 0) /\ List.length [4;5;1] == 3))
+                   split_all
 
 (* Here, all of the conjuncts that remain are sent off separetely to the SMT solver. *)

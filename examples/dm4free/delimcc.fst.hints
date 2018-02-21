@@ -9,17 +9,16 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_DelimCC.bind_k",
         "equation_DelimCC.kont", "equation_DelimCC.return_k",
-        "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
-        "refinement_interpretation_DelimCC_Tm_refine_ec226b0e6a0f4fa7cc8749ef613754f4",
+        "refinement_interpretation_DelimCC_Tm_refine_8d872f0cffc607bfe1464e48085c7607",
         "token_correspondence_DelimCC.return_k",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
-      0
+      0,
+      "398efe9fe49fbd29b37f9b10e50f1139"
     ],
     [
       "DelimCC.left_unit",
@@ -31,10 +30,10 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
-        "unit_typing"
+        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6"
       ],
-      0
+      0,
+      "4dd743f396e2b600c52f83c76e85e00e"
     ],
     [
       "DelimCC.associativity",
@@ -44,16 +43,15 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_DelimCC.bind_k",
         "equation_DelimCC.kont",
-        "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "interpretation_DelimCC_Tm_abs_e9c89cb6b52613c1825b275ae72a823c",
-        "refinement_interpretation_DelimCC_Tm_refine_ec226b0e6a0f4fa7cc8749ef613754f4",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "refinement_interpretation_DelimCC_Tm_refine_8d872f0cffc607bfe1464e48085c7607",
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
-      0
+      0,
+      "f98e21a378438a476e54d6b2df10689b"
     ],
     [
       "DelimCC.right_unit2",
@@ -63,17 +61,16 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_DelimCC.bind_k2",
         "equation_DelimCC.kont2", "equation_DelimCC.return_k2",
-        "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
-        "refinement_interpretation_DelimCC_Tm_refine_c081f6d4b0cd4f0a803b92d834bc0423",
+        "refinement_interpretation_DelimCC_Tm_refine_ac3daf7309674aafe2df23b2b382be0e",
         "token_correspondence_DelimCC.return_k2",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
-      0
+      0,
+      "afb78cd41670cccee71f2d2fbe72211d"
     ],
     [
       "DelimCC.left_unit2",
@@ -85,10 +82,10 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
-        "unit_typing"
+        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6"
       ],
-      0
+      0,
+      "241e9b81e2e820f28882dc9f1d5ebf7a"
     ],
     [
       "DelimCC.associativity2",
@@ -98,20 +95,51 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_DelimCC.bind_k2",
         "equation_DelimCC.kont2",
-        "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "interpretation_DelimCC_Tm_abs_f47ea27f0c9878b94f87ce35f7f63df2",
-        "refinement_interpretation_DelimCC_Tm_refine_c081f6d4b0cd4f0a803b92d834bc0423",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "refinement_interpretation_DelimCC_Tm_refine_ac3daf7309674aafe2df23b2b382be0e",
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
-      0
+      0,
+      "fb05ab3630c9019ea1141b2b69271470"
     ],
-    [ "DelimCC.ext", 1, 2, 1, [ "@query", "unit_typing" ], 0 ],
-    [ "DelimCC.left_unit3", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.right_unit3", 1, 2, 1, [ "@query", "unit_typing" ], 0 ],
-    [ "DelimCC.associativity3", 1, 2, 1, [ "@query", "unit_typing" ], 0 ]
+    [
+      "DelimCC.ext",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a1b4c8fab47222e419bd29a1877e6293"
+    ],
+    [
+      "DelimCC.left_unit3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6a5cac1c969fc7a7800863d97e148047"
+    ],
+    [
+      "DelimCC.right_unit3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b684b5a6b98f64e7e55df38a0d269cdf"
+    ],
+    [
+      "DelimCC.associativity3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d669e60d11c06a62d5e0aedf1dfe4529"
+    ]
   ]
 ]

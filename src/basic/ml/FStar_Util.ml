@@ -1,37 +1,14 @@
 let max_int = Z.of_int max_int
-let is_letter c = BatChar.is_letter c
-let is_digit  c = BatChar.is_digit  c
-let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
-let is_symbol c = BatChar.is_symbol c
+let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
+let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
+let is_letter_or_digit c = is_letter c || is_digit c
+let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 
 (* Modeled after: Char.IsPunctuation in .NET
    (http://www.dotnetperls.com/char-ispunctuation)
 *)
-let is_punctuation c = (
-    c = '!' ||
-    c = '"' ||
-    c = '#' ||
-    c = '%' ||
-    c = '&' ||
-    c = '\'' ||
-    c = '(' ||
-    c = ')' ||
-    c = '*' ||
-    c = ',' ||
-    c = '-' ||
-    c = '.' ||
-    c = '/' ||
-    c = ':' ||
-    c = ';' ||
-    c = '?' ||
-    c = '@' ||
-    c = '[' ||
-    c = '\\' ||
-    c = ']' ||
-    c = '_' ||
-    c = '{' ||
-    c = '}'
-  )
+let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
+(*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
 let return_all x = x
 
@@ -46,13 +23,13 @@ let record_time f =
     let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 type proc =
     {inc : in_channel;
@@ -88,7 +65,7 @@ let write_input in_write input =
 
 (*let cnt = ref 0*)
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
   (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
   output_string fc input;
   close_out fc;*)
@@ -97,7 +74,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   let (from_chd_r, from_chd_w) = Unix.pipe () in
   Unix.set_close_on_exec to_chd_w;
   Unix.set_close_on_exec from_chd_r;
-  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  let _pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
   (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
                                to_chd_r from_chd_w Unix.stderr
   in
@@ -113,10 +90,18 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
     let s, eof = (try
                     BatString.trim (input_line cin), false
                   with End_of_file ->
-                    Buffer.add_string out ("\nkilled\n") ; "", true) in
-    if not eof then
-      if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+                    if not raw then
+                        Buffer.add_string out ("\nkilled\n")
+                    else (); "", true) in
+    if not raw then (
+        if not eof then
+          if s = "Done!" then ()
+          else (Buffer.add_string out (s ^ "\n"); read_out ())
+    ) else (
+        if not eof then
+          (Buffer.add_string out s; read_out ())
+    )
+  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
   (* writing to z3 *)
@@ -128,7 +113,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   close_in cin;
   Buffer.contents out
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
   let (inc,outc) = Unix.open_process command in
   let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
@@ -221,8 +206,8 @@ let set_is_empty ((s, _):'a set) =
   | [] -> true
   | _ -> false
 
-let new_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
+let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
@@ -233,6 +218,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
        else
          aux (hd::out) tl in
   aux [] s1
+
 let set_add a ((s, b):'a set) = (a::s, b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
@@ -256,8 +242,11 @@ let fifo_set_is_empty ((s, _):'a fifo_set) =
   | [] -> true
   | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+  (l, fun x y -> cmp x y = Z.zero)
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+    as_fifo_set [] cmp
 
 let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
@@ -280,7 +269,8 @@ let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_s
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
+let smap_add (m:'value smap) k (v:'value) =
+    BatHashtbl.remove m k; BatHashtbl.add m k v
 let smap_of_list (l: (string * 'value) list) =
   let s = BatHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
@@ -291,6 +281,14 @@ let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
+
+type 'value psmap = (string, 'value) BatMap.t
+let psmap_empty (_: unit) : 'value psmap = BatMap.empty
+let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
+let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let psmap_try_find (map: 'value psmap) (key: string) =
+  try Some (BatMap.find key map) with Not_found -> None
 
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
@@ -305,6 +303,14 @@ let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
 let imap_remove (m:'value imap) k = BatHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
+
+type 'value pimap = (Z.t, 'value) BatMap.t
+let pimap_empty (_: unit) : 'value pimap = BatMap.empty
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let pimap_try_find (map: 'value pimap) (key: Z.t) =
+  try Some (BatMap.find key map) with Not_found -> None
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -349,22 +355,33 @@ let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of Z.t
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 let default_printer =
   { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
     printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
-    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr); }
+    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr);
+    printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ())}
 
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
 let print_raw s = pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
+let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
@@ -377,14 +394,16 @@ let unicode_of_string (string:string) =
   let i = ref 0 in
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
-
-let char_of_int i = char_of_int (Z.to_int i)
+let base64_encode s = BatBase64.str_encode s
+let base64_decode s = BatBase64.str_decode s
+let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
-let int_of_char x= Z.of_int (Char.code x)
+let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
+let int_of_char x = Z.of_int x
 let int_of_byte x = x
-let int_of_uint8 = int_of_char
+let int_of_uint8 x = Z.of_int (Char.code x)
 let uint16_of_int i = Z.to_int i
-let byte_of_char (c:char) = Char.code c
+let byte_of_char c = c
 
 let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
@@ -399,7 +418,7 @@ let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
-let string_of_char  (i:char) = spr "%c" i
+let string_of_char i = BatUTF8.init 1 (fun _ -> BatUChar.chr i)
 let hex_string_of_byte (i:int) =
   let hs = spr "%x" i in
   if (String.length hs = 1) then "0" ^ hs
@@ -409,15 +428,16 @@ let bytes_of_string = unicode_of_string
 let starts_with = BatString.starts_with
 let trim_string = BatString.trim
 let ends_with = BatString.ends_with
-let char_at s index = BatString.get s (Z.to_int index)
-let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let char_at s index = BatUChar.code (BatUTF8.get s (Z.to_int index))
+let is_upper c = 65 <= c && c <= 90
 let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
-let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
-let replace_char (s:string) (c1:char) (c2:char) =
-  BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
+let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
+let replace_char (s:string) c1 c2 =
+  let b = bytes_of_string s in
+  string_of_bytes (BatArray.map (fun x -> if x = c1 then c2 else x) b)
+let replace_chars (s:string) c (by:string) =
+  BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
@@ -598,7 +618,7 @@ let first_N n l =
   f [] 0 l
 
 let nth_tail n l =
-  let rec aux n l = 
+  let rec aux n l =
     if n=0 then l else aux (n - 1) (BatList.tl l)
   in
   aux (Z.to_int n) l
@@ -836,23 +856,36 @@ let load_value_from_file (fname:string) =
 let print_exn e =
   Printexc.to_string e
 
-let digest_of_file (fname:string) =
-  BatDigest.file fname
+let digest_of_file =
+  let cache = smap_create (Z.of_int 101) in
+  fun (fname:string) ->
+    match smap_try_find cache fname with
+    | Some dig -> dig
+    | None ->
+      let dig = BatDigest.file fname in
+      smap_add cache fname dig;
+      dig
 
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
+let measure_execution_time tag f =
+  let t = Sys.time () in
+  let retv = f () in
+  print2 "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
+  retv
 
 (** Hints. *)
 type hint = {
-    hint_name: string;
-    hint_index: Z.t;
+    hint_name:string;
+    hint_index:Z.t;
     fuel:Z.t;
     ifuel:Z.t;
-    unsat_core: string list option;
-    query_elapsed_time:Z.t
+    unsat_core:string list option;
+    query_elapsed_time:Z.t;
+    hash:string option
 }
 
 type hints = hint option list
@@ -867,86 +900,93 @@ let write_hints (filename: string) (hints: hints_db): unit =
     `String hints.module_digest;
     `List (List.map (function
       | None -> `Null
-      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time } ->
+      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time; hash } ->
           `List [
-	    `String hint_name;
-	    `Int (Z.to_int hint_index);
+            `String hint_name;
+            `Int (Z.to_int hint_index);
             `Int (Z.to_int fuel);
             `Int (Z.to_int ifuel);
             (match unsat_core with
             | None -> `Null
             | Some strings ->
                 `List (List.map (fun s -> `String s) strings));
-            `Int (Z.to_int query_elapsed_time)
+            `Int (Z.to_int query_elapsed_time);
+            `String (match hash with | Some(h) -> h | _ -> "")
           ]
     ) hints.hints)
   ] in
   Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
-    try
+  let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
+      hint_name = nm;
+      hint_index = Z.of_int ix;
+      fuel = Z.of_int fuel;
+      ifuel = Z.of_int ifuel;
+      unsat_core = begin
+        match unsat_core with
+        | `Null ->
+           None
+        | `List strings ->
+           Some (List.map (function
+                           | `String s -> s
+                           | _ -> raise Exit)
+                           strings)
+        |  _ ->
+           raise Exit
+        end;
+      query_elapsed_time = Z.of_int time;
+      hash = hash_opt
+  }
+  in
+  try
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (match json with
-    | `List [
-        `String module_digest;
-        `List hints
-      ] ->
-        {
-          module_digest;
-          hints = List.map (function
-            | `Null -> None
-            | `List [
-		`String hint_name;
-		`Int hint_index;
-                `Int fuel;
-                `Int ifuel;
-                unsat_core;
-                `Int query_elapsed_time
-              ] ->
-                Some {
-		  hint_name;
-		  hint_index = Z.of_int hint_index;
-                  fuel = Z.of_int fuel;
-                  ifuel = Z.of_int ifuel;
-                  unsat_core = begin match unsat_core with
-                    | `Null ->
-                        None
-                    | `List strings ->
-                        Some (List.map (function
-                          | `String s -> s
-                          | _ -> raise Exit
-                        ) strings)
-                    |  _ ->
-                        raise Exit
-                  end;
-                  query_elapsed_time = Z.of_int query_elapsed_time
-                }
-              | _ ->
-                 raise Exit
-          ) hints
-        }
-    | _ ->
-        raise Exit
+    Some (
+        match json with
+        | `List [
+            `String module_digest;
+            `List hints
+          ] -> {
+            module_digest;
+            hints = List.map (function
+                        | `Null -> None
+                        | `List [ `String hint_name;
+                                  `Int hint_index;
+                                  `Int fuel;
+                                  `Int ifuel;
+                                  unsat_core;
+                                  `Int query_elapsed_time ] ->
+                          (* This case is for dealing with old-style hint files
+                             that lack a query-hashes field. We should remove this
+                             case once we definitively remove support for old hints *)
+                           Some (mk_hint hint_name hint_index fuel ifuel unsat_core query_elapsed_time None)
+                        | `List [ `String hint_name;
+                                  `Int hint_index;
+                                  `Int fuel;
+                                  `Int ifuel;
+                                  unsat_core;
+                                  `Int query_elapsed_time;
+                                  `String hash ] ->
+                           let hash_opt = if hash <> "" then Some(hash) else None in
+                           Some (mk_hint hint_name hint_index fuel ifuel unsat_core query_elapsed_time hash_opt)
+                        | _ ->
+                           raise Exit
+                      ) hints
+          }
+        | _ ->
+           raise Exit
     )
   with
    | Exit ->
-      Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
+      print1_warning "Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ ->
-      Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+      print1_warning "Unable to open hints file: %s; ran without hints\n" filename;
       None
 
 (** Interactive protocol **)
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of Z.t
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
 
 exception UnsupportedJson
 
@@ -990,3 +1030,33 @@ let (:=) = FStar_ST.write
 
 let marshal (x:'a) : string = Marshal.to_string x []
 let unmarshal (x:string) : 'a = Marshal.from_string x 0
+
+type signedness = | Unsigned | Signed
+type width = | Int8 | Int16 | Int32 | Int64
+
+let rec z_pow2 n =
+  if n = Z.zero then Z.one
+  else Z.mul (Z.of_string "2") (z_pow2 (Z.sub n Z.one))
+
+let bounds signedness width =
+    let n =
+        match width with
+        | Int8 -> Z.of_string "8"
+        | Int16 -> Z.of_string "16"
+        | Int32 -> Z.of_string "32"
+        | Int64 -> Z.of_string "64"
+    in
+    let lower, upper =
+      match signedness with
+      | Unsigned ->
+        Z.zero, Z.sub (z_pow2 n) Z.one
+      | Signed ->
+        let upper = z_pow2 (Z.sub n Z.one) in
+        Z.neg upper, Z.sub upper Z.one
+    in
+    lower, upper
+
+let within_bounds repr signedness width =
+  let lower, upper = bounds signedness width in
+  let value = Z.of_string (ensure_decimal repr) in
+  Z.leq lower value && Z.leq value upper

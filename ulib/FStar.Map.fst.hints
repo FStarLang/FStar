@@ -1,31 +1,26 @@
 [
-  "\u0005\"”Iµ\f•\u0017ç¨\u0000ŒŒ‡˚j",
+  "G\u0018s7Ò~∆T\u0018√£!+0å",
   [
-    [ "FStar.Map.__proj__Mkt__item__mappings", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.__proj__Mkt__item__domain", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.upd", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.upd",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Set.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "39fc4b838ad611b3f0c4351ed15114ef"
     ],
-    [ "FStar.Map.concat", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.Map.lemma_InDomUpd1",
+      "FStar.Map.concat",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Set.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "5baefbf568224a84ff50f70932974a4a"
     ],
     [
       "FStar.Map.lemma_ContainsDom",
@@ -33,7 +28,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
+      0,
+      "25346099958eeff5676ccce28220f75e"
     ],
     [
       "FStar.Map.lemma_SelUpd1",
@@ -50,7 +46,8 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "unit_typing"
       ],
-      0
+      0,
+      "b91335ce8d4aa3378c059419974aa461"
     ],
     [
       "FStar.Map.lemma_SelUpd2",
@@ -68,7 +65,8 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "unit_typing"
       ],
-      0
+      0,
+      "d24db0593d37b4ee3bd24395c3904e80"
     ],
     [
       "FStar.Map.lemma_SelConst",
@@ -83,7 +81,8 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "unit_typing"
       ],
-      0
+      0,
+      "8393f678e6fe8eabc01c5a9ae4e069ae"
     ],
     [
       "FStar.Map.lemma_SelRestrict",
@@ -98,7 +97,8 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "unit_typing"
       ],
-      0
+      0,
+      "8461ae5afdbc0d827ec0401cecb9c4a8"
     ],
     [
       "FStar.Map.lemma_SelConcat1",
@@ -115,7 +115,8 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "typing_FStar.Map.contains", "unit_typing"
       ],
-      0
+      0,
+      "ada54bdee1c5606f20aeeac652f8d5a6"
     ],
     [
       "FStar.Map.lemma_SelConcat2",
@@ -133,11 +134,12 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "unit_typing"
       ],
-      0
+      0,
+      "95e4f5cc446e583fa31e718b0b3fdd29"
     ],
     [
       "FStar.Map.lemma_InDomUpd1",
-      2,
+      1,
       2,
       1,
       [
@@ -148,13 +150,12 @@
         "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Map.Mkt_domain",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Map.Mkt_domain",
         "typing_FStar.Map.__proj__Mkt__item__domain",
-        "typing_FStar.Map.contains", "typing_FStar.Set.singleton",
-        "unit_typing"
+        "typing_FStar.Map.contains", "typing_FStar.Set.singleton"
       ],
-      0
+      0,
+      "7d4ba9df67f9d13a71676e4fb4ac6b72"
     ],
     [
       "FStar.Map.lemma_InDomUpd2",
@@ -168,7 +169,8 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Map.contains", "unit_typing"
       ],
-      0
+      0,
+      "82b14aba69c07a7cea3e1c83f9d865da"
     ],
     [
       "FStar.Map.lemma_InDomConstMap",
@@ -184,7 +186,8 @@
         "projection_inverse_FStar.Map.Mkt_domain", "typing_FStar.Set.empty",
         "unit_typing"
       ],
-      0
+      0,
+      "ed3832a7b594a0e974a3a09cce5b3673"
     ],
     [
       "FStar.Map.lemma_InDomConcat",
@@ -199,7 +202,8 @@
         "projection_inverse_FStar.Map.Mkt_domain",
         "typing_FStar.Map.__proj__Mkt__item__domain", "unit_typing"
       ],
-      0
+      0,
+      "2ab488df03c1baf7d5b4eefbdbdf561f"
     ],
     [
       "FStar.Map.lemma_InDomRestrict",
@@ -215,7 +219,8 @@
         "projection_inverse_FStar.Map.Mkt_domain",
         "typing_FStar.Map.__proj__Mkt__item__domain", "unit_typing"
       ],
-      0
+      0,
+      "66f9014552d7041c9d8e7e684737578e"
     ],
     [
       "FStar.Map.lemma_ContainsDom",
@@ -227,7 +232,8 @@
         "equation_FStar.Map.domain", "fuel_guarded_inversion_FStar.Map.t",
         "unit_typing"
       ],
-      0
+      0,
+      "7a9d9b4abf91e354e8f7a361e22a943e"
     ],
     [
       "FStar.Map.lemma_UpdDomain",
@@ -244,7 +250,8 @@
         "typing_FStar.Map.__proj__Mkt__item__domain",
         "typing_FStar.Set.singleton", "typing_FStar.Set.union", "unit_typing"
       ],
-      0
+      0,
+      "1ef9ca2089cf23ee36d070ef347d97f2"
     ],
     [
       "FStar.Map.lemma_equal_intro",
@@ -252,7 +259,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
+      0,
+      "ef775c062dd9c058c751c3a3c2948d27"
     ],
     [
       "FStar.Map.lemma_equal_intro",
@@ -269,7 +277,8 @@
         "token_correspondence_FStar.Map.__proj__Mkt__item__mappings",
         "typing_FStar.Map.__proj__Mkt__item__domain", "unit_typing"
       ],
-      0
+      0,
+      "523ba9496e25d4fc7bef980ac07799ea"
     ],
     [
       "FStar.Map.lemma_equal_elim",
@@ -289,7 +298,8 @@
         "typing_FStar.Map.__proj__Mkt__item__domain",
         "typing_FStar.Map.__proj__Mkt__item__mappings", "unit_typing"
       ],
-      0
+      0,
+      "af307d04bfe3edaa5e9517ba590da980"
     ],
     [
       "FStar.Map.lemma_equal_refl",
@@ -301,7 +311,8 @@
         "fuel_guarded_inversion_FStar.Map.t",
         "lemma_FStar.Map.lemma_equal_intro", "unit_typing"
       ],
-      0
+      0,
+      "967f36c1d7c66355617590a37ed61c67"
     ]
   ]
 ]

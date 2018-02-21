@@ -23,7 +23,7 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (Seq.length s1 = Seq.length s2
                /\ (forall (i:nat{i < Seq.length s1}).{:pattern (Seq.index s1 i); (Seq.index s2 i)} (Seq.index s1 i == Seq.index s2 i))))
      (ensures (Seq.equal s1 s2))
-     [SMTPatT (Seq.equal s1 s2)]
+     [SMTPat (Seq.equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
 (* ----- from strings to bytestring and back *)
@@ -60,8 +60,8 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 (Char.char_of_int 0)
-let tag1 = createBytes 1 (Char.char_of_int 1)
+let tag0 = createBytes 1 0uy
+let tag1 = createBytes 1 1uy
 
 let request s = tag0 @| (utf8 s)
 

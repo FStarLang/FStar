@@ -28,6 +28,7 @@ open FStar
 open FStar.Util
 open FStar.Parser.AST
 open FStar.Ident
+open FStar.Errors
 
 module O = FStar.Options
 module P = FStar.Parser.Driver
@@ -194,7 +195,7 @@ let document_toplevel name topdecl =
         | None -> None, Some(doc)
         | Some (_, summary) -> Some(summary), Some(doc))
     | None -> None, None)
-  | _ -> raise(FStar.Errors.Err("Not a TopLevelModule"))
+  | _ -> Errors.raise_err (Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -228,14 +229,14 @@ let document_module (m:modul) =
           close_file fd;
           name
         end
-    | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
+    | None -> Errors.raise_err (Errors.Fatal_NonSingletonTopLevel, (Util.format1 "No singleton toplevel in module %s" name.str))
 
 ///////////////////////////////////////////////////////////////////////////////
 // entry point
 ///////////////////////////////////////////////////////////////////////////////
 let generate (files:list<string>) =
   // fsdoc each module into it's own module.md.
-  let modules = List.collect (fun fn -> fst (P.parse_file fn)) files in
+  let modules = List.map (fun fn -> fst (P.parse_file fn)) files in
   let mods = List.map document_module modules in
   // write mod_names into index.md
   let on = O.prepend_output_dir "index.md" in

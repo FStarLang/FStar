@@ -1,0 +1,36 @@
+[
+  "ÔÕçX∑ûx˙Qê≤›€Ec#",
+  [
+    [
+      "Bug1076.uu___is_Const0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d0ce314a6d8f078f56b524c0af2181d8"
+    ],
+    [
+      "Bug1076.uu___is_Const1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "16cd7064d1f88b4dc7918b9028cc3c8c"
+    ],
+    [
+      "Bug1076.__proj__Const1__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1076.Const1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug1076_Tm_refine_5cdcca8bdc4b0558b575402415d68f74"
+      ],
+      0,
+      "fd4fdf6ad53aa295c927d327f7b05d24"
+    ]
+  ]
+]

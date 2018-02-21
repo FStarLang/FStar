@@ -1,0 +1,96 @@
+[
+  "‡\u0011þŒðº‚\u0018´ê¦¾\u001aõ„L",
+  [
+    [
+      "FStar.Ref.contains",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8fe0e9fab5e7b229beec23355255494a"
+    ],
+    [
+      "FStar.Ref.unused_in",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ec6de3afd740dab31b21d07c806b9835"
+    ],
+    [
+      "FStar.Ref.fresh",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ceaf4eb1932966538814b721f6d87e00"
+    ],
+    [
+      "FStar.Ref.only",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "d72f677f58350917cf29dc4f9ac9f0f0"
+    ],
+    [
+      "FStar.Ref.recall",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Ref.contains" ],
+      0,
+      "4a9f63173754e11909566bc79825edd2"
+    ],
+    [
+      "FStar.Ref.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Ref.fresh",
+        "equation_FStar.Ref.sel", "equation_FStar.ST.ref",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "4f9b1b048fa1d1048247b3b60eb0db02"
+    ],
+    [
+      "FStar.Ref.read",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Ref.sel" ],
+      0,
+      "fcf2f412da6131a2880cbb76d69226af"
+    ],
+    [
+      "FStar.Ref.write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel",
+        "equation_FStar.Monotonic.Heap.only", "equation_FStar.Ref.contains",
+        "equation_FStar.Ref.only", "equation_FStar.Ref.sel",
+        "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "refinement_interpretation_FStar.Ref_Tm_refine_fc83f25424539824d394a73dd287ca2e",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0,
+      "436e312e5a9fd5acaa91e61e32882f11"
+    ]
+  ]
+]

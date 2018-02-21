@@ -1,0 +1,44 @@
+[
+  "\u0001)Û\u0000rÂIp˜gßÖŒÊ¬±",
+  [
+    [
+      "Canon.Test.lem1",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "2d56242656021f31b028719954c621ca"
+    ],
+    [
+      "Canon.Test.lem8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8b35069b1d729e530cfc59848c94cc7f"
+    ],
+    [
+      "Canon.Test.lem9",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "31f3f087d08e794eeca9a5cdee9f3ab7"
+    ],
+    [
+      "Canon.Test.lem10",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "478935fd913a0010f13c3a6acac68209"
+    ]
+  ]
+]

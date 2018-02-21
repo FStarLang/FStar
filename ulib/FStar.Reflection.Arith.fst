@@ -1,9 +1,7 @@
 module FStar.Reflection.Arith
 
-open FStar.Reflection.Syntax
-open FStar.Reflection.Types
-open FStar.Reflection.Syntax.Lemmas
 open FStar.Tactics
+open FStar.Reflection
 module O = FStar.Order
 
 (*
@@ -20,13 +18,15 @@ noeq
 type expr =
     | Lit     : int -> expr
     // atom, contains both a numerical ID and the actual term encountered
-    | Atom    : nat -> term -> expr 
+    | Atom    : nat -> term -> expr
     | Plus    : expr -> expr -> expr
     | Mult    : expr -> expr -> expr
     | Minus   : expr -> expr -> expr
     | Land    : expr -> expr -> expr
     | Lxor    : expr -> expr -> expr
     | Lor     : expr -> expr -> expr
+    | Ladd    : expr -> expr -> expr
+    | Lsub    : expr -> expr -> expr
     | Shl     : expr -> expr -> expr
     | Shr     : expr -> expr -> expr
     | Neg     : expr -> expr
@@ -106,14 +106,16 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
-val is_arith_expr : term -> tm expr
-let rec is_arith_expr (t:term) =
+val as_arith_expr : term -> tm expr
+let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
+    // Admitting this subtyping on lists for now, it's provable, but tedious right now
+    let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
     match inspect hd, tl with
-    | Tv_FVar fv, [e1; e2 ; e3] ->
+    | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
-      let e2' = is_arith_expr e2 in
-      let e3' = is_arith_expr e3 in
+      let e2' = as_arith_expr e2 in
+      let e3' = as_arith_expr e3 in
       if qn = land_qn then liftM2 Land e2' e3'
       else if qn = lxor_qn then liftM2 Lxor e2' e3'
       else if qn = lor_qn then liftM2 Lor e2' e3'
@@ -122,42 +124,59 @@ let rec is_arith_expr (t:term) =
       else if qn = udiv_qn then liftM2 Udiv e2' e3'
       else if qn = umod_qn then liftM2 Umod e2' e3'
       else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
-      else fail ("triary: " ^ fv_to_string fv)
-    | Tv_FVar fv, [l; r] ->
+      else if qn = ladd_qn then liftM2 Ladd e2' e3'
+      else if qn = lsub_qn then liftM2 Lsub e2' e3'
+      else atom t
+    | Tv_FVar fv, [(l, Q_Explicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
         // Have to go through hoops to get F* to typecheck this.
         // Maybe the do notation is twisting the terms somehow unexpected?
-        let ll = is_arith_expr l in
-        let rr = is_arith_expr r in
+        let ll = as_arith_expr l in
+        let rr = as_arith_expr r in
         if      qn = add_qn   then liftM2 Plus ll rr
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
-	else if qn = nat_bv_qn then liftM NatToBv rr
-        else fail ("binary: " ^ fv_to_string fv)
-    | Tv_FVar fv, [a] ->
+        else atom t
+    | Tv_FVar fv, [(l, Q_Implicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
-        let aa = is_arith_expr a in
+        let ll = as_arith_expr l in
+        let rr = as_arith_expr r in
+        if qn = nat_bv_qn then liftM NatToBv rr
+        else atom t
+    | Tv_FVar fv, [(a, Q_Explicit)] ->
+        let qn = inspect_fv fv in
+        let aa = as_arith_expr a in
         if qn = neg_qn then liftM Neg aa
-        else fail ("unary: " ^ fv_to_string fv)
+        else atom t
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
-    | Tv_FVar _ , []
-    | Tv_Var _ , [] ->
+    | _ ->
         atom t
-    | _, _ ->
-        fail ("unk (" ^ term_to_string t ^ ")")
+
+val is_arith_expr : term -> tm expr
+let is_arith_expr t =
+  a <-- as_arith_expr t ;
+  match a with
+  | Atom _ t -> begin
+    let hd, tl = collect_app_ref t in
+    match inspect hd, tl with
+    | Tv_FVar _, []
+    | Tv_Var _, [] -> return a
+    | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
+  end
+  | _ -> return a
 
 val is_arith_prop : term -> tm prop
 let rec is_arith_prop (t:term) =
     match term_as_formula t with
-    | Comp Eq _ l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | Comp BoolEq _ l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | Comp Lt _ l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
-    | Comp Le _ l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
-    | And l r           -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
-    | Or l r            -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _                 -> fail ("connector (" ^ term_to_string t ^ ")")
+    | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | Comp Lt l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
+    | Comp Le l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
+    | And l r         -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
+    | Or l r          -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
+    | _               -> fail ("connector (" ^ term_to_string t ^ ")")
 
 
 // Run the monadic computations, disregard the counter
@@ -177,6 +196,8 @@ let rec expr_to_string (e:expr) : string =
     | Land l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
     | Lor l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
     | Lxor l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
+    | Ladd l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
+    | Lsub l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"

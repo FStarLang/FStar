@@ -2,6 +2,8 @@ module FStar.Tactics
 
 (* I don't expect many uses of tactics without syntax handling *)
 include FStar.Reflection.Types
+include FStar.Reflection.Data
+include FStar.Reflection.Basic
 include FStar.Reflection.Syntax
 include FStar.Reflection.Formula
 

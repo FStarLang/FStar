@@ -1,5 +1,5 @@
 [
-  "AÝ\"É„ó\r¾ù¦Ö¦¾©\u0002]",
+  "¾¶õÑDòüÊç¡.¡\u000f´â…",
   [
     [
       "FStar.String.make",
@@ -10,7 +10,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "3eee92206728df489257d0d977778b3c"
     ],
     [
       "FStar.String.strcat",
@@ -18,15 +19,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.String.string_of_char",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0
+      0,
+      "6071644710659d74ce8bd7e959ae4e50"
     ]
   ]
 ]

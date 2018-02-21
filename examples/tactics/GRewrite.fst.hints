@@ -1,5 +1,5 @@
 [
-  "\u001fòñr˝\u0015»|ùD\u001f&M∏›f",
+  "«)—¸ò≈M\u007f∞\u0011Vç\u0018#\u0002e",
   [
     [
       "GRewrite.test_grewrite2",
@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
-      0
+      0,
+      "522eb460a986aa7f94a8623d060995f7"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -15,7 +16,8 @@
       2,
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
-      0
+      0,
+      "32a376f087613cc7f996c5f7a0505035"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -23,7 +25,8 @@
       2,
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
-      0
+      0,
+      "9e1932492eef38b05f5b586560aafe6a"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -34,7 +37,8 @@
         "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "ec4eb33f8ae3d087f85d6f44b5ba0e5b"
     ],
     [
       "GRewrite.test_grewrite4",
@@ -42,7 +46,8 @@
       2,
       1,
       [ "@query", "eq2-interp", "equation_Prims.eq2" ],
-      0
+      0,
+      "e326363f14fde063ce21230908743ea8"
     ],
     [
       "GRewrite.test_grewrite5",
@@ -55,8 +60,17 @@
         "refinement_interpretation_GRewrite_Tm_refine_0866e3ea54045c0749975ccf24302e72",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "184d32899e1502682b86a8884ab23d12"
     ],
-    [ "GRewrite.guard", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "GRewrite.guard",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "19e11903f09a8cc9cedd050e3633eb11"
+    ]
   ]
 ]

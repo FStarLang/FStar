@@ -7,9 +7,26 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "89f1f17c164f23fb5310cba0378382bb"
     ],
-    [ "FStar.Axiomatic.Array.IndexUpdate", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexAppend", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.Axiomatic.Array.IndexUpdate",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ed3f99fd68558256256262259936ad63"
+    ],
+    [
+      "FStar.Axiomatic.Array.IndexAppend",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c86d8b3876fdb9f6c6de6e6606a12107"
+    ]
   ]
 ]

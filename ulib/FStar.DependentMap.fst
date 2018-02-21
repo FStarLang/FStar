@@ -1,6 +1,8 @@
 module FStar.DependentMap
 
-noeq abstract type t (key: eqtype) (value: (key -> Tot Type)) : Type = {
+noeq abstract type t (key:Type u#a{hasEq key}) (value: (key -> Type u#b))
+  :Type u#(max a b) =
+{
   mappings: (k: key) -> Tot (value k)
 }
 
@@ -245,4 +247,5 @@ abstract let map_upd
 : Lemma
   (requires True)
   (ensures (map f (upd m k v) == upd (map f m) k (f k v)))
+  [SMTPat (map f (upd m k v))]  //AR: wanted to write an SMTPatOr, but gives some error
 = equal_elim #key #value2 (map f (upd m k v)) (upd (map f m) k (f k v))

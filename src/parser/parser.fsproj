@@ -31,7 +31,7 @@
     <NoWarn>1178</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
@@ -70,20 +70,20 @@
   </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
-    <FsYacc Include="parse.fsy">
-      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST</OtherFlags>
-    </FsYacc>
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
     <Compile Include="FStar.Parser.Const.fs" />
     <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
+    <FsYacc Include="parse.fsy">
+      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST</OtherFlags>
+    </FsYacc>
     <Compile Include="parse.fs" />
     <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />
-    <Compile Include="parseit.fsi" />
-    <Compile Include="parseit.fs" />
+    <Compile Include="FStar.Parser.ParseIt.fsi" />
+    <Compile Include="NotFStar.Parser.ParseIt.fs" />
     <Compile Include="FStar.Parser.Driver.fs" />
     <Content Include="packages.config" />
     <Compile Include="FStar.Parser.Dep.fsi" />
@@ -114,6 +114,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">

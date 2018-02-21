@@ -1,0 +1,65 @@
+[
+  "沑u0010嚬\u000e檈󍿄#拚傱",
+  [
+    [
+      "Normalization.def_of",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a329a950b3c6fb2751fd2fb08768dd9c"
+    ],
+    [
+      "Normalization.uu___109",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "dcb847491397d462aea334b23da7be05"
+    ],
+    [
+      "Normalization.uu___110",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "38e4629a8e2e10188fc86db02c50cb6f"
+    ],
+    [
+      "Normalization.uu___111",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "2812e8b5f5cab37b456a127d367d0ac0"
+    ],
+    [
+      "Normalization.uu___112",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Normalization.does_not_normalize",
+        "equation_Normalization.four__",
+        "function_token_typing_Normalization.four__", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d54f2d0116522e3827ffabe39e1a9eba"
+    ],
+    [
+      "Normalization.uu___113",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "d8b6640ffb87b739098289b45f0559bf"
+    ]
+  ]
+]

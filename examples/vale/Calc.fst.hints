@@ -1,0 +1,41 @@
+[
+  "\u001eü’{√‘(‰µ4Ωùa7AÖ",
+  [
+    [
+      "Calc.op_Amp_Equals",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "dc45762185238736e3f537f57d19af5f"
+    ],
+    [
+      "Calc.op_Amp_Bar",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "7a8ad090bd87b3b96c107be80aa80492"
+    ],
+    [
+      "Calc.op_Amp_Bar_Bar",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.pure_pre", "equation_Prims.squash",
+        "function_token_typing_Prims.unit",
+        "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Calc_Tm_refine_fff0b0f9a07ef127f1cdddcb92e23352",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Calc.rw_and_try", "typing_Prims.squash", "unit_typing"
+      ],
+      0,
+      "5effae11d052ba301c7f4b7e6e79ddf5"
+    ]
+  ]
+]

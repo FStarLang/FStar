@@ -44,12 +44,12 @@ module E = FStar.Errors
 let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
 
-let map_opt (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
-  snd (BU.choose_map (fun () x -> (), f x) () l)
+let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix x.ppname.idText then
+    if starts_with reserved_prefix x.ppname.idText
+    ||  Options.print_real_names () then
       x.ppname.idText ^ (string_of_int x.index)
     else
       x.ppname.idText
@@ -72,15 +72,13 @@ let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifie
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
 
-let resugar_imp (q:option<S.arg_qualifier>) : A.imp =
+let resugar_imp (q:option<S.arg_qualifier>) : option<A.imp> =
   match q with
-  | None -> A.Nothing
-  | Some (S.Implicit false) -> A.Hash
+  | None -> Some A.Nothing
+  | Some (S.Implicit false) -> Some A.Hash
   | Some S.Equality
   | Some (S.Implicit true) ->
-    (* This should be a proper error rather than a failwith *)
-    failwith "Not an imp"
-
+    (* We don't have syntax for inaccessible arguments *) None
 
 let rec universe_to_int n u =
   match u with
@@ -153,6 +151,7 @@ let string_to_op s =
     | "Question" -> Some ("?", 0)
     | "Colon" -> Some (":", 0)
     | "Dollar" -> Some ("$", 0)
+    | "Dot" -> Some (".", 0)
     | _ -> None
   in
   match s with
@@ -363,6 +362,11 @@ let rec resugar_term (t : S.term) : A.term =
       let b = BU.must (resugar_binder (List.hd x) t.pos) in
       mk (A.Refine(b, resugar_term phi))
 
+    | Tm_app({n=Tm_fvar fv}, [(e, _)])
+      when not (Options.print_implicits())
+           && S.fv_eq_lid fv C.b2t_lid ->
+      resugar_term e
+
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function
@@ -383,7 +387,14 @@ let rec resugar_term (t : S.term) : A.term =
       let resugar_as_app e args =
         let args = args |> List.map (fun (e, qual) -> resugar_term e, qual) in
         let e = resugar_term e in
-        List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, resugar_imp qual))) e args
+        let res_impl desugared_tm qual =
+          match resugar_imp qual with
+          | Some imp -> imp
+          | None -> Errors.log_issue t.pos
+                     (Errors.Warning_InaccessibleArgument, (BU.format1 "Inaccessible argument %s in function application"
+                                 (parser_term_to_string desugared_tm)));
+                   A.Nothing in
+        List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, res_impl x qual))) e args
       in
       let args = if (Options.print_implicits()) then args else filter_imp args
       in
@@ -489,11 +500,9 @@ let rec resugar_term (t : S.term) : A.term =
                 let pats, body = match (SS.compress body).n with
                   | Tm_meta(e, m) ->
                     let body = resugar_term e in
-                    let pats = match m with
-                      | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats
-                      | Meta_labeled (s, r, _) ->
-                        // this case can occur in typechecker when a failure is wrapped in meta_labeled
-                        [[mk (name s r)]]
+                    let pats, body = match m with
+                      | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats, body
+                      | Meta_labeled (s, r, p) -> [], mk (A.Labeled(body, s, p))
                       | _ -> failwith "wrong pattern format for QForall/QExists"
                     in
                     pats, body
@@ -548,7 +557,7 @@ let rec resugar_term (t : S.term) : A.term =
       (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
         it would be better to print it as `let P = e in e1`. *)
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
-      let bnds = [(resugar_pat pat, resugar_term e)] in
+      let bnds = [None, (resugar_pat pat, resugar_term e)] in
       let body = resugar_term t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
@@ -574,11 +583,16 @@ let rec resugar_term (t : S.term) : A.term =
       let tac_opt = Option.map resugar_term tac_opt in
       mk (A.Ascribed(resugar_term e, term, tac_opt))
 
-    | Tm_let((is_rec, bnds), body) ->
+    | Tm_let((is_rec, source_lbs), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
-      let bnds, body = SS.open_let_rec bnds body in
+      let source_lbs, body = SS.open_let_rec source_lbs body in
       let resugar_one_binding bnd =
         (* TODO : some stuff are open twice there ! (may have already been opened in open_let_rec) *)
+        let attrs_opt =
+            match bnd.lbattrs with
+            | [] -> None
+            | tms -> Some (List.map resugar_term tms)
+        in
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
         let typ, def = match (SS.compress td).n with
           | Tm_app(_, [(t, _); (d, _)]) -> t, d
@@ -596,20 +610,20 @@ let rec resugar_term (t : S.term) : A.term =
           | Inl bv ->
             mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
         in
-        if is_pat_app then
+        attrs_opt,
+        (if is_pat_app then
           let args = binders |> map_opt (fun (bv, q) ->
             BU.map_opt (resugar_arg_qual q) (fun q -> mk_pat(A.PatVar (bv_as_unique_ident bv, q)))) in
           ((mk_pat (A.PatApp (pat, args)), resugar_term term), (universe_to_string univs))
-        else
-          ((pat, resugar_term term), (universe_to_string univs))
+         else
+          ((pat, resugar_term term), (universe_to_string univs)))
       in
-      let r = List.map (resugar_one_binding) bnds in
+      let r = List.map (resugar_one_binding) source_lbs in
       let bnds =
-          let f =
-            if not (Options.print_universes ()) then fst
+          let f (attrs, (pb, univs)) =
+            if not (Options.print_universes ()) then attrs, pb
             (* Print bound universes as a comment *)
-            else function ((pat, body), univs) ->
-              pat, label univs body
+            else attrs, (fst pb, label univs (snd pb))
           in
           List.map f r
       in
@@ -633,7 +647,7 @@ let rec resugar_term (t : S.term) : A.term =
                 let h, uvs, args' = head_fv_universes_args head in
                 h, uvs, args' @ args
               | _ ->
-                raise (E.Err (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h))))
+                Errors.raise_error (Errors.Fatal_NotApplicationOrFv, (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h)))) e.pos
             in
             let head, universes, args =
               (* the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker *)
@@ -641,10 +655,14 @@ let rec resugar_term (t : S.term) : A.term =
               (* TODO : report this Meta_monadic if the right options are set *)
               try head_fv_universes_args (U.unmeta e) with
                 | E.Err _ ->
-                  raise (E.Error ((BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e))), e.pos))
+                  Errors.raise_error (Errors.Fatal_WrongDataAppHeadFormat, (BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e)))) e.pos
             in
             let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
-            let args = List.map (fun (t, q) -> (resugar_term t, resugar_imp q)) args in
+            let args =
+              List.filter_map (fun (t, q) ->
+                match resugar_imp q with
+                | Some rimp -> (* Real *) Some (resugar_term t, rimp)
+                | None -> (* Inaccessible *) None) args in
             let args =
               // ToDocument doesn't expect uvar that is added by the
               // typechecker in tuple constructor
@@ -656,8 +674,9 @@ let rec resugar_term (t : S.term) : A.term =
             mk (A.Construct(head, args))
           | Sequence ->
               let term = resugar_term e in
-              let rec resugar_seq t = match t.tm with
-                | A.Let(_, [p, t1], t2) ->
+              let rec resugar_seq t =
+                match t.tm with
+                | A.Let(_, [None, (p, t1)], t2) ->
                    mk (A.Seq(t1, t2))
                 | A.Ascribed(t1, t2, t3) ->
                    (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -697,8 +716,14 @@ let rec resugar_term (t : S.term) : A.term =
           mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i ->
           resugar_meta_desugared i
-      | Meta_alien (_, s) ->
-          resugar_term e
+      | Meta_alien (_, s, _) ->
+          begin match e.n with
+          | Tm_unknown ->
+              mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
+          | _ ->
+              E.log_issue e.pos (E.Warning_MetaAlienNotATmUnknown, "Meta_alien was not a Tm_unknown");
+              resugar_term e
+          end
       | Meta_named t ->
           mk (A.Name t)
       | Meta_monadic (name, t)
@@ -750,20 +775,16 @@ and resugar_comp (c:S.comp) : A.term =
     if (Options.print_effect_args()) then
       let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
       let args =
-       if (lid_equals c.effect_name C.effect_Lemma_lid) then
-        let rec aux l = function
-          | [] -> l
-          | (t,aq)::tl ->
-            match (t.n) with
-            | Tm_fvar fv when S.fv_eq_lid fv C.true_lid ->
-              aux l tl
-            | Tm_meta _ (* where metadata == Meta_desuagard(Meta_smt_pat) *) ->
-              aux l tl
-            | _ ->
-              aux ((t,aq)::l) tl
-        in
-        aux [] c.effect_args
-       else
+       if (lid_equals c.effect_name C.effect_Lemma_lid) then (
+        match c.effect_args with
+        | pre::post::pats::[] ->
+            // Common case, post is thunked.
+            let post = (U.unthunk_lemma_post (fst post), snd post) in
+             (if U.is_fvar C.true_lid (fst pre) then [] else [pre])
+            @[post]
+            @(if U.is_fvar C.nil_lid (fst pats) then [] else [pats])
+        | _ -> c.effect_args
+       ) else
         c.effect_args
       in
       let args = List.map(fun (e,_) -> (resugar_term e, A.Nothing)) args in
@@ -819,7 +840,7 @@ and resugar_pat (p:S.pat) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt =
-    BU.bind_opt bopt (fun b -> if true then Some A.Implicit else None)
+    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None)
   in
   let rec aux (p:S.pat) (imp_opt:option<bool>)=
     match p.v with
@@ -977,7 +998,7 @@ let resugar_tscheme' name (ts:S.tscheme) =
   mk_decl typ.pos [] (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
 
 let resugar_tscheme (ts:S.tscheme) =
-  resugar_tscheme' "tsheme" ts
+  resugar_tscheme' "tscheme" ts
 
 let resugar_eff_decl for_free r q ed =
   let resugar_action d for_free =
@@ -1065,7 +1086,7 @@ let resugar_sigelt se : option<A.decl> =
       let t = resugar_term desugared_let in
       begin match t.tm with
         | A.Let(isrec, lets, _) ->
-          Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
+          Some (decl'_to_decl se (TopLevelLet (isrec, List.map snd lets)))
         | _ -> failwith "Should not happen hopefully"
       end
 

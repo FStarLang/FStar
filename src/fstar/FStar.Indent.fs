@@ -11,16 +11,14 @@ module P = FStar.Pprint
 
 let generate filenames =
     let parse_and_indent filename =
-        let moduls, comments = D.parse_file filename in
+        let modul, comments = D.parse_file filename in
         // P.pretty_out_channel (float_of_string "1.0") 100 (comments_to_document comments) stdout ;
         let leftover_comments =
-            List.fold_left (fun comments module_ ->
-                            let doc, comments = modul_with_comments_to_document module_ comments in
+            let comments = List.rev comments in
+            let doc, comments = modul_with_comments_to_document modul comments in
                             (* TODO : some problem with the F# generated floats *)
-                            P.pretty_out_channel (float_of_string "1.0") 100 doc stdout ;
-                            comments)
-                        (List.rev comments)
-                        moduls
+            P.pretty_out_channel (float_of_string "1.0") 100 doc stdout ;
+            comments
         in
         (* TODO : We could setup the leftover comments a little more nicely *)
         let left_over_doc =

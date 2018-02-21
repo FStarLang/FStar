@@ -2,8 +2,8 @@ module Bug086
 
 let x = 0
 
-let xor = function 
-  | (0, 1) 
+let xor = function
+  | (0, 1)
   | (1, 0) -> 1
   | _ -> 0
 

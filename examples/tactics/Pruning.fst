@@ -58,13 +58,14 @@ open FStar.List
 let f (x:int) = assert (x + 1 == 1 + x)
 
 // This one should be sent in a pruned context
-let _ = assert_by_tactic (prune "";;
+let _ = assert_by_tactic (rev [1;2] == [2;1])
+                         (prune "";;
                           addns "FStar.List";;
                           addns "Prims")
-                         (rev [1;2] == [2;1])
 
 // First one should go to the SMT, also in pruned context
-let _ = assert_by_tactic (prune "";;
+let _ = assert_by_tactic (rev [1;2] == [2;1] /\ 1 == 1)
+                         (prune "";;
                           FStar.Tactics.split;;
                           (* rev [1;2] == [2;1] *)
                               addns "FStar.List";;
@@ -72,4 +73,3 @@ let _ = assert_by_tactic (prune "";;
                               smt;;
                           (* 1 == 1 *)
                               smt)
-                         (rev [1;2] == [2;1] /\ 1 == 1)

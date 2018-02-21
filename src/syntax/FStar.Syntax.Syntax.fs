@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Dyn
+module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
 ///[@ PpxDerivingShow ]
@@ -128,7 +129,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
-    lbdef  :term             //e
+    lbdef  :term;            //e
+    lbattrs:list<attribute>
 }
 and comp_typ = {
   comp_univs:universes;
@@ -155,6 +157,8 @@ and cflags =
   | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
   | DECREASES of term
@@ -168,7 +172,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string                           (* A blob embedded into syntax, with an annotation to print it *)
+  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
   | Data_app
   | Sequence
@@ -209,16 +213,16 @@ and fv = {
     fv_qual :option<fv_qual>
 }
 and free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
+    free_names:list<bv>;
+    free_uvars:list<(uvar*typ)>;
+    free_univs:list<universe_uvar>;
+    free_univ_names:list<univ_name>; //fifo
 }
 and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -228,6 +232,20 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and attribute = term
+
+let mk_lcomp eff_name res_typ cflags comp_thunk =
+    { eff_name = eff_name;
+      res_typ = res_typ;
+      cflags = cflags;
+      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+let lcomp_comp lc =
+    match !(lc.comp_thunk) with
+    | Inl thunk ->
+      let c = thunk () in
+      lc.comp_thunk := Inr c;
+      c
+    | Inr c -> c
 type tscheme = list<univ_name> * typ
 
 type freenames_l = list<bv>
@@ -260,8 +278,6 @@ type qualifier =
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
-
-type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -369,11 +385,12 @@ type modul = {
   exports: sigelts;
   is_interface:bool
 }
+let mod_name (m: modul) = m.name
+
 type path = list<string>
 type subst_t = list<subst_elt>
 type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
 type mk_t = mk_t_a<term'>
-
 
 
 let contains_reflectable (l: list<qualifier>): bool =
@@ -408,11 +425,10 @@ open FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
-let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
-let new_universe_names_fifo_set () : fifo_set<univ_name> =
-    Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
-                 (fun x -> Util.hashcode (Ident.text_of_id x))
+let new_bv_set () : set<bv> = Util.new_set order_bv
+let new_fv_set () :set<lident> = Util.new_set order_fv
+let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
+let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
@@ -451,7 +467,7 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
+let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e; lbattrs=[]}
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s
@@ -541,28 +557,44 @@ let set_range_of_fv (fv:fv) (r:Range.range) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function
-    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+    | { n = Tm_constant (Const_string (data, _)) } when data = s ->
         true
     | _ ->
         false
   ) l
 
+// Compares the SHAPE of the patterns, *ignoring bound variables*
+let rec eq_pat (p1 : pat) (p2 : pat) : bool =
+    match p1.v, p2.v with
+    | Pat_constant c1, Pat_constant c2 -> eq_const c1 c2
+    | Pat_cons (fv1, as1), Pat_cons (fv2, as2) ->
+        if fv_eq fv1 fv2
+        then begin assert(List.length as1 = List.length as2);
+                   List.zip as1 as2 |>
+                   List.for_all (fun ((p1, b1), (p2, b2)) -> b1 = b2 && eq_pat p1 p2)
+             end
+        else false
+    | Pat_var _, Pat_var _ -> true
+    | Pat_wild _, Pat_wild _ -> true
+    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | _, _ -> false
+
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
-module C = FStar.Parser.Const
 let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
-let t_unit   = tconst C.unit_lid
-let t_bool   = tconst C.bool_lid
-let t_int    = tconst C.int_lid
-let t_string = tconst C.string_lid
-let t_float  = tconst C.float_lid
-let t_char   = tabbrev C.char_lid
-let t_range  = tconst C.range_lid
-let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
-let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
-let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_unit   = tconst PC.unit_lid
+let t_bool   = tconst PC.bool_lid
+let t_int    = tconst PC.int_lid
+let t_string = tconst PC.string_lid
+let t_float  = tconst PC.float_lid
+let t_char   = tabbrev PC.char_lid
+let t_range  = tconst PC.range_lid
+let t_term   = tconst PC.term_lid
+let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
-

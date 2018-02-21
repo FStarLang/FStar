@@ -1,21 +1,37 @@
+#!/usr/bin/env python2
+
 """Cleanup interactive transcript received on standard input.
 
 This mostly consists in pretty-pretting JSON messages and sorting their
 fields, to permit text-based comparisons against reference transcripts.
 
-Usage: python2 cleanup.py [fname.clean] < [fname.dirty]
+Usage: python cleanup.py fname.clean < fname.dirty
 """
 
-import io
 import json
 import sys
 import re
+import os
+
+def cleanup_json(js):
+    if isinstance(js, dict):
+        if "fname" in js:
+            js["fname"] = os.path.basename(js["fname"].replace('\\', '/'))
+        for v in js.itervalues():
+            cleanup_json(v)
+    elif isinstance(js, list):
+        for v in js:
+            cleanup_json(v)
 
 def cleanup_one(line):
-    line = re.sub(r"\bu[0-9][0-9]+\b", "u[...]", line)
+    line = re.sub(r"\b(?<![\\])u[0-9]+\b", "u[...]", line)
     try:
-        return json.dumps(json.loads(line), ensure_ascii=False, sort_keys=True) + "\n"
-    except:
+        js = json.loads(line)
+        if js.get("kind") == "protocol-info":
+            js = {"kind": "[...]"} # Drop entire message
+        cleanup_json(js)
+        return json.dumps(js, ensure_ascii=False, sort_keys=True) + "\n"
+    except Exception as ex:
         return line
 
 def main():

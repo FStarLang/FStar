@@ -1,0 +1,41 @@
+[
+  "‡\u0011þŒðº‚\u0018´ê¦¾\u001aõ„L",
+  [
+    [
+      "FStar.Ref.only",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "ab6ecc5c18174d3d9229a4fd1813ecc8"
+    ],
+    [
+      "FStar.Ref.only",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "02a1f5351bd99b4e15cb6abb058fe485"
+    ],
+    [
+      "FStar.Ref.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "4d88ffa67fec83bb51dccf6a0c30a297"
+    ]
+  ]
+]

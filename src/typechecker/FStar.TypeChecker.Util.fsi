@@ -40,13 +40,13 @@ val check_uvars: Range.range -> typ -> unit
 val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
 
 //pattern utilities
-val pat_as_exp: bool -> env -> pat -> (list<bv> * term * pat)
+val pat_as_exp: bool -> env -> pat -> (env -> term -> term * guard_t) -> (list<bv> * term * guard_t * pat)
 val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation and generalization
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
-val generalize: env -> list<(lbname*term*comp)> -> list<(lbname*univ_names*term*comp)>
+val generalize: env -> bool -> list<(lbname*term*comp)> -> list<(lbname*univ_names*term*comp*list<binder>)>
 val generalize_universes: env -> term -> tscheme
 
 //operations on computation types
@@ -55,10 +55,11 @@ type lcomp_with_binder = option<bv> * lcomp
 val subst_lcomp: subst_t -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
-val return_value: env -> typ -> term -> comp
+val should_not_inline_lc: lcomp -> bool
+//val return_value: env -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
-val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
-val ite: env -> formula -> lcomp -> lcomp -> lcomp
+val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+val bind_cases: env -> typ -> list<(typ * lident * list<cflags> * (bool -> lcomp))> -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
@@ -81,6 +82,7 @@ val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
+val is_reifiable: env -> lident -> bool
 val reify_body: env -> term -> term
 val reify_body_with_arg: env -> term -> arg -> term
 val remove_reify: term -> term
@@ -92,5 +94,7 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit
 
-//elaborate discriminator and projectors
-val mk_data_operations : list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>
+//inductive types utilities
+
+val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
+val get_optimized_haseq_axiom: env -> sigelt -> list<subst_elt> -> univ_names -> (lident * term * binders * binders * term)

@@ -1,64 +1,51 @@
 [
-  "\u000e\u0005QŒv|FÃÍ+ ‚´?Æ(",
+  "t;×\u001aúä”\u0006\bÎù\u0015bsêf",
   [
-    null,
-    null,
-    null,
-    [
-      "NegativeTests.Termination.ackermann_bad",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "NegativeTests.Termination.ackermann_bad",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    null,
     [
       "NegativeTests.Termination.sumto",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
-        "function_token_typing_NegativeTests.Neg.x", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "78d86a2b2d1bdf33caa12637b8de8f98"
     ],
     [
-      "NegativeTests.Termination.sumto",
-      2,
+      "NegativeTests.Termination.snat",
+      1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      [ "@query" ],
+      0,
+      "d88fdcc964fd285a986cf488a064b439"
     ],
-    null,
     [
-      "NegativeTests.Termination.strangeZeroBad",
-      2,
+      "NegativeTests.Termination.uu___is_O",
+      1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      [ "@query" ],
+      0,
+      "d2050b887af45adb4ce637f04aa4f672"
     ],
-    [ "NegativeTests.Termination.snat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Termination.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Termination.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NegativeTests.Termination.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "57132128569f29166e13d96a271090de"
+    ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
       1,
@@ -70,12 +57,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
-      0
-    ],
-    null,
-    null,
-    null,
-    null,
-    null
+      0,
+      "624b8f585354081f0c843b49d12ef802"
+    ]
   ]
 ]

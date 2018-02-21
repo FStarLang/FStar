@@ -1,11 +1,8 @@
 
 module Ex10a
 open FStar.All
-open FStar.ST
-//acls-variant
-
 open FStar.List.Tot
-open FStar.Heap
+open FStar.Ref
 
 type file = string
 

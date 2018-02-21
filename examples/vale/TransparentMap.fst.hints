@@ -1,0 +1,82 @@
+[
+  "Ô\u000bÍ\u0010œŸè\u0004\u0004\u000e}\u0014i…hœ",
+  [
+    [
+      "TransparentMap.upd",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "b492d452bbb09a387220d6071129fbf8"
+    ],
+    [
+      "TransparentMap.sel_upd1",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_TransparentMap.sel",
+        "equation_TransparentMap.upd",
+        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "primitive_Prims.op_Equality"
+      ],
+      0,
+      "300dac61fa348e15c0bb036a1f72126d"
+    ],
+    [
+      "TransparentMap.sel_upd2",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_TransparentMap.sel",
+        "equation_TransparentMap.upd",
+        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "35adcfa31b2844e0c5847c90c74fca7d"
+    ],
+    [
+      "TransparentMap.lemma_equal_intro",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_TransparentMap.equal", "equation_TransparentMap.sel"
+      ],
+      0,
+      "cc298f4abacc90eea40d1fad3fe1f9d3"
+    ],
+    [
+      "TransparentMap.lemma_equal_elim",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.FunctionalExtensionality.Extensionality",
+        "equation_FStar.FunctionalExtensionality.efun",
+        "equation_Prims.eqtype", "equation_TransparentMap.equal",
+        "equation_TransparentMap.map",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "bcda84de7de7e2e6b0fa4c2cee2fb037"
+    ],
+    [
+      "TransparentMap.lemma_equal_refl",
+      1,
+      1,
+      0,
+      [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
+      0,
+      "fb0e790d812458aefdd1c1e93a942273"
+    ]
+  ]
+]

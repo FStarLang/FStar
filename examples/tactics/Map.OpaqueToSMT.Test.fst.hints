@@ -1,0 +1,50 @@
+[
+  "çØÂrRJG\bÊêŸª\u0007]ÓW",
+  [
+    [
+      "Map.OpaqueToSMT.Test.imap",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "4bc3436174df6d07251f10d45aa54066"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.upd",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "de2755ff5b811aa8dd173b2643d4657c"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.sel",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "467d7f56e853779661807b8fe3926380"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test1",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "66faf85de4e219b0e1fc0d25d47d9e20"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test2",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "612adf7edec76ce4b09bf612e65212a4"
+    ]
+  ]
+]

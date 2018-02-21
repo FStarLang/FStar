@@ -1,6 +1,4 @@
-
-module Bug28
-open Prims.PURE
+module Bug028
 
 val typing : int
 let typing =

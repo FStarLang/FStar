@@ -99,7 +99,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
             | None ->
               if lid_equals tc_lid FStar.Parser.Const.exn_lid
               then env, [], U_zero
-              else raise (Error("Unexpected data constructor", se.sigrng)) in
+              else raise_error (Errors.Fatal_UnexpectedDataConstructor, ("Unexpected data constructor")) se.sigrng in
 
 
          let arguments, result =
@@ -124,16 +124,16 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
          let result, res_lcomp = tc_trivial_guard env' result in
          begin match (SS.compress res_lcomp.res_typ).n with
                | Tm_type _ -> ()
-               | ty -> raise (Error(BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+               | ty -> raise_error (Errors.Fatal_WrongResultTypeAfterConstrutor, (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
-                                                (Print.term_to_string (res_lcomp.res_typ)), se.sigrng))
+                                                (Print.term_to_string (res_lcomp.res_typ)))) se.sigrng
          end;
          let head, _ = U.head_and_args result in
          let _ = match (SS.compress head).n with
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
-            | _ -> raise (Error(BU.format2 "Expected a constructor of type %s; got %s"
+            | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
-                                        (Print.term_to_string head), se.sigrng)) in
+                                        (Print.term_to_string head))) se.sigrng in
          let g =List.fold_left2 (fun g (x, _) u_x ->
                 Rel.conj_guard g (Rel.universe_inequality u_x u_tc))
             Rel.trivial_guard
@@ -429,7 +429,10 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
   | Tm_app (_, _) ->
     debug_log env ("Data constructor type is a Tm_app, so returning true");
     true  //if the data constructor type is a simple app, it must be t ..., and we already don't allow t (t ..), so nothing to check here
-    | _ -> failwith "Unexpected data constructor type when checking positivity"
+  | Tm_uinst (t, univs) ->
+    debug_log env ("Data constructor type is a Tm_uinst, so recursing in the base type");
+    ty_strictly_positive_in_type ty_lid t unfolded env
+  | _ -> failwith "Unexpected data constructor type when checking positivity"
 
 let check_positivity (ty:sigelt) (env:env_t) :bool =
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
@@ -499,57 +502,16 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
     //term is the lhs of the implication for soundness formula
     //term is the soundness condition derived from all the data constructors of this type
 let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>) (us:list<univ_name>) acc ty =
-  let lid, bs, t, d_lids =
+  let lid =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, d_lids) -> lid, bs, t, d_lids
-    | _                                            -> failwith "Impossible!"
+    | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+    | _                                      -> failwith "Impossible!"
   in
-
-  //apply usubt to bs
-  let bs = SS.subst_binders usubst bs in
-  //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
-  let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
-  //open t with binders bs
-  let bs, t = SS.open_term bs t in
-  //get the index binders, if any
-  let ibs =
-    match (SS.compress t).n with
-    | Tm_arrow (ibs, _) -> ibs
-    | _                 -> []
-  in
-  //open the ibs binders
-  let ibs = SS.open_binders ibs in
-  //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
-  //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
-  //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
-  //haseq of ind
-  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
-  //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
-  //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
-  let bs' = List.filter (fun b ->
-    let _, en, _, _ = acc in
-    //false means don't use SMT solver
-    let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
-    //is this criteria for success/failure ok ?
-    match opt with
-    | None   -> false
-    | Some _ -> true
-  ) bs in
-  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
-  //implication
-  let fml = U.mk_imp haseq_bs haseq_ind in
-  //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
-  //fold right with ibs, close and add a forall b
-  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
-  //fold right with bs, close and add a forall b
-  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
-  //so now fml is the haseq axiom we want to generate
+  
+  let _, en, _, _ = acc in
+  let axiom_lid, fml, bs, ibs, haseq_bs = TcUtil.get_optimized_haseq_axiom en ty usubst us in
+  //fml is the hasEq axiom for the inductive, bs and ibs are opened binders and index binders,
+  //haseq_bs is the conjunction of hasEq of all the binders
 
   //onto the soundness condition for the above axiom
   //this is the soundness guard
@@ -576,7 +538,6 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   let cond = List.fold_left (fun acc d -> U.mk_conj acc (optimized_haseq_soundness_for_data lid d usubst bs)) U.t_true t_datas in
 
   //return new accumulator
-  let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
   l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
 
 
@@ -823,7 +784,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     *)
   let tys, datas = ses |> List.partition (function { sigel = Sig_inductive_typ _ } -> true | _ -> false) in
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
-  then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env));
+  then raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) (Env.get_range env);
   let env0 = env in
 
   (* Check each tycon *)
@@ -850,4 +811,35 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
                     sigrng = Env.get_range env0;
                     sigmeta = default_sigmeta;
                     sigattrs = List.collect (fun s -> s.sigattrs) ses } in
+
+  (* In any of the tycons had their typed declared using `val`,
+     check that the declared and inferred types are compatible *)
+  tcs |> List.iter (fun se ->
+    match se.sigel with
+    | Sig_inductive_typ(l, univs, binders, typ, _, _) ->
+      let fail expected inferred =
+          raise_error (Errors.Fatal_UnexpectedInductivetype, (BU.format2 "Expected an inductive with type %s; got %s"
+                                            (Print.tscheme_to_string expected)
+                                            (Print.tscheme_to_string inferred)))
+                       se.sigrng
+      in
+      begin match Env.try_lookup_val_decl env0 l with
+            | None -> ()
+            | Some (expected_typ, _) ->
+              let inferred_typ =
+                  let body =
+                      match binders with
+                      | [] -> typ
+                      | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) None se.sigrng in
+                  (univs, body)
+              in
+              if List.length univs = List.length (fst expected_typ)
+              then let _, inferred = Env.inst_tscheme inferred_typ in
+                   let _, expected = Env.inst_tscheme expected_typ in
+                   if Rel.teq_nosmt env0 inferred expected
+                   then ()
+                   else fail expected_typ inferred_typ
+              else fail expected_typ inferred_typ
+      end
+    | _ -> ());
   sig_bndle, tcs, datas

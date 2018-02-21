@@ -164,7 +164,7 @@ let is_per_holds_sym
   (s s' : t)
 : Lemma
   (requires (is_per p))
-  (holds p s s' <==> holds p s' s)
+  (ensures (holds p s s' <==> holds p s' s))
   [SMTPat (holds p s s')]
 = holds_equiv p s s';
   holds_equiv p s' s
@@ -280,8 +280,12 @@ let flip (#t: Type0) (r: rel t) : Tot (rel t) =
 
 let holds_flip (#t: Type0) (r: rel t) : Lemma
   (forall x y . holds (flip r) x y <==> holds r y x)
-  [SMTPat (holds (flip r))]
 = Classical.forall_intro_2 (holds_equiv (flip r))
+
+let holds_flip' (#t: Type0) (r: rel t) x y : Lemma
+  (ensures (holds (flip r) x y <==> holds r y x))
+  [SMTPat (holds (flip r) x y)]
+= holds_flip r
 
 let eval_equiv_flip
   (#t: Type0)
@@ -320,7 +324,7 @@ let exec_equiv_sym
   (f f' : computation)
 : Lemma
   (requires (is_per p /\ is_per p'))
-  (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
+  (ensures (exec_equiv p p' f f' <==> exec_equiv p p' f' f))
   [SMTPat (exec_equiv p p' f f')]
 = ()
 
@@ -534,7 +538,8 @@ let d_seq_terminates_recip
   (ensures (
     terminates_on (reify_computation (seq c01 c12)) s0
   ))
-= d_seq_terminates (flip p0) (flip p1) (flip p2) c01' c01 c12' c12 s0' s0
+= holds_flip' p0 s0' s0;
+  d_seq_terminates (flip p0) (flip p1) (flip p2) c01' c01 c12' c12 s0' s0
 
 let d_seq
   (p0 p1 p2 : sttype)
@@ -547,7 +552,11 @@ let d_seq
   (ensures (
     exec_equiv p0 p2 (seq c01 c12) (seq c01' c12')
   ))
-  [SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))]
+  [SMTPatOr [
+    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p1 p2 c12 c12')];
+    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))];
+    [SMTPat (exec_equiv p1 p2 c12 c12'); SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))];
+  ]]
 = let f01 = reify_computation c01 in
   let f01' = reify_computation c01' in
   let f12 = reify_computation c12 in
@@ -597,7 +606,11 @@ let d_su1'
     exec_equiv phi' phi'' c' c''
   ))
   (ensures (exec_equiv phi phi'' (seq c c') c''))
-  [SMTPat (exec_equiv phi phi'' (seq c c') c'')]
+  [SMTPatOr [
+    [SMTPat (exec_equiv phi phi' c skip); SMTPat (exec_equiv phi phi'' (seq c c') c'')];
+    [SMTPat (exec_equiv phi' phi'' c' c''); SMTPat (exec_equiv phi phi'' (seq c c') c'')];
+    [SMTPat (exec_equiv phi phi' c skip); SMTPat (exec_equiv phi' phi'' c' c'')];
+  ]]
 = assert (exec_equiv phi phi'' (seq c c') (seq skip c'')) ;
   let f1 = reify_computation (seq skip c'') in
   let f2 = reify_computation c'' in
@@ -636,7 +649,11 @@ let d_cc
   (ensures (
     exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))
   ))
-  [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))]
+  [SMTPatOr [
+    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi' phi'' c3 c3)];
+    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))];
+    [SMTPat (exec_equiv phi' phi'' c3 c3); SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))];
+  ]]
 = let fl = reify_computation (seq (ifthenelse b c1 c2) c3) in
   let fr = reify_computation (ifthenelse b (seq c1 c3) (seq c2 c3)) in
   assert (forall s0 fuel . fl s0 fuel == fr s0 fuel);
@@ -721,8 +738,14 @@ let d_lu2
       end else ()
     end else ()
   in
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf2 x))
+  let prf1' (s0:heap) (fuel:nat) :Lemma (fst (fl fuel s0) == true ==> fr fuel s0 == fl fuel s0)
+    = Classical.move_requires (prf1 s0) fuel
+  in
+  let prf2' (s0:heap) (fuel:nat) :Lemma (fst (fr fuel s0) == true ==> fl (fuel + fuel) s0 == fr fuel s0)
+    = Classical.move_requires (prf2 s0) fuel
+  in
+  Classical.forall_intro_2 prf1';  //AR: same pattern as in Pointer, see the comment there
+  Classical.forall_intro_2 prf2'
 
 (* 3.2 Optimizing Transformations *)
 
@@ -738,6 +761,8 @@ let d_bre
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c1))
 *)
 
+let mention (#a:Type) (x:a) = True
+
 let d_bre
   (c1 c2 c0: computation)
   (phi phi' : sttype)
@@ -749,5 +774,4 @@ let d_bre
   ))
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c0))
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c0)]
-= let ec = reify_exp b in // TODO: WHY is this necessary?
-  ()
+= assert (mention (reify_exp b)) //Just mentioning `reify_exp b` triggers the necessary reduction; not sure exactly why though

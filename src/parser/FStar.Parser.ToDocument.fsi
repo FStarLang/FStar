@@ -22,6 +22,7 @@ open FStar.All
 
 val term_to_document : FStar.Parser.AST.term -> FStar.Pprint.document
 val decl_to_document   : FStar.Parser.AST.decl -> FStar.Pprint.document
+val signature_to_document : FStar.Parser.AST.decl -> FStar.Pprint.document
 val pat_to_document : FStar.Parser.AST.pattern -> FStar.Pprint.document
 val binder_to_document : FStar.Parser.AST.binder -> FStar.Pprint.document
 val modul_to_document  : FStar.Parser.AST.modul -> FStar.Pprint.document

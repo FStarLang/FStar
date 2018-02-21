@@ -1,0 +1,29 @@
+[
+  "â½ª„˜õ'\u001e\u0006ux4\u0010\u0007\u001dx",
+  [
+    [
+      "Bug316.c",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Bug316.a",
+        "haseqBug316_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98"
+      ],
+      0,
+      "d9a48f1b71002cdfc8984b95cb8edc60"
+    ],
+    [
+      "Bug316.r",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Bug316.a",
+        "haseqBug316_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98"
+      ],
+      0,
+      "bda08e248dbb27b3c4bfab49ae190d43"
+    ]
+  ]
+]

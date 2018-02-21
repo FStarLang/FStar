@@ -5,11 +5,20 @@
 *.ml* eol=lf
 Makefile eol=lf
 *.sh eol=lf
+configure eol=lf
 *.mdk eol=lf
+kremlin_ref eol=lf
 
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf
 
 # Don't show diffs for generated ocaml-output files
-/src/ocaml-output/*.ml -diff
+/src/ocaml-output/FStar_*.ml -diff
 *.hints -diff
+
+# Checked modules
+*.checked binary
+*.checked.lax binary
+
+# Batch files
+*.bat eol=crlf

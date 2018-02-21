@@ -205,11 +205,11 @@ let is_array e = match (unparen e).tm with
     | _ -> false
 
 let rec is_ref_set e = match (unparen e).tm with
-    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.tset_empty
-    | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_ref_lid}, e, Nothing)}, Nothing) ->
-        lid_equals maybe_singleton_lid C.tset_singleton && lid_equals maybe_ref_lid C.heap_ref
+    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.set_empty
+    | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_addr_of_lid}, e, Nothing)}, Nothing) ->
+        lid_equals maybe_singleton_lid C.set_singleton && lid_equals maybe_addr_of_lid C.heap_addr_of_lid
     | App({tm=App({tm=Var maybe_union_lid}, e1, Nothing)}, e2, Nothing) ->
-        lid_equals maybe_union_lid C.tset_union && is_ref_set e1 && is_ref_set e2
+        lid_equals maybe_union_lid C.set_union && is_ref_set e1 && is_ref_set e2
     | _ -> false
 
 (* [extract_from_ref_set e] assumes that [is_ref_set e] holds and returns the list of terms contained in the set *)
@@ -480,6 +480,16 @@ and p_fsdoc (doc, kwd_args) =
   (* TODO : these newlines should not always be there *)
   hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
+
+and p_justSig d = match d.d with
+  | Val (lid, t) ->
+      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+  | TopLevelLet (_, lbs) ->
+      separate_map hardline (fun lb -> group (str "let" ^/^ p_letlhs lb)) lbs
+  | _ ->
+      empty
+
+
 and p_rawDecl d = match d.d with
   | Open uid ->
     group (str "open" ^/^ p_quident uid)
@@ -587,22 +597,22 @@ and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
   optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
-and p_letbinding (pat, e) =
+and p_letlhs (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
-  let pat_doc =
-    let pat, ascr_doc =
-      match pat.pat with
-      | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
-      | _ -> pat, empty
-    in
+  let pat, ascr_doc =
     match pat.pat with
-    | PatApp ({pat=PatVar (x, _)}, pats) ->
-        surround 2 1 (p_lident x)
-                      (separate_map_or_flow break1 p_atomicPattern pats ^^ ascr_doc)
-                      equals
-    | _ -> group (p_tuplePattern pat ^^ ascr_doc ^/^ equals)
+    | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
+    | _ -> pat, empty
   in
-  prefix2 pat_doc (p_term e)
+  match pat.pat with
+  | PatApp ({pat=PatVar (x, _)}, pats) ->
+      group (p_lident x ^/^ separate_map_or_flow break1 p_atomicPattern pats ^^ ascr_doc)
+  | _ ->
+      group (p_tuplePattern pat ^^ ascr_doc)
+
+and p_letbinding (pat, e) =
+  let pat_doc = p_letlhs (pat, e) in
+  prefix2 (group (pat_doc ^/^ equals)) (p_term e)
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -877,15 +887,40 @@ and p_noSeqTerm' e = match (unparen e).tm with
       group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
-  | Let(q, lbs, e) ->
-    let let_doc = str "let" ^^ p_letqualifier q in
-    group (precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in") ^/^
-      p_term e
+  | Let(q, (a0, lb0)::attr_letbindings, e) ->
+    let let_first =
+        p_attrs_opt a0 ^/^
+        group (str "let" ^/^
+               p_letqualifier q ^/^
+               p_letbinding lb0)
+    in
+    let let_rest =
+        match attr_letbindings with
+        | [] -> empty
+        | _ ->
+          group (precede_break_separate_map
+                    empty
+                    empty
+                    p_attr_letbinding
+                    attr_letbindings)
+    in let_first ^/^
+       let_rest  ^/^
+       str "in"  ^/^
+       p_term e
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     group (str "function" ^/^ separate_map hardline p_patternBranch branches)
   | Assign (id, e) ->
       group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
   | _ -> p_typ e
+
+and p_attrs_opt = function
+  | None -> empty
+  | Some terms ->
+    group (str "[@" ^/^ (separate_map semi p_term terms) ^/^ str "]")
+
+and p_attr_letbinding (a, (pat, e)) =
+  let pat_doc = p_letlhs (pat, e) in
+  (prefix2 (p_attrs_opt a ^/^ (group (str "and " ^/^ pat_doc ^/^ equals))) (p_term e))
 
 and p_typ e = with_comment p_typ' e e.range
 
@@ -1070,7 +1105,7 @@ and p_argTerm arg_imp = match arg_imp with
   | (u, UnivApp) -> p_universe u
   | (e, FsTypApp) ->
       (* This case should not happen since it might lead to badly formed type applications (e.g t<a><b>)*)
-      BU.print_warning "Unexpected FsTypApp, output might not be formatted correctly.\n" ;
+      Errors.log_issue e.range (Errors.Warning_UnexpectedFsTypApp, "Unexpected FsTypApp, output might not be formatted correctly.") ;
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
@@ -1197,7 +1232,7 @@ and p_constant = function
   | Const_bool b -> doc_of_bool b
   | Const_float x -> str (Util.string_of_float x)
   | Const_char x -> squotes (doc_of_char x )
-  | Const_string(bytes, _) -> dquotes (str (Util.string_of_bytes bytes))
+  | Const_string(s, _) -> dquotes (str s)
   | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
@@ -1212,6 +1247,8 @@ and p_constant = function
       in
       let ending = default_or_map empty (fun (s, w) -> signedness s ^^ width w) sign_width_opt in
       str repr ^^ ending
+  | Const_range_of -> str "range_of"
+  | Const_set_range_of -> str "set_range_of"
   | Const_range r -> str (Range.string_of_range r)
   | Const_reify -> str "reify"
   | Const_reflect lid -> p_quident lid ^^ qmark ^^ dot ^^ str "reflect"
@@ -1243,6 +1280,8 @@ and p_atomicUniverse u = match (unparen u).tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e = p_term e
+
+let signature_to_document e = p_justSig e
 
 let decl_to_document e = p_decl e
 

@@ -1,10 +1,12 @@
 module FStar.Tactics.Simplifier
 
 open FStar.Tactics
+open FStar.Reflection.Syntax
+open FStar.Reflection.Formula
 
 (* A correct-by-construction logical simplifier
  *
- * No calling `norm [Simpl]`, that's cheating!
+ * No calling `norm [simpl]`, that's cheating!
  *)
 
 val lem_iff_refl : #a:Type -> Lemma (a <==> a)

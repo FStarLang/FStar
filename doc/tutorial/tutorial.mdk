@@ -370,8 +370,8 @@ type-checker knows that the `read f` call is safe.
 Write a function called `checkedWrite` that takes a filename `f` and a
 string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
-is not writable your `checkedWrite` should raise an exception. As for
-`checkedRead`, your `checkedRead` should have no preconditions.
+is not writable your `checkedWrite` should raise an exception. As with
+`checkedRead`, your `checkedWrite` should have no preconditions.
 ~~ ExerciseFragment {exname=Ex01a}
 [INCLUDE=code/exercises/Ex01a.fst:CheckedWriteType]
 ~~
@@ -674,7 +674,7 @@ Let's take a look at the factorial function:
       if n = 0 then 1 else n * (factorial (n - 1))
 
 ~ Remark
-By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as typles. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
+By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as tuples. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
 ~
 
 For a recursive function, without further annotation, F\* attempts to
@@ -2185,8 +2185,8 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
       Without a way to do this maintaining this document and keeping it consistent
       will be a nightmare.) -->
 
-[sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
-[sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
+[sf-stlc]: https://softwarefoundations.cis.upenn.edu/plf-current/Stlc.html
+[sf-stlc-prop]: https://softwarefoundations.cis.upenn.edu/plf-current/StlcProp.html
 
 We now look at a larger case study: proving the soundness of a type-checker
 for the simply-typed $\lambda$-calculus (STLC). If you're not familiar with
@@ -3577,7 +3577,7 @@ module Heap
 assume type heap
 assume val sel : #a:Type -> heap -> ref a -> Tot a
 assume val upd : #a:Type -> heap -> ref a -> a -> Tot heap
-assume val contains : #a:Type -> heap -> ref a -> a -> Tot bool
+assume val contains : #a:Type -> heap -> ref a -> Tot bool
 ```
 
 These functions are interpreted using standard axioms, which allows

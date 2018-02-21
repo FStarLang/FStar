@@ -67,6 +67,7 @@ type exported_id_kind = (* kinds of identifiers exported by a module *)
 type exported_id_set = exported_id_kind -> ref<string_set>
 
 type env
+type withenv<'a> = env -> 'a * env
 // = {
 //  curmodule:            option<lident>;                   (* name of the module being desugared *)
 //  curmonad:             option<ident>;                    (* current monad being desugared *)
@@ -94,14 +95,20 @@ type env
 //  remaining_iface_decls:BU.smap<(list<Parser.AST.decl>)>
 //  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
 //}
+type dsenv_hooks =
+  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
+    ds_push_include_hook : env -> lident -> unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 type foundname =
-  | Term_name of typ * bool // indicates if mutable
+  | Term_name of typ * bool * list<attribute> // bool indicates if mutable
   | Eff_name  of sigelt * lident
 
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val ds_hooks : env -> dsenv_hooks
+val set_ds_hooks: env -> dsenv_hooks -> env
 val syntax_only: env -> bool
 val set_syntax_only: env -> bool -> env
 val qualify: env -> ident -> lident
@@ -114,12 +121,15 @@ val set_expect_typ: env -> bool -> env
 val empty_env: unit -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
+val open_modules_and_namespaces: env -> list<lident>
 val iface_decls : env -> lident -> option<(list<Parser.AST.decl>)>
 val set_iface_decls: env -> lident -> list<Parser.AST.decl> -> env
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val shorten_module_path: env -> list<ident> -> bool -> (list<ident> * list<ident>)
 val shorten_lid: env -> lid -> lid
 val try_lookup_lid: env -> lident -> option<(term*bool)>
+val try_lookup_lid_with_attributes: env -> lident -> option<(term*bool*list<attribute>)>
+val try_lookup_lid_with_attributes_no_resolve: env -> lident -> option<(term * bool * list<attribute>)>
 val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
@@ -153,17 +163,17 @@ val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
 val pop: unit -> env
 val push: env -> env
-val mark: env -> env
-val reset_mark: unit -> env
-val commit_mark: env -> env
-val finish_module_or_interface: env -> modul -> env
-val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
+val finish_module_or_interface: env -> modul -> (env * modul)
 val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
 
 val transitive_exported_ids: env -> lident -> list<string>
+type module_inclusion_info
+val default_mii : module_inclusion_info
+val inclusion_info: env -> lident -> module_inclusion_info
+val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env * bool //pop the context when done desugaring
 
-(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
+(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool*list<attribute>)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
-(* private *) val check_admits: env -> unit
+(* private *) val check_admits: env -> modul -> modul
 (* private *) val finish:  env -> modul -> env

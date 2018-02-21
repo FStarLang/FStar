@@ -46,7 +46,7 @@ let finished_message fmods errs =
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"
          else Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs)
-    else print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
+    else print1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully")
   end
 
 (* printing total error count *)
@@ -66,12 +66,13 @@ let codegen (umods, env) =
     let mllibs = List.flatten mllibs in
     let ext = match opt with
       | Some "FSharp" -> ".fs"
-      | Some "OCaml" -> ".ml"
+      | Some "OCaml"
+      | Some "tactics" -> ".ml"
       | Some "Kremlin" -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "FSharp" | Some "OCaml" ->
+    | Some "FSharp" | Some "OCaml" | Some "tactics" ->
         (* When bootstrapped in F#, this will use the old printer in
            FStar.Extraction.ML.Code for both OCaml and F# extraction.
            When bootstarpped in OCaml, this will use the old printer
@@ -81,10 +82,38 @@ let codegen (umods, env) =
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
-        save_value_to_file (Options.prepend_output_dir "out.krml") bin
+        begin match programs with
+        | [ name, _ ] ->
+            save_value_to_file (Options.prepend_output_dir (name ^ ".krml")) bin
+        | _ ->
+            save_value_to_file (Options.prepend_output_dir "out.krml") bin
+        end
    | _ -> failwith "Unrecognized option"
 
+let gen_native_tactics (umods, env) out_dir =
+    (* Extract module and its dependencies to OCaml *)
+    Options.set_option "codegen" (Options.String "tactics");
+    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
+    let mllibs = List.flatten mllibs in
+    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
 
+    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
+    let user_tactics_modules = Universal.user_tactics_modules in
+    Tactics.Load.compile_modules out_dir (!user_tactics_modules)
+
+let init_native_tactics () =
+  Tactics.Load.load_tactics (Options.load ());
+  match Options.use_native_tactics () with
+  | Some dir ->
+      Util.print1 "Using native tactics from %s\n" dir;
+      Tactics.Load.load_tactics_dir dir
+  | None -> ()
+
+let init_warn_error() =
+  Errors.init_warn_error_flags;
+  let s = Options.warn_error() in
+  if s <> "" then
+    FStar.Parser.ParseIt.parse_warn_error s
 
 (****************************************************************************)
 (* Main function                                                            *)
@@ -95,29 +124,31 @@ let go _ =
     | Help ->
         Options.display_usage(); exit 0
     | Error msg ->
-        Util.print_string msg
+        Util.print_string msg; exit 1
     | Success ->
+        init_native_tactics ();
+        init_warn_error();
+
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
-        else if Options.interactive () then begin //--in
-          if Options.explicit_deps () then begin
-            Util.print_error "--explicit_deps incompatible with --in\n";
-            exit 1
-          end;
-          if List.length filenames <> 1 then begin
-            Util.print_error "fstar-mode.el should pass the current filename to F*\n";
-            exit 1
-          end;
-          let filename = List.hd filenames in
-
-          if Options.verify_module () <> [] then
-            Util.print_warning "Interactive mode; ignoring --verify_module";
-
-          (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          if Options.legacy_interactive () then FStar.Legacy.Interactive.interactive_mode filename
-          else FStar.Interactive.interactive_mode filename
-	  //and then start checking chunks from the current buffer
-        end //end interactive mode
+        then let _, deps = Parser.Dep.collect filenames in
+             Parser.Dep.print deps
+        else if (Options.use_extracted_interfaces () || Options.check_interface ()) && List.length filenames > 1 then
+          Errors.raise_error (Errors.Error_TooManyFiles, "Only one command line file is allowed if either --check_interface or --use_extracted_interfaces is set") Range.dummyRange
+        else if Options.interactive () then begin
+          match filenames with
+          | [] ->
+            Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName, "--ide: Name of current file missing in command line invocation\n"); exit 1
+          | _ :: _ :: _ ->
+            Errors. log_issue Range.dummyRange (Errors.Error_TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
+          | [filename] ->
+            if Options.check_interface () then begin
+              Errors.log_issue Range.dummyRange (Errors.Fatal_OptionsNotCompatible, "Only one command line file is allowed if either --check_interface or --use_extracted_interfaces is set\n"); exit 1
+            end
+            else if Options.legacy_interactive () then
+              FStar.Interactive.Legacy.interactive_mode filename
+            else
+              FStar.Interactive.Ide.interactive_mode filename
+          end
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
@@ -126,33 +157,35 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
-          let verify_mode =
-            if Options.verify_all () then begin
-              if Options.verify_module () <> [] then begin
-                Util.print_error "--verify_module is incompatible with --verify_all";
-                exit 1
-              end;
-              Parser.Dep.VerifyAll
-            end else if Options.verify_module () <> [] then
-              Parser.Dep.VerifyUserList
-            else
-              Parser.Dep.VerifyFigureItOut
-          in
-          let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
-          Tactics.Load.load_tactics (Options.load ());
-          let fmods, dsenv, env = Universal.batch_mode_tc filenames in
+          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
+          (match Options.gen_native_tactics () with
+          | Some dir ->
+             Util.print1 "Generating native tactics in %s\n" dir;
+             Options.set_option "lax" (Options.Bool true)
+          | None -> ());
+          let fmods, env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
+          report_errors module_names_and_times; //codegen errors
+          (match Options.gen_native_tactics () with
+          | Some dir ->
+              gen_native_tactics (fmods |> List.map fst, env) dir
+          | None -> ());
+          report_errors module_names_and_times; //native tactic errors
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
-          Util.print_error "no file provided\n"
+          Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
 
 
 let main () =
   try
-    go ();
+    let _, time = FStar.Util.record_time go in
+    if FStar.Options.query_stats()
+    then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
+              (FStar.Util.string_of_int time)
+              (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0
   with | e ->

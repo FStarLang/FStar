@@ -82,13 +82,13 @@ abstract val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a < max_int n)))
   (ensures (fun b -> a + 1 = b))
 let incr_underspec #n a =
-  if a < max_int n then a + 1 else magic()
+  if a < max_int n then a + 1 else 0
 
 abstract val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a > min_int n)))
   (ensures (fun b -> a - 1 = b))
 let decr_underspec #n a =
-  if a > min_int n then a - 1 else magic()
+  if a > min_int n then a - 1 else 0
 
 val incr_mod: #n:nat -> a:uint_t n -> Tot (uint_t n)
 let incr_mod #n a = (a + 1) % (pow2 n)
@@ -107,7 +107,7 @@ abstract val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
   (ensures (fun c ->
     size (a + b) n ==> a + b = c))
 let add_underspec #n a b =
-  if fits (a+b) n then a + b else magic ()
+  if fits (a+b) n then a + b else 0
 
 val add_mod: #n:nat -> uint_t n -> uint_t n -> Tot (uint_t n)
 let add_mod #n a b =
@@ -125,7 +125,7 @@ abstract val sub_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
   (ensures (fun c ->
     size (a - b) n ==> a - b = c))
 let sub_underspec #n a b =
-  if fits (a-b) n then a - b else magic ()
+  if fits (a-b) n then a - b else 0
 
 val sub_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let sub_mod #n a b =
@@ -143,16 +143,22 @@ abstract val mul_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
   (ensures (fun c ->
     size (a * b) n ==> a * b = c))
 let mul_underspec #n a b =
-  if fits (a*b) n then a * b else magic ()
+  if fits (a*b) n then a * b else 0
 
 val mul_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let mul_mod #n a b =
   (a * b) % (pow2 n)
 
+let lt_square_div_lt (a:nat) (b:pos) : Lemma
+  (requires (a < b * b))
+  (ensures (a / b < b))
+  = ()
+
 val mul_div: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20"
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 80"
 let mul_div #n a b =
   FStar.Math.Lemmas.lemma_mult_lt_sqr a b (pow2 n);
+  lt_square_div_lt (a * b) (pow2 n);
   (a * b) / (pow2 n)
 
 #reset-options "--max_fuel 0 --max_ifuel 0"
@@ -168,7 +174,7 @@ abstract val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (
   (ensures (fun c ->
     (b <> 0 /\ size (a / b) n) ==> a / b = c))
 let div_underspec #n a b =
-  if fits (a / b) n then a / b else magic ()
+  if fits (a / b) n then a / b else 0
 
 val div_size: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
   Lemma (requires (size a n)) (ensures (size (a / b) n))
@@ -459,6 +465,25 @@ val logand_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logand #n a (ones n) = a))
 let logand_lemma_2 #n a = nth_lemma #n (logand #n a (ones n)) a
 
+(* subset_vec_le_lemma proves that a subset of bits is numerically smaller or equal. *)
+val subset_vec_le_lemma: #n:pos -> a:bv_t n -> b:bv_t n ->
+  Lemma (requires is_subset_vec #n a b) (ensures (from_vec a) <= (from_vec b))
+let rec subset_vec_le_lemma #n a b = match n with
+  | 1 -> ()
+  | _ -> lemma_slice_subset_vec #n a b 0 (n-1);
+        subset_vec_le_lemma #(n-1) (slice a 0 (n-1)) (slice b 0 (n-1))
+
+(* logand_le proves the the result of AND is less than or equal to both arguments. *)
+val logand_le: #n:pos -> a:uint_t n -> b:uint_t n ->
+  Lemma (requires True)
+        (ensures (logand a b) <= a /\ (logand a b) <= b)
+let logand_le #n a b =
+  let va = to_vec a in
+  let vb = to_vec b in
+  let vand = to_vec (logand a b) in
+  subset_vec_le_lemma #n vand va;
+  subset_vec_le_lemma #n vand vb
+
 (* Bitwise XOR operator *)
 val logxor_commutative: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (requires True) (ensures (logxor #n a b = logxor #n b a))
@@ -527,6 +552,28 @@ val logor_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logor #n a (ones n) = ones n))
 let logor_lemma_2 #n a = nth_lemma (logor #n a (ones n)) (ones n)
 
+#set-options "--initial_fuel 1 --max_fuel 1"
+
+(* superset_vec_le_lemma proves that a superset of bits is numerically greater than or equal. *)
+val superset_vec_ge_lemma: #n:pos -> a:bv_t n -> b:bv_t n ->
+  Lemma (requires is_superset_vec #n a b)
+        (ensures (from_vec a) >= (from_vec b))
+let rec superset_vec_ge_lemma #n a b = match n with
+  | 1 -> ()
+  | _ -> lemma_slice_superset_vec #n a b 0 (n-1);
+        superset_vec_ge_lemma #(n-1) (slice a 0 (n-1)) (slice b 0 (n-1))
+
+(* logor_ge proves that the result of an OR is greater than or equal to both arguments. *)
+val logor_ge: #n:pos -> a:uint_t n -> b:uint_t n ->
+  Lemma (requires True)
+        (ensures (logor a b) >= a /\ (logor a b) >= b)
+let logor_ge #n a b =
+  let va = to_vec a in
+  let vb = to_vec b in
+  let vor = to_vec (logor a b) in
+  superset_vec_ge_lemma #n vor va;
+  superset_vec_ge_lemma #n vor vb
+
 (* Bitwise NOT operator *)
 val lognot_self: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (lognot #n (lognot #n a) = a))
@@ -536,13 +583,11 @@ val lognot_lemma_1: #n:pos ->
   Lemma (requires True) (ensures (lognot #n (zero n) = ones n))
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 
-#set-options "--initial_fuel 1 --max_fuel 1"
-
 (** Used in the next two lemmas *)
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
   Lemma (requires (a % pow2 m == 0))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPatT (a % pow2 m == 0)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a % pow2 m == 0)]
 let rec to_vec_mod_pow2 #n a m i =
   if i = n - 1 then
     begin
@@ -561,7 +606,7 @@ let rec to_vec_mod_pow2 #n a m i =
 private val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
   Lemma (requires (a < pow2 m))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPatT (a < pow2 m)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a < pow2 m)]
 let rec to_vec_lt_pow2 #n a m i =
   if n = 0 then ()
   else
@@ -575,6 +620,7 @@ let rec to_vec_lt_pow2 #n a m i =
       end
 
 (** Used in the next two lemmas *)
+#reset-options "--initial_fuel 0 --max_fuel 1 --z3rlimit 40"
 private val index_to_vec_ones: #n:pos -> m:nat{m <= n} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures (pow2 m <= pow2 n /\

@@ -894,9 +894,14 @@ module TestRsa = struct
       | None ->
           Printf.printf "rsa_encrypt/decrypt: got no bytes\n";
           raise Exit; ;
-      let sig_bytes = rsa_sign (Some SHA512) k original_bytes in
-      if not (rsa_verify (Some SHA512) k original_bytes sig_bytes) then begin
+      let sig_bytes = rsa_sign (Some SHA512) k false original_bytes in
+      if not (rsa_verify (Some SHA512) k false original_bytes sig_bytes) then begin
         Printf.printf "rsa_sign/rsa_verify: check failed\n";
+        raise Exit
+      end;
+      let sig_bytes = rsa_sign (Some SHA512) k true original_bytes in
+      if not (rsa_verify (Some SHA512) k true original_bytes sig_bytes) then begin
+        Printf.printf "rsa_sign/rsa_verify: PSS check failed\n";
         raise Exit
       end;
       true

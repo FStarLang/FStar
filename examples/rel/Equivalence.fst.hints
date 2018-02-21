@@ -1,7 +1,15 @@
 [
   "µ³Sq5t\u001a!Cµ5:·¾{1",
   [
-    [ "Equivalence.if_left", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Equivalence.if_left",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8c1656055df7c6f675190d298d8b6222"
+    ],
     [
       "Equivalence.if_left",
       2,
@@ -11,10 +19,10 @@
         "@query",
         "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "unit_typing"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
-      0
+      0,
+      "529cb1b51ed11f3b37051b357ecf2ea2"
     ],
     [
       "Equivalence.if_left_wp",
@@ -24,26 +32,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_FStar.DM4F.Heap.ST.refine_st",
-        "interpretation_Equivalence_Tm_abs_94257d9e083c345dc685e5e5ac84db79",
-        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_b6822213586ffda8330454a0422468da",
+        "interpretation_Equivalence_Tm_abs_0fa59d72b49b5a2bc999d88ede729bfa",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281",
         "unit_typing"
       ],
-      0
-    ],
-    [
-      "Equivalence.if_left_wp",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Equivalence_Tm_refine_2b5f2d484e596d06d6d46c7ceda588e0"
-      ],
-      0
+      0,
+      "14980e37de9a8b01da2c44ad44d211d2"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -59,7 +55,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
-      0
+      0,
+      "140f04f146cbb2df76b4422796da656b"
     ]
   ]
 ]

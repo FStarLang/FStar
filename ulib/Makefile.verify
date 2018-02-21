@@ -1,0 +1,42 @@
+.PHONY: indent extra
+
+FSTAR_HOME=..
+include $(FSTAR_HOME)/src/gmake/z3.mk
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/Makefile.tmpl
+
+EXTRA=
+FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
+# This was unused, and out previous idea of putting them first in
+# FSTAR_FILES doesn't really work, since we will first generate .depend
+# and then follow its order, which is not related to this one.
+#EXPENSIVE=FStar.Pointer.Base.fst
+
+FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
+
+extra: $(addsuffix -ver, $(EXTRA))
+
+OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
+
+indent: $(addsuffix -indent, $(ALL))
+
+%-ver: %
+	$(FSTAR) $^
+	touch $@
+
+%.fst-in:
+	@echo --use_hints --hint_info
+
+%.fst-indent: %.fst
+	$(FSTAR) --indent $^ > $^.indent.fst
+
+%.fsti-indent: %.fsti
+	$(FSTAR) --indent $^ > $^.indent.fsti
+
+verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
+
+%-verindent: %
+	$(FSTAR) $^
+
+wc:
+	wc -l prims.fst $(ALL)

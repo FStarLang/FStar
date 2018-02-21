@@ -208,6 +208,8 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	# -bundle Crypto_KrmlTest=Flag,Crypto.*
 	$(KRML) spartan_aes/aes.o crypto/spartan_stub.c \
                 -no-prefix Crypto.KrmlTest \
+		-dast \
+	        -drop Crypto.Symmetric.GF128.Spec -drop Crypto.Symmetric.PRF \
                 $(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
                 -tmpdir tmp -add-include '"testlib.h"' -o $@ \
                 crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
