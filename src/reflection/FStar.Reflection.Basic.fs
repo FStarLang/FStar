@@ -691,7 +691,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
         None
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
-let type_of_binder b = match b with (b, _) -> b.sort
+let type_of_binder (b : binder) = match b with (b, _) -> b.sort
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
-let fresh_binder t = (gen_bv "__refl" None t, None)
-let term_to_string = Print.term_to_string
+let fresh_binder t : binder = (gen_bv "__refl" None t, None)
+let term_to_string t = Print.term_to_string t
