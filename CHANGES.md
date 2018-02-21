@@ -14,14 +14,15 @@ Guidelines for the changelog:
 ## Syntax
 
 * The syntax of type annotations on binders has changed to eliminate a
-  parsing ambiguity. The annotation on a binder cannot itself begin
-  with a binder. For example, all of the following previously
+  parsing ambiguity. The annotation on a binder cannot itself contain
+  top-level binders. For example, all of the following previously
   accepted forms are now forbidden:
 
   ```
     let g0 (f:x:a -> b) = ()
     let g1 (f:x:int{x > 0}) = ()
     let g2 (a b : x:int{x> 0}) = ()
+    let g3 (f:a -> x:b -> c) = ()
    ```
 
   Instead, you must write:
@@ -31,6 +32,7 @@ Guidelines for the changelog:
     let g0 (f: (x:a -> b)) = ()
     let g1 (f: (x:int{x > 0})) = ()
     let g2 (a b : (x:int{x> 0})) = ()
+    let g3 (f : (a -> x:b -> c)) = ()
    ```
 
   In the second case, this version is also supported and is preferred:
