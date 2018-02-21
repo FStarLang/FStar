@@ -238,7 +238,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "b68b105746054b4cba6d07dc4e34eb68"
+      "21041502240851aa3f6a9e0bb0213373"
     ],
     [
       "Test.HyperStack.test_do_nothing",
@@ -718,7 +718,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "096858bb3f3b25a0f915cd79ed90b8ea"
+      "31f3d715b7a0c84cc83c72be5da9ed74"
     ],
     [
       "Test.HyperStack.test_stack_with_long_lived",
@@ -826,7 +826,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "1f5c1060a9b7e860944660ec33b5fd0a"
+      "34d0ed24e9eb5b00adcff162f4bdcad9"
     ],
     [
       "Test.HyperStack.test_heap_code_with_stack_calls",
@@ -912,7 +912,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "72e94a74842ad6eb77ebad5013d7e1f6"
+      "9229401448517f2545ee8b18c77226b2"
     ],
     [
       "Test.HyperStack.test_heap_code_with_stack_calls_and_regions",
@@ -993,7 +993,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "aeb6825dc8ef9a6cd42670eb5399f7e3"
+      "ccbc6a3c0372f7e20b2eb8c993e07b4b"
     ],
     [
       "Test.HyperStack.test_lax_code_with_stack_calls_and_regions",
@@ -1090,7 +1090,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "908e0874b2483c260a7f6beda518b6cd"
+      "b89d0a20998d90e6bc00a834214cad15"
     ],
     [
       "Test.HyperStack.test_lax_code_with_stack_calls_and_regions_2",
@@ -1185,7 +1185,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "7e00cfacb5568bc6132a43ad312191c7"
+      "86c61540f946a00ec712e1e8e5513805"
     ],
     [
       "Test.HyperStack.test_to_be_stack_inlined",
@@ -1733,7 +1733,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "70f73f823958e62b6b495ec91662ad30"
+      "ff6a69de2f9aed5193040827830fa423"
     ],
     [
       "Test.HyperStack.mods_test2",

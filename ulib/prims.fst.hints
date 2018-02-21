@@ -123,7 +123,7 @@
       1,
       [ "@query", "equation_Prims.normalize_term" ],
       0,
-      "d6c6e50e4c07442772d05063d0a964e9"
+      "9704d7fd5c43d06f84547244d7819a36"
     ],
     [
       "Prims.normalize_spec",
@@ -132,7 +132,7 @@
       1,
       [ "@query", "equation_Prims.normalize" ],
       0,
-      "2b3c715e01623f330d2799c45d590a04"
+      "340eb839b2812e53cfc6da3ce93fe2c6"
     ],
     [
       "Prims.norm_spec",
@@ -141,7 +141,7 @@
       1,
       [ "@query", "equation_Prims.norm" ],
       0,
-      "8882eb3c7c3241fccf6ca316bdaf8638"
+      "b407c16bdb588d49ebcd8965d99c4238"
     ]
   ]
 ]
