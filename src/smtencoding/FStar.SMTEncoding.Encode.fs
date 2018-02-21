@@ -597,10 +597,10 @@ and encode_string_term env head args_e =
         Term.unboxString (List.hd arg_tms),
         Term.unboxString (List.hd (List.tl arg_tms))
     in
-    let mk : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+    let mk_unary_int : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
     in
-    let strlen = mk Util.mkStrLen unary in
+    let strlen = mk_unary_int Util.mkStrLen unary in
     let ops =
         [(Const.strlen_lid, strlen)]
     in
