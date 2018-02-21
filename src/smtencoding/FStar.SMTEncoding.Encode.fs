@@ -597,16 +597,10 @@ and encode_string_term env head args_e =
         Term.unboxString (List.hd arg_tms),
         Term.unboxString (List.hd (List.tl arg_tms))
     in
-    let mk_default () =
-        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
-        Util.mkApp'(fname, fuel_args@arg_tms)
+    let mk : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
     in
-    let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
-      fun op mk_args ts -> mk_default ()
-    in
-    let mk_nl nm op ts = mk_default ()
-    in
-    let strlen = mk_l Util.mkStrLen unary in
+    let strlen = mk Util.mkStrLen unary in
     let ops =
         [(Const.strlen_lid, strlen)]
     in
