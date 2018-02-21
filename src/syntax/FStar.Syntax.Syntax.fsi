@@ -78,6 +78,15 @@ type delta_depth =
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+///[@ PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -96,6 +105,7 @@ type term' =
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -214,6 +224,16 @@ and residual_comp = {
 }
 
 and attribute = term
+
+and lazyinfo = {
+    blob : dyn;
+    kind : lazy_kind;
+    typ : typ;
+    rng : Range.range;
+ }
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
 
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>

@@ -263,6 +263,9 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_delayed _ ->
       failwith "Tm_delayed is impossible after compress"
 
+    | Tm_lazy i ->
+      resugar_term (U.unfold_lazy i)
+
     | Tm_bvar x ->
       (* this case can happen when printing a subterm of a term that is not opened *)
       let l = FStar.Ident.lid_of_ids [bv_as_unique_ident x] in

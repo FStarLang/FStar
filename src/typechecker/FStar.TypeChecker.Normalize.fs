@@ -386,6 +386,7 @@ let rec closure_as_term cfg (env:env) t =
             | Tm_unknown
             | Tm_constant _
             | Tm_name _
+            | Tm_lazy _
             | Tm_fvar _ -> t
 
             | Tm_uvar _ ->
@@ -1129,6 +1130,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_unknown
           | Tm_constant _
           | Tm_name _
+
+          | Tm_lazy _
 
           | Tm_fvar( {fv_delta=Delta_constant} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
@@ -2115,9 +2118,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             norm cfg env stack (guard_when_clause wopt b rest)
     in
 
-    if not cfg.steps.iota
-    then norm_and_rebuild_match ()
-    else matches scrutinee branches
+    if cfg.steps.iota
+    then matches scrutinee branches
+    else norm_and_rebuild_match ()
 
 let config' psteps s e =
     let d = s |> List.collect (function
@@ -2279,6 +2282,7 @@ let rec elim_delayed_subst_term (t:term) : term =
     | Tm_uinst _
     | Tm_constant _
     | Tm_type _
+    | Tm_lazy _
     | Tm_unknown -> t
 
     | Tm_abs(bs, t, rc_opt) ->

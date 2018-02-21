@@ -148,6 +148,7 @@ let rec is_arity env t =
     | Tm_delayed _
     | Tm_ascribed _
     | Tm_meta _ -> failwith "Impossible"
+    | Tm_lazy i -> is_arity env (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
     | Tm_name _
@@ -186,6 +187,8 @@ let rec is_type_aux env t =
     | Tm_delayed _
     | Tm_unknown ->
         failwith (BU.format1 "Impossible: %s" (Print.tag_of_term t))
+
+    | Tm_lazy i -> is_type_aux env (U.unfold_lazy i)
 
     | Tm_constant _ ->
       false
@@ -448,6 +451,8 @@ and term_as_mlty' env t =
       | Tm_bvar _
       | Tm_delayed _
       | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+
+      | Tm_lazy i -> term_as_mlty' env (U.unfold_lazy i)
 
       | Tm_constant _ -> unknownType
 
@@ -834,6 +839,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_delayed _
         | Tm_uvar _
         | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
+
+        | Tm_lazy i -> term_as_mlexpr' g (U.unfold_lazy i)
 
         | Tm_type _
         | Tm_refine _

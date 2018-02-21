@@ -306,6 +306,7 @@ let push_subst s t =
     let mk t' = Syntax.mk t' None (mk_range t.pos s) in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
+    | Tm_lazy i -> t
 
     | Tm_constant _
     | Tm_fvar _

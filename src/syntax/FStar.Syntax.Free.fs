@@ -95,7 +95,9 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
 
       | Tm_bvar _ -> no_free_vars
       | Tm_fvar fv -> singleton_fvar fv
+
       | Tm_constant _
+      | Tm_lazy _
       | Tm_unknown ->
         no_free_vars
 

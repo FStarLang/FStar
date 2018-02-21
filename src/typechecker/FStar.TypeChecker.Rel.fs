@@ -481,6 +481,8 @@ let base_and_refinement_maybe_delta should_delta env t1 =
                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
 
+        | Tm_lazy i -> aux norm (U.unfold_lazy i)
+
         | Tm_uinst _
         | Tm_fvar _
         | Tm_app _ ->
@@ -785,6 +787,7 @@ let rec delta_depth_of_term env t =
     match t.n with
     | Tm_meta _
     | Tm_delayed _  -> failwith "Impossible"
+    | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
     | Tm_unknown
     | Tm_bvar _
     | Tm_name _

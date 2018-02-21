@@ -304,8 +304,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
+  // aliens and lazy terms have whichever type they're annotated with
   | Tm_meta ({n = Tm_unknown}, Meta_alien (_, _, ty)) ->
-    top, S.mk_Total ty |> U.lcomp_of_comp, Rel.trivial_guard
+    value_check_expected_typ env top (Inl ty) Rel.trivial_guard
+
+  | Tm_lazy i ->
+    value_check_expected_typ env top (Inl i.typ) Rel.trivial_guard
 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
@@ -2383,6 +2387,7 @@ let rec universe_of_aux env e =
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
+   | Tm_lazy i -> universe_of_aux env (U.unfold_lazy i)
    | Tm_ascribed(_, (Inl t, _), _) -> t
    | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
    //also easy, since we can quickly recompute the type
@@ -2492,6 +2497,9 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
 
   | Tm_name x ->
     Some x.sort
+
+  | Tm_lazy i ->
+    type_of_well_typed_term env (U.unfold_lazy i)
 
   | Tm_fvar fv ->
     bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->

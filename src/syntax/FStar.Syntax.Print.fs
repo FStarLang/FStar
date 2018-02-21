@@ -248,6 +248,7 @@ let rec tag_of_term (t:term) = match t.n with
     end
   | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
+  | Tm_lazy _ -> "Tm_lazy"
 
 and term_to_string x =
   if not (Options.ugly()) then
@@ -260,6 +261,9 @@ and term_to_string x =
       match x.n with
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
+
+      // TODO: add an option to mark where this happens
+      | Tm_lazy i -> term_to_string (must !lazy_chooser i.kind i) // can't call into Syntax.Util here..
 
       | Tm_meta(t, Meta_pattern ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in

@@ -409,6 +409,23 @@ let rec ascribe t k = match t.n with
   | Tm_ascribed (t', _, _) -> ascribe t' k
   | _ -> mk (Tm_ascribed(t, k, None)) None t.pos
 
+let unfold_lazy i = must !lazy_chooser i.kind i
+
+let rec unlazy t =
+    match (compress t).n with
+    | Tm_lazy i -> unlazy <| unfold_lazy i
+    | _ -> t
+
+let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
+    let rng = (match r with | Some r -> r | None -> dummyRange) in
+    let i = {
+        kind = k;
+        blob = mkdyn t;
+        typ = typ;
+        rng = rng;
+      } in
+    mk (Tm_lazy i) None rng
+
 (* ---------------------------------------------------------------------- *)
 (* <eq_tm> Syntactic equality of zero-order terms                         *)
 (* ---------------------------------------------------------------------- *)
@@ -482,6 +499,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->
       equal_if (bv1.index = bv2.index)
+
+    | Tm_lazy _, _ -> eq_tm (unlazy t1) t2
+    | _, Tm_lazy _ -> eq_tm t1 (unlazy t2)
 
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
@@ -1360,6 +1380,7 @@ let rec delta_qualifier t =
     let t = Subst.compress t in
     match t.n with
         | Tm_delayed _ -> failwith "Impossible"
+        | Tm_lazy i -> delta_qualifier (unfold_lazy i)
         | Tm_fvar fv -> fv.fv_delta
         | Tm_bvar _
         | Tm_name _

@@ -176,11 +176,14 @@ let go _ =
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
-          Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
+          Errors.log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
 
+let lazy_chooser k = match k with
+    | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
 
 let main () =
   try
+    FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     let _, time = FStar.Util.record_time go in
     if FStar.Options.query_stats()
     then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"

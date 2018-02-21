@@ -97,6 +97,14 @@ type delta_depth =
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 ///[@ PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+
+///[@ PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -115,6 +123,7 @@ type term' =
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -232,7 +241,17 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and lazyinfo = {
+    blob : dyn;
+    kind : lazy_kind;
+    typ : typ;
+    rng : Range.range;
+ }
+
 and attribute = term
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
 
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
