@@ -332,9 +332,8 @@ type nonzero = i:int{i<>0}
 (*    the same sign as the dividend.                                    *)
 
 (*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
-(*    in OCaml. Although in F# they are still compiled to platform-specific *)
-(*    finite integers---this should eventually change to .NET BigInteger *)
-assume val op_Modulus            : int -> nonzero -> Tot int
+(*    in OCaml (ml/prims.ml) and bigint in F# (fs/prims.fs) *)
+assume val op_Modulus            : nat -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
 let rec pow2 (x:nat) : Tot pos =
