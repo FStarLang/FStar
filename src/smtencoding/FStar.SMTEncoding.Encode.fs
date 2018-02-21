@@ -472,6 +472,12 @@ let is_BitVector_primitive head args =
 
     | _ -> false
 
+let is_String_primitive head args =
+    match head.n, args with
+    | Tm_fvar fv, [_]->
+      S.fv_eq_lid fv Const.strlen_lid
+
+    | _ -> false
 
 let rec encode_const c env =
     match c with
@@ -483,7 +489,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, _) -> varops.string_const s, []
+    | Const_string(s, r) -> boxString (mkStringConstant s), []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
@@ -577,7 +583,40 @@ and encode_arith_term env head args_e =
     in
     op arg_tms, decls
 
- and encode_BitVector_term env head args_e =
+and encode_string_term env head args_e =
+    let arg_tms, decls = encode_args args_e env in
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary arg_tms =
+        Term.unboxString (List.hd arg_tms)
+    in
+    let binary arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxString (List.hd (List.tl arg_tms))
+    in
+    let mk_default () =
+        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
+        Util.mkApp'(fname, fuel_args@arg_tms)
+    in
+    let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts -> mk_default ()
+    in
+    let mk_nl nm op ts = mk_default ()
+    in
+    let strlen = mk_l Util.mkStrLen unary in
+    let ops =
+        [(Const.strlen_lid, strlen)]
+    in
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
+        BU.must
+    in
+    op arg_tms, decls
+
+and encode_BitVector_term env head args_e =
     (*first argument should be the implicit vector size
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
@@ -906,6 +945,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         | _ when is_BitVector_primitive head args_e ->
             encode_BitVector_term env head args_e
+    
+        | _ when is_String_primitive head args_e ->
+            encode_string_term env head args_e
 
         | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
         | Tm_fvar fv,  [_; (v1, _); (v2, _)]

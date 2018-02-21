@@ -115,6 +115,7 @@ let assert_lid      = pconst  "_assert"
 let list_append_lid = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
+let strlen_lid      = p2l ["FStar"; "String"; "strlen"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
 let strcat_lid'     = p2l ["FStar"; "String"; "strcat"]
 let str_make_lid    = p2l ["FStar"; "String"; "make"]

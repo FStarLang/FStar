@@ -68,6 +68,7 @@ type op =
   | BvUext of int
   | NatToBv of int
   | BvToNat
+  | StrLen
   | ITE
   | Var of string
 
@@ -77,6 +78,7 @@ type qop =
 
 type term' =
   | Integer    of string
+  | StringConstant of string
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
@@ -140,6 +142,7 @@ val fv_of_term : term -> fv
 val free_variables: term -> fvs
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
+val mkStringConstant : string -> Range.range -> term
 val mkInteger : string -> Range.range -> term
 val mkInteger': int -> Range.range -> term
 val mkBoundV : int -> Range.range -> term
@@ -148,6 +151,7 @@ val mkApp' : (op * list<term>) -> Range.range -> term
 val mkApp  : (string * list<term>) -> Range.range -> term
 val mkNot  : term -> Range.range -> term
 val mkMinus: term -> Range.range -> term
+val mkStrLen: term -> Range.range -> term
 val mkAnd  : ((term * term) -> Range.range -> term)
 val mkOr  :  ((term * term) -> Range.range -> term)
 val mkImp :  ((term * term) -> Range.range -> term)
