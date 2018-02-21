@@ -2069,7 +2069,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                u1 <: nat
 
       By collapsing u1 and u2, the constraints become unsolveable, since we then have
-        nat <: u <: nat and int <: u
+        nat <: u <: nat and int <: u. But u1 = nat, u2 = int would be a solution.
 
       However, it seems unlikely that this would arise in practice,
       since all the other non-flex-flex constraints would be attempted first.
@@ -2460,6 +2460,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    solve env (solve_prob orig guard [] wl)
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
+
+      | Tm_let _, Tm_let _ ->
+         // For now, just unify if they syntactically match
+         if U.term_eq t1 t2
+         then solve env (solve_prob orig None [] wl)
+         else giveup env "Tm_let mismatch (%s-%s vs %s-%s)" orig
 
       | Tm_let _, _
       | _, Tm_let _ ->
