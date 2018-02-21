@@ -1,10 +1,23 @@
 module FStar.BigInt
-
+open System.Numerics
 module Z = FSharp.Compatibility.OCaml.Big_int
 
 type bigint = Z.big_int
 type t = bigint
 
+(* Euclidean division and remainder *)
+let rec ediv_rem (n:t) (d:t) : t * t =
+    if Z.lt_big_int d Z.zero_big_int then
+      let q, r = ediv_rem n (Z.minus_big_int d) in
+      Z.minus_big_int q, r
+    else if Z.lt_big_int n Z.zero_big_int then
+      let q, r = ediv_rem (Z.minus_big_int n) d in
+      if r = Z.zero_big_int then
+        Z.minus_big_int q, Z.zero_big_int
+      else
+        Z.sub_big_int (Z.minus_big_int q) (Z.minus_big_int Z.unit_big_int),
+        Z.sub_big_int d r
+    else Z.quomod_big_int n d
 
 let zero = Z.zero_big_int
 let one = Z.unit_big_int
@@ -18,8 +31,8 @@ let abs_big_int = Z.abs_big_int
 let add_big_int = Z.add_big_int
 let mult_big_int = Z.mult_big_int
 let sub_big_int = Z.sub_big_int
-let div_big_int x y = fst (Z.quomod_big_int x y)
-let mod_big_int x y = snd (Z.quomod_big_int x y)
+let div_big_int x y = fst (ediv_rem x y)
+let mod_big_int x y = snd (ediv_rem x y)
 
 let eq_big_int = Z.eq_big_int
 let le_big_int = Z.le_big_int
