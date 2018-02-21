@@ -25,7 +25,7 @@ open FStar.All
 open FStar.Seq
 open FStar.Ref
 
-abstract type array (t:Type) = ref (seq t)
+abstract type array (t:Type) :Type0 = ref (seq t)
 
       (* #a:Type -> heap -> ref a ->  GTot a *)
 val sel: #a:Type -> heap -> array a -> GTot (seq a)

@@ -280,11 +280,8 @@ type __internal_ocaml_attributes =
  * s is the altertive function that should be printed in the warning
  * it can be omitted if the use case has no such function
  *)
-abstract 
-let attribute = unit
-
-irreducible 
-let deprecated (s:string) : attribute = ()
+irreducible
+let deprecated (s:string) : unit = ()
 
 irreducible
-let inline_let : attribute = ()
+let inline_let : unit = ()

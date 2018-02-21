@@ -85,10 +85,10 @@ sub_effect DIV ~> GST = lift_div_gst
  *       This form is useful in defining the MRRef interface (see mr_witness)
  *)
        
-abstract let stable (p:mem_predicate) =
+abstract let stable (p:mem_predicate) :Type0 =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
-abstract let witnessed (p:mem_predicate) = W.witnessed mem_rel p
+abstract let witnessed (p:mem_predicate) :Type0 = W.witnessed mem_rel p
 
 (* TODO: we should derive these using DM4F *)
 assume private val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
@@ -125,21 +125,21 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))
 (****** defining predicates for equal refs in some regions ******)
 
 (*
- * AR: (may be this is an overkill)
- *     various effects below talk about refs being equal in some regions (all regions, stack regions, etc.)
- *     this was done by defining, for example, an equal_dom predicate with a (forall (r:rid)) quantifier
- *     this quantifier was only guarded with Map.contains m.h r
- *     which meant it could fire for all the contained regions
- *
- *     instead now we define abstract predicates, e.g. same_refs_in_all_regions, and provide intro and elim forms
- *     the advantage is that, the (lemma) quantifiers are now guarded additionally by same_refs_in_all_regions kind
- *       of predicates, and hence should fire more contextually
- *     should profile the queries to see if it actually helps
- *)
+//  * AR: (may be this is an overkill)
+//  *     various effects below talk about refs being equal in some regions (all regions, stack regions, etc.)
+//  *     this was done by defining, for example, an equal_dom predicate with a (forall (r:rid)) quantifier
+//  *     this quantifier was only guarded with Map.contains m.h r
+//  *     which meant it could fire for all the contained regions
+//  *
+//  *     instead now we define abstract predicates, e.g. same_refs_in_all_regions, and provide intro and elim forms
+//  *     the advantage is that, the (lemma) quantifiers are now guarded additionally by same_refs_in_all_regions kind
+//  *       of predicates, and hence should fire more contextually
+//  *     should profile the queries to see if it actually helps
+//  *)
 
 (*
- * marking these opaque, since expect them to be unfolded away beforehand
- *)
+//  * marking these opaque, since expect them to be unfolded away beforehand
+//  *)
 [@"opaque_to_smt"]
 unfold private let equal_heap_dom (r:rid) (m0 m1:mem) :Type0
   = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
@@ -224,22 +224,22 @@ let lemma_equal_domains_trans (m0 m1 m2:mem)
   = ()
 
 (**
-   Effect of stacked based code: the 'equal_domains' clause enforces that
-   - both mem have the same tip
-   - both mem reference the same heaps (their map: rid -> heap have the same domain)
-   - in each region id, the corresponding heaps contain the same references on both sides
- *)
+//    Effect of stacked based code: the 'equal_domains' clause enforces that
+//    - both mem have the same tip
+//    - both mem reference the same heaps (their map: rid -> heap have the same domain)
+//    - in each region id, the corresponding heaps contain the same references on both sides
+//  *)
 effect Stack (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
 
 (**
-   Effect of heap-based code.
-   - assumes that the stack is empty (tip = root)
-   - corresponds to the HyperHeap ST effect
-   - can call to Stack and ST code freely
-   - respects the stack invariant: the stack has to be empty when returning
-*)
+//    Effect of heap-based code.
+//    - assumes that the stack is empty (tip = root)
+//    - corresponds to the HyperHeap ST effect
+//    - can call to Stack and ST code freely
+//    - respects the stack invariant: the stack has to be empty when returning
+// *)
 effect Heap (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HS.root /\ h1.tip = HS.root ) ==> p a h1)) (* WP *)
@@ -249,10 +249,10 @@ let equal_stack_domains (m0 m1:mem) =
   same_refs_in_stack_regions m0 m1
 
 (**
-  Effect of low-level code:
-  - maintains the allocation invariant on the stack: no allocation unless in a new frame that has to be popped before returning
-  - not constraints on heap allocation
-*)
+//   Effect of low-level code:
+//   - maintains the allocation invariant on the stack: no allocation unless in a new frame that has to be popped before returning
+//   - not constraints on heap allocation
+// *)
 effect ST (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
@@ -268,11 +268,11 @@ let inline_stack_inv h h' : GTot Type0 =
   same_refs_in_non_tip_regions h h'
 
 (**
-   Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
-   In other terms, the backend has to unfold the body into the caller's body.
-   This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
-   function body as well as in a Heap effect function body
-   *)
+//    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
+//    In other terms, the backend has to unfold the body into the caller's body.
+//    This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
+//    function body as well as in a Heap effect function body
+//    *)
 effect StackInline (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
@@ -284,21 +284,21 @@ let inline_inv h h' : GTot Type0 =
   same_refs_in_non_tip_stack_regions h h'
 
 (**
-   Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
-   In other terms, the backend has to unfold the body into the caller's body.
-   This effect only maintains the stack invariant: the tip is left unchanged and no allocation
-   may occurs in the stack lower than the tip.
-   Region allocation is not constrained.
-   Heap allocation is not constrained.
-   *)
+//    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
+//    In other terms, the backend has to unfold the body into the caller's body.
+//    This effect only maintains the stack invariant: the tip is left unchanged and no allocation
+//    may occurs in the stack lower than the tip.
+//    Region allocation is not constrained.
+//    Heap allocation is not constrained.
+//    *)
 effect Inline (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_inv h h1) ==> p a h1)) (* WP *)
 
 (**
-    TODO:
-    REMOVE AS SOON AS CONSENSUS IS REACHED ON NEW LOW EFFECT NAMES
-  *)
+//     TODO:
+//     REMOVE AS SOON AS CONSENSUS IS REACHED ON NEW LOW EFFECT NAMES
+//   *)
 effect STL (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) = Stack a pre post
 
 sub_effect
@@ -306,8 +306,8 @@ sub_effect
 
 
 (*
- * AR: The clients should now open HyperStack.ST after the memory model files (as with Heap and FStar.ST)
- *)
+//  * AR: The clients should now open HyperStack.ST after the memory model files (as with Heap and FStar.ST)
+//  *)
 
 type mreference (a:Type) (rel:preorder a) =
   r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
@@ -338,23 +338,23 @@ let is_eternal_region (r:rid) :Type0
   = HS.is_eternal_color (color r) /\ (r == HS.root \/ witnessed (region_contains_pred r))
 
 (*
- * AR: The change to using ST.rid may not be that bad itself,
- *     since subtyping should take care of most instances in the client usage.
- *     However, one case where it could be an issue is modifies clauses that use
- *     Set.set rid.
- *)
+//  * AR: The change to using ST.rid may not be that bad itself,
+//  *     since subtyping should take care of most instances in the client usage.
+//  *     However, one case where it could be an issue is modifies clauses that use
+//  *     Set.set rid.
+//  *)
 
 (**
-   Pushes a new empty frame on the stack
-   *)
+//    Pushes a new empty frame on the stack
+//    *)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
     let m1 = HS.hs_push_frame m0 in
     gst_put m1
 
 (**
-   Removes old frame from the stack
-   *)
+//    Removes old frame from the stack
+//    *)
 let pop_frame (_:unit)
   :Unsafe unit
   (requires (fun m -> poppable m))
@@ -385,8 +385,8 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
     r
 
 (**
-     Allocates on the top-most stack frame
-     *)
+//      Allocates on the top-most stack frame
+//      *)
 let salloc (#a:Type) (#rel:preorder a) (init:a)
   :StackInline (mstackref a rel)
   (requires (fun m -> is_stack_region m.tip))
@@ -483,10 +483,10 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   = ralloc_common i init true
 
 (*
- * AR: 12/26: For a ref to be readable/writable/free-able,
- *            the client can either prove contains
- *            or give us enough so that we can use monotonicity to derive contains
- *)
+//  * AR: 12/26: For a ref to be readable/writable/free-able,
+//  *            the client can either prove contains
+//  *            or give us enough so that we can use monotonicity to derive contains
+//  *)
 let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :Type0 =
   (m `contains` r) \/
     (let i = HS.frameOf r in
@@ -511,9 +511,9 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) m0
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
 
 (**
-   Assigns, provided that the reference exists.
-   Guaranties the strongest low-level effect: Stack
-   *)
+//    Assigns, provided that the reference exists.
+//    Guaranties the strongest low-level effect: Stack
+//    *)
 let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit
        (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
@@ -530,9 +530,9 @@ unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
   m1 == m0 /\ m0 `contains` r /\ x == HyperStack.sel m0 r
 
 (**
-   Dereferences, provided that the reference exists.
-   Guaranties the strongest low-level effect: Stack
-   *)
+//    Dereferences, provided that the reference exists.
+//    Guaranties the strongest low-level effect: Stack
+//    *)
 let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   :Stack a (requires (fun m -> r `is_live_for_rw_in` m))
            (ensures  (deref_post r))
@@ -546,16 +546,16 @@ let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 //   NS: This version is just fine; all the operation on mem are ghost
 //       and we can rig it so that mem just get erased at the end
 (**
-    Returns the current stack of heaps --- it should be erased
-    *)
+//     Returns the current stack of heaps --- it should be erased
+//     *)
 let get (_:unit)
   :Stack mem (requires (fun m -> True))
              (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
   = gst_get ()
 
 (**
-   We can only recall refs with mm bit unset, not stack refs
-   *)
+//    We can only recall refs with mm bit unset, not stack refs
+//    *)
 let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
   :Stack unit (requires (fun m -> True))
               (ensures (fun m0 _ m1 -> m0==m1 /\ m1 `contains` r))
@@ -563,8 +563,8 @@ let recall (#a:Type) (#rel:preorder a) (r:mref a rel)
     gst_recall (region_contains_pred (HS.frameOf r))
 
 (**
-   We can only recall eternal regions, not stack regions
-   *)
+//    We can only recall eternal regions, not stack regions
+//    *)
 let recall_region (i:rid{is_eternal_region i})
   :Stack unit (requires (fun m -> True))
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
@@ -584,7 +584,7 @@ let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
 (** MR witness etc. **)
 
 (* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
-*)
+// *)
 
 type erid = r:rid{is_eternal_region r}
 
