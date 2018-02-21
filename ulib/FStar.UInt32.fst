@@ -11,7 +11,7 @@ open FStar.Mul
 
 (* Except, as compared to [FStar.IntN.fstp], here:
  * - every occurrence of [int_t] has been replaced with [uint_t]
-2 * - every occurrence of [@%] has been replaced with [%].
+ * - every occurrence of [@%] has been replaced with [%].
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 

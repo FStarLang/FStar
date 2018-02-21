@@ -294,7 +294,7 @@ let modifies_trans_0_1 (#t:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
 	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
-let modifies_trans_1_1 (#a:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
+let modifies_trans_1_1 (#t:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid b h1 h2))
 	(ensures (modifies_buf_1 rid b h0 h2))
 	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
