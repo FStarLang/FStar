@@ -9,7 +9,7 @@ open FStar.Mul
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
-abstract type t =
+abstract type t :Type0 =
   | Mk: v:int_t n -> t
 
 abstract
@@ -149,7 +149,7 @@ let __int_to_t (x:int) : Tot t
     = int_to_t x
 #reset-options
 
-val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
+abstract val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
   (requires True)
   (ensures (fun c -> v c = Int64.v a * Int64.v b))
 let mul_wide a b = 

@@ -23,9 +23,9 @@ module D = FStar.Parser.Driver
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let tcenv_ref: ref<option<env>> = mk_ref None
 let test_mod_ref = mk_ref (Some ({name=test_lid;
-                                declarations=[];
-                                exports=[];
-                                is_interface=false}))
+                                  declarations=[];
+                                  exports=[];
+                                  is_interface=false}))
 
 let parse_mod mod_name dsenv =
     match parse (Filename mod_name) with
