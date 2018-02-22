@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "ac2aa0c0abbf1cd7b2c5e91544fd0e66"
+      "b9801d1a47702b3e6568cee75f89ba51"
     ],
     [
       "FStar.Map.lemma_equal_intro",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "101a2205a47e7bbcf0f1bf32345f1700"
+      "d61c5a3f94a6f0c2ce603b2f8c301a5a"
     ]
   ]
 ]
