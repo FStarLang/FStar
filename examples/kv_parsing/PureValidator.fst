@@ -89,7 +89,7 @@ let rec validate_many' n v =
 #reset-options "--max_fuel 0 --z3rlimit 20"
 
 val intro_validator_checks (#t:Type) (v: validator) (p:parser t)
-  (pf : b:bytes{length b < pow2 32} -> Lemma (validator_checks_on v p b)) :
+  (pf : (b:bytes{length b < pow2 32} -> Lemma (validator_checks_on v p b))) :
   Lemma (validator_checks v p)
 let intro_validator_checks #t v p pf =
   FStar.Classical.forall_intro

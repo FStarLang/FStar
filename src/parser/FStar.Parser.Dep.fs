@@ -681,7 +681,6 @@ let collect_one
         collect_term t
     | Paren t ->
         collect_term t
-    | Assign (_, t)
     | Requires (t, _)
     | Ensures (t, _)
     | Labeled (t, _, _) ->
