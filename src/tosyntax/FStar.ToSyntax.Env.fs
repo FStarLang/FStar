@@ -1008,18 +1008,21 @@ let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
 
 let check_admits env m =
   let admitted_sig_lids =
-    env.sigaccum |> List.fold_left (fun lids se -> match se.sigel with
-      | Sig_declare_typ(l, u, t) ->
-        begin match try_lookup_lid env l with
-          | None ->
+    env.sigaccum |> List.fold_left (fun lids se ->
+      match se.sigel with
+      | Sig_declare_typ(l, u, t) when not (se.sigquals |> List.contains Assumption) ->
+        // l is already fully qualified, so no name resolution
+        begin match BU.smap_try_find (sigmap env) l.str with
+          | Some ({sigel=Sig_let _}, _)
+          | Some ({sigel=Sig_inductive_typ _}, _) -> lids
+          | _ ->
             if not (Options.interactive ()) then
               FStar.Errors.log_issue (range_of_lid l)
                 (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
             let quals = Assumption :: se.sigquals in
             BU.smap_add (sigmap env) l.str ({ se with sigquals = quals }, false);
             l::lids
-        | Some _ -> lids
-      end
+        end
       | _ -> lids) []
   in
   //slap on the Assumption qualifier to module declarations that were admitted
