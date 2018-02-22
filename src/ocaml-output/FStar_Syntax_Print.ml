@@ -1464,36 +1464,41 @@ let rec (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
         FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.declarations
          in
       FStar_All.pipe_right uu____2620 (FStar_String.concat "\n")  in
-    FStar_Util.format2 "module %s\n%s" uu____2618 uu____2619
+    let uu____2625 =
+      let uu____2626 =
+        FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.exports  in
+      FStar_All.pipe_right uu____2626 (FStar_String.concat "\n")  in
+    FStar_Util.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n"
+      uu____2618 uu____2619 uu____2625
   
 let (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
-  fun uu___78_2627  ->
-    match uu___78_2627 with
+  fun uu___78_2633  ->
+    match uu___78_2633 with
     | FStar_Syntax_Syntax.DB (i,x) ->
-        let uu____2630 = FStar_Util.string_of_int i  in
-        let uu____2631 = bv_to_string x  in
-        FStar_Util.format2 "DB (%s, %s)" uu____2630 uu____2631
+        let uu____2636 = FStar_Util.string_of_int i  in
+        let uu____2637 = bv_to_string x  in
+        FStar_Util.format2 "DB (%s, %s)" uu____2636 uu____2637
     | FStar_Syntax_Syntax.NM (x,i) ->
-        let uu____2634 = bv_to_string x  in
-        let uu____2635 = FStar_Util.string_of_int i  in
-        FStar_Util.format2 "NM (%s, %s)" uu____2634 uu____2635
+        let uu____2640 = bv_to_string x  in
+        let uu____2641 = FStar_Util.string_of_int i  in
+        FStar_Util.format2 "NM (%s, %s)" uu____2640 uu____2641
     | FStar_Syntax_Syntax.NT (x,t) ->
-        let uu____2642 = bv_to_string x  in
-        let uu____2643 = term_to_string t  in
-        FStar_Util.format2 "DB (%s, %s)" uu____2642 uu____2643
+        let uu____2648 = bv_to_string x  in
+        let uu____2649 = term_to_string t  in
+        FStar_Util.format2 "DB (%s, %s)" uu____2648 uu____2649
     | FStar_Syntax_Syntax.UN (i,u) ->
-        let uu____2646 = FStar_Util.string_of_int i  in
-        let uu____2647 = univ_to_string u  in
-        FStar_Util.format2 "UN (%s, %s)" uu____2646 uu____2647
+        let uu____2652 = FStar_Util.string_of_int i  in
+        let uu____2653 = univ_to_string u  in
+        FStar_Util.format2 "UN (%s, %s)" uu____2652 uu____2653
     | FStar_Syntax_Syntax.UD (u,i) ->
-        let uu____2650 = FStar_Util.string_of_int i  in
-        FStar_Util.format2 "UD (%s, %s)" u.FStar_Ident.idText uu____2650
+        let uu____2656 = FStar_Util.string_of_int i  in
+        FStar_Util.format2 "UD (%s, %s)" u.FStar_Ident.idText uu____2656
   
 let (subst_to_string : FStar_Syntax_Syntax.subst_t -> Prims.string) =
   fun s  ->
-    let uu____2654 =
+    let uu____2660 =
       FStar_All.pipe_right s (FStar_List.map subst_elt_to_string)  in
-    FStar_All.pipe_right uu____2654 (FStar_String.concat "; ")
+    FStar_All.pipe_right uu____2660 (FStar_String.concat "; ")
   
 let (abs_ascription_to_string :
   (FStar_Syntax_Syntax.lcomp,FStar_Ident.lident) FStar_Util.either
@@ -1522,13 +1527,13 @@ let list_to_string :
       | x::xs ->
           let strb = FStar_Util.new_string_builder ()  in
           (FStar_Util.string_builder_append strb "[";
-           (let uu____2722 = f x  in
-            FStar_Util.string_builder_append strb uu____2722);
+           (let uu____2728 = f x  in
+            FStar_Util.string_builder_append strb uu____2728);
            FStar_List.iter
              (fun x1  ->
                 FStar_Util.string_builder_append strb "; ";
-                (let uu____2729 = f x1  in
-                 FStar_Util.string_builder_append strb uu____2729)) xs;
+                (let uu____2735 = f x1  in
+                 FStar_Util.string_builder_append strb uu____2735)) xs;
            FStar_Util.string_builder_append strb "]";
            FStar_Util.string_of_string_builder strb)
   
@@ -1542,13 +1547,13 @@ let set_to_string :
       | x::xs ->
           let strb = FStar_Util.new_string_builder ()  in
           (FStar_Util.string_builder_append strb "{";
-           (let uu____2762 = f x  in
-            FStar_Util.string_builder_append strb uu____2762);
+           (let uu____2768 = f x  in
+            FStar_Util.string_builder_append strb uu____2768);
            FStar_List.iter
              (fun x1  ->
                 FStar_Util.string_builder_append strb ", ";
-                (let uu____2769 = f x1  in
-                 FStar_Util.string_builder_append strb uu____2769)) xs;
+                (let uu____2775 = f x1  in
+                 FStar_Util.string_builder_append strb uu____2775)) xs;
            FStar_Util.string_builder_append strb "}";
            FStar_Util.string_of_string_builder strb)
   
