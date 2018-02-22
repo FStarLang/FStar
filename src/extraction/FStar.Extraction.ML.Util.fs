@@ -496,6 +496,22 @@ let rec mk_tac_embedding_path tcenv (m: emb_decl) (t: term): mlexpr' =
         raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))
   in try_mk t false
 
+(*
+  Given:
+      tac_lid: a source top-level lident at type `bs -> Tac t`
+      compiled to assm_lid at ML
+
+  builds the ML term:
+      fun psc args ->
+        mk_tactic_interpretation_N
+                true //to insert a TAC?.reflect
+                (from_tactic_N tac_lid)
+                (unembed_b1 ... unembed_bN)
+                (embed_t)
+                (t:FStar.Syntax.Syntax.typ)
+                args
+
+ *)
 let mk_interpretation_fun tcenv tac_lid assm_lid t bs =
     try
         let arg_types = List.map (fun x -> (fst x).sort) bs in
@@ -505,9 +521,14 @@ let mk_interpretation_fun tcenv tac_lid assm_lid t bs =
         let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
         let psc = str_to_name "psc" in
         let args =
-            [tac_fun] @
+            [MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
+             tac_fun] @
             (List.map (mk_tac_embedding_path tcenv Unembed) arg_types) @
-            [mk_tac_embedding_path tcenv Embed t; mk_tac_param_type tcenv t; tac_lid_app; psc; str_to_name "args"] in
+            [mk_tac_embedding_path tcenv Embed t;
+             mk_tac_param_type tcenv t;
+             tac_lid_app;
+             psc;
+             str_to_name "args"] in
         let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
         Some (MLE_Fun ([("psc", MLTY_Top); ("args", MLTY_Top)], app))
     with Errors.Error(Fatal_CallNotImplemented, msg, _)->

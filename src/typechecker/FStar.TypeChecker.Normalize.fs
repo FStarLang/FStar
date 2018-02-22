@@ -1400,10 +1400,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps.no_delta_steps) //we're allowed to do some delta steps, and ..
             && ((cfg.steps.pure_subterms_within_computations &&
-                 BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs) //1. we're extracting, and it's marked @inline_let
+                 U.has_attribute lb.lbattrs PC.inline_let_attr)        //1. we're extracting, and it's marked @inline_let
              || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
-                                        || BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs)) //it's marked @inline_let
-             || (U.is_ghost_effect n &&                              //Or, 3. it's ghost and we're not extracting
+                                        || U.has_attribute lb.lbattrs PC.inline_let_attr)) //it's marked @inline_let
+             || (U.is_ghost_effect n &&                                //Or, 3. it's ghost and we're not extracting
                     not (cfg.steps.pure_subterms_within_computations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in

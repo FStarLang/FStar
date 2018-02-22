@@ -1514,6 +1514,9 @@ let is_fvar lid t =
 let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
 
+let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
+     FStar.Util.for_some (is_fvar attr) attrs
+
 (* Spooky behaviours are possible with this, proceed with caution *)
 
 let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
