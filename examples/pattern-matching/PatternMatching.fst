@@ -331,7 +331,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     match inspect tm with
     | Tv_Type () -> return cur_bindings
     | _ -> raise (SimpleMismatch (pat, tm)) in
-  let interp_app (p_hd p_arg: p:pattern{p << pat}) cur_bindings tm =
+  let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
     match inspect tm with
     | Tv_App hd (arg, _) ->
       with_hd <-- interp_pattern_aux p_hd cur_bindings hd;

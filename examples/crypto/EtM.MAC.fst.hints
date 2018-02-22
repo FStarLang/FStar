@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e60a6c313eea8fbda95acc1a087c8599"
+      "f4d907a234ccf80491ddbb40f7b85c4b"
     ],
     [
       "EtM.MAC.tag",
@@ -24,7 +24,7 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "24ba82016b3a2c2193585389c184c2b0"
+      "c8db6949a5882a6c2be7510f3cb82f21"
     ],
     [
       "EtM.MAC.sha1",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a437bc82aa9936933470c44c71e69ea2"
+      "b187c58177f264727602064a463c6b71"
     ],
     [
       "EtM.MAC.sha1",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "647a7e7cb97241934ab6158d45023cb8"
+      "f0a1b46d38810516a3fc612a79a1d8f6"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -62,7 +62,7 @@
         "typing_EtM.MAC.sha1", "typing_Platform.Bytes.op_At_Bar"
       ],
       0,
-      "a2a2aa626021713861c436777d324fda"
+      "bde239f689825dfa5fa11501b7cacd9b"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -74,19 +74,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "004a283bc009cff0bfe90290008ec04c"
-    ],
-    [
-      "EtM.MAC.genPost",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
-        "equation_FStar.Monotonic.HyperStack.rid"
-      ],
-      0,
-      "f28b35782195d32f1d9716e95be6e7b3"
+      "77e62dae7fd564fa52f34587067314cc"
     ],
     [
       "EtM.MAC.keygen",
@@ -177,7 +165,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "8c08987a74e9629db78575de2b165666"
+      "0809e8a7eb6a4771fc0ee0170b329d54"
     ],
     [
       "EtM.MAC.mac",
@@ -215,7 +203,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "2477bf94b35901e570b8072b49e27362"
+      "ee7d64344de4129b39b7741a796674e3"
     ],
     [
       "EtM.MAC.verify",
@@ -238,7 +226,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "54a9d1291f4b63e629762ef2ebb6610f"
+      "675484eeb5d1aed9c03e15e052303496"
     ],
     [
       "EtM.MAC.verify",
@@ -317,7 +305,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "923e499f2c1bcc025d57f285a9d539ca"
+      "d80f9cc4859f4a13b9c504f25df8f4a9"
     ]
   ]
 ]

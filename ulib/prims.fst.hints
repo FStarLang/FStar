@@ -1,5 +1,5 @@
 [
-  "W–\u0006Í\u0010ô½ù'ƒ‚Kï+x¡",
+  "\u0005§Ó¡|\\\u0007·\u000b%<4…¡¿à",
   [
     [
       "Prims.Ghost",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "17f622068f28f7b44a4846c4d55a5e4f"
+      "a2c7a42b7468b0e8fcc7e3ed0d7aa15a"
     ],
     [
       "Prims.list",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "16179d8c7fc2c086ee14b6b355e233c6"
+      "480cb4cdaaed1d17d05d116fbd270de4"
     ],
     [
       "Prims.Lemma",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "11d4c579cc8ec79fcefeedfa4f498c02"
+      "74c4347d018642e67c00aa42908e2cc3"
     ],
     [
       "Prims._assert",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "71f73027a546599ff68f786f0e29946f"
+      "200a09da016e7ff2c7d14eed9f6dcda0"
     ],
     [
       "Prims.assert_spinoff",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a0df6da1098d143bdf8fa10ab1e01a16"
+      "1c00a13fa2145c827d865b8258508e78"
     ],
     [
       "Prims.cut",
@@ -59,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "f357e940970cff06ef2f2468fe80d29e"
+      "219ceab6418c376c3fffd4ddae6d179a"
     ],
     [
       "Prims.nonzero",
@@ -68,7 +68,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9a16cb3ec77294422700139568d1857a"
+      "306003244323f27cf63086da05b39138"
     ],
     [
       "Prims.pow2",
@@ -87,7 +87,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ab692180f14282e65c3e9b6ac35285b3"
+      "743ed798a75712190ef3d927497ff3db"
     ],
     [
       "Prims.min",
@@ -96,7 +96,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
       0,
-      "1a7e87168603232e757567d125d5cb8a"
+      "58acb9c0b806a9e7ce3925612c961fe4"
     ],
     [
       "Prims.abs",
@@ -105,7 +105,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
       0,
-      "ae8be1406d07d34d18639d8ad345bfd6"
+      "1bfb5afa824dfc5f349b63f782e368ec"
     ],
     [
       "Prims.assert_norm",
@@ -114,7 +114,34 @@
       1,
       [ "@query", "equation_Prims.normalize" ],
       0,
-      "4cb39878ac4fabca39995e0777f6810c"
+      "eac939e65c51eaa26448ff8fb8622b98"
+    ],
+    [
+      "Prims.normalize_term_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize_term" ],
+      0,
+      "9704d7fd5c43d06f84547244d7819a36"
+    ],
+    [
+      "Prims.normalize_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize" ],
+      0,
+      "340eb839b2812e53cfc6da3ce93fe2c6"
+    ],
+    [
+      "Prims.norm_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.norm" ],
+      0,
+      "b407c16bdb588d49ebcd8965d99c4238"
     ]
   ]
 ]

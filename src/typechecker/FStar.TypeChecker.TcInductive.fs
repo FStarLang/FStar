@@ -502,52 +502,16 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
     //term is the lhs of the implication for soundness formula
     //term is the soundness condition derived from all the data constructors of this type
 let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>) (us:list<univ_name>) acc ty =
-  let lid, bs, t, d_lids =
+  let lid =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, d_lids) -> lid, bs, t, d_lids
-    | _                                            -> failwith "Impossible!"
+    | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+    | _                                      -> failwith "Impossible!"
   in
-
-  //apply usubt to bs
-  let bs = SS.subst_binders usubst bs in
-  //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
-  let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
-  //open t with binders bs
-  let bs, t = SS.open_term bs t in
-  //get the index binders, if any
-  let ibs =
-    match (SS.compress t).n with
-    | Tm_arrow (ibs, _) -> ibs
-    | _                 -> []
-  in
-  //open the ibs binders
-  let ibs = SS.open_binders ibs in
-  //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
-  //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
-  //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
-  //haseq of ind
-  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
-  //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
-  //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
-  let bs' = List.filter (fun b ->
-    let _, en, _, _ = acc in
-    Rel.subtype_nosmt en (fst b).sort  (fst (type_u ()))
-  ) bs in
-  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
-  //implication
-  let fml = U.mk_imp haseq_bs haseq_ind in
-  //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
-  //fold right with ibs, close and add a forall b
-  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
-  //fold right with bs, close and add a forall b
-  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
-  //so now fml is the haseq axiom we want to generate
+  
+  let _, en, _, _ = acc in
+  let axiom_lid, fml, bs, ibs, haseq_bs = TcUtil.get_optimized_haseq_axiom en ty usubst us in
+  //fml is the hasEq axiom for the inductive, bs and ibs are opened binders and index binders,
+  //haseq_bs is the conjunction of hasEq of all the binders
 
   //onto the soundness condition for the above axiom
   //this is the soundness guard
@@ -574,7 +538,6 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   let cond = List.fold_left (fun acc d -> U.mk_conj acc (optimized_haseq_soundness_for_data lid d usubst bs)) U.t_true t_datas in
 
   //return new accumulator
-  let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
   l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
 
 

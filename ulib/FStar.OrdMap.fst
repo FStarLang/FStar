@@ -11,7 +11,7 @@ type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
 
 let cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
-abstract let map_t (k:eqtype) (v:Type) (f:cmp k) (d:ordset k f) =
+abstract let map_t (k:Type u#a{hasEq k}) (v:Type u#b) (f:cmp k) (d:ordset k f) :Type u#(max a b) =
   g:(k -> Tot (option v)){forall x. mem x d == Some? (g x)}
 
 abstract noeq type ordmap (k:eqtype) (v:Type) (f:cmp k) =
