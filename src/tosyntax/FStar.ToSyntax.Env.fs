@@ -1010,7 +1010,8 @@ let check_admits env m =
   let admitted_sig_lids =
     env.sigaccum |> List.fold_left (fun lids se -> match se.sigel with
       | Sig_declare_typ(l, u, t) ->
-        begin match try_lookup_lid env l with
+        // l is already fully qualified, so no name resolution
+        begin match BU.smap_try_find (sigmap env) l.str with
           | None ->
             if not (Options.interactive ()) then
               FStar.Errors.log_issue (range_of_lid l)
