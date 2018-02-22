@@ -474,6 +474,8 @@ let is_BitVector_primitive head args =
 
 let is_String_primitive head args =
     match head.n, args with
+    | Tm_fvar fv, [_;_]->
+          S.fv_eq_lid fv Const.strcat_lid'
     | Tm_fvar fv, [_]->
       S.fv_eq_lid fv Const.strlen_lid
 
@@ -489,7 +491,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, r) -> boxString (mkStringConstant s), []
+    | Const_string(s, _) -> boxString (mkStringConstant s), []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
@@ -597,12 +599,17 @@ and encode_string_term env head args_e =
         Term.unboxString (List.hd arg_tms),
         Term.unboxString (List.hd (List.tl arg_tms))
     in
-    let mk_unary_int : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+    let mk_int : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
     in
-    let strlen = mk_unary_int Util.mkStrLen unary in
+    let mk_string : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts -> op (mk_args ts) |> Term.boxString  
+    in
+    let strlen = mk_int    Util.mkStrLen unary in
+    let strcat = mk_string Util.mkStrCat binary in 
     let ops =
-        [(Const.strlen_lid, strlen)]
+        [(Const.strlen_lid, strlen);
+         (Const.strcat_lid', strcat)]
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>

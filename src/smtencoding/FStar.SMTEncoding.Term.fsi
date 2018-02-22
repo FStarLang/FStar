@@ -69,6 +69,7 @@ type op =
   | NatToBv of int
   | BvToNat
   | StrLen
+  | StrCat
   | ITE
   | Var of string
 
@@ -78,7 +79,7 @@ type qop =
 
 type term' =
   | Integer    of string
-  | StringConstant of string
+  | String     of string
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
@@ -152,6 +153,7 @@ val mkApp  : (string * list<term>) -> Range.range -> term
 val mkNot  : term -> Range.range -> term
 val mkMinus: term -> Range.range -> term
 val mkStrLen: term -> Range.range -> term
+val mkStrCat: ((term * term) -> Range.range -> term)
 val mkAnd  : ((term * term) -> Range.range -> term)
 val mkOr  :  ((term * term) -> Range.range -> term)
 val mkImp :  ((term * term) -> Range.range -> term)
