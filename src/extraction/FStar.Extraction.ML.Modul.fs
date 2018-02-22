@@ -357,7 +357,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   [MLM_Top app]
               | None -> [] in
 
-            if Options.codegen() = Some "tactics" then
+            if Options.codegen() = Some Options.Plugin then
               (match (snd lbs) with
                | [hd] ->
                   let bs, comp = U.arrow_formals_comp hd.lbtyp in
@@ -467,31 +467,20 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
        | Sig_pragma (p) ->
-         let codegen_opt = Options.codegen () in
          U.process_pragma p se.sigrng;
-         (match codegen_opt with
-          | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
-          | _ -> ());
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
 let extract' (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
-  let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
-  (* since command line options are reset, need to set OCaml extraction for when
-     extraction is driven from the F* compiler itself; currently this is only the case for
-     automatic tactic compilation *)
-  let _ = match codegen_opt with
-    | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
-    | _ -> () in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
-  let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
+  let is_kremlin = Options.codegen () = Some Options.Kremlin in
   if m.name.str <> "Prims"
   && (is_kremlin || not m.is_interface)
   && Options.should_extract m.name.str then begin

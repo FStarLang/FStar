@@ -134,7 +134,6 @@ let defaults =
       ("fs_typ_app"                   , Bool false);
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
-      ("gen_native_tactics"           , Unset);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
       ("hint_file"                    , Unset);
@@ -247,7 +246,6 @@ let get_extract_module          ()      = lookup_opt "extract_module"           
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
-let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -506,8 +504,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "tactics"],
-        "Generate code for execution");
+        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
+        "Generate code for further compilation to executable code, or build a compiler plugin");
 
       ( noshort,
         "codegen-lib",
@@ -591,11 +589,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "fstar_home",
         PathStr "dir",
         "Set the FSTAR_HOME variable to <dir>");
-
-       ( noshort,
-         "gen_native_tactics",
-         PathStr "[path]",
-        "Compile all user tactics used in the module in <path>");
 
        ( noshort,
         "hide_uvar_nums",
@@ -1200,7 +1193,16 @@ let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
-let codegen                      () = get_codegen                     ()
+type codegen_t = OCaml | FSharp | Kremlin | Plugin
+let codegen                      () =
+    Util.map_opt
+           (get_codegen())
+           (function
+            | "OCaml" -> OCaml
+            | "FSharp" -> FSharp
+            | "Kremlin" -> Kremlin
+            | "Plugin" -> Plugin
+            | _ -> failwith "Impossible")
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
 let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
@@ -1212,7 +1214,6 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
-let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
@@ -1331,6 +1332,3 @@ let should_extract m =
         (match get_extract_namespace (), get_extract_module() with
         | [], [] -> true //neither is set
         | _ -> should_extract_namespace m || should_extract_module m)
-
-let codegen_fsharp () =
-    codegen() = Some "FSharp"

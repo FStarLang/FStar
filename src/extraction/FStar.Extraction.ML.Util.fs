@@ -32,6 +32,8 @@ module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const
 module Range = FStar.Range
 
+let codegen_fsharp () = Options.codegen () = Some Options.FSharp
+
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
                           | Some xs -> xs::ll
@@ -301,11 +303,11 @@ let resugar_mlty t = match t with
     | _ -> t
 
 let flatten_ns ns =
-    if Options.codegen_fsharp()
+    if codegen_fsharp()
     then String.concat "." ns
     else String.concat "_" ns
 let flatten_mlpath (ns, n) =
-    if Options.codegen_fsharp()
+    if codegen_fsharp()
     then String.concat "." (ns@[n])
     else String.concat "_" (ns@[n])
 let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)

@@ -46,8 +46,6 @@ module Dep     = FStar.Parser.Dep
 
 let module_or_interface_name m = m.is_interface, m.name
 
-let user_tactics_modules = Tc.user_tactics_modules
-
 let with_tcenv (env:TcEnv.env) (f:DsEnv.withenv<'a>) =
     let a, dsenv = f env.dsenv in
     a, ({ env with dsenv=dsenv })

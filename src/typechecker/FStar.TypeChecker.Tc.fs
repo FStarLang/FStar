@@ -70,10 +70,6 @@ let get_tactic_fv env (tac_lid: lident) (h: term) =
       | _ -> None)
   | _ -> None
 
-(* This reference keeps a list of modules which contain user-defined tactics. It is only
-   modified in tc_decl to add these modules and only read in FStar.Main (via FStar.Universal,
-   in order to compile these modules when generating native tactics. *)
-let user_tactics_modules: ref<list<string>> = BU.mk_ref []
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -1290,108 +1286,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
           then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
-    (* 5. If top-level let is a user-defined tactic, check if it has been dynamically loaded as a native tactic.
-          If so, don't add its definition to the environment, instead add the reified tactic as an assumption and
-          replace its definition by the reflection of this assumed tactic. *)
-    let reified_tactic_type (l: lident) (t: typ): typ =
-      (* transform computations of type tactic to type __tac *)
-      let t = Subst.compress t in
-      match t.n with
-        | Tm_arrow(bs, c) ->
-            let bs, c = Subst.open_comp bs c in
-            if is_total_comp c
-            then begin
-              let c' =
-              (match c.n with
-                | Total (t', u) ->
-                  (match (Subst.compress t').n with
-                  | Tm_app (h, args) ->
-                      (match (Subst.compress h).n with
-                       | Tm_uinst (h', u') ->
-                          let h'' = fv_to_tm <| lid_as_fv PC.u_tac_lid Delta_constant None in
-                          mk_Total' (mk_Tm_app (mk_Tm_uinst h'' u') args None t'.pos) u
-                       | _ -> c)
-                  | _ -> c)
-                | _ -> c) in
-              {t with n=Tm_arrow(bs, Subst.close_comp bs c')}
-            end else t
-        | Tm_app(h, args) ->
-          (* tactics which take no arguments *)
-            (match (Subst.compress h).n with
-              | Tm_uinst (h', u') ->
-                let h'' = fv_to_tm <| lid_as_fv PC.u_tac_lid Delta_constant None in
-                mk_Tm_app (mk_Tm_uinst h'' u') args None t.pos
-              | _ -> t)
-        | _ -> t in
-
-    (* makes `assume val __native_tac: 'a -> __tac 'b` *)
-    let reified_tactic_decl (assm_lid: lident) (lb: letbinding): sigelt =
-      let t = reified_tactic_type assm_lid lb.lbtyp in
-      { sigel = Sig_declare_typ(assm_lid, lb.lbunivs, t);
-        sigquals =[Assumption];
-        sigrng = Ident.range_of_lid assm_lid;
-        sigmeta = default_sigmeta;
-        sigattrs = [] } in
-
-    (* makes `let native_tac (x: 'a): tactic 'b = fun () -> TAC?.reflect (__native_tac x)` *)
-    let reflected_tactic_decl (b: bool) (lb: letbinding) (bs: binders) (assm_lid: lident) comp: sigelt =
-      let reified_tac = fv_to_tm <| lid_as_fv assm_lid Delta_constant None in
-      let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
-      (* __native_tac x *)
-
-      let reflect_head = mk (Tm_constant (Const_reflect PC.tac_effect_lid)) None Range.dummyRange in
-      let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
-      let app = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
-      (* TAC?. reflect (__native_tac x) *)
-
-      let unit_binder = mk_binder <| new_bv None t_unit in
-      let body = abs [unit_binder] app <| Some (U.residual_comp_of_comp comp) in
-      let func = abs bs body <| Some (U.residual_comp_of_comp comp) in
-      {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids)} in
-
-    let tactic_decls =
-      (match (snd lbs) with
-        | [hd] ->
-          let bs, comp = U.arrow_formals_comp hd.lbtyp in
-          let t = comp_result comp in
-          (match (SS.compress t).n with
-            | Tm_app(h, args) ->
-                let h = SS.compress h in
-                let tac_lid = (right hd.lbname).fv_name.v in
-                let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                (match get_tactic_fv env assm_lid h with
-                 | Some fv ->
-                    (* check if the tactic has already been typechecked *)
-                    if not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
-                      (* if it's a user tactic, add the name of the module to the list of modules which contain user tactics,
-                         if the module has not already been added *)
-                      if (not (is_builtin_tactic env.curmodule)) then
-                        let added_modules = !user_tactics_modules in
-                        let module_name = Ident.ml_path_of_lid env.curmodule in
-                        if not (List.contains module_name added_modules) then
-                          user_tactics_modules := added_modules @ [module_name]
-                         else ()
-                      else ();
-                      (* check if tactic has been dynamically loaded *)
-                      if env.is_native_tactic assm_lid then begin
-                        let se_assm = reified_tactic_decl assm_lid hd in
-                        let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
-                        Some (se_assm, se_refl)
-                      end else None
-                    end else None
-                 | None -> None)
-            | _ -> None)
-        | _ -> None
-      ) in
-
-    match tactic_decls with
-    | Some (se_assm, se_refl) ->
-        if Env.debug env (Options.Other "NativeTactics") then
-          BU.print2 "Native tactic declarations: \n%s\n%s\n"
-            (Print.sigelt_to_string se_assm) (Print.sigelt_to_string se_refl)
-        else ();
-        [se_assm; se_refl], []
-    | None -> [se], []
+    [se], []
 
 let for_export hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
@@ -1743,12 +1638,12 @@ let extract_interface (env:env) (m:modul) :modul =
       let s1 = { s with sigel = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng);
                         sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
-      
-      if not (is_noeq_or_unopteq s.sigquals) then  //generate the optimized hasEq axiom for the inductive to add to the interface    
+
+      if not (is_noeq_or_unopteq s.sigquals) then  //generate the optimized hasEq axiom for the inductive to add to the interface
         let usubst, uvs = SS.univ_var_opening uvs in
         let env = Env.push_univ_vars env uvs in
         let axiom_lid, fml, _, _, _ = TcUtil.get_optimized_haseq_axiom env s usubst uvs in
-        let uvs, fml = TcUtil.generalize_universes env fml in 
+        let uvs, fml = TcUtil.generalize_universes env fml in
         let s2 = { s with sigel = Sig_assume (axiom_lid, uvs, fml); sigquals = Assumption::(filter_out_abstract s.sigquals) } in
         s1::[s2]
       else [s1]
@@ -1796,13 +1691,13 @@ let extract_interface (env:env) (m:modul) :modul =
    *  -- if Inr t, and t is not an arrow, then keep the body
    *  -- let comp = if Inl then c else result comp of Inr t (note t is an arrow at this point)
    *     -- if comp is Pure or Ghost, and the result type is non-unit, keep the body
-   *     -- if comp is a reifiable effect, and the result type is non-unit, keep the body 
+   *     -- if comp is a reifiable effect, and the result type is non-unit, keep the body
    *)
   let should_keep_lbdef (c_or_t:either<comp,typ>) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
-    in 
-      
+    in
+
     (is_right c_or_t && (not (U.is_function_typ (c_or_t |> right)))) ||
     (let c =
        if is_left c_or_t then c_or_t |> left
@@ -1816,11 +1711,11 @@ let extract_interface (env:env) (m:modul) :modul =
     match s.sigel with
     | Sig_inductive_typ _
     | Sig_datacon _ -> failwith "Impossible! Bare data constructor"
-    
+
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
-        List.fold_left (fun sigelts s -> 
+        List.fold_left (fun sigelts s ->
           match s.sigel with
           | Sig_inductive_typ (_, _, _, _, _, _) -> (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
@@ -1849,7 +1744,7 @@ let extract_interface (env:env) (m:modul) :modul =
           let lb, t = extract_lb_annotation lb lid s.sigrng in
           is_some t && b, lb::lbs, t::typs) (true, [], []) slbs lids
         in
-        let lbs, typs = List.rev_append lbs [], List.rev_append typs [] in 
+        let lbs, typs = List.rev_append lbs [], List.rev_append typs [] in
         //now boolean b tells us if all the types could be extracted, if b is false, we have to keep the body
         //in other words, b = true means all typs are some
 
@@ -1868,7 +1763,7 @@ let extract_interface (env:env) (m:modul) :modul =
           //if is it abstract or irreducible or lemma, keep just the vals
           let vals = List.map2 (fun lid opt -> val_of_lb s lid (opt |> must)) lids typs in
           if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
-          else 
+          else
             let should_keep_defs = List.existsML (fun opt -> should_keep_lbdef (opt |> must |> snd)) typs in
             if should_keep_defs then [ s ]
             else vals
@@ -1880,7 +1775,7 @@ let extract_interface (env:env) (m:modul) :modul =
     | Sig_effect_abbrev _
     | Sig_pragma _ -> [s]
   in
-  
+
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
 
 let check_module env m =

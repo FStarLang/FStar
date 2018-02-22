@@ -65,41 +65,48 @@ let codegen (umods, env) =
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = match opt with
-      | Some "FSharp" -> ".fs"
-      | Some "OCaml"
-      | Some "tactics" -> ".ml"
-      | Some "Kremlin" -> ".krml"
+      | Some Options.FSharp -> ".fs"
+      | Some Options.OCaml
+      | Some Options.Plugin -> ".ml"
+      | Some Options.Kremlin -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "FSharp" | Some "OCaml" | Some "tactics" ->
+    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
         (* When bootstrapped in F#, this will use the old printer in
            FStar.Extraction.ML.Code for both OCaml and F# extraction.
            When bootstarpped in OCaml, this will use the old printer
            for F# extraction and the new printer for OCaml extraction. *)
         let outdir = Options.output_dir() in
         List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
-    | Some "Kremlin" ->
+    | Some Options.Kremlin ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
         begin match programs with
         | [ name, _ ] ->
-            save_value_to_file (Options.prepend_output_dir (name ^ ".krml")) bin
+            save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
         | _ ->
             save_value_to_file (Options.prepend_output_dir "out.krml") bin
         end
    | _ -> failwith "Unrecognized option"
 
-let gen_native_tactics (umods, env) out_dir =
+let gen_plugins (umods, env) =
     (* Extract module and its dependencies to OCaml *)
-    Options.set_option "codegen" (Options.String "tactics");
+    let out_dir = match Options.output_dir() with
+                  | None -> "."
+                  | Some d -> d
+    in
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
 
     (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
-    let user_tactics_modules = Universal.user_tactics_modules in
-    Tactics.Load.compile_modules out_dir (!user_tactics_modules)
+    let user_plugin_modules =
+        umods |> List.collect (fun u ->
+        let name = Ident.string_of_lid u.name in
+        if Options.should_extract name then [name] else [])
+    in
+    Tactics.Load.compile_modules out_dir user_plugin_modules
 
 let init_native_tactics () =
   Tactics.Load.load_tactics (Options.load ());
@@ -158,20 +165,13 @@ let go _ =
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
-          (match Options.gen_native_tactics () with
-          | Some dir ->
-             Util.print1 "Generating native tactics in %s\n" dir;
-             Options.set_option "lax" (Options.Bool true)
-          | None -> ());
           let fmods, env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
           report_errors module_names_and_times; //codegen errors
-          (match Options.gen_native_tactics () with
-          | Some dir ->
-              gen_native_tactics (fmods |> List.map fst, env) dir
-          | None -> ());
+          if Options.codegen() = Some Options.Plugin
+          then gen_plugins (fmods |> List.map fst, env);
           report_errors module_names_and_times; //native tactic errors
           finished_message module_names_and_times 0
         end //end normal batch mode
