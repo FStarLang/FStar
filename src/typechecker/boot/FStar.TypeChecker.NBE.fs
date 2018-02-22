@@ -47,7 +47,8 @@ let debug_term (t : term) =
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
-let primops = ["op_Minus"; "op_Addition"; "op_Subtraction"; "op_GreaterThan"; "equals"]
+let primops = ["op_Minus"; "op_Addition"; "op_Subtraction"; "op_GreaterThan"; "equals";
+               "op_Negation"; "c_and"; "c_or"]
 
 type var = bv
 type sort = int
@@ -309,7 +310,7 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
-  | Refinement (b, r) -> Refinement (b, app r x q)
+  | Refinement (b, r) -> app r x q
   | Constant _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
@@ -510,27 +511,16 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 and readback_primops (env:Env.env) (n:string) (args:list<term * aqual>): term =
     debug (fun () -> BU.print1 "Readback primop %s\n" n);
     let args = List.map (fun (e, _) -> translate env [] e) args in
-    match n with
-    | "op_Minus" ->
-       (match args with
-        | [Constant (Int i)] -> readback env (Constant (Int (Z.minus_big_int i)))
-        | _ -> failwith "Bad primitive op application")
-    | "op_Addition" ->
-       (match args with
-        | [Constant (Int i1); Constant (Int i2)] -> readback env (Constant (Int (Z.add_big_int i1 i2)))
-        | _ -> failwith "Bad primitive op application")
-    | "op_Subtraction" ->
-       (match args with
-        | [Constant (Int i1); Constant (Int i2)] -> readback env (Constant (Int (Z.sub_big_int i1 i2)))
-        | _ -> failwith "Bad primitive op application")
-    | "op_GreaterThan" ->
-       (match args with
-        | [Constant (Int i1); Constant (Int i2)] -> readback env (Constant (Bool (Z.gt_big_int i2 i2)))
-        | _ -> failwith "Bad primitive op application")
-    | "equals" ->
-       (match args with
-        | [typ; t1; t2] -> readback env (Constant (Bool (readback env t1 = readback env t2)))
-        | _ -> failwith "Bad primitive op application")
+    match (n, args) with
+    | ("op_Minus", [Constant (Int i)]) -> readback env (Constant (Int (Z.minus_big_int i)))
+    | ("op_Addition", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Int (Z.add_big_int i1 i2)))
+    | ("op_Subtraction", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Int (Z.sub_big_int i1 i2)))
+    | ("op_GreaterThan", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Bool (Z.gt_big_int i2 i2)))
+    | ("equals", [typ; t1; t2]) -> readback env (Constant (Bool (readback env t1 = readback env t2)))
+    | ("op_Negation", [Constant (Bool b)]) -> readback env (Constant (Bool (not b)))
+    | ("c_and", [Constant (Bool b1); Constant (Bool b2)]) -> readback env (Constant (Bool (b1 && b2)))
+    | ("c_or", [Constant (Bool b1); Constant (Bool b2)]) -> readback env (Constant (Bool (b1 || b2)))
+    | _ -> failwith "Bad primitive op application"
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (env:Env.env) (x:t) : term =
@@ -632,8 +622,7 @@ and readback (env:Env.env) (x:t) : term =
     | Refinement (b, r) ->
         let body = translate env [] (readback env r) in
         debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
-        readback env body
-        // readback env (app body (Constant Unit) None)
+        readback env (app body (Constant Unit) None)
 
 // Zoe: Commenting out conflict with Danel
 // =======

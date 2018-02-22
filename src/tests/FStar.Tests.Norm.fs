@@ -136,8 +136,9 @@ let tests =
                                           | [hd] -> [hd]
                                           | hd1::hd2::tl -> hd1::hd2::copy_list_2 tl" in
   let _ = Pars.pars_and_tc_fragment "let (x1:int{x1>3}) = 6" in
-  let _ = Pars.pars_and_tc_fragment "let (x2:int{(x2+1>3) /\ (x2-5>0)}) = 2" in
+  let _ = Pars.pars_and_tc_fragment "let (x2:int{x2+1>3 /\ not (x2-5>0)}) = 2" in
   let _ = Pars.pars_and_tc_fragment "let my_plus (x:int) (y:int) = x + y" in
+  let _ = Pars.pars_and_tc_fragment "let (x3:int{forall (a:nat). a > x2}) = 7" in
 
   let _ = Pars.pars_and_tc_fragment "let idd (x: 'a) = x" in
   let _ = Pars.pars_and_tc_fragment "let revtb (x: tb) = match x with | T -> F | F -> T" in
@@ -216,7 +217,7 @@ let tests =
 
    ; (309, (tc_nbe "x1"), (tc_nbe "6"))
    ; (310, (tc_nbe "x2"), (tc_nbe "2"))
-   // ; (311, (tc_nbe "my_plus x1 x2"), (tc_nbe "8"))
+   // ; (311, (tc_nbe "x3"), (tc_nbe "7"))
   ]
 
 
