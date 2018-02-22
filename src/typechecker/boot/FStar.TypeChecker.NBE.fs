@@ -47,6 +47,8 @@ let debug_term (t : term) =
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
+let primops = ["op_Minus"; "op_Addition"; "op_Subtraction"; "op_GreaterThan"; "equals"]
+
 type var = bv
 type sort = int
 
@@ -75,7 +77,7 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   // NS:
-  // | Refinement of binder * t
+  | Refinement of binder * t // VD: do we need to keep the aqual?
   // | Arrow of list binder * comp_t
 and args = list<(t * aqual)>
 //NS:  
@@ -109,6 +111,7 @@ let rec t_to_string (x:t) =
   | Constant c -> constant_to_string c
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
+  | Refinement ((b,_), t) -> "Refinement (" ^ (P.bv_to_string b) ^ ", " ^ (t_to_string t) ^ ")"
 
 and atom_to_string (a: atom) =
     match a with
@@ -306,6 +309,7 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
+  | Refinement (b, r) -> Refinement (b, app r x q)
   | Constant _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
@@ -358,12 +362,25 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
-  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
+  let translated_def = translate env bs lb.lbdef in
+  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>): t =
     match us with
-    | [] -> translate env bs def
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving universe binder qualifier none for now; NS: makes sense
+    | [] -> translated_def
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs)), None) // Zoe: Leaving universe binder qualifier none for now; NS: makes sense
   in
-  make_univ_abst lb.lbunivs bs lb.lbdef
+  let translated_type =
+    match (SS.compress lb.lbtyp).n with
+    | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None // app (translate env (translated_def::bs) lb.lbtyp) translated_def None
+    | _ -> Constant Unit
+  in
+  // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
+  debug (fun () ->
+          match (SS.compress lb.lbtyp).n with
+          | Tm_refine _ ->
+              let readback_type = readback env translated_type in
+              BU.print2 "<<< Refinement for %s evaluates to %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
+          | _ -> ());
+  make_univ_abst lb.lbunivs bs
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
@@ -409,7 +426,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
-    | Tm_refine _ -> debug_term e; failwith "Tm_refine: Not yet implemented"
+    | Tm_refine (db, t) ->
+      Refinement ((db, None), Lam ((fun (y:t) -> translate env (y::bs) t), None))
 
     | Tm_ascribed (t, _, _) -> translate env bs t
 
@@ -488,6 +506,32 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_let((true, lbs), body) -> 
       translate env (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
+
+and readback_primops (env:Env.env) (n:string) (args:list<term * aqual>): term =
+    debug (fun () -> BU.print1 "Readback primop %s\n" n);
+    let args = List.map (fun (e, _) -> translate env [] e) args in
+    match n with
+    | "op_Minus" ->
+       (match args with
+        | [Constant (Int i)] -> readback env (Constant (Int (Z.minus_big_int i)))
+        | _ -> failwith "Bad primitive op application")
+    | "op_Addition" ->
+       (match args with
+        | [Constant (Int i1); Constant (Int i2)] -> readback env (Constant (Int (Z.add_big_int i1 i2)))
+        | _ -> failwith "Bad primitive op application")
+    | "op_Subtraction" ->
+       (match args with
+        | [Constant (Int i1); Constant (Int i2)] -> readback env (Constant (Int (Z.sub_big_int i1 i2)))
+        | _ -> failwith "Bad primitive op application")
+    | "op_GreaterThan" ->
+       (match args with
+        | [Constant (Int i1); Constant (Int i2)] -> readback env (Constant (Bool (Z.gt_big_int i2 i2)))
+        | _ -> failwith "Bad primitive op application")
+    | "equals" ->
+       (match args with
+        | [typ; t1; t2] -> readback env (Constant (Bool (readback env t1 = readback env t2)))
+        | _ -> failwith "Bad primitive op application")
+
 (* [readback] creates named binders and not De Bruijn *)
 and readback (env:Env.env) (x:t) : term =
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
@@ -509,16 +553,20 @@ and readback (env:Env.env) (x:t) : term =
       let body = readback env (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
-    | Construct (fv, us, args) ->
-      let args = map_rev (fun (x, q) -> (readback env x, q)) args in
+    | Construct (fv, us, args_t) ->
+      let args = map_rev (fun (x, q) -> (readback env x, q)) args_t in
       let apply tm =
         match args with
          | [] -> tm
          | _ ->  U.mk_app tm args
       in
-      (match us with
-       | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
-       | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
+      let fv_lid = P.lid_to_string (fv.fv_name.v) in
+      if Option.isSome (List.find (fun x -> x = fv_lid) primops) then
+          readback_primops env fv_lid args
+      else
+          (match us with
+           | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
+           | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv
@@ -580,6 +628,12 @@ and readback (env:Env.env) (x:t) : term =
          (match ts with
           | [] -> head
           | _ -> U.mk_app head args)
+
+    | Refinement (b, r) ->
+        let body = translate env [] (readback env r) in
+        debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
+        readback env body
+        // readback env (app body (Constant Unit) None)
 
 // Zoe: Commenting out conflict with Danel
 // =======
