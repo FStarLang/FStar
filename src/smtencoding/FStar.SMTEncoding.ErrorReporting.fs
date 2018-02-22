@@ -246,7 +246,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(BvToNat, _)
         | App(NatToBv _, _)
         | App(StrLen, _) 
-        | App(StrCat, _) ->
+        | App(StrCat, _) 
+        | App(StrAt, _) ->
           failwith "Impossible: non-propositional term"
 
         | App(ITE, _)

@@ -31,6 +31,11 @@ val compare: string -> string -> Tot int
 val lowercase:  string -> Tot string
 val uppercase:  string -> Tot string
 
+(* `at` is compliant with the specification of Z3Str3's `str.at`.
+   if the given index is less than 0, or greater than the value of the given string,
+   then the value of the result is "".
+   Otherwise it is a string of length 1, containing the character at the index. *)
+val at: string -> int -> string
 val index: s:string -> n:nat {n < length s} -> Tot char
 //index_of: returns -1 if the char is not found, for compatibility with C
 val index_of: string -> char -> Tot int

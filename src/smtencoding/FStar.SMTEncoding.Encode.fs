@@ -475,9 +475,10 @@ let is_BitVector_primitive head args =
 let is_String_primitive head args =
     match head.n, args with
     | Tm_fvar fv, [_;_]->
-          S.fv_eq_lid fv Const.strcat_lid'
+        S.fv_eq_lid fv Const.strcat_lid'
+        || S.fv_eq_lid fv Const.strat_lid
     | Tm_fvar fv, [_]->
-      S.fv_eq_lid fv Const.strlen_lid
+        S.fv_eq_lid fv Const.strlen_lid
 
     | _ -> false
 
@@ -592,12 +593,16 @@ and encode_string_term env head args_e =
         | Tm_fvar fv -> fv
         | _ -> failwith "Impossible"
     in
-    let unary arg_tms =
+    let unary_string arg_tms =
         Term.unboxString (List.hd arg_tms)
     in
-    let binary arg_tms =
+    let binary_string_string arg_tms =
         Term.unboxString (List.hd arg_tms),
         Term.unboxString (List.hd (List.tl arg_tms))
+    in
+    let binary_string_int arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxInt    (List.hd (List.tl arg_tms))
     in
     let mk_int : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
@@ -605,11 +610,13 @@ and encode_string_term env head args_e =
     let mk_string : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxString  
     in
-    let strlen = mk_int    Util.mkStrLen unary in
-    let strcat = mk_string Util.mkStrCat binary in 
+    let strlen = mk_int    Util.mkStrLen unary_string in
+    let strcat = mk_string Util.mkStrCat binary_string_string in
+    let strat  = mk_string Util.mkStrAt binary_string_int in
     let ops =
         [(Const.strlen_lid, strlen);
-         (Const.strcat_lid', strcat)]
+         (Const.strcat_lid', strcat);
+         (Const.strat_lid, strat)]
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
