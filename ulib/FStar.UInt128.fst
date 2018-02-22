@@ -585,7 +585,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-#set-options "--z3rlimit 64"
+#set-options "--z3rlimit 128"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
