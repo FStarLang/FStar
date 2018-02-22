@@ -249,7 +249,9 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
         let checking_or_using_extracted_interface, fmod, env =
           //see if we need to check or use extracted interface
           if Parser.Dep.check_or_use_extracted_interface (Dep.all_cmd_line_files env.dep_graph) fn then
-            true, Tc.extract_interface env fmod, { env with is_iface = true }
+            let extracted_interface = Tc.extract_interface env fmod in
+            if Options.dump_module fmod.name.str then BU.print2 "Extracted interface for %s:\n%s" fmod.name.str (Syntax.Print.modul_to_string extracted_interface);
+            true, extracted_interface, { env with is_iface = true }
           else false, fmod, env
         in
         if (Options.should_verify fmod.name.str //if we're verifying this module

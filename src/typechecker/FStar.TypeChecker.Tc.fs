@@ -1793,23 +1793,24 @@ let extract_interface (env:env) (m:modul) :modul =
 
   (*
    * When do we keep the body of the letbinding in the interface?
-   *  -- if Inr t, and t is not an arrow, then keep the body
-   *  -- let comp = if Inl then c else result comp of Inr t (note t is an arrow at this point)
-   *     -- if comp is Pure or Ghost, and the result type is non-unit, keep the body
-   *     -- if comp is a reifiable effect, and the result type is non-unit, keep the body 
    *)
   let should_keep_lbdef (c_or_t:either<comp,typ>) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
     in 
-      
-    (is_right c_or_t && (not (U.is_function_typ (c_or_t |> right)))) ||
-    (let c =
-       if is_left c_or_t then c_or_t |> left
-       else (match (SS.compress (c_or_t |> right)).n with | Tm_arrow (_, c) -> c | _ -> failwith "Impossible!")
-     in
-     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit)
-    )
+    
+    let c_opt =
+     if is_left c_or_t then Some (c_or_t |> left)
+     else
+       let t = c_or_t |> right in
+       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
+       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
+   in
+     
+   c_opt = None ||  //we can't get the comp type for sure, e.g. Inr t and t is not an arrow (say if..then..else), so keep the body
+   (let c = c_opt |> must in
+    //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
+    (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
