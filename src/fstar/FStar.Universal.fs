@@ -206,7 +206,7 @@ let load_module_from_cache env fn
                     if List.length digest = List.length digest'
                     then List.iter2
                             (fun (x,y) (x', y') ->
-                                 if x<>x || y<>y'
+                                 if x<>x' || y<>y'
                                  then BU.print2 "Differ at: Expected %s\n Got %s\n"
                                         (FStar.Parser.Dep.print_digest [(x,y)])
                                         (FStar.Parser.Dep.print_digest [(x',y')]))

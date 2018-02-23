@@ -47,9 +47,6 @@ let cong_mult #w #x #y #z p q = ()
 val neg_minus_one : (#x:int) -> Lemma (-x == (-1) * x)
 let neg_minus_one #x = ()
 
-val mult1 : (#x:int) -> Lemma (x == 1 * x)
-let mult1 #x = ()
-
 val x_plus_zero : (#x:int) -> Lemma (x + 0 == x)
 let x_plus_zero #x = ()
 
@@ -142,8 +139,7 @@ let rec canon_point = fun e () ->
         canon_point (Plus l r)
 
     | Plus (Plus a b) c ->
-        let o = compare_expr b c in
-        if O.gt o
+        if O.gt (compare_expr b c)
         then begin
             step_lemma (quote_lid ["FStar";"Tactics";"Canon";"sw_plus"]);;
             apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_plus"]);;
@@ -210,6 +206,17 @@ let rec canon_point = fun e () ->
         skip
     ) in x ()
 
+// On canon_point_entry, we interpret the LHS of the goal as an
+// arithmetic expression, of which we keep track in canon_point so we
+// avoid reinterpreting the goal, which gives a good speedup.
+//
+// However, we are repeating work between canon_point_entry calls, since
+// in (L + R), we are called once for L, once for R, and once for the
+// sum which traverses both (their canonized forms, actually).
+//
+// The proper way to solve this is have some state-passing in pointwise,
+// maybe having the inner tactic be of type (list a -> tactic a), where
+// the list is the collected results for all child calls.
 let canon_point_entry : tactic unit =
     norm [];;
     g <-- cur_goal;

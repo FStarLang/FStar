@@ -263,6 +263,8 @@ let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
                              || lid_equals c.eff_name PC.effect_GTot_lid
                              || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
+let is_tac_lcomp c = lid_equals c.eff_name PC.effect_Tac_lid
+
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
@@ -270,6 +272,9 @@ let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIA
 let is_tot_or_gtot_comp c =
     is_total_comp c
     || lid_equals PC.effect_GTot_lid (comp_effect_name c)
+
+let is_tac_comp c =
+    lid_equals PC.effect_Tac_lid (comp_effect_name c)
 
 let is_pure_effect l =
      lid_equals l PC.effect_Tot_lid
@@ -1449,7 +1454,8 @@ let rec term_eq t1 t2 =
   in
   let t1 = canon_app (unmeta_safe t1) in
   let t2 = canon_app (unmeta_safe t2) in
-  match t1.n, t2.n with
+  match (compress t1).n, (compress t2).n with
+
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
@@ -1458,11 +1464,36 @@ let rec term_eq t1 t2 =
   | Tm_constant c1, Tm_constant c2 -> eq_const c1 c2
   | Tm_type x, Tm_type y -> x = y
   | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
-  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2
   | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> eqlist binder_eq b1 b2 && comp_eq c1 c2
   | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
+
+  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2
+
   | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 && eqlist branch_eq bs1 bs2
-  | _, _ -> false // TODO missing cases
+
+  | Tm_ascribed (t1, _, _), _ -> term_eq t1 t2
+  | _, Tm_ascribed (t2, _, _) -> term_eq t1 t2
+
+  | Tm_let ((b1, lbs1), t1), Tm_let ((b2, lbs2), t2) ->
+    b1 = b2 && eqlist letbinding_eq lbs1 lbs2 && term_eq t1 t2
+
+  | Tm_uvar (u1, _), Tm_uvar (u2, _) -> u1 = u2
+
+  | Tm_delayed _, _
+  | _, Tm_delayed _ ->
+    failwith "impossible: term_eq did not compress properly"
+
+  | Tm_meta (t1, m1), Tm_meta (t2, m2) ->
+    begin match m1, m2 with
+    | Meta_monadic (n1, ty1), Meta_monadic (n2, ty2) ->
+        lid_equals n1 n2 && term_eq ty1 ty2
+    | Meta_monadic_lift (s1, t1, ty1), Meta_monadic_lift (s2, t2, ty2) ->
+        lid_equals s1 s2 && lid_equals t1 t2 && term_eq ty1 ty2
+    end
+
+  | Tm_unknown, Tm_unknown -> false // ?
+
+  | _, _ -> false
 and arg_eq a1 a2 = eqprod term_eq (fun q1 q2 -> q1 = q2) a1 a2
 and binder_eq b1 b2 = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2) b1 b2
 and lcomp_eq (c1:lcomp) (c2:lcomp) = false// TODO
@@ -1476,8 +1507,23 @@ and comp_eq c1 c2 = match c1.n, c2.n with
                         eqlist arg_eq c1.effect_args c2.effect_args &&
                         eq_flags c1.flags c2.flags
   | _, _ -> false
-and eq_flags f1 f2 = false // TODO
-and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
+  and eq_flags f1 f2 = true // TODO? Or just ignore?
+and branch_eq (p1,w1,t1) (p2,w2,t2) =
+    if eq_pat p1 p2
+    then begin
+        term_eq t1 t2 && (match w1, w2 with
+                          | Some x, Some y -> term_eq x y
+                          | None, None -> true
+                          | _ -> false)
+    end
+    else false
+
+and letbinding_eq lb1 lb2 =
+       eqsum bv_eq fv_eq lb1.lbname lb2.lbname
+    && lb1.lbunivs = lb2.lbunivs
+    && term_eq lb1.lbtyp lb2.lbtyp
+    && term_eq lb1.lbdef lb2.lbdef
+    // Ignoring eff and attrs..
 
 let rec bottom_fold (f : term -> term) (t : term) : term =
     let ff = bottom_fold f in

@@ -581,7 +581,7 @@ let (load_module_from_cache :
                                fun uu____869  ->
                                  match (uu____868, uu____869) with
                                  | ((x,y),(x',y')) ->
-                                     if (x <> x) || (y <> y')
+                                     if (x <> x') || (y <> y')
                                      then
                                        let uu____898 =
                                          FStar_Parser_Dep.print_digest
