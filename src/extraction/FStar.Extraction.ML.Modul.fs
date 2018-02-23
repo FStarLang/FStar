@@ -249,8 +249,13 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
               let fv_t = lb.lbtyp in
               let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv)) in
               match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t ml_name_str with
-              | Some (interp, arity) ->
-                  let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
+              | Some (interp, arity, plugin) ->
+                  let register =
+                    if plugin
+                    then "FStar_Tactics_Native.register_plugin"
+                    else "FStar_Tactics_Native.register_tactic"
+                  in
+                  let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
                   let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
                   let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [ml_name_str; arity; interp]) in
                   [MLM_Top app]

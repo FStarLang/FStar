@@ -20,6 +20,7 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
+module E = FStar.Errors
 
 let () = FStar.Version.dummy ()
 
@@ -90,31 +91,50 @@ let codegen (umods, env) =
         end
    | _ -> failwith "Unrecognized option"
 
-let gen_plugins (umods, env) =
-    (* Extract module and its dependencies to OCaml *)
-    let out_dir = match Options.output_dir() with
-                  | None -> "."
-                  | Some d -> d
-    in
-    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
-    let mllibs = List.flatten mllibs in
-    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
+//let gen_plugins (umods, env) =
+//    (* Extract module and its dependencies to OCaml *)
+//    let out_dir = match Options.output_dir() with
+//                  | None -> "."
+//                  | Some d -> d
+//    in
+//    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
+//    let mllibs = List.flatten mllibs in
+//    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
+//
+//    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
+//    let user_plugin_modules =
+//        umods |> List.collect (fun u ->
+//        let mname = FStar.Syntax.Syntax.mod_name u in
+//        if Options.should_extract (Ident.string_of_lid mname)
+//        then [FStar.Extraction.ML.Util.mlpath_of_lid mname |> FStar.Extraction.ML.Util.flatten_mlpath]
+//        else [])
+//    in
+//    Tactics.Load.compile_modules out_dir user_plugin_modules
 
-    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
-    let user_plugin_modules =
-        umods |> List.collect (fun u ->
-        let name = Ident.string_of_lid (FStar.Syntax.Syntax.mod_name u) in
-        if Options.should_extract name then [name] else [])
+let load_native_tactics () =
+    let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
+    let ml_module_name m =
+        FStar.Extraction.ML.Util.mlpath_of_lid m
+        |> FStar.Extraction.ML.Util.flatten_mlpath
     in
-    Tactics.Load.compile_modules out_dir user_plugin_modules
-
-let init_native_tactics () =
-  Tactics.Load.load_tactics (Options.load ());
-  match Options.use_native_tactics () with
-  | Some dir ->
-      Util.print1 "Using native tactics from %s\n" dir;
-      Tactics.Load.load_tactics_dir dir
-  | None -> ()
+    let ml_file m = ml_module_name m ^ ".ml" in
+    let cmxs_file m =
+        let cmxs = ml_module_name m ^ ".cmxs" in
+        match FStar.Options.find_file cmxs with
+        | Some f -> f
+        | None ->
+        match FStar.Options.find_file (ml_file m) with
+        | None ->
+            E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                         Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+        | Some ml ->
+            let dir = Util.dirname ml in
+            FStar.Tactics.Load.compile_modules dir [ml_module_name m];
+            Util.must (FStar.Options.find_file cmxs)
+    in
+    let cmxs_files = modules_to_load |> List.map cmxs_file in
+    List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
+    Tactics.Load.load_tactics cmxs_files
 
 let init_warn_error() =
   Errors.init_warn_error_flags;
@@ -133,7 +153,7 @@ let go _ =
     | Error msg ->
         Util.print_string msg; exit 1
     | Success ->
-        init_native_tactics ();
+        load_native_tactics ();
         init_warn_error();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
@@ -170,9 +190,6 @@ let go _ =
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
           report_errors module_names_and_times; //codegen errors
-          if Options.codegen() = Some Options.Plugin
-          then gen_plugins (fmods |> List.map fst, env);
-          report_errors module_names_and_times; //native tactic errors
           finished_message module_names_and_times 0
         end //end normal batch mode
         else

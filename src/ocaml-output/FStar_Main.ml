@@ -1,5 +1,5 @@
 open Prims
-let (uu___75 : Prims.unit) = FStar_Version.dummy () 
+let (uu___79 : Prims.unit) = FStar_Version.dummy () 
 let (process_args :
   Prims.unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -142,61 +142,64 @@ let (codegen :
            | uu____245 -> failwith "Unrecognized option")
         else ()
   
-let (gen_plugins :
-  (FStar_Syntax_Syntax.modul Prims.list,FStar_TypeChecker_Env.env)
-    FStar_Pervasives_Native.tuple2 -> Prims.unit)
-  =
-  fun uu____257  ->
-    match uu____257 with
-    | (umods,env) ->
-        let out_dir =
-          let uu____271 = FStar_Options.output_dir ()  in
-          match uu____271 with
-          | FStar_Pervasives_Native.None  -> "."
-          | FStar_Pervasives_Native.Some d -> d  in
-        let mllibs =
-          let uu____280 =
-            let uu____289 = FStar_Extraction_ML_UEnv.mkContext env  in
-            FStar_Util.fold_map FStar_Extraction_ML_Modul.extract uu____289
-              umods
+let (load_native_tactics : Prims.unit -> Prims.unit) =
+  fun uu____251  ->
+    let modules_to_load =
+      let uu____255 = FStar_Options.load ()  in
+      FStar_All.pipe_right uu____255 (FStar_List.map FStar_Ident.lid_of_str)
+       in
+    let ml_module_name m =
+      let uu____266 = FStar_Extraction_ML_Util.mlpath_of_lid m  in
+      FStar_All.pipe_right uu____266 FStar_Extraction_ML_Util.flatten_mlpath
+       in
+    let ml_file m =
+      let uu____283 = ml_module_name m  in Prims.strcat uu____283 ".ml"  in
+    let cmxs_file m =
+      let cmxs =
+        let uu____289 = ml_module_name m  in Prims.strcat uu____289 ".cmxs"
+         in
+      let uu____290 = FStar_Options.find_file cmxs  in
+      match uu____290 with
+      | FStar_Pervasives_Native.Some f -> f
+      | FStar_Pervasives_Native.None  ->
+          let uu____294 =
+            let uu____297 = ml_file m  in FStar_Options.find_file uu____297
              in
-          FStar_All.pipe_left FStar_Pervasives_Native.snd uu____280  in
-        let mllibs1 = FStar_List.flatten mllibs  in
-        (FStar_List.iter
-           (FStar_Extraction_ML_PrintML.print
-              (FStar_Pervasives_Native.Some out_dir) ".ml") mllibs1;
-         (let user_plugin_modules =
-            FStar_All.pipe_right umods
-              (FStar_List.collect
-                 (fun u  ->
-                    let name =
-                      let uu____324 = FStar_Syntax_Syntax.mod_name u  in
-                      FStar_Ident.string_of_lid uu____324  in
-                    let uu____325 = FStar_Options.should_extract name  in
-                    if uu____325 then [name] else []))
-             in
-          FStar_Tactics_Load.compile_modules out_dir user_plugin_modules))
-  
-let (init_native_tactics : Prims.unit -> Prims.unit) =
-  fun uu____331  ->
-    (let uu____333 = FStar_Options.load ()  in
-     FStar_Tactics_Load.load_tactics uu____333);
-    (let uu____336 = FStar_Options.use_native_tactics ()  in
-     match uu____336 with
-     | FStar_Pervasives_Native.Some dir ->
-         (FStar_Util.print1 "Using native tactics from %s\n" dir;
-          FStar_Tactics_Load.load_tactics_dir dir)
-     | FStar_Pervasives_Native.None  -> ())
+          (match uu____294 with
+           | FStar_Pervasives_Native.None  ->
+               let uu____298 =
+                 let uu____303 =
+                   let uu____304 = ml_file m  in
+                   FStar_Util.format1
+                     "Failed to compile native tactic; extracted module %s not found"
+                     uu____304
+                    in
+                 (FStar_Errors.Fatal_FailToCompileNativeTactic, uu____303)
+                  in
+               FStar_Errors.raise_err uu____298
+           | FStar_Pervasives_Native.Some ml ->
+               let dir = FStar_Util.dirname ml  in
+               ((let uu____308 =
+                   let uu____311 = ml_module_name m  in [uu____311]  in
+                 FStar_Tactics_Load.compile_modules dir uu____308);
+                (let uu____312 = FStar_Options.find_file cmxs  in
+                 FStar_Util.must uu____312)))
+       in
+    let cmxs_files =
+      FStar_All.pipe_right modules_to_load (FStar_List.map cmxs_file)  in
+    FStar_List.iter (fun x  -> FStar_Util.print1 "cmxs file: %s\n" x)
+      cmxs_files;
+    FStar_Tactics_Load.load_tactics cmxs_files
   
 let (init_warn_error : Prims.unit -> Prims.unit) =
-  fun uu____343  ->
+  fun uu____327  ->
     let s = FStar_Options.warn_error ()  in
     if s <> "" then FStar_Parser_ParseIt.parse_warn_error s else ()
   
-let go : 'Auu____349 . 'Auu____349 -> Prims.unit =
-  fun uu____353  ->
-    let uu____354 = process_args ()  in
-    match uu____354 with
+let go : 'Auu____333 . 'Auu____333 -> Prims.unit =
+  fun uu____337  ->
+    let uu____338 = process_args ()  in
+    match uu____338 with
     | (res,filenames) ->
         (match res with
          | FStar_Getopt.Help  ->
@@ -206,32 +209,32 @@ let go : 'Auu____349 . 'Auu____349 -> Prims.unit =
              (FStar_Util.print_string msg;
               FStar_All.exit (Prims.parse_int "1"))
          | FStar_Getopt.Success  ->
-             (init_native_tactics ();
+             (load_native_tactics ();
               init_warn_error ();
-              (let uu____372 =
-                 let uu____373 = FStar_Options.dep ()  in
-                 uu____373 <> FStar_Pervasives_Native.None  in
-               if uu____372
+              (let uu____356 =
+                 let uu____357 = FStar_Options.dep ()  in
+                 uu____357 <> FStar_Pervasives_Native.None  in
+               if uu____356
                then
-                 let uu____378 = FStar_Parser_Dep.collect filenames  in
-                 match uu____378 with
-                 | (uu____385,deps) -> FStar_Parser_Dep.print deps
+                 let uu____362 = FStar_Parser_Dep.collect filenames  in
+                 match uu____362 with
+                 | (uu____369,deps) -> FStar_Parser_Dep.print deps
                else
-                 (let uu____392 =
+                 (let uu____376 =
                     ((FStar_Options.use_extracted_interfaces ()) ||
                        (FStar_Options.check_interface ()))
                       &&
                       ((FStar_List.length filenames) > (Prims.parse_int "1"))
                      in
-                  if uu____392
+                  if uu____376
                   then
                     FStar_Errors.raise_error
                       (FStar_Errors.Error_TooManyFiles,
                         "Only one command line file is allowed if either --check_interface or --use_extracted_interfaces is set")
                       FStar_Range.dummyRange
                   else
-                    (let uu____394 = FStar_Options.interactive ()  in
-                     if uu____394
+                    (let uu____378 = FStar_Options.interactive ()  in
+                     if uu____378
                      then
                        match filenames with
                        | [] ->
@@ -239,24 +242,24 @@ let go : 'Auu____349 . 'Auu____349 -> Prims.unit =
                               (FStar_Errors.Error_MissingFileName,
                                 "--ide: Name of current file missing in command line invocation\n");
                             FStar_All.exit (Prims.parse_int "1"))
-                       | uu____396::uu____397::uu____398 ->
+                       | uu____380::uu____381::uu____382 ->
                            (FStar_Errors.log_issue FStar_Range.dummyRange
                               (FStar_Errors.Error_TooManyFiles,
                                 "--ide: Too many files in command line invocation\n");
                             FStar_All.exit (Prims.parse_int "1"))
                        | filename::[] ->
-                           let uu____403 = FStar_Options.check_interface ()
+                           let uu____387 = FStar_Options.check_interface ()
                               in
-                           (if uu____403
+                           (if uu____387
                             then
                               (FStar_Errors.log_issue FStar_Range.dummyRange
                                  (FStar_Errors.Fatal_OptionsNotCompatible,
                                    "Only one command line file is allowed if either --check_interface or --use_extracted_interfaces is set\n");
                                FStar_All.exit (Prims.parse_int "1"))
                             else
-                              (let uu____406 =
+                              (let uu____390 =
                                  FStar_Options.legacy_interactive ()  in
-                               if uu____406
+                               if uu____390
                                then
                                  FStar_Interactive_Legacy.interactive_mode
                                    filename
@@ -264,12 +267,12 @@ let go : 'Auu____349 . 'Auu____349 -> Prims.unit =
                                  FStar_Interactive_Ide.interactive_mode
                                    filename))
                      else
-                       (let uu____409 = FStar_Options.doc ()  in
-                        if uu____409
+                       (let uu____393 = FStar_Options.doc ()  in
+                        if uu____393
                         then FStar_Fsdoc_Generator.generate filenames
                         else
-                          (let uu____411 = FStar_Options.indent ()  in
-                           if uu____411
+                          (let uu____395 = FStar_Options.indent ()  in
+                           if uu____395
                            then
                              (if FStar_Platform.is_fstar_compiler_using_ocaml
                               then FStar_Indent.generate filenames
@@ -281,57 +284,37 @@ let go : 'Auu____349 . 'Auu____349 -> Prims.unit =
                                (FStar_List.length filenames) >=
                                  (Prims.parse_int "1")
                              then
-                               (let uu____414 =
+                               (let uu____398 =
                                   FStar_Dependencies.find_deps_if_needed
                                     filenames
                                    in
-                                match uu____414 with
+                                match uu____398 with
                                 | (filenames1,dep_graph1) ->
-                                    let uu____427 =
+                                    let uu____411 =
                                       FStar_Universal.batch_mode_tc
                                         filenames1 dep_graph1
                                        in
-                                    (match uu____427 with
+                                    (match uu____411 with
                                      | (fmods,env) ->
                                          let module_names_and_times =
                                            FStar_All.pipe_right fmods
                                              (FStar_List.map
-                                                (fun uu____494  ->
-                                                   match uu____494 with
+                                                (fun uu____478  ->
+                                                   match uu____478 with
                                                    | (x,t) ->
                                                        ((FStar_Universal.module_or_interface_name
                                                            x), t)))
                                             in
                                          (report_errors
                                             module_names_and_times;
-                                          (let uu____515 =
-                                             let uu____522 =
+                                          (let uu____499 =
+                                             let uu____506 =
                                                FStar_All.pipe_right fmods
                                                  (FStar_List.map
                                                     FStar_Pervasives_Native.fst)
                                                 in
-                                             (uu____522, env)  in
-                                           codegen uu____515);
-                                          report_errors
-                                            module_names_and_times;
-                                          (let uu____541 =
-                                             let uu____542 =
-                                               FStar_Options.codegen ()  in
-                                             uu____542 =
-                                               (FStar_Pervasives_Native.Some
-                                                  FStar_Options.Plugin)
-                                              in
-                                           if uu____541
-                                           then
-                                             let uu____547 =
-                                               let uu____554 =
-                                                 FStar_All.pipe_right fmods
-                                                   (FStar_List.map
-                                                      FStar_Pervasives_Native.fst)
-                                                  in
-                                               (uu____554, env)  in
-                                             gen_plugins uu____547
-                                           else ());
+                                             (uu____506, env)  in
+                                           codegen uu____499);
                                           report_errors
                                             module_names_and_times;
                                           finished_message
@@ -342,20 +325,20 @@ let go : 'Auu____349 . 'Auu____349 -> Prims.unit =
                                  (FStar_Errors.Error_MissingFileName,
                                    "no file provided\n"))))))))
   
-let main : 'Auu____576 . Prims.unit -> 'Auu____576 =
-  fun uu____580  ->
+let main : 'Auu____527 . Prims.unit -> 'Auu____527 =
+  fun uu____531  ->
     try
-      let uu____588 = FStar_Util.record_time go  in
-      match uu____588 with
-      | (uu____593,time) ->
-          ((let uu____596 = FStar_Options.query_stats ()  in
-            if uu____596
+      let uu____539 = FStar_Util.record_time go  in
+      match uu____539 with
+      | (uu____544,time) ->
+          ((let uu____547 = FStar_Options.query_stats ()  in
+            if uu____547
             then
-              let uu____597 = FStar_Util.string_of_int time  in
-              let uu____598 =
-                let uu____599 = FStar_Getopt.cmdline ()  in
-                FStar_String.concat " " uu____599  in
-              FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____597 uu____598
+              let uu____548 = FStar_Util.string_of_int time  in
+              let uu____549 =
+                let uu____550 = FStar_Getopt.cmdline ()  in
+                FStar_String.concat " " uu____550  in
+              FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____548 uu____549
             else ());
            cleanup ();
            FStar_All.exit (Prims.parse_int "0"))
@@ -363,19 +346,19 @@ let main : 'Auu____576 . Prims.unit -> 'Auu____576 =
     | e ->
         let trace = FStar_Util.trace_of_exn e  in
         (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____616 = FStar_Options.trace_error ()  in
-          if uu____616
+         (let uu____567 = FStar_Options.trace_error ()  in
+          if uu____567
           then
-            let uu____617 = FStar_Util.message_of_exn e  in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____617
+            let uu____568 = FStar_Util.message_of_exn e  in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____568
               trace
           else
             if Prims.op_Negation (FStar_Errors.handleable e)
             then
-              (let uu____619 = FStar_Util.message_of_exn e  in
+              (let uu____570 = FStar_Util.message_of_exn e  in
                FStar_Util.print1_error
                  "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____619)
+                 uu____570)
             else ());
          cleanup ();
          report_errors [];

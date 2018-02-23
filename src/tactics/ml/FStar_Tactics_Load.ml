@@ -23,6 +23,7 @@ let error_message : Dynlink.error -> string =
 let load_tactic tac =
   let dynlink fname =
     try
+      print_string ("Loading plugin from " ^ fname ^ "\n");
       Dynlink.loadfile fname
     with Dynlink.Error e ->
       failwith (U.format2 "Dynlinking %s failed: %s" fname (error_message e)) in

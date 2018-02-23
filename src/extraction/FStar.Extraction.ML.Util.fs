@@ -525,6 +525,11 @@ let rec mk_tac_embedding_path tcenv (m: emb_decl) (t: term): mlexpr' =
 
  *)
 let interpret_plugin_as_term_fun tcenv (fv:lident) (fv_t:typ) (ml_fv:mlexpr') =
+    let w = with_ty MLTY_Top in
+    let mk_lam nm e =
+        let psc = str_to_name nm in
+        MLE_Fun ([(nm, MLTY_Top)], w e)
+    in
     try
         let bs, c = U.arrow_formals_comp fv_t in
         let arg_types = List.map (fun x -> (fst x).sort) bs in
@@ -532,20 +537,20 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (fv_t:typ) (ml_fv:mlexpr') =
         let result_typ = U.comp_result c in
         if U.is_pure_comp c
         then begin
-            let embed_fun_N = with_ty MLTY_Top <| mk_basic_embedding Embed ("fun_" ^ string_of_int arity) in
-            let un_embeddings = List.map (must_mk_embedding_path tcenv Unembed) arg_types in
+            let embed_fun_N = with_ty MLTY_Top <| mk_basic_embedding Embed ("arrow_" ^ string_of_int arity) in
+            let un_embeddings = List.map (fun x -> w (must_mk_embedding_path tcenv Unembed x)) arg_types in
             let embed_res = must_mk_embedding_path tcenv Embed result_typ in
-            let args = un_embeddings @ [embed_res] in
-            Some (MLE_App(embed_fun_N,
-                          List.map (with_ty MLTY_Top) args),
-                  arity)
+            let args = un_embeddings @ [w embed_res; lid_to_top_name fv] in
+            Some (mk_lam "_" <| MLE_App(embed_fun_N, args),
+                  arity,
+                  true)
         end
         else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
                                  PC.tac_effect_lid
         then begin
             let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
             let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name fv]) in
-            let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top ml_fv]) in
+            let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
             let args =
                 [MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
@@ -556,9 +561,9 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (fv_t:typ) (ml_fv:mlexpr') =
                  tac_lid_app;
                  psc;
                  str_to_name "args"] in
-            let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
-            Some (MLE_Fun ([("psc", MLTY_Top); ("args", MLTY_Top)], app),
-                  arity)
+            Some (mk_lam "psc" <| (mk_lam "args" <| MLE_App (h, List.map w args)),
+                  arity,
+                  false)
           end
           else raise_err (Fatal_CallNotImplemented, ("Plugins not defined for type " ^ Print.term_to_string fv_t))
     with Errors.Error(Fatal_CallNotImplemented, msg, _)->

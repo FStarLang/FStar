@@ -223,6 +223,9 @@ let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psm
 let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
     add_steps (BU.psmap_empty ()) l
 
+let find_prim_step cfg fv =
+    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+
 type branches = list<(pat * option<term> * term)>
 
 type stack_elt =
@@ -852,7 +855,7 @@ let reduce_primops cfg env stack tm =
          let head, args = U.head_and_args tm in
          match (U.un_uinst head).n with
          | Tm_fvar fv -> begin
-           match BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v) with
+           match find_prim_step cfg fv with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
              if List.length args < prim_step.arity
              then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
@@ -1207,7 +1210,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  else rebuild cfg env stack t
             else // not an action, common case
                  let should_delta =
-                     cfg.delta_level |> BU.for_some (function
+                     Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
+                     && cfg.delta_level |> BU.for_some (function
                          | Env.UnfoldTac
                          | NoDelta -> false
                          | Env.Inlining
@@ -2125,6 +2129,17 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     then norm_and_rebuild_match ()
     else matches scrutinee branches
 
+let plugins =
+    let plugins = BU.mk_ref [] in
+    let register (p:primitive_step) =
+        plugins := p :: !plugins
+    in
+    let retrieve () = !plugins
+    in
+    register, retrieve
+let register_plugin p = fst plugins p
+let retrieve_plugins () = snd plugins ()
+
 let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
@@ -2143,7 +2158,7 @@ let config' psteps s e =
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
      delta_level=d;
-     primitive_steps= add_steps built_in_primitive_steps psteps;
+     primitive_steps= add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
      strong=false;
      memoize_lazy=true;
      normalize_pure_lets=
