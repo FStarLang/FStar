@@ -252,7 +252,7 @@ let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
     | [] -> out
     | hd::tl ->
-       if BatList.exists (eq hd) tl then
+       if BatList.exists (eq hd) out then
          aux out tl
        else
          aux (hd::out) tl in
