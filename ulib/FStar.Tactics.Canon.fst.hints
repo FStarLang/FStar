@@ -1,5 +1,5 @@
 [
-  "7\u0001SÄ=|£Òþe³äö|Çð",
+  "©µ¸‘’sP<²¡\u0001.\u0015®Ñ•",
   [
     [
       "FStar.Tactics.Canon.distr",
@@ -159,19 +159,6 @@
       "0c64af19cfd73c8b6a31b5a2876a218b"
     ],
     [
-      "FStar.Tactics.Canon.mult1",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "int_inversion",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
-        "unit_typing"
-      ],
-      0,
-      "2a4a884acaeb1b085d164bdc3f568dd3"
-    ],
-    [
       "FStar.Tactics.Canon.x_plus_zero",
       1,
       2,
@@ -182,7 +169,7 @@
         "unit_typing"
       ],
       0,
-      "99a506a02c01e6e57bc182b01530e660"
+      "e461c5c3646da288e8f811bcc174404c"
     ],
     [
       "FStar.Tactics.Canon.zero_plus_x",
@@ -195,7 +182,7 @@
         "unit_typing"
       ],
       0,
-      "a97636897c19b58bfa107209424d3324"
+      "e280aa04639d35963db0bcb4606ece2a"
     ],
     [
       "FStar.Tactics.Canon.x_mult_zero",
@@ -208,7 +195,7 @@
         "unit_typing"
       ],
       0,
-      "a7d96e76bbc7889fbab31ee9f91d6444"
+      "c60058265eaed60ce39b063020970274"
     ],
     [
       "FStar.Tactics.Canon.zero_mult_x",
@@ -221,7 +208,7 @@
         "unit_typing"
       ],
       0,
-      "72238d8c586104113cb6a31edf17c0fd"
+      "10cf029d67728b3ac4a75ac37edca08f"
     ],
     [
       "FStar.Tactics.Canon.x_mult_one",
@@ -234,7 +221,7 @@
         "unit_typing"
       ],
       0,
-      "38f9cbde3f7bd91e451ab20712a2248c"
+      "cf3b4245a5867a23b827f6c89edfbd51"
     ],
     [
       "FStar.Tactics.Canon.one_mult_x",
@@ -247,7 +234,7 @@
         "unit_typing"
       ],
       0,
-      "9d5aae5627e2142c540cf1291daba7f2"
+      "e7b6d63797452b82ce4af8ebf2d2527e"
     ],
     [
       "FStar.Tactics.Canon.minus_is_plus",
@@ -261,7 +248,7 @@
         "unit_typing"
       ],
       0,
-      "a1d9161c3a9f8232ca95b534c6a16daa"
+      "60275556eb0ae9f12b5f017cd3c3394c"
     ],
     [
       "FStar.Tactics.Canon.canon_point",
@@ -285,7 +272,7 @@
         "typing_FStar.Reflection.Arith.run_tm", "unit_typing"
       ],
       0,
-      "efe4020295a7c762c328545c3ccaaa4d"
+      "e8608bbdae95951e43c4fbc4529e5cec"
     ],
     [
       "FStar.Tactics.Canon.canon_point_entry",
@@ -303,7 +290,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "f5cecacb3f1afbd80e075a95812a61e3"
+      "d304bb2055a07a537fe900f57b5f75a2"
     ]
   ]
 ]

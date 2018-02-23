@@ -131,7 +131,7 @@
         "equation_FStar.Tactics.Logic.split", "unit_typing"
       ],
       0,
-      "0a8002c1f69b1d86cca4ecb0e1f2a7dd"
+      "3047bc7012c0f876a12e89da0e36be30"
     ],
     [
       "FStar.Tactics.Logic.simplify_eq_implication",
@@ -153,7 +153,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "1c5816f9ea28c30ed4425bf364738f37"
+      "6c102f9b69640367fa5f4f345a952a8b"
     ],
     [
       "FStar.Tactics.Logic.unfold_definition_and_simplify_eq'",
@@ -175,7 +175,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "1999432789e5e8469c1895fbccb846c5"
+      "d01307aca89e155883ebdbf8496e718f"
     ],
     [
       "FStar.Tactics.Logic.vbind",

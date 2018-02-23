@@ -1816,7 +1816,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "f8e562c91c9582d63c19eabba0340f4c"
+      "e4233f72202a8a6c0ef7d1c7f8a341c9"
     ],
     [
       "FStar.List.Tot.Properties.fold_left_invar",
@@ -2322,14 +2322,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "8b13ba2d48ca083b6e1e64a55bcfc907"
+      "68110aedba74fd57808bf7767cb8bc30"
     ],
     [
       "FStar.List.Tot.Properties.find_none",
