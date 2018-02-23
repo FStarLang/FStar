@@ -48,7 +48,7 @@ let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
 let primops = ["op_Minus"; "op_Addition"; "op_Subtraction"; "op_GreaterThan"; "equals";
-               "op_Negation"; "c_and"; "c_or"]
+               "op_Negation"; "l_and"; "l_or"; "b2t"]
 
 type var = bv
 type sort = int
@@ -310,7 +310,7 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
-  | Refinement (b, r) -> app r x q
+  | Refinement (b, r) -> Refinement (b, app r x q)
   | Constant _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
@@ -336,11 +336,12 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
                 debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
                 debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
                 debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-                // let t = SS.compress lb.lbdef in
-                // let x = (S.new_bv None S.tun, None) in
-                // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
-                // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
-                translate_letbinding env [] lb
+
+                // VD: Don't unfold primops
+                if (List.mem (P.lid_to_string (fvar.fv_name.v)) primops) then
+                    mkConstruct fvar [] []
+                else
+                    translate_letbinding env [] lb
              end
           | None -> failwith "Could not find mutually recursive definition")
       | Some { sigel = Sig_datacon(_, _, _, lid, _, []) } ->
@@ -371,16 +372,18 @@ and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
   in
   let translated_type =
     match (SS.compress lb.lbtyp).n with
-    | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None // app (translate env (translated_def::bs) lb.lbtyp) translated_def None
+    | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None
     | _ -> Constant Unit
   in
+
   // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
   debug (fun () ->
           match (SS.compress lb.lbtyp).n with
           | Tm_refine _ ->
               let readback_type = readback env translated_type in
-              BU.print2 "<<< Refinement for %s evaluates to %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
+              BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
           | _ -> ());
+
   make_univ_abst lb.lbunivs bs
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
@@ -515,11 +518,12 @@ and readback_primops (env:Env.env) (n:string) (args:list<term * aqual>): term =
     | ("op_Minus", [Constant (Int i)]) -> readback env (Constant (Int (Z.minus_big_int i)))
     | ("op_Addition", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Int (Z.add_big_int i1 i2)))
     | ("op_Subtraction", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Int (Z.sub_big_int i1 i2)))
-    | ("op_GreaterThan", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Bool (Z.gt_big_int i2 i2)))
+    | ("op_GreaterThan", [Constant (Int i1); Constant (Int i2)]) -> readback env (Constant (Bool (Z.gt_big_int i1 i2)))
     | ("equals", [typ; t1; t2]) -> readback env (Constant (Bool (readback env t1 = readback env t2)))
     | ("op_Negation", [Constant (Bool b)]) -> readback env (Constant (Bool (not b)))
-    | ("c_and", [Constant (Bool b1); Constant (Bool b2)]) -> readback env (Constant (Bool (b1 && b2)))
-    | ("c_or", [Constant (Bool b1); Constant (Bool b2)]) -> readback env (Constant (Bool (b1 || b2)))
+    | ("l_and", [Constant (Bool b1); Constant (Bool b2)]) -> readback env (Constant (Bool (b1 && b2)))
+    | ("l_or", [Constant (Bool b1); Constant (Bool b2)]) -> readback env (Constant (Bool (b1 || b2)))
+    | ("b2t", [Constant (Bool b)]) -> readback env (Constant (Bool b))
     | _ -> failwith "Bad primitive op application"
 
 (* [readback] creates named binders and not De Bruijn *)
@@ -551,7 +555,7 @@ and readback (env:Env.env) (x:t) : term =
          | _ ->  U.mk_app tm args
       in
       let fv_lid = P.lid_to_string (fv.fv_name.v) in
-      if Option.isSome (List.find (fun x -> x = fv_lid) primops) then
+      if (List.mem fv_lid primops) then
           readback_primops env fv_lid args
       else
           (match us with
@@ -622,7 +626,7 @@ and readback (env:Env.env) (x:t) : term =
     | Refinement (b, r) ->
         let body = translate env [] (readback env r) in
         debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
-        readback env (app body (Constant Unit) None)
+        S.mk (Tm_refine(fst b, readback env body)) None Range.dummyRange
 
 // Zoe: Commenting out conflict with Danel
 // =======
