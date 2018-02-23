@@ -103,7 +103,7 @@ let gen_plugins (umods, env) =
     (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
     let user_plugin_modules =
         umods |> List.collect (fun u ->
-        let name = Ident.string_of_lid u.name in
+        let name = Ident.string_of_lid (FStar.Syntax.Syntax.mod_name u) in
         if Options.should_extract name then [name] else [])
     in
     Tactics.Load.compile_modules out_dir user_plugin_modules

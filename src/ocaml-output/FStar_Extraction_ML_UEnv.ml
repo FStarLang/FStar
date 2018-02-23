@@ -103,7 +103,7 @@ let (erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty -> Prims.bool) =
        | FStar_Extraction_ML_Syntax.MLTY_Named
            (uu____282,("FStar"::"Tactics"::"Effect"::[],"tactic")) ->
            let uu____295 = FStar_Options.codegen ()  in
-           uu____295 <> (FStar_Pervasives_Native.Some "tactics")
+           uu____295 <> (FStar_Pervasives_Native.Some FStar_Options.Plugin)
        | uu____300 -> false)
   
 let (unknownType : FStar_Extraction_ML_Syntax.mlty) =

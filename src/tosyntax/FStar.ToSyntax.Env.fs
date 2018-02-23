@@ -1013,8 +1013,6 @@ let check_admits env m =
         begin match try_lookup_lid env l with
           | None ->
             if not (Options.interactive ()) then (
-              printfn "Sigelts in env: %s"
-                (env.sigaccum |> List.map (fun se -> Print.sigelt_to_string_short se) |> String.concat ",\n ");
               FStar.Errors.log_issue (range_of_lid l)
                 (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)))
                 );

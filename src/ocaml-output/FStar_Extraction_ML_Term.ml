@@ -579,7 +579,7 @@ let (maybe_eta_expand :
       let uu____1778 =
         (FStar_Options.ml_no_eta_expand_coertions ()) ||
           (let uu____1780 = FStar_Options.codegen ()  in
-           uu____1780 = (FStar_Pervasives_Native.Some "Kremlin"))
+           uu____1780 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin))
          in
       if uu____1778 then e else eta_expand expect e
   
@@ -1047,7 +1047,9 @@ let rec (extract_one_pat :
             | FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_int
                 (c,swopt)) when
                 let uu____2932 = FStar_Options.codegen ()  in
-                uu____2932 <> (FStar_Pervasives_Native.Some "Kremlin") ->
+                uu____2932 <>
+                  (FStar_Pervasives_Native.Some FStar_Options.Kremlin)
+                ->
                 let uu____2937 =
                   match swopt with
                   | FStar_Pervasives_Native.None  ->
@@ -2004,7 +2006,8 @@ and (term_as_mlexpr' :
        | FStar_Syntax_Syntax.Tm_app (head1,uu____6099) when
            ((FStar_Syntax_Util.is_fstar_tactics_embed head1) &&
               (let uu____6121 = FStar_Options.codegen ()  in
-               uu____6121 = (FStar_Pervasives_Native.Some "tactics")))
+               uu____6121 =
+                 (FStar_Pervasives_Native.Some FStar_Options.Plugin)))
              &&
              (let uu____6127 =
                 let uu____6128 =
@@ -2019,7 +2022,7 @@ and (term_as_mlexpr' :
            ->
            FStar_Errors.raise_error
              (FStar_Errors.Fatal_FailToExtractNativeTactic,
-               "Quotation not supported in native tactics")
+               "Quotation not supported in plugins")
              t.FStar_Syntax_Syntax.pos
        | FStar_Syntax_Syntax.Tm_app (head1,args) ->
            let is_total rc =
@@ -2089,7 +2092,8 @@ and (term_as_mlexpr' :
                            let evaluation_order_guaranteed =
                              (((FStar_List.length mlargs_f) =
                                  (Prims.parse_int "1"))
-                                || (FStar_Options.codegen_fsharp ()))
+                                ||
+                                (FStar_Extraction_ML_Util.codegen_fsharp ()))
                                ||
                                (match head1.FStar_Syntax_Syntax.n with
                                 | FStar_Syntax_Syntax.Tm_fvar fv ->

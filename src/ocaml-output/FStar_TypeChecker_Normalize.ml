@@ -5514,17 +5514,15 @@ let rec (norm :
                let uu____15175 =
                  (Prims.op_Negation (cfg.steps).no_delta_steps) &&
                    ((((cfg.steps).pure_subterms_within_computations &&
-                        (FStar_Util.for_some
-                           (FStar_Syntax_Util.is_fvar
-                              FStar_Parser_Const.inline_let_attr)
-                           lb.FStar_Syntax_Syntax.lbattrs))
+                        (FStar_Syntax_Util.has_attribute
+                           lb.FStar_Syntax_Syntax.lbattrs
+                           FStar_Parser_Const.inline_let_attr))
                        ||
                        ((FStar_Syntax_Util.is_pure_effect n1) &&
                           (cfg.normalize_pure_lets ||
-                             (FStar_Util.for_some
-                                (FStar_Syntax_Util.is_fvar
-                                   FStar_Parser_Const.inline_let_attr)
-                                lb.FStar_Syntax_Syntax.lbattrs))))
+                             (FStar_Syntax_Util.has_attribute
+                                lb.FStar_Syntax_Syntax.lbattrs
+                                FStar_Parser_Const.inline_let_attr))))
                       ||
                       ((FStar_Syntax_Util.is_ghost_effect n1) &&
                          (Prims.op_Negation

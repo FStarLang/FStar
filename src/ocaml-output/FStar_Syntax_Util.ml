@@ -3552,6 +3552,10 @@ let (is_fvar : FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool)
   
 let (is_synth_by_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t  -> is_fvar FStar_Parser_Const.synth_lid t 
+let (has_attribute :
+  FStar_Syntax_Syntax.attribute Prims.list ->
+    FStar_Ident.lident -> Prims.bool)
+  = fun attrs  -> fun attr  -> FStar_Util.for_some (is_fvar attr) attrs 
 let mk_alien :
   'a .
     FStar_Syntax_Syntax.typ ->
@@ -3564,18 +3568,18 @@ let mk_alien :
     fun b  ->
       fun s  ->
         fun r  ->
-          let uu____10196 =
-            let uu____10199 =
-              let uu____10200 =
-                let uu____10207 =
-                  let uu____10208 =
-                    let uu____10217 = FStar_Dyn.mkdyn b  in
-                    (uu____10217, s, ty)  in
-                  FStar_Syntax_Syntax.Meta_alien uu____10208  in
-                (FStar_Syntax_Syntax.tun, uu____10207)  in
-              FStar_Syntax_Syntax.Tm_meta uu____10200  in
-            FStar_Syntax_Syntax.mk uu____10199  in
-          uu____10196 FStar_Pervasives_Native.None
+          let uu____10206 =
+            let uu____10209 =
+              let uu____10210 =
+                let uu____10217 =
+                  let uu____10218 =
+                    let uu____10227 = FStar_Dyn.mkdyn b  in
+                    (uu____10227, s, ty)  in
+                  FStar_Syntax_Syntax.Meta_alien uu____10218  in
+                (FStar_Syntax_Syntax.tun, uu____10217)  in
+              FStar_Syntax_Syntax.Tm_meta uu____10210  in
+            FStar_Syntax_Syntax.mk uu____10209  in
+          uu____10206 FStar_Pervasives_Native.None
             (match r with
              | FStar_Pervasives_Native.Some r1 -> r1
              | FStar_Pervasives_Native.None  -> FStar_Range.dummyRange)
@@ -3585,18 +3589,18 @@ let (un_alien : FStar_Syntax_Syntax.term -> FStar_Dyn.dyn) =
     let t1 = FStar_Syntax_Subst.compress t  in
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta
-        (uu____10227,FStar_Syntax_Syntax.Meta_alien
-         (blob,uu____10229,uu____10230))
+        (uu____10237,FStar_Syntax_Syntax.Meta_alien
+         (blob,uu____10239,uu____10240))
         -> blob
-    | uu____10239 -> failwith "unexpected: term was not an alien embedding"
+    | uu____10249 -> failwith "unexpected: term was not an alien embedding"
   
 let (process_pragma :
   FStar_Syntax_Syntax.pragma -> FStar_Range.range -> Prims.unit) =
   fun p  ->
     fun r  ->
       let set_options1 t s =
-        let uu____10253 = FStar_Options.set_options t s  in
-        match uu____10253 with
+        let uu____10263 = FStar_Options.set_options t s  in
+        match uu____10263 with
         | FStar_Getopt.Success  -> ()
         | FStar_Getopt.Help  ->
             FStar_Errors.raise_error
@@ -3615,9 +3619,9 @@ let (process_pragma :
           else ()
       | FStar_Syntax_Syntax.SetOptions o -> set_options1 FStar_Options.Set o
       | FStar_Syntax_Syntax.ResetOptions sopt ->
-          ((let uu____10261 = FStar_Options.restore_cmd_line_options false
+          ((let uu____10271 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____10261 FStar_Pervasives.ignore);
+            FStar_All.pipe_right uu____10271 FStar_Pervasives.ignore);
            (match sopt with
             | FStar_Pervasives_Native.None  -> ()
             | FStar_Pervasives_Native.Some s ->
