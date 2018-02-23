@@ -1010,7 +1010,7 @@ let check_admits env m =
   let admitted_sig_lids =
     env.sigaccum |> List.fold_left (fun lids se -> match se.sigel with
       | Sig_declare_typ(l, u, t) ->
-        begin match try_lookup_id env l.ident with
+        begin match try_lookup_lid env l with
           | None ->
             if not (Options.interactive ()) then (
               printfn "Sigelts in env: %s"

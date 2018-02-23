@@ -439,21 +439,43 @@ let rec mk_tac_param_type tcenv (t: term): mlexpr' =
          raise_err (Fatal_CallNotImplemented, ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))
   in try_mk t false
 
+let norm tcenv t =
+    FStar.TypeChecker.Normalize.normalize
+                    [FStar.TypeChecker.Normalize.UnfoldUntil FStar.Syntax.Syntax.Delta_constant]
+                    tcenv
+                    (FStar.Syntax.Util.unrefine t)
+
+let mk_embedding_path tcenv (m:emb_decl) (t:term) : option<mlexpr'> =
+    let nm =
+        match (FStar.Syntax.Subst.compress t).n with
+        | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> Some "int"
+        | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> Some  "bool"
+        | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> Some  "unit"
+        | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> Some "string"
+        | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> Some "binder"
+        | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> Some "term"
+        | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> Some "fvar"
+        | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binders") -> Some "binders"
+        | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "norm_step") -> Some "norm_step"
+        | _ -> None
+    in
+    BU.bind_opt nm (fun n -> Some (mk_basic_embedding m n))
+
+let must_mk_embedding_path tcenv m t =
+    match mk_embedding_path tcenv m (norm tcenv t) with
+    | Some m -> m
+    | None -> raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string t)))
+
 (* Except for the `tactic` type, which is handled specially, this assumes that functions for embedding/unembedding a type
    live in the same place and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path tcenv (m: emb_decl) (t: term): mlexpr' =
-  let rec try_mk t unrefined =
-    match (FStar.Syntax.Subst.compress t).n with
-    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> mk_basic_embedding m "int"
-    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> mk_basic_embedding m "bool"
-    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> mk_basic_embedding m "unit"
-    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> mk_basic_embedding m "string"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> mk_embedding m "binder"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> mk_embedding m "term"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> mk_embedding m "fvar"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binders") -> mk_embedding m "binders"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "norm_step") -> mk_embedding m "norm_step"
-    | Tm_app (h, args) ->
+   let t = norm tcenv t in
+   match mk_embedding_path tcenv m t with
+   | Some mle -> mle
+   | None ->
+      begin
+      match (FStar.Syntax.Subst.compress t).n with
+      | Tm_app (h, args) ->
         (match (FStar.Syntax.Subst.compress h).n with
          | Tm_uinst (h', _) ->
             let ht, hargs, type_arg, is_tactic =
@@ -482,23 +504,13 @@ let rec mk_tac_embedding_path tcenv (m: emb_decl) (t: term): mlexpr' =
                 MLE_App (with_ty MLTY_Top (mk_basic_embedding m ht), List.map (with_ty MLTY_Top) hargs)
          | _ ->
              raise_err (Fatal_CallNotImplemented, "Impossible\n"))
-
-    | _ when not unrefined ->
-        // We failed to recognize the type, try unrefining (after unfolding).
-        // This will make `nat` fall into the `int` case.
-        let t = FStar.TypeChecker.Normalize.normalize
-                    [FStar.TypeChecker.Normalize.UnfoldUntil FStar.Syntax.Syntax.Delta_constant]
-                    tcenv
-                    t
-        in try_mk (FStar.Syntax.Util.unrefine t) true
-
     | _ ->
-        raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))
-  in try_mk t false
+        raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string t)))
+    end
 
 (*
   Given:
-      tac_lid: a source top-level lident at type `bs -> Tac t`
+      fv: a source top-level lident at type fv_t
       compiled to assm_lid at ML
 
   builds the ML term:
@@ -512,25 +524,43 @@ let rec mk_tac_embedding_path tcenv (m: emb_decl) (t: term): mlexpr' =
                 args
 
  *)
-let mk_interpretation_fun tcenv tac_lid assm_lid t bs =
+let interpret_plugin_as_term_fun tcenv (fv:lident) (fv_t:typ) (ml_fv:mlexpr') =
     try
+        let bs, c = U.arrow_formals_comp fv_t in
         let arg_types = List.map (fun x -> (fst x).sort) bs in
         let arity = List.length bs in
-        let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
-        let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name tac_lid]) in
-        let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
-        let psc = str_to_name "psc" in
-        let args =
-            [MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
-             tac_fun] @
-            (List.map (mk_tac_embedding_path tcenv Unembed) arg_types) @
-            [mk_tac_embedding_path tcenv Embed t;
-             mk_tac_param_type tcenv t;
-             tac_lid_app;
-             psc;
-             str_to_name "args"] in
-        let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
-        Some (MLE_Fun ([("psc", MLTY_Top); ("args", MLTY_Top)], app))
+        let result_typ = U.comp_result c in
+        if U.is_pure_comp c
+        then begin
+            let embed_fun_N = with_ty MLTY_Top <| mk_basic_embedding Embed ("fun_" ^ string_of_int arity) in
+            let un_embeddings = List.map (must_mk_embedding_path tcenv Unembed) arg_types in
+            let embed_res = must_mk_embedding_path tcenv Embed result_typ in
+            let args = un_embeddings @ [embed_res] in
+            Some (MLE_App(embed_fun_N,
+                          List.map (with_ty MLTY_Top) args),
+                  arity)
+        end
+        else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
+                                 PC.tac_effect_lid
+        then begin
+            let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
+            let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name fv]) in
+            let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top ml_fv]) in
+            let psc = str_to_name "psc" in
+            let args =
+                [MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
+                 tac_fun] @
+                (List.map (mk_tac_embedding_path tcenv Unembed) arg_types) @
+                [mk_tac_embedding_path tcenv Embed result_typ;
+                 mk_tac_param_type tcenv result_typ;
+                 tac_lid_app;
+                 psc;
+                 str_to_name "args"] in
+            let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
+            Some (MLE_Fun ([("psc", MLTY_Top); ("args", MLTY_Top)], app),
+                  arity)
+          end
+          else raise_err (Fatal_CallNotImplemented, ("Plugins not defined for type " ^ Print.term_to_string fv_t))
     with Errors.Error(Fatal_CallNotImplemented, msg, _)->
-        not_implemented_warning t.pos (string_of_lid tac_lid) msg;
+        not_implemented_warning fv_t.pos (string_of_lid fv) msg;
         None

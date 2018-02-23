@@ -195,6 +195,37 @@ let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t0:term) : option<l
 let unembed_list      ua t = __unembed_list true  ua t
 let unembed_list_safe ua t = __unembed_list false ua t
 
+let embed_arrow_1 (ua:unembedder<'a>) (eb:embedder<'b>) (f:'a -> 'b) (args:args) : option<term> =
+    match args with
+    | [(x, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      Some (eb FStar.Range.dummyRange (f (BU.must (ua x)))))
+    | _ ->
+      None
+
+let embed_arrow_2 (ua:unembedder<'a>) (ub:unembedder<'b>) (ed:embedder<'d>)
+                  (f:'a -> 'b -> 'd)
+                  (args:args) =
+    match args with
+    | [(x, _); (y, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      BU.bind_opt (ub y) (fun b ->
+      Some (ed FStar.Range.dummyRange (f a b))))
+    | _ ->
+      None
+
+let embed_arrow_3 (ua:unembedder<'a>) (ub:unembedder<'b>) (uc:unembedder<'c>) (ed:embedder<'d>)
+                  (f:'a -> 'b -> 'c -> 'd)
+                  (args:args) =
+    match args with
+    | [(x, _); (y, _); (z, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      BU.bind_opt (ub y) (fun b ->
+      BU.bind_opt (uc z) (fun c ->
+      Some (ed FStar.Range.dummyRange (f a b c)))))
+    | _ ->
+      None
+
 // Commonly called
 let embed_string_list rng ss   = embed_list embed_string S.t_string rng ss
 let unembed_string_list      t = unembed_list unembed_string t

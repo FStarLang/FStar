@@ -238,37 +238,26 @@ let extract_bundle env se =
    is extracted along with an invocation to FStar.Tactics.Native.register_tactic,
    which installs the compiled term as a primitive step in the normalizer
  *)
-let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> = []
-//    if Options.codegen() <> Some Options.Plugin
-//    || not (U.has_attribute se.sigattrs PC.plugin_attr)
-//    then []
-//    else match se.sigel with
-//         | Sig_let(lbs, lids) ->
-//           let mk_registration tac_lid assm_lid t bs =
-//              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
-//              let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
-//              let tac_arity = List.length bs in
-//              let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-//              match mk_interpretation_fun g.tcenv tac_lid lid_arg t bs with
-//              | Some tac_interpretation ->
-//                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
-//                  [MLM_Top app]
-//              | None -> []
-//           in
-//           (match (snd lbs) with
-//               | [hd] ->
-//                  let bs, comp = U.arrow_formals_comp hd.lbtyp in
-//                  let t = U.comp_result comp in
-//                  (match (SS.compress t).n with
-//                   | Tm_app(h, args) ->
-//                        let tac_lid = (right hd.lbname).fv_name.v in
-//                        let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-//                        if is_tactic_decl assm_lid (SS.compress h) g.currentModule then begin
-//                          mk_registration tac_lid assm_lid (fst(List.hd args)) bs
-//                        end else []
-//                   | _ -> [])
-//               | _ -> []
-//              ) else []
+let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
+    if Options.codegen() <> Some Options.Plugin
+    || not (U.has_attribute se.sigattrs PC.plugin_attr)
+    then []
+    else match se.sigel with
+         | Sig_let(lbs, lids) ->
+           let mk_registration lb : list<mlmodule1> =
+              let fv = (right lb.lbname).fv_name.v in
+              let fv_t = lb.lbtyp in
+              let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv)) in
+              match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t ml_name_str with
+              | Some (interp, arity) ->
+                  let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
+                  let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
+                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [ml_name_str; arity; interp]) in
+                  [MLM_Top app]
+              | None -> []
+           in
+           List.collect mk_registration (snd lbs)
+        | _ -> []
 
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
