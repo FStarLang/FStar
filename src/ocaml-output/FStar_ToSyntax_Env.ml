@@ -3695,3 +3695,29 @@ let fail_or2 :
             id1.FStar_Ident.idRange
       | FStar_Pervasives_Native.Some r -> r
   
+let (mk_copy : env -> env) =
+  fun en  ->
+    let uu___137_10701 = en  in
+    let uu____10702 = FStar_Util.smap_copy en.exported_ids  in
+    let uu____10705 = FStar_Util.smap_copy en.trans_exported_ids  in
+    let uu____10708 = FStar_Util.smap_copy en.sigmap  in
+    let uu____10719 = FStar_Util.smap_copy en.docs  in
+    {
+      curmodule = (uu___137_10701.curmodule);
+      curmonad = (uu___137_10701.curmonad);
+      modules = (uu___137_10701.modules);
+      scope_mods = (uu___137_10701.scope_mods);
+      exported_ids = uu____10702;
+      trans_exported_ids = uu____10705;
+      includes = (uu___137_10701.includes);
+      sigaccum = (uu___137_10701.sigaccum);
+      sigmap = uu____10708;
+      iface = (uu___137_10701.iface);
+      admitted_iface = (uu___137_10701.admitted_iface);
+      expect_typ = (uu___137_10701.expect_typ);
+      docs = uu____10719;
+      remaining_iface_decls = (uu___137_10701.remaining_iface_decls);
+      syntax_only = (uu___137_10701.syntax_only);
+      ds_hooks = (uu___137_10701.ds_hooks)
+    }
+  
