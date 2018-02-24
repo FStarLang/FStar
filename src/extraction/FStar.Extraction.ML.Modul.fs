@@ -239,6 +239,7 @@ let extract_bundle env se =
    which installs the compiled term as a primitive step in the normalizer
  *)
 let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
+    let w = with_ty MLTY_Top in
     if Options.codegen() <> Some Options.Plugin
     || not (U.has_attribute se.sigattrs PC.plugin_attr)
     then []
@@ -257,7 +258,7 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
                   in
                   let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
                   let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
-                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [ml_name_str; arity; interp]) in
+                  let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity; interp]) in
                   [MLM_Top app]
               | None -> []
            in

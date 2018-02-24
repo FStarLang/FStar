@@ -31,6 +31,7 @@ module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const
 module Range = FStar.Range
+module S = FStar.Syntax.Syntax
 
 let codegen_fsharp () = Options.codegen () = Some Options.FSharp
 
@@ -381,7 +382,9 @@ type variance =
   | Contravariant
   | Invariant
 
+module N = FStar.TypeChecker.Normalize
 let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
+    let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] tcenv t in
     let w = with_ty MLTY_Top in
     let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
     let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
@@ -423,7 +426,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
             (fun (x, args, _) -> fv_eq_lid fv x && n = List.length args)
             known_type_constructors
     in
-    let embed_type_app (fv:Syntax.fv) (arg_embeddings:list<embedding>) =
+    let embed_type_app (fv:S.fv) (arg_embeddings:list<embedding>) =
         let nm = fv.fv_name.v.ident.idText in
         let _, variances, trepr_head =
             BU.find_opt
@@ -470,11 +473,12 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           unembed = mk Unembed;
           type_repr = type_repr}
     in
-    let rec mk_embedding (env:list<(option<embedding>)>) t =
+    let find_env_entry bv (bv', _) = S.bv_eq bv bv' in
+    let rec mk_embedding (env:list<(bv * embedding)>) t =
         match (FStar.Syntax.Subst.compress t).n with
-        | Tm_bvar bv
-          when Option.isSome (List.nth env bv.index) -> //de Bruijn
-          BU.must <| List.nth env bv.index
+        | Tm_name bv
+             when BU.for_some (find_env_entry bv) env ->
+          snd (BU.must (BU.find_opt (find_env_entry bv) env))
 
         | _ ->
           let t = FStar.TypeChecker.Normalize.unfold_whnf tcenv t in
@@ -497,7 +501,23 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
     let bs, c = U.arrow_formals_comp t in
     let arity = List.length bs in
     let result_typ = U.comp_result c in
-    let rec aux accum_embeddings env bs =
+    let type_vars, bs =
+        match
+            BU.prefix_until
+                (fun (b, _) ->
+                    match (Subst.compress b.sort).n with
+                    | Tm_type _ -> false
+                    | _ -> true)
+               bs
+        with
+        | None ->
+          bs, []
+        | Some (tvars, x, rest) ->
+          tvars, x::rest
+    in
+    let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
+    let tvar_context = List.map2 (fun b nm -> fst b, id_embedding nm) type_vars tvar_names in
+    let rec aux accum_embeddings (env:list<(bv * embedding)>) bs =
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings |> List.map (fun x -> x.unembed) in
@@ -506,7 +526,9 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           then begin
             let embed_fun_N = mk_basic_embedding Embed ("arrow_" ^ string_of_int arity) in
             let args = arg_unembeddings @ [res_embedding.embed; lid_to_top_name fv] in
-            Some (mk_lam "_" (w <| MLE_App(embed_fun_N, args)),
+            let fun_embedding = w <| MLE_App(embed_fun_N, args) in
+            let tabs = List.fold_right mk_lam tvar_names fun_embedding in
+            Some (mk_lam "_psc" tabs,
                   arity,
                   true)
           end
@@ -534,23 +556,8 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           else raise_err (Fatal_CallNotImplemented, ("Plugins not defined for type " ^ Print.term_to_string t))
 
         | (b, _)::bs ->
-          aux (mk_embedding env b.sort::accum_embeddings) (None::env) bs
+          aux (mk_embedding env b.sort::accum_embeddings) env bs
     in
-    let type_vars, rest =
-        match
-            BU.prefix_until
-                (fun (b, _) ->
-                    match (Subst.compress b.sort).n with
-                    | Tm_type _ -> false
-                    | _ -> true)
-               bs
-        with
-        | None ->
-          bs, []
-        | Some (tvars, x, rest) ->
-          tvars, x::rest
-    in
-    let tvar_context = List.mapi (fun i tv -> Some <| id_embedding ("tv_" ^ string_of_int i)) type_vars in
     aux [] tvar_context bs
 
 //
