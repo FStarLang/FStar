@@ -1533,6 +1533,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se
 
+
 let dont_use_exports = Options.use_extracted_interfaces () || Options.check_interface ()
 
 let tc_decls env ses =
@@ -1680,57 +1681,21 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
-let finish_partial_modul must_check_exports env modul exports =
-  let modul = if dont_use_exports then { modul with exports = modul.declarations } else { modul with exports=exports } in
-  let env = Env.finish_module env modul in
-  if not (Options.lax()) && (not dont_use_exports)
-  && must_check_exports
-  then check_exports env modul exports;
-  env.solver.pop ("Ending modul " ^ modul.name.str);
-  env.solver.encode_modul env modul;
-  env.solver.refresh();
-  //interactive mode manages it itself
-  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
-  modul, env
-
-let load_checked_module env modul =
-  //This function tries to very carefully mimic the effect of the environment
-  //of having checked the module from scratch, i.e., using tc_module below
-  let env = Env.set_current_module env modul.name in
-  env.solver.push ("Internals for " ^ Ident.string_of_lid modul.name);
-  let env = List.fold_left (fun env se ->
-             //push every sigelt in the environment
-             let env = Env.push_sigelt env se in
-             //and then query it back immediately to populate the environment's internal cache
-             //this is important for extraction to work correctly,
-             //in particular, when extracting a module we want the module's internal symbols
-             //that may be marked "abstract" externally to be visible internally
-             //populating the cache enables this behavior, rather indirectly, sadly : (
-             let lids = Util.lids_of_sigelt se in
-             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
-             env)
-             env
-             modul.declarations in
-  //And then call finish_partial_modul, which is the normal workflow of tc_modul below
-  //except with the flag `must_check_exports` set to false, since this is already a checked module
-  snd (finish_partial_modul false env modul modul.exports)
-
-let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul true in
-  finish_partial_modul true env modul non_private_decls
-
+//extract an interface from m
 let extract_interface (env:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let is_assume = List.contains Assumption in
   let is_noeq_or_unopteq = List.existsb (fun q -> q = Noeq || q = Unopteq) in
-  let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
-  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
-  let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
+  let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Visible_default)) in
+  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible || q = Visible_default)) in  //abstract inductive should not have noeq and unopteq
+  let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Visible_default || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
   let add_assume_if_needed quals = if is_assume quals then quals else Assumption::quals in
 
   //in case we need to drop val, and keep let, we should carry over the types from val
   let val_typs = BU.mk_ref [] in
+
+  let abstract_inductive_tycons = BU.mk_ref [] in
 
   //we need to filter out projectors and discriminators of abstract inductive datacons, so keep track of such datacons
   let abstract_inductive_datacons = BU.mk_ref [] in
@@ -1739,7 +1704,7 @@ let extract_interface (env:env) (m:modul) :modul =
     List.existsML (fun q ->
       match q with
       | Discriminator l
-      | Projector (l, _) -> List.existsb (fun l' -> lid_equals l l') !abstract_inductive_datacons
+      | Projector (l, _) -> true //List.existsb (fun l' -> lid_equals l l') !abstract_inductive_datacons
       | _ -> false
     ) quals
   in
@@ -1760,7 +1725,7 @@ let extract_interface (env:env) (m:modul) :modul =
                         sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
       
-      if not (is_noeq_or_unopteq s.sigquals) then  //generate the optimized hasEq axiom for the inductive to add to the interface    
+      if false then //not (is_noeq_or_unopteq s.sigquals) then  //generate the optimized hasEq axiom for the inductive to add to the interface    
         let usubst, uvs = SS.univ_var_opening uvs in
         let env = Env.push_univ_vars env uvs in
         let axiom_lid, fml, _, _, _ = TcUtil.get_optimized_haseq_axiom env s usubst uvs in
@@ -1839,7 +1804,7 @@ let extract_interface (env:env) (m:modul) :modul =
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
         List.fold_left (fun sigelts s -> 
           match s.sigel with
-          | Sig_inductive_typ (_, _, _, _, _, _) -> (vals_of_abstract_inductive s)@sigelts
+          | Sig_inductive_typ (lid, _, _, _, _, _) -> abstract_inductive_tycons := lid::!abstract_inductive_tycons; (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons
@@ -1890,7 +1855,18 @@ let extract_interface (env:env) (m:modul) :modul =
             if should_keep_defs then [ s ]
             else vals
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
-    | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]
+    | Sig_assume (lid, _, _) ->
+      //keep hasEq of abstract inductive tycons, drop hasEq of others
+      let is_haseq =
+        let str = lid.str in let len = String.length str in
+        len > 6 && String.compare (String.substring str (len - 6) 6) "_haseq" = 0
+      in
+      let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (lid_of_ids (l.ns @ [(id_of_text (l.ident.idText ^ "_haseq"))]))) !abstract_inductive_tycons in
+      if is_haseq then
+        if is_haseq_of_abstract_inductive then
+          [ { s with sigquals = filter_out_abstract s.sigquals } ]
+        else []
+      else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_new_effect_for_free _
     | Sig_sub_effect _
@@ -1899,6 +1875,56 @@ let extract_interface (env:env) (m:modul) :modul =
   in
   
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
+
+let rec tc_modul env0 modul =
+  let env = mk_copy env0 in  //AR: one redundant copy, in the second phase, no need to copy
+  let modul, non_private_decls, env = tc_partial_modul env modul true in
+  finish_partial_modul false env0 env modul non_private_decls
+
+and finish_partial_modul loading_from_cache env0 env modul exports =
+  if (not loading_from_cache) && Options.use_extracted_interfaces () && not modul.is_interface then begin //if we are using extracted interfaces and this is not already an interface
+    env.solver.pop ("Ending modul " ^ modul.name.str); //pop the solver
+    env.solver.refresh ();  //refresh
+    //if true then BU.print2 "Module %s before extraction:\n%s" modul.name.str (Syntax.Print.modul_to_string modul);
+    let modul = extract_interface env0 modul in
+    if true then BU.print2 "Extracting and type checking module %s interface:\n%s" modul.name.str ""; //(Syntax.Print.modul_to_string modul);
+    let env0 = { env0 with is_iface = true } in
+    tc_modul env0 modul
+  end
+  else
+    let modul = if dont_use_exports then { modul with exports = modul.declarations } else { modul with exports=exports } in
+    let env = Env.finish_module env modul in
+    if not (Options.lax()) && (not dont_use_exports)
+    && (not loading_from_cache)
+    then check_exports env modul exports;
+    env.solver.pop ("Ending modul " ^ modul.name.str);
+    env.solver.encode_modul env modul;
+    env.solver.refresh();
+    //interactive mode manages it itself
+    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+    modul, env
+
+let load_checked_module env modul =
+  //This function tries to very carefully mimic the effect of the environment
+  //of having checked the module from scratch, i.e., using tc_module below
+  let env = Env.set_current_module env modul.name in
+  env.solver.push ("Internals for " ^ Ident.string_of_lid modul.name);
+  let env = List.fold_left (fun env se ->
+             //push every sigelt in the environment
+             let env = Env.push_sigelt env se in
+             //and then query it back immediately to populate the environment's internal cache
+             //this is important for extraction to work correctly,
+             //in particular, when extracting a module we want the module's internal symbols
+             //that may be marked "abstract" externally to be visible internally
+             //populating the cache enables this behavior, rather indirectly, sadly : (
+             let lids = Util.lids_of_sigelt se in
+             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
+             env)
+             env
+             modul.declarations in
+  //And then call finish_partial_modul, which is the normal workflow of tc_modul below
+  //except with the flag `must_check_exports` set to false, since this is already a checked module
+  snd (finish_partial_modul true env env modul modul.exports)
 
 let check_module env m =
   if Options.debug_any()
