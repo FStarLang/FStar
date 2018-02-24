@@ -22,7 +22,7 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
 val user_tactics_modules: ref<list<string>>
-val check_module: env -> modul -> modul * env
+val check_module: env -> modul -> modul * option<modul> * env
 val load_checked_module: env -> modul -> env
 val tc_decls: env -> list<sigelt> -> list<sigelt> * list<sigelt> * env
 val tc_partial_modul: env -> modul -> bool -> modul * list<sigelt> * env
