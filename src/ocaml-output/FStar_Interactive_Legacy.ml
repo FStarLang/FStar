@@ -1026,7 +1026,7 @@ let (interactive_mode : Prims.string -> Prims.unit) =
                 let uu____3998 =
                   let uu____3999 = FStar_Options.file_list ()  in
                   FStar_List.hd uu____3999  in
-                FStar_SMTEncoding_Solver.with_hints_db uu____3998 false
+                FStar_SMTEncoding_Solver.with_hints_db uu____3998
                   (fun uu____4003  ->
                      go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                        filename stack FStar_Pervasives_Native.None env3 ts)
