@@ -42,6 +42,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
+let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -403,8 +404,9 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
         w <| MLE_Fun ([(nm, MLTY_Top)], e)
     in
     let id_embedding nm =
-        let id = mk_lam "x" (str_to_name "x") in
-        { embed = id; unembed = id; type_repr = str_to_name nm}
+        { embed = mk_basic_embedding Embed "any";
+          unembed = mk_basic_embedding Unembed "any";
+          type_repr = str_to_name nm }
     in
     let known_type_constructors =
         [ (PC.int_lid,  [], fstar_syn_syn_prefix "t_int");
@@ -435,21 +437,19 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
             |> BU.must
         in
         let choose e_or_u variance embedding =
-            let term_embedding =
-                 match variance with
-                 | Covariant ->
-                    (match e_or_u with
-                     | Embed   -> [embedding.embed]
-                     | Unembed -> [embedding.unembed])
-                 | Contravariant ->
-                    (match e_or_u with
-                     | Embed   -> [embedding.unembed]
-                     | Unembed -> [embedding.embed])
-                 | Invariant ->
-                    [embedding.embed;
-                     embedding.unembed]
-            in
-            term_embedding@[embedding.type_repr]
+            match variance with
+            | Covariant ->
+              (match e_or_u with
+               | Embed   -> [embedding.embed; embedding.type_repr]
+               | Unembed -> [embedding.unembed; ])
+            | Contravariant ->
+              (match e_or_u with
+               | Embed   -> [embedding.unembed]
+               | Unembed -> [embedding.embed; embedding.type_repr])
+            | Invariant ->
+              [embedding.embed;
+               embedding.type_repr;
+               embedding.unembed]
         in
         let mk embed_or_unembed =
             let head = mk_basic_embedding embed_or_unembed nm in
@@ -498,9 +498,44 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
             raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string t)))
           end
     in
+    let abstract_tvars tvar_names (body:mlexpr) : mlexpr =
+        match tvar_names with
+        | [] -> body
+        | _ ->
+          let args_tail = MLP_Var "args_tail" in
+          let mk_cons hd_pat tail_pat =
+              MLP_CTor ((["Prims"], "Cons"), [hd_pat; tail_pat])
+          in
+          let fst_pat v =
+              MLP_Tuple [MLP_Var v; MLP_Wild]
+          in
+          let pattern =
+              List.fold_right
+                (fun hd_var -> mk_cons (fst_pat hd_var))
+                tvar_names
+                args_tail
+          in
+          let branch =
+             pattern,
+             None,
+             w <| MLE_App(body, [str_to_name "args_tail"])
+          in
+          let default_branch =
+              MLP_Wild,
+              None,
+              w <| MLE_App(str_to_name "failwith",
+                            [w <| mlexpr_of_const
+                                   Range.dummyRange
+                                   (FStar.Const.Const_string("arity mismatch", Range.dummyRange))])
+          in
+          let body =
+              w <| MLE_Match(str_to_name "args", [branch; default_branch])
+          in
+          mk_lam "args" body
+    in
     let bs, c = U.arrow_formals_comp t in
-    let arity = List.length bs in
     let result_typ = U.comp_result c in
+    let arity = List.length bs in
     let type_vars, bs =
         match
             BU.prefix_until
@@ -515,6 +550,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
         | Some (tvars, x, rest) ->
           tvars, x::rest
     in
+    let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
     let tvar_context = List.map2 (fun b nm -> fst b, id_embedding nm) type_vars tvar_names in
     let rec aux accum_embeddings (env:list<(bv * embedding)>) bs =
@@ -524,10 +560,10 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           let res_embedding = mk_embedding env result_typ in
           if U.is_pure_comp c
           then begin
-            let embed_fun_N = mk_basic_embedding Embed ("arrow_" ^ string_of_int arity) in
+            let embed_fun_N = mk_basic_embedding Embed ("arrow_" ^ string_of_int non_tvar_arity) in
             let args = arg_unembeddings @ [res_embedding.embed; lid_to_top_name fv] in
             let fun_embedding = w <| MLE_App(embed_fun_N, args) in
-            let tabs = List.fold_right mk_lam tvar_names fun_embedding in
+            let tabs = abstract_tvars tvar_names fun_embedding in
             Some (mk_lam "_psc" tabs,
                   arity,
                   true)

@@ -22,6 +22,9 @@ module Z = FStar.BigInt
 type embedder<'a>   = Range.range -> 'a -> term
 type unembedder<'a> = term -> option<'a>
 
+val embed_any         : embedder<term>
+val unembed_any       : unembedder<term>
+
 val embed_unit        : embedder<unit>
 val unembed_unit      : unembedder<unit>
 val unembed_unit_safe : unembedder<unit>
