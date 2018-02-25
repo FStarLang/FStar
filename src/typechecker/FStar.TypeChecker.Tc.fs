@@ -1876,30 +1876,30 @@ let extract_interface (env:env) (m:modul) :modul =
   
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
 
-let rec tc_modul (env0:env) (modul:modul) :(modul * option<modul> * env) =
+let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
   let lax_mode = env0.lax in
   let env0 = if lid_equals env0.curmodule Parser.Const.prims_lid then { env0 with lax = true } else env0 in
   let env = mk_copy env0 in  //AR: one redundant copy, in the second phase, no need to copy
-  let modul, non_private_decls, env = tc_partial_modul env modul true in
+  let modul, non_private_decls, env = tc_partial_modul env m true in
   let m, m_opt, env = finish_partial_modul false env0 env modul non_private_decls in
   m, m_opt, { env with lax = lax_mode }
 
-and finish_partial_modul (loading_from_cache:bool) (env0:env) (env:env) (modul:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
+and finish_partial_modul (loading_from_cache:bool) (env0:env) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
   //AR: TODO: FIXME: do we ever call finish_partial_modul for current buffer in the interactive mode?
-  if (not loading_from_cache) && Options.use_extracted_interfaces () && not modul.is_interface then begin //if we are using extracted interfaces and this is not already an interface
-    env.solver.pop ("Ending modul " ^ modul.name.str); //pop the solver
-    env.solver.refresh ();  //refresh
+  if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
+    en.solver.pop ("Ending modul " ^ m.name.str); //pop the solver
+    en.solver.refresh ();  //refresh
     //if true then BU.print2 "Module %s before extraction:\n%s" modul.name.str (Syntax.Print.modul_to_string modul);
-    let modul_iface = extract_interface env0 modul in
-    if true then BU.print2 "Extracting and type checking module %s interface:\n%s" modul.name.str ""; //(Syntax.Print.modul_to_string modul_iface);
+    let modul_iface = extract_interface env0 m in
+    if true then BU.print2 "Extracting and type checking module %s interface:\n%s" m.name.str ""; //(Syntax.Print.modul_to_string modul_iface);
     let env0 = { env0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul env0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
-    else modul, Some modul_iface, env
+    else m, Some modul_iface, env
   end
   else
-    let modul = if dont_use_exports then { modul with exports = modul.declarations } else { modul with exports=exports } in
-    let env = Env.finish_module env modul in
+    let modul = if dont_use_exports then { m with exports = m.declarations } else { m with exports=exports } in
+    let env = Env.finish_module en modul in
     if not (Options.lax()) && (not dont_use_exports)
     && (not loading_from_cache)
     then check_exports env modul exports;
@@ -1910,11 +1910,11 @@ and finish_partial_modul (loading_from_cache:bool) (env0:env) (env:env) (modul:m
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
     modul, None, env
 
-let load_checked_module (env:env) (modul:modul) :env =
+let load_checked_module (en:env) (m:modul) :env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
-  let env = Env.set_current_module env modul.name in
-  env.solver.push ("Internals for " ^ Ident.string_of_lid modul.name);
+  let env = Env.set_current_module en m.name in
+  env.solver.push ("Internals for " ^ Ident.string_of_lid m.name);
   let env = List.fold_left (fun env se ->
              //push every sigelt in the environment
              let env = Env.push_sigelt env se in
@@ -1927,10 +1927,10 @@ let load_checked_module (env:env) (modul:modul) :env =
              lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
              env)
              env
-             modul.declarations in
+             m.declarations in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  let _, _, env = finish_partial_modul true env env modul modul.exports in
+  let _, _, env = finish_partial_modul true env env m m.exports in
   env
 
 let check_module env m =

@@ -219,12 +219,12 @@ let load_module_from_cache env fn
            fail "Stale"
     else fail "Absent"
 
-let store_module_to_cache env fn (modul:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
+let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
     let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
     match digest with
     | Some hashes ->
-      BU.save_value_to_file cache_file (hashes, modul, modul_iface_opt, mii)
+      BU.save_value_to_file cache_file (hashes, m, modul_iface_opt, mii)
     | _ ->
       FStar.Errors.log_issue
         (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
