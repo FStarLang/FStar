@@ -80,9 +80,6 @@ let is_interface (f: string): bool =
 let is_implementation f =
   not (is_interface f)
 
-let interface_filename (f:string) :string =
-  if is_interface f then f
-  else check_and_strip_suffix f |> must |> (fun x -> x ^ ".fsti")
 
 let list_of_option = function Some x -> [x] | None -> []
 
@@ -123,7 +120,6 @@ let deps_add_dep (Deps m) k v = BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
 let empty_deps = Mk (deps_empty (), BU.smap_create 0, [])
-let all_cmd_line_files = fun (Mk (_, _, fns)) -> fns
 
 let module_name_of_dep = function
     | UseInterface m
@@ -157,33 +153,7 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-(*
- * If --check_interface is set, we check extracted fsti of all files in the dependence graph and the one we are verifying
- * If --use_extracted_interfaces is set, then we load/check extracted depepndency.fsti
- *
- * The definition of dependency in this function is a file not passed on the command line
- * We must already make sure that there was only one command line file in case one of these flags is set
- *)
-let check_or_use_extracted_interface all_cmd_line_files fn =
-  if is_interface fn then false
-  else
-    let is_cmd_line_fn = List.contains fn all_cmd_line_files in
-    Options.check_interface () ||  //check_interface implies use_extracted_interfaces also
-    (Options.use_extracted_interfaces () && (not is_cmd_line_fn))
-
-(*
- * This function is called by the dependency analysis and the main typechecker
- * In the case of dependency analysis, the analysis knows which file is a dependency, and which is not
- *   and so, this function leaves it to the caller to change fn to interface fn if required
- *
- * For the main typechecker flow, we will use check_or_use_extracted_interface to use .fsti if need be
- *)
-let cache_file_name all_cmd_line_files fn =
-  let fn =
-    if Options.dep () <> None then fn  //if --dep is set, that code is required to manipulate fn itself, we can't rely on command line files in case of a --dep invocation
-    else if check_or_use_extracted_interface all_cmd_line_files fn then interface_filename fn
-    else fn
-  in
+let cache_file_name fn =
   FStar.Options.prepend_cache_dir
     (if Options.lax()
      then fn ^ ".checked.lax"
@@ -201,11 +171,7 @@ let file_of_dep_aux
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
-    let maybe_add_suffix f =  //f is a dependency, if --use_extracted_interfaces is set, then we will convert f to its interface name
-      if use_checked_file
-      then cache_file_name all_cmd_line_files (if Options.dep () <> None && Options.use_extracted_interfaces () then (interface_filename f) else f)
-      else f
-    in
+    let maybe_add_suffix f = if use_checked_file then cache_file_name f else f in
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
@@ -834,7 +800,7 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
         | Some fn -> fn
         | _ -> fn
     in
-    let cache_file = cache_file_name all_cmd_line_files fn in
+    let cache_file = cache_file_name fn in
     let digest_of_file fn =
         if Options.debug_any()
         then BU.print2 "%s: contains digest of %s\n" cache_file fn;
@@ -861,7 +827,7 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let cache_fn = cache_file_name all_cmd_line_files fn in
+          let cache_fn = cache_file_name fn in
           if BU.file_exists cache_fn
           then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
           else (if Options.debug_any()
@@ -957,7 +923,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = norm_path (cache_file_name all_cmd_line_files f) in
+    let cache_file f = norm_path (cache_file_name f) in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
@@ -981,13 +947,6 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                       norm_f
                       files;
           
-          //emit rule for extracted interface: a.fsti.checked: a.fst b.fsti.checked
-          if Options.use_extracted_interfaces () && is_implementation f && not (has_interface file_system_map (lowercase_module_name f))
-          then Util.print3 "%s: %s \\\n\t%s\n\n"
-                           (cache_file (interface_filename f))
-                           norm_f
-                           files;
-
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then (
