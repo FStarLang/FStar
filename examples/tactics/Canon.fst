@@ -32,7 +32,7 @@ let lem3 (a b c d e : int) =
     assert_by_tactic (c + (b + a) == b + (a + c))
                      check_canon
 
-let lem3_nat (a b c d e : x:nat{0 <= x /\ x < 256}) =
+let lem3_nat (a b c d e : (x:nat{0 <= x /\ x < 256})) =
     assert_by_tactic (c + (b + a) == b + (a + c))
                      check_canon
 
@@ -42,8 +42,6 @@ let lem4 (a b c : int) =
 
 (* The following tests should pass, but it's too slow to run them on every regression build, *)
 (* and the previous ones are probably enough *)
-
-(*
 
 let lem5 (a b c d e : int) =
     assert_by_tactic
@@ -90,8 +88,9 @@ let lem9 (n:int) (p:int) (r:int) (h:int) (r0:int) (r1:int) (h0:int) (h1:int) (h2
                         ((h2 * r1) * (n * n * n) + (h2 * r0 + h1 * r1) * (n * n) + (h1 * r0 + h0 * r1) * n + h0 * r0))
                      check_canon
 
-let lem10 (a b c : int) (n:int) (p:int) (r:int) (h:int) (r0:int) (r1:int) (h0:int) (h1:int) (h2:int) (s1:int) (d0:int) (d1:int) (d2:int) (hh:int) =
-    assert_by_tactic ((((h2 * (n * n) + h1 * n + h0) * (r1*n + r0))) * ((a+b+c)*(a+b+c)) =
-                        (((h2 * r1) * (n * n * n) + (h2 * r0 + h1 * r1) * (n * n) + (h1 * r0 + h0 * r1) * n + h0 * r0))
-                        * (a * a + a * b + a * c +  b * a + b * b + b * c + c * a + c * b + c * c))
-                     check_canon
+// Takes long, around a minute
+(* let lem10 (a b c : int) (n:int) (p:int) (r:int) (h:int) (r0:int) (r1:int) (h0:int) (h1:int) (h2:int) (s1:int) (d0:int) (d1:int) (d2:int) (hh:int) = *)
+(*     assert_by_tactic ((((h2 * (n * n) + h1 * n + h0) * (r1*n + r0))) * ((a+b+c)*(a+b+c)) = *)
+(*                         (((h2 * r1) * (n * n * n) + (h2 * r0 + h1 * r1) * (n * n) + (h1 * r0 + h0 * r1) * n + h0 * r0)) *)
+(*                         * (a * a + a * b + a * c +  b * a + b * b + b * c + c * a + c * b + c * c)) *)
+(*                      check_canon *)

@@ -8,11 +8,20 @@
       1,
       [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
       0,
-      "26984a0a72edb936a31553cdd9e0cb2a"
+      "743ff047257531a1a91195edab9ca229"
     ],
     [
       "Clear.l2",
       1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "772c28fc735d2c77ac12888632449796"
+    ],
+    [
+      "Clear.l2",
+      2,
       2,
       1,
       [
@@ -21,16 +30,16 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a7b133b8705fc03334e8d5e471db4f49"
+      "603fe4eff34e95657edd594bad940c5d"
     ],
     [
       "Clear.l2",
-      2,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c436a5e2bc5feaf4838efb74a8d414c2"
+      "32b5b84f135b6889c3783714d62be2b1"
     ]
   ]
 ]

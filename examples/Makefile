@@ -23,6 +23,7 @@ bytes \
 tactics \
 pattern-matching \
 kv_parsing \
+lowparse \
 vale \
 seplogic \
 hello \

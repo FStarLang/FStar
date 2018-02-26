@@ -100,11 +100,11 @@ let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 //Deciding if the t is a computation type
 //based on its head symbol
 let rec is_comp_type env t =
-    match t.tm with
+    match (unparen t).tm with
     | Name l
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
-    | Paren t
+    | Paren t -> failwith "impossible"
     | Ascribed(t, _, _)
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
@@ -209,11 +209,10 @@ and free_type_vars env t = match (unparen t).tm with
   | Discrim _
   | Name _  -> []
 
-  | Assign (_, t)
   | Requires (t, _)
   | Ensures (t, _)
-  | NamedTyp(_, t)
-  | Paren t -> free_type_vars env t
+  | NamedTyp(_, t) -> free_type_vars env t
+  | Paren t -> failwith "impossible"
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
@@ -755,6 +754,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Op(op_star, [_;_]) when
       Ident.text_of_id op_star = "*" &&
       (op_as_term env 2 top.range op_star |> Option.isNone) ->
+      (* See the comment in parse.mly to understand why this implicitly relies
+       * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
         // * is left-associative
         | Op({idText = "*"}, [t1;t2]) -> flatten t1 @ [ t2 ]
@@ -812,13 +813,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                                (Ident.text_of_lid eff_name)
                                txt)
       end
-
-    | Assign (ident, t2) ->
-      let t2 = desugar_term env t2 in
-      let t1, mut = fail_or2 (Env.try_lookup_id env) ident in
-      if not mut then
-        raise_error (Errors.Fatal_AssignToImmutableValues, "Can only assign to mutable values") top.range;
-      mk_ref_assign t1 t2 top.range
 
     | Var l
     | Name l ->
@@ -1249,17 +1243,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
       mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
-    | NamedTyp(_, e)
-    | Paren e ->
-      desugar_term env e
+    | NamedTyp(_, e) ->
+        desugar_term env e
+    | Paren e -> failwith "impossible"
 
     | _ when (top.level=Formula) -> desugar_formula env top
 
     | _ ->
       raise_error (Fatal_UnexpectedTerm, ("Unexpected term" ^ term_to_string top)) top.range
-    | Let(_, _, _) -> failwith "Not implemented yet"
-    | QForall(_, _, _) -> failwith "Not implemented yet"
-    | QExists(_, _, _) -> failwith "Not implemented yet"
   end
 
 and not_ascribed t =
@@ -1573,8 +1564,7 @@ and desugar_formula env (f:term) : S.term =
     | QExists([b], pats, body) ->
       desugar_quant C.exists_lid b pats body
 
-    | Paren f ->
-      desugar_formula env f
+    | Paren f -> failwith "impossible"
 
     | _ -> desugar_term env f
 

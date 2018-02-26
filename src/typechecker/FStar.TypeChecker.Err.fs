@@ -108,9 +108,6 @@ let basic_type_error env eopt t1 t2 =
 let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
 
-let unification_well_formedness =
-  (Errors.Fatal_UnificationNotWellFormed, "Term or type of an unexpected sort")
-
 let incompatible_kinds env k1 k2 =
   (Errors.Fatal_IncompatibleKinds, (format2 "Kinds \"%s\" and \"%s\" are incompatible"
     (N.term_to_string env k1) (N.term_to_string env k2)))

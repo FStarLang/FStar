@@ -1,5 +1,5 @@
 [
-  "∂\fÊè˘ﬁ\bL\u007fèfºA^e\u0015",
+  "$˚∑,ÆÑ∞˚”æ\u000evÊÑ’Q",
   [
     [
       "FStar.WellFounded.acc_inv",
@@ -11,7 +11,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "56b7b54077400452d8fac3f4af99a737"
+      "ce36431b5fa46b58a3f1f6ab4c3d7f1e"
     ],
     [
       "FStar.WellFounded.apply",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "652ad34768e25eb0524de1bc5f1f8b22"
+      "6b2ccd6a43a89896b713e57becda24c8"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -36,7 +36,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "3b5d3eebea042bed3f032a99aaf305da"
+      "37bf484656413e4f7a8b8adfee1d6a8c"
     ]
   ]
 ]

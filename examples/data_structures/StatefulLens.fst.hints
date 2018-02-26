@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "a83d8e3633d89e9574fd6149c1d9ef67"
+      "ce106e628cff8b4e6507658f45bb5a4a"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "227067483fc488e680a752a521058156"
+      "caef993be6e77f2f2142bcfde9a1c7f1"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "2c2a037dd49e6a36396fc93df072a576"
+      "eaaae45d3aebf9bf144918ddb605333c"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "9a100d2827bdce56a52479a1fc87a483"
+      "3aca05667400f41493d73feb3cc3bd52"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "995a6e5fb0aff42f645c8516e4195c8f"
+      "86cd6845e4a108484f5cfaf5275dab25"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "2ba090eecfa7af46f8bf4493ec621a56"
+      "4edc08afa1415cc30c5a0135714f561c"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "f41fb4b24fb6fe541ca4e674d719cc4b"
+      "81081a4474ef0dcad46d58d1b0828d83"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "7df313835f0d924e7c91596061a058da"
+      "0642f64a09d523580337cbba32a8435b"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "0b30031aed6669a7d9cfb390c776d628"
+      "f8312a29a4c12e324a28b59b48c65008"
     ]
   ]
 ]

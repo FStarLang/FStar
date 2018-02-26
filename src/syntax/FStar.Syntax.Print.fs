@@ -618,11 +618,11 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
       | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
       | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
-        U.format4 "%stype %s %s : %s"
-                 (quals_to_string' x.sigquals)
-                 lid.str
-                 (binders_to_string " " tps)
-                 (term_to_string k)
+        let quals_str = quals_to_string' x.sigquals in
+        let binders_str = binders_to_string " " tps in
+        let term_str = term_to_string k in
+        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str lid.str (univ_names_to_string univs) binders_str term_str
+        else U.format4 "%stype %s %s : %s" quals_str lid.str binders_str term_str
       | Sig_datacon(lid, univs, t, _, _, _) ->
         if (Options.print_universes())
         then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)

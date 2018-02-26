@@ -139,7 +139,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
         let op (us, t) =
             let n_us = List.length us in
             us, SS.subst (SS.shift_subst n_us opening)
-                         (open_univs (n_effect_params + n_us) t)
+                         (open_univs n_us t)  //AR:used to be n_effect_params + n_us, but i think it should just be n_us, effect_params come after n_us, and they are being opened in opening
         in
         { ed with
             univs         = annotated_univ_names;
@@ -865,9 +865,11 @@ let tc_lex_t env ses quals lids =
         | _ -> Errors.raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, ("Invalid (partial) redefinition of lex_t")) err_range
     end;
     begin match ses with
-      | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _);  sigquals = []; sigrng = r };
-         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
-         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
+      //AR: we were enforcing the univs to be [], which breaks down when we have two phases
+      //    the typechecking of lex_t is anyway hardcoded, so it should be fine to ignore that restriction
+      | [{ sigel = Sig_inductive_typ(lex_t, _, [], t, _, _);  sigquals = []; sigrng = r };
+         { sigel = Sig_datacon(lex_top, _, _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
+         { sigel = Sig_datacon(lex_cons, _, _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
          when (lid_equals lex_t PC.lex_t_lid
             && lid_equals lex_top PC.lextop_lid
             && lid_equals lex_cons PC.lexcons_lid) ->
@@ -931,6 +933,7 @@ let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
 
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
+
     let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
             we still need to check whether or not it supports equality
@@ -1063,11 +1066,15 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       match sub.lift, sub.lift_wp with
       | None, None ->
         failwith "Impossible (parser)"
-      | lift, Some (_, lift_wp) ->
+      | lift, Some (uvs, lift_wp) ->
+        //AR: open the universes, if present (two phases)
+        let lift_wp = if List.length uvs > 0 then SS.subst (fst (SS.univ_var_opening uvs)) lift_wp else lift_wp in
         (* Covers both the "classic" format and the reifiable case. *)
         lift, check_and_gen env lift_wp expected_k
       (* Sub-effect for free case *)
       | Some (what, lift), None ->
+        //AR: open the universes if present (two phases)
+        let lift = if List.length what > 0 then SS.subst (fst (SS.univ_var_opening what)) lift else lift in
         if Env.debug env (Options.Other "ED") then
             BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
         let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
@@ -1110,8 +1117,18 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     [se], []
 
   | Sig_effect_abbrev(lid, uvs, tps, c, flags) ->
-    assert (uvs = []);
+    //assert (uvs = []); AR: not necessarily, two phases
     let env0 = env in
+
+    //AR: open universes in tps and c if needed
+    let uvs, tps, c =
+      if List.length uvs = 0 then uvs, tps, c
+      else
+        let usubst, uvs = SS.univ_var_opening uvs in
+        let tps = SS.subst_binders usubst tps in
+        let c = SS.subst_comp (SS.shift_subst (List.length tps) usubst) c in
+        uvs, tps, c
+    in
     let env = Env.set_range env r in
     let tps, c = SS.open_comp tps c in
     let tps, env, us = tc_tparams env tps in
@@ -1516,7 +1533,6 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se
 
-
 let dont_use_exports = Options.use_extracted_interfaces () || Options.check_interface ()
 
 let tc_decls env ses =
@@ -1793,23 +1809,24 @@ let extract_interface (env:env) (m:modul) :modul =
 
   (*
    * When do we keep the body of the letbinding in the interface?
-   *  -- if Inr t, and t is not an arrow, then keep the body
-   *  -- let comp = if Inl then c else result comp of Inr t (note t is an arrow at this point)
-   *     -- if comp is Pure or Ghost, and the result type is non-unit, keep the body
-   *     -- if comp is a reifiable effect, and the result type is non-unit, keep the body 
    *)
   let should_keep_lbdef (c_or_t:either<comp,typ>) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
     in 
-      
-    (is_right c_or_t && (not (U.is_function_typ (c_or_t |> right)))) ||
-    (let c =
-       if is_left c_or_t then c_or_t |> left
-       else (match (SS.compress (c_or_t |> right)).n with | Tm_arrow (_, c) -> c | _ -> failwith "Impossible!")
-     in
-     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit)
-    )
+    
+    let c_opt =
+     if is_left c_or_t then Some (c_or_t |> left)
+     else
+       let t = c_or_t |> right in
+       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
+       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
+   in
+     
+   c_opt = None ||  //we can't get the comp type for sure, e.g. Inr t and t is not an arrow (say if..then..else), so keep the body
+   (let c = c_opt |> must in
+    //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
+    (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =

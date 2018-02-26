@@ -245,7 +245,7 @@ let coerce_validator #t (#p: parser t)
 
 inline_for_extraction [@"substitute"]
 val and_check (#t:Type) (#t':Type) (p: parser t) (p': t -> parser t') (p_st: parser_st (hide p))
-              (v: x:t -> stateful_validator (hide (p' x)))
+              (v: (x:t -> stateful_validator (hide (p' x))))
               : stateful_validator (hide (p `and_then` p'))
 let and_check #t #t' p p' p_st v =
     fun input -> match p_st input with
