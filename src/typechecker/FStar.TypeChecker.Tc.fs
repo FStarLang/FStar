@@ -1891,7 +1891,8 @@ and finish_partial_modul (loading_from_cache:bool) (env0:env) (en:env) (m:modul)
     en.solver.refresh ();  //refresh
     //if true then BU.print2 "Module %s before extraction:\n%s" modul.name.str (Syntax.Print.modul_to_string modul);
     let modul_iface = extract_interface env0 m in
-    if true then BU.print2 "Extracting and type checking module %s interface:\n%s" m.name.str ""; //(Syntax.Print.modul_to_string modul_iface);
+    if true then BU.print2 "Extracting and type checking module %s interface:\n%s" m.name.str
+                           (if Options.dump_module m.name.str then (Syntax.Print.modul_to_string modul_iface) else "");
     let env0 = { env0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul env0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
