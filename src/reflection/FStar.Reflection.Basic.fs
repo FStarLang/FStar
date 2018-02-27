@@ -476,7 +476,7 @@ let rec inspect (t:term) : term_view =
         Tv_Match (t, brs)
 
     | _ ->
-        BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =

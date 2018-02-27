@@ -295,6 +295,7 @@ type raw_error =
   | Error_NoLetMutable
   | Error_BadImplicit
   | Warning_DeprecatedDefinition
+  | Warning_CantInspect
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -590,7 +591,9 @@ let default_flags =
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
   (Warning_ModuleOrFileNotFoundWarning               , CWarning);
   (Error_BadImplicit                                 , CError);
-  (Warning_DeprecatedDefinition                      , CWarning)]
+  (Warning_DeprecatedDefinition                      , CWarning);
+  (Warning_CantInspect                               , CWarning);
+  ]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
