@@ -374,7 +374,15 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // action cps'd type contains the "good" wp that tells us EVERYTHING
           // about what this action does. Please note that this "good" wp is
           // of the form [binders -> repr ...], i.e. is it properly curried.
-          let act_typ, _, g_t = tc_tot_or_gtot_term env act.action_typ in
+          let act_typ =
+            match (SS.compress act.action_typ).n with
+            | Tm_arrow (bs, c) ->
+              let c = comp_to_comp_typ c in
+              if lid_equals c.effect_name ed.mname then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args)))) else act.action_typ
+            | _ -> act.action_typ
+          in
+          
+          let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
 
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
