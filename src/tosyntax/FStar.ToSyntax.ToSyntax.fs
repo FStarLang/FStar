@@ -2318,10 +2318,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                      | Paren t
                      | Ascribed(_, t, _) ->
                        is_logic t
-                     | If(_, t1, t2) ->
-                       is_logic t1 || is_logic t2
-                     | Match(_, branches) ->
-                       BU.for_some (fun (_, _, t) -> is_logic t) branches
                      | _ -> false
             in
             if lets |> BU.for_some (fun (_, (_, t)) -> is_logic t)
