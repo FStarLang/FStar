@@ -752,7 +752,8 @@ let and_match m1 m2 =
 
 let fv_delta_depth env fv = match fv.fv_delta with
     | Delta_abstract d ->
-      if env.curmodule.str = fv.fv_name.v.nsstr
+      if env.curmodule.str = fv.fv_name.v.nsstr && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
+                                                                     //    a better way would be create new fvs with appripriate delta_depth at extraction time
       then d //we're in the defining module
       else Delta_constant
     | Delta_defined_at_level _ ->

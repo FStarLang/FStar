@@ -1889,6 +1889,8 @@ and finish_partial_modul (loading_from_cache:bool) (env0:env) (en:env) (m:modul)
   if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
     en.solver.pop ("Ending modul " ^ m.name.str); //pop the solver
     en.solver.refresh ();  //refresh
+    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+
     //if true then BU.print2 "Module %s before extraction:\n%s" modul.name.str (Syntax.Print.modul_to_string modul);
     let modul_iface = extract_interface env0 m in
     if true then BU.print2 "Extracting and type checking module %s interface:\n%s" m.name.str

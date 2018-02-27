@@ -173,7 +173,8 @@ let steps :
   'Auu____61 . 'Auu____61 -> FStar_TypeChecker_Normalize.step Prims.list =
   fun env  ->
     [FStar_TypeChecker_Normalize.Beta;
-    FStar_TypeChecker_Normalize.Eager_unfolding]
+    FStar_TypeChecker_Normalize.Eager_unfolding;
+    FStar_TypeChecker_Normalize.NoFullNorm]
   
 let (norm :
   FStar_TypeChecker_Env.env ->

@@ -4357,7 +4357,9 @@ let (check_top_level :
           (uu____10740, uu____10741)
         else
           (let c = FStar_Syntax_Syntax.lcomp_comp lc  in
-           let steps = [FStar_TypeChecker_Normalize.Beta]  in
+           let steps =
+             [FStar_TypeChecker_Normalize.Beta;
+             FStar_TypeChecker_Normalize.NoFullNorm]  in
            let c1 =
              let uu____10748 =
                let uu____10749 =

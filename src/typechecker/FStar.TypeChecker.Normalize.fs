@@ -1231,12 +1231,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (attr_eq at) ats') ats
                              | _, _ -> false))
                  in
-
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
                                  (Range.string_of_range t.pos)
                                  (string_of_bool should_delta));
-
                  if should_delta
                  then do_unfold_fv cfg env stack t qninfo fv
                  else rebuild cfg env stack t
@@ -2045,7 +2043,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
     in
 
-    let rec is_cons head = match head.n with
+    let rec is_cons head = match (SS.compress head).n with
       | Tm_uinst(h, _) -> is_cons h
       | Tm_constant _
       | Tm_fvar( {fv_qual=Some Data_ctor} )
@@ -2226,7 +2224,7 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [Weak;HNF; UnfoldUntil Delta_constant; Beta] env t
+let unfold_whnf env t = normalize [Primops; Simplify; Weak; HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])

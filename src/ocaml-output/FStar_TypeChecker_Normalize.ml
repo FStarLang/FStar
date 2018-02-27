@@ -7205,7 +7205,10 @@ and (rebuild :
                     rebuild cfg env1 stack1 uu____19183)
                     in
                  let rec is_cons head1 =
-                   match head1.FStar_Syntax_Syntax.n with
+                   let uu____19188 =
+                     let uu____19189 = FStar_Syntax_Subst.compress head1  in
+                     uu____19189.FStar_Syntax_Syntax.n  in
+                   match uu____19188 with
                    | FStar_Syntax_Syntax.Tm_uinst (h,uu____19193) ->
                        is_cons h
                    | FStar_Syntax_Syntax.Tm_constant uu____19198 -> true
@@ -7647,8 +7650,12 @@ let (unfold_whnf :
   fun env  ->
     fun t  ->
       normalize
-        [Weak; HNF; UnfoldUntil FStar_Syntax_Syntax.Delta_constant; Beta] env
-        t
+        [Primops;
+        Simplify;
+        Weak;
+        HNF;
+        UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
+        Beta] env t
   
 let (reduce_or_remove_uvar_solutions :
   Prims.bool ->

@@ -1635,7 +1635,7 @@ let check_top_level env g lc : (bool * comp) =
   if U.is_total_lcomp lc
   then discharge g, lcomp_comp lc
   else let c = lcomp_comp lc in
-       let steps = [Normalize.Beta] in
+       let steps = [Normalize.Beta; Normalize.NoFullNorm] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env

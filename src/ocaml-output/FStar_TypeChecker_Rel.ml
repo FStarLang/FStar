@@ -1958,8 +1958,9 @@ let (fv_delta_depth :
       match fv.FStar_Syntax_Syntax.fv_delta with
       | FStar_Syntax_Syntax.Delta_abstract d ->
           if
-            (env.FStar_TypeChecker_Env.curmodule).FStar_Ident.str =
-              ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.nsstr
+            ((env.FStar_TypeChecker_Env.curmodule).FStar_Ident.str =
+               ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.nsstr)
+              && (Prims.op_Negation env.FStar_TypeChecker_Env.is_iface)
           then d
           else FStar_Syntax_Syntax.Delta_constant
       | FStar_Syntax_Syntax.Delta_defined_at_level uu____4870 ->
