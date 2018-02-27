@@ -2309,7 +2309,22 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr fv} -> Env.lookup_letbinding_quals env fv.fv_name.v) in
           let quals =
-            if lets |> BU.for_some (fun (_, (_, t)) -> t.level=Formula)
+            let rec is_logic t =
+                if t.level = Formula then true
+                else match t.tm with
+                     | Let(_, _, t)
+                     | LetOpen(_, t)
+                     | Seq(_, t)
+                     | Paren t
+                     | Ascribed(_, t, _) ->
+                       is_logic t
+                     | If(_, t1, t2) ->
+                       is_logic t1 || is_logic t2
+                     | Match(_, branches) ->
+                       BU.for_some (fun (_, _, t) -> is_logic t) branches
+                     | _ -> false
+            in
+            if lets |> BU.for_some (fun (_, (_, t)) -> is_logic t)
             then S.Logic::quals
             else quals in
           let lbs = if quals |> List.contains S.Abstract
