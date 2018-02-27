@@ -24,6 +24,7 @@ open FStar
 open FStar.Syntax.Syntax
 open FStar.Syntax
 open FStar.Util
+module C = FStar.Const
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 
@@ -279,7 +280,7 @@ let isInjective s =
 let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
-let mkStringConstant s r = mk (String s) r
+let mkStringConstant s r = mk (String (C.z3_sanitize_string s)) r
 let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (string_of_int i) r
 let mkBoundV i r    = mk (BoundV i) r

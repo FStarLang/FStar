@@ -78,3 +78,23 @@ let within_bounds repr signedness width =
   let lower, upper = bounds signedness width in
   let value = big_int_of_string (FStar.Util.ensure_decimal repr) in
   le_big_int lower value && le_big_int value upper
+
+
+(* Z3 can accept any ASCII character, but it may need to escape them *)
+let z3_acceptable c : bool =
+    Util.int_of_char c <= 255
+
+let z3_acceptable_string s : bool =
+    let chars = String.list_of_string s in
+    List.for_all z3_acceptable chars
+
+let z3_sanitize_char c : string =
+    let n = Util.int_of_char c in
+    if n = 34 then "\"\"" else // z3 requires that a quote `"` be escaped as `""`
+    if n >= 32 && n <= 127 then Util.string_of_char c else 
+    "\\x" ^ Util.hex_string_of_byte (Util.byte_of_char c)
+    
+let z3_sanitize_string s : string =
+    let chars = String.list_of_string s in
+    let fragments = List.map z3_sanitize_char chars in
+    String.concat "" fragments
