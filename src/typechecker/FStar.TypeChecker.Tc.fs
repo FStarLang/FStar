@@ -374,6 +374,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // action cps'd type contains the "good" wp that tells us EVERYTHING
           // about what this action does. Please note that this "good" wp is
           // of the form [binders -> repr ...], i.e. is it properly curried.
+
+          //AR: if the act typ is already in the effect monad (e.g. in the second phase),
+          //    then, convert it to repr, so that the code after it can work as it is
+          //    perhaps should open/close binders properly
           let act_typ =
             match (SS.compress act.action_typ).n with
             | Tm_arrow (bs, c) ->
