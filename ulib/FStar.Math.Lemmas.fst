@@ -476,7 +476,7 @@ let mod_pow2_div2 a m =
   assert (a / 2 == pow2 (m - 1) * (a / pow2 m));
   multiple_modulo_lemma (a / pow2 m) (pow2 (m - 1))
 
-#reset-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap"
+#reset-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 1 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap"
 
 (* Lemma: Divided by a product is equivalent to being divided one by one *)
 val division_multiplication_lemma: a:nat -> b:pos -> c:pos ->
@@ -500,7 +500,7 @@ let division_multiplication_lemma a b c =
 let lemma_mul_pos_pos_is_pos (x:pos) (y:pos) : Lemma (x*y > 0) = ()
 let lemma_mul_nat_pos_is_nat (x:nat) (y:pos) : Lemma (x*y >= 0) = ()
 
-#set-options "--z3rlimit 50"
+#set-options "--z3rlimit 50 --max_ifuel 0"
 
 let modulo_division_lemma_0 (a:nat) (b:pos) (c:pos) : Lemma
   (a / (b*c) <= a /\ (a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c))
