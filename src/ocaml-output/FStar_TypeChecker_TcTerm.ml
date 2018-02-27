@@ -7679,7 +7679,7 @@ and (check_lbtyp :
                                then
                                  let uu____15953 =
                                    let uu____15954 =
-                                     FStar_Syntax_Syntax.range_of_lbname
+                                     FStar_Syntax_Util.range_of_lbname
                                        lb.FStar_Syntax_Syntax.lbname
                                       in
                                    FStar_Range.string_of_range uu____15954
