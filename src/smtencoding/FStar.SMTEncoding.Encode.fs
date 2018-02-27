@@ -242,7 +242,7 @@ let push_free_var env (x:lident) arity fname ftok =
 let push_zfuel_name env (x:lident) f =
     let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
-    let fvb = mk_fvb x fvb.smt_id (fvb.smt_arity - 1) fvb.smt_token (Some t3) in
+    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) in
     {env with bindings=Binding_fvar fvb::env.bindings}
 let try_lookup_free_var env l =
     match try_lookup_lid env l with
@@ -270,22 +270,29 @@ let lookup_free_var env a =
     match try_lookup_free_var env a.v with
         | Some t -> t
         | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a.v))
-let lookup_free_var_name env a = let fvb = lookup_lid env a.v in fvb.smt_id
+let lookup_free_var_name env a =
+    let fvb = lookup_lid env a.v in
+    fvb.smt_id, fvb.smt_arity
 let lookup_free_var_sym env a =
-    let {smt_id=name;
-         smt_token=sym;
-         smt_fuel_partial_app=zf_opt} =
-        lookup_lid env a.v
-    in
-    match zf_opt with
-        | Some({tm=App(g, zf)}) when env.use_zfuel_name -> g, zf
-        | _ ->
-            match sym with
-                | None -> Var name, []
-                | Some sym ->
-                    match sym.tm with
-                        | App(g, [fuel]) -> g, [fuel]
-                        | _ -> Var name, []
+    let fvb = lookup_lid env a.v in
+    match fvb.smt_fuel_partial_app with
+    | Some({tm=App(g, zf)})
+        when env.use_zfuel_name ->
+        g, zf, fvb.smt_arity + 1
+    | _ ->
+        begin
+        match fvb.smt_token with
+        | None ->
+            Var fvb.smt_id, [], fvb.smt_arity
+        | Some sym ->
+            begin
+            match sym.tm with
+            | App(g, [fuel]) ->
+                g, [fuel], fvb.smt_arity + 1
+            | _ ->
+                Var fvb.smt_id, [], fvb.smt_arity
+            end
+        end
 
 let tok_of_name env nm =
     BU.find_map env.bindings (function
@@ -362,6 +369,23 @@ let mk_Apply e vars =
             | Fuel_sort -> mk_ApplyTF out (mkFreeV var)
             | s -> assert (s=Term_sort); mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
+let raise_arity_mismatch head arity n_args rng =
+    Errors.raise_error (Errors.Fatal_SMTEncodingArityMismatch,
+                                 BU.format3 "Head symbol %s expects at least %s arguments; got only %s"
+                                        head
+                                        (BU.string_of_int arity)
+                                        (BU.string_of_int n_args))
+                                rng
+
+let maybe_curry_app rng (head:op) (arity:int) (args:list<term>) =
+    let n_args = List.length args in
+    if n_args = arity
+    then Util.mkApp'(head, args)
+    else if n_args > arity
+    then let args, rest = BU.first_N arity args in
+         let head = Util.mkApp'(head, args) in
+         mk_Apply_args head rest
+    else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
 
 let is_app = function
     | Var "ApplyTT"
@@ -579,8 +603,9 @@ and encode_arith_term env head args_e =
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
     let mk_default () =
-        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
-        Util.mkApp'(fname, fuel_args@arg_tms)
+        let fname, fuel_args, arity = lookup_free_var_sym env head_fv.fv_name in
+        let args = fuel_args@arg_tms in
+        maybe_curry_app head.pos fname arity args
     in
     let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts ->
@@ -792,7 +817,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
                   let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
 
-                  let t = mkApp(tsym, List.map mkFreeV cvars) in
+                  let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
                   let t_has_kind = mk_HasType t mk_Term_type in
 
                   let k_assumption =
@@ -992,9 +1017,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 end in
 
             let encode_full_app fv =
-                let fname, fuel_args = lookup_free_var_sym env fv in
-                let tm = mkApp'(fname, fuel_args@args) in
-                tm, decls in
+                let fname, fuel_args, arity = lookup_free_var_sym env fv in
+                let tm = maybe_curry_app t0.pos fname arity (fuel_args@args) in
+                tm, decls
+            in
 
             let head = SS.compress head in
 
@@ -1117,7 +1143,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let fsym = varops.mk_unique ("Tm_abs_" ^ (BU.digest_of_string tkey_hash)) in
                         module_name ^ "_" ^ fsym in
                     let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                    let f = mkApp(fsym, List.map mkFreeV cvars) in
+                    let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
                     let app = mk_Apply f vars in
                     let typing_f =
                       match arrow_t_opt with
@@ -1212,7 +1238,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             in
             let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                mk_guard arg (mkApp(proj, [scrutinee]))) in
+                mk_guard arg (mkApp(proj, [scrutinee]))) in //arity ok, primitive projector (#1383)
             mk_and_l (is_f::sub_term_guards)
     in
 
@@ -1228,7 +1254,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             args
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                mk_projections arg (mkApp(proj, [scrutinee])))
+                mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
             |> List.flatten in
 
     let pat_term () = encode_term pat_term env in
@@ -1508,8 +1534,8 @@ let prims =
         let xname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
-        let xapp = mkApp(x, List.map mkFreeV vars) in
-        let xtok = mkApp(xtok, []) in
+        let xapp = mkApp(x, List.map mkFreeV vars) in //arity ok, see decl (#1383)
+        let xtok = mkApp(xtok, []) in //arity ok, see decl (#1383)
         let xtok_app = mk_Apply xtok vars in
         xtok,
         List.length vars,
@@ -1831,7 +1857,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     let _, (xxsym, _) = BU.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
                     let f = {ppname=f; index=0; sort=tun} in
-                    let tp_name = mk_term_projector_name d f in
+                    let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
                     let prim_app = mkApp(tp_name, [xx]) in
                     [Util.mkAssume(mkForall([[vapp]], vars,
                                             mkEq(vapp, prim_app)), Some "Projector equation", ("proj_equation_"^tp_name))]
@@ -1842,7 +1868,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
               let vtok_app = mk_Apply vtok_tm vars in
 
-              let vapp = mkApp(vname, List.map mkFreeV vars) in
+              let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |formals| = |vars| (#1383)
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (fun _ -> Term_sort), Term_sort, None) in
                 let tok_typing, decls2 =
@@ -2041,15 +2067,23 @@ let encode_top_level_let :
         let decls = List.rev decls |> List.flatten in
         let typs = List.rev typs in
 
-        let mk_app curry f ftok vars =
+        let mk_app rng curry fvb vars =
+            let mk_fv () =
+              if fvb.smt_arity = 0
+              then mkFreeV(fvb.smt_id, Term_sort)
+              else raise_arity_mismatch fvb.smt_id fvb.smt_arity 0 rng
+            in
             match vars with
-            | [] -> mkFreeV(f, Term_sort)
+            | [] ->
+              mk_fv ()
             | _ ->
               if curry
-                  then match ftok with
-                      | Some ftok -> mk_Apply ftok vars
-                      | None -> mk_Apply (mkFreeV(f, Term_sort)) vars
-                  else mkApp(f, List.map mkFreeV vars)
+              then match fvb.smt_token with
+                   | Some ftok ->
+                     mk_Apply ftok vars
+                   | None ->
+                     mk_Apply (mk_fv()) vars
+              else maybe_curry_app rng (Var fvb.smt_id) fvb.smt_arity (List.map mkFreeV vars)
         in
 
         let encode_non_rec_lbdef
@@ -2058,7 +2092,7 @@ let encode_top_level_let :
                 (toks:list<fvar_binding>)
                 (env:env_t) =
             match bindings, typs, toks with
-            | [{lbunivs=uvs;lbdef=e}], [t_norm], [fvb] ->
+            | [{lbunivs=uvs;lbdef=e;lbname=lbn}], [t_norm], [fvb] ->
 
                 (* Open universes *)
                 let flid = fvb.fvar_lid in
@@ -2087,7 +2121,7 @@ let encode_top_level_let :
                   then TcUtil.reify_body env'.tcenv body
                   else U.ascribe body (BU.Inl t_body, None)
                 in
-                let app = mk_app curry fvb.smt_id fvb.smt_token vars in
+                let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
                     if quals |> List.contains Logic
                     then mk_Valid app, encode_formula body env'
@@ -2118,7 +2152,7 @@ let encode_top_level_let :
             let flid = fvb.fvar_lid in
             let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
             let gtok = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented_token") in
-            let env = push_free_var env flid (fvb.smt_arity + 1) gtok (Some <| mkApp(g, [fuel_tm])) in
+            let env = push_free_var env flid fvb.smt_arity gtok (Some <| mkApp(g, [fuel_tm])) in
             (fvb, g, gtok)::gtoks, env) ([], env)
           in
           let gtoks = List.rev gtoks in
@@ -2301,7 +2335,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 List.fold_right aux formals (env, [], [])
               in
               (* let app = mkApp("Reify", [mkApp(aname, xs)]) in *)
-              let app = mkApp(aname, xs) in
+              let app = mkApp(aname, xs) in //arity ok; length xs = length formals = arity
               let a_eq =
                 Util.mkAssume(mkForall([[app]], xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
                             Some "Action equality",
@@ -2463,7 +2497,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
         let ttok_tm = mkApp(ttok, []) in
         let guard = mk_and_l guards in
-        let tapp = mkApp(tname, List.map mkFreeV vars) in
+        let tapp = mkApp(tname, List.map mkFreeV vars) in //arity ok
         let decls, env =
             //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
             //See: https://github.com/FStarLang/FStar/issues/349
@@ -2527,7 +2561,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let app = mk_Apply ddtok_tm vars in
         let guard = mk_and_l guards in
         let xvars = List.map mkFreeV vars in
-        let dapp =  mkApp(ddconstrsym, xvars) in
+        let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
 
         let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
         let tok_typing =
@@ -2551,7 +2585,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
         let ty_pred', decls_pred =
              let xvars = List.map mkFreeV vars' in
-             let dapp =  mkApp(ddconstrsym, xvars) in
+             let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
              encode_term_pred (Some fuel_tm) t_res env'' dapp in
         let guard' = mk_and_l guards' in
         let proxy_fresh = match formals with
@@ -2563,7 +2597,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             match (SS.compress head).n with
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv ->
-                  let encoded_head = lookup_free_var_name env' fv.fv_name in
+                  let encoded_head, encoded_head_arity = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
                   let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
                     let fv =
@@ -2596,9 +2630,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       (env', [], [], 0) (FStar.List.zip args encoded_args)
                   in
                   let arg_vars = List.rev arg_vars in
-                  let ty = mkApp(encoded_head, arg_vars) in
+                  let ty = maybe_curry_app fv.fv_name.p (Var encoded_head) encoded_head_arity arg_vars in
                   let xvars = List.map mkFreeV vars in
-                  let dapp =  mkApp(ddconstrsym, xvars) in
+                  let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
                   let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
                   let arg_binders = List.map fv_of_term arg_vars in
                   let typing_inversion =

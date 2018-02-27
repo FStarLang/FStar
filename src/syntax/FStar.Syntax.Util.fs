@@ -620,9 +620,9 @@ let quals_of_sigelt (x: sigelt) = x.sigquals
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let range_of_lb = function
-  | (Inl x, _, _) -> range_of_bv  x
-  | (Inr l, _, _) -> range_of_lid l
+let range_of_lbname = function
+  | Inl x -> range_of_bv  x
+  | Inr fv -> range_of_lid fv.fv_name.v
 
 let range_of_arg (hd, _) = hd.pos
 
