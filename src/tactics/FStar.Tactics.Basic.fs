@@ -259,23 +259,25 @@ let dismiss_all : tac<unit> =
 let nwarn = BU.mk_ref 0
 
 let check_valid_goal g =
-    let b = true in
-    let env = g.context in
-    let b = b && Env.closed env g.witness in
-    let b = b && Env.closed env g.goal_ty in
-    let rec aux b e =
-        match Env.pop_bv e with
-        | None -> b
-        | Some (bv, e) -> (
-            let b = b && Env.closed e bv.sort in
-            aux b e
-            )
-    in
-    if not (aux b env) && !nwarn < 5
-    then (Err.log_issue g.goal_ty.pos
-              (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                          (goal_to_string g));
-          nwarn := !nwarn + 1)
+    if Options.defensive () then begin
+        let b = true in
+        let env = g.context in
+        let b = b && Env.closed env g.witness in
+        let b = b && Env.closed env g.goal_ty in
+        let rec aux b e =
+            match Env.pop_bv e with
+            | None -> b
+            | Some (bv, e) -> (
+                let b = b && Env.closed e bv.sort in
+                aux b e
+                )
+        in
+        if not (aux b env) && !nwarn < 5
+        then (Err.log_issue g.goal_ty.pos
+                  (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
+                              (goal_to_string g));
+              nwarn := !nwarn + 1)
+    end
 
 let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
