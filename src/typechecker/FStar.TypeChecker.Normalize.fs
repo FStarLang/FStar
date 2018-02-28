@@ -89,8 +89,6 @@ type fsteps = {
     weak : bool;
     hnf  : bool;
     primops : bool;
-    eager_unfolding : bool;
-    inlining : bool;
     no_delta_steps : bool;
     unfold_until : option<S.delta_depth>;
     unfold_only : option<list<I.lid>>;
@@ -115,8 +113,6 @@ let default_steps : fsteps = {
     weak = false;
     hnf  = false;
     primops = false;
-    eager_unfolding = false;
-    inlining = false;
     no_delta_steps = false;
     unfold_until = None;
     unfold_only = None;
@@ -134,12 +130,12 @@ let default_steps : fsteps = {
     unascribe = false;
 }
 
-let rec to_fsteps (s : list<step>) : fsteps =
+let fstep_add_one s fs =
     let add_opt x = function
         | None -> Some [x]
         | Some xs -> Some (x::xs)
     in
-    let add_one s fs = match s with
+    match s with
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
     | Zeta -> { fs with zeta = true }
@@ -150,8 +146,8 @@ let rec to_fsteps (s : list<step>) : fsteps =
     | Weak -> { fs with weak = true }
     | HNF -> { fs with hnf = true }
     | Primops -> { fs with primops = true }
-    | Eager_unfolding ->  { fs with eager_unfolding = true }
-    | Inlining ->  { fs with inlining = true }
+    | Eager_unfolding -> fs // eager_unfolding is not a step
+    | Inlining -> fs // not a step
     | NoDeltaSteps ->  { fs with no_delta_steps = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly lids -> { fs with unfold_only = Some lids }
@@ -167,8 +163,9 @@ let rec to_fsteps (s : list<step>) : fsteps =
     | CheckNoUvars ->  { fs with check_no_uvars = true }
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
-    in
-    List.fold_right add_one s default_steps
+
+let rec to_fsteps (s : list<step>) : fsteps =
+    List.fold_right fstep_add_one s default_steps
 
 type psc = {
     psc_range:FStar.Range.range;
