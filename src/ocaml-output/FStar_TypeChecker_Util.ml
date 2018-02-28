@@ -3665,14 +3665,15 @@ let (gen :
                     [FStar_TypeChecker_Normalize.Beta;
                     FStar_TypeChecker_Normalize.Exclude
                       FStar_TypeChecker_Normalize.Zeta;
-                    FStar_TypeChecker_Normalize.Eager_unfolding;
-                    FStar_TypeChecker_Normalize.NoFullNorm] env c
+                    FStar_TypeChecker_Normalize.NoFullNorm;
+                    FStar_TypeChecker_Normalize.NoDeltaSteps] env c
                 else
                   FStar_TypeChecker_Normalize.normalize_comp
                     [FStar_TypeChecker_Normalize.Beta;
                     FStar_TypeChecker_Normalize.Exclude
                       FStar_TypeChecker_Normalize.Zeta;
-                    FStar_TypeChecker_Normalize.NoFullNorm] env c
+                    FStar_TypeChecker_Normalize.NoFullNorm;
+                    FStar_TypeChecker_Normalize.NoDeltaSteps] env c
                  in
               (let uu____8479 =
                  FStar_TypeChecker_Env.debug env FStar_Options.Medium  in
