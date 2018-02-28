@@ -235,6 +235,7 @@ type stack_elt =
  | Debug    of term * BU.time
 type stack = list<stack_elt>
 
+let head_of t = let hd, _ = U.head_and_args' t in hd
 let mk t r = mk t None r
 let set_memo cfg (r:memo<'a>) (t:'a) =
   if cfg.memoize_lazy then
@@ -1136,15 +1137,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
-            when U.is_fstar_tactics_embed hd
-              || (U.is_fstar_tactics_quote hd && cfg.steps.no_delta_steps)
-              || U.is_fstar_tactics_by_tactic hd ->
-            let args = closures_as_args_delayed cfg env args in
-            let hd = closure_as_term cfg env hd in
-            let t = {t with n=Tm_app(hd, args)} in
-            rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
-
-          | Tm_app(hd, args)
             when not (cfg.steps.no_full_norm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
@@ -1923,9 +1915,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     let t = mk_Tm_uinst t us in
     rebuild cfg env stack t
 
+  | Arg (Clos(env_arg, tm, _, _), aq, r) :: stack
+        when U.is_fstar_tactics_quote     (head_of t)
+          || U.is_fstar_tactics_embed     (head_of t)
+          || U.is_fstar_tactics_by_tactic (head_of t) ->
+    let t = S.extend_app t (closure_as_term cfg env_arg tm, aq) None r in
+    rebuild cfg env stack t
+
   | Arg (Clos(env_arg, tm, m, _), aq, r) :: stack ->
-    log cfg  (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
-    //this needs to be tail recursive for reducing large terms
+    log cfg (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
+    // this needs to be tail recursive for reducing large terms
 
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
