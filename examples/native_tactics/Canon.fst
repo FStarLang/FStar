@@ -280,7 +280,7 @@ let rec canon_point = fun e () ->
     let x : tactic expr = (
     // These cannot be top-levels if we want to compile
     let step (t : tactic unit) : tactic unit =
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"trans"]);;
+        apply_lemma (fun () -> `trans);;
         t
     in
     let step_lemma (lem : tactic term) : tactic unit =
@@ -304,35 +304,35 @@ let rec canon_point = fun e () ->
 
     // Forget about negations
     | Neg e ->
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"neg_minus_one"]);;
+        step_lemma (fun () -> `neg_minus_one);;
         canon_point (Mult (Lit (-1)) e)
 
     // Distribute
     | Mult a (Plus b c) ->
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"distr"]);;
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_plus"]);;
+        step_lemma (fun () -> `distr);;
+        step_lemma (fun () -> `cong_plus);;
         l <-- canon_point (Mult a b);
         r <-- canon_point (Mult a c);
         canon_point (Plus l r)
 
     | Mult (Plus a b) c ->
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"distl"]);;
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_plus"]);;
+        step_lemma (fun () -> `distl);;
+        step_lemma (fun () -> `cong_plus);;
         l <-- canon_point (Mult a c);
         r <-- canon_point (Mult b c);
         canon_point (Plus l r)
 
     // Associate to the left
     | Mult a (Mult b c) ->
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"ass_mult_l"]);;
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_mult"]);;
+        step_lemma (fun () -> `ass_mult_l);;
+        step_lemma (fun () -> `cong_mult);;
         l <-- canon_point (Mult a b);
         r <-- canon_point c;
         canon_point (Mult l r)
 
     | Plus a (Plus b c) ->
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"ass_plus_l"]);;
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_plus"]);;
+        step_lemma (fun () -> `ass_plus_l);;
+        step_lemma (fun () -> `cong_plus);;
         l <-- canon_point (Plus a b);
         r <-- canon_point c;
         canon_point (Plus l r)
@@ -341,8 +341,8 @@ let rec canon_point = fun e () ->
         let o = compare_expr b c in
         if O.gt o
         then begin
-            step_lemma (quote_lid ["FStar";"Tactics";"Canon";"sw_plus"]);;
-            apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_plus"]);;
+            step_lemma (fun () -> `sw_plus);;
+            apply_lemma (fun () -> `cong_plus);;
             l <-- canon_point (Plus a c);
             trefl;;
             return (Plus l b)
@@ -352,8 +352,8 @@ let rec canon_point = fun e () ->
     | Mult (Mult a b) c ->
         if O.gt (compare_expr b c)
         then begin
-            step_lemma (quote_lid ["FStar";"Tactics";"Canon";"sw_mult"]);;
-            apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_mult"]);;
+            step_lemma (fun () -> `sw_mult);;
+            apply_lemma (fun () -> `cong_mult);;
             l <-- canon_point (Mult a c);
             trefl;;
             return (Mult l b)
@@ -361,43 +361,43 @@ let rec canon_point = fun e () ->
         else skip
 
     | Plus a (Lit 0) ->
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"x_plus_zero"]);;
+        apply_lemma (fun () -> `x_plus_zero);;
         return a
 
     | Plus (Lit 0) b ->
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"zero_plus_x"]);;
+        apply_lemma (fun () -> `zero_plus_x);;
         return b
 
     | Plus a b ->
         if O.gt (compare_expr a b)
-        then (apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"comm_plus"]);; return (Plus b a))
+        then (apply_lemma (fun () -> `comm_plus);; return (Plus b a))
         else skip
 
     | Mult (Lit 0) _ ->
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"zero_mult_x"]);;
+        apply_lemma (fun () -> `zero_mult_x);;
         return (Lit 0)
 
     | Mult _ (Lit 0) ->
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"x_mult_zero"]);;
+        apply_lemma (fun () -> `x_mult_zero);;
         return (Lit 0)
 
     | Mult (Lit 1) r ->
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"one_mult_x"]);;
+        apply_lemma (fun () -> `one_mult_x);;
         return r
 
     | Mult l (Lit 1) ->
-        apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"x_mult_one"]);;
+        apply_lemma (fun () -> `x_mult_one);;
         return l
 
     | Mult a b ->
         if O.gt (compare_expr a b)
-        then (apply_lemma (quote_lid ["FStar";"Tactics";"Canon";"comm_mult"]);; return (Mult b a))
+        then (apply_lemma (fun () -> `comm_mult);; return (Mult b a))
         else skip
 
     // Forget about subtraction
     | Minus a b ->
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"minus_is_plus"]);;
-        step_lemma (quote_lid ["FStar";"Tactics";"Canon";"cong_plus"]);;
+        step_lemma (fun () -> `minus_is_plus);;
+        step_lemma (fun () -> `cong_plus);;
         trefl;;
         canon_point (Neg b);;
         canon_point (Plus a (Neg b))

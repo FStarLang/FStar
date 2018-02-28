@@ -9,56 +9,56 @@ open FStar.UInt
 // using uint_t' instead of uint_t breaks the tactic (goes to inl).
 
 (* Congruence lemmas *)
-val cong_bvand : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+val cong_bvand : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			       (#y:bv_t n) -> (#z:bv_t n) ->
 			       squash (w == y) -> squash (x == z) ->
 			       Lemma (bvand #n w x == bvand #n y z)
 let cong_bvand #n #w #x #y #z pf1 pf2 = ()
 
-val cong_bvxor : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+val cong_bvxor : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			       (#y:bv_t n) -> (#z:bv_t n) ->
 			       squash (w == y) -> squash (x == z) ->
 			       Lemma (bvxor w x == bvxor y z)
 let cong_bvxor #n #w #x #y #z pf1 pf2 = ()
 
-val cong_bvor : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+val cong_bvor : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			       (#y:bv_t n) -> (#z:bv_t n) ->
 			       squash (w == y) -> squash (x == z) ->
 			       Lemma (bvor w x == bvor y z)
 let cong_bvor #n #w #x #y #z pf1 pf2 = ()
 
-val cong_bvshl : #n:pos -> (#w:bv_t n) -> (#x:uint_t n) -> 
+val cong_bvshl : #n:pos -> (#w:bv_t n) -> (#x:uint_t n) ->
 				 (#y:bv_t n) -> squash (w == y) ->
 				 Lemma (bvshl w x == bvshl y x)
 let cong_bvshl #n #w #x #y pf = ()
 
-val cong_bvshr : #n:pos -> #w:bv_t n -> (#x:uint_t n) -> 
+val cong_bvshr : #n:pos -> #w:bv_t n -> (#x:uint_t n) ->
 			   #y:bv_t n -> squash (w == y) ->
 			   Lemma (bvshr #n w x == bvshr #n y x)
 let cong_bvshr #n #w #x #y pf = ()
 
-val cong_bvdiv : #n:pos -> #w:bv_t n -> (#x:uint_t n{x <> 0}) -> 
+val cong_bvdiv : #n:pos -> #w:bv_t n -> (#x:uint_t n{x <> 0}) ->
 			  #y:bv_t n -> squash (w == y) ->
 			   Lemma (bvdiv #n w x == bvdiv #n y x)
 let cong_bvdiv #n #w #x #y pf = ()
 
-val cong_bvmod : #n:pos -> #w:bv_t n -> (#x:uint_t n{x <> 0}) -> 
+val cong_bvmod : #n:pos -> #w:bv_t n -> (#x:uint_t n{x <> 0}) ->
 			  #y:bv_t n -> squash (w == y) ->
 			   Lemma (bvmod #n w x == bvmod #n y x)
 let cong_bvmod #n #w #x #y pf = ()
 
-val cong_bvmul : #n:pos -> #w:bv_t n -> (#x:uint_t n) -> 
+val cong_bvmul : #n:pos -> #w:bv_t n -> (#x:uint_t n) ->
 			  #y:bv_t n -> squash (w == y) ->
 			   Lemma (bvmul #n w x == bvmul #n y x)
 let cong_bvmul #n #w #x #y pf = ()
 
-val cong_bvadd : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+val cong_bvadd : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			  (#y:bv_t n) -> (#z:bv_t n) ->
 			  squash (w == y) -> squash (x == z) ->
 			  Lemma (bvadd w x == bvadd y z)
 let cong_bvadd #n #w #x #y #z pf1 pf2 = ()
 
-val cong_bvsub : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+val cong_bvsub : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			  (#y:bv_t n) -> (#z:bv_t n) ->
 			  squash (w == y) -> squash (x == z) ->
 			  Lemma (bvsub w x == bvsub y z)
@@ -76,19 +76,19 @@ let lt_to_bv #n #x #y pf = int2bv_lemma_ult_2 #n x y
 (* Creates two fresh variables and two equations of the form int2bv
    x = z /\ int2bv y = w. The above lemmas transform these two
    equations before finally instantiating them through reflexivity,
-   leaving Z3 to solve z = w *) 
-val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  squash (x == z) -> squash (y == w) -> squash (z == w) -> 
+   leaving Z3 to solve z = w *)
+val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
+		  squash (x == z) -> squash (y == w) -> squash (z == w) ->
 		  Lemma (x == y)
 let trans #n #x #y #z #w pf1 pf2 pf3 = ()
 
-val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  (eq2 #(bv_t n) x z) -> (eq2 #(bv_t n) y w) -> squash (bvult #n z w) -> 
+val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
+		  (eq2 #(bv_t n) x z) -> (eq2 #(bv_t n) y w) -> squash (bvult #n z w) ->
 		  Lemma (bvult #n x y)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
-val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) -> 
+val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
+		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) ->
 		  Lemma (x < y)
 let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = int2bv_lemma_ult_2 x y
 
@@ -99,48 +99,48 @@ let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = int2bv_lemma_ult_2 x y
 let rec arith_expr_to_bv e : tactic unit =
     match e with
     | NatToBv (MulMod e1 _) | MulMod e1 _ ->
-        apply_lemma (quote int2bv_mul);;
-        apply_lemma (quote cong_bvmul);;
+        apply_lemma (fun () -> `int2bv_mul);;
+        apply_lemma (fun () -> `cong_bvmul);;
         arith_expr_to_bv e1
     | NatToBv (Umod e1 _) | Umod e1 _ ->
-        apply_lemma (quote int2bv_mod);;
-        apply_lemma (quote cong_bvmod);;
+        apply_lemma (fun () -> `int2bv_mod);;
+        apply_lemma (fun () -> `cong_bvmod);;
         arith_expr_to_bv e1
     | NatToBv (Udiv e1 _) | Udiv e1 _ ->
-        apply_lemma (quote int2bv_div);;
-        apply_lemma (quote cong_bvdiv);;
+        apply_lemma (fun () -> `int2bv_div);;
+        apply_lemma (fun () -> `cong_bvdiv);;
         arith_expr_to_bv e1
     | NatToBv (Shl e1 _) | Shl e1 _ ->
-        apply_lemma (quote int2bv_shl);;
-        apply_lemma (quote cong_bvshl);;
+        apply_lemma (fun () -> `int2bv_shl);;
+        apply_lemma (fun () -> `cong_bvshl);;
         arith_expr_to_bv e1
     | NatToBv (Shr e1 _) | Shr e1 _ ->
-        apply_lemma (quote int2bv_shr);;
-        apply_lemma (quote cong_bvshr);;
+        apply_lemma (fun () -> `int2bv_shr);;
+        apply_lemma (fun () -> `cong_bvshr);;
         arith_expr_to_bv e1
     | NatToBv (Land e1 e2) | (Land e1 e2) ->
-        apply_lemma (quote int2bv_logand);;
-        apply_lemma (quote cong_bvand);;
+        apply_lemma (fun () -> `int2bv_logand);;
+        apply_lemma (fun () -> `cong_bvand);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
     | NatToBv (Lxor e1 e2) | (Lxor e1 e2) ->
-        apply_lemma (quote int2bv_logxor);;
-        apply_lemma (quote cong_bvxor);;
+        apply_lemma (fun () -> `int2bv_logxor);;
+        apply_lemma (fun () -> `cong_bvxor);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
     | NatToBv (Lor e1 e2) | (Lor e1 e2) ->
-        apply_lemma (quote int2bv_logor);;
-        apply_lemma (quote cong_bvor);;
+        apply_lemma (fun () -> `int2bv_logor);;
+        apply_lemma (fun () -> `cong_bvor);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
     | NatToBv (Ladd e1 e2) | (Ladd e1 e2) ->
-        apply_lemma (quote int2bv_add);;
-        apply_lemma (quote cong_bvadd);;
+        apply_lemma (fun () -> `int2bv_add);;
+        apply_lemma (fun () -> `cong_bvadd);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
     | NatToBv (Lsub e1 e2) | (Lsub e1 e2) ->
-        apply_lemma (quote int2bv_sub);;
-        apply_lemma (quote cong_bvsub);;
+        apply_lemma (fun () -> `int2bv_sub);;
+        apply_lemma (fun () -> `cong_bvsub);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
     | _ ->
@@ -167,8 +167,8 @@ let arith_to_bv_tac : tactic unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 let bv_tac ()  =
-  mapply (quote eq_to_bv);;
-  mapply (quote trans);;
+  mapply (fun () -> `eq_to_bv);;
+  mapply (fun () -> `trans);;
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
@@ -176,16 +176,16 @@ let bv_tac ()  =
   smt
 
 let bv_tac_lt n =
-  // apply_lemma (quote (lt_to_bv #n));;
+  // apply_lemma (fun () -> `(lt_to_bv #n));;
   // dump "after lt_to_bv";;
-  apply_lemma (quote (trans_lt2 #n));;  
+  apply_lemma (fun () -> `(trans_lt2 #n));;
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
   smt
 
 let to_bv_tac ()  =
-  apply_lemma (quote eq_to_bv);;
-  apply_lemma (quote trans);;
+  apply_lemma (fun () -> `eq_to_bv);;
+  apply_lemma (fun () -> `trans);;
   arith_to_bv_tac;;
   arith_to_bv_tac

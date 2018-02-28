@@ -81,9 +81,7 @@ let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
 
 private
 let admit1' : tactic unit =
-    g <-- cur_goal;
-    gg <-- unquote #Type g;
-    exact (quote #gg (magic ()))
+    exact (fun () -> `(magic ()))
 
 let admit1 : tactic unit =
     print "Warning: Admitting goal";;
@@ -110,7 +108,7 @@ private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
 let tcut (t:term) : tactic binder =
-    qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];
+    qq <-- (fun () -> `__cut);
     let tt = pack (Tv_App qq (t, Q_Explicit)) in
     apply (return tt);;
     intro
@@ -231,7 +229,7 @@ private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -
 private let __witness #a x #p _ = ()
 
 let witness (t : tactic term) : tactic unit =
-    apply_raw (quote __witness);;
+    apply_raw (fun () -> `__witness);;
     exact t
 
 private val push1 : (#p:Type) -> (#q:Type) ->
@@ -264,7 +262,7 @@ let rec apply_squash_or_lem d t =
            (* Is the lemma an implication? We can try to intro *)
            match term_as_formula' post with
            | Implies p q ->
-               apply (quote push1);;
+               apply (fun () -> `push1);;
                apply_squash_or_lem (d-1) t
 
            | _ ->
@@ -276,7 +274,7 @@ let rec apply_squash_or_lem d t =
        | Some _ -> apply (return t)
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
-           apply (quote FStar.Squash.return_squash);;
+           apply (fun () -> `FStar.Squash.return_squash);;
            apply (return t)
        end
     | _ -> fail "mapply: can't apply (2)"

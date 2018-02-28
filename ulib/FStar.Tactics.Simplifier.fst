@@ -17,10 +17,10 @@ val lem_iff_trans : #a:Type -> #b:Type -> #c:Type -> squash (a <==> b) -> squash
 let lem_iff_trans #a #b #c _ _ = ()
 
 let tiff : tactic unit =
-    apply_lemma (quote lem_iff_refl)
+    apply_lemma (fun () -> `lem_iff_refl)
 
 let step : tactic unit =
-    apply_lemma (quote lem_iff_trans)
+    apply_lemma (fun () -> `lem_iff_trans)
 
 val lem_true_and_p : #p:Type -> Lemma ((True /\ p) <==> p)
 let lem_true_and_p #p = ()
@@ -159,9 +159,9 @@ let inhabit =
     match inspect t with
     | Tv_FVar fv ->
         let qn = inspect_fv fv in
-             if qn = int_lid then exact (quote 42)
-        else if qn = bool_lid then exact (quote true)
-        else if qn = unit_lid then exact (quote ())
+             if qn = int_lid then exact (fun () -> `42)
+        else if qn = bool_lid then exact (fun () -> `true)
+        else if qn = unit_lid then exact (fun () -> `())
         else fail ""
     | _ -> fail ""
 
@@ -180,48 +180,48 @@ let rec simplify_point = fun () -> (
     | Iff l r ->
         begin match term_as_formula' l with
         | And p q ->
-                 if is_true p then apply_lemma (quote lem_true_and_p)
-            else if is_true q then apply_lemma (quote lem_p_and_true)
-            else if is_false p then apply_lemma (quote lem_false_and_p)
-            else if is_false q then apply_lemma (quote lem_p_and_false)
+                 if is_true p then apply_lemma (fun () -> `lem_true_and_p)
+            else if is_true q then apply_lemma (fun () -> `lem_p_and_true)
+            else if is_false p then apply_lemma (fun () -> `lem_false_and_p)
+            else if is_false q then apply_lemma (fun () -> `lem_p_and_false)
             else tiff
 
         | Or p q ->
-                 if is_true p then apply_lemma (quote lem_true_or_p)
-            else if is_true q then apply_lemma (quote lem_p_or_true)
-            else if is_false p then apply_lemma (quote lem_false_or_p)
-            else if is_false q then apply_lemma (quote lem_p_or_false)
+                 if is_true p then apply_lemma (fun () -> `lem_true_or_p)
+            else if is_true q then apply_lemma (fun () -> `lem_p_or_true)
+            else if is_false p then apply_lemma (fun () -> `lem_false_or_p)
+            else if is_false q then apply_lemma (fun () -> `lem_p_or_false)
             else tiff
 
         | Implies p q ->
-                 if is_true p then apply_lemma (quote lem_true_imp_p)
-            else if is_true q then apply_lemma (quote lem_p_imp_true)
-            else if is_false p then apply_lemma (quote lem_false_imp_p)
+                 if is_true p then apply_lemma (fun () -> `lem_true_imp_p)
+            else if is_true q then apply_lemma (fun () -> `lem_p_imp_true)
+            else if is_false p then apply_lemma (fun () -> `lem_false_imp_p)
             else tiff
 
         | Forall b p ->
-                 if is_true p then apply_lemma (quote lem_fa_true)
-            else if is_false p then or_else (apply_lemma (quote lem_fa_false);; inhabit) tiff
+                 if is_true p then apply_lemma (fun () -> `lem_fa_true)
+            else if is_false p then or_else (apply_lemma (fun () -> `lem_fa_false);; inhabit) tiff
             else tiff
 
         | Exists b p ->
-                 if is_false p then apply_lemma (quote lem_ex_false)
-            else if is_true  p then or_else (apply_lemma (quote lem_ex_true);; inhabit) tiff
+                 if is_false p then apply_lemma (fun () -> `lem_ex_false)
+            else if is_true  p then or_else (apply_lemma (fun () -> `lem_ex_true);; inhabit) tiff
             else tiff
 
         | Not p ->
-                 if is_true p then apply_lemma (quote lem_neg_true)
-            else if is_false p then apply_lemma (quote lem_neg_false)
+                 if is_true p then apply_lemma (fun () -> `lem_neg_true)
+            else if is_false p then apply_lemma (fun () -> `lem_neg_false)
             else tiff
 
         | Iff p q ->
             // After applying the lemma, we might still have more simpl to do,
             // so add an intermediate step.
             step;;
-                 if is_true p then apply_lemma (quote lem_true_iff_p)
-            else if is_true q then apply_lemma (quote lem_p_iff_true)
-            else if is_false p then apply_lemma (quote lem_false_iff_p)
-            else if is_false q then apply_lemma (quote lem_p_iff_false)
+                 if is_true p then apply_lemma (fun () -> `lem_true_iff_p)
+            else if is_true q then apply_lemma (fun () -> `lem_p_iff_true)
+            else if is_false p then apply_lemma (fun () -> `lem_false_iff_p)
+            else if is_false q then apply_lemma (fun () -> `lem_p_iff_false)
             else tiff;;
             simplify_point
 
@@ -241,30 +241,30 @@ and recurse : unit -> Tac unit = fun () -> (
     | Iff l r ->
         begin match term_as_formula' l with
         | And _ _ ->
-            seq (apply_lemma (quote and_cong)) simplify_point
+            seq (apply_lemma (fun () -> `and_cong)) simplify_point
 
         | Or _ _ ->
-            seq (apply_lemma (quote or_cong)) simplify_point
+            seq (apply_lemma (fun () -> `or_cong)) simplify_point
 
         | Implies _ _ ->
-            seq (apply_lemma (quote imp_cong)) simplify_point
+            seq (apply_lemma (fun () -> `imp_cong)) simplify_point
 
         | Forall _ _ ->
-            apply_lemma (quote fa_cong);;
+            apply_lemma (fun () -> `fa_cong);;
             intro;;
             simplify_point
 
         | Exists _ _ ->
-            apply_lemma (quote ex_cong);;
+            apply_lemma (fun () -> `ex_cong);;
             intro;;
             simplify_point
 
         | Not _ ->
-            apply_lemma (quote neg_cong);;
+            apply_lemma (fun () -> `neg_cong);;
             simplify_point
 
         | Iff _ _ ->
-            seq (apply_lemma (quote iff_cong)) simplify_point
+            seq (apply_lemma (fun () -> `iff_cong)) simplify_point
 
         | _ -> tiff
         end
@@ -275,5 +275,5 @@ val equiv : #p:Type -> #q:Type -> squash (p <==> q) -> squash q -> Lemma p
 let equiv #p #q _ _ = ()
 
 let simplify : tactic unit =
-    apply_lemma (quote equiv);;
+    apply_lemma (fun () -> `equiv);;
     simplify_point

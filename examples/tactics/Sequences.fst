@@ -6,7 +6,7 @@ open FStar.Seq
 
 let is_seq_t t : tactic bool = 
     let hd, args = collect_app t in
-    tseq <-- quote seq; //Somehow, tseq ends up as (seq u#0), when we expect it to be (seq u#?), i.e., a unification variable
+    tseq <-- (fun () -> `seq);
     print ("This is the quoted term: " ^ (term_to_string tseq));;
     print ("This is hd: " ^ (term_to_string hd));;
     return (term_eq tseq hd)
@@ -43,7 +43,7 @@ let try_unref_eq : tactic unit =
   | Comp (Eq (Some t)) l r ->
     begin match inspect t with
     | Tv_Refine _ _ ->
-        apply_lemma (quote unrefine_eq_lem);;
+        apply_lemma (fun () -> `unrefine_eq_lem);;
         norm []
     | _ ->
         fail "done"
@@ -67,7 +67,7 @@ let sequence_pruning =
     if b
     then (prune_for_seq ;; 
           dump "After pruning" ;;
-          apply_lemma (quote lemma_eq_elim)) //ok, we have a sequence equality; we're going to try to process it
+          apply_lemma (fun () -> `lemma_eq_elim)) //ok, we have a sequence equality; we're going to try to process it
     else fail "Not a sequence" //don't know about this goal, leave it untouched
   | _ -> fail "Not a sequence"
 

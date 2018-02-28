@@ -12,7 +12,7 @@ let tau : tactic unit =
     and_elim (pack (Tv_Var h));;
     h1 <-- implies_intro;
     implies_intro;;
-    apply (quote (FStar.Squash.return_squash));;
+    apply (fun () -> `FStar.Squash.return_squash);;
     exact (return (pack (Tv_Var h1)));;
     qed
 

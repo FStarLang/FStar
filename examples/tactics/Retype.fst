@@ -12,7 +12,7 @@ assume val l : unit -> Lemma (p == r)
 assume val l2 : unit -> Lemma (requires r) (ensures q)
 
 let assumption' : tactic unit =
-    apply_raw (quote FStar.Squash.return_squash);;
+    apply_raw (fun () -> `FStar.Squash.return_squash);;
     assumption
 
 let tau : tactic unit =
