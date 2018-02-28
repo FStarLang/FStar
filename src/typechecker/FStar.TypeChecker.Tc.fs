@@ -1760,28 +1760,7 @@ let extract_interface (env:env) (m:modul) :modul =
    *                                                                  rest is the type annotation we extracted, if at all
    *)
   let extract_lb_annotation (lb:letbinding) (lid:lident) (r:Range.range) :letbinding * option<(univ_names * either<comp,typ>)> =
-    //first see if we have seen a val declaration for this let, if so, take the type from there
-    let opt = List.tryFind (fun (l, _, _) -> lid_equals lid l) !val_typs in
-    if is_some opt then
-      let _, uvs, t = opt |> must in
-      //annotate the letbinding with this type, so that if this letbinding is added to the iface later, it has the correct type
-      { lb with lbunivs = uvs; lbdef = ascribe lb.lbdef (Inl t, None) }, Some (uvs, Inr t)  //since we are pre-typechecking, annotating means adding ascription to the lbdef
-    else
-      //look at lbtyp
-      match (SS.compress lb.lbtyp).n with
-      | Tm_unknown ->  //unknown, so get into the body
-        (match (SS.compress lb.lbdef).n with
-         | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inl c)  //comp annotation
-         | Tm_ascribed (_, (Inl t, _), _) -> lb, Some (lb.lbunivs, Inr t)  //typ annotation
-         | Tm_abs (bs, e, _) ->  //it's a lambda
-           (match (SS.compress e).n with
-            | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has the comp annotation
-            | Tm_ascribed (_, (Inl t, _), _) ->
-              let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
-              lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has t, we add top-level effect
-            | _ -> lb, None)  //can't get the type of the letbinding
-         | _ -> lb, None)  //can't get the type
-      | _ -> lb, Some (lb.lbunivs, Inr lb.lbtyp)  //take whatever is annotated
+    lb, Some (lb.lbunivs, Inr lb.lbtyp)
   in
 
   (*
@@ -1905,8 +1884,9 @@ and finish_partial_modul (loading_from_cache:bool) (env0:env) (en:env) (m:modul)
 
     //if true then BU.print2 "Module %s before extraction:\n%s" modul.name.str (Syntax.Print.modul_to_string modul);
     let modul_iface = extract_interface env0 m in
-    if true then BU.print2 "Extracting and type checking module %s interface:\n%s" m.name.str
-                           (if Options.dump_module m.name.str then (Syntax.Print.modul_to_string modul_iface) else "");
+    BU.print3 "Extracting and type checking module %s interface\n%s\n%s\n" m.name.str
+              (if Options.dump_module m.name.str then ("from: " ^ (Syntax.Print.modul_to_string m)) else "")
+              (if Options.dump_module m.name.str then ("to: " ^ (Syntax.Print.modul_to_string modul_iface)) else "");
     let env0 = { env0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul env0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
