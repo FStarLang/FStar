@@ -574,7 +574,7 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 #reset-options "--max_fuel 0 --max_ifuel 0"
-#set-options "--normalize_pure_terms_for_extraction"
+#set-options "--normalize_pure_terms_for_extraction --z3rlimit 100"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -586,7 +586,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-#set-options "--z3rlimit 128"
+#set-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 0"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
@@ -1082,6 +1082,7 @@ let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   product_bound x y (pow2 n);
   pow2_div_bound #(n+n) (x * y) n
 
+#set-options "--z3rlimit 100"
 let mul_wide (x y:U64.t) : Pure t
   (requires True)
   (ensures (fun r -> v r == U64.v x * U64.v y)) =

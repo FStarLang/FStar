@@ -303,6 +303,133 @@
       ],
       0,
       "51a7c87ada1376536c7356fe91ea7a3b"
+    ],
+    [
+      "FStar.DependentMap.restrict",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqFStar.DependentMap_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "08a1c76651811bfbfe71c8739e4eee00"
+    ],
+    [
+      "FStar.DependentMap.sel_restrict",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqFStar.DependentMap_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "b32d33c463822787188836bac73a293e"
+    ],
+    [
+      "FStar.DependentMap.concat_value",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "ed0de2dcd34b93827029682490b4ff4c"
+    ],
+    [
+      "FStar.DependentMap.concat_mappings",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "constructor_distinct_FStar.Pervasives.Inl",
+        "constructor_distinct_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.DependentMap.concat_value",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_FStar.Pervasives.Inl__a",
+        "projection_inverse_FStar.Pervasives.Inl__b",
+        "projection_inverse_FStar.Pervasives.Inl_v",
+        "projection_inverse_FStar.Pervasives.Inr_v"
+      ],
+      0,
+      "f07532779e9d418ad272130754203ec9"
+    ],
+    [
+      "FStar.DependentMap.concat",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either_haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "b5e6cab548c3621da91859ef94cbd158"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_l",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either_haseq",
+        "constructor_distinct_FStar.Pervasives.Inl",
+        "equation_FStar.DependentMap.concat_value", "equation_Prims.eqtype",
+        "projection_inverse_FStar.Pervasives.Inl__a",
+        "projection_inverse_FStar.Pervasives.Inl__b",
+        "projection_inverse_FStar.Pervasives.Inl_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.DependentMap.sel"
+      ],
+      0,
+      "ccdcde184055e62af7697b2e2414db18"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_r",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either_haseq",
+        "constructor_distinct_FStar.Pervasives.Inr",
+        "equation_FStar.DependentMap.concat_value", "equation_Prims.eqtype",
+        "projection_inverse_FStar.Pervasives.Inr__a",
+        "projection_inverse_FStar.Pervasives.Inr__b",
+        "projection_inverse_FStar.Pervasives.Inr_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.DependentMap.sel"
+      ],
+      0,
+      "02a4ce8ee1c5ff9c96acd678c47b8301"
+    ],
+    [
+      "FStar.DependentMap.sel_rename",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "equation_FStar.DependentMap.rename_value",
+        "typing_FStar.DependentMap.sel"
+      ],
+      0,
+      "5072aa9faa27282efbc664023595d064"
     ]
   ]
 ]

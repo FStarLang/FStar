@@ -137,6 +137,21 @@
       ],
       0,
       "44845e16e26e13fe20974bf16837974f"
+    ],
+    [
+      "FStar.MRef.lemma_functoriality",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.spred",
+        "equation_FStar.MRef.stable",
+        "refinement_interpretation_FStar.MRef_Tm_refine_622e5d71d43c090771b195939447feeb",
+        "token_correspondence_FStar.MRef.stable",
+        "token_correspondence_FStar.Preorder.stable"
+      ],
+      0,
+      "b756c8bb552f4b55b4ec92f8a7c6d674"
     ]
   ]
 ]

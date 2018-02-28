@@ -313,6 +313,24 @@
       ],
       0,
       "86cbaafd4486065d886e30931c7f4bcd"
+    ],
+    [
+      "FStar.Map.lemma_ContainsDom",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "a19aa711e3c98467f375e206d80b7900"
+    ],
+    [
+      "FStar.Map.lemma_equal_intro",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "9e86975043b127f2468712be307897e6"
     ]
   ]
 ]

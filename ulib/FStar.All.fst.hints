@@ -9,6 +9,15 @@
       [ "@query" ],
       0,
       "8096b61689e7433b883243e87edc500d"
+    ],
+    [
+      "FStar.All.uu___is_Failure",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0640615e8fb2ebb2e6730b3df5e8952a"
     ]
   ]
 ]

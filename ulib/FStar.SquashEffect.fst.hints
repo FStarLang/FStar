@@ -30,6 +30,33 @@
       [ "@query" ],
       0,
       "9485bc95b80569fd94bc3a37bf3bb151"
+    ],
+    [
+      "FStar.SquashEffect.resquash'",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e285337e7785d09cc3cea702a2c1191f"
+    ],
+    [
+      "FStar.SquashEffect.return_squash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "592e154a78025056308b93b2518cc6ab"
+    ],
+    [
+      "FStar.SquashEffect.bind_squash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6dd08634a2480d503d617270fc16c07d"
     ]
   ]
 ]

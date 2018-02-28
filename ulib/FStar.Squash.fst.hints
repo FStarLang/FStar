@@ -50,6 +50,46 @@
       ],
       0,
       "0dde3973dea4d13e5bfdbeb6c85fa844"
+    ],
+    [
+      "FStar.Squash.return_squash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0c3368feb4ef80c6c3d8fa2018f09a6e"
+    ],
+    [
+      "FStar.Squash.get_proof",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cfd17420c39127ffb0de2780ac728176"
+    ],
+    [
+      "FStar.Squash.proof_irrelevance",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_inversion"
+      ],
+      0,
+      "7bdb04c77d72ca1d5f848dd5699a82d3"
+    ],
+    [
+      "FStar.Squash.proof_irrelevance",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b0238172b44d89d5a09c27822c92487c"
     ]
   ]
 ]

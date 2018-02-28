@@ -107,6 +107,58 @@
       [ "@query", "equation_FStar.OrdSet.equal" ],
       0,
       "14d153c5a05b42c9555d87719e645f9d"
+    ],
+    [
+      "FStar.OrdSetProps.fold",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1a2fb9ff142e786c0454c22b5265b901_4",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
+        "binder_x_a3bd20a0deb77a7f7700bf8adf269959_6", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "equation_Prims.nat", "lemma_FStar.OrdSet.choose_s",
+        "lemma_FStar.OrdSet.eq_remove", "lemma_FStar.OrdSet.hasEq_ordset",
+        "lemma_FStar.OrdSet.mem_remove", "lemma_FStar.OrdSet.mem_singleton",
+        "lemma_FStar.OrdSet.mem_union", "lemma_FStar.OrdSet.size_remove",
+        "lemma_FStar.OrdSet.size_singleton", "lemma_FStar.OrdSet.size_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.OrdSet.choose", "typing_FStar.OrdSet.remove",
+        "typing_FStar.OrdSet.singleton", "typing_FStar.OrdSet.size",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "54ca54a730287450904642ddadf3cb20"
+    ],
+    [
+      "FStar.OrdSetProps.union_lemma",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "6b69438ecaf0078ecc0a030b5e17d15e"
+    ],
+    [
+      "FStar.OrdSetProps.union_lemma'",
+      3,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "a90598f51f0f35722b325502f4fa131f"
     ]
   ]
 ]

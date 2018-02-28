@@ -1044,6 +1044,176 @@
       ],
       0,
       "0555dc8aa79ee3a01881d6c44598267f"
+    ],
+    [
+      "FStar.OrdMap.map_t",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "26646a1c7378449bbb6964bd9d87e711"
+    ],
+    [
+      "FStar.OrdMap.const_on",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "c863b6be2d90da4111702e1021c84891"
+    ],
+    [
+      "FStar.OrdMap.insert",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.OrdMap.cmp",
+        "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order",
+        "refinement_interpretation_FStar.OrdMap_Tm_refine_f1d03c53111f5957ece8bf1c261fee93"
+      ],
+      0,
+      "58c6573f1663b79dc4d38b338f4b051e"
+    ],
+    [
+      "FStar.OrdMap.dom",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "2ddefdcc490d6fa614d9c54913783ebf"
+    ],
+    [
+      "FStar.OrdMap.sel_contains",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "fa0ded759d751f4ac84b9383ef66b166"
+    ],
+    [
+      "FStar.OrdMap.contains_upd1",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "fc97229534a4c7de5e8d12015e4bd74f"
+    ],
+    [
+      "FStar.OrdMap.contains_upd2",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "b07819bb93758f84d0b3853e8ca84fb0"
+    ],
+    [
+      "FStar.OrdMap.contains_remove",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "5757733c554b07d8d9702fb862d228f8"
+    ],
+    [
+      "FStar.OrdMap.dom_empty_helper",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.OrdMap.cmp",
+        "equation_FStar.OrdMap.total_order", "equation_FStar.OrdSet.cmp",
+        "equation_FStar.OrdSet.total_order",
+        "lemma_FStar.OrdSet.hasEq_ordset",
+        "refinement_interpretation_FStar.OrdMap_Tm_refine_f1d03c53111f5957ece8bf1c261fee93",
+        "refinement_interpretation_FStar.OrdSet_Tm_refine_6256d572f4d48024e68a9fc798700b8a"
+      ],
+      0,
+      "5780a690a5c4142a0963baee7a06ce3d"
+    ],
+    [
+      "FStar.OrdMap.choose_m",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b55c17329289a4438c5f7e22fc7ef0a1"
+    ],
+    [
+      "FStar.OrdMap.size_empty",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "4d50672cb6d54b6e9f524dfc43d9b773"
+    ],
+    [
+      "FStar.OrdMap.size_remove",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "e757f4b153b5f669d26d7287651b48e0"
+    ],
+    [
+      "FStar.OrdMap.dom_lemma",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "64c77b085a2781d79bb4344edaabd9fb"
+    ],
+    [
+      "FStar.OrdMap.contains_const_on",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "f94fc0417ff4aacb20b393cedcbed12a"
+    ],
+    [
+      "FStar.OrdMap.select_const_on",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.OrdMap.cmp",
+        "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order",
+        "lemma_FStar.OrdMap.sel_contains",
+        "refinement_interpretation_FStar.OrdMap_Tm_refine_f1d03c53111f5957ece8bf1c261fee93",
+        "typing_FStar.OrdMap.const_on"
+      ],
+      0,
+      "278372c073d256d67c074bcaafe4ba9a"
     ]
   ]
 ]

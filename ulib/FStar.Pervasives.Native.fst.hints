@@ -104,6 +104,110 @@
       [ "@query" ],
       0,
       "6e70ec5bcc1eb1982176c03cadba5a3a"
+    ],
+    [
+      "FStar.Pervasives.Native.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "45078348f47efb9ebfdc8e9fcc339f30"
+    ],
+    [
+      "FStar.Pervasives.Native.uu___is_None",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "55c58ca6d6108c380bfe26ddc53dbf82"
+    ],
+    [
+      "FStar.Pervasives.Native.uu___is_Some",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "42a78fb314062f15363915ca29f69dff"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__Some__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
+      ],
+      0,
+      "cf39173d121db0da3c0659014c3598d1"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cc8dcc566c96967058afc99c00a2911d"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "20851e1372683f3204bf672340aa7ccb"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a7f368aefdb3a3b46dd30f40b9280bf1"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "76e4aae2fe048c5468ecd112dd9aaad1"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8b24ac4d9d3d837e7025c8f167dcf2b5"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "98b5cb54851ff9e24f82e6a11841a79d"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f102e67a6c6787fd79ec17b9224333f9"
     ]
   ]
 ]

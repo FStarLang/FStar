@@ -17,7 +17,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "72fd05885ac3400981be3df5d044b3c3"
+      "49b0815c5fecf50a48bd01351a3f82a5"
     ],
     [
       "FStar.Tactics.Arith.split_arith",
@@ -38,7 +38,25 @@
         "equation_FStar.Tactics.Logic.split", "unit_typing"
       ],
       0,
-      "95c0b83df2022600335ee12de2e09819"
+      "bb2503d387f468bc7601f83cb67674a2"
+    ],
+    [
+      "FStar.Tactics.Arith.is_arith_goal",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.Reflection.Arith.run_tm",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "kinding_FStar.Reflection.Arith.prop@tok",
+        "typing_FStar.Reflection.Arith.is_arith_prop",
+        "typing_FStar.Reflection.Arith.run_tm"
+      ],
+      0,
+      "1f127394519dcf6808c8581562c8e1f6"
     ]
   ]
 ]

@@ -31,6 +31,24 @@
       ],
       0,
       "b78064bffbfc053f77827b4ec5c81a40"
+    ],
+    [
+      "FStar.Reader.f",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "2da6e6fffad965fd4637d9464154f8a0"
+    ],
+    [
+      "FStar.Reader.g",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8220567ebd4917802fa62134f29a9b18"
     ]
   ]
 ]
