@@ -7651,7 +7651,6 @@ let (unfold_whnf :
     fun t  ->
       normalize
         [Primops;
-        Simplify;
         Weak;
         HNF;
         UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
