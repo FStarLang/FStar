@@ -1594,18 +1594,16 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     let cfg =
       if cfg.steps.pure_subterms_within_computations
       then
-        (* KM : This case should be tailored for extraction but I'm not exactly sure that the logic here is correct *)
-        (* Why are we dropping previous steps arbitrarily ? This will silently break any extension of the steps *)
-        (* GM: Also worried about this *)
-        { cfg with
-          steps = to_fsteps [PureSubtermsWithinComputations;
-                             Primops;
-                             AllowUnboundUniverses;
-                             EraseUniverses;
-                             Exclude Zeta;
-                             Inlining];
-          delta_level=[Env.Inlining; Env.Eager_unfolding_only]
-        }
+        let new_steps = [PureSubtermsWithinComputations;
+                         Primops;
+                         AllowUnboundUniverses;
+                         EraseUniverses;
+                         Exclude Zeta;
+                         Inlining]
+        in { cfg with
+               steps = List.fold_right fstep_add_one new_steps cfg.steps;
+               delta_level = [Env.Inlining; Env.Eager_unfolding_only]
+           }
       else
         { cfg with steps = { cfg.steps with zeta = false } }
     in
