@@ -279,6 +279,19 @@ let (fstar_refl_tdataconstr :
     let uu____746 = fstar_refl_lid s  in
     FStar_Syntax_Syntax.tdataconstr uu____746
   
+let (fstar_refl_inspect_lid : FStar_Ident.lident) =
+  fstar_refl_basic_lid "inspect" 
+let (fstar_refl_inspect : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar fstar_refl_inspect_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
+  
+let (fstar_refl_pack_lid : FStar_Ident.lident) = fstar_refl_basic_lid "pack" 
+let (fstar_refl_pack : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar fstar_refl_pack_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
+  
 let (fstar_refl_aqualv : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "aqualv" 
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
