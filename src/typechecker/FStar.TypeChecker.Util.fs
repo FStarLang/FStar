@@ -1419,8 +1419,8 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.Eager_unfolding; N.NoFullNorm] env c
-                 else Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm] env c in
+                 then Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.NoDeltaSteps] env c
+                 else Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.NoDeltaSteps] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
