@@ -318,6 +318,12 @@ let find_t env x =
 let add_binders env binders =
   List.fold_left (fun env (name, _) -> extend env name false) env binders
 
+let rec is_unit_type = function
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") -> true
+  | MLTY_Fun (_, E_GHOST, _) -> true
+  | MLTY_Fun (_, E_PURE, t) -> is_unit_type t
+  | _ -> false
+
 (* Actual translation ********************************************************)
 
 let rec translate (MLLib modules): list<file> =
@@ -410,10 +416,15 @@ and translate_let env flavor lb: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
-      let meta = match eff, t with
-        | E_GHOST, _
-        | E_PURE, TUnit -> MustDisappear :: translate_flags meta
-        | _ -> translate_flags meta
+      let meta =
+        let is_unit = match eff with
+        | E_GHOST -> true
+        | E_PURE -> is_unit_type t0
+        | _ -> false
+        in
+        if is_unit
+        then MustDisappear :: translate_flags meta
+        else translate_flags meta
       in
       if assumed then
         if List.length tvars = 0 then
@@ -442,6 +453,11 @@ and translate_let env flavor lb: option<decl> =
     } ->
       // Case 2: this is a global
       let meta = translate_flags meta in
+      let meta =
+        if is_unit_type t
+        then MustDisappear :: meta
+        else meta
+      in
       let env = List.fold_left (fun env name -> extend_t env name) env tvars in
       let t = translate_type env t in
       let name = env.module_name, name in
