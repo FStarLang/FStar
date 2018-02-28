@@ -2224,7 +2224,7 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [Primops; Simplify; Weak; HNF; UnfoldUntil Delta_constant; Beta] env t
+let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
