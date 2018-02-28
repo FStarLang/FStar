@@ -8,8 +8,6 @@ open FStar.Tactics
  * Separation logic tactics for manipulating wps of the deeply embedded languages of Lang
  *)
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-
 let unfold_fns :list string = [
   "wp_command";
   "wpsep_command";
