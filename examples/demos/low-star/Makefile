@@ -1,6 +1,8 @@
+FSTAR_HOME=../../..
+include ../../Makefile.include
 FSTAR_FILES := Demo.fst
 FSTAR_FLAGS +=--cache_checked_modules --use_hints --use_hint_hashes --use_two_phase_tc true --use_extracted_interfaces $(OTHERFLAGS)
-FSTAR = fstar $(FSTAR_FLAGS)
+FSTAR := $(FSTAR) $(FSTAR_FLAGS)
 
 all: $(addsuffix .checked, $(FSTAR_FILES))
 
@@ -29,4 +31,4 @@ extract-tailcalls:
 	@krml -skip-compilation -ftail-calls Demo.fst -tmpdir out | grep "wrote out"
 
 clean:
-	rm -rf *.c *.h *~ *.checked *.checked.lax *.krml .depend out *.hints
+	rm -rf *.c *.h *~ *.checked *.checked.lax *.krml .depend out
