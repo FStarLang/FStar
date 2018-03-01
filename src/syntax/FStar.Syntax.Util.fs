@@ -110,8 +110,7 @@ let rec unmeta_safe e =
             begin match m with
             | Meta_monadic _
             | Meta_monadic_lift _
-            | Meta_quoted _
-            | Meta_alien _ ->
+            | Meta_quoted _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
             end
@@ -1593,17 +1592,6 @@ let is_fvar lid t =
 
 let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
-
-(* Spooky behaviours are possible with this, proceed with caution *)
-
-let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
-    mk (Tm_meta (tun, Meta_alien (mkdyn b, s, ty))) None (match r with | Some r -> r | None -> dummyRange)
-
-let un_alien (t : term) : dyn =
-    let t = Subst.compress t in
-    match t.n with
-    | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
-    | _ -> failwith "unexpected: term was not an alien embedding"
 
 ///////////////////////////////////////////
 // Setting pragmas

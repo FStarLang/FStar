@@ -1514,9 +1514,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(m,r)::stack) head
 
-                      | Meta_alien _ ->
-                        rebuild cfg env stack t
-
                       | Meta_pattern args ->
                           let args = norm_pattern_args cfg env args in
                           norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
@@ -2395,7 +2392,6 @@ and elim_delayed_subst_meta = function
   | Meta_pattern args -> Meta_pattern(List.map elim_delayed_subst_args args)
   | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
   | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
-  | Meta_alien(d, s, t) -> Meta_alien(d, s, elim_delayed_subst_term t)
   | m -> m
 
 and elim_delayed_subst_args args =

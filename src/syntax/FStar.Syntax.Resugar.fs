@@ -719,14 +719,6 @@ let rec resugar_term (t : S.term) : A.term =
           mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i ->
           resugar_meta_desugared i
-      | Meta_alien (_, s, _) ->
-          begin match e.n with
-          | Tm_unknown ->
-              mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
-          | _ ->
-              E.log_issue e.pos (E.Warning_MetaAlienNotATmUnknown, "Meta_alien was not a Tm_unknown");
-              resugar_term e
-          end
       | Meta_named t ->
           mk (A.Name t)
       | Meta_monadic (name, t)

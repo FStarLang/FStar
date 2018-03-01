@@ -756,12 +756,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         then Term.mk_Term_unit, []
         else encode_term t env
 
-      | Tm_meta ({n = Tm_unknown}, Meta_alien (obj, desc, ty)) ->
-        let tsym = varops.fresh "t", Term_sort in
-        let t = mkFreeV tsym in
-        let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "alien term (%s)" desc)) in
-        t, [decl]
-
       | Tm_meta({n = _}, Meta_quoted (qt, qi)) ->
         // Inspect the term and encode its view, recursively.
         // Quoted terms are, in a way, simply an optimization.

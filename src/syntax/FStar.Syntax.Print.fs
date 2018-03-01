@@ -273,8 +273,6 @@ and term_to_string x =
 
       | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
-      | Tm_meta(t, Meta_alien(_, s, _)) -> U.format1 "(Meta_alien \"%s\")" s
-
       | Tm_meta(t, Meta_labeled(l,r,b)) ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
 
