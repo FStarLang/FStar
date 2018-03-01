@@ -178,7 +178,7 @@ let bv_tac ()  =
 let bv_tac_lt n =
   // apply_lemma (fun () -> `(lt_to_bv #n));;
   // dump "after lt_to_bv";;
-  apply_lemma (fun () -> `(trans_lt2 #n));;
+  apply_lemma (quote (trans_lt2 #n));;
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
