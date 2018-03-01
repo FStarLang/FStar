@@ -5189,7 +5189,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                             (def_check_closed (p_loc orig)
                                                "solve_t_flex_rigid.subterms"
                                                uv_sol;
-                                             FStar_Syntax_Unionfind.change
+                                             FStar_Syntax_Util.set_uvar
                                                uvar uv_sol;
                                              FStar_Pervasives_Native.Some
                                                (xs1, c1)))
@@ -5298,7 +5298,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                             (def_check_closed (p_loc orig)
                                                "solve_t_flex_rigid.subterms"
                                                uv_sol;
-                                             FStar_Syntax_Unionfind.change
+                                             FStar_Syntax_Util.set_uvar
                                                uvar uv_sol;
                                              FStar_Pervasives_Native.Some
                                                (xs1, c1)))
