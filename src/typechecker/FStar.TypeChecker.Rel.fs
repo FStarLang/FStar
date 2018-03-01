@@ -1921,7 +1921,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              let k' = U.arrow xs c in
                              let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
                              def_check_closed (p_loc orig) "solve_t_flex_rigid.subterms" uv_sol;
-                             UF.change uvar uv_sol;
+                             U.set_uvar uvar uv_sol;
                              Some (xs, c))
                         | _ -> None
                        end
