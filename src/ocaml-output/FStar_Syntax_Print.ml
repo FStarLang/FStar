@@ -1564,3 +1564,10 @@ let set_to_string :
            FStar_Util.string_builder_append strb "}";
            FStar_Util.string_of_string_builder strb)
   
+let (bvs_to_string :
+  Prims.string -> FStar_Syntax_Syntax.bv Prims.list -> Prims.string) =
+  fun sep  ->
+    fun bvs  ->
+      let uu____2786 = FStar_List.map FStar_Syntax_Syntax.mk_binder bvs  in
+      binders_to_string sep uu____2786
+  

@@ -3619,9 +3619,9 @@ let fail_or :
         FStar_Ident.lident -> 'a
   =
   fun env  ->
-    fun lookup  ->
+    fun lookup1  ->
       fun lid  ->
-        let uu____10638 = lookup lid  in
+        let uu____10638 = lookup1 lid  in
         match uu____10638 with
         | FStar_Pervasives_Native.None  ->
             let opened_modules =
@@ -3683,9 +3683,9 @@ let fail_or2 :
     (FStar_Ident.ident -> 'a FStar_Pervasives_Native.option) ->
       FStar_Ident.ident -> 'a
   =
-  fun lookup  ->
+  fun lookup1  ->
     fun id1  ->
-      let uu____10694 = lookup id1  in
+      let uu____10694 = lookup1 id1  in
       match uu____10694 with
       | FStar_Pervasives_Native.None  ->
           FStar_Errors.raise_error
