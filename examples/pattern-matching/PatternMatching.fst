@@ -702,8 +702,8 @@ let matching_problem_of_abs (tm: term)
 let arg_type_of_binder_kind binder_kind : Tac term =
   match binder_kind with
   | ABKVar typ -> typ
-  | ABKHyp -> quote binder ()
-  | ABKGoal -> quote unit ()
+  | ABKHyp -> `binder
+  | ABKGoal -> `unit
 
 (** Retrieve the function used to locate a value for a given abspat binder. **)
 let locate_fn_of_binder_kind binder_kind =
@@ -738,7 +738,7 @@ quoted function taking a matching solution and running its body with appropriate
 bindings. **)
 let specialize_abspat_continuation (continuation: abspat_continuation)
     : Tac term =
-  let solution_binder = fresh_binder (quote matching_solution ()) in
+  let solution_binder = fresh_binder (`matching_solution) in
   let solution_term = pack (Tv_Var solution_binder) in
   let applied = specialize_abspat_continuation' continuation solution_term in
   let thunked = pack (Tv_Abs solution_binder applied) in
@@ -771,8 +771,7 @@ let tinterp_abspat_continuation a (continuation: abspat_continuation)
 (** Construct a matching problem from an abspat. **)
 let interp_abspat #a (abspat: a)
     : Tac (matching_problem * abspat_continuation) =
-  let abs = quote abspat () in
-  matching_problem_of_abs abs
+  matching_problem_of_abs (quote abspat ())
 
 (** Construct an solve a matching problem.
 This higher-order function isn't very usable on its own — it's mostly a
@@ -845,7 +844,7 @@ open FStar.Tactics
 
 let fetch_eq_side' #a : tactic (term * term) =
   gpm (fun (left right: a) (g: goal (squash (left == right))) ->
-         (quote left (), quote right ()) <: Tac (term * term))
+         (`left, `right))
 
 let _ =
   assert_by_tactic (1 + 1 == 2)
@@ -857,7 +856,7 @@ let _ =
   admit (); // typing a term fails due to #1269 while running the tactic
   assert_by_tactic (1 + 1 == 2)
     (gpm (fun (left right: int) (g: goal (squash (left == right))) ->
-            let l, r = quote left (), quote right () in
+            let l, r = `left, `right in
             print (term_to_string l ^ " / " ^ term_to_string r) () <: Tac unit))
 
 /// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
