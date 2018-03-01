@@ -416,8 +416,8 @@
         "@MaxIFuel_assumption", "@query",
         "LowParse.Spec.Base_pretyping_e24e8cabdb5c58cdc1d812d5f6f285ec",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_LowParse.Spec.Base.parser_subkind_haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_LowParse.Spec.Base.parser_subkind__uu___haseq",
         "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
         "data_typing_intro_LowParse.Spec.Base.ParserConsumesAll@tok",
         "equation_FStar.UInt32.n", "equation_Prims.nat",
@@ -427,7 +427,7 @@
         "kinding_LowParse.Spec.Base.parser_subkind@tok"
       ],
       0,
-      "32866c6e9e223b88de32e18303e9b1a0"
+      "cd6b61b7754e4b892e95d4f1d20437a4"
     ],
     [
       "LowParse.Spec.Base.parser_kind_prop_ext",
@@ -577,8 +577,8 @@
         "@MaxIFuel_assumption", "@query",
         "LowParse.Spec.Base_pretyping_e24e8cabdb5c58cdc1d812d5f6f285ec",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_LowParse.Spec.Base.parser_subkind_haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_LowParse.Spec.Base.parser_subkind__uu___haseq",
         "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "data_elim_LowParse.Spec.Base.Mkparser_kind_",
@@ -610,7 +610,7 @@
         "typing_LowParse.Spec.Base.__proj__Mkparser_kind___item__parser_kind_high"
       ],
       0,
-      "231fbd00b8a29ab801ea8168a28fbf88"
+      "df2e8baf90d9a25f447191efb21b1317"
     ],
     [
       "LowParse.Spec.Base.default_parser_kind",
@@ -719,13 +719,13 @@
       2,
       1,
       [
-        "@query", "assumption_LowParse.Spec.Base.parser_kind__haseq",
+        "@query", "assumption_LowParse.Spec.Base.parser_kind___uu___haseq",
         "equation_FStar.Pervasives.id",
         "equation_LowParse.Spec.Base.parser_kind", "equation_Prims.nat",
         "haseqLowParse.Spec.Base_Tm_refine_9fc4b705eaf2fe68d9cc8785e7df72bf"
       ],
       0,
-      "0d3f601acaee886e1596924f676928a5"
+      "e4085c44c2d9c06b6bb14f2b43c7a8e8"
     ],
     [
       "LowParse.Spec.Base.coerce",

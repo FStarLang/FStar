@@ -40,9 +40,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "06ea3e21393a5156830d4afd8d2f4e1a"
+      "a567e3f8ef28343f4b9d20ab65bd7a10"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -80,7 +80,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_FStar.UInt8.t_haseq",
+        "assumption_FStar.UInt8.t__uu___haseq",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.UInt8.byte", "equation_MAC.bytes",
@@ -100,7 +100,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "5619b78de512e6d2d9ace86c4596b8e0"
+      "930f896fb58f9815b75c0d40c73417d0"
     ]
   ]
 ]

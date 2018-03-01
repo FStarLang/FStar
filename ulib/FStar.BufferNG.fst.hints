@@ -11,7 +11,7 @@
         "equation_FStar.BufferNG.gsingleton_buffer_of_pointer"
       ],
       0,
-      "ea4b19193a02ef661b95d098e03d4985"
+      "f0729b4a071f8d76ea457b003d63852f"
     ],
     [
       "FStar.BufferNG.buffer_of_array_pointer",
@@ -23,7 +23,7 @@
         "equation_FStar.BufferNG.gbuffer_of_array_pointer"
       ],
       0,
-      "f2f35d05067e88c06dc40adf6c6f39ed"
+      "c089b7f25d95b75ea64c64b26483ec51"
     ],
     [
       "FStar.BufferNG.length_gsingleton_buffer_of_pointer",
@@ -38,7 +38,7 @@
         "lemma_FStar.Pointer.Base.buffer_length_gsingleton_buffer_of_pointer"
       ],
       0,
-      "6b0e84f55024f35961c62e88792bc166"
+      "42d6c36518230f5e9a551252c1f1a377"
     ],
     [
       "FStar.BufferNG.length_gbuffer_of_array_pointer",
@@ -53,7 +53,7 @@
         "lemma_FStar.Pointer.Base.buffer_length_gbuffer_of_array_pointer"
       ],
       0,
-      "504d7a87d5200a54bea03958bce8a905"
+      "eff681a94f397f92afea733d55e26ff1"
     ],
     [
       "FStar.BufferNG.live_gsingleton_buffer_of_pointer",
@@ -70,7 +70,7 @@
         "lemma_FStar.Pointer.Base.buffer_live_gsingleton_buffer_of_pointer"
       ],
       0,
-      "16cec85dd412c42c9732d2e760906c3f"
+      "9bfaf6c2506f955a5c8b1277f9cb188f"
     ],
     [
       "FStar.BufferNG.live_gbuffer_of_array_pointer",
@@ -90,7 +90,7 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_484a6e6064fc1ae01de63e2e98020bbf"
       ],
       0,
-      "8c6b0dddae52833e04b52b5eb4e6a858"
+      "ccb1db9093daf0015094831bf87f0828"
     ],
     [
       "FStar.BufferNG.frameOf_gsingleton_buffer_of_pointer",
@@ -105,7 +105,7 @@
         "lemma_FStar.Pointer.Base.frameOf_buffer_gsingleton_buffer_of_pointer"
       ],
       0,
-      "acf533107818da09ff7c077699e82fe0"
+      "c7cc33435fc2182810cf9408d145443d"
     ],
     [
       "FStar.BufferNG.frameOf_gbuffer_of_array_pointer",
@@ -120,7 +120,7 @@
         "lemma_FStar.Pointer.Base.frameOf_buffer_gbuffer_of_array_pointer"
       ],
       0,
-      "da3b958a5c1df2c1ecde028d848c66b2"
+      "1b2d0b740e085da9352ae0bfc87cd314"
     ],
     [
       "FStar.BufferNG.gsub",
@@ -132,7 +132,7 @@
         "equation_FStar.BufferNG.length"
       ],
       0,
-      "bc447cd2938e2fd8f37982be35f4dad0"
+      "2cdbf55c056e2686310eef201f91df9b"
     ],
     [
       "FStar.BufferNG.sub",
@@ -148,7 +148,7 @@
         "refinement_interpretation_FStar.BufferNG_Tm_refine_1ca287a63ccb1b6f58b142fb1f56c698"
       ],
       0,
-      "596146d1912b2a3d5d6eb3d983d2d1d8"
+      "90580cb5ab3b005bad3c77a9ba4b57cc"
     ],
     [
       "FStar.BufferNG.length_gsub",
@@ -165,7 +165,7 @@
         "lemma_FStar.Pointer.Base.buffer_length_gsub_buffer"
       ],
       0,
-      "9c21f780ad0f617b8ddc6e445ece0bd3"
+      "c15722e024ceddf51ef4c2338786ed65"
     ],
     [
       "FStar.BufferNG.live_gsub_equiv",
@@ -184,7 +184,7 @@
         "lemma_FStar.Pointer.Base.buffer_live_gsub_buffer_equiv"
       ],
       0,
-      "cabfec99052b25735ea8995d503e9309"
+      "422caeda17295caff06872b5efa02ca6"
     ],
     [
       "FStar.BufferNG.live_gsub_intro",
@@ -201,7 +201,7 @@
         "lemma_FStar.BufferNG.live_gsub_equiv"
       ],
       0,
-      "774088b75153c7dc624ccb94e0cc1946"
+      "c08a880f354b5511562e86420e5d6fb3"
     ],
     [
       "FStar.BufferNG.gsub_gsub",
@@ -232,7 +232,7 @@
         "typing_FStar.BufferNG.length", "typing_FStar.UInt32.v"
       ],
       0,
-      "6d31f8cc4424c21db85e7413f7e93102"
+      "8ee4bd5d38ce4b2204443fedb444a436"
     ],
     [
       "FStar.BufferNG.gsub_zero_length",
@@ -261,7 +261,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "8c92f67995ee7798c5f33582207c0d90"
+      "0bacd8e61f44679ac2881dc41a137e30"
     ],
     [
       "FStar.BufferNG.length_as_seq",
@@ -281,7 +281,7 @@
         "typing_FStar.BufferNG.length", "typing_FStar.UInt32.v"
       ],
       0,
-      "01e7a21f44163108b80a2325610671d2"
+      "a73ebbafe7433b4f387378ae7612b82e"
     ],
     [
       "FStar.BufferNG.as_seq_gsingleton_buffer_of_pointer",
@@ -301,7 +301,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c9eed5ca264b2ac22a20eb35fd1300e5"
+      "7b42f576dfc8a2cbaa0274059b4cab1e"
     ],
     [
       "FStar.BufferNG.as_seq_gbuffer_of_array_pointer",
@@ -319,7 +319,7 @@
         "typing_FStar.BufferNG.gbuffer_of_array_pointer"
       ],
       0,
-      "d5460c7380960c926d7e989f5f2edf07"
+      "7e44dd02a0a889eae1baf2bfe6a112f0"
     ],
     [
       "FStar.BufferNG.as_seq_gsub",
@@ -351,7 +351,7 @@
         "typing_FStar.UInt32.v", "unit_typing"
       ],
       0,
-      "13b81894bf3463aef9dc094d9f0e4a09"
+      "c9e22894fd80f1ec00d398233f7005aa"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell",
@@ -364,7 +364,7 @@
         "refinement_interpretation_FStar.BufferNG_Tm_refine_01903ba282f3516bd02e0a70ef3c98af"
       ],
       0,
-      "7fd548e095e0db28010d6488f480d8c9"
+      "8e8d84516db179695d8e2f95f5d9b213"
     ],
     [
       "FStar.BufferNG.pointer_of_buffer_cell",
@@ -380,7 +380,7 @@
         "refinement_interpretation_FStar.BufferNG_Tm_refine_5bd68c65f5987633010936f2d776087f"
       ],
       0,
-      "bb308a4d592ab1e64c9c87266381e3cc"
+      "86b313561d39cf0475cc64fc5a6d04e1"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell_gsub",
@@ -410,7 +410,7 @@
         "typing_FStar.BufferNG.length", "typing_FStar.UInt32.v"
       ],
       0,
-      "483e7e47d7df6a5281409319956fc9c3"
+      "a85e8f993156e85939c5a9bad3f73c9e"
     ],
     [
       "FStar.BufferNG.live_gpointer_of_buffer_cell",
@@ -429,7 +429,7 @@
         "lemma_FStar.Pointer.Base.live_gpointer_of_buffer_cell"
       ],
       0,
-      "4fd84e96e86fd9baf350bb0461f6c0e0"
+      "08c65772738c413daa91a3dc5a9b0b53"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell_gsingleton_buffer_of_pointer",
@@ -463,7 +463,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "c7b6680018e8bbf5cd48a0d06ef7f1bb"
+      "52c3526c66f353b61acad06cced65320"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell_gbuffer_of_array_pointer",
@@ -482,7 +482,7 @@
         "lemma_FStar.Pointer.Base.gpointer_of_buffer_cell_gbuffer_of_array_pointer"
       ],
       0,
-      "9dc5982dace93a0ce6faee6f1b5f739e"
+      "66288e9ae5595051db6d5844d6374ad0"
     ],
     [
       "FStar.BufferNG.gread_gpointer_of_buffer_cell",
@@ -514,7 +514,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "4ea15fbcfee394c2f84f6974419302f7"
+      "90f1e1ec72bbb561b0136efb1ad133f6"
     ],
     [
       "FStar.BufferNG.gread_gpointer_of_buffer_cell'",
@@ -545,7 +545,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "1d493e84f3b80894651ef16c0f03e816"
+      "8d24f4dded2aa16ce332d73411e3d219"
     ],
     [
       "FStar.BufferNG.gread_pointer_of_buffer_cell'",
@@ -574,7 +574,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "674d73c40fb0cbb796829e13eea9b2aa"
+      "4e00b66729de77803bf046da9b188396"
     ],
     [
       "FStar.BufferNG.readable_live",
@@ -590,7 +590,7 @@
         "lemma_FStar.Pointer.Base.buffer_readable_buffer_live"
       ],
       0,
-      "ed48d2c98209c6d5561ca924b8cce7d0"
+      "77dcc5aa9af9830e2188e413a069f4c8"
     ],
     [
       "FStar.BufferNG.readable_gsingleton_buffer_of_pointer",
@@ -607,7 +607,7 @@
         "lemma_FStar.Pointer.Base.buffer_readable_gsingleton_buffer_of_pointer"
       ],
       0,
-      "1a6408ccf75fa7f8157c3f6111282727"
+      "d60ddec2e6fc53fd158019e8e6e48208"
     ],
     [
       "FStar.BufferNG.readable_gbuffer_of_array_pointer",
@@ -624,7 +624,7 @@
         "lemma_FStar.Pointer.Base.buffer_readable_gbuffer_of_array_pointer"
       ],
       0,
-      "ff01a185b9935ef6e278346d6817c0ee"
+      "822cc078b4b0868c3a58f5bb6f48bf8d"
     ],
     [
       "FStar.BufferNG.readable_gsub",
@@ -643,7 +643,7 @@
         "lemma_FStar.Pointer.Base.buffer_readable_gsub_buffer"
       ],
       0,
-      "06e4dea60f962799a8fc48b4ecf86ce5"
+      "8eab111563f35b79ba7b2acf3b285607"
     ],
     [
       "FStar.BufferNG.readable_gpointer_of_buffer_cell",
@@ -662,7 +662,7 @@
         "lemma_FStar.Pointer.Base.readable_gpointer_of_buffer_cell"
       ],
       0,
-      "9f52cd3b47a78bb41f54d28decf849b8"
+      "d41cb24de49e8693ff481b36cbf75ddd"
     ],
     [
       "FStar.BufferNG.readable_intro",
@@ -678,7 +678,7 @@
         "fuel_guarded_inversion_FStar.UInt32.t_"
       ],
       0,
-      "48df8ec72b323e0e052dbfb65b14115e"
+      "d697a530d313cd6004be7fb2a5180c4d"
     ],
     [
       "FStar.BufferNG.read",
@@ -702,7 +702,7 @@
         "refinement_interpretation_FStar.BufferNG_Tm_refine_a1a47df36bb9fb07be03f331ce2f12d6"
       ],
       0,
-      "9f39a525e129d6203069064853f1d774"
+      "250f82191a1e028dab776a8480721b86"
     ],
     [
       "FStar.BufferNG.write",
@@ -734,7 +734,7 @@
         "typing_FStar.Pointer.Base.gpointer_of_buffer_cell"
       ],
       0,
-      "4e24403710915e0ef4b5526ccf955b57"
+      "dd722996d6c847d7031bce6f206d4217"
     ],
     [
       "FStar.BufferNG.gsub",
@@ -746,7 +746,7 @@
         "equation_FStar.BufferNG.length"
       ],
       0,
-      "a1b834f04d8b371046b928498494d352"
+      "c300243f74482416ad3fba57bdad9bc4"
     ],
     [
       "FStar.BufferNG.sub",
@@ -755,7 +755,7 @@
       1,
       [ "@query" ],
       0,
-      "fd7ddceaa1bf9192dfec347826b8a335"
+      "7eabe0659ad820aee8f18ca8007c8077"
     ],
     [
       "FStar.BufferNG.gsub_gsub",
@@ -777,7 +777,7 @@
         "typing_FStar.BufferNG.length", "typing_FStar.UInt32.v"
       ],
       0,
-      "612073f8b260389e9dc3a1bf2c817fb0"
+      "1a7b17e931fd0586f187dec1024efd28"
     ],
     [
       "FStar.BufferNG.gsub_zero_length",
@@ -789,7 +789,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c573b8b686749b09f8fc1f550055c1e6"
+      "3f2a7daffa6b137f3734fdd67d461c5c"
     ],
     [
       "FStar.BufferNG.length_as_seq",
@@ -798,7 +798,7 @@
       1,
       [ "@query" ],
       0,
-      "73bd02118c04f8ba61b87196b487e381"
+      "feae66c3194b1baae81bc6ad6e348808"
     ],
     [
       "FStar.BufferNG.as_seq_gbuffer_of_array_pointer",
@@ -811,7 +811,7 @@
         "lemma_FStar.Pointer.Base.buffer_as_seq_gbuffer_of_array_pointer"
       ],
       0,
-      "4694d1327a83e9f11d22f2da5fa7f958"
+      "2c449b900c7bb78e3abb94f3bd7f94d3"
     ],
     [
       "FStar.BufferNG.as_seq_gsub",
@@ -839,7 +839,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "05c34a09b79531778c4a92b05b870a05"
+      "2b8f51fc4be2454f59cc2175bae275a5"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell",
@@ -848,7 +848,7 @@
       1,
       [ "@query", "equation_FStar.BufferNG.length" ],
       0,
-      "4a9bf6047c2ef3c50754391c2bd66b8a"
+      "c2333665c2092a1a690fcff4e380081c"
     ],
     [
       "FStar.BufferNG.pointer_of_buffer_cell",
@@ -857,7 +857,7 @@
       1,
       [ "@query" ],
       0,
-      "39d51c3dae18f55e4feb10ea9045ff67"
+      "f1b7b3f9dbc6edf669c66c12750fc39e"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell_gsub",
@@ -879,7 +879,7 @@
         "typing_FStar.BufferNG.length", "typing_FStar.UInt32.v"
       ],
       0,
-      "67c8d6daf01c607001e3c41c948b44e4"
+      "150f441c7358681babaf39c3bcf9e6c4"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell_gsingleton_buffer_of_pointer",
@@ -911,7 +911,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "89b8f6c656602f56bd3bb6c51beea0de"
+      "cecca7b29313ea03f47dc77a08604916"
     ],
     [
       "FStar.BufferNG.gpointer_of_buffer_cell_gbuffer_of_array_pointer",
@@ -920,7 +920,7 @@
       1,
       [ "@query", "lemma_FStar.BufferNG.length_gbuffer_of_array_pointer" ],
       0,
-      "100b4932571f48b422465e42d3e36c28"
+      "453b4453d10ec5c837027b85d556a9de"
     ],
     [
       "FStar.BufferNG.gread_gpointer_of_buffer_cell",
@@ -941,7 +941,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c9a032debdee25b7fcf6787057c40ca5"
+      "e6505dc13fefeba00507856377cf337e"
     ],
     [
       "FStar.BufferNG.gread_gpointer_of_buffer_cell'",
@@ -962,7 +962,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "be58c1b75f46a7722d0fa9d462e99d70"
+      "751d8a84266b8bdce03c608a4c394efb"
     ],
     [
       "FStar.BufferNG.gread_pointer_of_buffer_cell'",
@@ -981,7 +981,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e6ca50ae6c6bc43bd7519bc13fe91119"
+      "da747c8e50896e18e21dfd6ff59db923"
     ],
     [
       "FStar.BufferNG.read",
@@ -1005,7 +1005,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "a5aff37bd4f8db9e1beaabe9b519697a"
+      "e4412713056d8c550d950633a024d76f"
     ],
     [
       "FStar.BufferNG.write",
@@ -1027,7 +1027,7 @@
         "refinement_interpretation_FStar.BufferNG_Tm_refine_5bd68c65f5987633010936f2d776087f"
       ],
       0,
-      "4143b06248b783232a52a80bc984a61b"
+      "de06697d16210787ab9dcb0ed3982751"
     ]
   ]
 ]

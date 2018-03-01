@@ -260,11 +260,11 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.list_haseq",
+        "@query", "assumption_Prims.list__uu___haseq",
         "kinding_Termination.tree@tok"
       ],
       0,
-      "b31d0022154730a54054688d1dcaf603"
+      "af44f9a61a1c8306b98191281674a62d"
     ],
     [
       "Termination.uu___is_Leaf",
@@ -319,7 +319,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
-        "assumption_Termination.tree_haseq",
+        "assumption_Termination.tree__uu___haseq",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
         "binder_x_39c83f45d9c5b726691119f6b8db9a95_5",
         "disc_equation_Termination.Leaf", "disc_equation_Termination.Node",
@@ -327,12 +327,11 @@
         "fuel_guarded_inversion_Termination.tree",
         "kinding_Termination.tree@tok",
         "lemma_Termination.list_subterm_ordering_lemma",
-        "projection_inverse_Termination.Node__0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "22936ac8feba7f9ae089b711e40f5c19"
+      "7c82971bda053bfe82b128740d494946"
     ],
     [
       "Termination.list_map",
@@ -389,7 +388,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
-        "assumption_Termination.tree_haseq",
+        "assumption_Termination.tree__uu___haseq",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
         "binder_x_4703f7286672cb83b2cdaf28b8cd3cfa_2",
         "disc_equation_Termination.Leaf", "disc_equation_Termination.Node",
@@ -397,12 +396,11 @@
         "fuel_guarded_inversion_Termination.tree",
         "kinding_Termination.tree@tok",
         "lemma_Termination.list_subterm_ordering_lemma",
-        "projection_inverse_Termination.Node__0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "dc8aa6f35f0ffdaa8209ad55380a6cf6"
+      "1c2d643cd2f76d8b22aaa82195866896"
     ],
     [
       "Termination.flatten_list'",

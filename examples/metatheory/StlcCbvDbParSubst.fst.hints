@@ -213,12 +213,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcStrongDbParSubst.typ_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcStrongDbParSubst.typ__uu___haseq",
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "a252e96991d33afb53759e1456eda09d"
+      "b57f651767e05a054243259f993c50f9"
     ],
     [
       "StlcCbvDbParSubst.context_invariance",
@@ -386,12 +386,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcStrongDbParSubst.typ_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcStrongDbParSubst.typ__uu___haseq",
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "223524c447b6a2751d8fc9536ce20b82"
+      "f805ebfde3b780c350b6f9dd59baaba3"
     ],
     [
       "StlcCbvDbParSubst.typable_below",
@@ -491,9 +491,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_StlcStrongDbParSubst.exp_haseq" ],
+      [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "d6d3280c8e089fc1dbcc485f27224e4a"
+      "6590e30cea7e00251b2f8b02c8f3d1b4"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_var_lt",
@@ -523,12 +523,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcStrongDbParSubst.typ_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcStrongDbParSubst.typ__uu___haseq",
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "93337bec9324d77e01d42deb51251fe2"
+      "cc18feac00bc39507f9979221aa8ab64"
     ],
     [
       "StlcCbvDbParSubst.extend_lt",
@@ -554,12 +554,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcStrongDbParSubst.typ_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcStrongDbParSubst.typ__uu___haseq",
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "aee856c48525e8e0d344b476293dd57d"
+      "83a8fea2cba6164d2a19960aca9919b6"
     ],
     [
       "StlcCbvDbParSubst.extend_gt",
@@ -636,18 +636,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_StlcStrongDbParSubst.exp_haseq" ],
+      [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "217dd70e654f5fdfe31a62f5f373ed0b"
+      "0e3ee2da56e3cc6771b74ef9bf70326a"
     ],
     [
       "StlcCbvDbParSubst.subst_below",
       1,
       2,
       1,
-      [ "@query", "assumption_StlcStrongDbParSubst.exp_haseq" ],
+      [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "f29d9f617791624fd913f05a73c0e61c"
+      "3ec010a1aacf3fc5aa97e1b8d6816160"
     ],
     [
       "StlcCbvDbParSubst.subst_below",
@@ -660,11 +660,14 @@
         "@fuel_correspondence_StlcStrongDbParSubst.subst.fuel_instrumented",
         "@fuel_irrelevance_StlcCbvDbParSubst.below.fuel_instrumented",
         "@fuel_irrelevance_StlcStrongDbParSubst.subst.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "StlcStrongDbParSubst_interpretation_Tm_arrow_a30b9f6b7ca969a69d3f40851e07b43a",
         "StlcStrongDbParSubst_interpretation_Tm_arrow_b31df40a0c67e19bf30cd231c3f1ba8e",
         "StlcStrongDbParSubst_pretyping_00c2c856e702f50718a37c394bb4dba3",
-        "assumption_StlcStrongDbParSubst.exp_haseq",
+        "assumption_FStar.FunctionalExtensionality.Extensionality",
+        "assumption_StlcStrongDbParSubst.exp__uu___haseq",
         "binder_x_57e0c583fea9b6dd3215ed2c8e9a9a5e_2",
         "binder_x_dc8693e4546e385be1be4d6460db8d1c_1",
         "binder_x_efdd934bb8b090f4e1b7156061e14150_0", "bool_inversion",
@@ -679,6 +682,7 @@
         "disc_equation_StlcStrongDbParSubst.EVar",
         "equality_tok_Prims.LexTop@tok",
         "equality_tok_StlcStrongDbParSubst.EUnit@tok",
+        "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq", "equation_Prims.nat",
         "equation_StlcCbvDbParSubst.sub_below",
         "equation_StlcStrongDbParSubst.sub",
@@ -687,11 +691,11 @@
         "equation_StlcStrongDbParSubst.var",
         "equation_with_fuel_StlcCbvDbParSubst.below.fuel_instrumented",
         "equation_with_fuel_StlcStrongDbParSubst.subst.fuel_instrumented",
-        "fuel_guarded_inversion_StlcStrongDbParSubst.exp", "int_inversion",
-        "int_typing",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.exp",
+        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
         "interpretation_StlcStrongDbParSubst_Tm_abs_44a531bec9a21204131605545f429d72",
         "interpretation_StlcStrongDbParSubst_Tm_abs_c636cdcc538f5ce27d02a83ecd813b7b",
-        "lemma_StlcStrongDbParSubst.subst_extensional",
+        "kinding_StlcStrongDbParSubst.exp@tok",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction",
@@ -706,26 +710,26 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_aed57c45c26bc1a288eeeab78c02e426",
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_d0dbb011f2b1b00c3673c42052db1f3e",
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_3949545d6bf3f1c8a6f29ddc1f66f50e",
-        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_a59e8c0240cd57332b5902e525cc79d3",
         "subterm_ordering_StlcStrongDbParSubst.EApp",
         "subterm_ordering_StlcStrongDbParSubst.ELam",
         "token_correspondence_StlcCbvDbParSubst.below.fuel_instrumented",
         "token_correspondence_StlcStrongDbParSubst.sub_inc",
         "typing_StlcCbvDbParSubst.below",
-        "typing_StlcStrongDbParSubst_Tm_abs_44a531bec9a21204131605545f429d72",
+        "typing_StlcStrongDbParSubst.sub_elam",
+        "typing_StlcStrongDbParSubst.uu___is_EVar",
         "typing_StlcStrongDbParSubst_Tm_abs_c636cdcc538f5ce27d02a83ecd813b7b"
       ],
       0,
-      "a1512d12d961171adfb775519ea4ad23"
+      "4a4a3d55f5d62384b7e29d4901ecb36b"
     ],
     [
       "StlcCbvDbParSubst.subst_closed",
       1,
       2,
       1,
-      [ "@query", "assumption_StlcStrongDbParSubst.exp_haseq" ],
+      [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "6a8c5417f091fe3381415af9c94e1c3b"
+      "3b9c084df27fa4d9df1076c20ef0ab7e"
     ],
     [
       "StlcCbvDbParSubst.subst_closed",
@@ -750,9 +754,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_StlcStrongDbParSubst.exp_haseq" ],
+      [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "adfe4eae841f52da1b711980796fc439"
+      "10cf7d655743e076ff84b4c020cd2c25"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux",
@@ -777,7 +781,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_StlcStrongDbParSubst.subst.fuel_instrumented",
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_StlcStrongDbParSubst.exp_haseq", "bool_inversion",
+        "assumption_StlcStrongDbParSubst.exp__uu___haseq", "bool_inversion",
         "constructor_distinct_StlcStrongDbParSubst.EVar",
         "equation_Prims.nat", "equation_StlcCbvDbParSubst.closed",
         "equation_StlcCbvDbParSubst.sub_beta_gen",
@@ -785,7 +789,7 @@
         "equation_StlcStrongDbParSubst.sub_inc",
         "equation_StlcStrongDbParSubst.var",
         "equation_with_fuel_StlcStrongDbParSubst.subst.fuel_instrumented",
-        "int_inversion", "int_typing",
+        "int_inversion",
         "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
         "interpretation_StlcStrongDbParSubst_Tm_abs_44a531bec9a21204131605545f429d72",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -801,7 +805,7 @@
         "typing_StlcCbvDbParSubst.closed", "unit_inversion", "unit_typing"
       ],
       0,
-      "1c736d854025f872d5a1f6092534467a"
+      "5a9c4873ba3e75b633270b7641cf61d6"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux_forall",
@@ -822,9 +826,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_StlcStrongDbParSubst.exp_haseq" ],
+      [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "14974bf38806044c1264874852cc65a0"
+      "42e4f4ef19ea177538800ae2da8f188c"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam",
@@ -857,7 +861,7 @@
         "StlcStrongDbParSubst_interpretation_Tm_arrow_b31df40a0c67e19bf30cd231c3f1ba8e",
         "StlcStrongDbParSubst_pretyping_00c2c856e702f50718a37c394bb4dba3",
         "assumption_FStar.FunctionalExtensionality.Extensionality",
-        "assumption_StlcStrongDbParSubst.exp_haseq",
+        "assumption_StlcStrongDbParSubst.exp__uu___haseq",
         "constructor_distinct_StlcStrongDbParSubst.ELam",
         "data_elim_StlcStrongDbParSubst.EVar",
         "data_typing_intro_StlcStrongDbParSubst.EUnit@tok",
@@ -891,7 +895,7 @@
         "typing_StlcStrongDbParSubst_Tm_abs_c636cdcc538f5ce27d02a83ecd813b7b"
       ],
       0,
-      "cef3611eb2f7648d19a8bbdf3a22f84a"
+      "bc3341286c007d320c61aeab5ea6c82c"
     ],
     [
       "StlcCbvDbParSubst.substitution_preserves_typing",
@@ -984,12 +988,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcStrongDbParSubst.typ_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcStrongDbParSubst.typ__uu___haseq",
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "44e7d503b76671a5f5db5b45ccfd30ab"
+      "464d85bd3339e11e4f43b64e19bd6a90"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_0_aux",
@@ -1021,8 +1025,8 @@
       [
         "@query",
         "StlcStrongDbParSubst_pretyping_fcf8df75f2957ee85ada8a1f90a7cec8",
-        "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcStrongDbParSubst.typ_haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcStrongDbParSubst.typ__uu___haseq",
         "data_typing_intro_StlcStrongDbParSubst.TUnit@tok",
         "equation_FStar.FunctionalExtensionality.feq", "equation_Prims.nat",
         "equation_StlcStrongDbParSubst.var",
@@ -1031,7 +1035,7 @@
         "token_correspondence_StlcStrongDbParSubst.extend"
       ],
       0,
-      "9009e5aeb84a9b5aa4ab5dacb05a0f8e"
+      "a9c02c6ff2f811a4484e846e08c2ef52"
     ],
     [
       "StlcCbvDbParSubst.preservation",

@@ -6,27 +6,27 @@
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "0e95b173dd199121a01f12e0916ac200"
+      "3c8fee5eedb4e3a830a0c76b8f5ab97c"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       2,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "de0858bcedcf26726af45647142d3c7b"
+      "6acfa3756872d1179c86c3fafc4b7e5b"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       3,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "40251b72b1f7d17cf175410bccc8edf1"
+      "7d35dccc07556ea6dd6eeb384d12a5ff"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -34,7 +34,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_FStar.UInt8.t_haseq",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.UInt8.t__uu___haseq",
         "equation_Ex12c.Format.message", "equation_FStar.Seq.Base.op_At_Bar",
         "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
         "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
@@ -43,7 +44,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "a977aa0ca5c414beaabea68d42ff8950"
+      "79c7e57b8710f1458d0910d537ebe828"
     ]
   ]
 ]

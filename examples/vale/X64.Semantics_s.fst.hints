@@ -7,12 +7,12 @@
       1,
       0,
       [
-        "@query", "assumption_X64.Machine_s.operand_haseq",
+        "@query", "assumption_X64.Machine_s.operand__uu___haseq",
         "equation_X64.Machine_s.dst_op",
         "haseqX64.Machine_s_Tm_refine_e85c4468bd6fa895770a44e5ae1526dc"
       ],
       0,
-      "5471d58093033a3c1926d54a048b0604"
+      "9c1a6a8e482722e8ff48ef5f7b4fcdb4"
     ],
     [
       "X64.Semantics_s.uu___is_Mov64",
@@ -426,9 +426,9 @@
       1,
       1,
       0,
-      [ "@query", "assumption_X64.Machine_s.operand_haseq" ],
+      [ "@query", "assumption_X64.Machine_s.operand__uu___haseq" ],
       0,
-      "514a58bdbd42ba0be1de38b6f48832ec"
+      "9db676ab0b9aa3d4d3192cdb782b62d2"
     ],
     [
       "X64.Semantics_s.uu___is_OEq",
@@ -780,9 +780,9 @@
       1,
       1,
       0,
-      [ "@query", "assumption_X64.Machine_s.reg_haseq" ],
+      [ "@query", "assumption_X64.Machine_s.reg__uu___haseq" ],
       0,
-      "b8dfea3f0dfe58aaf536b2a479f0b2ba"
+      "699760a8e486c17836d185006322039e"
     ],
     [
       "X64.Semantics_s.update_mem",
@@ -1116,7 +1116,8 @@
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_FStar.UInt64.t_haseq",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.UInt64.t__uu___haseq",
         "disc_equation_X64.Semantics_s.OEq",
         "disc_equation_X64.Semantics_s.OGe",
         "disc_equation_X64.Semantics_s.OGt",
@@ -1127,7 +1128,7 @@
         "fuel_guarded_inversion_X64.Semantics_s.ocmp"
       ],
       0,
-      "82c2c327d0998a0f508faf131967c6b4"
+      "194970a7673101ae7df2d59e821aecbe"
     ],
     [
       "X64.Semantics_s.add_mod64",

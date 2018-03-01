@@ -108,7 +108,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Ex10a.entry_haseq", "bool_typing",
+        "assumption_Ex10a.entry__uu___haseq", "bool_typing",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
@@ -126,7 +126,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "b21e1c9df140e6aa153ada073ed62587"
+      "42dbad25d227cde597f65ab96de2e62b"
     ]
   ]
 ]

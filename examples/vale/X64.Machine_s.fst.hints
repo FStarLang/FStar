@@ -179,10 +179,10 @@
       0,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_X64.Machine_s.reg_haseq"
+        "assumption_X64.Machine_s.reg__uu___haseq"
       ],
       0,
-      "df4bf54fefe7e9dc9475cb5df43031f7"
+      "d861bfd5b7ad66dc685465337744049f"
     ],
     [
       "X64.Machine_s.uu___is_MConst",
@@ -314,11 +314,11 @@
       0,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_X64.Machine_s.maddr_haseq",
-        "assumption_X64.Machine_s.reg_haseq"
+        "assumption_X64.Machine_s.maddr__uu___haseq",
+        "assumption_X64.Machine_s.reg__uu___haseq"
       ],
       0,
-      "1524af97ccc9472ad8e04ea6eb750be5"
+      "2bf6326a2d5a3bc669c08e3ce063d774"
     ],
     [
       "X64.Machine_s.uu___is_OConst",
@@ -393,11 +393,11 @@
       1,
       0,
       [
-        "@query", "assumption_Prims.list_haseq",
+        "@query", "assumption_Prims.list__uu___haseq",
         "kinding_X64.Machine_s.precode@tok"
       ],
       0,
-      "092cbb468cea38c52527b7b26ad416a5"
+      "74553f2b84bc4d7daeb1d78927abc247"
     ],
     [
       "X64.Machine_s.uu___is_Ins",

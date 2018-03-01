@@ -324,11 +324,11 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0,
-      "6047e68796c9cfdfa5a64baf1daf234f"
+      "262af0e3035d5e48aa5e845115ada1ae"
     ],
     [
       "Unit1.Basic.record_f_exhaustive",
@@ -537,7 +537,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
         "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.nat",
@@ -545,7 +545,7 @@
         "kinding_Unit1.Basic.mlist@tok"
       ],
       0,
-      "87c7a4a2d15fe8f692d843231799e1d5"
+      "d0d3f846d987666ef76204b7b366d084"
     ],
     [
       "Unit1.Basic.uu___is_N",
@@ -604,10 +604,10 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Unit1.Basic.mlist_haseq"
+        "assumption_Unit1.Basic.mlist__uu___haseq"
       ],
       0,
-      "be4c371c1f7ec18dfe21c24363f63aac"
+      "85e08fd04627efe42ecbe83680f81f6c"
     ],
     [
       "Unit1.Basic.do_ok",
@@ -795,10 +795,11 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
       ],
       0,
-      "e3838fefeaf023bfe0876dfa706f8d1b"
+      "442268857443d40cc89066b3a169d7bf"
     ],
     [
       "Unit1.Basic.idl",
@@ -939,7 +940,7 @@
         "@fuel_correspondence_Unit1.Basic.map.fuel_instrumented", "@query",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
+        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "equation_FStar.UInt32.n", "equation_Unit1.Basic.apply",
         "equation_Unit1.Basic.plus_one",
@@ -954,11 +955,11 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "token_correspondence_Unit1.Basic.plus_one",
-        "typing_Unit1.Basic.apply", "typing_Unit1.Basic.plus_one",
+        "typing_Unit1.Basic.apply",
         "typing_Unit1.Basic_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
       ],
       0,
-      "d661b4fb5eba0f17f3ef1f8e55055e19"
+      "fce75b68651df825668ff0f5a749cef5"
     ],
     [
       "Unit1.Basic.test_map2",
@@ -970,7 +971,7 @@
         "@fuel_correspondence_Unit1.Basic.map.fuel_instrumented", "@query",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
+        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "equation_FStar.UInt32.n", "equation_Unit1.Basic.apply",
         "equation_with_fuel_Unit1.Basic.map.fuel_instrumented",
@@ -987,7 +988,7 @@
         "typing_Unit1.Basic_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
       ],
       0,
-      "2ee1b0e18f87311c8f6acf373e431464"
+      "c8e8c48c807632434474ae719e8f8a25"
     ],
     [
       "Unit1.Basic.even",

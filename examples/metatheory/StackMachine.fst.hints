@@ -26,11 +26,11 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_StackMachine.binop_haseq", "equation_Prims.nat",
+        "assumption_StackMachine.binop__uu___haseq", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0fdcbd169b72c6eac8b4fc05310335e5"
+      "c795c6aaaebbf3f4448934d9fcbb8ac3"
     ],
     [
       "StackMachine.uu___is_Const",
@@ -190,11 +190,11 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_StackMachine.binop_haseq", "equation_Prims.nat",
+        "assumption_StackMachine.binop__uu___haseq", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "498a15e7150ce2435b959490a72d47a2"
+      "68612603b2862e878171667f190c0abc"
     ],
     [
       "StackMachine.uu___is_IConst",
@@ -335,21 +335,25 @@
         "@fuel_irrelevance_StackMachine.compile.fuel_instrumented",
         "@fuel_irrelevance_StackMachine.expDenote.fuel_instrumented",
         "@fuel_irrelevance_StackMachine.progDenote.fuel_instrumented",
-        "@query", "StackMachine_pretyping_348f082711510f298b6584ad3416d399",
-        "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
+        "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
         "binder_x_2a319081b764dd27a6651686e4e88bbc_0",
+        "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_2",
         "binder_x_ce0b7b036f4e4c7e19ed25969fddd4c5_1",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.Native.option",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.unit",
         "constructor_distinct_StackMachine.Binop",
         "constructor_distinct_StackMachine.Const",
         "constructor_distinct_StackMachine.IBinop",
         "constructor_distinct_StackMachine.IConst",
-        "data_elim_StackMachine.Const", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "data_typing_intro_StackMachine.IBinop@tok",
-        "data_typing_intro_StackMachine.Times@tok",
         "disc_equation_StackMachine.Binop",
         "disc_equation_StackMachine.Const",
         "equation_FStar.List.Tot.Base.op_At", "equation_Prims.nat",
@@ -364,7 +368,8 @@
         "function_token_typing_Prims.nat",
         "function_token_typing_StackMachine.stack",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion", "kinding_StackMachine.instr@tok",
+        "kinding_StackMachine.instr@tok",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
         "lemma_StackMachine.app_assoc_reverse",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
@@ -374,15 +379,16 @@
         "projection_inverse_StackMachine.Binop__0",
         "projection_inverse_StackMachine.Binop__1",
         "projection_inverse_StackMachine.Binop__2",
+        "projection_inverse_StackMachine.Const__0",
         "projection_inverse_StackMachine.IBinop__0",
         "projection_inverse_StackMachine.IConst__0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_StackMachine.Binop",
         "token_correspondence_StackMachine.compile.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.op_At", "typing_StackMachine.compile"
+        "typing_FStar.List.Tot.Base.op_At", "typing_StackMachine.compile",
+        "typing_StackMachine.progDenote", "unit_typing"
       ],
       0,
-      "e940a0b1003f9dc0cc3ef6074505ca19"
+      "f742372c56656413a1cc04d47afe0475"
     ],
     [
       "StackMachine.app_nil_end",
@@ -409,8 +415,8 @@
       [
         "@MaxFuel_assumption",
         "@fuel_correspondence_StackMachine.progDenote.fuel_instrumented",
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
         "constructor_distinct_Prims.Nil", "equation_Prims.nat",
         "equation_StackMachine.prog", "equation_StackMachine.stack",
         "equation_with_fuel_StackMachine.progDenote.fuel_instrumented",
@@ -422,7 +428,7 @@
         "projection_inverse_Prims.Nil_a", "typing_StackMachine.compile"
       ],
       0,
-      "306da5b4059ce902b53dace498a5834c"
+      "7c90cdd40fac1b7b8bd3fa0d686a9395"
     ],
     [
       "StackMachine.uu___is_Nat",
@@ -447,9 +453,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_StackMachine.typ_haseq" ],
+      [ "@query", "assumption_StackMachine.typ__uu___haseq" ],
       0,
-      "2dbb2a6e122c96577049603ea4bce70a"
+      "da09fd1da1b11e03b28027ec75497ecc"
     ],
     [
       "StackMachine.uu___is_TPlus",
@@ -507,12 +513,13 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_bool",
-        "assumption_Prims.HasEq_int", "assumption_StackMachine.tbinop_haseq",
-        "assumption_StackMachine.typ_haseq", "equation_Prims.nat",
+        "assumption_Prims.HasEq_int",
+        "assumption_StackMachine.tbinop__uu___haseq",
+        "assumption_StackMachine.typ__uu___haseq", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4ed9fc122e54deb0487254ba7018646d"
+      "9c447d4d30438e7e3620b457f81f7ab8"
     ],
     [
       "StackMachine.uu___is_TNConst",
@@ -746,16 +753,16 @@
       [
         "@query", "StackMachine_pretyping_99009f55474bb74b46709f3fb0f7bfdf",
         "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq",
-        "assumption_StackMachine.tbinop_haseq",
-        "assumption_StackMachine.typ_haseq",
+        "assumption_Prims.list__uu___haseq",
+        "assumption_StackMachine.tbinop__uu___haseq",
+        "assumption_StackMachine.typ__uu___haseq",
         "data_typing_intro_StackMachine.Bool@tok", "equation_Prims.nat",
         "equation_StackMachine.tstack",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "kinding_StackMachine.typ@tok"
       ],
       0,
-      "de4c020ecd7c1cd275fc87b2e8576311"
+      "332e617c2a8ab0a19cbd6e24cfcec962"
     ],
     [
       "StackMachine.uu___is_TiNConst",
@@ -923,14 +930,14 @@
       1,
       [
         "@query", "StackMachine_pretyping_99009f55474bb74b46709f3fb0f7bfdf",
-        "assumption_Prims.list_haseq",
-        "assumption_StackMachine.tinstr_haseq",
-        "assumption_StackMachine.typ_haseq",
+        "assumption_Prims.list__uu___haseq",
+        "assumption_StackMachine.tinstr__uu___haseq",
+        "assumption_StackMachine.typ__uu___haseq",
         "data_typing_intro_StackMachine.Bool@tok",
         "equation_StackMachine.tstack", "kinding_StackMachine.typ@tok"
       ],
       0,
-      "4a12e6c23fbd23662d72f25ca9971283"
+      "2f9da3989bfeadece17d881088c642de"
     ],
     [
       "StackMachine.uu___is_TNil",

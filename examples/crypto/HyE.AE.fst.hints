@@ -189,7 +189,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_HyE.Plain.Plain_hasEq",
         "assumption_Platform.Bytes.HasEq_bytes",
         "equality_tok_CoreCrypto.AES_128_GCM@tok",
@@ -201,7 +201,7 @@
         "haseqHyE.AE_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "17f13077a36f9969efb24fe835c0402c"
+      "0370ceb973d9a741cbd79dd294a2c418"
     ],
     [
       "HyE.AE.decrypt",

@@ -7,11 +7,11 @@
       2,
       1,
       [
-        "@query", "assumption_CPS.Expr.expr_haseq",
+        "@query", "assumption_CPS.Expr.expr__uu___haseq",
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "48c5d502d5d45f2caf6b7f518527879a"
+      "feabd4cb927e31db48d07c660884da42"
     ],
     [
       "CPS.DoubleDefun.uu___is_C0",

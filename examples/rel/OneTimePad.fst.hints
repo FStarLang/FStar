@@ -17,7 +17,7 @@
       4,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.tuple4_haseq",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
         "assumption_Prims.HasEq_bool", "bool_inversion", "bool_typing",
         "data_elim_FStar.Pervasives.Native.Mktuple4",
         "equation_OneTimePad.nib", "equation_OneTimePad.xor",
@@ -35,7 +35,7 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "a16c338fccbe4c694ade6b71f878f2b2"
+      "42be559df4fa345a28f50cc03899ae71"
     ]
   ]
 ]

@@ -8,12 +8,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
+        "assumption_Prims.list__uu___haseq",
         "equation_FStar.Reflection.Types.name",
         "function_token_typing_Prims.string"
       ],
       0,
-      "2f956336f8e4767dd8219b3304ee811e"
+      "474d5fb6e55ba3e13a0349394db11a48"
     ],
     [
       "PatternMatching.zip",
@@ -149,12 +149,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq", "equation_PatternMatching.qn",
+        "assumption_Prims.list__uu___haseq", "equation_PatternMatching.qn",
         "equation_PatternMatching.varname",
         "function_token_typing_Prims.string"
       ],
       0,
-      "cc184a5b05fe2b29a3afd77f03b0db7e"
+      "752351c15200d43b133837f808fce39d"
     ],
     [
       "PatternMatching.uu___is_PAny",
@@ -555,7 +555,7 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.assoc.fuel_instrumented",
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
+        "assumption_Prims.list__uu___haseq",
         "binder_x_da99089b48f0c43a12b50fe9bb851b39_0", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -576,7 +576,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "bb76a421e8ff9a97afcee27ceaf9c472"
+      "9631b5605d946a447e0fdb365858de5e"
     ],
     [
       "PatternMatching.debug",
@@ -743,7 +743,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Reflection.Data_pretyping_b90ba98501c0444263072cb94ae6e3aa",
-        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list__uu___haseq",
         "binder_x_58d2c7c10918d93b79238e251dd796c1_0",
         "constructor_distinct_FStar.Reflection.Data.Tv_App",
         "data_elim_FStar.Reflection.Data.Tv_App",
@@ -761,7 +761,7 @@
         "typing_FStar.Reflection.Basic.inspect"
       ],
       0,
-      "afb1cf44ce1e101729dc57fe4401fd64"
+      "a9790fdd4bd35066eb4f782f0257b98c"
     ],
     [
       "PatternMatching.uu___is_ABKVar",

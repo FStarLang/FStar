@@ -17,12 +17,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_StlcCbvDbPntSubstNoLists.ty_haseq", "equation_Prims.nat",
-        "equation_StlcCbvDbPntSubstNoLists.var",
+        "assumption_StlcCbvDbPntSubstNoLists.ty__uu___haseq",
+        "equation_Prims.nat", "equation_StlcCbvDbPntSubstNoLists.var",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4f9c9a4a1e8fb27a36ad218b74c3df6a"
+      "85434077bf2f893c61e085baa3543f9f"
     ],
     [
       "StlcCbvDbPntSubstNoLists.uu___is_EVar",
@@ -637,12 +637,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcCbvDbPntSubstNoLists.ty_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcCbvDbPntSubstNoLists.ty__uu___haseq",
         "kinding_StlcCbvDbPntSubstNoLists.ty@tok"
       ],
       0,
-      "5133d62e2a8a28e58079f3c2d4931c39"
+      "b6a4464431afffb9de415e86136718df"
     ],
     [
       "StlcCbvDbPntSubstNoLists.equalE",
@@ -650,12 +650,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_StlcCbvDbPntSubstNoLists.ty_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_StlcCbvDbPntSubstNoLists.ty__uu___haseq",
         "kinding_StlcCbvDbPntSubstNoLists.ty@tok"
       ],
       0,
-      "86fc98928b6a2d0c7b44d0c336a87499"
+      "24378e71ab770f28ecfc398ea3cea876"
     ],
     [
       "StlcCbvDbPntSubstNoLists.context_invariance",
