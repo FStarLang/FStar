@@ -85,6 +85,8 @@ let fstar_refl_inspect_lid = fstar_refl_basic_lid "inspect"
 let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
 let fstar_refl_pack_lid    = fstar_refl_basic_lid "pack"
 let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
+let fstar_refl_pack_fv_lid = fstar_refl_basic_lid "pack_fv"
+let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
 
 (* types *)
 let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"

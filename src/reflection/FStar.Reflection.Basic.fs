@@ -23,6 +23,8 @@ module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
 
+open FStar.Dyn
+
 (* This file provides implementation for reflection primitives in F*.
  *
  * Users can be exposed to (mostly) raw syntax of terms when working in
@@ -49,7 +51,7 @@ let embed_binder (rng:Range.range) (b:binder) : term =
 let unembed_binder (t:term) : option<binder> =
     match (SS.compress t).n with
     | Tm_lazy i when i.kind = Lazy_binder ->
-        Some (FStar.Dyn.undyn i.blob)
+        Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
         None
@@ -71,19 +73,28 @@ let rec unembed_term (t:term) : option<term> =
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term: %s" (Print.term_to_string t)));
         None
 
+let inspect_fv (fv:fv) : list<string> =
+    Ident.path_of_lid (lid_of_fv fv)
+
+let pack_fv (ns:list<string>) : fv =
+    // TODO: Delta_equational and None ok?
+    lid_as_fv (PC.p2l ns) Delta_equational None
+
 let embed_fvar (rng:Range.range) (fv:fv) : term =
     U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
 
 let unembed_fvar (t:term) : option<fv> =
     match (SS.compress t).n with
     | Tm_lazy i when i.kind = Lazy_fvar ->
-        Some (FStar.Dyn.undyn i.blob)
+        Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
         None
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
-    U.exp_unit
+    let fv : fv = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_fv [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
+                None i.rng
 
 let embed_comp (rng:Range.range) (c:comp) : term =
     U.mk_lazy c fstar_refl_comp Lazy_comp (Some rng)
@@ -91,7 +102,7 @@ let embed_comp (rng:Range.range) (c:comp) : term =
 let unembed_comp (t:term) : option<comp> =
     match (SS.compress t).n with
     | Tm_lazy i when i.kind = Lazy_comp ->
-        Some (FStar.Dyn.undyn i.blob)
+        Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
         None
@@ -105,7 +116,7 @@ let embed_env (rng:Range.range) (e:Env.env) : term =
 let unembed_env (t:term) : option<Env.env> =
     match (SS.compress t).n with
     | Tm_lazy i when i.kind = Lazy_env ->
-        Some (FStar.Dyn.undyn i.blob)
+        Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
         None
@@ -370,13 +381,6 @@ let rec init (l:list<'a>) : list<'a> =
     | [] -> failwith "init: empty list"
     | [x] -> []
     | x::xs -> x :: init xs
-
-let inspect_fv (fv:fv) : list<string> =
-    Ident.path_of_lid (lid_of_fv fv)
-
-let pack_fv (ns:list<string>) : fv =
-    // TODO: Delta_equational and None ok?
-    lid_as_fv (PC.p2l ns) Delta_equational None
 
 let inspect_bv (b:binder) : string =
     Print.bv_to_string (fst b)
