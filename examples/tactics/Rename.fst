@@ -12,17 +12,18 @@ assume val p : squash xi
 
 let l1 (x : bool) (y : int) (z : unit) =
     assert_by_tactic (phi ==> (psi ==> xi))
-            (h0 <-- implies_intro;
-             h1 <-- implies_intro;
-             dump "Test";;
-             exact (quote p)
-             )
+            (fun () ->
+                let h0 = implies_intro () in
+                let h1 = implies_intro () in
+                dump "Test";
+                exact (quote p))
 
 // this error should show pretty binders too
 (* let _ = *)
 (*     assert_by_tactic (False ==> True) *)
-(*             (h0 <-- implies_intro; *)
-(*              x <-- quote (fun x -> 1 + x); *)
-(*              let t = mk_e_app x [pack (Tv_Const C_Unit)] in *)
-(*              tc t;; *)
-(*              trivial) *)
+(*             (fun () -> *)
+(*                 let h0 = implies_intro () in *)
+(*                 let x = quote (fun x -> 1 + x) in *)
+(*                 let t = mk_e_app x [pack (Tv_Const C_Unit)] in *)
+(*                 let _ = tc t in *)
+(*                 trivial ()) *)

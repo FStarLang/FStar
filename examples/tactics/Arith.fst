@@ -8,21 +8,19 @@ open FStar.List
 
 let lem0 (x:int) =
     assert_by_tactic (op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)
-        (prune "";;
-         addns "Prims") 
+        (fun () ->prune ""; addns "Prims")
 
 // Can't locally define tactics
-let tau1 : tactic unit =
-    prune "";;
-    FStar.Tactics.split;;
+let tau1 () : Tac unit =
+    prune "";
+    FStar.Tactics.split;
     (* rev part *)
-      addns "FStar.List";;
-      addns "Prims";;
-      smt;;
+      addns "FStar.List";
+      addns "Prims";
+      smt ();
     (* arithmetic part *)
-      addns "Prims";;
-      smt;;
-    return ()
+      addns "Prims";
+      smt ()
 
 let lem1 (x:int) =
     assert_by_tactic (List.rev [1;2;3;4] == [4;3;2;1] /\ op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)

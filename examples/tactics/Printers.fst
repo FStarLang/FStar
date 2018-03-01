@@ -24,13 +24,14 @@ let mk_print_binder (b : binder) : term =
     | _ ->
         mk_stringlit "?"
 
-let printer : tactic unit =
-    x <-- intro;
-    e <-- cur_env;
+let printer () : Tac unit =
+    let x = intro () in
+    let e = cur_env () in
     let xt = type_of_binder x in
-    xt_ns <-- (match inspect xt with
-               | Tv_FVar fv -> return (inspect_fv fv)
-               | _ -> fail "not a qname type?");
+    let xt_ns = match inspect xt with
+                | Tv_FVar fv -> (inspect_fv fv)
+                | _ -> fail "not a qname type?"
+    in
     match lookup_typ e xt_ns with
     | Unk -> fail "type not found?"
     | Sg_Let _ _ _ -> fail "cannot create printer for let"
@@ -47,8 +48,8 @@ let printer : tactic unit =
         in
         let branches = List.Tot.map br1 ctors in
         let m = pack (Tv_Match (pack (Tv_Var x)) branches) in
-        exact_guard (return m);;
-        smt
+        exact_guard m;
+        smt ()
 
 type t1 =
     | A : int -> int -> t1

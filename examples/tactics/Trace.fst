@@ -62,18 +62,17 @@ type ins_info = {
     trace_arg : term;
 }
 
-let rec instrument_body (ii : ins_info) (t : term) : tactic term =
-  admit(); // admit termination for now
+let rec instrument_body (ii : ins_info) (t : term) : Tac term =
   match inspect t with
   // descend into matches
   | Tv_Match t brs -> begin
-    brs' <-- mapM (ins_br ii) brs;
-    return (pack (Tv_Match t brs'))
+    let brs' = map (ins_br ii) brs in
+    pack (Tv_Match t brs')
     end
   // descend into lets
   | Tv_Let b t1 t2 -> begin
-    t2' <-- instrument_body ii t2;
-    return (pack (Tv_Let b t1 t2'))
+    let t2' = instrument_body ii t2 in
+    pack (Tv_Let b t1 t2')
     end
   | _ -> begin
     let hd, args = collect_app t in
@@ -83,17 +82,17 @@ let rec instrument_body (ii : ins_info) (t : term) : tactic term =
         // modify the tail call
         // turn `nm <b1,...,bn>` into `nm' (<a1,...,an>::tr) <b1,...,bn>`
         let f' = pack (Tv_FVar ii.ins_name) in
-        return (mk_app f' (args @ [mk_cons argpack ii.trace_arg, Q_Explicit]))
+        mk_app f' (args @ [mk_cons argpack ii.trace_arg, Q_Explicit])
     end else begin
         // not a tail call, record the current set of args and be done
-        return (mkpair (mk_cons argpack ii.trace_arg) t)
+        mkpair (mk_cons argpack ii.trace_arg) t
     end
    end
 
-and ins_br (ii : ins_info) (br : branch) : tactic branch =
+and ins_br (ii : ins_info) (br : branch) : Tac branch =
   let (p, t) = br in
-  t' <-- instrument_body ii t;
-  return (p, t')
+  let t' = instrument_body ii t in
+  (p, t')
 
 let rec cutlast (l : list 'a) : list 'a * 'a =
     match l with
@@ -101,14 +100,16 @@ let rec cutlast (l : list 'a) : list 'a * 'a =
     | [x] -> [], x
     | x::xs -> let ys, y = cutlast xs in x::ys, y
 
-let instrument (f : 'a) : tactic unit =
-    t <-- quote f;
+let instrument (f : 'a) : Tac unit =
+    admit ();
+    let t = quote f in
     // name
-    n <-- (match inspect t with
-           | Tv_FVar fv -> return fv
-           | _ -> fail "Not a top-level");
+    let n = match inspect t with
+            | Tv_FVar fv -> fv
+            | _ -> fail "Not a top-level"
+    in
     let n' = tick n in
-    all_args <-- intros;
+    let all_args = intros () in
     let real, trace_arg = cutlast all_args in 
     let real = List.Tot.map (fun b -> pack (Tv_Var b)) real in
     let ii = {
@@ -119,13 +120,13 @@ let instrument (f : 'a) : tactic unit =
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)
-    t <-- norm_term [delta] (mk_e_app t ii.args);
-    dup;;
-    t <-- instrument_body ii t;
-    dump "";;
-    focus (exact_guard (return t);; repeat smt);;
-    norm [];;
-    trefl
+    let t = norm_term [delta] (mk_e_app t ii.args) in
+    dup ();
+    let t = instrument_body ii t in
+    dump "";
+    let _ = focus (fun () -> exact_guard t; repeat smt) in
+    norm [];
+    trefl ()
 
 let rec fall (n : mynat) : Tot mynat =
     match n with
@@ -138,7 +139,7 @@ let rec fall (n : mynat) : Tot mynat =
 let rec fall' (n : mynat) =
     // We need to annotate the result type.. which sucks.
     // But we could use a tactic later :)
-    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (instrument fall) n
+    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (fun () -> instrument fall) n
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
@@ -155,7 +156,7 @@ let rec fact (n : nat) : Tot nat = fact_aux n 1
 
 #set-options "--admit_smt_queries true"
 let rec fact_aux' (n acc : nat) (tr : list (nat * nat)) : Tot (list (nat * nat) * nat) =
-    synth_by_tactic #(nat -> nat -> list (nat * nat) -> (list (nat * nat) * nat)) (instrument fact_aux) n acc tr
+    synth_by_tactic #(nat -> nat -> list (nat * nat) -> (list (nat * nat) * nat)) (fun () -> instrument fact_aux) n acc tr
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 5); (5, 1)], 120))
@@ -165,7 +166,7 @@ let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 
 #set-options "--admit_smt_queries true"
 // TODO: I have to use `int` for the codomains or it complains... why? I'm even admitting SMT
 let rec fact' (n : nat) (tr : list nat) : Tot (list nat * int) =
-    synth_by_tactic #(nat -> list nat -> (list nat * int)) (instrument fact) n tr
+    synth_by_tactic #(nat -> list nat -> (list nat * int)) (fun () -> instrument fact) n tr
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fact' 5 [] == ([5], 120))

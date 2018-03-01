@@ -60,11 +60,6 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
 
 sub_effect DIV ~> TAC = lift_div_tac
 
-let tactic (a:Type) = unit -> Tac a
-
-let return (#a:Type) (x:a) : tactic a =
-    fun () -> x
-
 (* Why the "CPS"-like definition? So we don't call bind which would
  * introduce an extra tracepoint. *)
 let set_rng (rng:range) (tau : unit -> Tac 'a) : Tac 'a =
@@ -73,38 +68,28 @@ let set_rng (rng:range) (tau : unit -> Tac 'a) : Tac 'a =
         reify (tau ()) ps
     )
 
-let bind (#a:Type) (#b:Type) (rng:range) (t : tactic a) (f : a -> tactic b) : tactic b =
-    fun () -> set_rng rng (fun () -> let r = t () in f r ())
-
-(* Cannot eta reduce this... *)
-let get : tactic proofstate = fun () -> TAC?.__get ()
-
-let reify_tactic (t:tactic 'a) : __tac 'a =
-  fun s -> reify (t ()) s
-
 abstract
 let __by_tactic (t:__tac 'a) (p:Type) : Type = p
 
-unfold let by_tactic (t : tactic 'a) (p:Type) : Type = __by_tactic (reify_tactic t) p
+unfold let by_tactic (t : unit -> Tac 'a) (p:Type) : Type = __by_tactic (reify (t ())) p
 
 // This will run the tactic in order to (try to) produce a term of type t
 // It should not lead to any inconsistency, as any time this term appears
 // during typechecking, it is forced to be fully applied and the tactic
 // is run. A failure of the tactic is a typechecking failure.
 // TODO: `a` is really fixed to unit for now. Make it consistent
-assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> tactic a -> Tot t
+assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> (unit -> Tac a) -> Tot t
 
-private let trace_wrap (t : tactic 'a) : tactic 'a =
-    return ();;
-    r <-- t;
-    return r
-
-let assert_by_tactic (p:Type) (t:tactic unit)
+let assert_by_tactic (p:Type) (t:unit -> Tac unit)
   : Pure unit
-         (requires (by_tactic (trace_wrap t) (squash p)))
+         (requires (by_tactic t (squash p)))
          (ensures (fun _ -> p))
   = ()
 
 (* We don't peel off all `by_tactic`s in negative positions, so give the SMT a way to reason about them *)
-val by_tactic_seman : a:Type -> tau:(tactic a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
+val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
+
+// TcTerm checks against this
+private let tactic a = unit -> Tac a
+let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
