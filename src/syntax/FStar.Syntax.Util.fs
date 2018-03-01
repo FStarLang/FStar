@@ -620,9 +620,9 @@ let quals_of_sigelt (x: sigelt) = x.sigquals
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let range_of_lb = function
-  | (Inl x, _, _) -> range_of_bv  x
-  | (Inr l, _, _) -> range_of_lid l
+let range_of_lbname = function
+  | Inl x -> range_of_bv  x
+  | Inr fv -> range_of_lid fv.fv_name.v
 
 let range_of_arg (hd, _) = hd.pos
 
@@ -1489,6 +1489,7 @@ let rec term_eq t1 t2 =
         lid_equals n1 n2 && term_eq ty1 ty2
     | Meta_monadic_lift (s1, t1, ty1), Meta_monadic_lift (s2, t2, ty2) ->
         lid_equals s1 s2 && lid_equals t1 t2 && term_eq ty1 ty2
+    | _ -> false
     end
 
   | Tm_unknown, Tm_unknown -> false // ?

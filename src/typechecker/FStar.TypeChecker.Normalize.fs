@@ -89,8 +89,6 @@ type fsteps = {
     weak : bool;
     hnf  : bool;
     primops : bool;
-    eager_unfolding : bool;
-    inlining : bool;
     no_delta_steps : bool;
     unfold_until : option<S.delta_depth>;
     unfold_only : option<list<I.lid>>;
@@ -115,8 +113,6 @@ let default_steps : fsteps = {
     weak = false;
     hnf  = false;
     primops = false;
-    eager_unfolding = false;
-    inlining = false;
     no_delta_steps = false;
     unfold_until = None;
     unfold_only = None;
@@ -134,12 +130,12 @@ let default_steps : fsteps = {
     unascribe = false;
 }
 
-let rec to_fsteps (s : list<step>) : fsteps =
+let fstep_add_one s fs =
     let add_opt x = function
         | None -> Some [x]
         | Some xs -> Some (x::xs)
     in
-    let add_one s fs = match s with
+    match s with
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
     | Zeta -> { fs with zeta = true }
@@ -150,8 +146,8 @@ let rec to_fsteps (s : list<step>) : fsteps =
     | Weak -> { fs with weak = true }
     | HNF -> { fs with hnf = true }
     | Primops -> { fs with primops = true }
-    | Eager_unfolding ->  { fs with eager_unfolding = true }
-    | Inlining ->  { fs with inlining = true }
+    | Eager_unfolding -> fs // eager_unfolding is not a step
+    | Inlining -> fs // not a step
     | NoDeltaSteps ->  { fs with no_delta_steps = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly lids -> { fs with unfold_only = Some lids }
@@ -167,8 +163,9 @@ let rec to_fsteps (s : list<step>) : fsteps =
     | CheckNoUvars ->  { fs with check_no_uvars = true }
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
-    in
-    List.fold_right add_one s default_steps
+
+let rec to_fsteps (s : list<step>) : fsteps =
+    List.fold_right fstep_add_one s default_steps
 
 type psc = {
     psc_range:FStar.Range.range;
@@ -238,6 +235,7 @@ type stack_elt =
  | Debug    of term * BU.time
 type stack = list<stack_elt>
 
+let head_of t = let hd, _ = U.head_and_args' t in hd
 let mk t r = mk t None r
 let set_memo cfg (r:memo<'a>) (t:'a) =
   if cfg.memoize_lazy then
@@ -1139,15 +1137,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
-            when U.is_fstar_tactics_embed hd
-              || (U.is_fstar_tactics_quote hd && cfg.steps.no_delta_steps)
-              || U.is_fstar_tactics_by_tactic hd ->
-            let args = closures_as_args_delayed cfg env args in
-            let hd = closure_as_term cfg env hd in
-            let t = {t with n=Tm_app(hd, args)} in
-            rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
-
-          | Tm_app(hd, args)
             when not (cfg.steps.no_full_norm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
@@ -1595,18 +1584,16 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     let cfg =
       if cfg.steps.pure_subterms_within_computations
       then
-        (* KM : This case should be tailored for extraction but I'm not exactly sure that the logic here is correct *)
-        (* Why are we dropping previous steps arbitrarily ? This will silently break any extension of the steps *)
-        (* GM: Also worried about this *)
-        { cfg with
-          steps = to_fsteps [PureSubtermsWithinComputations;
-                             Primops;
-                             AllowUnboundUniverses;
-                             EraseUniverses;
-                             Exclude Zeta;
-                             Inlining];
-          delta_level=[Env.Inlining; Env.Eager_unfolding_only]
-        }
+        let new_steps = [PureSubtermsWithinComputations;
+                         Primops;
+                         AllowUnboundUniverses;
+                         EraseUniverses;
+                         Exclude Zeta;
+                         Inlining]
+        in { cfg with
+               steps = List.fold_right fstep_add_one new_steps cfg.steps;
+               delta_level = [Env.Inlining; Env.Eager_unfolding_only]
+           }
       else
         { cfg with steps = { cfg.steps with zeta = false } }
     in
@@ -1928,9 +1915,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     let t = mk_Tm_uinst t us in
     rebuild cfg env stack t
 
+  | Arg (Clos(env_arg, tm, _, _), aq, r) :: stack
+        when U.is_fstar_tactics_quote     (head_of t)
+          || U.is_fstar_tactics_embed     (head_of t)
+          || U.is_fstar_tactics_by_tactic (head_of t) ->
+    let t = S.extend_app t (closure_as_term cfg env_arg tm, aq) None r in
+    rebuild cfg env stack t
+
   | Arg (Clos(env_arg, tm, m, _), aq, r) :: stack ->
-    log cfg  (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
-    //this needs to be tail recursive for reducing large terms
+    log cfg (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
+    // this needs to be tail recursive for reducing large terms
 
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?

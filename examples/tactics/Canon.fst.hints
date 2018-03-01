@@ -15,22 +15,13 @@
       "b413062e764cfa1ba644b75017fa0bac"
     ],
     [
-      "Canon.lem8",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8cfab36f7f4894de92a618c654bf003b"
-    ],
-    [
       "Canon.lem9",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5f799b5a8d30de37e0eb3e2e785cbf91"
+      "313ce399dda5e2843d02d287fabf88f1"
     ]
   ]
 ]

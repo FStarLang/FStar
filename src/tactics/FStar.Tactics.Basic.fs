@@ -259,23 +259,25 @@ let dismiss_all : tac<unit> =
 let nwarn = BU.mk_ref 0
 
 let check_valid_goal g =
-    let b = true in
-    let env = g.context in
-    let b = b && Env.closed env g.witness in
-    let b = b && Env.closed env g.goal_ty in
-    let rec aux b e =
-        match Env.pop_bv e with
-        | None -> b
-        | Some (bv, e) -> (
-            let b = b && Env.closed e bv.sort in
-            aux b e
-            )
-    in
-    if not (aux b env) && !nwarn < 5
-    then (Err.log_issue g.goal_ty.pos
-              (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                          (goal_to_string g));
-          nwarn := !nwarn + 1)
+    if Options.defensive () then begin
+        let b = true in
+        let env = g.context in
+        let b = b && Env.closed env g.witness in
+        let b = b && Env.closed env g.goal_ty in
+        let rec aux b e =
+            match Env.pop_bv e with
+            | None -> b
+            | Some (bv, e) -> (
+                let b = b && Env.closed e bv.sort in
+                aux b e
+                )
+        in
+        if not (aux b env) && !nwarn < 5
+        then (Err.log_issue g.goal_ty.pos
+                  (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
+                              (goal_to_string g));
+              nwarn := !nwarn + 1)
+    end
 
 let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
@@ -354,7 +356,11 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
-    try ret (ps.main_context.type_of e t) with e -> fail "not typeable")
+    try ret (ps.main_context.type_of e t)
+    with ex ->
+           //printfn "%A\n" ex;
+           fail2 "Cannot type %s in context (%s)" (tts e t)
+                                                  (Env.all_binders e |> Print.binders_to_string ", "))
 
 let must_trivial (e : env) (g : guard_t) : tac<unit> =
     try if not (Rel.is_trivial <| Rel.discharge_guard_no_smt e g)

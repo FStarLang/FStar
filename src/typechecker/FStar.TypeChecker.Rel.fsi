@@ -48,9 +48,6 @@ val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : guard_t -> guard_t
 val resolve_implicits_tac     : guard_t -> guard_t
-val guard_unbound_vars        : env -> guard_t -> set<bv>
-val check_term                : string -> env -> term -> unit
-val check_guard               : string -> env -> guard_t -> unit
 val base_and_refinement       : env -> term -> term * option<(bv * term)>
 
 val unrefine   : env -> typ -> typ

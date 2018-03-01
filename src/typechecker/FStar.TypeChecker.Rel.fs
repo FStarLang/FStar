@@ -65,27 +65,29 @@ let abstract_guard_n bs g =
 let abstract_guard b g =
     abstract_guard_n [b] g
 
-let guard_unbound_vars env g =
-    match g.guard_f with
-    | Trivial      -> BU.new_set S.order_bv
-    | NonTrivial f -> unbound_vars env f
+let def_check_closed_in rng msg e t =
+    if Options.defensive () then begin
+        let s = unbound_vars e t in
+        if not (BU.set_is_empty s)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ", "))
+    end
 
-let check_guard msg env g =
-    let s = guard_unbound_vars env g in
-    if BU.set_is_empty s
-    then ()
-    else raise_err (Errors.Fatal_FreeVariables, BU.format2 "Guard has free variables (%s): %s"
-                                msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
-
-let check_term msg env t =
-    let s = unbound_vars env t in
-    if BU.set_is_empty s
-    then ()
-    else raise_err (Errors.Fatal_FreeVariables, BU.format3 "Term <%s> has free variables (%s): %s"
-                                (Print.term_to_string t)
-                                msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
+let def_check_closed rng msg t =
+    if Options.defensive () then begin
+        let s = Free.names t in
+        if not (BU.set_is_empty s)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ", "))
+    end
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
@@ -316,9 +318,20 @@ let p_loc = function
 let p_guard = function
    | TProb p -> p.logical_guard
    | CProb p -> p.logical_guard
-let p_scope = function
+
+let p_scope prob =
+   let r = match prob with
    | TProb p -> p.scope
    | CProb p -> p.scope
+   in
+   begin match r with
+   | [] -> r
+   | (bv, _)::_ ->
+       // A simple sanity check, the head of the environment must have a closed type.
+       def_check_closed (p_loc prob) "p_scope" bv.sort;
+       r
+   end
+
 let p_invert = function
    | TProb p -> TProb <| invert p
    | CProb p -> CProb <| invert p
@@ -405,7 +418,10 @@ let commit uvis = uvis |> List.iter (function
         | U_unif u' -> UF.univ_union u u'
         | _ -> UF.univ_change u t
       end
-    | TERM((u, _), t) -> U.set_uvar u t)
+    | TERM((u, _), t) ->
+      def_check_closed t.pos "commit" t;
+      U.set_uvar u t
+    )
 
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
@@ -560,6 +576,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (string_of_int (p_pid prob))
                             (Print.term_to_string uv)
                             (Print.term_to_string phi);
+          def_check_closed (p_loc prob) "solve_prob'" phi;
           U.set_uvar uvar phi
         | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     commit uvis;
@@ -1828,6 +1845,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     (Print.tag_of_term im);
                     (List.map (prob_to_string env) sub_probs |> String.concat ", ");
                     (N.term_to_string env formula)];
+        def_check_closed (p_loc orig) "imitate" im;
         let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate> *)
@@ -1899,6 +1917,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
                              let k' = U.arrow xs c in
                              let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
+                             def_check_closed (p_loc orig) "solve_t_flex_rigid.subterms" uv_sol;
                              UF.change uvar uv_sol;
                              Some (xs, c))
                         | _ -> None
@@ -2872,6 +2891,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
+      def_check_closed_in (Env.get_range env) "discharge_guard'" env vc;
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->

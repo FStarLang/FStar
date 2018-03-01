@@ -234,6 +234,7 @@ val n_fuel: int -> term
 
 val mk_haseq: term -> term
 
+val op_to_string: op -> string
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string

@@ -567,7 +567,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "55321fb2be8295b995e9f9d5e4a42053"
+      "3d75c609fd6b30774d66b823144d90c2"
     ],
     [
       "IntegerParsing.parse_u8_st_nochk",
@@ -713,7 +713,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "8d81ec312aef759c72f1aa7b86430b7a"
+      "73cdc4ee5f3ac622c8e6b47bc5b194bf"
     ],
     [
       "IntegerParsing.parse_u8_st",
@@ -836,7 +836,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "40ed5c9ac9e2ab45993725ee7bbc9f64"
+      "36e01ce2199c9645af244c3b856a0af7"
     ],
     [
       "IntegerParsing.parse_u16_st_nochk",
@@ -1112,7 +1112,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "cafc854ca0a358fc650f095004b5c84d"
+      "df62866b365dee102ea4ce35d2ba3400"
     ],
     [
       "IntegerParsing.parse_u32_st_nochk",

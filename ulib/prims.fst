@@ -324,18 +324,12 @@ type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
 
-(*    For the moment we require not just that the divisor is non-zero, *)
-(*    but also that the dividend is natural. This works around a *)
-(*    mismatch between the semantics of integer division in SMT-LIB and *)
-(*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
-(*    math Euclidian division), while for F#/OCaml ints the modulus has *)
-(*    the same sign as the dividend.                                    *)
-
-(*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
-(*    in OCaml. Although in F# they are still compiled to platform-specific *)
-(*    finite integers---this should eventually change to .NET BigInteger *)
+(*    Arbitrary precision ints are compiled to zarith (big_ints)       *)
+(*    in OCaml and to .NET BigInteger in F#. Both these operations are *)
+(*    Euclidean and are mapped to the corresponding theory symbols in  *)
+(*    the SMT encoding *)
 assume val op_Modulus            : int -> nonzero -> Tot int
-assume val op_Division           : nat -> nonzero -> Tot int
+assume val op_Division           : int -> nonzero -> Tot int
 
 let rec pow2 (x:nat) : Tot pos =
   match x with
