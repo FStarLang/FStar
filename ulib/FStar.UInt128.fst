@@ -556,7 +556,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#set-options "--z3rlimit 80"
+#set-options "--z3rlimit 150"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -574,7 +574,7 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 #reset-options "--max_fuel 0 --max_ifuel 0"
-#set-options "--normalize_pure_terms_for_extraction --z3rlimit 100"
+#set-options "--normalize_pure_terms_for_extraction --z3rlimit 150"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
