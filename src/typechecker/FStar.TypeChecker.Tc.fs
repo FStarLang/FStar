@@ -1604,26 +1604,6 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
-let tc_partial_modul env modul push_before_typechecking =
-  let verify = Options.should_verify modul.name.str in
-  let action = if verify then "Verifying" else "Lax-checking" in
-  let label = if modul.is_interface then "interface" else "implementation" in
-  if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label modul.name.str;
-
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
-  let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
-  if push_before_typechecking then env.solver.push msg;
-  let env = Env.set_current_module env modul.name in
-  let ses, exports, env = tc_decls env modul.declarations in
-  {modul with declarations=ses}, exports, env
-
-let tc_more_partial_modul env modul decls =
-  let ses, exports, env = tc_decls env decls in
-  let modul = {modul with declarations=modul.declarations@ses} in
-  modul, exports, env
-
 (* Consider the module:
         module Test
         abstract type t = nat
@@ -1812,28 +1792,59 @@ let extract_interface (env:env) (m:modul) :modul =
   
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
 
+//AR: moving these push and pop functions from Universal, using them in extracting interface etc.
+let pop_context env msg =
+    ToSyntax.Env.pop () |> ignore;
+    let en = TypeChecker.Env.pop env msg in
+    env.solver.refresh();
+    en
+
+let push_context env msg =
+    let dsenv = ToSyntax.Env.push env.dsenv in
+    let env = TypeChecker.Env.push env msg in
+    {env with dsenv=dsenv}
+
+let tc_partial_modul env modul =
+  let verify = Options.should_verify modul.name.str in
+  let action = if verify then "Verifying" else "Lax-checking" in
+  let label = if modul.is_interface then "interface" else "implementation" in
+  if Options.debug_any () then
+    BU.print3 "%s %s of %s\n" action label modul.name.str;
+
+  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
+  let env = Env.set_current_module env modul.name in
+  let ses, exports, env = tc_decls env modul.declarations in
+  {modul with declarations=ses}, exports, env
+
+let tc_more_partial_modul env modul decls =
+  let ses, exports, env = tc_decls env decls in
+  let modul = {modul with declarations=modul.declarations@ses} in
+  modul, exports, env
+
 let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
   let lax_mode = env0.lax in
   let env0 = if lid_equals env0.curmodule Parser.Const.prims_lid then { env0 with lax = true } else env0 in
-  let env = mk_copy env0 in  //AR: one redundant copy, in the second phase, no need to copy
-  let modul, non_private_decls, env = tc_partial_modul env m true in
-  let m, m_opt, env = finish_partial_modul false env0 env modul non_private_decls in
+  let msg = "Internals for " ^ m.name.str in
+  //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
+  let env0 = push_context env0 msg in
+  let modul, non_private_decls, env = tc_partial_modul env0 m in
+  let m, m_opt, env = finish_partial_modul false env modul non_private_decls in
   m, m_opt, { env with lax = lax_mode }
 
-and finish_partial_modul (loading_from_cache:bool) (env0:env) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
-  //AR: TODO: FIXME: do we ever call finish_partial_modul for current buffer in the interactive mode?
+and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
+  //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
-    en.solver.pop ("Ending modul " ^ m.name.str); //pop the solver
-    en.solver.refresh ();  //refresh
+    //pop AND use the old env for rest of the function
+    let en = pop_context en ("Ending modul " ^ m.name.str) in
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
-    //if true then BU.print2 "Module %s before extraction:\n%s" modul.name.str (Syntax.Print.modul_to_string modul);
-    let modul_iface = extract_interface env0 m in
+    let modul_iface = extract_interface en m in
     BU.print3 "Extracting and type checking module %s interface%s%s\n" m.name.str
               (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
               (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
-    let env0 = { env0 with is_iface = true } in
-    let modul_iface, must_be_none, env = tc_modul env0 modul_iface in
+    let env0 = { en with is_iface = true } in
+    let modul_iface, must_be_none, env = tc_modul en modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
     else m, Some modul_iface, env
   end
@@ -1843,7 +1854,8 @@ and finish_partial_modul (loading_from_cache:bool) (env0:env) (en:env) (m:modul)
     if not (Options.lax()) && (not (Options.use_extracted_interfaces ()))
     && (not loading_from_cache)
     then check_exports env modul exports;
-    env.solver.pop ("Ending modul " ^ modul.name.str);
+    //pop BUT ignore the old env
+    pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
     env.solver.encode_modul env modul;
     env.solver.refresh();
     //interactive mode manages it itself
@@ -1854,7 +1866,8 @@ let load_checked_module (en:env) (m:modul) :env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
   let env = Env.set_current_module en m.name in
-  env.solver.push ("Internals for " ^ Ident.string_of_lid m.name);
+  //push context, finish_partial_modul will do the pop
+  let env = push_context env ("Internals for " ^ Ident.string_of_lid m.name) in
   let env = List.fold_left (fun env se ->
              //push every sigelt in the environment
              let env = Env.push_sigelt env se in
@@ -1870,7 +1883,7 @@ let load_checked_module (en:env) (m:modul) :env =
              m.declarations in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  let _, _, env = finish_partial_modul true env env m m.exports in
+  let _, _, env = finish_partial_modul true env m m.exports in
   env
 
 let check_module env m =

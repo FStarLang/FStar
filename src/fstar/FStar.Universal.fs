@@ -137,7 +137,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
                              (range_of_first_mod_decl ast_modul)
     end;
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
-                        else Tc.tc_partial_modul env modul false in
+                        else Tc.tc_partial_modul env modul in
     (Some modul, env)
   | Parser.Driver.Decls ast_decls ->
     match curmod with
@@ -289,15 +289,9 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
-let pop_context env msg =
-    DsEnv.pop () |> ignore;
-    TcEnv.pop env msg |> ignore;
-    env.solver.refresh()
+let pop_context env msg = Tc.pop_context env msg |> ignore
 
-let push_context env msg =
-    let dsenv = DsEnv.push env.dsenv in
-    let env = TcEnv.push env msg in
-    {env with dsenv=dsenv}
+let push_context env msg = Tc.push_context env msg
 
 let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) =
   let remaining, (nmods, env) =
