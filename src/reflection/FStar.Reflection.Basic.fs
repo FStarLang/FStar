@@ -72,7 +72,7 @@ let rec unembed_term (t:term) : option<term> =
         None
 
 let embed_fvar (rng:Range.range) (fv:fv) : term =
-    U.mk_lazy fv fstar_refl_fvar Lazy_fvar (Some rng)
+    U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
 
 let unembed_fvar (t:term) : option<fv> =
     match (SS.compress t).n with
@@ -116,15 +116,15 @@ let unfold_lazy_env (i : lazyinfo) : term =
 let embed_const (rng:Range.range) (c:vconst) : term =
     let r =
     match c with
-    | C_Unit    -> ref_C_Unit
-    | C_True    -> ref_C_True
-    | C_False   -> ref_C_False
+    | C_Unit    -> ref_C_Unit.t
+    | C_True    -> ref_C_True.t
+    | C_False   -> ref_C_False.t
 
     | C_Int i ->
-        S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (Z.string_of_big_int i))]
+        S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
                     None Range.dummyRange
     | C_String s ->
-        S.mk_Tm_app ref_C_String [S.as_arg (embed_string rng s)]
+        S.mk_Tm_app ref_C_String.t [S.as_arg (embed_string rng s)]
                     None Range.dummyRange
     in { r with pos = rng }
 
@@ -132,20 +132,20 @@ let unembed_const (t:term) : option<vconst> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unit_lid ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unit.lid ->
         Some C_Unit
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_True_lid ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_True.lid ->
         Some C_True
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_False_lid ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_False.lid ->
         Some C_False
 
-    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
+    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int.lid ->
         BU.bind_opt (unembed_int i) (fun i ->
         Some <| C_Int i)
 
-    | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv ref_C_String_lid ->
+    | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv ref_C_String.lid ->
         BU.bind_opt (unembed_string s) (fun s ->
         Some <| C_String s)
 
@@ -156,32 +156,32 @@ let unembed_const (t:term) : option<vconst> =
 let rec embed_pattern (rng:Range.range) (p : pattern) : term =
     match p with
     | Pat_Constant c ->
-        S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const rng c)] None rng
+        S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed_const rng c)] None rng
     | Pat_Cons (fv, ps) ->
-        S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
+        S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
     | Pat_Var bv ->
-        S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder rng (S.mk_binder bv))] None rng
+        S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_binder rng (S.mk_binder bv))] None rng
     | Pat_Wild bv ->
-        S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder rng (S.mk_binder bv))] None rng
+        S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_binder rng (S.mk_binder bv))] None rng
 
 let rec unembed_pattern (t : term) : option<pattern> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Pat_Constant_lid ->
+    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Pat_Constant.lid ->
         BU.bind_opt (unembed_const c) (fun c ->
         Some <| Pat_Constant c)
 
-    | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons_lid ->
+    | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
         BU.bind_opt (unembed_fvar f) (fun f ->
         BU.bind_opt (unembed_list unembed_pattern ps) (fun ps ->
         Some <| Pat_Cons (f, ps)))
 
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var_lid ->
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
         BU.bind_opt (unembed_binder b) (fun (bv, aq) ->
         Some <| Pat_Var bv)
 
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild_lid ->
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
         BU.bind_opt (unembed_binder b) (fun (bv, aq) ->
         Some <| Pat_Wild bv)
 
@@ -195,16 +195,16 @@ let unembed_branch = unembed_pair unembed_pattern unembed_term
 let embed_aqualv (rng:Range.range) (q : aqualv) : term =
     let r =
     match q with
-    | Data.Q_Explicit -> ref_Q_Explicit
-    | Data.Q_Implicit -> ref_Q_Implicit
+    | Data.Q_Explicit -> ref_Q_Explicit.t
+    | Data.Q_Implicit -> ref_Q_Implicit.t
     in { r with pos = rng }
 
 let unembed_aqualv (t : term) : option<aqualv> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit_lid -> Some Data.Q_Explicit
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit_lid -> Some Data.Q_Implicit
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit.lid -> Some Data.Q_Explicit
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit.lid -> Some Data.Q_Implicit
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded aqualv: %s" (Print.term_to_string t)));
         None
@@ -215,109 +215,109 @@ let unembed_argv = unembed_pair unembed_term unembed_aqualv
 let embed_term_view (rng:Range.range) (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
-        S.mk_Tm_app ref_Tv_FVar [S.as_arg (embed_fvar rng fv)]
+        S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fvar rng fv)]
                     None rng
 
     | Tv_Var bv ->
-        S.mk_Tm_app ref_Tv_Var [S.as_arg (embed_binder rng bv)]
+        S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed_binder rng bv)]
                     None rng
 
     | Tv_App (hd, a) ->
-        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term rng hd); S.as_arg (embed_argv rng a)]
+        S.mk_Tm_app ref_Tv_App.t [S.as_arg (embed_term rng hd); S.as_arg (embed_argv rng a)]
                     None rng
 
     | Tv_Abs (b, t) ->
-        S.mk_Tm_app ref_Tv_Abs [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t)]
                     None rng
 
     | Tv_Arrow (b, c) ->
-        S.mk_Tm_app ref_Tv_Arrow [S.as_arg (embed_binder rng b); S.as_arg (embed_comp rng c)]
+        S.mk_Tm_app ref_Tv_Arrow.t [S.as_arg (embed_binder rng b); S.as_arg (embed_comp rng c)]
                     None rng
 
     | Tv_Type u ->
-        S.mk_Tm_app ref_Tv_Type [S.as_arg (embed_unit rng ())]
+        S.mk_Tm_app ref_Tv_Type.t [S.as_arg (embed_unit rng ())]
                     None rng
 
     | Tv_Refine (bv, t) ->
-        S.mk_Tm_app ref_Tv_Refine [S.as_arg (embed_binder rng bv); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed_binder rng bv); S.as_arg (embed_term rng t)]
                     None rng
 
     | Tv_Const c ->
-        S.mk_Tm_app ref_Tv_Const [S.as_arg (embed_const rng c)]
+        S.mk_Tm_app ref_Tv_Const.t [S.as_arg (embed_const rng c)]
                     None rng
 
     | Tv_Uvar (u, t) ->
-        S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int rng u); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Uvar.t [S.as_arg (embed_int rng u); S.as_arg (embed_term rng t)]
                     None rng
 
     | Tv_Let (b, t1, t2) ->
-        S.mk_Tm_app ref_Tv_Let [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t1); S.as_arg (embed_term rng t2)]
+        S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t1); S.as_arg (embed_term rng t2)]
                     None rng
 
     | Tv_Match (t, brs) ->
-        S.mk_Tm_app ref_Tv_Match [S.as_arg (embed_term rng t); S.as_arg (embed_list embed_branch fstar_refl_branch rng brs)]
+        S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed_term rng t); S.as_arg (embed_list embed_branch fstar_refl_branch rng brs)]
                     None rng
 
     | Tv_Unknown ->
-        { ref_Tv_Unknown with pos = rng }
+        { ref_Tv_Unknown.t with pos = rng }
 
 let unembed_term_view (t:term) : option<term_view> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var_lid ->
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var.lid ->
         BU.bind_opt (unembed_binder b) (fun b ->
         Some <| Tv_Var b)
 
-    | Tm_fvar fv, [(f, _)] when S.fv_eq_lid fv ref_Tv_FVar_lid ->
+    | Tm_fvar fv, [(f, _)] when S.fv_eq_lid fv ref_Tv_FVar.lid ->
         BU.bind_opt (unembed_fvar f) (fun f ->
         Some <| Tv_FVar f)
 
-    | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App_lid ->
+    | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App.lid ->
         BU.bind_opt (unembed_term l) (fun l ->
         BU.bind_opt (unembed_argv r) (fun r ->
         Some <| Tv_App (l, r)))
 
-    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Abs_lid ->
+    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Abs.lid ->
         BU.bind_opt (unembed_binder b) (fun b ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Tv_Abs (b, t)))
 
-    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Arrow_lid ->
+    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Arrow.lid ->
         BU.bind_opt (unembed_binder b) (fun b ->
         BU.bind_opt (unembed_comp t) (fun c ->
         Some <| Tv_Arrow (b, c)))
 
-    | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv ref_Tv_Type_lid ->
+    | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv ref_Tv_Type.lid ->
         BU.bind_opt (unembed_unit u) (fun u ->
         Some <| Tv_Type u)
 
-    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine_lid ->
+    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine.lid ->
         BU.bind_opt (unembed_binder b) (fun b ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Tv_Refine (b, t)))
 
-    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const_lid ->
+    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const.lid ->
         BU.bind_opt (unembed_const c) (fun c ->
         Some <| Tv_Const c)
 
-    | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar_lid ->
+    | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
         BU.bind_opt (unembed_int u) (fun u ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Tv_Uvar (u, t)))
 
-    | Tm_fvar fv, [(b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let_lid ->
+    | Tm_fvar fv, [(b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
         BU.bind_opt (unembed_binder b) (fun b ->
         BU.bind_opt (unembed_term t1) (fun t1 ->
         BU.bind_opt (unembed_term t2) (fun t2 ->
         Some <| Tv_Let (b, t1, t2))))
 
-    | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match_lid ->
+    | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
         BU.bind_opt (unembed_term t) (fun t ->
         BU.bind_opt (unembed_list unembed_branch brs) (fun brs ->
         Some <| Tv_Match (t, brs)))
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown_lid ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
         Some <| Tv_Unknown
 
     | _ ->
@@ -327,31 +327,31 @@ let unembed_term_view (t:term) : option<term_view> =
 let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
     match cv with
     | C_Total t ->
-        S.mk_Tm_app ref_C_Total [S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_C_Total.t [S.as_arg (embed_term rng t)]
                     None rng
 
     | C_Lemma (pre, post) ->
         let post = U.unthunk_lemma_post post in
-        S.mk_Tm_app ref_C_Lemma [S.as_arg (embed_term rng pre); S.as_arg (embed_term rng post)]
+        S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed_term rng pre); S.as_arg (embed_term rng post)]
                     None rng
 
     | C_Unknown ->
-        { ref_C_Unknown with pos = rng }
+        { ref_C_Unknown.t with pos = rng }
 
 let unembed_comp_view (t : term) : option<comp_view> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_C_Total_lid ->
+    | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_C_Total.lid ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| C_Total t)
 
-    | Tm_fvar fv, [(pre, _); (post, _)] when S.fv_eq_lid fv ref_C_Lemma_lid ->
+    | Tm_fvar fv, [(pre, _); (post, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
         BU.bind_opt (unembed_term pre) (fun pre ->
         BU.bind_opt (unembed_term post) (fun post ->
         Some <| C_Lemma (pre, post)))
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unknown_lid ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unknown.lid ->
         Some <| C_Unknown
 
     | _ ->
@@ -639,7 +639,7 @@ let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
 let embed_ctor (rng:Range.range) (c:ctor) : term =
     match c with
     | Ctor (nm, t) ->
-        S.mk_Tm_app ref_Ctor
+        S.mk_Tm_app ref_Ctor.t
                     [S.as_arg (embed_string_list rng nm);
                      S.as_arg (embed_term rng t)]
                     None rng
@@ -648,7 +648,7 @@ let unembed_ctor (t:term) : option<ctor> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(nm, _); (t, _)] when S.fv_eq_lid fv ref_Ctor_lid ->
+    | Tm_fvar fv, [(nm, _); (t, _)] when S.fv_eq_lid fv ref_Ctor.lid ->
         BU.bind_opt (unembed_string_list nm) (fun nm ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Ctor (nm, t)))
@@ -659,7 +659,7 @@ let unembed_ctor (t:term) : option<ctor> =
 let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     match sev with
     | Sg_Inductive (nm, bs, t, dcs) ->
-        S.mk_Tm_app ref_Sg_Inductive
+        S.mk_Tm_app ref_Sg_Inductive.t
                     [S.as_arg (embed_string_list rng nm);
                         S.as_arg (embed_binders rng bs);
                         S.as_arg (embed_term rng t);
@@ -667,33 +667,33 @@ let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
                     None rng
 
     | Sg_Let (fv, ty, t) ->
-        S.mk_Tm_app ref_Sg_Let
+        S.mk_Tm_app ref_Sg_Let.t
                     [S.as_arg (embed_fvar rng fv);
                         S.as_arg (embed_term rng ty);
                         S.as_arg (embed_term rng t)]
                     None rng
 
     | Unk ->
-        { ref_Unk with pos = rng }
+        { ref_Unk.t with pos = rng }
 
 let unembed_sigelt_view (t:term) : option<sigelt_view> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(nm, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive_lid ->
+    | Tm_fvar fv, [(nm, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
         BU.bind_opt (unembed_string_list nm) (fun nm ->
         BU.bind_opt (unembed_binders bs) (fun bs ->
         BU.bind_opt (unembed_term t) (fun t ->
         BU.bind_opt (unembed_list unembed_ctor dcs) (fun dcs ->
         Some <| Sg_Inductive (nm, bs, t, dcs)))))
 
-    | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let_lid ->
+    | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
         BU.bind_opt (unembed_fvar fvar) (fun fvar ->
         BU.bind_opt (unembed_term ty) (fun ty ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Sg_Let (fvar, ty, t))))
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk_lid ->
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
         Some Unk
 
     | _ ->
