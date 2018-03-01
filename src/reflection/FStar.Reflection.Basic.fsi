@@ -18,7 +18,13 @@ val term_eq        : term -> term -> bool
 val fresh_binder   : typ -> binder // DANGER! unpure, we should move it to tactics
 val term_to_string : term -> string
 
-(* Views, should be gone *)
+(* Lazy unfoldings *)
+val unfold_lazy_fvar   : lazyinfo -> term
+val unfold_lazy_binder : lazyinfo -> term
+val unfold_lazy_comp   : lazyinfo -> term
+val unfold_lazy_env    : lazyinfo -> term
+
+(* Views *)
 val inspect_fv    : fv -> list<string>
 val pack_fv       : list<string> -> fv
 

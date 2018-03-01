@@ -7,8 +7,9 @@ open FStar.Syntax.Embeddings
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
-val embed_proofstate   : embedder<proofstate>
-val unembed_proofstate : unembedder<proofstate>
+val embed_proofstate       : embedder<proofstate>
+val unembed_proofstate     : unembedder<proofstate>
+val unfold_lazy_proofstate : lazyinfo -> term
 
 val embed_result   : embedder<'a> -> typ -> embedder<__result<'a>>
 val unembed_result : term -> unembedder<'a> -> option<FStar.Util.either<('a * proofstate), (string * proofstate)>>

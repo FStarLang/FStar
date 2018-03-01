@@ -44,13 +44,18 @@ module Z = FStar.BigInt
   *)
 
 let embed_binder (rng:Range.range) (b:binder) : term =
-    U.mk_alien fstar_refl_binder b "reflection.embed_binder" (Some rng)
+    U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
 
 let unembed_binder (t:term) : option<binder> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ ->
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_binder ->
+        Some (FStar.Dyn.undyn i.blob)
+    | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
         None
+
+let unfold_lazy_binder (i : lazyinfo) : term =
+    U.exp_unit
 
 let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 let unembed_binders t = unembed_list unembed_binder t
@@ -67,31 +72,46 @@ let rec unembed_term (t:term) : option<term> =
         None
 
 let embed_fvar (rng:Range.range) (fv:fv) : term =
-    U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" (Some rng)
+    U.mk_lazy fv fstar_refl_fvar Lazy_fvar (Some rng)
 
 let unembed_fvar (t:term) : option<fv> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ ->
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_fvar ->
+        Some (FStar.Dyn.undyn i.blob)
+    | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
         None
 
+let unfold_lazy_fvar (i : lazyinfo) : term =
+    U.exp_unit
+
 let embed_comp (rng:Range.range) (c:comp) : term =
-    U.mk_alien fstar_refl_comp c "reflection.embed_comp" (Some rng)
+    U.mk_lazy c fstar_refl_comp Lazy_comp (Some rng)
 
 let unembed_comp (t:term) : option<comp> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ ->
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_comp ->
+        Some (FStar.Dyn.undyn i.blob)
+    | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
         None
 
-let embed_env (rng:Range.range) (env:Env.env) : term =
-    U.mk_alien fstar_refl_env env "tactics_embed_env" (Some rng)
+let unfold_lazy_comp (i : lazyinfo) : term =
+    U.exp_unit
+
+let embed_env (rng:Range.range) (e:Env.env) : term =
+    U.mk_lazy e fstar_refl_env Lazy_env (Some rng)
 
 let unembed_env (t:term) : option<Env.env> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ ->
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_env ->
+        Some (FStar.Dyn.undyn i.blob)
+    | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
         None
+
+let unfold_lazy_env (i : lazyinfo) : term =
+    U.exp_unit
 
 let embed_const (rng:Range.range) (c:vconst) : term =
     let r =

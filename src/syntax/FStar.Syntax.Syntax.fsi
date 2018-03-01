@@ -87,6 +87,11 @@ type delta_depth =
 // output_value on them (serious).
 type lazy_kind =
   | BadLazy
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index

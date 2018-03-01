@@ -826,8 +826,11 @@ let equality_ops : BU.psmap<primitive_step> =
 
 // Should match FStar.Reflection.Basic.unembed_binder
 let unembed_binder (t : term) : option<S.binder> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ -> None
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_binder ->
+        Some (FStar.Dyn.undyn i.blob)
+    | _ ->
+        None
 
 let mk_psc_subst cfg env =
     List.fold_right

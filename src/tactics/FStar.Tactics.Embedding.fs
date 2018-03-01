@@ -59,13 +59,18 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;
                                       Range.dummyRange
 
 let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
-    U.mk_alien t_proofstate ps "tactics.embed_proofstate" (Some rng)
+    U.mk_lazy ps t_proofstate Lazy_proofstate (Some rng)
 
 let unembed_proofstate (t:term) : option<proofstate> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ ->
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_proofstate ->
+        Some <| FStar.Dyn.undyn i.blob
+    | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));
         None
+
+let unfold_lazy_proofstate (i : lazyinfo) : term =
+    failwith "cannot unfold proofstate -- this shouldn't be needed"
 
 let embed_result (embed_a:embedder<'a>) (t_a:typ) (rng:Range.range) (res:__result<'a>) : term =
     match res with
