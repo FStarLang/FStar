@@ -212,23 +212,14 @@ let example (x: U32.t) : Tot (m unit) =
     ret ()
   end
 
+#set-options "--use_two_phase_tc true"
+
 inline_for_extraction
 let example_sz (x: U32.t) : Tot (m_sz (example x)) =
-  [@inline_let]
-  let c = U32.lt x 256ul in
   ifthenelse_sz
     (U32.lt x 256ul)
-    #(fun (u: unit { c == true } ) -> g <-- ret (cast x) ; print_char g)
-    (fun (u: unit { c == true } ) ->
-      [@inline_let]
-      let p = ret (cast x) in
-      [@inline_let]
-      let r : m_sz p = ret_sz (cast x) in
-      bind_sz r (fun g ->
-      print_char_sz g
-    ))
-    #(fun (u: unit { c == false } ) -> ret ())
-    (fun (u: unit { c == false } ) -> ret_sz ())
+    (fun _ -> bind_sz (ret_sz (cast x)) (fun g -> print_char_sz g))
+    (fun _ -> ret_sz ())
 
 inline_for_extraction
 let test (x: U32.t) : Tot (option U32.t) =
