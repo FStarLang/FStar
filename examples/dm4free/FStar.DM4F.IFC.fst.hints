@@ -45,22 +45,18 @@
       1,
       2,
       1,
-      [
-        "@query", "assumption_FStar.DM4F.IFC.label_haseq",
-        "equality_tok_FStar.DM4F.IFC.High@tok",
-        "equality_tok_FStar.DM4F.IFC.Low@tok"
-      ],
+      [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "8780c3028882fdd5982ac0e22485a864"
+      "c2e203ca992de1f5e0915b85ffcc2e6f"
     ],
     [
       "FStar.DM4F.IFC.flows",
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
+      [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "5a54e10169273f29f73f556a0edfb97a"
+      "4cd146a092c0622a362c053e0e344587"
     ],
     [
       "FStar.DM4F.IFC.write",

@@ -44,12 +44,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_SimplePrintf.arg_haseq", "equation_FStar.String.char",
-        "equation_Prims.eqtype", "function_token_typing_FStar.Char.char",
+        "assumption_SimplePrintf.arg__uu___haseq",
+        "equation_FStar.String.char", "equation_Prims.eqtype",
+        "function_token_typing_FStar.Char.char",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ec2032cafb084392c5de165b64ccf018"
+      "805f784716c1f19c14d0411f995a226d"
     ],
     [
       "SimplePrintf.uu___is_Lit",

@@ -16,12 +16,12 @@
       2,
       1,
       [
-        "@query", "assumption_Lens.point_haseq",
+        "@query", "assumption_Lens.point__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e1b99948c0cdfc6df819de336c58ec24"
+      "80f572ce1e9c3153a8f8ee9436b93db4"
     ],
     [
       "Lens.rgb",
@@ -40,9 +40,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Lens.rgb_haseq" ],
+      [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "77a07ae3c4ba755561addfb68692596c"
+      "f9d18d6a4a748076333224dd11c8074b"
     ],
     [
       "Lens.stlens",

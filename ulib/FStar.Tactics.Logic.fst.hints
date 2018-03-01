@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "49f44493124bf65d99ba3e56eb106381"
+      "55deadc9ee33fd5864ec3573b04e034b"
     ],
     [
       "FStar.Tactics.Logic.l_revert_all",
@@ -28,7 +28,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bd24c032ed830e88193e466c9363f9a2"
+      "f4aab4ec3124134f35c23497719d4045"
     ],
     [
       "FStar.Tactics.Logic.fa_intro_lem",
@@ -43,7 +43,7 @@
         "unit_typing"
       ],
       0,
-      "09a623cc2e374545e8471a719070b8bb"
+      "2d0e1a86eacef218b28d8ccc42d534d1"
     ],
     [
       "FStar.Tactics.Logic.forall_intro",
@@ -56,7 +56,7 @@
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
       0,
-      "c6c0139263a7e2d55a91cea01bd4a714"
+      "97a944e989b286e4f4970ae7ab1ce630"
     ],
     [
       "FStar.Tactics.Logic.split_lem",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "089870ec4bf5d30f18f07639bd5d29ba"
+      "7756c50e0e19d69a958c875ee97dbcbc"
     ],
     [
       "FStar.Tactics.Logic.split",
@@ -81,7 +81,7 @@
         "equation_FStar.Tactics.Derived.fail", "unit_typing"
       ],
       0,
-      "2450a85eef7100477fa01fe4aa9cb898"
+      "1b2319e1f284984ed224d4cb949730a3"
     ],
     [
       "FStar.Tactics.Logic.imp_intro_lem",
@@ -96,7 +96,7 @@
         "unit_typing"
       ],
       0,
-      "f01758f31ce82c5be8ceb19f0537535c"
+      "b74fe9b6ad8ac7bf9e62db6ac7e92d3a"
     ],
     [
       "FStar.Tactics.Logic.implies_intro",
@@ -109,7 +109,7 @@
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
       0,
-      "a3d42f55c81428223ceb448b55ec3b6a"
+      "73004042524daeeb3b9bffffa4fa337f"
     ],
     [
       "FStar.Tactics.Logic.visit",
@@ -131,7 +131,7 @@
         "equation_FStar.Tactics.Logic.split", "unit_typing"
       ],
       0,
-      "3047bc7012c0f876a12e89da0e36be30"
+      "a4199088080a397af36b544561570dfe"
     ],
     [
       "FStar.Tactics.Logic.simplify_eq_implication",
@@ -153,7 +153,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "6c102f9b69640367fa5f4f345a952a8b"
+      "867305af90a36c89b819d2e62ab0fa1d"
     ],
     [
       "FStar.Tactics.Logic.unfold_definition_and_simplify_eq'",
@@ -175,7 +175,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "d01307aca89e155883ebdbf8496e718f"
+      "929ccda2df65ff0d6b942b996637c459"
     ],
     [
       "FStar.Tactics.Logic.vbind",
@@ -187,7 +187,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "cc29df045d38dd3dba8a9e687abbcd20"
+      "9dcd6e054c56eec3a5f67706145827b8"
     ],
     [
       "FStar.Tactics.Logic.or_ind",
@@ -201,7 +201,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "697d7e1290813ab93478169a5596a674"
+      "2c54f9164effff02a986150eb8ecf394"
     ],
     [
       "FStar.Tactics.Logic.bool_ind",
@@ -214,7 +214,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "55c2810819ae38dd4bd33f24b0d4a516"
+      "e28f37e39dbfe3bd90ea85bb54759771"
     ],
     [
       "FStar.Tactics.Logic.or_intro_1",
@@ -226,7 +226,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "571a35f4f9e44676d7a90f52087fbf99"
+      "481e552906ad1350ea7353f529c4fb56"
     ],
     [
       "FStar.Tactics.Logic.or_intro_2",
@@ -238,7 +238,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "2a98040153bf7835c255e4647c5805a0"
+      "601fbcf7913eff2d6aeeb8bfb09a0ab3"
     ],
     [
       "FStar.Tactics.Logic.__and_elim",
@@ -252,7 +252,75 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "f1e07549843ff989cd6a0ce00fcee0fb"
+      "820dfed88fe946eed1030219161e4283"
+    ],
+    [
+      "FStar.Tactics.Logic.revert_squash",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "forall-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "7e2ee4f9e8f25d644e6af2d5e976bfe2"
+    ],
+    [
+      "FStar.Tactics.Logic.l_revert_all",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1ed654bfaa534f1761692bbafce5b1e2_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "61344124276c3c24bf200389161bdc6e"
+    ],
+    [
+      "FStar.Tactics.Logic.forall_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Effect.bind", "unit_typing"
+      ],
+      0,
+      "92c4b2093102301eef30fe076587f1c2"
+    ],
+    [
+      "FStar.Tactics.Logic.split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Derived.fail", "unit_typing"
+      ],
+      0,
+      "a12b789c53576c53e165af1386ab5fdd"
+    ],
+    [
+      "FStar.Tactics.Logic.implies_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Effect.bind", "unit_typing"
+      ],
+      0,
+      "b72cb29eac735dfc7e839a74a35158ae"
     ]
   ]
 ]

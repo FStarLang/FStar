@@ -374,7 +374,19 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // action cps'd type contains the "good" wp that tells us EVERYTHING
           // about what this action does. Please note that this "good" wp is
           // of the form [binders -> repr ...], i.e. is it properly curried.
-          let act_typ, _, g_t = tc_tot_or_gtot_term env act.action_typ in
+
+          //AR: if the act typ is already in the effect monad (e.g. in the second phase),
+          //    then, convert it to repr, so that the code after it can work as it is
+          //    perhaps should open/close binders properly
+          let act_typ =
+            match (SS.compress act.action_typ).n with
+            | Tm_arrow (bs, c) ->
+              let c = comp_to_comp_typ c in
+              if lid_equals c.effect_name ed.mname then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args)))) else act.action_typ
+            | _ -> act.action_typ
+          in
+          
+          let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
 
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
@@ -1533,8 +1545,6 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se
 
-let dont_use_exports = Options.use_extracted_interfaces () || Options.check_interface ()
-
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
@@ -1569,7 +1579,7 @@ let tc_decls env ses =
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
     let exports, hidden =
-      if dont_use_exports then [], []
+      if Options.use_extracted_interfaces () then [], []
       else
         let accum_exports_hidden (exports, hidden) se =
           let se_exported, hidden = for_export hidden se in
@@ -1593,26 +1603,6 @@ let tc_decls env ses =
 
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
-
-let tc_partial_modul env modul push_before_typechecking =
-  let verify = Options.should_verify modul.name.str in
-  let action = if verify then "Verifying" else "Lax-checking" in
-  let label = if modul.is_interface then "interface" else "implementation" in
-  if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label modul.name.str;
-
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
-  let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
-  if push_before_typechecking then env.solver.push msg;
-  let env = Env.set_current_module env modul.name in
-  let ses, exports, env = tc_decls env modul.declarations in
-  {modul with declarations=ses}, exports, env
-
-let tc_more_partial_modul env modul decls =
-  let ses, exports, env = tc_decls env decls in
-  let modul = {modul with declarations=modul.declarations@ses} in
-  modul, exports, env
 
 (* Consider the module:
         module Test
@@ -1680,66 +1670,24 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
-let finish_partial_modul must_check_exports env modul exports =
-  let modul = if dont_use_exports then { modul with exports = modul.declarations } else { modul with exports=exports } in
-  let env = Env.finish_module env modul in
-  if not (Options.lax()) && (not dont_use_exports)
-  && must_check_exports
-  then check_exports env modul exports;
-  env.solver.pop ("Ending modul " ^ modul.name.str);
-  env.solver.encode_modul env modul;
-  env.solver.refresh();
-  //interactive mode manages it itself
-  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
-  modul, env
-
-let load_checked_module env modul =
-  //This function tries to very carefully mimic the effect of the environment
-  //of having checked the module from scratch, i.e., using tc_module below
-  let env = Env.set_current_module env modul.name in
-  env.solver.push ("Internals for " ^ Ident.string_of_lid modul.name);
-  let env = List.fold_left (fun env se ->
-             //push every sigelt in the environment
-             let env = Env.push_sigelt env se in
-             //and then query it back immediately to populate the environment's internal cache
-             //this is important for extraction to work correctly,
-             //in particular, when extracting a module we want the module's internal symbols
-             //that may be marked "abstract" externally to be visible internally
-             //populating the cache enables this behavior, rather indirectly, sadly : (
-             let lids = Util.lids_of_sigelt se in
-             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
-             env)
-             env
-             modul.declarations in
-  //And then call finish_partial_modul, which is the normal workflow of tc_modul below
-  //except with the flag `must_check_exports` set to false, since this is already a checked module
-  snd (finish_partial_modul false env modul modul.exports)
-
-let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul true in
-  finish_partial_modul true env modul non_private_decls
-
+//extract an interface from m
 let extract_interface (env:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let is_assume = List.contains Assumption in
-  let is_noeq_or_unopteq = List.existsb (fun q -> q = Noeq || q = Unopteq) in
-  let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible)) in
-  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible)) in  //abstract inductive should not have noeq and unopteq
-  let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
-  let add_assume_if_needed quals = if is_assume quals then quals else Assumption::quals in
+  let filter_out_abstract = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Visible_default)) in
+  let filter_out_abstract_and_noeq = List.filter (fun q -> not (q = Abstract || q = Noeq || q = Unopteq || q = Irreducible || q = Visible_default)) in  //abstract inductive should not have noeq and unopteq
+  let filter_out_abstract_and_inline = List.filter (fun q -> not (q = Abstract || q = Irreducible || q = Visible_default || q = Inline_for_extraction || q = Unfold_for_unification_and_vcgen)) in
 
-  //in case we need to drop val, and keep let, we should carry over the types from val
-  let val_typs = BU.mk_ref [] in
-
-  //we need to filter out projectors and discriminators of abstract inductive datacons, so keep track of such datacons
+  //we need to filter out projectors and discriminators of abstract inductive datacons, so keep track of such datacons, and keep tycons for haseq purposes
+  let abstract_inductive_tycons   = BU.mk_ref [] in
   let abstract_inductive_datacons = BU.mk_ref [] in
 
   let is_projector_or_discriminator_of_an_abstract_inductive (quals:list<qualifier>) :bool =
     List.existsML (fun q ->
       match q with
       | Discriminator l
-      | Projector (l, _) -> List.existsb (fun l' -> lid_equals l l') !abstract_inductive_datacons
+      | Projector (l, _) -> true //List.existsb (fun l' -> lid_equals l l') !abstract_inductive_datacons
       | _ -> false
     ) quals
   in
@@ -1759,74 +1707,31 @@ let extract_interface (env:env) (m:modul) :modul =
       let s1 = { s with sigel = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng);
                         sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
-      
-      if not (is_noeq_or_unopteq s.sigquals) then  //generate the optimized hasEq axiom for the inductive to add to the interface    
-        let usubst, uvs = SS.univ_var_opening uvs in
-        let env = Env.push_univ_vars env uvs in
-        let axiom_lid, fml, _, _, _ = TcUtil.get_optimized_haseq_axiom env s usubst uvs in
-        let uvs, fml = TcUtil.generalize_universes env fml in 
-        let s2 = { s with sigel = Sig_assume (axiom_lid, uvs, fml); sigquals = Assumption::(filter_out_abstract s.sigquals) } in
-        s1::[s2]
-      else [s1]
+      [s1]
     | _ -> failwith "Impossible!"
   in
 
-  let val_of_lb (s:sigelt) (lid:lident) ((uvs, c_or_t): univ_names * either<comp,typ>) :sigelt =
-    //if it's a comp annotation, extract out just the result type
-    let t = if c_or_t |> is_left then c_or_t |> left |> U.comp_result else c_or_t |> right in
+  let val_of_lb (s:sigelt) (lid:lident) ((uvs, t): (univ_names * typ)) :sigelt =
     { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals) }
   in
 
   (*
-   * We have lb:letbinding lid:lident r:Range, we have to extract the type of the letbinding
-   * We return (letbinding * option <univ_names * either<comp,typ>>), where the returned letbinding is possibly annotated with type from its val (if both val and let are present)
-   *                                                                  rest is the type annotation we extracted, if at all
+   * When do we keep the body of the letbinding in the interface ...
    *)
-  let extract_lb_annotation (lb:letbinding) (lid:lident) (r:Range.range) :letbinding * option<(univ_names * either<comp,typ>)> =
-    //first see if we have seen a val declaration for this let, if so, take the type from there
-    let opt = List.tryFind (fun (l, _, _) -> lid_equals lid l) !val_typs in
-    if is_some opt then
-      let _, uvs, t = opt |> must in
-      //annotate the letbinding with this type, so that if this letbinding is added to the iface later, it has the correct type
-      { lb with lbunivs = uvs; lbdef = ascribe lb.lbdef (Inl t, None) }, Some (uvs, Inr t)  //since we are pre-typechecking, annotating means adding ascription to the lbdef
-    else
-      //look at lbtyp
-      match (SS.compress lb.lbtyp).n with
-      | Tm_unknown ->  //unknown, so get into the body
-        (match (SS.compress lb.lbdef).n with
-         | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inl c)  //comp annotation
-         | Tm_ascribed (_, (Inl t, _), _) -> lb, Some (lb.lbunivs, Inr t)  //typ annotation
-         | Tm_abs (bs, e, _) ->  //it's a lambda
-           (match (SS.compress e).n with
-            | Tm_ascribed (_, (Inr c, _), _) -> lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has the comp annotation
-            | Tm_ascribed (_, (Inl t, _), _) ->
-              let c = if Options.ml_ish () then U.ml_comp t r else S.mk_Total t in  //taking care of top-level effects here, is there a utility?
-              lb, Some (lb.lbunivs, Inr (mk (Tm_arrow (bs, c)) None r))  //abstraction body has t, we add top-level effect
-            | _ -> lb, None)  //can't get the type of the letbinding
-         | _ -> lb, None)  //can't get the type
-      | _ -> lb, Some (lb.lbunivs, Inr lb.lbtyp)  //take whatever is annotated
-  in
-
-  (*
-   * When do we keep the body of the letbinding in the interface?
-   *)
-  let should_keep_lbdef (c_or_t:either<comp,typ>) :bool =
+  let should_keep_lbdef (t:typ) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
     in 
     
     let c_opt =
-     if is_left c_or_t then Some (c_or_t |> left)
-     else
-       let t = c_or_t |> right in
-       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
-       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
-   in
+      //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
+      if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
+    in
      
-   c_opt = None ||  //we can't get the comp type for sure, e.g. Inr t and t is not an arrow (say if..then..else), so keep the body
-   (let c = c_opt |> must in
-    //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
-    (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
+    c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
+    (let c = c_opt |> must in
+     //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
+     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1839,7 +1744,7 @@ let extract_interface (env:env) (m:modul) :modul =
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
         List.fold_left (fun sigelts s -> 
           match s.sigel with
-          | Sig_inductive_typ (_, _, _, _, _, _) -> (vals_of_abstract_inductive s)@sigelts
+          | Sig_inductive_typ (lid, _, _, _, _, _) -> abstract_inductive_tycons := lid::!abstract_inductive_tycons; (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons
@@ -1851,46 +1756,33 @@ let extract_interface (env:env) (m:modul) :modul =
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       //if it's an assumption, no let is coming, so add it as is
       else if is_assume s.sigquals then [ { s with sigquals = filter_out_abstract s.sigquals } ]
-      //else record the type declaration, leave the decision to let
-      else begin
-        val_typs := (lid, uvs, t)::!val_typs;
-        []
-      end
+      //else leave the decision to let
+      else []
     | Sig_let (lbs, lids) ->
       //if it's a projector or discriminator of an abstract inductive, got to go
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       else
         //extract the type annotations from all the letbindings
         let flbs, slbs = lbs in
-        let b, lbs, typs = List.fold_left2 (fun (b, lbs, typs) lb lid ->  //b accumulates if for some let binding, we were unable to extract the annotation
-          let lb, t = extract_lb_annotation lb lid s.sigrng in
-          is_some t && b, lb::lbs, t::typs) (true, [], []) slbs lids
-        in
-        let lbs, typs = List.rev_append lbs [], List.rev_append typs [] in 
-        //now boolean b tells us if all the types could be extracted, if b is false, we have to keep the body
-        //in other words, b = true means all typs are some
+        let typs = slbs |> List.map (fun lb -> lb.lbunivs, lb.lbtyp) in
 
-        let s = { s with sigel = Sig_let ((flbs, lbs), lids) } in
-        if not b then
-          //keep the bindings as is, except if they are marked abstract or irreducible, in that case error out
-          if is_abstract s.sigquals || is_irreducible s.sigquals then
-            Errors.raise_error (Errors.Fatal_IllTyped, "For extracting interfaces, abstract and irreducible defns must be annotated at the top-level: " ^ (List.hd lids).str) s.sigrng
-          else [ s ]
-        else
-          //all let binding types were extracted
-          let is_lemma = List.existsML (fun opt ->
-            let _, c_or_t = opt |> must in
-            is_right c_or_t && (c_or_t |> right |> U.is_lemma)) typs  //no comp lemmas
-          in
-          //if is it abstract or irreducible or lemma, keep just the vals
-          let vals = List.map2 (fun lid opt -> val_of_lb s lid (opt |> must)) lids typs in
-          if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
-          else 
-            let should_keep_defs = List.existsML (fun opt -> should_keep_lbdef (opt |> must |> snd)) typs in
-            if should_keep_defs then [ s ]
-            else vals
+        let is_lemma = List.existsML (fun (_, t) -> t |> U.is_lemma) typs in
+        //if is it abstract or irreducible or lemma, keep just the vals
+        let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
+        if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
+        else 
+          let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
+          if should_keep_defs then [ s ]
+          else vals
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
-    | Sig_assume (lids, uvs, t) -> [ { s with sigquals = filter_out_abstract s.sigquals } ]
+    | Sig_assume (lid, _, _) ->
+      //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
+      let is_haseq = TcUtil.is_haseq_lid lid in
+      if is_haseq then
+        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcUtil.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
+        if is_haseq_of_abstract_inductive then [ { s with sigquals = filter_out_abstract s.sigquals } ]
+        else []
+      else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_new_effect_for_free _
     | Sig_sub_effect _
@@ -1900,12 +1792,106 @@ let extract_interface (env:env) (m:modul) :modul =
   
   { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
 
+//AR: moving these push and pop functions from Universal, using them in extracting interface etc.
+let pop_context env msg =
+    ToSyntax.Env.pop () |> ignore;
+    let en = TypeChecker.Env.pop env msg in
+    env.solver.refresh();
+    en
+
+let push_context env msg =
+    let dsenv = ToSyntax.Env.push env.dsenv in
+    let env = TypeChecker.Env.push env msg in
+    {env with dsenv=dsenv}
+
+let tc_partial_modul env modul =
+  let verify = Options.should_verify modul.name.str in
+  let action = if verify then "Verifying" else "Lax-checking" in
+  let label = if modul.is_interface then "interface" else "implementation" in
+  if Options.debug_any () then
+    BU.print3 "%s %s of %s\n" action label modul.name.str;
+
+  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
+  let env = Env.set_current_module env modul.name in
+  let ses, exports, env = tc_decls env modul.declarations in
+  {modul with declarations=ses}, exports, env
+
+let tc_more_partial_modul env modul decls =
+  let ses, exports, env = tc_decls env decls in
+  let modul = {modul with declarations=modul.declarations@ses} in
+  modul, exports, env
+
+let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
+  let lax_mode = env0.lax in
+  let env0 = if lid_equals env0.curmodule Parser.Const.prims_lid then { env0 with lax = true } else env0 in
+  let msg = "Internals for " ^ m.name.str in
+  //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
+  let env0 = push_context env0 msg in
+  let modul, non_private_decls, env = tc_partial_modul env0 m in
+  let m, m_opt, env = finish_partial_modul false env modul non_private_decls in
+  m, m_opt, { env with lax = lax_mode }
+
+and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
+  //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
+  if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
+    //pop AND use the old env for rest of the function
+    let en = pop_context en ("Ending modul " ^ m.name.str) in
+    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+
+    let modul_iface = extract_interface en m in
+    BU.print3 "Extracting and type checking module %s interface%s%s\n" m.name.str
+              (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+              (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+    let env0 = { en with is_iface = true } in
+    let modul_iface, must_be_none, env = tc_modul en modul_iface in
+    if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
+    else m, Some modul_iface, env
+  end
+  else
+    let modul = if Options.use_extracted_interfaces () then { m with exports = m.declarations } else { m with exports=exports } in
+    let env = Env.finish_module en modul in
+    if not (Options.lax()) && (not (Options.use_extracted_interfaces ()))
+    && (not loading_from_cache)
+    then check_exports env modul exports;
+    //pop BUT ignore the old env
+    pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
+    env.solver.encode_modul env modul;
+    env.solver.refresh();
+    //interactive mode manages it itself
+    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+    modul, None, env
+
+let load_checked_module (en:env) (m:modul) :env =
+  //This function tries to very carefully mimic the effect of the environment
+  //of having checked the module from scratch, i.e., using tc_module below
+  let env = Env.set_current_module en m.name in
+  //push context, finish_partial_modul will do the pop
+  let env = push_context env ("Internals for " ^ Ident.string_of_lid m.name) in
+  let env = List.fold_left (fun env se ->
+             //push every sigelt in the environment
+             let env = Env.push_sigelt env se in
+             //and then query it back immediately to populate the environment's internal cache
+             //this is important for extraction to work correctly,
+             //in particular, when extracting a module we want the module's internal symbols
+             //that may be marked "abstract" externally to be visible internally
+             //populating the cache enables this behavior, rather indirectly, sadly : (
+             let lids = Util.lids_of_sigelt se in
+             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
+             env)
+             env
+             m.declarations in
+  //And then call finish_partial_modul, which is the normal workflow of tc_modul below
+  //except with the flag `must_check_exports` set to false, since this is already a checked module
+  let _, _, env = finish_partial_modul true env m m.exports in
+  env
+
 let check_module env m =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
 
   let env = {env with lax=not (Options.should_verify m.name.str)} in
-  let m, env = tc_modul env m in
+  let m, m_iface_opt, env = tc_modul env m in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module m.name.str
@@ -1926,4 +1912,4 @@ let check_module env m =
     BU.print1 "%s\n" (Print.modul_to_string normalized_module)
   end;
 
-  m, env
+  m, m_iface_opt, env

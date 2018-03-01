@@ -233,11 +233,11 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0,
-      "85f5bae2a4cdd255a356d7a21b660edc"
+      "a857ed8cf2e7a62a356168fb664a4180"
     ],
     [
       "BinaryTrees.map_find",
@@ -500,9 +500,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_BinaryTrees.tree_haseq" ],
+      [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "ebb68db18becd761f9c54939fc0643cb"
+      "b8581af7066fbea43c722b2999c790d9"
     ],
     [
       "BinaryTrees.revert_involutive",
@@ -534,18 +534,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_BinaryTrees.tree_haseq" ],
+      [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "cf5279b56ee2e04a6f61eab1bea2939e"
+      "f67322bdca10dd6c3d7ae86d22551133"
     ],
     [
       "BinaryTrees.revert_injective",
       2,
       2,
       1,
-      [ "@query", "assumption_BinaryTrees.tree_haseq" ],
+      [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "e235d4a610866b9eb1c84b60667f1692"
+      "b7ab5f3c9818e81d8acf8d08cbad263c"
     ],
     [
       "BinaryTrees.revert_injective",
@@ -584,9 +584,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_BinaryTrees.tree_haseq" ],
+      [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "65fbaf8305e33e071f3ccf76c85159f1"
+      "0872e445cfb1242cb82689ca1930eabd"
     ],
     [
       "BinaryTrees.revert_fold",
@@ -664,9 +664,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_BinaryTrees.tree_haseq" ],
+      [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "e3509f67db9ad26c3354a78eaf5bd58f"
+      "eaa0519ea6fcc73eb5a30dc9d69a004f"
     ],
     [
       "BinaryTrees.remove_add_root",

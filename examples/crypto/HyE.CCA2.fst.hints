@@ -47,22 +47,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.option_haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
         "data_typing_intro_FStar.Pervasives.V@tok",
         "equation_HyE.Ideal.conf", "equation_HyE.RSA.cipher",
         "equation_HyE.RSA.plain", "equation_HyE.RSA.plainsize",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "fuel_guarded_inversion_HyE.CCA2.pkey",
         "function_token_typing_HyE.Ideal.ind_cca",
         "function_token_typing_HyE.RSA.cipher",
         "function_token_typing_HyE.RSA.plain",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
-        "refinement_interpretation_FStar.HyperStack.All_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
-        "refinement_interpretation_HyE.CCA2_Tm_refine_6e5e30b8a35b3df5111e4e25b1b2bf65"
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "882f6054274de1b6d47648b222698fbd"
+      "9fd9f93efb89efce6f1f1bbb86484dd2"
     ],
     [
       "HyE.CCA2.decrypt",

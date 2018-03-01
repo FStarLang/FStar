@@ -44,13 +44,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.option_haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Prims.HasEq_int",
         "haseqNegativeTests.BST_Tm_refine_7b1de022dd98e3cefdde3a41e40ebd18",
         "int_inversion", "kinding_NegativeTests.BST.tree@tok"
       ],
       0,
-      "83c44cb84a75466beb88a4b2873509a9"
+      "dc4aaf60f57202cd870c5fe0874361a5"
     ],
     [
       "NegativeTests.BST.uu___is_Leaf",

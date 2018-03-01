@@ -22,7 +22,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Seq.Base.seq_haseq",
+        "assumption_FStar.Seq.Base.seq__uu___haseq",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.eqtype",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "84a3494ef42925d703248c9bcd2b37bf"
+      "c5085befdbc37807f50174b74ab6a1c4"
     ],
     [
       "FStar.DM4F.Heap.Random.incr",

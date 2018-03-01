@@ -273,3 +273,5 @@ val string_of_proof_ns : env -> string
 val unbound_vars    : env -> term -> BU.set<bv>
 val closed          : env -> term -> bool
 val closed'         : term -> bool
+
+val mk_copy: env -> env

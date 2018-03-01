@@ -46,18 +46,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "bffebed14caac7ec19ce01d75be50d57"
+      "0ce6855a7ed30bcd36a82678331e8330"
     ],
     [
       "Bug260.validity'",
       1,
       2,
       1,
-      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "eb3efb2e8c78d05250cdddfc2e868a33"
+      "6e57254079b702a227c122dbbfbc792a"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",

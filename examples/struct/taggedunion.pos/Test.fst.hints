@@ -96,7 +96,7 @@
         "typing_Prims.pow2", "typing_Test.either_l"
       ],
       0,
-      "2ac566cd42aa05f01b1d00e81f850b1d"
+      "5ad7f718ca9575a345e4a73e11039660"
     ],
     [
       "Test.option_l",
@@ -200,7 +200,7 @@
         "typing_Prims.pow2", "typing_Test.option_l"
       ],
       0,
-      "ba279d8106b9e667bf1ab30cef219564"
+      "e3ead10881afcb51734a93b9793ce99f"
     ],
     [
       "Test.s_l",
@@ -435,8 +435,9 @@
         "FStar.Pervasives.Native_interpretation_Tm_arrow_7fe3e7847982dd1674bac902db1b25d6",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "assumption_FStar.UInt32.t_haseq", "assumption_Prims.HasEq_string",
-        "b2t_def", "bool_inversion",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.UInt32.t__uu___haseq",
+        "assumption_Prims.HasEq_string", "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TUInt16",
         "constructor_distinct_FStar.Pointer.Base.TUInt8",
@@ -458,11 +459,11 @@
         "equation_FStar.TaggedUnion.tags", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_Test.either_l", "equation_Test.either_tags",
-        "equation_Test.either_typ", "equation_Test.s_l",
-        "equation_Test.s_typ", "equation_Test.s_x", "equation_Test.s_y",
-        "equation_Test.st_tags", "equation_Test.st_typ",
+        "equation_FStar.UInt32.n", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos", "equation_Test.either_l",
+        "equation_Test.either_tags", "equation_Test.either_typ",
+        "equation_Test.s_l", "equation_Test.s_typ", "equation_Test.s_x",
+        "equation_Test.s_y", "equation_Test.st_tags", "equation_Test.st_typ",
         "equation_with_fuel_FStar.List.Tot.Base.assoc.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.map.fuel_instrumented",
@@ -472,6 +473,7 @@
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "function_token_typing_FStar.Int8.n",
         "function_token_typing_FStar.Pervasives.Native.fst",
+        "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.string",
         "function_token_typing_Test.s_l", "function_token_typing_Test.s_typ",
         "function_token_typing_Test.s_x", "function_token_typing_Test.s_y",
@@ -525,7 +527,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "29a5ce5f69ea9a40c41d8886582ec362"
+      "db808b711087a03a79445963096e58d5"
     ],
     [
       "Test.step_alt",
@@ -547,8 +549,8 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.UInt32.t_haseq", "assumption_Prims.HasEq_string",
-        "b2t_def", "bool_inversion",
+        "assumption_FStar.UInt32.t__uu___haseq",
+        "assumption_Prims.HasEq_string", "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TUInt16",
         "constructor_distinct_FStar.Pointer.Base.TUInt8",
@@ -660,7 +662,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "c6e1704c9bf90ac528ae390d95e03a3e"
+      "a5a7004442eaa01257205d40363a2f3d"
     ]
   ]
 ]

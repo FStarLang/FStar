@@ -1312,3 +1312,8 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 (* </Move> *)
+
+let mk_copy en =
+  { en with gamma_cache = BU.smap_copy en.gamma_cache;
+            sigtab = BU.smap_copy en.sigtab;
+            dsenv = ToSyntax.Env.mk_copy en.dsenv }

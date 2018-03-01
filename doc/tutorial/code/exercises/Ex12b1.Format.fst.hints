@@ -6,27 +6,27 @@
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "88b1a9e3b6900f7dfeaba67517438313"
+      "3fb19f5a451a195bd738d75a19b198ff"
     ],
     [
       "Ex12b1.Format.append_inj_lemma",
       2,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "7eb1a93b624c55c6e7155a622659f5c8"
+      "11875b6c6b1d3f467b6cf45a99a66630"
     ],
     [
       "Ex12b1.Format.append_inj_lemma",
       3,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "6bc25ed1abe1d50af5fe8edffe434e06"
+      "80c477b15471e29d28c0368d28ffbd02"
     ],
     [
       "Ex12b1.Format.append_inj_lemma",
@@ -36,17 +36,19 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_FStar.UInt8.t_haseq", "equation_Ex12b1.Format.message",
+        "assumption_FStar.UInt8.t__uu___haseq",
+        "equation_Ex12b1.Format.message",
         "equation_FStar.Seq.Base.op_At_Bar", "equation_Platform.Bytes.byte",
         "equation_Platform.Bytes.bytes", "equation_Prims.eqtype",
         "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "2c9fb6c415c46f3a15f13f46df0d66f6"
+      "9d0a5a001a0be286d9d71b4ec8cfcdd0"
     ],
     [
       "Ex12b1.Format.lemma_eq_intro",
@@ -83,9 +85,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "eba0aedfa9898c1b4c1f2800690add65"
+      "9fc962505b5b3a6e503ee89e32e27b94"
     ],
     [
       "Ex12b1.Format.uint16_to_bytes",
@@ -128,9 +130,9 @@
       3,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "cb5d9519636db8b96774dc3ca455f863"
+      "8b24cf4d11509b44b3f99a9135c8d568"
     ],
     [
       "Ex12b1.Format.UINT16_inj",

@@ -53,12 +53,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.nat",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.nat",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4392edb73be831f1d0e85c144aa7ce92"
+      "9dd08d530caca7cc4c513013951c18f5"
     ],
     [
       "Bug026.test_filter1",
@@ -99,12 +99,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.pos",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.pos",
         "function_token_typing_Prims.pos",
         "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "fb9f89ecc26649797f7a89c80c96d8e2"
+      "6c5548a7ea2dd1baf8b821a9710c7d5c"
     ],
     [
       "Bug026.test_filter2",
@@ -145,12 +145,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.pos",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.pos",
         "function_token_typing_Prims.pos",
         "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "a1511ea9af4da3b6e1bef4a77b55d2a2"
+      "c5bb411f66857a2c6522db5b7a4dec89"
     ],
     [
       "Bug026.test_filter3",

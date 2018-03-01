@@ -60,12 +60,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "assumption_WhileReify.binop_haseq", "equation_Prims.eqtype",
+        "assumption_WhileReify.binop__uu___haseq", "equation_Prims.eqtype",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b03e4a176260b53b3e3ff91a67867b65"
+      "27575c89f34de743c65b964d20fef0f8"
     ],
     [
       "WhileReify.uu___is_AInt",
@@ -165,13 +165,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_WhileReify.exp_haseq",
-        "equation_Prims.eqtype", "equation_WhileReify.metric",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_WhileReify.exp__uu___haseq", "equation_Prims.eqtype",
+        "equation_WhileReify.metric",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "824ca4dd1901d9d14acbda14e5fd6339"
+      "d83d510c6373d28afc5d88f6e1d9b525"
     ],
     [
       "WhileReify.uu___is_Skip",

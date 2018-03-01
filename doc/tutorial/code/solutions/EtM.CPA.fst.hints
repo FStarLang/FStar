@@ -187,7 +187,7 @@
       1,
       [
         "@query", "assumption_EtM.Plain.Plain_hasEq",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Platform.Bytes.HasEq_bytes",
         "equality_tok_CoreCrypto.AES_128_CBC@tok",
         "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
@@ -198,7 +198,7 @@
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "cef8d76e32520c3ecd77d9c6ae7433c5"
+      "dad3dad11573b708858d9dc4e05b9bbb"
     ],
     [
       "EtM.CPA.decrypt",

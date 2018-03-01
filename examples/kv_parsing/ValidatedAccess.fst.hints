@@ -181,17 +181,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Seq.Base.seq_haseq",
-        "assumption_FStar.UInt8.t_haseq",
+        "assumption_FStar.Seq.Base.seq__uu___haseq",
+        "assumption_FStar.UInt8.t__uu___haseq",
         "binder_x_6a02e9ceac77bf0f455c7dbd8d82184b_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.UInt8.byte", "equation_Slice.byte",
         "equation_Slice.bytes", "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.UInt8.t",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "function_token_typing_FStar.UInt8.t", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aa26e1718f2246c59e07c17796307d4f"
+      "e2c00f5b54a7ed1ee680e1d41cb9cc07"
     ],
     [
       "ValidatedAccess.lookup_in_entries_st",

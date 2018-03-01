@@ -202,11 +202,11 @@
       2,
       1,
       [
-        "@query", "assumption_Bug281.exp_haseq",
+        "@query", "assumption_Bug281.exp__uu___haseq",
         "haseqBug281_Tm_refine_fa874d2b81678cf67fefc82e7574cdec"
       ],
       0,
-      "d57b34f5eb661aaedea1dc34b617cde0"
+      "5e7722e1ad15e2006f4a78aa6be9e3f2"
     ],
     [
       "Bug281.plouf0",
@@ -219,10 +219,11 @@
         "@fuel_correspondence_Bug281.sub_elam.fuel_instrumented",
         "@fuel_irrelevance_Bug281.esubst.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Bug281.exp_haseq", "constructor_distinct_Bug281.EApp",
-        "constructor_distinct_Bug281.EVar", "disc_equation_Bug281.EVar",
-        "equation_Bug281.eesh", "equation_Bug281.sub_einc",
-        "equation_Bug281.test", "equation_Prims.nat",
+        "assumption_Bug281.exp__uu___haseq",
+        "constructor_distinct_Bug281.EApp",
+        "constructor_distinct_Bug281.EVar", "equation_Bug281.eesh",
+        "equation_Bug281.sub_einc", "equation_Bug281.test",
+        "equation_Prims.nat",
         "equation_with_fuel_Bug281.esubst.fuel_instrumented",
         "equation_with_fuel_Bug281.sub_elam.fuel_instrumented", "int_typing",
         "interpretation_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
@@ -236,7 +237,7 @@
         "token_correspondence_Bug281.sub_einc"
       ],
       0,
-      "c9fafc2459a2f4d57489fda2b0f7b0eb"
+      "9cb29bc909bda80f53e059d9051fa1ef"
     ],
     [
       "Bug281.plouf1",
@@ -249,10 +250,11 @@
         "@fuel_correspondence_Bug281.sub_elam.fuel_instrumented",
         "@fuel_irrelevance_Bug281.esubst.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Bug281.exp_haseq", "constructor_distinct_Bug281.EApp",
-        "constructor_distinct_Bug281.EVar", "disc_equation_Bug281.EVar",
-        "equation_Bug281.eesh", "equation_Bug281.sub_einc",
-        "equation_Bug281.test", "equation_Prims.nat",
+        "assumption_Bug281.exp__uu___haseq",
+        "constructor_distinct_Bug281.EApp",
+        "constructor_distinct_Bug281.EVar", "equation_Bug281.eesh",
+        "equation_Bug281.sub_einc", "equation_Bug281.test",
+        "equation_Prims.nat",
         "equation_with_fuel_Bug281.esubst.fuel_instrumented",
         "equation_with_fuel_Bug281.sub_elam.fuel_instrumented", "int_typing",
         "interpretation_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
@@ -266,16 +268,16 @@
         "token_correspondence_Bug281.sub_einc"
       ],
       0,
-      "bca62540a796c8aea0436744e0d75f04"
+      "bcb5ca5fda6724df07a11ab6bad5851c"
     ],
     [
       "Bug281.plouf2",
       1,
       2,
       1,
-      [ "@query", "assumption_Bug281.exp_haseq" ],
+      [ "@query", "assumption_Bug281.exp__uu___haseq" ],
       0,
-      "3e9e6d61b90e5c21181af7882bd10a26"
+      "e4d961cb94a807ff17e383680876e1e4"
     ],
     [
       "Bug281.plouf2",
@@ -312,9 +314,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Bug281.exp_haseq" ],
+      [ "@query", "assumption_Bug281.exp__uu___haseq" ],
       0,
-      "ab983ae714cfdcc0b4461205d797160d"
+      "e880d0d5a803ee59d9ad082871f56f1e"
     ],
     [
       "Bug281.plouf4",

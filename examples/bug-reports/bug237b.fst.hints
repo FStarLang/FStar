@@ -47,11 +47,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Bug237b.knd_haseq",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Bug237b.knd__uu___haseq",
         "data_typing_intro_Bug237b.KKArr@tok"
       ],
       0,
-      "2537ec2debc649388c45144022384a1a"
+      "794947fce39ea854ade29edb061c17d8"
     ],
     [
       "Bug237b.uu___is_KConst",

@@ -1270,3 +1270,9 @@ let fail_or env lookup lid = match lookup lid with
 let fail_or2 lookup id = match lookup id with
   | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^id.idText^"]")) id.idRange
   | Some r -> r
+
+let mk_copy en =
+  { en with exported_ids = BU.smap_copy en.exported_ids;
+            trans_exported_ids = BU.smap_copy en.trans_exported_ids;
+            sigmap = BU.smap_copy en.sigmap;
+            docs = BU.smap_copy en.docs }

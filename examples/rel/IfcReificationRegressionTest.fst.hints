@@ -41,10 +41,9 @@
         "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.DM4F.IntST.decr",
         "equation_FStar.DM4F.IntST.ifc", "equation_FStar.DM4F.IntST.incr",
-        "equation_Prims._assert",
         "function_token_typing_IfcReificationRegressionTest.s0",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_FStar.DM4F.IntST_Tm_abs_5833b31a9a69cb7e9c2d3bf961d0a34a",
@@ -63,7 +62,7 @@
         "unit_typing"
       ],
       0,
-      "bac24ed8e92812266ee8402bf9d771e7"
+      "ea852037bfe740b2409cdffb3b5cb8e1"
     ],
     [
       "IfcReificationRegressionTest.bidule1",
@@ -78,10 +77,10 @@
         "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.DM4F.IntST.decr",
         "equation_FStar.DM4F.IntST.incr",
-        "equation_IfcReificationRegressionTest.x1", "equation_Prims._assert",
+        "equation_IfcReificationRegressionTest.x1",
         "function_token_typing_IfcReificationRegressionTest.s0",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_FStar.DM4F.IntST_Tm_abs_5833b31a9a69cb7e9c2d3bf961d0a34a",
@@ -100,7 +99,7 @@
         "token_correspondence_IfcReificationRegressionTest.x1", "unit_typing"
       ],
       0,
-      "1e298de3b634637e95c0fd0ce66d53b6"
+      "b0c1ac4630c2eecb417b70c044fa6749"
     ],
     [
       "IfcReificationRegressionTest.bidule2",
@@ -115,10 +114,10 @@
         "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.DM4F.IntST.decr",
         "equation_FStar.DM4F.IntST.incr",
-        "equation_IfcReificationRegressionTest.x2", "equation_Prims._assert",
+        "equation_IfcReificationRegressionTest.x2",
         "function_token_typing_IfcReificationRegressionTest.s0",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_FStar.DM4F.IntST_Tm_abs_5833b31a9a69cb7e9c2d3bf961d0a34a",
@@ -138,7 +137,7 @@
         "token_correspondence_IfcReificationRegressionTest.x2", "unit_typing"
       ],
       0,
-      "15de24c6d6fcbfc68c64eca0cba8f30c"
+      "2540f7b4fdb8acfe162ae87ecb6b9fdf"
     ],
     [
       "IfcReificationRegressionTest.bidule3",
@@ -153,10 +152,10 @@
         "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.DM4F.IntST.decr",
         "equation_FStar.DM4F.IntST.incr",
-        "equation_IfcReificationRegressionTest.x3", "equation_Prims._assert",
+        "equation_IfcReificationRegressionTest.x3",
         "function_token_typing_IfcReificationRegressionTest.s0",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_FStar.DM4F.IntST_Tm_abs_5833b31a9a69cb7e9c2d3bf961d0a34a",
@@ -173,7 +172,7 @@
         "unit_typing"
       ],
       0,
-      "1b87f3d44a4047f1b21ca7192dca7854"
+      "fd6bff0d3f5e49c20013faeb1b2226e7"
     ]
   ]
 ]

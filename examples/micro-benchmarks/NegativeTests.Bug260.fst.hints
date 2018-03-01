@@ -47,9 +47,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_NegativeTests.Bug260.pnat_haseq" ],
+      [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
-      "b6473f6c723d9e973de8a87ecf6e1a88"
+      "6418cad8b2d9e7ade8fd4d366d4e257d"
     ]
   ]
 ]

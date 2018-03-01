@@ -63,12 +63,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
+        "assumption_Prims.list__uu___haseq",
         "equation_FStar.Reflection.Types.name",
         "function_token_typing_Prims.string"
       ],
       0,
-      "170e90ebc9602722e12e86d5d91c610c"
+      "5124bc500759643b1d81ae31c2400f88"
     ],
     [
       "Trace.instrument_body",

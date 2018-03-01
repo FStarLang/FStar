@@ -6,18 +6,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt32.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "45790320d172b50d5b8a269787db75e3"
+      "edfb8682641be8198eeed8c6b0f9c757"
     ],
     [
       "IntNormalization.uu___108",
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.UInt32.t_haseq" ],
+      [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "a8a8f9ddfe8e1e0db26069c43279deb7"
+      "455e0707333e6017e65675c8def1618e"
     ]
   ]
 ]

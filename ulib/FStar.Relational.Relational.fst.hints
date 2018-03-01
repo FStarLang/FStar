@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9bc49493a605cd9fb8e3bcb504f51427"
+      "72fdccf6e130066bd99566ace8b9b3d2"
     ],
     [
       "FStar.Relational.Relational.tl_rel",
@@ -21,7 +21,7 @@
         "refinement_interpretation_FStar.Relational.Relational_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
       ],
       0,
-      "73f0b4f38405639c2e8fbc54e07293ae"
+      "79556b30d6f4e207386c6773af24fb40"
     ],
     [
       "FStar.Relational.Relational.eq_rel",
@@ -30,7 +30,38 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "627c318924af38220717f9cbbbc2355a"
+      "ccc750fa620fee7218f973fcfecb3e68"
+    ],
+    [
+      "FStar.Relational.Relational.rel",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "796e5c0d40ab8e9f00b185ad0544854e"
+    ],
+    [
+      "FStar.Relational.Relational.tl_rel",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Relational.Relational_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
+      ],
+      0,
+      "55b76a54b27df08a45b9ebac021582fe"
+    ],
+    [
+      "FStar.Relational.Relational.eq_rel",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "426190fa1dc90cf4b9633dc9a7347e5e"
     ]
   ]
 ]

@@ -577,6 +577,6 @@ let interactive_mode (filename:string): unit =
   if FStar.Options.record_hints() //and if we're recording or using hints
   || FStar.Options.use_hints()
   then FStar.SMTEncoding.Solver.with_hints_db
-            (List.hd (Options.file_list ())) false  //passing false for using_or_checking_extracted_interfaces, since --use_checked_interface is not allowed in interactive mode, and this is for the main file (not a dependency)
+            (List.hd (Options.file_list ()))
             (fun () -> go (1, 0) filename stack None env ts)
   else go (1, 0) filename stack None env ts

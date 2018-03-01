@@ -142,10 +142,11 @@
       0,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
       ],
       0,
-      "02ebac99250f89c3624069c9e2e0df41"
+      "9502daabdd233a1b8a6baebb4d31fd07"
     ]
   ]
 ]

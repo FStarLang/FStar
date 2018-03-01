@@ -47,11 +47,11 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "kinding_BinaryTreesEnumeration.bin_tree@tok"
       ],
       0,
-      "83b326b3a692ee0e325841365886b85a"
+      "c8b148fdfa9c133d9af764984f6e1888"
     ],
     [
       "BinaryTreesEnumeration.uu___is_Leaf",

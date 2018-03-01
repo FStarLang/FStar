@@ -46,29 +46,24 @@ let z3_result_as_replay_result = function
     | Inr (r, _) -> Inr r
 let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
 let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
-let format_hints_file_name src_filename checking_or_using_extracted_interface =
-  BU.format1 "%s.hints" (if checking_or_using_extracted_interface then Parser.Dep.interface_filename src_filename else src_filename)
+let format_hints_file_name src_filename = BU.format1 "%s.hints" src_filename
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
-let initialize_hints_db src_filename checking_or_using_extracted_interface format_filename : unit =
+let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
-         let src_filename_for_printing =
-           if checking_or_using_extracted_interface then Parser.Dep.interface_filename norm_src_filename
-           else norm_src_filename
-         in
          let val_filename = match Options.hint_file() with
                             | Some fn -> fn
-                            | None -> (format_hints_file_name norm_src_filename checking_or_using_extracted_interface) in
+                            | None -> (format_hints_file_name norm_src_filename) in
          begin match BU.read_hints val_filename with
             | Some hints ->
                 let expected_digest = BU.digest_of_file norm_src_filename in
                 if Options.hint_info()
                 then begin
-                    BU.print3 "(%s) digest is %s%s.\n" src_filename_for_printing
+                    BU.print3 "(%s) digest is %s%s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
@@ -79,10 +74,10 @@ let initialize_hints_db src_filename checking_or_using_extracted_interface forma
                 replaying_hints := Some hints.hints
             | None ->
                 if Options.hint_info()
-                then BU.print1 "(%s) Unable to read hint file.\n" src_filename_for_printing
+                then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
          end
 
-let finalize_hints_db src_filename checking_or_using_extracted_interface : unit =
+let finalize_hints_db src_filename :unit =
     begin if Options.record_hints () then
           let hints = Option.get !recorded_hints in
           let hints_db = {
@@ -92,18 +87,18 @@ let finalize_hints_db src_filename checking_or_using_extracted_interface : unit 
           let norm_src_filename = BU.normalize_file_path src_filename in
           let val_filename = match Options.hint_file() with
                             | Some fn -> fn
-                            | None -> (format_hints_file_name norm_src_filename checking_or_using_extracted_interface) in
+                            | None -> (format_hints_file_name norm_src_filename) in
           BU.write_hints val_filename hints_db
     end;
     recorded_hints := None;
     replaying_hints := None
 
-let with_hints_db fname checking_or_using_extracted_interface f =
-    initialize_hints_db fname checking_or_using_extracted_interface false;
+let with_hints_db fname f =
+    initialize_hints_db fname false;
     let result = f () in
     // for the moment, there should be no need to trap exceptions to finalize the hints db
     // no cleanup needs to occur if an error occurs.
-    finalize_hints_db fname checking_or_using_extracted_interface;
+    finalize_hints_db fname;
     result
 
 let filter_using_facts_from (e:env) (theory:decls_t) =

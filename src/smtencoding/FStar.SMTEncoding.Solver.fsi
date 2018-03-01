@@ -19,6 +19,6 @@ module FStar.SMTEncoding.Solver
 open FStar.ST
 open FStar.All
 
-val with_hints_db : string -> bool -> (unit -> 'a) -> 'a
+val with_hints_db : string -> (unit -> 'a) -> 'a
 val dummy: FStar.TypeChecker.Env.solver_t
 val solver: FStar.TypeChecker.Env.solver_t

@@ -113,9 +113,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "fbf799581c468c4cd423bd37fc939169"
+      "d711f9770a9a36c85284b5193312e5ce"
     ],
     [
       "SfLists.test_app1",
@@ -139,9 +139,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "92500598819c49b807f0eecd83c1d7c1"
+      "60daab41a88fd3bb24d88731d0619a92"
     ],
     [
       "SfLists.test_app2",
@@ -162,9 +162,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "e1aa57e18140ac425ebcd7b4be8e0421"
+      "0a561c912b6f5387df571032edbb0769"
     ],
     [
       "SfLists.test_app3",
@@ -188,9 +188,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "fa2efee1a8a39c4c04ec67bc31a0d8c8"
+      "69ffdb32247a0b7c21314b4dca9a7f13"
     ],
     [
       "SfLists.nil_app",
@@ -211,9 +211,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "f7d0b8b72c15cf9152209195549978da"
+      "3c9ccb8bf01d0f61cada2f5414717f42"
     ],
     [
       "SfLists.app_nil",
@@ -384,9 +384,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "525112ffa02af4f2c7cc3d40a9bb044f"
+      "3b6b8712beed71bf1ac6570c74e7eacc"
     ],
     [
       "SfLists.app_assoc",
@@ -555,9 +555,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "e93346a456c91ef10451064299c7cc4d"
+      "31bbb6484245c55a441cfa7ca2902613"
     ],
     [
       "SfLists.foo1",
@@ -589,9 +589,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "228aba474a24f26bc05708816202d594"
+      "6bd25e7f16b2dccf58773cd4eb61a7c1"
     ],
     [
       "SfLists.foo2",
@@ -687,9 +687,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "b977cee58ef826efdc1ea2177d967940"
+      "58f2dedeaf19e63e895aa1c4e192cc18"
     ],
     [
       "SfLists.foo4",
@@ -721,9 +721,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "ec3297c38605eff371a2ad2479bf9b7f"
+      "a3e850c1da6439678a2be6755f67c610"
     ],
     [
       "SfLists.snoc_cons",
@@ -756,9 +756,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "db8c9bf7cce3251ded452526f3e4063d"
+      "f6612f267de61be0bd504ea1469ce85e"
     ],
     [
       "SfLists.rev_involutive",
@@ -785,18 +785,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "509dd8c3bd6cee7327add8785e3ff6d4"
+      "630d552c08c2db8af2082ee85b8a8049"
     ],
     [
       "SfLists.snoc_injective",
       2,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "efa93d768105266a4e4450e6a411132c"
+      "3cd1b2d38e24b44af860985e57607dc9"
     ],
     [
       "SfLists.snoc_injective",
@@ -844,18 +844,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "b1dad21b12b2cbb995c9b96a8aba32ac"
+      "18dceae65398a1fe2e35cdb8924727bf"
     ],
     [
       "SfLists.rev_injective",
       2,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "8455bf79ff03eaa0ffc3313b42870db2"
+      "34aed61a20385c03bc00968bcfb71743"
     ],
     [
       "SfLists.rev_injective",
@@ -909,9 +909,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "417fe37ea44cf8d7d4a454e332a57191"
+      "63c63b81b0a5d391874a7210beed6ffe"
     ],
     [
       "SfLists.app_cons",
@@ -941,9 +941,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "a8e269aa14881fed6fc68a13ecaf9dc2"
+      "81a2b9e528faa13e7919943c79d875c4"
     ],
     [
       "SfLists.snoc_app",
@@ -973,9 +973,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "33bbf1c7ff03962f963ee95735fe7322"
+      "c02b091049bc928423da6771530260cc"
     ],
     [
       "SfLists.rev_app",
@@ -999,9 +999,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_SfLists.ilist_haseq" ],
+      [ "@query", "assumption_SfLists.ilist__uu___haseq" ],
       0,
-      "945b3b7fb174f82c5d1edcbe00540b5f"
+      "e7348af0b9122c34dc7ae20f343ef3cf"
     ],
     [
       "SfLists.fold_left_cons_is_rev",

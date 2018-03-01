@@ -59,9 +59,12 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Ex07a.ty_haseq", "assumption_Prims.HasEq_int" ],
+      [
+        "@query", "assumption_Ex07a.ty__uu___haseq",
+        "assumption_Prims.HasEq_int"
+      ],
       0,
-      "6f677823fe4e52b433844346e46e4961"
+      "2699ed6a5bf9288b2a8f83ec59fca700"
     ],
     [
       "Ex07a.uu___is_EVar",
@@ -310,28 +313,23 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Ex07a_pretyping_954d904f9a7601853684143df10460f5",
-        "assumption_Ex07a.ty_haseq",
+        "assumption_Ex07a.ty__uu___haseq",
         "binder_x_896e04207a09217ae90a78b1619cef5a_1", "bool_inversion",
-        "constructor_distinct_Ex07a.EAbs", "constructor_distinct_Ex07a.EApp",
-        "constructor_distinct_Ex07a.ETrue", "disc_equation_Ex07a.EAbs",
-        "disc_equation_Ex07a.EApp", "disc_equation_Ex07a.EFalse",
-        "disc_equation_Ex07a.EIf", "disc_equation_Ex07a.ETrue",
-        "disc_equation_Ex07a.EVar",
+        "disc_equation_Ex07a.EAbs", "disc_equation_Ex07a.EApp",
+        "disc_equation_Ex07a.EFalse", "disc_equation_Ex07a.EIf",
+        "disc_equation_Ex07a.ETrue", "disc_equation_Ex07a.EVar",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_Ex07a.TBool@tok", "fuel_guarded_inversion_Ex07a.exp",
         "kinding_Ex07a.ty@tok", "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Ex07a.EApp__0",
-        "projection_inverse_Ex07a.EApp__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
         "subterm_ordering_Ex07a.EAbs", "subterm_ordering_Ex07a.EApp",
         "subterm_ordering_Ex07a.EIf",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "94a846568183d528daa4f5b033a0202a"
+      "e753565b423a2d3bf529d1ab03ea8aea"
     ],
     [
       "Ex07a.progress",
@@ -505,12 +503,12 @@
       2,
       1,
       [
-        "@query", "assumption_Ex07a.ty_haseq",
-        "assumption_FStar.Pervasives.Native.option_haseq",
+        "@query", "assumption_Ex07a.ty__uu___haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "e758bc2b05a5a17211183c5251e455be"
+      "cdfc4edc472486fdddff4fed26d1d928"
     ],
     [
       "Ex07a.equalE",
@@ -518,12 +516,12 @@
       2,
       1,
       [
-        "@query", "assumption_Ex07a.ty_haseq",
-        "assumption_FStar.Pervasives.Native.option_haseq",
+        "@query", "assumption_Ex07a.ty__uu___haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "b0a40f3bf64838e734a4f897f00aafab"
+      "2bf90094115785ec6ce61af32bf99817"
     ],
     [
       "Ex07a.context_invariance",
@@ -722,12 +720,12 @@
       2,
       1,
       [
-        "@query", "assumption_Ex07a.ty_haseq",
-        "assumption_FStar.Pervasives.Native.option_haseq",
+        "@query", "assumption_Ex07a.ty__uu___haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "9e55f6452612d7266f4667f486e70349"
+      "b9e780826834d78fc69d5f7079f82df5"
     ]
   ]
 ]

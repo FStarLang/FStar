@@ -131,7 +131,7 @@ let u   (#s:signedness) (#w:width)
        | W64 -> FStar.Int64.int_to_t x
        | W128 -> FStar.Int128.int_to_t x)
 
-let cast (#s:signedness) (#s':signedness)
+abstract let cast (#s:signedness) (#s':signedness)
          (#w:width)      (#w':width)
          (from:int_t s w{normalize (within_bounds s' w' (v from))})
    : Tot (to:int_t s' w'{normalize (v from == v to)})

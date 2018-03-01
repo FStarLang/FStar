@@ -81,9 +81,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
+      [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "1820c3d2103af3769a974b1577a2fb79"
+      "0ffb00c38db6e808f832d9a3b6fab54b"
     ],
     [
       "Ex10a.grant",
@@ -110,9 +110,10 @@
         "Ex10a_pretyping_9ab526030749815b532b60f20894130b",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Ex10a.entry_haseq", "bool_typing", "equation_Ex10a.db",
-        "equation_FStar.ST.ref", "equation_Prims.eqtype",
-        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
+        "assumption_Ex10a.entry__uu___haseq", "bool_typing",
+        "equation_Ex10a.db", "equation_FStar.ST.ref",
+        "equation_Prims.eqtype", "function_token_typing_Ex10a.acls",
+        "function_token_typing_Ex10a.db",
         "interpretation_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
         "kinding_Ex10a.entry@tok",
         "lemma_FStar.List.Tot.Base.mem_filter_forall",
@@ -120,11 +121,10 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Ref_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
         "typing_FStar.Ref.sel"
       ],
       0,
-      "67a3d4ed77d5cfedd88897c95d28cad9"
+      "0319e38b91e1ef58c3f87681ab178fa2"
     ],
     [
       "Ex10a.safe_delete",

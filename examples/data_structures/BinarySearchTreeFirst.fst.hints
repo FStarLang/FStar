@@ -44,13 +44,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.option_haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Prims.HasEq_int",
         "haseqBinarySearchTreeFirst_Tm_refine_b3a254a8b54e4091484f91010c2d56c0",
         "int_inversion", "kinding_BinarySearchTreeFirst.tree@tok"
       ],
       0,
-      "62ead623dae7f92579ab79b54da5a578"
+      "b6be1c96ec06058b0dfdfaeea4c6643e"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__l",

@@ -14,7 +14,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "da4be5f4e74582f002075e19dcab35ca"
+      "cc36b8c521e43bd883d947e7370b2495"
     ],
     [
       "FStar.Tactics.Builtins.t_exact",
@@ -32,7 +32,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "bb97a1ea987f1a56379348890d341886"
+      "71444654798c811fa7388945411ec7f7"
     ],
     [
       "FStar.Tactics.Builtins.apply",
@@ -50,7 +50,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "58f797f056cf38eeda38f0e8494e553f"
+      "b6cb60c25a4070492c08c09c29088fe6"
     ],
     [
       "FStar.Tactics.Builtins.apply_raw",
@@ -68,7 +68,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "796643517f669357041d0373ca84d22c"
+      "33b953abbe70d9bed451d19e4f5d4368"
     ],
     [
       "FStar.Tactics.Builtins.apply_lemma",
@@ -86,7 +86,94 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "40aea92075d45e10538f34b6f02d9ed8"
+      "cddad280f67abf28fbae0ac8a010e836"
+    ],
+    [
+      "FStar.Tactics.Builtins.quote",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
+      ],
+      0,
+      "c17c76ac0c93f0eb7f212542e8deee4f"
+    ],
+    [
+      "FStar.Tactics.Builtins.t_exact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0,
+      "a6e8a5d3d0df41da85cec873bbf0ba4f"
+    ],
+    [
+      "FStar.Tactics.Builtins.apply",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0,
+      "ecc66dfad9dd646aed65c1a77e292d4c"
+    ],
+    [
+      "FStar.Tactics.Builtins.apply_raw",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0,
+      "6fa64196507ad9386eefa16aae4b2f62"
+    ],
+    [
+      "FStar.Tactics.Builtins.apply_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0,
+      "e6bc0e75fa927b3eda43ad03b1c994f8"
     ]
   ]
 ]
