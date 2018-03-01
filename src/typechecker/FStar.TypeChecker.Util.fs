@@ -2168,6 +2168,18 @@ let mk_data_operations iquals env tcs se =
 
   | _ -> []
 
+
+(* private *)
+let haseq_suffix = "__uu___haseq"
+
+let is_haseq_lid lid = 
+  let str = lid.str in let len = String.length str in
+  let haseq_suffix_len = String.length haseq_suffix in
+  len > haseq_suffix_len &&
+  String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
+
+let get_haseq_axiom_lid lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ haseq_suffix))])
+
 //get the optimized hasEq axiom for this inductive
 //the caller is supposed to open the universes, and pass along the universe substitution and universe names
 //returns -- lid of the hasEq axiom
@@ -2222,6 +2234,5 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
 
-  let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
-
+  let axiom_lid = get_haseq_axiom_lid lid in
   axiom_lid, fml, bs, ibs, haseq_bs

@@ -132,8 +132,8 @@ let go _ =
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then let _, deps = Parser.Dep.collect filenames in
              Parser.Dep.print deps
-        else if (Options.use_extracted_interfaces () || Options.check_interface ()) && List.length filenames > 1 then
-          Errors.raise_error (Errors.Error_TooManyFiles, "Only one command line file is allowed if either --check_interface or --use_extracted_interfaces is set") Range.dummyRange
+        else if Options.use_extracted_interfaces () && List.length filenames > 1 then
+          Errors.raise_error (Errors.Error_TooManyFiles, "Only one command line file is allowed if --use_extracted_interfaces is set") Range.dummyRange
         else if Options.interactive () then begin
           match filenames with
           | [] ->
@@ -141,10 +141,7 @@ let go _ =
           | _ :: _ :: _ ->
             Errors. log_issue Range.dummyRange (Errors.Error_TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
           | [filename] ->
-            if Options.check_interface () then begin
-              Errors.log_issue Range.dummyRange (Errors.Fatal_OptionsNotCompatible, "Only one command line file is allowed if either --check_interface or --use_extracted_interfaces is set\n"); exit 1
-            end
-            else if Options.legacy_interactive () then
+            if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
             else
               FStar.Interactive.Ide.interactive_mode filename
