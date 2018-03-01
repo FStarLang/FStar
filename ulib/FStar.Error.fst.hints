@@ -81,7 +81,7 @@
     ],
     [
       "FStar.Error.uu___is_Error",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -90,7 +90,7 @@
     ],
     [
       "FStar.Error.__proj__Error__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -103,7 +103,7 @@
     ],
     [
       "FStar.Error.uu___is_Correct",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -112,7 +112,7 @@
     ],
     [
       "FStar.Error.__proj__Correct__item___0",
-      2,
+      1,
       2,
       1,
       [

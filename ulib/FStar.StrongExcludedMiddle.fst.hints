@@ -12,7 +12,7 @@
     ],
     [
       "FStar.StrongExcludedMiddle.strong_excluded_middle",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],

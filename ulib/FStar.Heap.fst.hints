@@ -17,7 +17,7 @@
     ],
     [
       "FStar.Heap.trivial_preorder",
-      2,
+      1,
       2,
       1,
       [

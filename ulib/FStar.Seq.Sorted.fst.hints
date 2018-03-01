@@ -324,7 +324,7 @@
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
-      3,
+      1,
       2,
       1,
       [
@@ -336,7 +336,7 @@
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_slice_lemma",
-      3,
+      1,
       2,
       1,
       [
@@ -352,7 +352,7 @@
     ],
     [
       "FStar.Seq.Sorted.sorted_slice_lemma",
-      3,
+      1,
       2,
       1,
       [
@@ -368,7 +368,7 @@
     ],
     [
       "FStar.Seq.Sorted.sorted_split_lemma",
-      3,
+      1,
       2,
       1,
       [
@@ -381,7 +381,7 @@
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_append_lemma",
-      3,
+      1,
       2,
       1,
       [ "@query" ],

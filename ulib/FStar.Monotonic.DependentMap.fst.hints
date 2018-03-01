@@ -595,23 +595,26 @@
     ],
     [
       "FStar.Monotonic.DependentMap.repr",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_575554edf8c9e5442068048fe07eedcb_4",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Monotonic.DependentMap.map",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e65a9373f8798fa0e91315b1a917ba47"
+      "40f571cc09d5c293a49c58acbb937c06"
     ],
     [
       "FStar.Monotonic.DependentMap.empty",
-      2,
+      1,
       2,
       1,
       [
@@ -626,7 +629,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.sel",
-      2,
+      1,
       2,
       1,
       [
@@ -651,6 +654,7 @@
         "equation_FStar.Monotonic.DependentMap.map",
         "equation_FStar.Monotonic.DependentMap.opt",
         "equation_FStar.Monotonic.DependentMap.partial_dependent_map",
+        "equation_Prims.eqtype",
         "equation_with_fuel_FStar.Monotonic.DependentMap.repr.fuel_instrumented",
         "fuel_guarded_inversion_Prims.dtuple2",
         "fuel_guarded_inversion_Prims.list",
@@ -666,17 +670,18 @@
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mkdtuple2__2",
         "projection_inverse_Prims.Mkdtuple2_b",
-        "projection_inverse_Prims.Nil_a", "subterm_ordering_Prims.Cons",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.Monotonic.DependentMap.opt",
         "token_correspondence_FStar.Monotonic.DependentMap.repr.fuel_instrumented",
         "typing_FStar.Monotonic.DependentMap_Tm_abs_7a34dc4259607baf16a43981a2a099e7"
       ],
       0,
-      "a6a6f9aed23d5c8b9aa65b869f75056a"
+      "80953c98c7b7be67ffacc59f6f668f32"
     ],
     [
       "FStar.Monotonic.DependentMap.upd",
-      2,
+      1,
       2,
       1,
       [
@@ -697,7 +702,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.grows'",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -706,7 +711,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.grows",
-      2,
+      1,
       2,
       1,
       [
@@ -719,7 +724,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.value_of",
-      2,
+      1,
       2,
       1,
       [
@@ -733,7 +738,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.contains",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -742,7 +747,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.alloc",
-      3,
+      1,
       2,
       1,
       [
@@ -760,11 +765,11 @@
         "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_b2967d9ab9ba1cfd9fec4aa29b50fa40"
       ],
       0,
-      "dad5e3ed43200d39fb9fd529c646e92b"
+      "ca3260dc738cab964b3e6260ffcb8b82"
     ],
     [
       "FStar.Monotonic.DependentMap.extend",
-      3,
+      1,
       2,
       1,
       [
@@ -776,23 +781,22 @@
     ],
     [
       "FStar.Monotonic.DependentMap.lookup",
-      3,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
+        "bool_inversion", "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "32694d62a4291b68f882d395071c4873"
+      "31959da114ac6ffd6a3eb1d23fcc3d5f"
     ],
     [
       "FStar.Monotonic.DependentMap.forall_t",
-      2,
+      1,
       2,
       1,
       [
@@ -804,7 +808,7 @@
     ],
     [
       "FStar.Monotonic.DependentMap.f_opt",
-      2,
+      1,
       2,
       1,
       [
@@ -814,14 +818,14 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "13703694ba2463a54cd9c01bc469007c"
+      "8f46a13274d6b2c81ee84fb581348c50"
     ],
     [
       "FStar.Monotonic.DependentMap.mmap_f",
-      2,
+      1,
       2,
       1,
       [
@@ -873,23 +877,24 @@
         "projection_inverse_Prims.Cons_tl",
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mkdtuple2__2",
+        "projection_inverse_Prims.Mkdtuple2_a",
         "projection_inverse_Prims.Mkdtuple2_b",
         "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_fab851b24cd613c2b2b4e335b033d40a",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.Monotonic.DependentMap.opt",
+        "token_correspondence_FStar.Monotonic.DependentMap.repr.fuel_instrumented",
         "typing_FStar.DependentMap.map",
         "typing_FStar.Monotonic.DependentMap.empty_partial_dependent_map",
-        "typing_FStar.Monotonic.DependentMap.repr",
         "typing_FStar.Monotonic.DependentMap_Tm_abs_7947c921c05d9f6aff28a128a82e8ce4",
         "typing_FStar.Monotonic.DependentMap_Tm_abs_7a34dc4259607baf16a43981a2a099e7"
       ],
       0,
-      "2cdca62f1429827444211681fcd4a2e8"
+      "98f4ddb944f0cf75dc5b5a7d5a5255f7"
     ],
     [
       "FStar.Monotonic.DependentMap.map_f",
-      3,
+      1,
       2,
       1,
       [
@@ -907,7 +912,7 @@
         "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_ecc923c61561a744b55919cb2bbb6591"
       ],
       0,
-      "cf386ef1399aa351aacfc991ec5a51ac"
+      "6f7ae1493723dbb7006a6f31790177a2"
     ]
   ]
 ]

@@ -43,7 +43,7 @@
     ],
     [
       "FStar.Relational.Relational.tl_rel",
-      2,
+      1,
       2,
       1,
       [
@@ -56,7 +56,7 @@
     ],
     [
       "FStar.Relational.Relational.eq_rel",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],

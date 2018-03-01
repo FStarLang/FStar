@@ -34,7 +34,7 @@
     ],
     [
       "FStar.Tactics.Effect.__bind",
-      2,
+      1,
       2,
       1,
       [
@@ -51,7 +51,7 @@
     ],
     [
       "FStar.Tactics.Effect.g_bind",
-      2,
+      1,
       2,
       1,
       [

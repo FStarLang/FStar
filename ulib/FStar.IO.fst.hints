@@ -12,7 +12,7 @@
     ],
     [
       "FStar.IO.uu___is_EOF",
-      2,
+      1,
       2,
       1,
       [ "@query" ],

@@ -49,7 +49,7 @@
     ],
     [
       "FStar.Tactics.Result.uu___is_Success",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -58,7 +58,7 @@
     ],
     [
       "FStar.Tactics.Result.__proj__Success__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -72,7 +72,7 @@
     ],
     [
       "FStar.Tactics.Result.uu___is_Failed",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -81,7 +81,7 @@
     ],
     [
       "FStar.Tactics.Result.__proj__Failed__item___0",
-      2,
+      1,
       2,
       1,
       [

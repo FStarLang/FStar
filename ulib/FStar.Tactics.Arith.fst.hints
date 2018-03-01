@@ -42,7 +42,7 @@
     ],
     [
       "FStar.Tactics.Arith.is_arith_goal",
-      2,
+      1,
       2,
       1,
       [

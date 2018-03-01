@@ -121,7 +121,7 @@
       1,
       [ "@query", "assumption_Ex12b.RPC.log_entry__uu___haseq" ],
       0,
-      "0248c553dc984bb041b5f55e9998cdf1"
+      "8e4895e2a37546b0c2e5ecbad1275bd3"
     ],
     [
       "Ex12b.RPC.log",
@@ -130,7 +130,7 @@
       1,
       [ "@query", "assumption_Ex12b.RPC.log_entry__uu___haseq" ],
       0,
-      "a01bae3ab2246f42c6b8852aaaf2d818"
+      "e8cdd8332dbebf39698cd6d89b7280f3"
     ],
     [
       "Ex12b.RPC.add_to_log",
@@ -161,7 +161,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "04df311b7c34df8040feff65b6461064"
+      "aa8873aad7601f328e9ef4e0f59ef08f"
     ],
     [
       "Ex12b.RPC.req",
@@ -178,7 +178,7 @@
         "string_inversion", "token_correspondence_Ex12b.RPC.subset_"
       ],
       0,
-      "18d52db9b33904835d90096c765e0291"
+      "2e1355e1ef25f6e6d34f221b49ca418f"
     ],
     [
       "Ex12b.RPC.resp",
@@ -195,7 +195,7 @@
         "string_inversion", "token_correspondence_Ex12b.RPC.subset_"
       ],
       0,
-      "8423abdc194832a8f4fe2d05e8716538"
+      "743452c8079acd4a7e72a0fe320a09dd"
     ],
     [
       "Ex12b.RPC.pRequest",
@@ -207,7 +207,7 @@
         "equation_FStar.MRef.stable"
       ],
       0,
-      "5451a4484eedcd9fdd554345e6a5b86b"
+      "66a309b56cc043b1b9fc53ca54b9e8f3"
     ],
     [
       "Ex12b.RPC.pResponse",
@@ -219,7 +219,7 @@
         "equation_FStar.MRef.stable"
       ],
       0,
-      "131615e7c316a7e8fc90c47fff87b8a4"
+      "22e3f02d4ee0f47e6b710cba930c6737"
     ],
     [
       "Ex12b.RPC.reqresp",
@@ -272,7 +272,7 @@
         "unit_typing"
       ],
       0,
-      "a65cdf73c781178ef2a5ba522f8b9580"
+      "9ea9120295dbb230fe002e5489ece726"
     ],
     [
       "Ex12b.RPC.client_recv",
@@ -327,7 +327,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "c68978b2d70725f23ce6536f27f0c04f"
+      "3be675c84bc622b8cd4842dd35d70d15"
     ],
     [
       "Ex12b.RPC.server",
@@ -412,7 +412,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "c06a4086a9f9ee28ea36c0ba2d58f21c"
+      "e8316dfe5ed5589aefc1d3e05ebc98c8"
     ],
     [
       "Ex12b.RPC.test",

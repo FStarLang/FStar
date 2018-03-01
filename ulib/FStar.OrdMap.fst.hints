@@ -1047,19 +1047,21 @@
     ],
     [
       "FStar.OrdMap.map_t",
-      2,
+      1,
       2,
       1,
       [
-        "@query", "equation_FStar.OrdMap.total_order",
-        "equation_FStar.OrdSet.total_order"
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "equation_FStar.OrdMap.cmp", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order",
+        "refinement_interpretation_FStar.OrdMap_Tm_refine_f1d03c53111f5957ece8bf1c261fee93"
       ],
       0,
-      "65da02958a9a04a8093a9828af37e112"
+      "1f02544c8dba939445d75ef1ab0f0965"
     ],
     [
       "FStar.OrdMap.const_on",
-      3,
+      1,
       2,
       1,
       [
@@ -1071,7 +1073,7 @@
     ],
     [
       "FStar.OrdMap.insert",
-      2,
+      1,
       2,
       1,
       [
@@ -1085,7 +1087,7 @@
     ],
     [
       "FStar.OrdMap.dom",
-      2,
+      1,
       2,
       1,
       [
@@ -1097,7 +1099,7 @@
     ],
     [
       "FStar.OrdMap.sel_contains",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1106,7 +1108,7 @@
     ],
     [
       "FStar.OrdMap.contains_upd1",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1115,7 +1117,7 @@
     ],
     [
       "FStar.OrdMap.contains_upd2",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1124,7 +1126,7 @@
     ],
     [
       "FStar.OrdMap.contains_remove",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1133,13 +1135,14 @@
     ],
     [
       "FStar.OrdMap.dom_empty_helper",
-      4,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.OrdMap.cmp",
         "equation_FStar.OrdMap.total_order", "equation_FStar.OrdSet.cmp",
         "equation_FStar.OrdSet.total_order",
+        "fuel_guarded_inversion_FStar.OrdMap.ordmap",
         "lemma_FStar.OrdSet.hasEq_ordset",
         "refinement_interpretation_FStar.OrdMap_Tm_refine_f1d03c53111f5957ece8bf1c261fee93",
         "refinement_interpretation_FStar.OrdSet_Tm_refine_6256d572f4d48024e68a9fc798700b8a"
@@ -1149,16 +1152,21 @@
     ],
     [
       "FStar.OrdMap.choose_m",
-      3,
+      1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.option_haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "06db42489fb050bd1a2ece9508f25328"
+      "49a65c451b0c3dc8cf762f2f7a77e8fd"
     ],
     [
       "FStar.OrdMap.size_empty",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -1167,7 +1175,7 @@
     ],
     [
       "FStar.OrdMap.size_remove",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -1176,7 +1184,7 @@
     ],
     [
       "FStar.OrdMap.dom_lemma",
-      3,
+      1,
       2,
       1,
       [
@@ -1188,7 +1196,7 @@
     ],
     [
       "FStar.OrdMap.contains_const_on",
-      5,
+      1,
       2,
       1,
       [
@@ -1197,11 +1205,11 @@
         "equation_FStar.OrdSet.total_order"
       ],
       0,
-      "7a3a5447eac2a1ae485a3bfd52a47361"
+      "795e6afd74efbbc69f659c2be24186cb"
     ],
     [
       "FStar.OrdMap.select_const_on",
-      4,
+      1,
       2,
       1,
       [
@@ -1213,7 +1221,7 @@
         "typing_FStar.OrdMap.const_on"
       ],
       0,
-      "65b0177f183a4d34b300e0f460edbcea"
+      "09729de3635847e7a7f131f53830dd56"
     ]
   ]
 ]

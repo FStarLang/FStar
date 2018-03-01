@@ -90,7 +90,7 @@
     ],
     [
       "FStar.Tactics.Builtins.quote",
-      2,
+      1,
       2,
       1,
       [
@@ -105,7 +105,7 @@
     ],
     [
       "FStar.Tactics.Builtins.t_exact",
-      2,
+      1,
       2,
       1,
       [
@@ -123,7 +123,7 @@
     ],
     [
       "FStar.Tactics.Builtins.apply",
-      2,
+      1,
       2,
       1,
       [
@@ -141,7 +141,7 @@
     ],
     [
       "FStar.Tactics.Builtins.apply_raw",
-      2,
+      1,
       2,
       1,
       [
@@ -159,7 +159,7 @@
     ],
     [
       "FStar.Tactics.Builtins.apply_lemma",
-      2,
+      1,
       2,
       1,
       [

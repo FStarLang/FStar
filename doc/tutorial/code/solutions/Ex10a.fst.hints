@@ -83,7 +83,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "f30b3b977addfb75c31355be7cf928e5"
+      "0ffb00c38db6e808f832d9a3b6fab54b"
     ],
     [
       "Ex10a.grant",
@@ -124,7 +124,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "98cf5315952d93fca036065658239e72"
+      "0319e38b91e1ef58c3f87681ab178fa2"
     ],
     [
       "Ex10a.safe_delete",

@@ -30,7 +30,7 @@
     ],
     [
       "FStar.Axiomatic.Array.IndexUpdate",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -39,7 +39,7 @@
     ],
     [
       "FStar.Axiomatic.Array.IndexAppend",
-      2,
+      1,
       2,
       1,
       [ "@query" ],

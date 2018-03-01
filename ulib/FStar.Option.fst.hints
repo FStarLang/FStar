@@ -84,7 +84,7 @@
     ],
     [
       "FStar.Option.isNone",
-      2,
+      1,
       2,
       1,
       [
@@ -93,14 +93,14 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "9bd02779413fc6e05278365c501074fd"
+      "0bf6789479eaab3d31a1600f81bde29b"
     ],
     [
       "FStar.Option.isSome",
-      2,
+      1,
       2,
       1,
       [
@@ -116,7 +116,7 @@
     ],
     [
       "FStar.Option.mapTot",
-      2,
+      1,
       2,
       1,
       [

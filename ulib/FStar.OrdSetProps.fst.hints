@@ -110,7 +110,7 @@
     ],
     [
       "FStar.OrdSetProps.fold",
-      2,
+      1,
       2,
       1,
       [
@@ -144,7 +144,7 @@
     ],
     [
       "FStar.OrdSetProps.union_lemma",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -153,7 +153,7 @@
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
-      3,
+      1,
       2,
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],

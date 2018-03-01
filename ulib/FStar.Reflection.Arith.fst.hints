@@ -1032,7 +1032,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Lit",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1041,7 +1041,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lit__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1055,7 +1055,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Atom",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1064,7 +1064,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Atom__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1078,7 +1078,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Atom__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1092,7 +1092,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Plus",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1101,7 +1101,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Plus__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1115,7 +1115,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Plus__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1129,7 +1129,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Mult",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1138,7 +1138,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Mult__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1152,7 +1152,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Mult__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1166,7 +1166,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Minus",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1175,7 +1175,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Minus__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1189,7 +1189,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Minus__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1203,7 +1203,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Land",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1212,7 +1212,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Land__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1226,7 +1226,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Land__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1240,7 +1240,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Lxor",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1249,7 +1249,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lxor__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1263,7 +1263,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lxor__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1277,7 +1277,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Lor",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1286,7 +1286,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lor__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1300,7 +1300,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lor__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1314,7 +1314,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Ladd",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1323,7 +1323,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Ladd__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1337,7 +1337,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Ladd__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1351,7 +1351,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Lsub",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1360,7 +1360,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lsub__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1374,7 +1374,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Lsub__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1388,7 +1388,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Shl",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1397,7 +1397,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Shl__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1411,7 +1411,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Shl__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1425,7 +1425,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Shr",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1434,7 +1434,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Shr__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1448,7 +1448,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Shr__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1462,7 +1462,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Neg",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1471,7 +1471,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Neg__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1485,7 +1485,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Udiv",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1494,7 +1494,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Udiv__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1508,7 +1508,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Udiv__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1522,7 +1522,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_Umod",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1531,7 +1531,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Umod__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1545,7 +1545,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__Umod__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1559,7 +1559,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_MulMod",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1568,7 +1568,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__MulMod__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1582,7 +1582,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__MulMod__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1596,7 +1596,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_NatToBv",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1605,7 +1605,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__NatToBv__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1619,7 +1619,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_C_Lt",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1628,7 +1628,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_C_Eq",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1637,7 +1637,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_C_Gt",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1646,7 +1646,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_C_Ne",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1655,7 +1655,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_CompProp",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1664,7 +1664,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__CompProp__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1678,7 +1678,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__CompProp__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1692,7 +1692,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__CompProp__item___2",
-      2,
+      1,
       2,
       1,
       [
@@ -1706,7 +1706,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_AndProp",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1715,7 +1715,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__AndProp__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1729,7 +1729,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__AndProp__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1743,7 +1743,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_OrProp",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1752,7 +1752,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__OrProp__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1766,7 +1766,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__OrProp__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1780,7 +1780,7 @@
     ],
     [
       "FStar.Reflection.Arith.uu___is_NotProp",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1789,7 +1789,7 @@
     ],
     [
       "FStar.Reflection.Arith.__proj__NotProp__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1803,7 +1803,7 @@
     ],
     [
       "FStar.Reflection.Arith.bind",
-      2,
+      1,
       2,
       1,
       [
@@ -1822,7 +1822,7 @@
     ],
     [
       "FStar.Reflection.Arith.find_idx",
-      2,
+      1,
       2,
       1,
       [
@@ -1831,31 +1831,33 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1", "bool_inversion",
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.UInt32.n", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.UInt32.n",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_FStar.Reflection.Arith_Tm_refine_b0dec681e90f3e7877c26fb291758fc9",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_kinding_FStar.Reflection.Arith_Tm_refine_b0dec681e90f3e7877c26fb291758fc9",
         "subterm_ordering_Prims.Cons",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "a9e4248b1794cb0e460b0d929b4e2813"
+      "a68e94a196076e076471cd0e59f60eb4"
     ],
     [
       "FStar.Reflection.Arith.atom",
-      2,
+      1,
       2,
       1,
       [
@@ -1864,24 +1866,22 @@
         "@fuel_correspondence_FStar.Reflection.Arith.find_idx.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "bool_typing", "constructor_distinct_Prims.Cons",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Reflection.Arith.st", "equation_FStar.UInt32.n",
-        "equation_Prims.nat",
+        "equation_FStar.Reflection.Arith.st", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.nat", "int_inversion",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Prims.list@tok", "lemma_FStar.Pervasives.invertOption",
+        "kinding_Prims.list@tok",
         "partial_app_typing_c90069b06c76d257c4fad17b15aaea24",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -1891,43 +1891,44 @@
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_FStar.Reflection.Arith_Tm_refine_79cdadb47c8ce16e3f6559ff6c35bf9c",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_kinding_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_FStar.List.Tot.Base.length",
         "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Reflection.Arith.find_idx"
       ],
       0,
-      "52f69ae2c979f758b8ef34f5fdaad4aa"
+      "20e1b6ac3f26c9930c0e5eb51305166d"
     ],
     [
       "FStar.Reflection.Arith.forall_list",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "equation_Prims.l_True", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "12f7154d469c6a5384b9f3bd3edf2ef8"
+      "42045afbb7bef43353110472630588df"
     ],
     [
       "FStar.Reflection.Arith.is_arith_expr",
-      2,
+      1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
       0,
-      "e1473e06f514cae9c43b8e4ef8fbeb9e"
+      "e7f0abae543a88998fe61585a23171d0"
     ],
     [
       "FStar.Reflection.Arith.is_arith_prop",
-      2,
+      1,
       2,
       1,
       [
@@ -1949,7 +1950,7 @@
     ],
     [
       "FStar.Reflection.Arith.run_tm",
-      2,
+      1,
       2,
       1,
       [
@@ -1964,6 +1965,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Nil_a"
@@ -1973,12 +1975,19 @@
     ],
     [
       "FStar.Reflection.Arith.expr_to_string",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_a07959c370bece0a8a0f8382b2d82719_0",
+        "constructor_distinct_FStar.Reflection.Arith.Atom",
+        "constructor_distinct_FStar.Reflection.Arith.Land",
+        "constructor_distinct_FStar.Reflection.Arith.Lor",
+        "constructor_distinct_FStar.Reflection.Arith.Minus",
+        "constructor_distinct_FStar.Reflection.Arith.Mult",
+        "constructor_distinct_FStar.Reflection.Arith.Neg",
+        "constructor_distinct_FStar.Reflection.Arith.Plus",
         "disc_equation_FStar.Reflection.Arith.Atom",
         "disc_equation_FStar.Reflection.Arith.Ladd",
         "disc_equation_FStar.Reflection.Arith.Land",
@@ -1997,6 +2006,17 @@
         "disc_equation_FStar.Reflection.Arith.Udiv",
         "disc_equation_FStar.Reflection.Arith.Umod",
         "fuel_guarded_inversion_FStar.Reflection.Arith.expr",
+        "projection_inverse_FStar.Reflection.Arith.Land__0",
+        "projection_inverse_FStar.Reflection.Arith.Land__1",
+        "projection_inverse_FStar.Reflection.Arith.Lor__0",
+        "projection_inverse_FStar.Reflection.Arith.Lor__1",
+        "projection_inverse_FStar.Reflection.Arith.Minus__0",
+        "projection_inverse_FStar.Reflection.Arith.Minus__1",
+        "projection_inverse_FStar.Reflection.Arith.Mult__0",
+        "projection_inverse_FStar.Reflection.Arith.Mult__1",
+        "projection_inverse_FStar.Reflection.Arith.Neg__0",
+        "projection_inverse_FStar.Reflection.Arith.Plus__0",
+        "projection_inverse_FStar.Reflection.Arith.Plus__1",
         "subterm_ordering_FStar.Reflection.Arith.Ladd",
         "subterm_ordering_FStar.Reflection.Arith.Land",
         "subterm_ordering_FStar.Reflection.Arith.Lor",
@@ -2014,32 +2034,30 @@
         "subterm_ordering_FStar.Reflection.Arith.Umod"
       ],
       0,
-      "13a5afa4e0b46e08e73648abb12eabac"
+      "6f477e93dee8e1c6c429431674ec5b5a"
     ],
     [
       "FStar.Reflection.Arith.compare_expr",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Arith_pretyping_a07959c370bece0a8a0f8382b2d82719",
         "binder_x_a07959c370bece0a8a0f8382b2d82719_0",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "constructor_distinct_FStar.Reflection.Arith.Minus",
+        "constructor_distinct_FStar.Reflection.Arith.Mult",
+        "equality_tok_FStar.Order.Gt@tok", "equality_tok_FStar.Order.Lt@tok",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Reflection.Arith.Minus__0",
         "projection_inverse_FStar.Reflection.Arith.Minus__1",
-        "projection_inverse_FStar.Reflection.Arith.Mult__0",
         "projection_inverse_FStar.Reflection.Arith.Mult__1",
-        "projection_inverse_FStar.Reflection.Arith.Plus__0",
-        "projection_inverse_FStar.Reflection.Arith.Plus__1",
         "subterm_ordering_FStar.Reflection.Arith.Minus",
         "subterm_ordering_FStar.Reflection.Arith.Mult",
         "subterm_ordering_FStar.Reflection.Arith.Neg",
         "subterm_ordering_FStar.Reflection.Arith.Plus"
       ],
       0,
-      "4504f83d8af9f143449cb947b2803391"
+      "4d54514f6a8a6383961ee2e5293eaa2b"
     ]
   ]
 ]

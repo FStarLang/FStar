@@ -362,25 +362,25 @@
     ],
     [
       "FStar.Tactics.Simplifier.is_true",
-      2,
+      1,
       2,
       1,
-      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      [ "@query", "disc_equation_FStar.Reflection.Syntax.Tv_App" ],
       0,
-      "9b77a753806c38badd294004e7dccc67"
+      "4a83971d90632bb82867850ccb5aa104"
     ],
     [
       "FStar.Tactics.Simplifier.is_false",
-      2,
+      1,
       2,
       1,
-      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      [ "@query", "disc_equation_FStar.Reflection.Syntax.Tv_App" ],
       0,
-      "5db1baae5cfce853b168fbacab20e65e"
+      "6cb5aadabd15d99f8a40e8caedaac92a"
     ],
     [
       "FStar.Tactics.Simplifier.inhabit",
-      2,
+      1,
       2,
       1,
       [

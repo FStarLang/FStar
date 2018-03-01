@@ -140,18 +140,24 @@
     ],
     [
       "FStar.MRef.lemma_functoriality",
-      2,
+      1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.spred",
-        "equation_FStar.MRef.stable",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.p_pred",
+        "equation_FStar.MRef.spred", "equation_FStar.MRef.stable",
+        "equation_FStar.MRef.token", "equation_FStar.Preorder.stable",
+        "equation_FStar.ST.heap_rel", "equation_FStar.ST.mref",
+        "equation_FStar.ST.stable", "l_and-interp",
         "refinement_interpretation_FStar.MRef_Tm_refine_622e5d71d43c090771b195939447feeb",
+        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "token_correspondence_FStar.MRef.p_pred",
         "token_correspondence_FStar.MRef.stable",
-        "token_correspondence_FStar.Preorder.stable"
+        "token_correspondence_FStar.Preorder.stable",
+        "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "02af3990041479c2ea3d3c082a36208c"
+      "cb89fda45053d215be2f4ac67e3550ec"
     ]
   ]
 ]

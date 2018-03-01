@@ -221,7 +221,7 @@
     ],
     [
       "FStar.TwoLevelHeap.t",
-      2,
+      1,
       2,
       1,
       [
@@ -233,7 +233,7 @@
     ],
     [
       "FStar.TwoLevelHeap.new_region",
-      3,
+      1,
       2,
       1,
       [
@@ -245,7 +245,7 @@
     ],
     [
       "FStar.TwoLevelHeap.sel",
-      2,
+      1,
       2,
       1,
       [
@@ -257,7 +257,7 @@
     ],
     [
       "FStar.TwoLevelHeap.upd",
-      2,
+      1,
       2,
       1,
       [
@@ -269,7 +269,7 @@
     ],
     [
       "FStar.TwoLevelHeap.upd",
-      3,
+      2,
       2,
       1,
       [
@@ -281,7 +281,7 @@
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
-      5,
+      1,
       2,
       1,
       [
@@ -293,7 +293,7 @@
     ],
     [
       "FStar.TwoLevelHeap.op_Colon_Equals",
-      4,
+      1,
       2,
       1,
       [
@@ -305,7 +305,7 @@
     ],
     [
       "FStar.TwoLevelHeap.op_Bang",
-      2,
+      1,
       2,
       1,
       [
@@ -317,7 +317,7 @@
     ],
     [
       "FStar.TwoLevelHeap.modifies",
-      2,
+      1,
       2,
       1,
       [
@@ -329,7 +329,7 @@
     ],
     [
       "FStar.TwoLevelHeap.modifies",
-      3,
+      2,
       2,
       1,
       [
@@ -341,7 +341,7 @@
     ],
     [
       "FStar.TwoLevelHeap.fresh_region",
-      2,
+      1,
       2,
       1,
       [
@@ -353,7 +353,7 @@
     ],
     [
       "FStar.TwoLevelHeap.contains_ref",
-      2,
+      1,
       2,
       1,
       [
@@ -365,7 +365,7 @@
     ],
     [
       "FStar.TwoLevelHeap.fresh_rref",
-      2,
+      1,
       2,
       1,
       [

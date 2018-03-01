@@ -316,7 +316,7 @@
     ],
     [
       "FStar.Map.lemma_ContainsDom",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -325,7 +325,7 @@
     ],
     [
       "FStar.Map.lemma_equal_intro",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],

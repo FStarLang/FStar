@@ -830,7 +830,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Eq",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -839,7 +839,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Eq__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -853,7 +853,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_BoolEq",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -862,7 +862,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__BoolEq__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -876,7 +876,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Lt",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -885,7 +885,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Le",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -894,7 +894,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Gt",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -903,7 +903,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Ge",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -912,7 +912,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_True_",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -921,7 +921,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_False_",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -930,7 +930,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Comp",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -939,7 +939,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Comp__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -953,7 +953,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Comp__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -967,7 +967,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Comp__item___2",
-      2,
+      1,
       2,
       1,
       [
@@ -981,7 +981,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_And",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -990,7 +990,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__And__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1004,7 +1004,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__And__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1018,7 +1018,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Or",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1027,7 +1027,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Or__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1041,7 +1041,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Or__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1055,7 +1055,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Not",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1064,7 +1064,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Not__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1078,7 +1078,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Implies",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1087,7 +1087,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Implies__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1101,7 +1101,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Implies__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1115,7 +1115,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Iff",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1124,7 +1124,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Iff__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1138,7 +1138,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Iff__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1152,7 +1152,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Forall",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1161,7 +1161,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Forall__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1175,7 +1175,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Forall__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1189,7 +1189,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Exists",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1198,7 +1198,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Exists__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1212,7 +1212,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Exists__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1226,7 +1226,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_App",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1235,7 +1235,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__App__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1249,7 +1249,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__App__item___1",
-      2,
+      1,
       2,
       1,
       [
@@ -1263,7 +1263,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_Name",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1272,7 +1272,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__Name__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1286,7 +1286,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_FV",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1295,7 +1295,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__FV__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1309,7 +1309,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_IntLit",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1318,7 +1318,7 @@
     ],
     [
       "FStar.Reflection.Formula.__proj__IntLit__item___0",
-      2,
+      1,
       2,
       1,
       [
@@ -1332,7 +1332,7 @@
     ],
     [
       "FStar.Reflection.Formula.uu___is_F_Unknown",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1341,11 +1341,17 @@
     ],
     [
       "FStar.Reflection.Formula.smaller",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Reflection.Formula.And",
+        "constructor_distinct_FStar.Reflection.Formula.App",
+        "constructor_distinct_FStar.Reflection.Formula.Exists",
+        "constructor_distinct_FStar.Reflection.Formula.False_",
+        "constructor_distinct_FStar.Reflection.Formula.Implies",
+        "constructor_distinct_FStar.Reflection.Formula.Or",
         "disc_equation_FStar.Reflection.Formula.And",
         "disc_equation_FStar.Reflection.Formula.App",
         "disc_equation_FStar.Reflection.Formula.Comp",
@@ -1361,14 +1367,16 @@
         "disc_equation_FStar.Reflection.Formula.Not",
         "disc_equation_FStar.Reflection.Formula.Or",
         "disc_equation_FStar.Reflection.Formula.True_",
+        "equality_tok_FStar.Reflection.Formula.False_@tok",
+        "equation_Prims.l_True",
         "fuel_guarded_inversion_FStar.Reflection.Formula.formula"
       ],
       0,
-      "d167bd75fb298c33145c4959578f0c65"
+      "6681954fefd0183b1029839683dd8508"
     ],
     [
       "FStar.Reflection.Formula.term_as_formula'",
-      2,
+      1,
       4,
       2,
       [
@@ -1443,7 +1451,6 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Prims.Cons_hd", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
@@ -1489,11 +1496,11 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "247ea35c2c00749c49dcb2bafec4f8e2"
+      "b4c15ef73cf1606f1a1b0ae1a2adc909"
     ],
     [
       "FStar.Reflection.Formula.is_name_imp",
-      2,
+      1,
       2,
       1,
       [
@@ -1516,7 +1523,7 @@
     ],
     [
       "FStar.Reflection.Formula.unsquash",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
@@ -1525,19 +1532,20 @@
     ],
     [
       "FStar.Reflection.Formula.term_as_formula",
-      2,
+      1,
       2,
       2,
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Reflection.Data_pretyping_b90ba98501c0444263072cb94ae6e3aa",
-        "binder_x_58d2c7c10918d93b79238e251dd796c1_0", "bool_inversion",
+        "binder_x_58d2c7c10918d93b79238e251dd796c1_0",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_FStar.Reflection.Formula.F_Unknown",
         "data_elim_FStar.Reflection.Data.Tv_App",
         "data_typing_intro_FStar.Reflection.Data.Q_Explicit@tok",
         "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_FStar.Reflection.Formula.F_Unknown@tok",
         "equation_FStar.Reflection.Basic.inspect",
         "equation_FStar.Reflection.Basic.smaller",
@@ -1546,26 +1554,20 @@
         "equation_FStar.Reflection.Formula.term_as_formula_",
         "equation_FStar.Reflection.Formula.unsquash",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FStar.Reflection.Formula.formula",
-        "function_token_typing_FStar.Reflection.Types.term", "l_and-interp",
-        "lemma_FStar.Pervasives.invertOption",
+        "l_and-interp", "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
-        "refinement_interpretation_FStar.Reflection.Formula_Tm_refine_be31f2203f3bc07f6634ec74c06cb2e6",
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2", "true_interp",
-        "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Reflection.Basic.__inspect",
-        "typing_FStar.Reflection.Basic.inspect",
-        "typing_FStar.Reflection.Formula.term_as_formula_",
-        "typing_FStar.Reflection.Formula.unsquash"
+        "typing_FStar.Reflection.Basic.inspect"
       ],
       0,
-      "eaf917a84c860f587f7d7d356e6009e4"
+      "749a7fb97858f7eddf566704dc1f8798"
     ],
     [
       "FStar.Reflection.Formula.formula_as_term_view",
-      2,
+      1,
       2,
       1,
       [
@@ -1612,7 +1614,7 @@
     ],
     [
       "FStar.Reflection.Formula.formula_to_string",
-      2,
+      1,
       2,
       1,
       [
