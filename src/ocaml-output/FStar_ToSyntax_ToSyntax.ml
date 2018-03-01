@@ -5546,7 +5546,7 @@ let rec (desugar_effect :
                                  in
                               let eff_t1 =
                                 FStar_Syntax_Subst.close binders1 eff_t  in
-                              let lookup1 s =
+                              let lookup s =
                                 let l =
                                   FStar_ToSyntax_Env.qualify env2
                                     (FStar_Ident.mk_ident
@@ -5585,12 +5585,12 @@ let rec (desugar_effect :
                                   let uu____16959 =
                                     let uu____16960 =
                                       let uu____16961 =
-                                        let uu____16962 = lookup1 "repr"  in
+                                        let uu____16962 = lookup "repr"  in
                                         FStar_Pervasives_Native.snd
                                           uu____16962
                                          in
-                                      let uu____16971 = lookup1 "return"  in
-                                      let uu____16972 = lookup1 "bind"  in
+                                      let uu____16971 = lookup "return"  in
+                                      let uu____16972 = lookup "bind"  in
                                       {
                                         FStar_Syntax_Syntax.cattributes = [];
                                         FStar_Syntax_Syntax.mname = mname;
@@ -5655,29 +5655,26 @@ let rec (desugar_effect :
                                       in
                                    let uu____16988 =
                                      let uu____16989 =
-                                       let uu____16990 = lookup1 "return_wp"
+                                       let uu____16990 = lookup "return_wp"
                                           in
-                                       let uu____16991 = lookup1 "bind_wp"
-                                          in
+                                       let uu____16991 = lookup "bind_wp"  in
                                        let uu____16992 =
-                                         lookup1 "if_then_else"  in
-                                       let uu____16993 = lookup1 "ite_wp"  in
-                                       let uu____16994 = lookup1 "stronger"
+                                         lookup "if_then_else"  in
+                                       let uu____16993 = lookup "ite_wp"  in
+                                       let uu____16994 = lookup "stronger"
                                           in
-                                       let uu____16995 = lookup1 "close_wp"
+                                       let uu____16995 = lookup "close_wp"
                                           in
-                                       let uu____16996 = lookup1 "assert_p"
+                                       let uu____16996 = lookup "assert_p"
                                           in
-                                       let uu____16997 = lookup1 "assume_p"
+                                       let uu____16997 = lookup "assume_p"
                                           in
-                                       let uu____16998 = lookup1 "null_wp"
-                                          in
-                                       let uu____16999 = lookup1 "trivial"
-                                          in
+                                       let uu____16998 = lookup "null_wp"  in
+                                       let uu____16999 = lookup "trivial"  in
                                        let uu____17000 =
                                          if rr
                                          then
-                                           let uu____17001 = lookup1 "repr"
+                                           let uu____17001 = lookup "repr"
                                               in
                                            FStar_All.pipe_left
                                              FStar_Pervasives_Native.snd
@@ -5685,10 +5682,10 @@ let rec (desugar_effect :
                                          else FStar_Syntax_Syntax.tun  in
                                        let uu____17017 =
                                          if rr
-                                         then lookup1 "return"
+                                         then lookup "return"
                                          else un_ts  in
                                        let uu____17019 =
-                                         if rr then lookup1 "bind" else un_ts
+                                         if rr then lookup "bind" else un_ts
                                           in
                                        {
                                          FStar_Syntax_Syntax.cattributes = [];
@@ -6683,7 +6680,7 @@ and (desugar_decl_noattrs :
           let quals = d.FStar_Parser_AST.quals  in
           desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
       | FStar_Parser_AST.SubEffect l ->
-          let lookup1 l1 =
+          let lookup l1 =
             let uu____18539 =
               FStar_ToSyntax_Env.try_lookup_effect_name env l1  in
             match uu____18539 with
@@ -6699,8 +6696,8 @@ and (desugar_decl_noattrs :
                 FStar_Errors.raise_error uu____18542
                   d.FStar_Parser_AST.drange
             | FStar_Pervasives_Native.Some l2 -> l2  in
-          let src = lookup1 l.FStar_Parser_AST.msource  in
-          let dst = lookup1 l.FStar_Parser_AST.mdest  in
+          let src = lookup l.FStar_Parser_AST.msource  in
+          let dst = lookup l.FStar_Parser_AST.mdest  in
           let uu____18553 =
             match l.FStar_Parser_AST.lift_op with
             | FStar_Parser_AST.NonReifiableLift t ->
