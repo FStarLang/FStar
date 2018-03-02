@@ -1,5 +1,5 @@
 [
-  "w!\"ìëuo¿T\u0018K”?§©P",
+  "YŽ×\u0015Ðˆ×ÔÆX[i5\u0000§2",
   [
     [
       "Effects.Def.monad_laws_via_eq",
@@ -17,6 +17,23 @@
       ],
       0,
       "e0d14ffbf86d07038f44934243520cea"
+    ],
+    [
+      "Effects.Def.morphism_laws_via_eq",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Effects.Def_interpretation_Tm_arrow_123ba7806c812ab95bd48e4d6d081b66",
+        "Effects.Def_interpretation_Tm_arrow_8e22cfd431c076e21f26f7e23182ca66",
+        "Effects.Def_interpretation_Tm_arrow_e6a92e8460cfc8e8f0030aa04a9de9e0",
+        "equation_Effects.Def.eq_m",
+        "refinement_interpretation_Effects.Def_Tm_refine_b703abd911fa41d432a2a9d6e4033229",
+        "typing_Effects.Def_Tm_abs_5f3d3f8c665d1ee3f1ea417cc2cac42f"
+      ],
+      0,
+      "1e37ec1e9cc9944ec3f0f63c82a33d6b"
     ],
     [
       "Effects.Def.st_laws",
