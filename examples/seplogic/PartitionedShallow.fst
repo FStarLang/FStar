@@ -12,13 +12,20 @@ let st (a:Type0) (wp:st_wp a) =
 (* ******* *)
 
 let return (#a:Type) (x:a) 
-    : st a (fun post h0' -> is_emp h0' /\ post (x,h0'))
+    : st a (fun post' h0' -> is_emp h0' /\ post' (x,h0'))
     = fun h0 -> x,h0
 
 (* ******* *)
 
 //TODO: implement bind
 
+(*let bind (#a:Type) (#wp1:st_wp a)
+         (#b:Type) (#wp2:a -> st_wp b)
+         (f:st a wp1)
+         (g:(x:a -> st b (wp2 x)))
+    : st b (fun post' h0' -> wp1 (fun (x,h1) -> wp2 x post' h1) h0')
+    = fun h0 -> admit () //let (x,h1) = f h0 in g x h1*)
+    
 (* ******* *)
 
 assume 
@@ -50,7 +57,7 @@ let lemma_read (#a:Type0) (r:ref a) (post:(a * heap -> Type0)) (h0:heap) (h0':he
   = ()
 
 let read (#a:Type0) (r:ref a)
-    : st a (fun post h0' -> exists x . h0' == points_to r x /\ post (x,h0'))
+    : st a (fun post' h0' -> exists x . h0' == points_to r x /\ post' (x,h0'))
     = fun h0 -> sel_tot h0 r, h0
 
 (* ******* *)
@@ -79,7 +86,6 @@ let lemma_write (#a:Type0) (r:ref a) (v:a) (post:(unit * heap -> Type0)) (h0:hea
   = ()
 
 let write (#a:Type0) (r:ref a) (v:a)
-    : st unit (fun post h0' -> (exists (x:a). h0' == points_to r x) /\ 
-                               post ((), points_to r v))
+    : st unit (fun post' h0' -> (exists (x:a). h0' == points_to r x) /\ post' ((), points_to r v))
     = fun h0 -> (), upd_tot h0 r v
 
