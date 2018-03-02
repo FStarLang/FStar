@@ -2222,8 +2222,8 @@ and (encode_term :
                                 (uu___111_5811.FStar_TypeChecker_Env.check_type_of);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___111_5811.FStar_TypeChecker_Env.use_bv_sorts);
-                              FStar_TypeChecker_Env.qname_and_index =
-                                (uu___111_5811.FStar_TypeChecker_Env.qname_and_index);
+                              FStar_TypeChecker_Env.qtbl_name_and_index =
+                                (uu___111_5811.FStar_TypeChecker_Env.qtbl_name_and_index);
                               FStar_TypeChecker_Env.proof_ns =
                                 (uu___111_5811.FStar_TypeChecker_Env.proof_ns);
                               FStar_TypeChecker_Env.synth =
@@ -5825,8 +5825,9 @@ let (encode_free_var :
                                        (uu___119_17154.FStar_TypeChecker_Env.check_type_of);
                                      FStar_TypeChecker_Env.use_bv_sorts =
                                        (uu___119_17154.FStar_TypeChecker_Env.use_bv_sorts);
-                                     FStar_TypeChecker_Env.qname_and_index =
-                                       (uu___119_17154.FStar_TypeChecker_Env.qname_and_index);
+                                     FStar_TypeChecker_Env.qtbl_name_and_index
+                                       =
+                                       (uu___119_17154.FStar_TypeChecker_Env.qtbl_name_and_index);
                                      FStar_TypeChecker_Env.proof_ns =
                                        (uu___119_17154.FStar_TypeChecker_Env.proof_ns);
                                      FStar_TypeChecker_Env.synth =
@@ -6544,8 +6545,8 @@ let (encode_top_level_let :
                          (uu___122_18541.FStar_TypeChecker_Env.check_type_of);
                        FStar_TypeChecker_Env.use_bv_sorts =
                          (uu___122_18541.FStar_TypeChecker_Env.use_bv_sorts);
-                       FStar_TypeChecker_Env.qname_and_index =
-                         (uu___122_18541.FStar_TypeChecker_Env.qname_and_index);
+                       FStar_TypeChecker_Env.qtbl_name_and_index =
+                         (uu___122_18541.FStar_TypeChecker_Env.qtbl_name_and_index);
                        FStar_TypeChecker_Env.proof_ns =
                          (uu___122_18541.FStar_TypeChecker_Env.proof_ns);
                        FStar_TypeChecker_Env.synth =
