@@ -152,7 +152,7 @@ let run_all () =
     let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in
     let tm2 = tc ("x:int -> y:int -> bool") in
     unify 11 tm1 tm2
-            (NonTrivial (tc "forall (x:int). (forall (y:int). y==x <==> True)"));
+            (NonTrivial (tc "forall (x:int). (forall (y:int). y==x)"));
 
     let tm1 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
     let tm2 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
