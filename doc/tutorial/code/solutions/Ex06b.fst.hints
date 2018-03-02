@@ -132,7 +132,7 @@
     ],
     [
       "Ex06b.partition_lemma",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -141,7 +141,7 @@
     ],
     [
       "Ex06b.partition_lemma",
-      2,
+      3,
       2,
       1,
       [
@@ -191,7 +191,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "2d6373b6243960fab2db5fd47229054d"
+      "78e73e89c12c88348583f0a9941472f0"
     ],
     [
       "Ex06b.sorted_concat_lemma",

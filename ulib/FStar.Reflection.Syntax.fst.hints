@@ -180,7 +180,7 @@
     ],
     [
       "FStar.Reflection.Syntax.compare_term",
-      1,
+      2,
       2,
       1,
       [
@@ -190,11 +190,11 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "db3ca57ca596044c101179cf86065cad"
+      "fbe21bcee633489fbe583d5c815699f6"
     ],
     [
       "FStar.Reflection.Syntax.compare_term",
-      1,
+      3,
       2,
       1,
       [
@@ -222,7 +222,7 @@
         "typing_FStar.Reflection.Basic.inspect_comp"
       ],
       0,
-      "41fb581961f51a63a2f41d32a79a8b29"
+      "fdcf8480d89498b21ba440cdf10f93fe"
     ],
     [
       "FStar.Reflection.Syntax.mk_list",
@@ -385,7 +385,7 @@
     ],
     [
       "FStar.Reflection.Syntax.compare_term",
-      2,
+      4,
       2,
       1,
       [
@@ -435,7 +435,7 @@
     ],
     [
       "FStar.Reflection.Syntax.compare_term",
-      2,
+      5,
       2,
       1,
       [
@@ -445,11 +445,11 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "0896a391ab746a3b3cfa0bc6acc68aca"
+      "1a29b3ebed5b64207c1505ab0c0d3dd1"
     ],
     [
       "FStar.Reflection.Syntax.compare_term",
-      2,
+      6,
       2,
       1,
       [
@@ -477,7 +477,7 @@
         "typing_FStar.Reflection.Basic.inspect_comp"
       ],
       0,
-      "7c581016e6196269b394d12cf8afd42e"
+      "fd06de415dc8a4e8974a4118481594a2"
     ],
     [
       "FStar.Reflection.Syntax.mk_list",

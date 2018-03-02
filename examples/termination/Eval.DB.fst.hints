@@ -269,17 +269,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_Eval.DB.App",
-        "disc_equation_Eval.DB.App", "proj_equation_Eval.DB.App_a",
-        "proj_equation_Eval.DB.App_b", "proj_equation_Eval.DB.App_g",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "proj_equation_Eval.DB.App_a", "proj_equation_Eval.DB.App_b",
+        "proj_equation_Eval.DB.App_g", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Eval.DB.App_a",
         "projection_inverse_Eval.DB.App_b",
         "projection_inverse_Eval.DB.App_g",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
       0,
-      "330610acc3658e5518ff3cdafcc253d8"
+      "c5c579c3576600acb7cd6a0a5a5205c8"
     ],
     [
       "Eval.DB.__proj__App__item__e2",
@@ -306,14 +305,12 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_04eaea7bd4f83bcbe98e3ee87b22ddff_4",
         "binder_x_64a6f2da4341770a4dee8aa1d0d4ae69_5", "data_elim_Eval.DB.O",
-        "disc_equation_Eval.DB.O", "disc_equation_Eval.DB.S",
-        "fuel_guarded_inversion_Eval.DB.var",
-        "projection_inverse_Eval.DB.S__3", "projection_inverse_Eval.DB.S_a",
-        "projection_inverse_Eval.DB.S_b", "projection_inverse_Eval.DB.S_g",
+        "data_elim_Eval.DB.S", "disc_equation_Eval.DB.O",
+        "disc_equation_Eval.DB.S", "fuel_guarded_inversion_Eval.DB.var",
         "subterm_ordering_Eval.DB.S"
       ],
       0,
-      "9ec3a114810a50c603dc93efb7c62133"
+      "5025a2a43e63db58219bb6d0b48785b8"
     ],
     [
       "Eval.DB.eval",
@@ -323,24 +320,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_469181b3de8c335ece34fd70f472f78d_3",
-        "constructor_distinct_Eval.DB.App",
-        "constructor_distinct_Eval.DB.Lam",
-        "constructor_distinct_Eval.DB.Var", "data_elim_Eval.DB.App",
-        "data_elim_Eval.DB.Lam", "data_elim_Eval.DB.Var",
-        "disc_equation_Eval.DB.App", "disc_equation_Eval.DB.Lam",
-        "disc_equation_Eval.DB.Var", "fuel_guarded_inversion_Eval.DB.tm",
-        "projection_inverse_Eval.DB.App_b",
-        "projection_inverse_Eval.DB.App_e1",
-        "projection_inverse_Eval.DB.App_e2",
-        "projection_inverse_Eval.DB.App_g",
-        "projection_inverse_Eval.DB.Lam_a",
-        "projection_inverse_Eval.DB.Lam_b",
-        "projection_inverse_Eval.DB.Lam_g", "subterm_ordering_Eval.DB.App",
+        "data_elim_Eval.DB.App", "data_elim_Eval.DB.Lam",
+        "data_elim_Eval.DB.Var", "disc_equation_Eval.DB.App",
+        "disc_equation_Eval.DB.Lam", "disc_equation_Eval.DB.Var",
+        "fuel_guarded_inversion_Eval.DB.tm", "subterm_ordering_Eval.DB.App",
         "subterm_ordering_Eval.DB.Lam",
         "typing_Eval.DB_Tm_abs_f194870b934b0e45086850ee97d529d3"
       ],
       0,
-      "b71272951652a78fce822404cd103007"
+      "1d405fd9235ddbd14da746473403b0e6"
     ]
   ]
 ]

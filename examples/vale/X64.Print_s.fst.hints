@@ -113,7 +113,7 @@
         "constructor_distinct_X64.Semantics_s.OLt",
         "constructor_distinct_X64.Semantics_s.ONe",
         "constructor_distinct_X64.Semantics_s.ocmp",
-        "equation_Prims.assert_norm", "equation_X64.Print_s.cmp_not",
+        "equation_X64.Print_s.cmp_not",
         "projection_inverse_X64.Semantics_s.OEq_o1",
         "projection_inverse_X64.Semantics_s.OEq_o2",
         "projection_inverse_X64.Semantics_s.OGe_o1",
@@ -150,10 +150,11 @@
         "disc_equation_X64.Semantics_s.Sub64",
         "disc_equation_X64.Semantics_s.Xor64",
         "fuel_guarded_inversion_X64.Semantics_s.ins",
-        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "string_inversion"
       ],
       0,
-      "0013bc222a66f5bc3f95d3885bda44ce"
+      "055088d5edbe32f3dda15f9849fafd57"
     ],
     [
       "X64.Print_s.print_cmp",
@@ -192,7 +193,7 @@
     ],
     [
       "X64.Print_s.print_block",
-      1,
+      2,
       1,
       1,
       [
@@ -208,7 +209,7 @@
         "subterm_ordering_X64.Machine_s.While"
       ],
       0,
-      "7359192ed6b56ff79194a310647d8d57"
+      "913d59885ebb63996534206b2e617613"
     ],
     [
       "X64.Print_s.masm",

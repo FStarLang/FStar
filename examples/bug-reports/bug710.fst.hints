@@ -35,10 +35,10 @@
         "kinding_Bug710.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "3b1deb8b50367d771d646d7af5f37d82"
+      "c2c8b07a108ed882b1bfce3cc927bafe"
     ],
     [
       "Bug710.left_unit",
@@ -62,10 +62,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v"
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc"
       ],
       0,
-      "49898513151a8b60c0bb2af6f42ee48b"
+      "9ecbe9a3f1d8d68a96e073adc4e9ec99"
     ]
   ]
 ]

@@ -24,7 +24,7 @@
     ],
     [
       "LemmaArgs.example1",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

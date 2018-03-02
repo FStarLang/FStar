@@ -15,7 +15,7 @@
     ],
     [
       "Ex11a.point",
-      1,
+      2,
       2,
       1,
       [
@@ -23,11 +23,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b895bd4e6bb1bbf261f7b3abc50243e2"
+      "b9c6463a36a26e333a61a8e81cb3fb28"
     ],
     [
       "Ex11a.point",
-      1,
+      3,
       2,
       1,
       [
@@ -35,7 +35,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9897178b92fe27896e85f3ff5670d501"
+      "a88fccb3236e15db4ac0cc1d256de21a"
     ],
     [
       "Ex11a.__proj__Point__item__r",
@@ -275,25 +275,25 @@
     ],
     [
       "Ex11a.new_point",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4bcafd2c7e9494294eaa9aa518d623e2"
+      "fbf4eb8d0df4309cc28a4e9c31dcddbc"
     ],
     [
       "Ex11a.new_point",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "962c869fc3550d2063a6c52df2db2ba7"
+      "84849a28d6c69c80aca1dc15ad9e25ac"
     ],
     [
       "Ex11a.new_point",
-      2,
+      4,
       2,
       1,
       [
@@ -368,7 +368,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "23a468187cf947266c95f4c9744d4bac"
+      "e20b71f7407718e24a17ea5315dd5cc1"
     ],
     [
       "Ex11a.new_arm",
@@ -534,25 +534,25 @@
     ],
     [
       "Ex11a.walk_robot_to",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "42a43b3edf0a38814a79e67e3c1c1434"
+      "9e386819f5489729722dc3707326b0ce"
     ],
     [
       "Ex11a.walk_robot_to",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "933cb3dd995f6061cb2787d7ceb0750c"
+      "4e10bb93cf953e587bdb1af9e462cbfd"
     ],
     [
       "Ex11a.walk_robot_to",
-      2,
+      4,
       2,
       1,
       [
@@ -649,7 +649,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "94ed4d728da58458cd792935f4204b38"
+      "38eecfcbd855a80147284215e536f628"
     ],
     [
       "Ex11a.fly",

@@ -25,13 +25,12 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_FStar.Tactics.Derived.idtac",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_None",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "69a19fe25a58bb0ba3c46692cad3d460"
+      "08df5997cb9036ae31df2cc77bfcab00"
     ],
     [
       "Bug1299.test",
@@ -41,18 +40,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics.Effect_pre_typing_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
-        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_Prims.unit",
-        "data_elim_FStar.Tactics.Result.Failed",
         "equation_FStar.Tactics.Effect.__tac",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_Prims.unit", "string_typing",
-        "typing_FStar.Tactics.Builtins.__fail", "unit_typing"
+        "typing_FStar.Tactics.Builtins.__fail"
       ],
       0,
-      "ae80a316f8ded2087745d12d6346a839"
+      "50465570cdf6ca4f67ad4a817160d20e"
     ]
   ]
 ]

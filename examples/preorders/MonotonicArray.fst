@@ -495,7 +495,7 @@ let lemma_disjoint_sibling_remain_same_transitive
          (ensures  (disjoint_siblings_remain_same arr h0 h2))
   = ()
 
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 150"
 private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
   :ST unit (requires (fun h0      -> is_mutable arr h0))
            (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\

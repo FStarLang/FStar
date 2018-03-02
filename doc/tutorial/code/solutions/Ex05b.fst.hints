@@ -53,7 +53,7 @@
     ],
     [
       "Ex05b.fib_is_ok_aux",
-      1,
+      2,
       2,
       1,
       [
@@ -69,7 +69,7 @@
     ],
     [
       "Ex05b.fib_is_ok_aux",
-      2,
+      3,
       2,
       1,
       [
@@ -99,7 +99,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f3e03520406c4ea1c31623e1535fe409"
+      "5232b53a0c07860e025fd6d5479548c8"
     ],
     [
       "Ex05b.fib_is_ok",

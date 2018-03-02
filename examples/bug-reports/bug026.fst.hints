@@ -12,12 +12,12 @@
     ],
     [
       "Bug026.bar",
-      1,
+      2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "929fe491f7445ab3d8638dcdf0fad68c"
+      "6aa2d1eafc6770b04f21169c933c2e94"
     ],
     [
       "Bug026.evenb",
@@ -37,11 +37,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4315d7edce2c1e02b85d1593ea222cee"
+      "f79ada8b7d06a4ece6beed99d0ff26cd"
     ],
     [
       "Bug026.test_filter1",

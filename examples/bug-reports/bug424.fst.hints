@@ -15,12 +15,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "cc9e833e805fe354e90a640d381256c0"
+      "6154a817e3cb1946df7246db68ddeb74"
     ]
   ]
 ]

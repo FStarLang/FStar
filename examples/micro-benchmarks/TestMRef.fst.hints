@@ -147,20 +147,19 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
         "function_token_typing_TestMRef.x",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_typing",
         "interpretation_TestMRef_Tm_abs_7caf1af4d46527a25f37dce663a38e2d",
         "lemma_FStar.Set.mem_empty",
         "lemma_FStar.TSet.lemma_mem_tset_of_set",
         "primitive_Prims.op_GreaterThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_TestMRef_Tm_refine_b2a5982808cf5d0bd90d308bb945a71c",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty"
       ],
       0,
-      "85737217f2c6c41a443fcec4fa9216d5"
+      "2af197a8778b93bb44b129ac735ea7f6"
     ],
     [
       "TestMRef.test_write_mref",
@@ -178,7 +177,7 @@
     ],
     [
       "TestMRef.test_write_mref",
-      1,
+      2,
       2,
       1,
       [
@@ -192,7 +191,7 @@
     ],
     [
       "TestMRef.test_write_mref",
-      2,
+      3,
       2,
       1,
       [
@@ -215,7 +214,7 @@
         "typing_FStar.Monotonic.Heap.addr_of"
       ],
       0,
-      "62fbf6ee6f71ab8b3f518b8fce7a44ba"
+      "686c58b25e41f00f0bda1711ac96e3f3"
     ]
   ]
 ]

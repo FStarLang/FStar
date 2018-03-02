@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@query", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query" ],
       0,
-      "797ebf37d322758630787f6b2c8d2973"
+      "9a5a40f891f0500aa1f9c21df3cd2994"
     ]
   ]
 ]

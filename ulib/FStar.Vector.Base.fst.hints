@@ -131,7 +131,7 @@
     ],
     [
       "FStar.Vector.Base.hide_reveal",
-      1,
+      2,
       2,
       1,
       [
@@ -139,35 +139,38 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5400b104f46d7fc8030cdd65ddfe71f5"
+      "4f2645ef4ee4cb82e4ab38c3a975d609"
     ],
     [
       "FStar.Vector.Base.hide_reveal",
-      1,
+      3,
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.Vector.Base.len_t",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.Vector.Base.len_t", "equation_FStar.Vector.Base.raw",
         "equation_FStar.Vector.Base.raw_length",
-        "function_token_typing_FStar.UInt32.n", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
+        "equation_FStar.Vector.Base.reveal",
+        "function_token_typing_FStar.UInt32.n",
+        "haseqFStar.Vector.Base_Tm_refine_7f014d1f670e5d2ecdc0d7946b4a693d",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_FStar.Vector.Base_Tm_refine_ba20691c598b7aba0d11d91ead0d6da1",
         "typing_FStar.UInt32.v"
       ],
       0,
-      "8b13b1b08c59721248c9d4ed7bb7d08c"
+      "6a1f4d0934812edbc5c1c0c411bdbd75"
     ],
     [
       "FStar.Vector.Base.hide_reveal",
-      2,
+      4,
       2,
       1,
       [
@@ -204,32 +207,26 @@
     ],
     [
       "FStar.Vector.Base.reveal_hide",
-      1,
+      2,
       2,
       1,
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "b2t_def", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt32.n",
-        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "b2t_def", "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Vector.Base_Tm_refine_6f26e0f319127d2eaaacb2de398dad6c",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
+        "refinement_interpretation_FStar.Vector.Base_Tm_refine_6f26e0f319127d2eaaacb2de398dad6c"
       ],
       0,
-      "97e282883ff51f11e95370a7a7355acc"
+      "1a6d514d58cee05d881189b1f63658a3"
     ],
     [
       "FStar.Vector.Base.reveal_hide",
-      1,
+      3,
       2,
       1,
       [
@@ -254,7 +251,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_hide",
-      2,
+      4,
       2,
       1,
       [
@@ -550,7 +547,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_append",
-      1,
+      2,
       2,
       1,
       [
@@ -562,7 +559,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_append",
-      2,
+      3,
       2,
       1,
       [
@@ -598,7 +595,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_sub",
-      1,
+      2,
       2,
       1,
       [
@@ -622,31 +619,33 @@
     ],
     [
       "FStar.Vector.Base.reveal_sub",
-      1,
+      3,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.Vector.Base.len_t",
-        "equation_FStar.Vector.Base.raw_length", "equation_Prims.nat",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.Vector.Base.len_t", "equation_FStar.Vector.Base.raw",
+        "equation_FStar.Vector.Base.reveal",
         "function_token_typing_FStar.UInt32.n", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_FStar.Vector.Base_Tm_refine_2c95b50d26b7b1404a55cf6cad1b4240",
-        "refinement_interpretation_FStar.Vector.Base_Tm_refine_320acf689852bc1615c53b40221219f5",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.UInt32.v", "typing_FStar.Vector.Base.raw_length"
+        "refinement_interpretation_FStar.Vector.Base_Tm_refine_ba20691c598b7aba0d11d91ead0d6da1",
+        "typing_FStar.UInt32.v"
       ],
       0,
-      "6f202132de73c4c677db45a4ce48ae2b"
+      "e29c21e96b6c7d78955bc96888a31311"
     ],
     [
       "FStar.Vector.Base.reveal_sub",
-      2,
+      4,
       2,
       1,
       [
@@ -751,7 +750,7 @@
     ],
     [
       "FStar.Vector.Base.as_raw_from_raw",
-      1,
+      2,
       2,
       1,
       [
@@ -759,11 +758,11 @@
         "equation_FStar.Vector.Base.len_t"
       ],
       0,
-      "f8590c9746b4de960eb468deb3545796"
+      "765c3f078528d46e9ca383a025beb031"
     ],
     [
       "FStar.Vector.Base.as_raw_from_raw",
-      2,
+      3,
       2,
       1,
       [
@@ -896,7 +895,7 @@
     ],
     [
       "FStar.Vector.Base.hide_reveal",
-      3,
+      5,
       2,
       1,
       [
@@ -923,7 +922,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_hide",
-      3,
+      5,
       2,
       1,
       [
@@ -1127,7 +1126,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_append",
-      3,
+      4,
       2,
       1,
       [
@@ -1139,7 +1138,7 @@
     ],
     [
       "FStar.Vector.Base.reveal_sub",
-      3,
+      5,
       2,
       1,
       [
@@ -1205,7 +1204,7 @@
     ],
     [
       "FStar.Vector.Base.as_raw_from_raw",
-      3,
+      4,
       2,
       1,
       [

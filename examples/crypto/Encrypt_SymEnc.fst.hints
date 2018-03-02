@@ -203,7 +203,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_Platform.Bytes.HasEq_bytes",
-        "constructor_distinct_Encrypt_SymEnc.Ideal",
         "disc_equation_Encrypt_SymEnc.Concrete",
         "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.blocksize",
         "equation_AES.bytes", "equation_AES.cipher", "equation_AES.csize",
@@ -212,11 +211,12 @@
         "fuel_guarded_inversion_Encrypt_SymEnc.key",
         "haseqEncrypt_SymEnc_Tm_refine_a4882effbbffebcebded1bfc535411cb",
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "projection_inverse_Encrypt_SymEnc.Ideal_p",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_e29b8688192dd6cb60440072191f0830",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "d7885fe1d54e811f39da46a0bf37a17e"
+      "d03fbf4bcf180d729b2f1233c640f57a"
     ]
   ]
 ]

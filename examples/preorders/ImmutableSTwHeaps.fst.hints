@@ -70,27 +70,23 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "equation_ImmutableSTwHeaps.heap_rel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_ImmutableSTwHeaps.heap_rel",
         "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_unused",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
         "lemma_FStar.Monotonic.Heap.lemma_unused_upd_modifies",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains",
-        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_012d464f8c2a08388dffaf30b5904708",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_a51928430ff7628816c2d836c4b2574e",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
-        "true_interp", "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Heap.trivial_preorder",
         "typing_ImmutableSTwHeaps.gen_ref", "typing_ImmutableSTwHeaps.sel",
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "2bd70e0a959b3b6367ce00a5e83a010a"
+      "202c7c5e8862d5dc63f7aeef6a0a6234"
     ],
     [
       "ImmutableSTwHeaps.read",
@@ -120,14 +116,13 @@
         "lemma_FStar.Monotonic.Heap.lemma_sel_same_addr",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
-        "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_a51928430ff7628816c2d836c4b2574e",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
         "typing_FStar.Heap.trivial_preorder", "typing_ImmutableSTwHeaps.sel",
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "ea6241a19c43728e366dbf7cfcdfded4"
+      "ae445645f36eda60506dd94b9e3a0049"
     ]
   ]
 ]

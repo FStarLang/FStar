@@ -82,21 +82,25 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_ArrayUtils.all_some", "equation_Prims.nat",
         "int_inversion", "int_typing",
         "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_app2",
         "lemma_FStar.Seq.Base.lemma_len_append",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "03781ff2fd5b230e31f429eef81868e5"
+      "e968beff4f54f7a80cd6fd34ad200f11"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_slice",
@@ -171,7 +175,7 @@
     ],
     [
       "ArrayUtils.copy_seq",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -180,7 +184,7 @@
     ],
     [
       "ArrayUtils.copy_seq",
-      1,
+      3,
       2,
       1,
       [
@@ -195,7 +199,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e33fdab77502afaf5ea433657c0c5f17"
+      "7d56b1a88d9d938be15543db2d60e206"
     ],
     [
       "ArrayUtils.is_prefix_of",
@@ -237,15 +241,12 @@
     ],
     [
       "ArrayUtils.seq_map",
-      1,
+      2,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
+      [ "@query" ],
       0,
-      "76e13f41749e05361d73b76cc923e7ea"
+      "49944f027234cd7acf97c7dbd8672b88"
     ]
   ]
 ]

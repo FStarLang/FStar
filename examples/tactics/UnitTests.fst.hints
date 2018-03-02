@@ -27,13 +27,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
-        "int_typing", "primitive_Prims.op_LessThan",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "int_inversion", "int_typing", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ca8f1be9fd65c749c4c922b4260d8e9c"
+      "2f2460dc3afe1a2fa54675f4648df9fb"
     ],
     [
       "UnitTests.uu___135",
@@ -110,11 +111,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_UnitTests.A",
         "disc_equation_UnitTests.B", "disc_equation_UnitTests.C",
-        "disc_equation_UnitTests.D", "equality_tok_UnitTests.B@tok",
-        "equality_tok_UnitTests.C@tok", "fuel_guarded_inversion_UnitTests.t"
+        "disc_equation_UnitTests.D", "fuel_guarded_inversion_UnitTests.t"
       ],
       0,
-      "a1f5f95d534560f771c4110df12279e8"
+      "6fd8bf2c37e404581ef2cec6944fc0c5"
     ],
     [
       "UnitTests.uu___142",

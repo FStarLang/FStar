@@ -12,7 +12,7 @@
     ],
     [
       "FStar.Monotonic.Heap.compare_addrs",
-      1,
+      2,
       2,
       1,
       [
@@ -20,7 +20,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "102c01e110daddb5cd7b958134063a89"
+      "c03d152f2d90639ee297fc44aed5abb7"
     ],
     [
       "FStar.Monotonic.Heap.only",
@@ -177,7 +177,7 @@
     ],
     [
       "FStar.Monotonic.Heap.lemma_free_mm_unused",
-      1,
+      2,
       2,
       1,
       [
@@ -309,7 +309,7 @@
     ],
     [
       "FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
-      1,
+      2,
       2,
       1,
       [

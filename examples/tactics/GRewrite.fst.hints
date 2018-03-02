@@ -12,7 +12,7 @@
     ],
     [
       "GRewrite.test_grewrite2",
-      1,
+      2,
       2,
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
@@ -21,7 +21,7 @@
     ],
     [
       "GRewrite.test_grewrite2",
-      1,
+      3,
       2,
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
@@ -30,12 +30,15 @@
     ],
     [
       "GRewrite.test_grewrite2",
-      1,
+      4,
       2,
       1,
-      [ "@query", "primitive_Prims.op_Addition" ],
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
       0,
-      "b40b7a4a67614a53f86406eefeb150ff"
+      "7eccc666ad010427417a008410a8f0e0"
     ],
     [
       "GRewrite.test_grewrite4",

@@ -68,22 +68,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_FStar.Pervasives.V",
-        "data_elim_FStar.Pervasives.V", "equation_Formatting.op_At_Bar",
         "equation_Formatting.request", "equation_Formatting.string16",
-        "equation_Platform.Bytes.bytes", "equation_RPC.reqresp",
-        "equation_SHA1.hmac_sha1", "equation_SHA1.key",
+        "equation_RPC.reqresp", "equation_SHA1.key",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_RPC.k",
-        "projection_inverse_FStar.Pervasives.V_a",
-        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Formatting_Tm_refine_df393ec945fcc9a49fa4c6eaca42efd8",
         "refinement_interpretation_RPC_Tm_refine_550fe84c55fa1c4e5d6ffbaa7d53b8b2",
         "string_inversion", "token_correspondence_MAC.key_prop",
-        "token_correspondence_RPC.reqresp", "unit_inversion", "unit_typing"
+        "token_correspondence_RPC.reqresp", "unit_typing"
       ],
       0,
-      "73fd3ebfd8e7953f6534dec3d05ce4b2"
+      "71be6bb54bcdfeffb485cad349cf806d"
     ],
     [
       "RPC.client_recv",
@@ -208,23 +203,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_FStar.Pervasives.V",
-        "disc_equation_FStar.Pervasives.Err", "equation_Formatting.length",
-        "equation_Formatting.string16", "equation_Formatting.uInt16",
-        "equation_Prims.nat", "equation_SHA1.keysize",
+        "disc_equation_FStar.Pervasives.Err", "equation_FStar.UInt32.n",
+        "equation_Formatting.length", "equation_Formatting.uInt16",
+        "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.result",
-        "function_token_typing_SHA1.keysize",
+        "function_token_typing_FStar.UInt32.n",
         "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.V_a",
-        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "string_typing", "typing_Formatting.length",
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "29f169c498efe8d336ff2a0aa1195bd6"
+      "c16d8597320232ce0e7865cfd2a0e8e9"
     ]
   ]
 ]

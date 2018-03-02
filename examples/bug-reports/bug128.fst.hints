@@ -12,12 +12,12 @@
     ],
     [
       "Bug128.subst",
-      1,
+      2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query" ],
       0,
-      "278ebf3735e96a085e7b5f4da47ca5cd"
+      "7527a7783b5c16dcfa0292d8c764e755"
     ]
   ]
 ]

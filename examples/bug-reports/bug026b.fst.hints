@@ -12,12 +12,12 @@
     ],
     [
       "Bug026b.bar",
-      1,
+      2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "25aabadf5d0155f18b2c87d0edd7df80"
+      "2f06c988a196783bb5905b1552c3650e"
     ]
   ]
 ]

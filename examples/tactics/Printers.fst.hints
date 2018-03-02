@@ -16,19 +16,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_Printers.mk_concat.fuel_instrumented",
-        "@query", "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.Sg_Inductive",
         "disc_equation_FStar.Reflection.Data.Sg_Let",
         "disc_equation_FStar.Reflection.Data.Unk",
         "equality_tok_FStar.Reflection.Data.Unk@tok",
         "equation_FStar.Reflection.Basic.lookup_typ",
-        "equation_Printers.paren",
         "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
-        "typing_FStar.Reflection.Basic.__lookup_typ"
+        "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0,
-      "1507a199ef3a98c83d65e24b41e665ae"
+      "74620e2af5d4e34240200beb2922ff5a"
     ],
     [
       "Printers.t1",
@@ -114,12 +112,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Printers.C",
-        "disc_equation_Printers.A", "disc_equation_Printers.B",
-        "disc_equation_Printers.C", "fuel_guarded_inversion_Printers.t1"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "disc_equation_Printers.B", "disc_equation_Printers.C",
+        "fuel_guarded_inversion_Printers.t1"
       ],
       0,
-      "ad366b40cc3b859a789c099539a1f026"
+      "7c6f387407ff0eb014cf993fc3821443"
     ],
     [
       "Printers.uu___105",
@@ -132,12 +130,12 @@
     ],
     [
       "Printers.uu___105",
-      1,
+      2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
+      [ "@query" ],
       0,
-      "b0c9638c1fcd7e6f1b91e661a532bb5e"
+      "5305ded524c89884df404872586907d0"
     ],
     [
       "Printers.uu___106",
@@ -150,12 +148,12 @@
     ],
     [
       "Printers.uu___106",
-      1,
+      2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
+      [ "@query" ],
       0,
-      "8df71e5cacab89252a34aaf07f69157e"
+      "402765dfc4e05f25cd59160340db49ba"
     ],
     [
       "Printers.uu___107",
@@ -168,12 +166,12 @@
     ],
     [
       "Printers.uu___107",
-      1,
+      2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
+      [ "@query" ],
       0,
-      "3aa0244a73b3d42c68bd376358a08553"
+      "376000e4fd2bfe4389ebaef9a410382b"
     ]
   ]
 ]

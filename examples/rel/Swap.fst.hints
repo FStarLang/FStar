@@ -72,11 +72,13 @@
       0,
       0,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
       ],
       0,
-      "67e7afa4fa88eb3072b1b5226ff1545f"
+      "9af1090cfd85fcfc0c8bf7a5fcf7575d"
     ],
     [
       "Swap.swap",
@@ -89,9 +91,8 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Prims.HasEq_int", "bool_inversion",
         "equation_FStar.DM4F.Heap.modifies", "equation_Prims.eqtype",
-        "equation_Prims.l_and", "equation_Prims.nat",
-        "equation_Prims.squash", "equation_Swap.addr_set",
-        "equation_Swap.cmd", "equation_Swap.command", "equation_Swap.equiv",
+        "equation_Prims.nat", "equation_Swap.addr_set", "equation_Swap.cmd",
+        "equation_Swap.command", "equation_Swap.equiv",
         "equation_Swap.equiv_on_h", "equation_Swap.footprint",
         "equation_Swap.fp_body", "equation_Swap.heap_eq",
         "equation_Swap.heap_equiv_on", "equation_Swap.no_alloc",
@@ -109,10 +110,10 @@
         "refinement_interpretation_Swap_Tm_refine_0824ffa0e4317f41dc8da00682b8f3c0",
         "token_correspondence_Swap.seq_", "typing_FStar.DM4F.Heap.addr_of",
         "typing_FStar.Set.mem", "typing_Swap.op_Greater_Greater",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "efc45bbfa49d464d33f3a81c03552e26"
+      "3a0e146e5f743417214ccdd06e6cb1fb"
     ],
     [
       "Swap.idem",
@@ -142,10 +143,10 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Swap_Tm_refine_0824ffa0e4317f41dc8da00682b8f3c0",
         "token_correspondence_Swap.seq_", "typing_FStar.DM4F.Heap.addr_of",
-        "typing_Swap.op_Greater_Greater", "unit_inversion", "unit_typing"
+        "typing_Swap.op_Greater_Greater", "unit_typing"
       ],
       0,
-      "732b873224cf3e8a2cf22904c1098318"
+      "4c3943a4342e574678814115c5f4a37f"
     ],
     [
       "Swap.cond",
@@ -171,11 +172,11 @@
         "l_and-interp",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Swap_Tm_refine_9c76b7d22d32570206b805def616bb17",
-        "token_correspondence_Swap.cond", "unit_inversion", "unit_typing"
+        "refinement_interpretation_Swap_Tm_refine_5c43b5675cabbba3b51b38a7e3f62e1c",
+        "token_correspondence_Swap.cond", "unit_typing"
       ],
       0,
-      "92f3c66c914fb1b225eacd175d9d8e33"
+      "58856cc0552ba9d20703dec430c136c8"
     ],
     [
       "Swap.lemma_skip_c1",
@@ -186,29 +187,31 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int", "equation_FStar.DM4F.Heap.modifies",
-        "equation_FStar.Set.subset", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Swap.addr_set", "equation_Swap.cmd",
+        "assumption_Prims.HasEq_int", "bool_inversion",
+        "equation_FStar.DM4F.Heap.modifies", "equation_FStar.Set.subset",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Swap.addr_set", "equation_Swap.cmd",
         "equation_Swap.command", "equation_Swap.equiv",
         "equation_Swap.equiv_on_h", "equation_Swap.footprint",
         "equation_Swap.fp_body", "equation_Swap.heap_eq",
-        "equation_Swap.heap_equiv_on", "equation_Swap.no_alloc",
-        "equation_Swap.op_Greater_Greater", "equation_Swap.seq_",
-        "function_token_typing_Prims.nat",
+        "equation_Swap.heap_equiv_on", "equation_Swap.op_Greater_Greater",
+        "equation_Swap.seq_", "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_typing",
         "interpretation_Swap_Tm_abs_a5c4b5f5e51342909d88aa2479aed14a",
         "l_and-interp", "l_imp-interp",
-        "lemma_FStar.Set.disjoint_not_in_both",
+        "lemma_FStar.Set.disjoint_not_in_both", "lemma_FStar.Set.mem_union",
+        "primitive_Prims.op_BarBar",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Swap_Tm_refine_0824ffa0e4317f41dc8da00682b8f3c0",
         "token_correspondence_Swap.seq_", "typing_FStar.DM4F.Heap.addr_of",
-        "typing_Swap.op_Greater_Greater", "unit_inversion", "unit_typing"
+        "typing_FStar.Set.mem", "typing_Swap.op_Greater_Greater",
+        "unit_typing"
       ],
       0,
-      "28de5916b86611e5c3f4ce0e4b65fd7e"
+      "ccfe16991487693d2392fc9c050b3015"
     ],
     [
       "Swap.swap_old",
@@ -224,7 +227,7 @@
     ],
     [
       "Swap.swap_old",
-      1,
+      2,
       0,
       0,
       [
@@ -236,7 +239,7 @@
     ],
     [
       "Swap.swap_old",
-      1,
+      3,
       0,
       0,
       [
@@ -248,7 +251,7 @@
     ],
     [
       "Swap.swap_old",
-      2,
+      4,
       0,
       0,
       [
@@ -267,7 +270,7 @@
         "typing_FStar.DM4F.Heap.addr_of"
       ],
       0,
-      "5c36e1ec76048c6841c947a0604282f1"
+      "b9653a91d192a357ba1123722b8e1c63"
     ],
     [
       "Swap.idem_old",
@@ -287,10 +290,10 @@
         "int_typing", "lemma_FStar.Set.disjoint_not_in_both",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.DM4F.Heap.addr_of", "unit_inversion", "unit_typing"
+        "typing_FStar.DM4F.Heap.addr_of", "unit_typing"
       ],
       0,
-      "57d042d4cbecd8e9bcaa39c0ff2fe564"
+      "45bdec594fb6805fed74d577a13f5f09"
     ]
   ]
 ]

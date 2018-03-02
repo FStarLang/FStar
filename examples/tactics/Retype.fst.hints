@@ -14,16 +14,16 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "4dc17b444e16ae073cc97ca03ee28ef0"
+      "ef1997dc5e42eee76d95df22fab55a92"
     ],
     [
       "Retype.tau",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
+      [ "@query" ],
       0,
-      "9347d17e68d487ee840951a604450dbc"
+      "bb45226489c640f4979e1e76320813af"
     ]
   ]
 ]

@@ -367,7 +367,7 @@
     ],
     [
       "FStar.Tactics.Simplifier.simplify_point",
-      1,
+      2,
       2,
       1,
       [

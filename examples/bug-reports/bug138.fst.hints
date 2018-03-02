@@ -18,7 +18,7 @@
     ],
     [
       "Bug138.foo",
-      1,
+      2,
       2,
       1,
       [
@@ -27,7 +27,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3033e638c840521460415445942a58b5"
+      "040957c56c81977e1d0ce2b58cfe24cf"
     ],
     [
       "Bug138.uu___is_Foo",
@@ -53,12 +53,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Bug138.Bar",
-        "constructor_distinct_Bug138.Foo", "disc_equation_Bug138.Bar",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug138.Bar",
         "disc_equation_Bug138.Foo", "fuel_guarded_inversion_Bug138.arg"
       ],
       0,
-      "454f36e131a639b20c324534933446d4"
+      "6d31d759a9456f21742af9fc962453e2"
     ],
     [
       "Bug138.foo_bar",

@@ -747,7 +747,7 @@
         "binder_x_58d2c7c10918d93b79238e251dd796c1_0",
         "constructor_distinct_FStar.Reflection.Data.Tv_App",
         "data_elim_FStar.Reflection.Data.Tv_App",
-        "data_typing_intro_FStar.Reflection.Data.Q_Explicit@tok",
+        "equality_tok_FStar.Reflection.Data.Q_Implicit@tok",
         "equation_FStar.Reflection.Basic.inspect",
         "equation_FStar.Reflection.Basic.smaller",
         "equation_FStar.Reflection.Data.argv",
@@ -758,10 +758,11 @@
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2",
         "typing_FStar.Reflection.Basic.__inspect",
-        "typing_FStar.Reflection.Basic.inspect"
+        "typing_FStar.Reflection.Basic.inspect",
+        "typing_tok_FStar.Reflection.Data.Q_Implicit@tok"
       ],
       0,
-      "c8d894d0f4468fc319ff8a7ff18cb1ed"
+      "3d1c501035319ba65d17fb3239d14947"
     ],
     [
       "PatternMatching.uu___is_ABKVar",
@@ -837,7 +838,6 @@
         "constructor_distinct_PatternMatching.PApp",
         "constructor_distinct_PatternMatching.PQn",
         "constructor_distinct_PatternMatching.PVar",
-        "constructor_distinct_PatternMatching.Success",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "constructor_distinct_Tm_unit",
         "data_elim_FStar.Reflection.Data.Tv_App",
@@ -879,6 +879,7 @@
         "primitive_Prims.op_Equality",
         "proj_equation_PatternMatching.Success__0",
         "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Reflection.Data.Tv_App__1",
         "projection_inverse_PatternMatching.Failure__0",
         "projection_inverse_PatternMatching.Failure_a",
@@ -887,7 +888,6 @@
         "projection_inverse_PatternMatching.PQn_qn",
         "projection_inverse_PatternMatching.PVar_name",
         "projection_inverse_PatternMatching.Success__0",
-        "projection_inverse_PatternMatching.Success_a",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_PatternMatching_Tm_refine_304c7627001789dcdeedb99529812ddf",
         "string_typing",
@@ -900,7 +900,7 @@
         "typing_PatternMatching.interp_pattern_aux"
       ],
       0,
-      "97140faa80ec03fd86156fe1b1bb47c6"
+      "87490baa89db0d460c94dc3ebb949b51"
     ],
     [
       "PatternMatching.binders_and_body_of_abs",

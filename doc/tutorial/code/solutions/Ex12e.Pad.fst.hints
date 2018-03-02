@@ -81,7 +81,7 @@
     ],
     [
       "Ex12e.Pad.lemma_append_inj",
-      1,
+      2,
       2,
       1,
       [
@@ -93,15 +93,18 @@
     ],
     [
       "Ex12e.Pad.lemma_append_inj",
-      2,
+      3,
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4fb06bda506d857cceafb6801fa5b693"
+      "e474984913b3e941e872b8b4192051e3"
     ],
     [
       "Ex12e.Pad.inj",

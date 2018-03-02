@@ -12,7 +12,7 @@
     ],
     [
       "Bug283.XOR_Laws",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Bug283.HasEq_block" ],

@@ -23,8 +23,7 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "refinement_interpretation_Bug1206_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557"
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
       "49c8778250d294fe32c5847143a3edfc"
@@ -42,8 +41,7 @@
         "fuel_guarded_inversion_Bug1206.bslice",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "proj_equation_Bug1206.BSlice_len",
-        "refinement_interpretation_Bug1206_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557"
+        "proj_equation_Bug1206.BSlice_len"
       ],
       0,
       "f8baf77f45176f6f76d48a24405b5e5e"

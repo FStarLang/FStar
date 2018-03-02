@@ -12,7 +12,7 @@
     ],
     [
       "Cases.test_cases_bool_2",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -21,7 +21,7 @@
     ],
     [
       "Cases.test_cases_bool_2",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -30,7 +30,7 @@
     ],
     [
       "Cases.test_cases_bool_2",
-      1,
+      4,
       2,
       1,
       [
@@ -38,11 +38,11 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1208b2450a54933c908fbe824d6c3662"
+      "ef7af8dc2d012c289182001af57fd2f4"
     ],
     [
       "Cases.test_cases_bool_2",
-      1,
+      5,
       2,
       1,
       [
@@ -52,7 +52,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6026796fcc2b51615220ceccad74ad9b"
+      "8555411bd06ba26f314e9e237df99b98"
     ]
   ]
 ]

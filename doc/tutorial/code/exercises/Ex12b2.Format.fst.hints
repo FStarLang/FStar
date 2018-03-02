@@ -12,24 +12,6 @@
     ],
     [
       "Ex12b2.Format.append_inj_lemma",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
-      0,
-      "0aa9925953ade27628945bb0311f49d5"
-    ],
-    [
-      "Ex12b2.Format.append_inj_lemma",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
-      0,
-      "e5528625093f73f933345a6faba19e05"
-    ],
-    [
-      "Ex12b2.Format.append_inj_lemma",
       2,
       2,
       1,
@@ -48,7 +30,38 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "59485cd4ae7100cbb5e7a1d169924fd9"
+      "cf207552c0bf48ac040996b55c6a6346"
+    ],
+    [
+      "Ex12b2.Format.append_inj_lemma",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
+      0,
+      "3bbfe9e2d78b91e3249206b06fd21d3d"
+    ],
+    [
+      "Ex12b2.Format.append_inj_lemma",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_FStar.UInt8.t__uu___haseq",
+        "equation_Ex12b2.Format.message",
+        "equation_FStar.Seq.Base.op_At_Bar", "equation_Platform.Bytes.byte",
+        "equation_Platform.Bytes.bytes", "equation_Prims.eqtype",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_intro",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
+      ],
+      0,
+      "bca4e013189dcfd413b2029cb79f4b45"
     ],
     [
       "Ex12b2.Format.lemma_eq_intro",
@@ -64,24 +77,21 @@
     ],
     [
       "Ex12b2.Format.lemma_eq_intro",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "f9433d8cd61d5bc42c3e0b24df40611b"
-    ],
-    [
-      "Ex12b2.Format.lemma_eq_intro",
       2,
       2,
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_eq_intro" ],
       0,
-      "d236d36cddce5538625017286c236eba"
+      "73bae933c9d40e01b80d5ce3b8e542b7"
+    ],
+    [
+      "Ex12b2.Format.lemma_eq_intro",
+      3,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Seq.Base.lemma_eq_intro" ],
+      0,
+      "da45e1be81cff273486aad4b00a95eaf"
     ],
     [
       "Ex12b2.Format.UTF8_inj",
@@ -121,30 +131,34 @@
     ],
     [
       "Ex12b2.Format.UINT16_inj",
-      1,
+      2,
       2,
       1,
       [ "@query", "equation_Ex12b2.Format.uInt16" ],
       0,
-      "d4dcb29def7315db596b124a1cfbf256"
+      "668861bcc4615cb2893c9ce0a79c8a77"
     ],
     [
       "Ex12b2.Format.UINT16_inj",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "ccdfcab139475514ab4c622bacc73298"
+      "f4144c798e8df7cce0ce3d54546abeab"
     ],
     [
       "Ex12b2.Format.UINT16_inj",
-      1,
+      4,
       2,
       1,
-      [ "@query", "equation_Ex12b2.Format.uInt16" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Ex12b2.Format.uInt16",
+        "equation_Ex12b2.Format.uint16",
+        "refinement_interpretation_Ex12b2.Format_Tm_refine_2715c7aa110a09a1aebf3f1c479c3086"
+      ],
       0,
-      "b78884c77748875c6fcc7a195f186019"
+      "bfa507ea1aa6db94811c2536fee1a478"
     ],
     [
       "Ex12b2.Format.response",

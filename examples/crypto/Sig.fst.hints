@@ -52,13 +52,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Platform.Bytes.bytes",
-        "equation_Sig.text", "proj_equation_Sig.Entry_k",
-        "projection_inverse_Sig.Entry_k",
-        "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
+        "@query", "proj_equation_Sig.Entry_k",
+        "projection_inverse_Sig.Entry_k"
       ],
       0,
-      "73a9321a35ed6d393f8da92711023077"
+      "d84950ad3715beeb950b8273be666d80"
     ],
     [
       "Sig.sign",

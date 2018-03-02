@@ -50,13 +50,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_MAC.bytes",
-        "equation_MAC.text", "proj_equation_MAC.Entry_k",
-        "projection_inverse_MAC.Entry_k",
-        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
+        "@query", "proj_equation_MAC.Entry_k",
+        "projection_inverse_MAC.Entry_k"
       ],
       0,
-      "f8ca9e71c38be997a61d48aefe7ce89a"
+      "c4e84b86985e218ec3763626f7ed63db"
     ],
     [
       "MAC.mac",

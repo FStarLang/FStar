@@ -129,7 +129,7 @@
     ],
     [
       "FStar.Pointer.Base.typ",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
@@ -138,7 +138,7 @@
     ],
     [
       "FStar.Pointer.Base.typ",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
@@ -147,7 +147,7 @@
     ],
     [
       "FStar.Pointer.Base.typ",
-      1,
+      4,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
@@ -156,7 +156,7 @@
     ],
     [
       "FStar.Pointer.Base.typ",
-      1,
+      5,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
@@ -165,7 +165,7 @@
     ],
     [
       "FStar.Pointer.Base.typ",
-      1,
+      6,
       2,
       1,
       [
@@ -181,7 +181,7 @@
         "kinding_FStar.Pointer.Base.typ@tok"
       ],
       0,
-      "7020fd29df24fc408e04c199eac1db58"
+      "1d97906abfa314e43665b0b0f5029bc2"
     ],
     [
       "FStar.Pointer.Base.uu___is_TBase",
@@ -456,7 +456,7 @@
     ],
     [
       "FStar.Pointer.Base.typ_depth",
-      1,
+      2,
       2,
       1,
       [
@@ -468,7 +468,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3cff698d0b4ced875d183d7cadf6dee9"
+      "e231b7cae6b2eba0b40d4f8658d68c05"
     ],
     [
       "FStar.Pointer.Base.typ_depth_typ_of_struct_field",
@@ -1290,7 +1290,7 @@
     ],
     [
       "FStar.Pointer.Base.loc_includes_addresses_pointer",
-      1,
+      2,
       2,
       1,
       [
@@ -1314,7 +1314,7 @@
     ],
     [
       "FStar.Pointer.Base.loc_includes_addresses_buffer",
-      1,
+      2,
       2,
       1,
       [
@@ -1362,15 +1362,12 @@
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_gcell",
-      1,
+      2,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "haseqFStar.UInt32_Tm_refine_dc181b56999d84c95c280557dd2cc2d2"
-      ],
+      [ "@query" ],
       0,
-      "d52fe5a58451538d5b0b9716b814b097"
+      "15aef3159da1bbd2182ce9a522ac8c8c"
     ],
     [
       "FStar.Pointer.Base.live_unused_in_disjoint_strong",
@@ -1407,15 +1404,12 @@
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_gpointer_of_buffer_cell",
-      1,
+      2,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "haseqFStar.UInt32_Tm_refine_dc181b56999d84c95c280557dd2cc2d2"
-      ],
+      [ "@query" ],
       0,
-      "7244de69b0b49c0c6ff730b4933d94ad"
+      "0c26a46b9f47c816c1f840c9330eaffb"
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_gpointer_of_buffer_cell_r",
@@ -1459,7 +1453,7 @@
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_addresses",
-      1,
+      2,
       2,
       1,
       [
@@ -1471,7 +1465,7 @@
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_addresses",
-      1,
+      3,
       2,
       1,
       [
@@ -1483,15 +1477,18 @@
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_addresses",
-      1,
+      4,
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f546e95978f559cebdc37a7d4969ca17"
+      "7c396c9134599fdd9a26454da8e20de9"
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_pointer_addresses",
@@ -1507,7 +1504,7 @@
     ],
     [
       "FStar.Pointer.Base.loc_disjoint_pointer_addresses",
-      1,
+      2,
       2,
       1,
       [
@@ -1579,15 +1576,12 @@
     ],
     [
       "FStar.Pointer.Base.ecreate",
-      1,
+      2,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
+      [ "@query" ],
       0,
-      "0a3acb4671a79f9f0436497835db4739"
+      "3808f8002cbde12a5d74c042f8541e5a"
     ],
     [
       "FStar.Pointer.Base.cell",

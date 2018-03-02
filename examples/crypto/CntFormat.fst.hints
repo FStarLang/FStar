@@ -12,7 +12,7 @@
     ],
     [
       "CntFormat.append_inj_lemma",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
@@ -21,7 +21,7 @@
     ],
     [
       "CntFormat.append_inj_lemma",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
@@ -30,7 +30,7 @@
     ],
     [
       "CntFormat.append_inj_lemma",
-      2,
+      4,
       2,
       1,
       [
@@ -50,7 +50,7 @@
         "typing_CntFormat.op_At_Bar", "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "e2ccc34828a4d44e7e7ef7bd844a292e"
+      "2bf271907d578e52c4118eb841040cd2"
     ],
     [
       "CntFormat.UTF8_inj",
@@ -118,37 +118,30 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Platform.Bytes.HasEq_bytes",
         "assumption_Prims.HasEq_int", "equation_CntFormat.signal_size",
-        "equation_Platform.Bytes.bytes", "equation_Prims.nat",
-        "function_token_typing_CntFormat.signal_size",
+        "equation_FStar.UInt32.n", "equation_Platform.Bytes.bytes",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
         "haseqCntFormat_Tm_refine_3980f0779462eb2167aa5484cf2bf257",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "87997a425d07e2a58783be62cf28d466"
+      "a83773ec6e652ee01111a8a3d83e7fcc"
     ],
     [
       "CntFormat.signal_split",
-      1,
+      2,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_int", "equation_CntFormat.signal_size",
-        "equation_Platform.Bytes.bytes", "equation_Prims.nat",
-        "function_token_typing_CntFormat.signal_size",
-        "haseqCntFormat_Tm_refine_3980f0779462eb2167aa5484cf2bf257",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "@query", "equation_CntFormat.signal_size",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9e40761dd19934f5860d66fdd31d7708"
+      "dd1c47ec7cb6b203a5ba0b3c00d50c7e"
     ],
     [
       "CntFormat.signal_split",
-      2,
+      3,
       2,
       1,
       [
@@ -181,7 +174,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_71050496a0b6bdbab08b701114cb2b13"
       ],
       0,
-      "55daef9b08c6bab44f763bf7ef861cfe"
+      "341bc69fbef597194024953263bf365c"
     ],
     [
       "CntFormat.signal_components_corr",
@@ -194,7 +187,7 @@
     ],
     [
       "CntFormat.signal_components_corr",
-      1,
+      2,
       2,
       1,
       [
@@ -204,11 +197,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f4799faf38462a7034e76f70c04ffd42"
+      "bf13367ef196f09e0162f6ca67f3872e"
     ],
     [
       "CntFormat.signal_components_corr",
-      1,
+      3,
       2,
       1,
       [
@@ -218,11 +211,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "51668add98679cfd72ead6a4320f5a14"
+      "3a9e7bc8844c0b6bae4826bff0e10987"
     ],
     [
       "CntFormat.signal_components_corr",
-      1,
+      4,
       2,
       1,
       [
@@ -230,11 +223,11 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4b0c3144293fb3f5a9e9ea204189f1b0"
+      "0dd3bf90a8d98302c0c1f10cf2eb0d48"
     ],
     [
       "CntFormat.signal_components_corr",
-      1,
+      5,
       2,
       1,
       [
@@ -242,7 +235,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e2a0d1db8865611bf23953515b159a27"
+      "8f5a9e1a2a2898c7aaec6651a823e13a"
     ]
   ]
 ]

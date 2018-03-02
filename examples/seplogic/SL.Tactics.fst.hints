@@ -14,7 +14,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "37ca5fe35cb933a84ad0393a8d4d60d3"
+      "6ab2a66f24cefce4da53ba7a6bee1dec"
     ],
     [
       "SL.Tactics.assumption''",
@@ -29,7 +29,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "e51636e52e37d59da2ffcb00b92b46fc"
+      "6a7c051b22ab60e0eb694b1b6bee9bea"
     ],
     [
       "SL.Tactics.split_all",
@@ -53,7 +53,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "bc7bfa25eda3bfeadb164bcde6bc879e"
+      "c23a62982ddf91289674b1001a1d9a67"
     ],
     [
       "SL.Tactics.simplify_contains_aux",
@@ -68,7 +68,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "b1fc3b8e5fabd7a40a4c2a9d114da09b"
+      "3c6b799cfc1aa2c258f283914fb3aec6"
     ],
     [
       "SL.Tactics.simplify_restrict_aux",
@@ -83,7 +83,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "25740ab8aa8964b553bbdde190122264"
+      "8138239d4cc2a97f2b606a07428f589a"
     ],
     [
       "SL.Tactics.step_bind",
@@ -98,7 +98,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "53c89b8864e7f70f935a717aafa58025"
+      "0e14ef5cac3caaf0bb7eb11b2ab08d30"
     ],
     [
       "SL.Tactics.step_read_write",
@@ -113,7 +113,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "7798c163d72098460fdebfc2391e9bef"
+      "6bdecc826f38c52b252414893afb62a6"
     ],
     [
       "SL.Tactics.step_alloc_return",
@@ -128,7 +128,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "60ea0199d2697b51b195faedbe2ca6f5"
+      "4787f978af3bc5c07789f9b4719a33b2"
     ],
     [
       "SL.Tactics.step_eq_implies_intro",
@@ -143,7 +143,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "398d5e192c2c54b4850cd6c76d5295be"
+      "c89be05c7823e2ac0bf925d693521714"
     ],
     [
       "SL.Tactics.step_eq_implies_intro'",
@@ -158,7 +158,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "aa98dc5435663bdb19863c8434c1a0b1"
+      "c142450dc232309bd9d23f327162771f"
     ],
     [
       "SL.Tactics.simplify_select",
@@ -173,7 +173,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "275f8c30fae4c40d5a1424f38d20d309"
+      "831748cfab9307acf2a860d507287db8"
     ],
     [
       "SL.Tactics.step_select",
@@ -188,7 +188,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "2a670cb7c299c8d47d2848fc9829dff8"
+      "7eb88f7d1390ac90e0d6bc5ee1e9dbb8"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -196,13 +196,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option"
+        "function_token_typing_FStar.Reflection.Types.term",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "b991010cc57480f061d806bd3b87668e"
+      "94dd6a9696015a5116a1e24c94689205"
     ]
   ]
 ]

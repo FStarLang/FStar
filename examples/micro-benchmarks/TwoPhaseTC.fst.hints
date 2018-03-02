@@ -24,30 +24,30 @@
     [
       "TwoPhaseTC.xxx",
       1,
-      2,
-      1,
+      0,
+      0,
       [ "@query" ],
       0,
-      "701019e7b24bb46ccb71830685ad3d35"
+      "8086736919ea5830894d2e5a10442d4b"
     ],
     [
       "TwoPhaseTC.false_elim",
       1,
-      2,
-      1,
+      0,
+      0,
       [
         "@MaxIFuel_assumption",
         "binder_x_4fc4236351f63880baefb7dc4b626c05_2",
         "refinement_interpretation_TwoPhaseTC_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "34158b8212a640601c05eda0f10d4d75"
+      "6de541121cc15766faf1d4376cb4f515"
     ],
     [
       "TwoPhaseTC.f8",
       1,
-      2,
-      1,
+      0,
+      0,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_GreaterThan",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a4b7fe5c9e363ab7e710151664eaa6de"
+      "031dc80081320cc7622f39cb653bfafb"
     ],
     [
       "TwoPhaseTC.f12",
@@ -69,8 +69,8 @@
     [
       "TwoPhaseTC.f13",
       1,
-      2,
-      1,
+      0,
+      0,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_2", "equation_Prims.nat",
@@ -78,26 +78,25 @@
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_TwoPhaseTC_Tm_refine_54dd6fb71add02bcfb57e5e9a06e36f0",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "34dcce6ec28cbe6bb6fa0c0c7223261a"
+      "1320da839dab85f0cd64dbb9ec0f2a15"
     ],
     [
       "TwoPhaseTC.f14",
       1,
-      2,
-      1,
+      0,
+      0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "381ea159f306bc662329dd3f73d1a010"
+      "531298b492db71c5d12edc64b418e159"
     ],
     [
       "TwoPhaseTC.f18",
       1,
-      2,
-      1,
+      0,
+      0,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
@@ -106,40 +105,37 @@
         "unit_typing"
       ],
       0,
-      "7af94ff5545a2f8092f31811b13a1cdf"
+      "6aac446a3bec8cb2815017a67b3448a6"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_TwoPhaseTC.f20",
-        "proj_equation_TwoPhaseTC.ExIntro_a",
-        "projection_inverse_TwoPhaseTC.ExIntro_a",
-        "projection_inverse_TwoPhaseTC.ExIntro_p"
-      ],
       0,
-      "7d6b4763ff98a314db72df977864d031"
-    ],
-    [
-      "TwoPhaseTC.__proj__ExIntro__item__x",
-      1,
-      2,
-      1,
+      0,
       [
         "@query", "proj_equation_TwoPhaseTC.ExIntro_a",
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "d230d6d722704a8a98359ebee986f616"
+      "3cef9bccd055178a01b62fec2655b10e"
+    ],
+    [
+      "TwoPhaseTC.__proj__ExIntro__item__x",
+      1,
+      0,
+      0,
+      [
+        "@query", "proj_equation_TwoPhaseTC.ExIntro_a",
+        "projection_inverse_TwoPhaseTC.ExIntro_a"
+      ],
+      0,
+      "8145965941793176757654949bb122f4"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item___3",
       1,
-      2,
-      1,
+      0,
+      0,
       [
         "@query", "proj_equation_TwoPhaseTC.ExIntro_p",
         "proj_equation_TwoPhaseTC.ExIntro_x",
@@ -148,13 +144,13 @@
         "token_correspondence_TwoPhaseTC.__proj__ExIntro__item__p"
       ],
       0,
-      "563f2452dbd3a73d1858b373eda614cb"
+      "ef35e435ed43fe2c20d26009975c68b9"
     ],
     [
       "TwoPhaseTC.f21",
       1,
-      2,
-      1,
+      0,
+      0,
       [
         "@MaxIFuel_assumption", "@query", "equality_tok_TwoPhaseTC.IP@tok",
         "fuel_guarded_inversion_TwoPhaseTC.f20",
@@ -162,7 +158,7 @@
         "typing_tok_TwoPhaseTC.IP@tok"
       ],
       0,
-      "bf2d0fedd54418317fd7c93606f29de8"
+      "a1020771a51e761ae7b85245f0aac262"
     ]
   ]
 ]

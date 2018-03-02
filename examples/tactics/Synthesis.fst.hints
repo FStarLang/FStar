@@ -17,13 +17,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
-        "int_typing", "primitive_Prims.op_LessThan",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "int_inversion", "int_typing", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "89fa92fff932eac8873dcc7c2e349ce8"
+      "a48049c9da833054ded2bbba44eb5b8b"
     ],
     [
       "Synthesis.uu___116",
@@ -44,13 +46,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "70ea85b60e7b2942910457b4b5cb6cd0"
+      "727ce8c842e3f9e60110335f0b420d7f"
     ],
     [
       "Synthesis.uu___117",
@@ -81,12 +85,12 @@
     ],
     [
       "Synthesis.uu___118",
-      1,
+      2,
       2,
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "19537a098177103cff63a6b76ad808ce"
+      "c81616de68ab808efbfa5179be26e51a"
     ],
     [
       "Synthesis.uu___119",
@@ -99,12 +103,12 @@
     ],
     [
       "Synthesis.uu___119",
-      1,
+      2,
       2,
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "88c572e2d34bf0369b557ef8dda44a1c"
+      "1f8dafd534bca9e689343901c6440a1f"
     ],
     [
       "Synthesis.uu___120",
@@ -117,7 +121,7 @@
     ],
     [
       "Synthesis.uu___120",
-      1,
+      2,
       2,
       1,
       [
@@ -125,7 +129,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e47c5ae602f70a922a983a8cc0faa67a"
+      "6d111f56605344c2056661765396f1bd"
     ]
   ]
 ]

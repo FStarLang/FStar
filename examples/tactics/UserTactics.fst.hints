@@ -52,16 +52,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_UserTactics.A",
-        "constructor_distinct_UserTactics.B",
-        "constructor_distinct_UserTactics.C",
-        "constructor_distinct_UserTactics.D", "disc_equation_UserTactics.A",
+        "@MaxIFuel_assumption", "@query", "disc_equation_UserTactics.A",
         "disc_equation_UserTactics.B", "disc_equation_UserTactics.C",
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "19a909a8497e8b2825ee49a7fb4870fb"
+      "5bb6c7d04376c4e9da729d36bbf28319"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -131,7 +127,7 @@
     ],
     [
       "UserTactics.test_inspect",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -149,7 +145,7 @@
     ],
     [
       "UserTactics.test_simpl",
-      1,
+      2,
       2,
       1,
       [ "@query" ],

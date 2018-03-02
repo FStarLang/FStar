@@ -84,16 +84,12 @@
     ],
     [
       "FStar.Squash.proof_irrelevance",
-      2,
+      3,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion"
-      ],
+      [ "@query" ],
       0,
-      "e7cf88ad5aa321372606139e4e59d261"
+      "c55c7a5df72c3696adf4144e758939ef"
     ]
   ]
 ]

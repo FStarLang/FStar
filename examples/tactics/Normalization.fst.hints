@@ -21,7 +21,7 @@
     ],
     [
       "Normalization.uu___109",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
@@ -39,7 +39,7 @@
     ],
     [
       "Normalization.uu___110",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
@@ -57,7 +57,7 @@
     ],
     [
       "Normalization.uu___111",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
@@ -90,7 +90,7 @@
     ],
     [
       "Normalization.uu___113",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],

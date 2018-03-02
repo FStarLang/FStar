@@ -14,11 +14,10 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.DM4F.ExnSt.exnst", "function_token_typing_Prims.int",
         "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "c6e4653701fabe27711b3835f0269855"
+      "e17ecd99b9ba63f09085e1ba7550b3c8"
     ]
   ]
 ]

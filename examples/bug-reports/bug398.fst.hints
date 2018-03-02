@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "045283bc5499df17b999af614f4cb096"
+      "579441469c834b066bca80e21f22c564"
     ],
     [
       "Bug398.bar",

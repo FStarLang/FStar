@@ -73,7 +73,7 @@
     ],
     [
       "IntSort.sorted_smaller",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -82,7 +82,7 @@
     ],
     [
       "IntSort.sorted_smaller",
-      2,
+      3,
       2,
       1,
       [
@@ -116,7 +116,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "818c540177820a18962b6317e4ed8f8e"
+      "78eb342793cb722804d1641cc3309c69"
     ],
     [
       "IntSort.permutation",
