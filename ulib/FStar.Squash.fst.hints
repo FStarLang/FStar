@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "be9645282d2f2ddb923b978909cc9e22"
+      "61d37fdcf9fb718145911aad903b5093"
     ],
     [
       "FStar.Squash.get_proof",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "d2d9097ffa73c29abce00cff6eb0032d"
+      "9a49454126854494586eddd81efe33a7"
     ],
     [
       "FStar.Squash.proof_irrelevance",
