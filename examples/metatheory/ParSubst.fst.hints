@@ -127,7 +127,7 @@
     ],
     [
       "ParSubst.is_renaming",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

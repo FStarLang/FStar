@@ -2374,25 +2374,25 @@
     ],
     [
       "FStar.List.Tot.Properties.mem_existsb",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "3cb5a0f588bce7090225d5daa02eb0b9"
+      "c8a307598dd73bc5fa9684bdfafa34bc"
     ],
     [
       "FStar.List.Tot.Properties.rev_acc_length",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3472351ef897bc1b1e77b86342bf3213"
+      "57ff88455ab70edff56b2baa185beb6f"
     ],
     [
       "FStar.List.Tot.Properties.rev_length",
-      1,
+      3,
       2,
       1,
       [
@@ -2400,71 +2400,70 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8fbd2e8ba3648db086e84388b69a4b5e"
+      "93e426dd13926922ec0a2caa65308384"
     ],
     [
       "FStar.List.Tot.Properties.append_length",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6f90a4493f6fc15b45e3f51f8c1c811d"
+      "6269312e986277c209aa0658e4ac6bad"
     ],
     [
       "FStar.List.Tot.Properties.append_mem",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "7e0bd8ba13ef0de1075b68d7d70abc21"
+      "7ab340a09c096e811392bae189447665"
     ],
     [
       "FStar.List.Tot.Properties.append_mem_forall",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "f8e184ee90b5d2d72fe8ae16953e9cdd"
+      "b58cc3214812281d668c8b78053f33fa"
     ],
     [
       "FStar.List.Tot.Properties.append_count",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d0434e42ab53a73a92a40f8fc1afbec8"
+      "40823d9e58c9aab3d97cc8a8b8546a3a"
     ],
     [
       "FStar.List.Tot.Properties.append_count_forall",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "050c7866da5bb6e216f89ac5dcc8a436"
+      "e0404d49e05d95f1939c838caa8bdb0a"
     ],
     [
       "FStar.List.Tot.Properties.rev'",
-      1,
+      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "95218c8c486e69ed60bd6cde17376882"
+      "7cfe643f3422f08072e98a41fc1283dc"
     ],
     [
       "FStar.List.Tot.Properties.map_lemma",
-      1,
+      3,
       2,
       1,
       [
@@ -2472,47 +2471,47 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "da4012ee067d72c4815b50ce3124fd4c"
+      "39f92d16a6e6052641909120db96f4fa"
     ],
     [
       "FStar.List.Tot.Properties.partition_mem",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "71f6897d21cd821ff7220a7cc888adce"
+      "a5f194a40b834c4d41736a1998111054"
     ],
     [
       "FStar.List.Tot.Properties.partition_mem_forall",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "8d3d963bc16ccfc4598c5606f235b2fb"
+      "41e33fb2c16b2669d3b7d3e4ab119cc2"
     ],
     [
       "FStar.List.Tot.Properties.partition_count",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f9737f246777dc525b1b5a3adf5ea0be"
+      "20a3d907625ae3d82da7bfcb9e67b98e"
     ],
     [
       "FStar.List.Tot.Properties.partition_count_forall",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fce7289d1df871d7a9164c600ebd7533"
+      "a183a715689925a382aa32ba1b0ec5f7"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_permutation",
-      1,
+      3,
       2,
       1,
       [
@@ -2520,11 +2519,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ad81ab1267f5c5c09cf6cb7361f823c7"
+      "3c8b2204c9fe589120b68cfe5bd56019"
     ],
     [
       "FStar.List.Tot.Properties.sorted",
-      1,
+      2,
       2,
       1,
       [
@@ -2534,34 +2533,33 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "3c96d8308e36092d9f9242df4f71a66a"
+      "c9994a950ca984eb38d9f579b914648f"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_sorted",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "ac82bc12e0f46810c1d768d558a270d1"
+      "7e7f902e2adeb9111c3fb126659d616d"
     ],
     [
       "FStar.List.Tot.Properties.memP_existsb",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "17c75e7435c42718df9b4793ccb12ea0"
+      "09887061ff0c50f2274ffc90c3c153e8"
     ],
     [
       "FStar.List.Tot.Properties.index_extensionality_aux",
-      1,
+      2,
       2,
       1,
       [
@@ -2569,19 +2567,16 @@
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_e70d8689a3c220acb5776c2c28f84984"
       ],
       0,
-      "d70070784218e4a23ea94db443916c61"
+      "3eb8f7aee7e2a41328b78c6bcb404bf4"
     ],
     [
       "FStar.List.Tot.Properties.index_extensionality",
-      1,
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58"
-      ],
+      [ "@query" ],
       0,
-      "abf612e65f3bd98097b71062a749be02"
+      "3b087b5a95781856adc98e84607776a2"
     ]
   ]
 ]

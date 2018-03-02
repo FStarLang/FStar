@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "831285cf4dc691ae8f065ddf3db85e86"
+      "d3b3bc4c6381f4569bf31c2044ff38ae"
     ],
     [
       "FStar.Ref.unused_in",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "4f1b2e3d1951008e2e9ef657d861b74e"
+      "b0e81b9d562db7d726a1350f3b263a07"
     ],
     [
       "FStar.Ref.fresh",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "3e7b377e75fe61b746a9087a63d991d8"
+      "222b125147f39d2a0c854e7b5ed857fc"
     ],
     [
       "FStar.Ref.only",
@@ -38,7 +38,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e19e98c231504f1eae91783fbbb98c8d"
+      "2ba3cdf5855167239d039b45cb609a13"
     ],
     [
       "FStar.Ref.recall",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "equation_FStar.Ref.contains" ],
       0,
-      "6424fbfdab26ab1d7587449be0b1428e"
+      "cb1d6cf25bb0c8c7b5a924e6a2c91945"
     ],
     [
       "FStar.Ref.alloc",
@@ -61,7 +61,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9807b609f6bcff31beefca2c155237d7"
+      "6c9f3d1882af96720ebe8262857a8e64"
     ],
     [
       "FStar.Ref.read",
@@ -70,7 +70,7 @@
       1,
       [ "@query", "equation_FStar.Ref.sel" ],
       0,
-      "1b714701d71db3a7e8e58a60d6f0d61e"
+      "72455a6c2f9401f18efde9c70c9aeda4"
     ],
     [
       "FStar.Ref.write",
@@ -90,11 +90,11 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "488d7a0cd2570bba2e300fd03a3713c8"
+      "f89b4acf14e2ce6259d1332dbea9fe79"
     ],
     [
       "FStar.Ref.only",
-      1,
+      2,
       2,
       1,
       [
@@ -102,21 +102,19 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1948cdc5d973f91274af9ff0ca85c2a7"
+      "6b06225021a044d3cbb56e23aa21a6c0"
     ],
     [
       "FStar.Ref.alloc",
-      1,
+      2,
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Ref.fresh",
-        "equation_FStar.Ref.sel", "equation_FStar.ST.ref",
-        "equation_Prims.nat",
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "127a64c8d86d95dda045657ca0fdac4d"
+      "fb61c4d19f7dc7d1a873ec6598b458b0"
     ]
   ]
 ]

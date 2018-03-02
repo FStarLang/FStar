@@ -138,88 +138,88 @@
     ],
     [
       "FStar.Order.uu___is_Lt",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "d173632e660dfd006ab38b055b7a11c8"
+      "5e200ef140ece0b8975012a9acfa4c76"
     ],
     [
       "FStar.Order.uu___is_Eq",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "2f71dc2af6e95f602e319f50a604ea55"
+      "41f08f658bfe8ba56277811165fa72a0"
     ],
     [
       "FStar.Order.uu___is_Gt",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "0035a6e11eedd155baf98ecc59429d97"
+      "9c62d8a01914821e3069dfb4027bded1"
     ],
     [
       "FStar.Order.ge",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
       0,
-      "e51847812d0d586ff9abbce1f3c6554d"
+      "7d338facf2ca6da0c8e7f02e6d1896d3"
     ],
     [
       "FStar.Order.le",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
       0,
-      "f6dcdabf7c80e97bcb3e86ff4a22180a"
+      "737c20157cb421e0ea6c56b181e583ff"
     ],
     [
       "FStar.Order.ne",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
       0,
-      "5db464bd43a24c8df52635dc81fe80f7"
+      "b1f9a8e946ba830651cf763c353deb15"
     ],
     [
       "FStar.Order.gt",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
       0,
-      "4fecbcebae4a990c7e3e05f2d2d2932f"
+      "c927b27634d1694f1327bd5d8d88601e"
     ],
     [
       "FStar.Order.lt",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
       0,
-      "07582f25b760032e0883dffb36268ea6"
+      "941a8f4a5c43e2e84f092f292173a675"
     ],
     [
       "FStar.Order.eq",
-      1,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order__uu___haseq" ],
       0,
-      "c932f6f1eca9f394f91140d6578a2eae"
+      "5d2784f5650bc92a3c0b2d5dce69d4e0"
     ],
     [
       "FStar.Order.lex",
-      1,
+      2,
       2,
       1,
       [
@@ -227,31 +227,26 @@
         "FStar.Order_pretyping_8778b52c607a696e08d0fb2074eee9b6",
         "data_typing_intro_FStar.Order.Eq@tok",
         "disc_equation_FStar.Order.Eq", "disc_equation_FStar.Order.Gt",
-        "disc_equation_FStar.Order.Lt", "equality_tok_FStar.Order.Gt@tok",
-        "equality_tok_FStar.Order.Lt@tok",
+        "disc_equation_FStar.Order.Lt",
         "fuel_guarded_inversion_FStar.Order.order",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "7ab56478f4f79be22978f3063adc5f70"
+      "1aa0fe4a5b4ef2909ab35b3a2a6e2cae"
     ],
     [
       "FStar.Order.order_from_int",
-      1,
+      2,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "equality_tok_FStar.Order.Eq@tok", "equality_tok_FStar.Order.Gt@tok",
-        "equality_tok_FStar.Order.Lt@tok"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d769decef044d03a4b7c808156bebfc8"
+      "8f6b1e306c808b3e66e453984b1ebe2f"
     ],
     [
       "FStar.Order.compare_list",
-      1,
+      2,
       2,
       1,
       [
@@ -259,17 +254,15 @@
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_FStar.Order.Eq@tok", "equality_tok_FStar.Order.Gt@tok",
-        "equality_tok_FStar.Order.Lt@tok",
         "fuel_guarded_inversion_Prims.list",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "projection_inverse_Prims.Cons_hd", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3803f71809bcba828729d41282c966a6"
+      "55a2f4ca20d43cdbe95d6a34f245ba50"
     ]
   ]
 ]

@@ -1018,7 +1018,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1027,7 +1027,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      3,
+      1,
       2,
       1,
       [
@@ -1041,11 +1041,11 @@
         "token_correspondence_Benton2004.reify_computation"
       ],
       0,
-      "bc9d05403d4679970a52af650fb49dee"
+      "13926bb29d85079731c1212b88a0d3c4"
     ],
     [
       "Benton2004.RHL.r_while",
-      4,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1054,7 +1054,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      5,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1063,7 +1063,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      6,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1072,7 +1072,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      7,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1081,7 +1081,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      8,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -1090,7 +1090,7 @@
     ],
     [
       "Benton2004.RHL.r_while",
-      9,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],

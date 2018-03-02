@@ -33,33 +33,30 @@
     ],
     [
       "FStar.SquashEffect.resquash'",
-      1,
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "7558c66305cd614d558b6f60138c6d93"
+      "c8c4bc1c7c4c244dc7c187392d4dd51b"
     ],
     [
       "FStar.SquashEffect.return_squash",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "c68edcdf523f9c165fe9c943ba0b9236"
+      "09b813ad9370281156f24b8457affef6"
     ],
     [
       "FStar.SquashEffect.bind_squash",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "4331a796a7b573e2b7a027e25ac5068e"
+      "27283aec19bce33809f0454a758b2f83"
     ]
   ]
 ]

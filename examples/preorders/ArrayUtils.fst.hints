@@ -171,7 +171,7 @@
     ],
     [
       "ArrayUtils.copy_seq",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -180,23 +180,22 @@
     ],
     [
       "ArrayUtils.copy_seq",
-      3,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_ArrayUtils_Tm_refine_077237cabd91707d6b4c088d07b1fa1e",
-        "refinement_interpretation_ArrayUtils_Tm_refine_3afe25c598e781e4bc4fb07cc8ad4bed",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f114d64cf0b22b1ad67eeffe09ba1c0b"
+      "e33fdab77502afaf5ea433657c0c5f17"
     ],
     [
       "ArrayUtils.is_prefix_of",
@@ -238,12 +237,15 @@
     ],
     [
       "ArrayUtils.seq_map",
-      2,
+      1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0,
-      "49944f027234cd7acf97c7dbd8672b88"
+      "76e13f41749e05361d73b76cc923e7ea"
     ]
   ]
 ]

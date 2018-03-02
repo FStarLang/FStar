@@ -12,7 +12,7 @@
     ],
     [
       "BinarySearchTreeFirst.tree",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -21,7 +21,7 @@
     ],
     [
       "BinarySearchTreeFirst.tree",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -30,7 +30,7 @@
     ],
     [
       "BinarySearchTreeFirst.tree",
-      4,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -39,7 +39,7 @@
     ],
     [
       "BinarySearchTreeFirst.tree",
-      5,
+      1,
       2,
       1,
       [
@@ -50,7 +50,7 @@
         "int_inversion", "kinding_BinarySearchTreeFirst.tree@tok"
       ],
       0,
-      "b6be1c96ec06058b0dfdfaeea4c6643e"
+      "913e23fb911eaadba8296d6e5767025d"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__l",

@@ -15,7 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "a683bb4600be093619dbbb45b14d8013"
+      "a5bed9e228cae7424acb7c4784ff5749"
     ],
     [
       "FStar.Option.isSome",
@@ -31,7 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "9ba4b137abb34258963df4cc9a2d0208"
+      "f8860a0ebf5fcecb0174587f93e58739"
     ],
     [
       "FStar.Option.map",
@@ -48,7 +48,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "2af732d26112498f33829e61dadd255b"
+      "72d06ab5b202682d6205cd3686236134"
     ],
     [
       "FStar.Option.mapTot",
@@ -64,7 +64,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "f5b0570f571b5fe9e18fded8e7602565"
+      "7d34b9f0872322ee994f48a2dfdb69e0"
     ],
     [
       "FStar.Option.get",
@@ -80,11 +80,11 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "15a97590dbd0ec7eddd95ea3a93f875a"
+      "d8e7d9b7de5094f1f7c84f65aa7662fb"
     ],
     [
       "FStar.Option.isNone",
-      1,
+      2,
       2,
       1,
       [
@@ -93,14 +93,14 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0bf6789479eaab3d31a1600f81bde29b"
+      "e5aa9e14da53e545fafa1eb2a6249107"
     ],
     [
       "FStar.Option.isSome",
-      1,
+      2,
       2,
       1,
       [
@@ -112,11 +112,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "5a65f1fe5861eb27d301f46aba901398"
+      "7bbf85d4c127bd891ada82e6be590195"
     ],
     [
       "FStar.Option.mapTot",
-      1,
+      2,
       2,
       1,
       [
@@ -128,7 +128,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "06120038d21e7cb53dd6d3ea4f74731d"
+      "bf3c9473399af6ffdb1c27a83519a360"
     ]
   ]
 ]

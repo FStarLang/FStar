@@ -157,7 +157,7 @@
     ],
     [
       "Huffman.sorted_smaller",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Huffman.trie__uu___haseq" ],
@@ -166,7 +166,7 @@
     ],
     [
       "Huffman.sorted_smaller",
-      3,
+      2,
       2,
       1,
       [
@@ -200,7 +200,7 @@
         "typing_Huffman.sorted", "unit_inversion", "unit_typing"
       ],
       0,
-      "870b02a4c0196bfa07334ab07a4f5c91"
+      "c2e082c445be477752af24e65f0a37d6"
     ],
     [
       "Huffman.insert_in_sorted",

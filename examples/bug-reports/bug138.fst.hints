@@ -18,7 +18,7 @@
     ],
     [
       "Bug138.foo",
-      2,
+      1,
       2,
       1,
       [
@@ -27,7 +27,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "040957c56c81977e1d0ce2b58cfe24cf"
+      "3033e638c840521460415445942a58b5"
     ],
     [
       "Bug138.uu___is_Foo",

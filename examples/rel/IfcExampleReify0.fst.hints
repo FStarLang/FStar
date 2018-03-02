@@ -90,7 +90,7 @@
     ],
     [
       "IfcExampleReify0.ni_ifc_c3",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -99,7 +99,7 @@
     ],
     [
       "IfcExampleReify0.ni_ifc_c3",
-      3,
+      2,
       2,
       1,
       [
@@ -133,7 +133,7 @@
         "unit_typing"
       ],
       0,
-      "cbc4e051dbc9d24ae782bc6a01531204"
+      "9586c657afb8e250901ba740f7cbb668"
     ],
     [
       "IfcExampleReify0.ni_ifc_c4",

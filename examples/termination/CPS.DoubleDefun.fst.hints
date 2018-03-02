@@ -142,7 +142,7 @@
     ],
     [
       "CPS.DoubleDefun.apply",
-      2,
+      1,
       2,
       1,
       [
@@ -153,21 +153,18 @@
         "binder_x_0c607185f6c6768f1786fe5f14f15ea1_0",
         "binder_x_fc08148c0a56a96633a93ae5c4e7943e_1",
         "constructor_distinct_CPS.DoubleDefun.C2",
-        "constructor_distinct_CPS.Expr.Const",
-        "constructor_distinct_CPS.Expr.Plus", "disc_equation_CPS.Expr.Const",
-        "disc_equation_CPS.Expr.Plus", "equality_tok_Prims.LexTop@tok",
+        "disc_equation_CPS.Expr.Const", "disc_equation_CPS.Expr.Plus",
+        "equality_tok_Prims.LexTop@tok",
         "equation_with_fuel_CPS.DoubleDefun.stack.fuel_instrumented",
         "fuel_guarded_inversion_CPS.Expr.expr", "int_typing",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_CPS.DoubleDefun.C2__0",
         "projection_inverse_CPS.DoubleDefun.C2__1",
-        "projection_inverse_CPS.Expr.Plus__0",
-        "projection_inverse_CPS.Expr.Plus__1",
         "subterm_ordering_CPS.Expr.Plus", "typing_CPS.DoubleDefun.stack",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9f94e46e12702da9570f708e0c5e00a4"
+      "83d98d219f8fda6f529ca49bff649051"
     ]
   ]
 ]

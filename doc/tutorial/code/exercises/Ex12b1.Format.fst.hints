@@ -12,7 +12,7 @@
     ],
     [
       "Ex12b1.Format.append_inj_lemma",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
@@ -21,7 +21,7 @@
     ],
     [
       "Ex12b1.Format.append_inj_lemma",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
@@ -30,7 +30,7 @@
     ],
     [
       "Ex12b1.Format.append_inj_lemma",
-      4,
+      2,
       2,
       1,
       [
@@ -48,7 +48,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "9d0a5a001a0be286d9d71b4ec8cfcdd0"
+      "be19cbf93cfdda79a875d0f52c660c3c"
     ],
     [
       "Ex12b1.Format.lemma_eq_intro",
@@ -64,21 +64,24 @@
     ],
     [
       "Ex12b1.Format.lemma_eq_intro",
-      2,
+      1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0,
-      "5f1d2172806a05b35c3dbf652956719f"
+      "a1264907d8a62674d2174121ba171c5e"
     ],
     [
       "Ex12b1.Format.lemma_eq_intro",
-      3,
+      2,
       2,
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_eq_intro" ],
       0,
-      "4cf3f6cd564ee92a33eeefbafc5446be"
+      "4a55a6c693bc3f6dee2fada9cc513e92"
     ],
     [
       "Ex12b1.Format.UTF8_inj",
@@ -118,7 +121,7 @@
     ],
     [
       "Ex12b1.Format.UINT16_inj",
-      2,
+      1,
       2,
       1,
       [ "@query", "equation_Ex12b1.Format.uInt16" ],
@@ -127,25 +130,21 @@
     ],
     [
       "Ex12b1.Format.UINT16_inj",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "8b24cf4d11509b44b3f99a9135c8d568"
+      "49eeda4a0b91e64ba2687a15d23d74c5"
     ],
     [
       "Ex12b1.Format.UINT16_inj",
-      4,
+      1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12b1.Format.uInt16",
-        "equation_Ex12b1.Format.uint16",
-        "refinement_interpretation_Ex12b1.Format_Tm_refine_840eba52f90cf7bf85387b7d8eff7d06"
-      ],
+      [ "@query", "equation_Ex12b1.Format.uInt16" ],
       0,
-      "bb93bc7683d49168502d8ff061ea2a72"
+      "76639d62180e4337a89f8110acedc8c7"
     ],
     [
       "Ex12b1.Format.response",

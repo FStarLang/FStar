@@ -47,7 +47,7 @@
     ],
     [
       "Normalization.pow2_values",
-      2,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -56,7 +56,7 @@
     ],
     [
       "Normalization.pow2_values",
-      3,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -65,7 +65,7 @@
     ],
     [
       "Normalization.pow2_values",
-      4,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -74,7 +74,7 @@
     ],
     [
       "Normalization.pow2_values",
-      5,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -83,7 +83,7 @@
     ],
     [
       "Normalization.pow2_values",
-      6,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -92,7 +92,7 @@
     ],
     [
       "Normalization.pow2_values",
-      7,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -101,7 +101,7 @@
     ],
     [
       "Normalization.pow2_values",
-      8,
+      1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -110,21 +110,21 @@
     ],
     [
       "Normalization.pow2_values",
-      9,
+      1,
       0,
       0,
-      [ "@query", "equation_Prims.l_True" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e243158b3bc0e3cc52692ad3d938814b"
+      "1764d99f705d24152f564053606cec97"
     ],
     [
       "Normalization.pow2_values",
-      10,
+      2,
       0,
       0,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d597cd2be27c283017441a9ca4539f7c"
+      "4c1ef9f03a3240b31c26b3d0c78e4936"
     ],
     [
       "Normalization.compare",

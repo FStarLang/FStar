@@ -12,7 +12,7 @@
     ],
     [
       "Bug284.foo",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -21,7 +21,7 @@
     ],
     [
       "Bug284.foo",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -30,7 +30,7 @@
     ],
     [
       "Bug284.foo",
-      4,
+      2,
       2,
       1,
       [
@@ -38,7 +38,7 @@
         "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "eee83c266acd8533391a9b5128bcf709"
+      "d74001d63c38d0b244a5ec6ace2ac1dc"
     ]
   ]
 ]

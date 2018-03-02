@@ -249,7 +249,7 @@
     ],
     [
       "GC.mark",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
@@ -258,7 +258,7 @@
     ],
     [
       "GC.mark",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
@@ -267,7 +267,7 @@
     ],
     [
       "GC.mark",
-      4,
+      2,
       2,
       1,
       [
@@ -316,7 +316,7 @@
         "typing_tok_GC.F2@tok"
       ],
       0,
-      "8d3d6fd26c728d8379f73399f62d8422"
+      "cd4301bfecfbc755bafca06308d1d313"
     ],
     [
       "GC.sweep_aux_inv",
@@ -385,7 +385,7 @@
     ],
     [
       "GC.sweep",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
@@ -394,7 +394,7 @@
     ],
     [
       "GC.sweep",
-      3,
+      2,
       2,
       1,
       [
@@ -449,7 +449,7 @@
         "typing_GC.valid"
       ],
       0,
-      "43ab544f385abe54849b6b574c80e6d6"
+      "3d5b13d72d35dd5ffb2a3f84d2e012a2"
     ],
     [
       "GC.gc",
@@ -462,7 +462,7 @@
     ],
     [
       "GC.gc",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -471,7 +471,7 @@
     ],
     [
       "GC.gc",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -480,7 +480,7 @@
     ],
     [
       "GC.gc",
-      4,
+      2,
       2,
       1,
       [
@@ -511,7 +511,7 @@
         "true_interp", "typing_GC.mem_lo"
       ],
       0,
-      "3763f25dc041ff317fea87626e1e56cc"
+      "af0dc77ea641094b28db0c08c5219065"
     ],
     [
       "GC.try_alloc_invariant",

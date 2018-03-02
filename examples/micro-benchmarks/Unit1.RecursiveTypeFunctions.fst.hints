@@ -123,7 +123,7 @@
     ],
     [
       "Unit1.RecursiveTypeFunctions.good_t",
-      2,
+      1,
       2,
       1,
       [
@@ -135,7 +135,7 @@
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0,
-      "d3acb920f9e3a9111d9d8464d520d3ef"
+      "e679b152aebc6eb3ef9fa7c437212beb"
     ],
     [
       "Unit1.RecursiveTypeFunctions.extract_nat_t",
@@ -170,7 +170,7 @@
     ],
     [
       "Unit1.RecursiveTypeFunctions.extract_nat_t",
-      2,
+      1,
       2,
       1,
       [
@@ -180,6 +180,7 @@
         "@fuel_irrelevance_Unit1.RecursiveTypeFunctions.good_t.fuel_instrumented",
         "@query", "b2t_def", "binder_x_f8d4faaab6031329d2d2f13175552828_0",
         "constructor_distinct_Unit1.RecursiveTypeFunctions.S",
+        "constructor_distinct_Unit1.RecursiveTypeFunctions.SofT",
         "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "equation_Unit1.RecursiveTypeFunctions.s",
@@ -194,7 +195,7 @@
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0,
-      "95c0733be3eea21964d4a8ff608a818b"
+      "72c3cffddaa470bcaa6b751ad7e2a609"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq",

@@ -52,7 +52,7 @@
     ],
     [
       "Unit1.Parser.s1",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -70,7 +70,7 @@
     ],
     [
       "Unit1.Parser.s3",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

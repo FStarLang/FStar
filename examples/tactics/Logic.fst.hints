@@ -1,1 +1,20 @@
-[ "~ä\u0012&r†îµ“°¶Ž~”\u001aŠ", [] ]
+[
+  "sÛŠ(\u0005\u0016ÌÌóü‚ë5Ë\u0005Î",
+  [
+    [
+      "Logic.tau",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
+      ],
+      0,
+      "d7bb31781657fa6407ecfc5d1ac4515f"
+    ]
+  ]
+]

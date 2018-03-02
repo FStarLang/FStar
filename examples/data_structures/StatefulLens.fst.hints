@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "ce106e628cff8b4e6507658f45bb5a4a"
+      "f3679fd228c690450682c7e5fda3b7e4"
     ],
     [
       "StatefulLens.as_stlens",
@@ -46,7 +46,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "caef993be6e77f2f2142bcfde9a1c7f1"
+      "0f6223f079f823782caa12d88dba52b4"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -71,7 +71,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "eaaae45d3aebf9bf144918ddb605333c"
+      "3aee033080679f3af6545da5a0b6f138"
     ],
     [
       "StatefulLens.test0",
@@ -91,7 +91,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "3aca05667400f41493d73feb3cc3bd52"
+      "64c04f405625c98b97cc39db9c4a6497"
     ],
     [
       "StatefulLens.test1",
@@ -133,7 +133,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "86cd6845e4a108484f5cfaf5275dab25"
+      "34ec99bcc7af1b54200f65f2b8a7cf74"
     ],
     [
       "StatefulLens.test2",
@@ -176,7 +176,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "4edc08afa1415cc30c5a0135714f561c"
+      "f6209688b0873d0b851730d93ec53e51"
     ],
     [
       "StatefulLens.test4",
@@ -219,7 +219,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "81081a4474ef0dcad46d58d1b0828d83"
+      "d867c82f9b3b2b0ee2fab3e5d7c8e97d"
     ],
     [
       "StatefulLens.move_x",
@@ -265,7 +265,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "0642f64a09d523580337cbba32a8435b"
+      "97d45ef455523f3c1c00559a421fca61"
     ],
     [
       "StatefulLens.move_x2",
@@ -306,7 +306,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "f8312a29a4c12e324a28b59b48c65008"
+      "f4cdfe47b535e6b4098c985d022f183f"
     ]
   ]
 ]

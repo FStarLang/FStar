@@ -13,7 +13,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "7c8dc866f170dc00e5a03434c039da4b"
+      "317a0340c955428381d61b74465285c7"
     ],
     [
       "Slice.__proj__BSlice__item__len",
@@ -27,7 +27,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "d77dc1d663c5f7e36117be0d08bd32ab"
+      "d027b60006ea698b162d18960e8b7f84"
     ],
     [
       "Slice.__proj__BSlice__item__p",
@@ -41,7 +41,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "299afab5b9de40d5194b68ed8eaf25ea"
+      "3de0c29fe1fe3e70620298be5e1be744"
     ],
     [
       "Slice.__proj__BSlice__item__p",
@@ -63,7 +63,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "0a5ed1b7c485b12697fd4fb15b57b08d"
+      "f762d5e19cfb4f63c69367a3ca8f8f64"
     ],
     [
       "Slice.as_seq",
@@ -79,7 +79,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "d8c2e56edb0a30f41ce3c131fd7b246a"
+      "53fb1f4712714023b164a8255fbf87a1"
     ],
     [
       "Slice.advance_slice",
@@ -104,7 +104,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "4d629ac969093c01a18990a00f48fa99"
+      "4702548772fe1825845b23f0cc70e650"
     ],
     [
       "Slice.advance_slice_spec",
@@ -160,7 +160,7 @@
         "unit_typing"
       ],
       0,
-      "f7c138a6788fdd86c19a33ed815689d9"
+      "8f023d1dd140bf120b3d3ace85723a74"
     ],
     [
       "Slice.u32_add_overflows",
@@ -188,7 +188,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "57be0c6813fbe5b2637d70e0edd160d5"
+      "81ab65a221fdfc456064b8874416880b"
     ],
     [
       "Slice.truncate_slice",
@@ -206,7 +206,7 @@
         "refinement_interpretation_Slice_Tm_refine_b89bf9d8a6bca42f733fb835128df8e8"
       ],
       0,
-      "59f7e6a15ddde87f6b5a7c99cfd227d2"
+      "cf9ba88bcd225d62cb279dc28074db04"
     ],
     [
       "Slice.truncate_slice",
@@ -263,7 +263,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "07e4a089859dc331770d3598a14fdca8"
+      "52586ae196e477ce2c43d9e69388bc97"
     ],
     [
       "Slice.truncated_slice",
@@ -288,7 +288,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "e9c38248e7218013d85a42df14b9bed0"
+      "b616bf2b1a8a1820aa17978f16c039b7"
     ],
     [
       "Slice.bslice_prefix_equals",
@@ -297,11 +297,11 @@
       1,
       [ "@query" ],
       0,
-      "e5bb07389b51d8cb17a008b94e33799f"
+      "88a914cd4f7181f909b5584ac8b82746"
     ],
     [
       "Slice.bslice_prefix_equals",
-      2,
+      1,
       2,
       1,
       [
@@ -312,46 +312,47 @@
         "haseqSlice_Tm_refine_af7aba22b704bb45f768ebc63f29a656"
       ],
       0,
-      "531842881df26c82d4a333683341cc82"
+      "8d739a5e4168ab1652f49fa8a8a0ab1c"
     ],
     [
       "Slice.bslice_prefix_equals",
-      3,
+      1,
       2,
       1,
       [ "@query" ],
       0,
-      "8ec68ccb7631ee5b0bbeba5f236167f8"
+      "ddd8427579f4a8355c84471aa0c5c62a"
     ],
     [
       "Slice.bslice_prefix_equals",
-      4,
+      1,
       2,
       1,
       [ "@query" ],
       0,
-      "bf37325df82721b8380118158b74d0b9"
+      "85202e417582543865cf53d80943540c"
     ],
     [
       "Slice.bslice_prefix_equals",
-      5,
+      1,
       2,
       1,
       [ "@query" ],
       0,
-      "825f202b6f830e6bd81091df1479d2f3"
+      "334e5c2d6e9ca95c3040279fee342251"
     ],
     [
       "Slice.bslice_prefix_equals",
-      6,
+      2,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Buffer.buffer",
-        "equation_FStar.Buffer.includes", "equation_FStar.Buffer.live",
-        "equation_FStar.Heap.trivial_preorder",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.Buffer.buffer", "equation_FStar.Buffer.includes",
+        "equation_FStar.Buffer.live", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.HyperStack.ST.mreference",
         "equation_FStar.HyperStack.ST.reference",
+        "equation_FStar.Monotonic.HyperStack.contains",
         "equation_FStar.Monotonic.HyperStack.mreference",
         "equation_FStar.UInt8.byte", "equation_Slice.as_seq",
         "equation_Slice.bslice_prefix", "equation_Slice.byte",
@@ -359,16 +360,16 @@
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mreference_",
         "fuel_guarded_inversion_Slice.bslice",
-        "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_FStar.UInt8.t", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Buffer.MkBuffer_content",
-        "proj_equation_Slice.BSlice_p",
+        "proj_equation_Slice.BSlice_p", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
         "refinement_interpretation_Slice_Tm_refine_2cce8b21947d7cc0465fdc87c7a1f882",
         "typing_FStar.Buffer.__proj__MkBuffer__item__content",
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "66ff11f934b59fa62c98b8c59b75cf18"
+      "ed599922c355643fdd2d9fd045aa0158"
     ],
     [
       "Slice.bslice_prefix_trans",
@@ -381,7 +382,7 @@
         "equation_Slice.byte", "proj_equation_Slice.BSlice_p"
       ],
       0,
-      "8e4a44cfc9cf085a1927d168ed268575"
+      "f0ec0289d268ecfd8b071439174f3f1f"
     ],
     [
       "Slice.u32_max",
@@ -397,7 +398,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_FStar.UInt32.lte"
       ],
       0,
-      "65ad399ad2ba57670afc35c2e6fd67a2"
+      "debfdb2866ff5f9ca792f4f1f803ffc9"
     ],
     [
       "Slice.modifies_prefix_plus",
@@ -424,9 +425,8 @@
         "equation_FStar.Monotonic.HyperStack.frameOf",
         "equation_FStar.Monotonic.HyperStack.modifies_ref",
         "equation_FStar.Monotonic.HyperStack.mreference",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.gt",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.gt",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
         "equation_FStar.UInt32.lte", "equation_FStar.UInt32.n",
         "equation_FStar.UInt8.byte", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Slice.byte",
@@ -445,8 +445,7 @@
         "lemma_FStar.Set.mem_union",
         "lemma_FStar.TSet.lemma_mem_tset_of_set",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Buffer.MkBuffer_content",
         "proj_equation_FStar.Buffer.MkBuffer_idx",
         "proj_equation_FStar.Buffer.MkBuffer_max_length",
@@ -476,7 +475,7 @@
         "typing_Slice.truncated_slice", "typing_Slice.u32_max"
       ],
       0,
-      "fca77a37a3d35999f5ef4eae41ee9392"
+      "ed2bda62350036f29e6f5ac585d6ccb8"
     ],
     [
       "Slice.modifies_prefix_times",
@@ -617,7 +616,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "899d8a1557d4c4427186aa8e27dbff44"
+      "2fbe0cae701c9cf38790b7a307256d55"
     ],
     [
       "Slice.same_ref",
@@ -626,7 +625,7 @@
       1,
       [ "@query" ],
       0,
-      "1b07621d622e76c097b9abd8ba49bee1"
+      "f66aadfe840d3c97d207b070ccceaeee"
     ],
     [
       "Slice.same_ref_equivalence",
@@ -635,7 +634,7 @@
       1,
       [ "@query", "equation_Slice.same_ref" ],
       0,
-      "6dd64acb9b9d1a375afe87f9b3a1f186"
+      "df3a1cf7c8f810905cf4497acacd6a3e"
     ],
     [
       "Slice.is_concat_liveness",
@@ -658,7 +657,7 @@
         "typing_FStar.Buffer.content"
       ],
       0,
-      "717931f8b130400bea97300b9dfa82d7"
+      "c21504d556733507fb472445494cafa0"
     ],
     [
       "Slice.is_concat_disjoint",
@@ -675,7 +674,7 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__max_length"
       ],
       0,
-      "ff644b61ddc16d72fc6a4a73971739d7"
+      "58bd844bfb366559280192b73c2094d5"
     ],
     [
       "Slice.is_concat_append",
@@ -735,7 +734,7 @@
         "typing_FStar.Monotonic.HyperStack.sel"
       ],
       0,
-      "f9a23473745fe287bd744d7c2fa38607"
+      "4abb2fb7b995192f5c55d2c34b002e2b"
     ],
     [
       "Slice.is_concat_suffix",
@@ -801,7 +800,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "ec8312887f0eeb5b256961c8e7ac3185"
+      "d0b80bcb4d6503b65a4e5ccba87dd13d"
     ],
     [
       "Slice.is_concat_prefix",
@@ -854,7 +853,7 @@
         "typing_FStar.Monotonic.HyperStack.sel"
       ],
       0,
-      "8aa9b37930c5ed61fa8bdc0a440193f0"
+      "bf4a849cdf1c9e3c5e0b21d6e86490fd"
     ],
     [
       "Slice.buffer_split_at",
@@ -913,7 +912,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "4f60e61e43c1eb45c8ec23204e04b5f3"
+      "9e0663053b7ddc4b62067c7ce4f278e9"
     ],
     [
       "Slice.bslice_split_at",
@@ -948,7 +947,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "439a7018e8e8f29b42b99850c4980b61"
+      "6525028798dafc0a502a1790a3eec115"
     ],
     [
       "Slice.modifies_prefix_seq_intro",
@@ -962,7 +961,7 @@
         "refinement_interpretation_Slice_Tm_refine_b89bf9d8a6bca42f733fb835128df8e8"
       ],
       0,
-      "139a4016bfc68b909635e87b9e9f1e4a"
+      "d22367e0fade95a4ebd6603c06bd237b"
     ],
     [
       "Slice.modifies_prefix_seq_intro",
@@ -971,7 +970,7 @@
       1,
       [ "@query", "equation_Slice.modifies_slice" ],
       0,
-      "db7965cd6f11774bf31495244a441474"
+      "66841b6efea1c0b3f38049bce09e2119"
     ],
     [
       "Slice.modifies_prefix_split",
@@ -990,7 +989,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "e172b574bf5225a9df3563e1b747c607"
+      "78880b9caef8acf4faf89eafefa83335"
     ],
     [
       "Slice.modifies_prefix_split",
@@ -999,7 +998,7 @@
       1,
       [ "@query", "equation_Slice.live" ],
       0,
-      "00de8f3393db0731c452065b3c595a50"
+      "a5ee24f94d416fe25deab5d688a4cf71"
     ],
     [
       "Slice.modifies_grow_from_b1",
@@ -1029,7 +1028,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "a2fd086b7bf0f709a50bc6b27f834261"
+      "9e321f13da7778841140786e8d9bec11"
     ],
     [
       "Slice.modifies_grow_from_b2",
@@ -1059,7 +1058,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "65f5b51989cc2af915097abda5d3b930"
+      "08f0ac1a711c9d62ab354b74f8b046bd"
     ]
   ]
 ]

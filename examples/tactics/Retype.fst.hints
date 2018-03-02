@@ -1,6 +1,21 @@
 [
-  "þ,v\u0013¹Œâáñ\fÐÜ>@øO",
+  "\u001c,\u0019qÐ0$@ Í}®ø&yV",
   [
+    [
+      "Retype.assumption'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
+      ],
+      0,
+      "4dc17b444e16ae073cc97ca03ee28ef0"
+    ],
     [
       "Retype.tau",
       1,
@@ -8,7 +23,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
       0,
-      "602fe36ca26090a84bd9918279544387"
+      "9347d17e68d487ee840951a604450dbc"
     ]
   ]
 ]

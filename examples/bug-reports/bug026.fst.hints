@@ -12,15 +12,12 @@
     ],
     [
       "Bug026.bar",
-      2,
+      1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug026_Tm_refine_908043d23d9b610a14feef808af9da3d"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e98a9bc263632a79912e91a130955c6b"
+      "929fe491f7445ab3d8638dcdf0fad68c"
     ],
     [
       "Bug026.evenb",

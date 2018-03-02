@@ -187,7 +187,7 @@
     ],
     [
       "StlcStrongDbParSubst.is_renaming",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -196,7 +196,7 @@
     ],
     [
       "StlcStrongDbParSubst.is_renaming",
-      3,
+      2,
       2,
       1,
       [
@@ -204,7 +204,7 @@
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_7e0e8fe097c61d6e1bb114136c2600bd"
       ],
       0,
-      "7ae7d1c69ec8550c2d48befc775aa9ac"
+      "b00894e34cab0af16d3fe57bcc506de0"
     ],
     [
       "StlcStrongDbParSubst.sub_inc",

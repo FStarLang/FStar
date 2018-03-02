@@ -48,7 +48,7 @@
     ],
     [
       "IfcExampleReify3.p1_x",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -57,7 +57,7 @@
     ],
     [
       "IfcExampleReify3.p1_x",
-      3,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -66,7 +66,7 @@
     ],
     [
       "IfcExampleReify3.p1_x",
-      4,
+      2,
       2,
       1,
       [
@@ -105,10 +105,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.index",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "ba7e96001d1fbd30cadcef4c6a520d00"
+      "91b7ab2db8de4cef6cf06fa6ae34e50c"
     ],
     [
       "IfcExampleReify3.ni_p1",

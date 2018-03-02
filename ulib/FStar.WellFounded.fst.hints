@@ -40,7 +40,7 @@
     ],
     [
       "FStar.WellFounded.acc_inv",
-      1,
+      2,
       2,
       1,
       [
@@ -48,20 +48,20 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "1b53cbdbf60aa08835920d6907208660"
+      "7901bcd8f0c02babde89c38dfa5fc381"
     ],
     [
       "FStar.WellFounded.apply",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
       0,
-      "ccd58aca3f5012f30e983741f24cda3b"
+      "ec3f3224346d502246c1c73e4b3d8de6"
     ],
     [
       "FStar.WellFounded.fix_F",
-      1,
+      2,
       2,
       1,
       [
@@ -73,7 +73,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "f59f06d641cf2c07b4fcc3de6a352610"
+      "900c1edc3625cbecddfb6767e930be1c"
     ]
   ]
 ]
