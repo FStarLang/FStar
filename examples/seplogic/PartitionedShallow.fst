@@ -4,10 +4,13 @@ open FStar.SL.Heap
 
 let st_wp (a:Type0) = (a * heap -> Type0) -> heap -> Type0
 
+unfold let sep_wp (a:Type0) (wp:st_wp a) (post:(a * heap -> Type0)) (h0:heap) = 
+  (exists h0' h0'' . disjoint h0' h0'' /\ h0 == join_tot h0' h0'' /\ 
+                     wp (fun (x,h1) -> disjoint h1 h0'' /\ post (x,join_tot h1 h0'')) h0')
+
 let st (a:Type0) (wp:st_wp a) =
-    h0:heap -> PURE (a * heap)
-                    (fun post -> (exists h0' h0'' . disjoint h0' h0'' /\ h0 == join_tot h0' h0'' /\ 
-                                                    wp (fun (x,h1) -> disjoint h1 h0'' /\ post (x,join_tot h1 h0'')) h0'))    
+    h0:heap -> PURE (a * heap) (fun post -> sep_wp a wp post h0)
+                        
 
 (* ******* *)
 
@@ -17,15 +20,16 @@ let return (#a:Type) (x:a)
 
 (* ******* *)
 
-//TODO: implement bind
+//TODO: try to implement bind
 
-(*let bind (#a:Type) (#wp1:st_wp a)
+assume
+val bind (#a:Type) (#wp1:st_wp a)
          (#b:Type) (#wp2:a -> st_wp b)
          (f:st a wp1)
          (g:(x:a -> st b (wp2 x)))
     : st b (fun post' h0' -> wp1 (fun (x,h1) -> wp2 x post' h1) h0')
-    = fun h0 -> admit () //let (x,h1) = f h0 in g x h1*)
-    
+//    = fun h0 -> let (x,h1) = f h0 in g x h1
+
 (* ******* *)
 
 assume 
