@@ -1,0 +1,21 @@
+[
+  "\u0003\u0019ÅlOc\u001b\u0015Ë:Ç’èôÃJ",
+  [
+    [
+      "FStar.DM4F.Random.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "674e060038675e7e930634d1a8176ca0"
+    ]
+  ]
+]

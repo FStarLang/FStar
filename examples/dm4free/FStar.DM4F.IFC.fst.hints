@@ -1,0 +1,72 @@
+[
+  "s≥vö\u000e8o$\u0006ÇùöÙ3Á(",
+  [
+    [
+      "FStar.DM4F.IFC.uu___is_Low",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2c3a5431f8a1bff56c7256a47ed53f91"
+    ],
+    [
+      "FStar.DM4F.IFC.uu___is_High",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "80f83fe7c524b94855d5213ab967edee"
+    ],
+    [
+      "FStar.DM4F.IFC.bind_ifc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IFC_interpretation_Tm_arrow_4fdb0ab0c7e9da3107de701807750e02",
+        "FStar.DM4F.IFC_interpretation_Tm_arrow_6b8412e65fdf5b2d1cd9400a44aba2da",
+        "FStar.DM4F.IFC_pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
+        "bool_inversion", "bool_typing",
+        "data_typing_intro_FStar.DM4F.IFC.High@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.DM4F.IFC.ifc", "kinding_FStar.DM4F.IFC.label@tok",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "70e1b200357491cc6ca566870020eae1"
+    ],
+    [
+      "FStar.DM4F.IFC.join",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
+      0,
+      "aeef1b08d81132b0f5f2aa2d06a2c379"
+    ],
+    [
+      "FStar.DM4F.IFC.flows",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
+      0,
+      "940264572f5a55004b8c4192b21f1f86"
+    ],
+    [
+      "FStar.DM4F.IFC.write",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3ef880f17285a24fc8d824bfe01f622d"
+    ]
+  ]
+]
