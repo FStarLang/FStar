@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
-      ],
+      [ "@query" ],
       0,
-      "cde33d965f66e13cacc7d9b5385dc1f6"
+      "88fb3df1e964230980f53213aa9f4589"
     ],
     [
       "DependentSynth.f",
@@ -20,11 +17,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_DependentSynth.myty", "int_typing",
-        "projection_inverse_BoxBool_proj_0", "unit_typing"
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
       ],
       0,
-      "852f04f93bf243f103e82300e5216585"
+      "80bc9550dddc4a5b73ee45594d45913a"
     ]
   ]
 ]

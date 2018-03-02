@@ -17,7 +17,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "a8d7a773299fa78a2ce83e8f2968b00b"
+      "9c523cd941bd63798ee66d09b43fb548"
     ],
     [
       "FStar.Tactics.Arith.split_arith",
@@ -38,11 +38,11 @@
         "equation_FStar.Tactics.Logic.split", "unit_typing"
       ],
       0,
-      "fc2d88f889caca11d287b8708cebd09c"
+      "ed505400c34120ce4688c2b96ff7daf8"
     ],
     [
       "FStar.Tactics.Arith.is_arith_goal",
-      1,
+      2,
       2,
       1,
       [
@@ -56,7 +56,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "437b50bc2ccbd33d33398a0249bf1a29"
+      "6a9534edf15b635dc7cc411b550acc71"
     ]
   ]
 ]

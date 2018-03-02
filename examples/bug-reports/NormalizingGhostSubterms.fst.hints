@@ -6,9 +6,9 @@
       1,
       2,
       1,
-      [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
+      [ "@query" ],
       0,
-      "f1313197228430adeab895d309cf8316"
+      "fe9aa093c84659a253b3e7a435b6f01d"
     ]
   ]
 ]

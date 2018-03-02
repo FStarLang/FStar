@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b38daa6b5c5ec1c00a137a800eb7c1af"
+      "2c3a5431f8a1bff56c7256a47ed53f91"
     ],
     [
       "FStar.DM4F.IFC.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "304af875ea5f9a8c3b1a5c15190b5242"
+      "80f83fe7c524b94855d5213ab967edee"
     ],
     [
       "FStar.DM4F.IFC.bind_ifc",
@@ -35,10 +35,11 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.DM4F.IFC.ifc", "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption"
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e13cbd894a147273ab40e8549682e459"
+      "70e1b200357491cc6ca566870020eae1"
     ],
     [
       "FStar.DM4F.IFC.join",
@@ -47,7 +48,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "c2e203ca992de1f5e0915b85ffcc2e6f"
+      "aeef1b08d81132b0f5f2aa2d06a2c379"
     ],
     [
       "FStar.DM4F.IFC.flows",
@@ -56,7 +57,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "4cd146a092c0622a362c053e0e344587"
+      "940264572f5a55004b8c4192b21f1f86"
     ],
     [
       "FStar.DM4F.IFC.write",
@@ -65,7 +66,7 @@
       1,
       [ "@query" ],
       0,
-      "dcea36f0d37bb8a4d4fb855f445b82e7"
+      "3ef880f17285a24fc8d824bfe01f622d"
     ]
   ]
 ]

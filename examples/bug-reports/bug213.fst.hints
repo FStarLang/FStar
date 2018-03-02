@@ -16,14 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug213.cexists",
-        "proj_equation_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_p"
+        "@query", "proj_equation_Bug213.ExIntro_a",
+        "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "cdb88402765b28842936ae14029bbbb3"
+      "15b7f8da62e72ad03ee26107de94bfaa"
     ],
     [
       "Bug213.__proj__ExIntro__item__x",
@@ -57,13 +54,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "data_typing_intro_Bug213.IP@tok",
-        "fuel_guarded_inversion_Bug213.cexists",
-        "projection_inverse_Bug213.ExIntro_a"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro" ],
       0,
-      "1db138c5560113d1cff415e7f8ee117e"
+      "423cb953820bcb7669e6ded0e86016b3"
     ]
   ]
 ]

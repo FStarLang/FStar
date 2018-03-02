@@ -40,7 +40,7 @@
     ],
     [
       "FStar.WellFounded.acc_inv",
-      1,
+      2,
       2,
       1,
       [
@@ -52,7 +52,7 @@
     ],
     [
       "FStar.WellFounded.apply",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -61,7 +61,7 @@
     ],
     [
       "FStar.WellFounded.fix_F",
-      1,
+      2,
       2,
       1,
       [

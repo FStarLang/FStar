@@ -223,7 +223,7 @@
     ],
     [
       "FStar.Classical.get_squashed",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -232,7 +232,7 @@
     ],
     [
       "FStar.Classical.get_equality",
-      1,
+      2,
       2,
       1,
       [ "@query", "equation_Prims.eq2" ],
@@ -241,7 +241,7 @@
     ],
     [
       "FStar.Classical.get_forall",
-      1,
+      2,
       2,
       1,
       [ "@query", "equation_Prims.l_Forall" ],
@@ -250,7 +250,7 @@
     ],
     [
       "FStar.Classical.forall_intro_gtot",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -259,7 +259,7 @@
     ],
     [
       "FStar.Classical.impl_intro_gen",
-      1,
+      3,
       2,
       1,
       [
@@ -271,7 +271,7 @@
     ],
     [
       "FStar.Classical.or_elim",
-      1,
+      2,
       2,
       1,
       [

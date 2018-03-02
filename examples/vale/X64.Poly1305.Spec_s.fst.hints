@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "65e60f7a9f553ea3915ccd5bf007a2bf"
+      "fb1d09024a2a22ad5cbd7d3c43be5ccd"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3f419bd37539d2b361f6fa3ace5b9fbd"
+      "25efffe5668734d6b4e2022a70cb4f93"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -47,7 +47,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "ff8d18f0b7e420c2fa0247bb3031da76"
+      "510c4d9432e8df29652c4505db5c31ed"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -56,7 +56,6 @@
       0,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_4",
         "binder_x_835ec214631cfc50b39ee6d7c6e833c3_5",
         "equality_tok_Prims.LexTop@tok", "int_inversion", "int_typing",
@@ -68,7 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "93630c9c5664faac31db1407c8a272c4"
+      "4a3e48bcc6fe7c1a3dbc4c30fff0979f"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -81,10 +80,10 @@
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "equation_X64.Poly1305.Spec_s.nat128",
+        "bool_typing", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_Prims.nat",
+        "equation_Prims.pos", "equation_X64.Poly1305.Spec_s.nat128",
         "equation_X64.Poly1305.Spec_s.nat128_max",
         "function_token_typing_X64.Poly1305.Spec_s.nat128_max",
         "int_inversion", "int_typing", "lemma_FStar.UInt.pow2_values",
@@ -99,7 +98,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "34e758d41d7bf81879c0a1cc4e23ef2b"
+      "58b0050f37e5f02591b95b408554a5b0"
     ]
   ]
 ]

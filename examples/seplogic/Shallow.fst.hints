@@ -1,0 +1,56 @@
+[
+  "\u0002Ë\u001c¶Y}yük–Ï\u0003\u0014ÀS›",
+  [
+    [
+      "Shallow.return",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f620fad79a63a7a827ea7332d0941080"
+    ],
+    [
+      "Shallow.points_to_sel",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Shallow.points_to_contains" ],
+      0,
+      "036cdefbf6965b919e3a909b2af731f7"
+    ],
+    [
+      "Shallow.read",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_sel"
+      ],
+      0,
+      "8a1c03066a34f2d2811bb79516962ba8"
+    ],
+    [
+      "Shallow.points_to_upd",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Shallow.points_to_contains" ],
+      0,
+      "034c7c809e18821c2b75827e9ccc98d6"
+    ],
+    [
+      "Shallow.write",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_upd"
+      ],
+      0,
+      "22736e4acfa1fb21a5b48e9a4910e4dc"
+    ]
+  ]
+]

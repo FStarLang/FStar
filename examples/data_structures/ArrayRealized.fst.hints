@@ -115,13 +115,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "proj_equation_ArrayRealized.Seq_start_i",
-        "projection_inverse_ArrayRealized.Seq_start_i",
-        "refinement_interpretation_ArrayRealized_Tm_refine_47109dd5837e560f72664f314778a899"
+        "@query", "proj_equation_ArrayRealized.Seq_start_i",
+        "projection_inverse_ArrayRealized.Seq_start_i"
       ],
       0,
-      "16b4f7a785c324045a5ae4855c00cb5e"
+      "5d3e306f212f8962fd3f00fc7646fadc"
     ],
     [
       "ArrayRealized.create",
@@ -186,13 +184,11 @@
         "fuel_guarded_inversion_ArrayRealized.contents",
         "fuel_guarded_inversion_ArrayRealized.seq",
         "proj_equation_ArrayRealized.Seq_c",
-        "projection_inverse_ArrayRealized.Append_s1",
-        "projection_inverse_ArrayRealized.Append_s2",
         "subterm_ordering_ArrayRealized.Append",
         "subterm_ordering_ArrayRealized.Seq"
       ],
       0,
-      "2e405031535df5fd61f3111955fbe00a"
+      "e16f3ca4feb07c7d3198cb6afc6028f8"
     ],
     [
       "ArrayRealized.slice",
@@ -230,14 +226,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_ArrayRealized.length", "equation_Prims.nat",
-        "fuel_guarded_inversion_ArrayRealized.seq",
+        "data_elim_ArrayRealized.Seq", "equation_ArrayRealized.length",
+        "equation_Prims.nat", "fuel_guarded_inversion_ArrayRealized.seq",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_ArrayRealized.length"
       ],
       0,
-      "2bb4443acf3ba2fe2cdccf8d3f6435c0"
+      "daa8bfb7fa08226fc540cc8a980e467a"
     ]
   ]
 ]

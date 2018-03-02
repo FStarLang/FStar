@@ -55,12 +55,11 @@
       0,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Bug989.A",
-        "disc_equation_Bug989.A", "disc_equation_Bug989.B",
-        "equality_tok_Bug989.A@tok", "fuel_guarded_inversion_Bug989.t"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug989.A",
+        "disc_equation_Bug989.B", "fuel_guarded_inversion_Bug989.t"
       ],
       0,
-      "c7c828c8a410450cf6bdcc47d3b1317d"
+      "5e6dc7e326ffc9636194a0f727ae48ab"
     ]
   ]
 ]

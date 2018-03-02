@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
-      "c076fbbe6f75656ac23b5e1b49cdca7b"
+      "e7a4d284463b37b2166e10cb6d59ec5e"
     ],
     [
       "PureEncoder.encode_store",
@@ -16,9 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_KeyValue.Store",
-        "equation_FStar.UInt.uint_t",
-        "fuel_guarded_inversion_KeyValue.store",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_KeyValue.Store", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "fuel_guarded_inversion_KeyValue.store",
+        "function_token_typing_FStar.UInt32.n",
         "lemma_FStar.Buffer.lemma_size",
         "proj_equation_KeyValue.Store_entries",
         "proj_equation_KeyValue.Store_num_entries",
@@ -28,7 +30,7 @@
         "typing_KeyValue.__proj__Store__item__num_entries"
       ],
       0,
-      "f13770377e0635f3d474ec39cd6ed12c"
+      "7470a4df3bac086fa10250a134d0e813"
     ]
   ]
 ]

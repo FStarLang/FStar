@@ -9,7 +9,7 @@ open FStar.Mul
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
-abstract type t :Type0 =
+abstract type t =
   | Mk: v:int_t n -> t
 
 abstract

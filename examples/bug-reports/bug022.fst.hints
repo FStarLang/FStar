@@ -46,15 +46,9 @@
       1,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "constructor_distinct_Bug022.EAbs", "disc_equation_Bug022.EAbs",
-        "equality_tok_Bug022.EFalse@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug022.EAbs__0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fdf2e2eaf7f6c31fb150692741be5883"
+      "7a918f6ea2ffb9a35d37ec671fbd107e"
     ]
   ]
 ]

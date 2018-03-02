@@ -392,9 +392,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let default_settings, next_hint =
         let qname, index =
-            match env.qname_and_index with
-            | None -> failwith "No query name set!"
-            | Some (q, n) -> Ident.text_of_lid q, n
+            match env.qtbl_name_and_index with
+            | _, None -> failwith "No query name set!"
+            | _, Some (q, n) -> Ident.text_of_lid q, n
         in
         let rlimit =
             Prims.op_Multiply

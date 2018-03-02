@@ -113,9 +113,9 @@
       9,
       0,
       0,
-      [ "@query", "equation_Prims.l_True" ],
+      [ "@query" ],
       0,
-      "e243158b3bc0e3cc52692ad3d938814b"
+      "58c914d2794e054a1a62d78d43d745d8"
     ],
     [
       "Normalization.pow2_values",

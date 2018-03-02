@@ -264,7 +264,7 @@
       "BinarySearch.bsearch_rec_complete",
       5,
       2,
-      2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinarySearch.bsearch_rec.fuel_instrumented",
@@ -290,7 +290,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "9512edbf733f19a904159727c222efa7"
+      "7e6230a09093c75e5f6fc1e669ab3acb"
     ],
     [
       "BinarySearch.bsearch_complete",
