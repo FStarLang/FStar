@@ -106,7 +106,7 @@ type env = {
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
+  qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
@@ -205,7 +205,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     check_type_of=check_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
-    qname_and_index=None;
+    qtbl_name_and_index=BU.smap_create 10, None;  //10?
     proof_ns = Options.using_facts_from ();
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
@@ -219,27 +219,14 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
 
-let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
-let push_query_indices () = match !query_indices with
-    | [] -> failwith "Empty query indices!"
-    | _ -> query_indices := (List.hd !query_indices)::!query_indices
-
-let pop_query_indices () = match !query_indices with
-    | [] -> failwith "Empty query indices!"
-    | hd::tl -> query_indices := tl
-
-let add_query_index (l, n) = match !query_indices with
-    | hd::tl -> query_indices := ((l,n)::hd)::tl
-    | _ -> failwith "Empty query indices"
-
-let peek_query_indices () = List.hd !query_indices
 
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
-              identifier_info=BU.mk_ref !env.identifier_info}
+              identifier_info=BU.mk_ref !env.identifier_info;
+              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd}
 
 let pop_stack () =
     match !stack with
@@ -249,29 +236,17 @@ let pop_stack () =
     | _ -> failwith "Impossible: Too many pops"
 
 let push env msg =
-    push_query_indices();
     env.solver.push msg;
     push_stack env
 
 let pop env msg =
     env.solver.pop msg;
-    pop_query_indices();
     pop_stack ()
 
 let incr_query_index env =
-    let qix = peek_query_indices () in
-    match env.qname_and_index with
-    | None -> env
-    | Some (l, n) ->
-    match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
-    | None ->
-        let next = n + 1 in
-        add_query_index (l, next);
-        {env with qname_and_index=Some (l, next)}
-    | Some (_, m) ->
-        let next = m + 1 in
-        add_query_index (l, next);
-        {env with qname_and_index=Some (l, next)}
+    match env.qtbl_name_and_index with
+    | _, None -> env
+    | tbl, Some (l, n) -> BU.smap_add tbl l.str (n + 1); { env with qtbl_name_and_index = tbl, Some (l, n + 1) }
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
