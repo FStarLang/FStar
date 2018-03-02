@@ -333,7 +333,7 @@ let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
 
-let tac_effect_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
+let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant
 
 let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]

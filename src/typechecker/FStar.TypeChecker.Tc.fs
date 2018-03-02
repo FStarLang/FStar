@@ -1368,7 +1368,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
       (* __native_tac x *)
 
-      let reflect_head = mk (Tm_constant (Const_reflect PC.tac_effect_lid)) None Range.dummyRange in
+      let reflect_head = mk (Tm_constant (Const_reflect PC.effect_TAC_lid)) None Range.dummyRange in
       let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
       let app = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
       (* TAC?. reflect (__native_tac x) *)

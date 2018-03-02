@@ -13,7 +13,7 @@ let lem0 (x:int) =
 // Can't locally define tactics
 let tau1 () : Tac unit =
     prune "";
-    FStar.Tactics.split;
+    FStar.Tactics.split ();
     (* rev part *)
       addns "FStar.List";
       addns "Prims";

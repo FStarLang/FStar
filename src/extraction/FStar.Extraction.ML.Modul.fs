@@ -57,16 +57,6 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
-let is_tactic_decl (tac_lid: lident) (h: term) (current_module:mlpath) =
-  match h.n with
-  | Tm_uinst (h', _) ->
-    (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
-          (* TODO change this test *)
-          not (BU.starts_with (string_of_mlpath current_module) "FStar.Tactics")
-      | _ -> false)
-  | _ -> false
-
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
@@ -366,9 +356,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                    | Tm_app(h, args) ->
                         let tac_lid = (right hd.lbname).fv_name.v in
                         let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                        if is_tactic_decl assm_lid (SS.compress h) g.currentModule then begin
-                          mk_registration tac_lid assm_lid (fst(List.hd args)) bs
-                        end else []
+                        if (lid_equals PC.effect_Tac_lid (U.comp_effect_name comp)
+                            || lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)) // TODO: this is brittle
+                           && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics") // this too
+                        then mk_registration tac_lid assm_lid (fst(List.hd args)) bs
+                        else []
                    | _ -> [])
                | _ -> []
               ) else [] in
