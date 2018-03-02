@@ -92,7 +92,8 @@ let (pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv) =
   fun ns  ->
     let uu____128 = FStar_Parser_Const.p2l ns  in
     FStar_Syntax_Syntax.lid_as_fv uu____128
-      FStar_Syntax_Syntax.Delta_equational FStar_Pervasives_Native.None
+      (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "999"))
+      FStar_Pervasives_Native.None
   
 let (embed_fvar :
   FStar_Range.range -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term) =

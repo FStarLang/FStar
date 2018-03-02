@@ -105,7 +105,7 @@ let (unembed_proofstate :
   
 let (unfold_lazy_proofstate :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
-  fun i  -> failwith "cannot unfold proofstate -- this shouldn't be needed" 
+  fun i  -> FStar_Syntax_Util.exp_string "(((proofstate)))" 
 let embed_result :
   'a .
     'a FStar_Syntax_Embeddings.embedder ->
