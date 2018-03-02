@@ -219,6 +219,20 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
 
+let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
+let push_query_indices () = match !query_indices with
+  | [] -> failwith "Empty query indices!"
+  | _ -> query_indices := (List.hd !query_indices)::!query_indices
+
+let pop_query_indices () = match !query_indices with
+  | [] -> failwith "Empty query indices!"
+  | hd::tl -> query_indices := tl
+
+let add_query_index (l, n) = match !query_indices with
+  | hd::tl -> query_indices := ((l,n)::hd)::tl
+  | _ -> failwith "Empty query indices"
+
+let peek_query_indices () = List.hd !query_indices
 
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
@@ -236,17 +250,31 @@ let pop_stack () =
     | _ -> failwith "Impossible: Too many pops"
 
 let push env msg =
+    push_query_indices ();
     env.solver.push msg;
     push_stack env
 
 let pop env msg =
     env.solver.pop msg;
+    pop_query_indices ();
     pop_stack ()
 
 let incr_query_index env =
-    match env.qtbl_name_and_index with
-    | _, None -> env
-    | tbl, Some (l, n) -> BU.smap_add tbl l.str (n + 1); { env with qtbl_name_and_index = tbl, Some (l, n + 1) }
+  let qix = peek_query_indices () in
+  match env.qtbl_name_and_index with
+  | _, None -> env
+  | tbl, Some (l, n) ->
+    match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
+    | None ->
+      let next = n + 1 in
+      add_query_index (l, next);
+      BU.smap_add tbl l.str next;
+      {env with qtbl_name_and_index=tbl, Some (l, next)}
+    | Some (_, m) ->
+      let next = m + 1 in
+      add_query_index (l, next);
+      BU.smap_add tbl l.str next;
+      {env with qtbl_name_and_index=tbl, Some (l, next)}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
