@@ -1040,12 +1040,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     | Tm_fvar fv when S.fv_eq_lid fv PC.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
                         (* handle applications of __embed differently *)
                         (match args with
-                         | [a;b] ->
-                            // BU.print1 "First term %s \n" (Print.term_to_string (fst a));
-                            // BU.print1 "Second term %s \n" (Print.term_to_string (fst b));
+                         | [ty; tm; ps] ->
+                            // BU.print1 "First term %s \n" (Print.term_to_string (fst ty));
+                            // BU.print1 "Second term %s \n" (Print.term_to_string (fst tm));
+                            // BU.print1 "Third term %s \n" (Print.term_to_string (fst ps));
                             // BU.print1 "Embedded term %s \n" (Print.term_to_string embedded);
-                            term_as_mlexpr g (fst a)
-                         | _ -> failwith (Print.args_to_string args))
+                            term_as_mlexpr g (fst tm)
+                         | _ -> failwith ("__embed : " ^ Print.args_to_string args))
                     | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
