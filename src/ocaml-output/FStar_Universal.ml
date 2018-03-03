@@ -18,7 +18,7 @@ let with_tcenv :
     fun f  ->
       let uu____47 = f env.FStar_TypeChecker_Env.dsenv  in
       match uu____47 with
-      | (a,dsenv) ->
+      | (a,dsenv1) ->
           (a,
             (let uu___51_61 = env  in
              {
@@ -88,7 +88,7 @@ let with_tcenv :
                  (uu___51_61.FStar_TypeChecker_Env.identifier_info);
                FStar_TypeChecker_Env.tc_hooks =
                  (uu___51_61.FStar_TypeChecker_Env.tc_hooks);
-               FStar_TypeChecker_Env.dsenv = dsenv;
+               FStar_TypeChecker_Env.dsenv = dsenv1;
                FStar_TypeChecker_Env.dep_graph =
                  (uu___51_61.FStar_TypeChecker_Env.dep_graph)
              }))

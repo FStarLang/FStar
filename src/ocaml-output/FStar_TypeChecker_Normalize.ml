@@ -7563,7 +7563,7 @@ let (term_to_string :
               FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____21461);
              t)
          in
-      FStar_Syntax_Print.term_to_string t1
+      FStar_Syntax_Print.term_to_string' env.FStar_TypeChecker_Env.dsenv t1
   
 let (comp_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
@@ -7585,7 +7585,7 @@ let (comp_to_string :
               FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu____21491);
              c)
          in
-      FStar_Syntax_Print.comp_to_string c1
+      FStar_Syntax_Print.comp_to_string' env.FStar_TypeChecker_Env.dsenv c1
   
 let (normalize_refinement :
   steps ->

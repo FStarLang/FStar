@@ -562,33 +562,33 @@ let (fresh_name_tracking_hooks :
     (events,
       {
         FStar_ToSyntax_Env.ds_push_open_hook =
-          (fun dsenv  ->
+          (fun dsenv1  ->
              fun op  ->
                let uu____1205 =
                  let uu____1206 =
-                   let uu____1211 = FStar_ToSyntax_Env.current_module dsenv
+                   let uu____1211 = FStar_ToSyntax_Env.current_module dsenv1
                       in
                    (uu____1211, op)  in
                  NTOpen uu____1206  in
                push_event uu____1205);
         FStar_ToSyntax_Env.ds_push_include_hook =
-          (fun dsenv  ->
+          (fun dsenv1  ->
              fun ns  ->
                let uu____1217 =
                  let uu____1218 =
-                   let uu____1223 = FStar_ToSyntax_Env.current_module dsenv
+                   let uu____1223 = FStar_ToSyntax_Env.current_module dsenv1
                       in
                    (uu____1223, ns)  in
                  NTInclude uu____1218  in
                push_event uu____1217);
         FStar_ToSyntax_Env.ds_push_module_abbrev_hook =
-          (fun dsenv  ->
+          (fun dsenv1  ->
              fun x  ->
                fun l  ->
                  let uu____1231 =
                    let uu____1232 =
-                     let uu____1239 = FStar_ToSyntax_Env.current_module dsenv
-                        in
+                     let uu____1239 =
+                       FStar_ToSyntax_Env.current_module dsenv1  in
                      (uu____1239, x, l)  in
                    NTAlias uu____1232  in
                  push_event uu____1231)
@@ -609,8 +609,8 @@ let (track_name_changes :
     let set_hooks dshooks tchooks env1 =
       let uu____1283 =
         FStar_Universal.with_tcenv env1
-          (fun dsenv  ->
-             let uu____1291 = FStar_ToSyntax_Env.set_ds_hooks dsenv dshooks
+          (fun dsenv1  ->
+             let uu____1291 = FStar_ToSyntax_Env.set_ds_hooks dsenv1 dshooks
                 in
              ((), uu____1291))
          in

@@ -6510,7 +6510,8 @@ let (push_context :
   FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =
   fun env  ->
     fun msg  ->
-      let dsenv = FStar_ToSyntax_Env.push env.FStar_TypeChecker_Env.dsenv  in
+      let dsenv1 = FStar_ToSyntax_Env.push env.FStar_TypeChecker_Env.dsenv
+         in
       let env1 = FStar_TypeChecker_Env.push env msg  in
       let uu___104_9550 = env1  in
       {
@@ -6579,7 +6580,7 @@ let (push_context :
           (uu___104_9550.FStar_TypeChecker_Env.identifier_info);
         FStar_TypeChecker_Env.tc_hooks =
           (uu___104_9550.FStar_TypeChecker_Env.tc_hooks);
-        FStar_TypeChecker_Env.dsenv = dsenv;
+        FStar_TypeChecker_Env.dsenv = dsenv1;
         FStar_TypeChecker_Env.dep_graph =
           (uu___104_9550.FStar_TypeChecker_Env.dep_graph)
       }
