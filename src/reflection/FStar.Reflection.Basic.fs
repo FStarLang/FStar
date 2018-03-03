@@ -77,8 +77,7 @@ let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
 let pack_fv (ns:list<string>) : fv =
-    // TODO: Delta_equational and None ok?
-    lid_as_fv (PC.p2l ns) Delta_equational None
+    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) None
 
 let embed_fvar (rng:Range.range) (fv:fv) : term =
     U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
