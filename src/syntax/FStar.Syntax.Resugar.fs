@@ -38,7 +38,7 @@ module BU = FStar.Util
 module D = FStar.Parser.ToDocument
 module UF = FStar.Syntax.Unionfind
 module E = FStar.Errors
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 
 (* Helpers to print/debug the resugaring phase *)
 let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc

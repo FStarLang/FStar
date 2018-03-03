@@ -1789,13 +1789,13 @@ let extract_interface (env:env) (m:modul) :modul =
 
 //AR: moving these push and pop functions from Universal, using them in extracting interface etc.
 let pop_context env msg =
-    ToSyntax.Env.pop () |> ignore;
+    Syntax.DsEnv.pop () |> ignore;
     let en = TypeChecker.Env.pop env msg in
     env.solver.refresh();
     en
 
 let push_context env msg =
-    let dsenv = ToSyntax.Env.push env.dsenv in
+    let dsenv = Syntax.DsEnv.push env.dsenv in
     let env = TypeChecker.Env.push env msg in
     {env with dsenv=dsenv}
 

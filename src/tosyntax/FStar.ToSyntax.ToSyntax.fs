@@ -25,7 +25,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Parser
-open FStar.ToSyntax.Env
+open FStar.Syntax.DsEnv
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
@@ -34,7 +34,7 @@ module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
-module Env = FStar.ToSyntax.Env
+module Env = FStar.Syntax.DsEnv
 module P = FStar.Syntax.Print
 
 let desugar_disjunctive_pattern pats when_opt branch =

@@ -881,7 +881,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ ->
-        FStar.ToSyntax.Env.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
+        FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
         |> BU.must
         |> fst
 

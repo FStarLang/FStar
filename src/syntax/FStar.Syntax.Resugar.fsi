@@ -32,7 +32,7 @@ module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Range = FStar.Range
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 
 val resugar_term: S.term -> A.term
 val resugar_sigelt: S.sigelt -> option<A.decl>
