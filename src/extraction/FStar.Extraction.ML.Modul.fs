@@ -355,6 +355,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   if (lid_equals PC.effect_Tac_lid (U.comp_effect_name comp)
                       || lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)) // TODO: this is brittle
                      && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics") // this too
+                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Reflection") // this too
                   then begin
                       let tac_lid = (right hd.lbname).fv_name.v in
                       let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
