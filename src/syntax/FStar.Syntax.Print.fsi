@@ -30,8 +30,10 @@ val fv_to_string          : fv -> string
 val nm_to_string          : bv -> string
 val lid_to_string         : lid -> string
 val term_to_string        : term -> string
+val term_to_string'       : FStar.ToSyntax.Env.env -> term -> string
 val uvar_to_string        : uvar -> string
 val comp_to_string        : comp -> string
+val comp_to_string'       : FStar.ToSyntax.Env.env -> comp -> string
 val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
@@ -44,8 +46,8 @@ val sigelt_to_string      : sigelt -> string
 val sigelt_to_string_short: sigelt -> string
 val binder_to_string      : binder -> string
 val binders_to_string     : string -> binders -> string
-val binder_to_json        : binder -> json
-val binders_to_json       : binders -> json
+val binder_to_json        : FStar.ToSyntax.Env.env -> binder -> json
+val binders_to_json       : FStar.ToSyntax.Env.env -> binders -> json
 val aqual_to_string       : aqual -> string
 val args_to_string        : args -> string
 val eff_decl_to_string    : bool -> eff_decl -> string

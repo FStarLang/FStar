@@ -124,7 +124,7 @@ let ps_to_string (msg, ps) =
                ]
 
 let goal_to_json g =
-    let g_binders = Env.all_binders g.context |> Print.binders_to_json in
+    let g_binders = Env.all_binders g.context |> Print.binders_to_json (Env.dsenv g.context) in
     JsonAssoc [("hyps", g_binders);
                ("goal", JsonAssoc [("witness", JsonStr (tts g.context g.witness));
                                    ("type", JsonStr (tts g.context g.goal_ty))])]

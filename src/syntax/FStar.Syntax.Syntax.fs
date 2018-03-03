@@ -191,7 +191,6 @@ and metadata =
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
   | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect

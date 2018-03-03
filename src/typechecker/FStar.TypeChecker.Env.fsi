@@ -151,6 +151,8 @@ val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val dep_graph: env -> FStar.Parser.Dep.deps
 
+val dsenv : env -> FStar.ToSyntax.Env.env
+
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
 val pop                : env -> string -> env
