@@ -180,3 +180,6 @@ let uvar_env : RT.env -> RT.term option -> RT.term __tac = fun e o -> __uvar_env
 
 let __unify (t1 : RT.term) (t2 : RT.term) : bool __tac = from_tac_2 B.unify t1 t2
 let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
+
+let __fresh_binder_named (nm : string) (ty : RT.term) : binder __tac = from_tac_2 B.fresh_binder_named nm ty
+let fresh_binder_named : string -> RT.term -> binder __tac = fun nm ty -> __fresh_binder_named nm ty

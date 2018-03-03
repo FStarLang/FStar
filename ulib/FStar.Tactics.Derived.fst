@@ -1,6 +1,7 @@
 module FStar.Tactics.Derived
 
 open FStar.Reflection
+open FStar.Reflection.Formula
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
@@ -8,6 +9,9 @@ val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
+
+// TODO: maybe we can increase a counter on each call
+let fresh_binder t = fresh_binder_named "x" t
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost

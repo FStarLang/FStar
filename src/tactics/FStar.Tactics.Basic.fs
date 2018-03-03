@@ -1129,6 +1129,12 @@ let launch_process (prog : string) (args : string) (input : string) : tac<string
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
     )
 
+let fresh_binder_named (nm : string) (t : typ) : tac<binder> =
+    // The `bind idtac` thunks the tactic. Not really needed, just being paranoid
+    bind idtac (fun () ->
+        ret (gen_bv nm None t, None)
+    )
+
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
     let g =  {

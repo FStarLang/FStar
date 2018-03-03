@@ -108,16 +108,16 @@ let arith_test1 =
                     (fun () -> let t = quote (1 + 2) in
                                match run_tm (is_arith_expr t) with
                                | Inr (Plus (Lit 1) (Lit 2)) -> print "alright!"
-                               | Inr _ -> fail "different thing"
-                               | Inl s -> fail ("oops: " ^ s))
+                               | Inl s -> fail ("oops: " ^ s)
+                               | _ -> fail "different thing")
 
 let arith_test2 (x : int) =
     assert_by_tactic True
                     (fun () -> let t = quote (x + x) in
                                match run_tm (is_arith_expr t) with
                                | Inr (Plus (Atom 0 _) (Atom 0 _)) -> print "alright!"
-                               | Inr _ -> fail "different thing"
-                               | Inl s -> fail ("oops: " ^ s))
+                               | Inl s -> fail ("oops: " ^ s)
+                               | _ -> fail "different thing")
 
 let _ = assert_by_tactic True
             (fun () ->

@@ -9,7 +9,7 @@ let is_arith_goal () : Tac bool =
     let g = cur_goal () in
     match run_tm (is_arith_prop g) with
     | Inr _ -> true
-    | Inl s -> false
+    | _ -> false
 
 val split_arith : unit -> Tac unit
 let rec split_arith () =

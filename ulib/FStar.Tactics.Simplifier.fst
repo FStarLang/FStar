@@ -117,7 +117,7 @@ val iff_cong (#p #p' #q #q' : Type) : squash (p <==> p') -> squash (q <==> q') -
 let iff_cong #p #p' #q #q' _ _ = ()
 
 // Absolutely hideous, do something about normalization
-val is_true : term -> bool
+val is_true : term -> Tac bool
 let is_true t =
     begin match term_as_formula' t with
     | True_ -> true
@@ -135,7 +135,7 @@ let is_true t =
            end
     end
 
-val is_false : term -> bool
+val is_false : term -> Tac bool
 let is_false t =
     begin match term_as_formula' t with
     | False_ -> true
