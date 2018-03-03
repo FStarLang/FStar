@@ -49,7 +49,7 @@ private let implies_intros' () : Tac unit =
 (*
  * To prove (squash p) from p in the context
  *)
-private let assumption' () : Tac unit = 
+private let assumption' () : Tac unit =
   apply_raw (`FStar.Squash.return_squash);
   assumption ()
 
@@ -57,7 +57,7 @@ private let assumption' () : Tac unit =
  * If we have (p = q) in the context, and we want to prove the goal (q = p)
  * This is specifically for addrs
  *)
-private let assumption'' () : Tac unit = 
+private let assumption'' () : Tac unit =
   or_else assumption'
           (fun () -> apply_lemma (`lemma_addr_not_eq_refl); norm []; assumption' ())
 
@@ -74,13 +74,14 @@ private let rec split_all () : Tac unit =
 
 private let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
     match ts with
-    | [] -> fail "no more tactics to try"
-    | t::ts -> or_else t (first ts)
+    | [] -> fail "no tactics to try"
+    | [t] -> t ()
+    | t::ts -> or_else t (fun () -> first ts)
 
 private let simplify_unused_in () : Tac unit =
   first [(fun () -> apply_lemma (`lemma_r_unused_in_minus));
-         (fun () -> apply_lemma (`lemma_r_unused_in_h))];
-  ()
+         (fun () -> apply_lemma (`lemma_r_unused_in_h));
+         idtac]
 
 private let simplify_contains_aux () :Tac unit =
   first [assumption'';
@@ -117,14 +118,14 @@ private let simplify_restrict () : Tac unit =
 (*
  * Command specific tactics to solve the frames
  *)
-private let step_bind () : Tac unit = 
+private let step_bind () : Tac unit =
   apply_lemma (`lemma_bind);
   norm []
 
 (*
  * simplify_contains takes care of the contains clauses in the goals
  *)
-private let step_read_write () : Tac unit = 
+private let step_read_write () : Tac unit =
   apply_lemma (`lemma_read_write);  //lemma_read_write is the one that solves the frame
   norm [];
   simplify_contains ()
@@ -144,7 +145,7 @@ private let step_eq_implies_intro () : Tac unit =
   norm []
 
 private let step_eq_implies_intro' () : Tac unit =
-  let _ = forall_intro() in
+  let _ = forall_intro () in
   apply_lemma (`lemma_eq_implies_intro');
   norm [];
   let _ = implies_intro () in
@@ -175,8 +176,8 @@ private let simplify_select () : Tac unit =
          (fun () -> apply_lemma (`lemma_sel_r1_join_tot_restrict_minus));
          (fun () -> apply_lemma (`lemma_sel_r1_join_tot_points_to_minus));
          (fun () -> apply_lemma (`lemma_sel_join_tot_h_emp_with_next_addr));
-         (fun () -> apply_lemma (`lemma_sel_join_tot_emp_with_next_addr_h));
-         simplify_contains]
+         (fun () -> apply_lemma (`lemma_sel_join_tot_emp_with_next_addr_h))];
+  simplify_contains ()
 
 (*
  * Splits the sel goal into two subgoals, do simplify_select on the first subgoal
