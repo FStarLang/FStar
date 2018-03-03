@@ -1,12 +1,11 @@
 module Calc
 
 open FStar.Tactics
-open FStar.Tactics.Canon
 
 //The normalize_term's here are important, see (XXX)
 let ( &= ) (#a:Type) (x:a) (y:a) :
     (unit -> Pure a (requires (normalize_term x == y)) (fun z -> z == y /\
-							 normalize_term x == y))
+                             normalize_term x == y))
   = fun () -> y
 
 (** Combinator used to discharge equalities with SMT/lemmas*)
@@ -22,17 +21,19 @@ private let rw_and_try (proof : unit -> Tac unit) () : Tac unit =
     norm[delta];
     proof ()
 
-let _tactic_unit = unit -> Tac unit
-
 #reset-options "--no_tactics"
 (** Combinator used to discharge equalities with tactics*)
-let ( &|| ) #a #req (#ens : a -> Type0) ($f:(unit -> Pure a req ens))
-      (proof: (_tactic_unit){by_tactic
-	(rw_and_try proof) (squash req)})
-	: Tot (x:a{ens x}) = f ()
-	//this is weird, but the sequencing "encourages" the
-	//normalizer to actually reduce f(), which is important below
-	//(see XXX)
+let ( &|| ) #a (#req : Type0) (#ens : (a -> Type0)) ($f:(unit -> Pure a req ens))
+      (proof: (unit -> Tac unit){by_tactic (rw_and_try proof) (squash req)})
+        : Tot (x:a{ens x}) =
+            // GM: need to explicitely this bring (squash req) into the
+            // logical environment. Unsure why the SMT pattern doesn't
+            // kick in
+            by_tactic_seman unit (rw_and_try proof) (squash req);
+            f ()
+        //this is weird, but the sequencing "encourages" the
+        //normalizer to actually reduce f(), which is important below
+        //(see XXX)
 #reset-options
 
 let calc = ignore
