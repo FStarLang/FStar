@@ -1675,11 +1675,5 @@ let (term_eq :
       let uu____4031 = FStar_Syntax_Util.un_uinst t2  in
       FStar_Syntax_Util.term_eq uu____4030 uu____4031
   
-let (fresh_binder : FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.binder) =
-  fun t  ->
-    let uu____4035 =
-      FStar_Syntax_Syntax.gen_bv "__refl" FStar_Pervasives_Native.None t  in
-    (uu____4035, FStar_Pervasives_Native.None)
-  
 let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 

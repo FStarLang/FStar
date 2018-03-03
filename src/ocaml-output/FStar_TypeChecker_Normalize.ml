@@ -3292,7 +3292,7 @@ let mk_psc_subst :
                              let uu____8335 =
                                FStar_Syntax_Util.is_constructed_typ
                                  bv.FStar_Syntax_Syntax.sort
-                                 FStar_Parser_Const.fstar_reflection_types_binder_lid
+                                 FStar_Parser_Const.binder_lid
                                 in
                              Prims.op_Negation uu____8335  in
                            if uu____8334
