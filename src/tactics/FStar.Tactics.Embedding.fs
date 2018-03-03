@@ -70,7 +70,7 @@ let unembed_proofstate (t:term) : option<proofstate> =
         None
 
 let unfold_lazy_proofstate (i : lazyinfo) : term =
-    failwith "cannot unfold proofstate -- this shouldn't be needed"
+    U.exp_string "(((proofstate)))"
 
 let embed_result (embed_a:embedder<'a>) (t_a:typ) (rng:Range.range) (res:__result<'a>) : term =
     match res with
