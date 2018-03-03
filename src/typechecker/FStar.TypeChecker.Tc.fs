@@ -1713,7 +1713,7 @@ let extract_interface (env:env) (m:modul) :modul =
     match s.sigel with
     | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
       let s1 = { s with sigel = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng);
-                        sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
+                        sigquals = Assumption::New::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
       [s1]
     | _ -> failwith "Impossible!"
