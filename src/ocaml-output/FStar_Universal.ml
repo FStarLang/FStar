@@ -11,7 +11,7 @@ let (user_tactics_modules : Prims.string Prims.list FStar_ST.ref) =
 let with_tcenv :
   'a .
     FStar_TypeChecker_Env.env ->
-      'a FStar_ToSyntax_Env.withenv ->
+      'a FStar_Syntax_DsEnv.withenv ->
         ('a,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2
   =
   fun env  ->
@@ -408,7 +408,7 @@ let (tc_one_fragment :
                         else ());
                        (let uu____382 =
                           let uu____391 =
-                            FStar_ToSyntax_Env.syntax_only
+                            FStar_Syntax_DsEnv.syntax_only
                               env2.FStar_TypeChecker_Env.dsenv
                              in
                           if uu____391
@@ -459,7 +459,7 @@ let (tc_one_fragment :
                        | (sigelts,env2) ->
                            let uu____550 =
                              let uu____559 =
-                               FStar_ToSyntax_Env.syntax_only
+                               FStar_Syntax_DsEnv.syntax_only
                                  env2.FStar_TypeChecker_Env.dsenv
                                 in
                              if uu____559
@@ -511,7 +511,7 @@ let (load_module_from_cache :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
       (FStar_Syntax_Syntax.modul,FStar_Syntax_Syntax.modul
-                                   FStar_Pervasives_Native.option,FStar_ToSyntax_Env.module_inclusion_info)
+                                   FStar_Pervasives_Native.option,FStar_Syntax_DsEnv.module_inclusion_info)
         FStar_Pervasives_Native.tuple3 FStar_Pervasives_Native.option)
   =
   fun env  ->
@@ -602,7 +602,7 @@ let (store_module_to_cache :
     Prims.string ->
       FStar_Syntax_Syntax.modul ->
         FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
-          FStar_ToSyntax_Env.module_inclusion_info -> Prims.unit)
+          FStar_Syntax_DsEnv.module_inclusion_info -> Prims.unit)
   =
   fun env  ->
     fun fn  ->
@@ -680,7 +680,7 @@ let (tc_one_file :
                (match uu____1211 with
                 | (tcmod,tcmod_iface_opt,env2) ->
                     let mii =
-                      FStar_ToSyntax_Env.inclusion_info
+                      FStar_Syntax_DsEnv.inclusion_info
                         env2.FStar_TypeChecker_Env.dsenv
                         (FStar_Pervasives_Native.fst tcmod).FStar_Syntax_Syntax.name
                        in

@@ -404,7 +404,7 @@ let (quals_to_string' :
 let (paren : Prims.string -> Prims.string) =
   fun s  -> Prims.strcat "(" (Prims.strcat s ")") 
 let (term_to_string' :
-  FStar_ToSyntax_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env  ->
     fun x  ->
       let e = FStar_Syntax_Resugar.resugar_term' env x  in
@@ -879,7 +879,7 @@ and (args_to_string : FStar_Syntax_Syntax.args -> Prims.string) =
     FStar_All.pipe_right uu____1909 (FStar_String.concat " ")
 
 and (comp_to_string' :
-  FStar_ToSyntax_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env  ->
     fun c  ->
       let e = FStar_Syntax_Resugar.resugar_comp' env c  in
@@ -1111,7 +1111,7 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
         Prims.strcat "`(" uu____2184
 
 let (binder_to_json :
-  FStar_ToSyntax_Env.env -> FStar_Syntax_Syntax.binder -> FStar_Util.json) =
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.binder -> FStar_Util.json) =
   fun env  ->
     fun b  ->
       let uu____2192 = b  in
@@ -1134,7 +1134,7 @@ let (binder_to_json :
           FStar_Util.JsonAssoc [("name", n1); ("type", t)]
   
 let (binders_to_json :
-  FStar_ToSyntax_Env.env -> FStar_Syntax_Syntax.binders -> FStar_Util.json) =
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.binders -> FStar_Util.json) =
   fun env  ->
     fun bs  ->
       let uu____2220 = FStar_List.map (binder_to_json env) bs  in

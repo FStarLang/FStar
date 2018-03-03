@@ -6500,7 +6500,7 @@ let (pop_context :
   FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =
   fun env  ->
     fun msg  ->
-      (let uu____9539 = FStar_ToSyntax_Env.pop ()  in
+      (let uu____9539 = FStar_Syntax_DsEnv.pop ()  in
        FStar_All.pipe_right uu____9539 FStar_Pervasives.ignore);
       (let en = FStar_TypeChecker_Env.pop env msg  in
        (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ();
@@ -6510,7 +6510,7 @@ let (push_context :
   FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =
   fun env  ->
     fun msg  ->
-      let dsenv1 = FStar_ToSyntax_Env.push env.FStar_TypeChecker_Env.dsenv
+      let dsenv1 = FStar_Syntax_DsEnv.push env.FStar_TypeChecker_Env.dsenv
          in
       let env1 = FStar_TypeChecker_Env.push env msg  in
       let uu___104_9550 = env1  in

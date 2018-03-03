@@ -3274,7 +3274,7 @@ and (tc_constant :
         | FStar_Const.Const_char uu____7070 ->
             let uu____7071 =
               let uu____7076 =
-                FStar_ToSyntax_Env.try_lookup_lid
+                FStar_Syntax_DsEnv.try_lookup_lid
                   env.FStar_TypeChecker_Env.dsenv FStar_Parser_Const.char_lid
                  in
               FStar_All.pipe_right uu____7076 FStar_Util.must  in

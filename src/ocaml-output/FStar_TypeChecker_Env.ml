@@ -249,7 +249,7 @@ type env =
   is_native_tactic: FStar_Ident.lid -> Prims.bool ;
   identifier_info: FStar_TypeChecker_Common.id_info_table FStar_ST.ref ;
   tc_hooks: tcenv_hooks ;
-  dsenv: FStar_ToSyntax_Env.env ;
+  dsenv: FStar_Syntax_DsEnv.env ;
   dep_graph: FStar_Parser_Dep.deps }[@@deriving show]
 and solver_t =
   {
@@ -1181,7 +1181,7 @@ let (__proj__Mkenv__item__tc_hooks : env -> tcenv_hooks) =
         tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
         dep_graph = __fname__dep_graph;_} -> __fname__tc_hooks
   
-let (__proj__Mkenv__item__dsenv : env -> FStar_ToSyntax_Env.env) =
+let (__proj__Mkenv__item__dsenv : env -> FStar_Syntax_DsEnv.env) =
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -1612,7 +1612,7 @@ let (initial_env :
                   FStar_Util.mk_ref
                     FStar_TypeChecker_Common.id_info_table_empty
                    in
-                let uu____5975 = FStar_ToSyntax_Env.empty_env ()  in
+                let uu____5975 = FStar_Syntax_DsEnv.empty_env ()  in
                 {
                   solver;
                   range = FStar_Range.dummyRange;
@@ -1654,7 +1654,7 @@ let (initial_env :
                   dep_graph = deps
                 }
   
-let (dsenv : env -> FStar_ToSyntax_Env.env) = fun env  -> env.dsenv 
+let (dsenv : env -> FStar_Syntax_DsEnv.env) = fun env  -> env.dsenv 
 let (sigtab : env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap) =
   fun env  -> env.sigtab 
 let (gamma_cache : env -> cached_elt FStar_Util.smap) =
@@ -4955,7 +4955,7 @@ let (mk_copy : env -> env) =
     let uu___111_14798 = en  in
     let uu____14799 = FStar_Util.smap_copy en.gamma_cache  in
     let uu____14802 = FStar_Util.smap_copy en.sigtab  in
-    let uu____14805 = FStar_ToSyntax_Env.mk_copy en.dsenv  in
+    let uu____14805 = FStar_Syntax_DsEnv.mk_copy en.dsenv  in
     {
       solver = (uu___111_14798.solver);
       range = (uu___111_14798.range);

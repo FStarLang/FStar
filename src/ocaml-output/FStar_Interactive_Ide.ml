@@ -39,7 +39,7 @@ let (set_check_kind :
     fun check_kind  ->
       let uu___86_49 = env  in
       let uu____50 =
-        FStar_ToSyntax_Env.set_syntax_only env.FStar_TypeChecker_Env.dsenv
+        FStar_Syntax_DsEnv.set_syntax_only env.FStar_TypeChecker_Env.dsenv
           (check_kind = SyntaxCheck)
          in
       {
@@ -415,7 +415,7 @@ let (nothing_left_to_pop : repl_state -> Prims.bool) =
 type name_tracking_event =
   | NTAlias of (FStar_Ident.lid,FStar_Ident.ident,FStar_Ident.lid)
   FStar_Pervasives_Native.tuple3 
-  | NTOpen of (FStar_Ident.lid,FStar_ToSyntax_Env.open_module_or_namespace)
+  | NTOpen of (FStar_Ident.lid,FStar_Syntax_DsEnv.open_module_or_namespace)
   FStar_Pervasives_Native.tuple2 
   | NTInclude of (FStar_Ident.lid,FStar_Ident.lid)
   FStar_Pervasives_Native.tuple2 
@@ -435,7 +435,7 @@ let (uu___is_NTOpen : name_tracking_event -> Prims.bool) =
   
 let (__proj__NTOpen__item___0 :
   name_tracking_event ->
-    (FStar_Ident.lid,FStar_ToSyntax_Env.open_module_or_namespace)
+    (FStar_Ident.lid,FStar_Syntax_DsEnv.open_module_or_namespace)
       FStar_Pervasives_Native.tuple2)
   = fun projectee  -> match projectee with | NTOpen _0 -> _0 
 let (uu___is_NTInclude : name_tracking_event -> Prims.bool) =
@@ -484,7 +484,7 @@ let (update_names_from_event :
             then
               let uu____974 = query_of_lid included  in
               FStar_Interactive_CompletionTable.register_open table
-                (kind = FStar_ToSyntax_Env.Open_module) [] uu____974
+                (kind = FStar_Syntax_DsEnv.Open_module) [] uu____974
             else table
         | NTInclude (host,included) ->
             let uu____978 = if is_cur_mod host then [] else query_of_lid host
@@ -550,7 +550,7 @@ let (commit_name_tracking :
   
 let (fresh_name_tracking_hooks :
   Prims.unit ->
-    (name_tracking_event Prims.list FStar_ST.ref,FStar_ToSyntax_Env.dsenv_hooks,
+    (name_tracking_event Prims.list FStar_ST.ref,FStar_Syntax_DsEnv.dsenv_hooks,
       FStar_TypeChecker_Env.tcenv_hooks) FStar_Pervasives_Native.tuple3)
   =
   fun uu____1063  ->
@@ -561,34 +561,34 @@ let (fresh_name_tracking_hooks :
       FStar_ST.op_Colon_Equals events uu____1075  in
     (events,
       {
-        FStar_ToSyntax_Env.ds_push_open_hook =
+        FStar_Syntax_DsEnv.ds_push_open_hook =
           (fun dsenv1  ->
              fun op  ->
                let uu____1205 =
                  let uu____1206 =
-                   let uu____1211 = FStar_ToSyntax_Env.current_module dsenv1
+                   let uu____1211 = FStar_Syntax_DsEnv.current_module dsenv1
                       in
                    (uu____1211, op)  in
                  NTOpen uu____1206  in
                push_event uu____1205);
-        FStar_ToSyntax_Env.ds_push_include_hook =
+        FStar_Syntax_DsEnv.ds_push_include_hook =
           (fun dsenv1  ->
              fun ns  ->
                let uu____1217 =
                  let uu____1218 =
-                   let uu____1223 = FStar_ToSyntax_Env.current_module dsenv1
+                   let uu____1223 = FStar_Syntax_DsEnv.current_module dsenv1
                       in
                    (uu____1223, ns)  in
                  NTInclude uu____1218  in
                push_event uu____1217);
-        FStar_ToSyntax_Env.ds_push_module_abbrev_hook =
+        FStar_Syntax_DsEnv.ds_push_module_abbrev_hook =
           (fun dsenv1  ->
              fun x  ->
                fun l  ->
                  let uu____1231 =
                    let uu____1232 =
                      let uu____1239 =
-                       FStar_ToSyntax_Env.current_module dsenv1  in
+                       FStar_Syntax_DsEnv.current_module dsenv1  in
                      (uu____1239, x, l)  in
                    NTAlias uu____1232  in
                  push_event uu____1231)
@@ -610,7 +610,7 @@ let (track_name_changes :
       let uu____1283 =
         FStar_Universal.with_tcenv env1
           (fun dsenv1  ->
-             let uu____1291 = FStar_ToSyntax_Env.set_ds_hooks dsenv1 dshooks
+             let uu____1291 = FStar_Syntax_DsEnv.set_ds_hooks dsenv1 dshooks
                 in
              ((), uu____1291))
          in
@@ -618,7 +618,7 @@ let (track_name_changes :
       | ((),tcenv') -> FStar_TypeChecker_Env.set_tc_hooks tcenv' tchooks  in
     let uu____1293 =
       let uu____1298 =
-        FStar_ToSyntax_Env.ds_hooks env.FStar_TypeChecker_Env.dsenv  in
+        FStar_Syntax_DsEnv.ds_hooks env.FStar_TypeChecker_Env.dsenv  in
       let uu____1299 = FStar_TypeChecker_Env.tc_hooks env  in
       (uu____1298, uu____1299)  in
     match uu____1293 with
@@ -2596,7 +2596,7 @@ let (run_symbol_lookup :
               FStar_Ident.lid_of_ids uu____5137  in
             let lid1 =
               let uu____5141 =
-                FStar_ToSyntax_Env.resolve_to_fully_qualified_name
+                FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                   tcenv.FStar_TypeChecker_Env.dsenv lid
                  in
               FStar_All.pipe_left (FStar_Util.dflt lid) uu____5141  in
@@ -2610,7 +2610,7 @@ let (run_symbol_lookup :
              in
           let docs_of_lid lid =
             let uu____5237 =
-              FStar_ToSyntax_Env.try_lookup_doc
+              FStar_Syntax_DsEnv.try_lookup_doc
                 tcenv.FStar_TypeChecker_Env.dsenv lid
                in
             FStar_All.pipe_right uu____5237
@@ -3309,7 +3309,7 @@ let (json_of_search_result :
           let uu____7698 =
             let uu____7699 =
               let uu____7700 =
-                FStar_ToSyntax_Env.shorten_lid
+                FStar_Syntax_DsEnv.shorten_lid
                   tcenv.FStar_TypeChecker_Env.dsenv sc.sc_lid
                  in
               uu____7700.FStar_Ident.str  in
@@ -3385,7 +3385,7 @@ let run_search :
               else
                 (let lid = FStar_Ident.lid_of_str term1  in
                  let uu____7796 =
-                   FStar_ToSyntax_Env.resolve_to_fully_qualified_name
+                   FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                      tcenv.FStar_TypeChecker_Env.dsenv lid
                     in
                  match uu____7796 with

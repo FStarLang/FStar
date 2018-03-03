@@ -17,8 +17,8 @@ let (test_mod_ref :
   
 let (parse_mod :
   FStar_Parser_ParseIt.filename ->
-    FStar_ToSyntax_Env.env ->
-      (FStar_ToSyntax_Env.env,FStar_Syntax_Syntax.modul)
+    FStar_Syntax_DsEnv.env ->
+      (FStar_Syntax_DsEnv.env,FStar_Syntax_Syntax.modul)
         FStar_Pervasives_Native.tuple2)
   =
   fun mod_name1  ->
@@ -37,8 +37,8 @@ let (parse_mod :
                  let uu____93 =
                    FStar_Ident.lid_of_path ["Test"] FStar_Range.dummyRange
                     in
-                 FStar_ToSyntax_Env.prepare_module_or_interface false false
-                   env' uu____93 FStar_ToSyntax_Env.default_mii
+                 FStar_Syntax_DsEnv.prepare_module_or_interface false false
+                   env' uu____93 FStar_Syntax_DsEnv.default_mii
                   in
                (match uu____88 with | (env'1,uu____99) -> (env'1, m1)))
       | FStar_Parser_ParseIt.ParseError (err,msg,r) ->
@@ -55,9 +55,9 @@ let (parse_mod :
   
 let (add_mods :
   FStar_Parser_ParseIt.filename Prims.list ->
-    FStar_ToSyntax_Env.env ->
+    FStar_Syntax_DsEnv.env ->
       FStar_TypeChecker_Env.env ->
-        (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+        (FStar_Syntax_DsEnv.env,FStar_TypeChecker_Env.env)
           FStar_Pervasives_Native.tuple2)
   =
   fun mod_names  ->
@@ -92,7 +92,7 @@ let (init_once : Prims.unit -> Prims.unit) =
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let uu____222 =
        let uu____227 = FStar_Options.prims ()  in
-       let uu____228 = FStar_ToSyntax_Env.empty_env ()  in
+       let uu____228 = FStar_Syntax_DsEnv.empty_env ()  in
        parse_mod uu____227 uu____228  in
      match uu____222 with
      | (dsenv1,prims_mod) ->
