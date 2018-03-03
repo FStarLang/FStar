@@ -153,8 +153,8 @@ let (init_once : Prims.unit -> Prims.unit) =
                (uu___51_232.FStar_TypeChecker_Env.check_type_of);
              FStar_TypeChecker_Env.use_bv_sorts =
                (uu___51_232.FStar_TypeChecker_Env.use_bv_sorts);
-             FStar_TypeChecker_Env.qname_and_index =
-               (uu___51_232.FStar_TypeChecker_Env.qname_and_index);
+             FStar_TypeChecker_Env.qtbl_name_and_index =
+               (uu___51_232.FStar_TypeChecker_Env.qtbl_name_and_index);
              FStar_TypeChecker_Env.proof_ns =
                (uu___51_232.FStar_TypeChecker_Env.proof_ns);
              FStar_TypeChecker_Env.synth =
@@ -275,8 +275,8 @@ let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
           (uu___54_347.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___54_347.FStar_TypeChecker_Env.use_bv_sorts);
-        FStar_TypeChecker_Env.qname_and_index =
-          (uu___54_347.FStar_TypeChecker_Env.qname_and_index);
+        FStar_TypeChecker_Env.qtbl_name_and_index =
+          (uu___54_347.FStar_TypeChecker_Env.qtbl_name_and_index);
         FStar_TypeChecker_Env.proof_ns =
           (uu___54_347.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth =

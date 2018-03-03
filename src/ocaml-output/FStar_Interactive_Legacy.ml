@@ -107,8 +107,8 @@ let (push_with_kind :
                 (uu___56_233.FStar_TypeChecker_Env.check_type_of);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___56_233.FStar_TypeChecker_Env.use_bv_sorts);
-              FStar_TypeChecker_Env.qname_and_index =
-                (uu___56_233.FStar_TypeChecker_Env.qname_and_index);
+              FStar_TypeChecker_Env.qtbl_name_and_index =
+                (uu___56_233.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.proof_ns =
                 (uu___56_233.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth =
