@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1960307bf1ae186251f21b85d677b817"
+      "a3c770a57c0ede2bad94b8eb1fda4600"
     ],
     [
       "Bug710.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "9485ec5c3f01eb6751f5871761ee86d4"
+      "2f15d342a112babc1ae0879f641ef446"
     ],
     [
       "Bug710.bind_ifc",
@@ -38,7 +38,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "c2c8b07a108ed882b1bfce3cc927bafe"
+      "97bfb983c948fcb72c3ac0285e25f5b0"
     ],
     [
       "Bug710.left_unit",
@@ -66,7 +66,7 @@
         "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc"
       ],
       0,
-      "9ecbe9a3f1d8d68a96e073adc4e9ec99"
+      "8285c79b9ed4ae7a5a7591b72a1a99fa"
     ]
   ]
 ]

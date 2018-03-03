@@ -1,23 +1,43 @@
 [
-  "X\u001dPÅý›}t\nM‡ë«ž[Æ",
+  "…ÕYîø°¸ö\u001a\u000e›R‰ìJâ",
   [
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
       0,
-      "6044da631fb763ffeff9329954a97e6b"
+      "f54429cdcc980c6a15b66a0096d03420"
     ],
     [
       "Cases.test_cases_bool_2",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
       0,
-      "f19bef797ec54d80f80519638f50e41c"
+      "64063693fc177cd1c322a29c9c4fd158"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -26,7 +46,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7ce470c52ac694586c1ab6e882c9b0db"
+      "4f1d862bfc2fcf955a09d42ffa80f810"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -38,7 +58,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ef7af8dc2d012c289182001af57fd2f4"
+      "73bf2cfb66415feb99d1005a91fcc60e"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -52,7 +72,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "8555411bd06ba26f314e9e237df99b98"
+      "4ad8b1e4cd7e74fb14b97914361bcf10"
     ]
   ]
 ]

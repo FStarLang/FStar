@@ -1,5 +1,5 @@
 [
-  "Ëz\u0018¡ÌIrkÎ™³@kŠ\"\u007f",
+  "Ü\u0017\ròø–—d#½¨\u001eF‚½\u0002",
   [
     [
       "Bug1299.id",
@@ -14,23 +14,49 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "0e78249a93fd9cd4aa93f9b5a38ad85f"
+      "a0507738766f271fef9b02bc4add4b88"
     ],
     [
       "Bug1299.should_fail",
       1,
       2,
-      1,
+      2,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit",
+        "lemma_FStar.Pervasives.invertOption", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "08df5997cb9036ae31df2cc77bfcab00"
+      "3d7d33bd9e29d88c1096b2e2b6aeb124"
+    ],
+    [
+      "Bug1299.make_term",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
+      ],
+      0,
+      "5212c62e6d2cfc890e62cafa58b9af05"
     ],
     [
       "Bug1299.test",
@@ -47,7 +73,7 @@
         "typing_FStar.Tactics.Builtins.__fail"
       ],
       0,
-      "50465570cdf6ca4f67ad4a817160d20e"
+      "936e9fe4455ceeb38552472e465bacf1"
     ]
   ]
 ]

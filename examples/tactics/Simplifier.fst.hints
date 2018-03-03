@@ -1,14 +1,23 @@
 [
-  "·ÉËœšÛ#«P\u001fbê=H­I",
+  "Ø\u0019\\_ÒVÅÑ¶ñ‡MTm9Ê",
   [
     [
       "Simplifier.goal_is_true",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
       0,
-      "aae4e94a9f33a70a3c5cf0b99d3d7ef5"
+      "5c6efa2771d21a388e064a24636c4bf6"
     ]
   ]
 ]

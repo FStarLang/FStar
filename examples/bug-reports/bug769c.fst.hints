@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "e6f602e0e188838f4f493888898d3f15"
+      "681505ffd017009aabe5c5440fd695be"
     ],
     [
       "Bug769c.v",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "40577e550201b677f921317f3489e46e"
+      "1d2265553cf88d80ff378062f657cf39"
     ]
   ]
 ]

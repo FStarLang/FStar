@@ -1,5 +1,5 @@
 [
-  "«)—¸ò≈M\u007f∞\u0011Vç\u0018#\u0002e",
+  "ßd.@\u0001`öfΩ®˜4\rÙb\u000f",
   [
     [
       "GRewrite.test_grewrite2",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "1c4a841a43669bee2c40df6712de514e"
+      "930ac0e7b565eb9477e7b8e32d4ec547"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "6b1702c7d9105855af3af4b4f35028fa"
+      "b92974ce2cb356730ffe15f5a3f9c19e"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "aa6da2f67a57ecf10bb05e17e6b30724"
+      "f54dfff91f6d851998e20bd386c44721"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -38,7 +38,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "7eccc666ad010427417a008410a8f0e0"
+      "dfc956ef071b366be767a383878e0b04"
     ],
     [
       "GRewrite.test_grewrite4",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "eq2-interp", "equation_Prims.eq2" ],
       0,
-      "426fa403aa7a5a2f7dc42abc6956900d"
+      "c72cd5c6c1104380dd9109c3a836f67f"
     ],
     [
       "GRewrite.test_grewrite5",
@@ -61,16 +61,24 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "3fa99a0ee5314547a75b39cf37c7d852"
+      "8c25e4330135e7408f30e771f2d81448"
     ],
     [
       "GRewrite.guard",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
+      ],
       0,
-      "4a95840a3200bca7ddba28de599166d1"
+      "9455f4318f4b8c007e6e7fa6e7456ebd"
     ]
   ]
 ]
