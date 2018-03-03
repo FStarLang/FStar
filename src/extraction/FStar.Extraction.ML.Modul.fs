@@ -352,16 +352,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                | [hd] ->
                   let bs, comp = U.arrow_formals_comp hd.lbtyp in
                   let t = U.comp_result comp in
-                  (match (SS.compress t).n with
-                   | Tm_app(h, args) ->
-                        let tac_lid = (right hd.lbname).fv_name.v in
-                        let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                        if (lid_equals PC.effect_Tac_lid (U.comp_effect_name comp)
-                            || lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)) // TODO: this is brittle
-                           && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics") // this too
-                        then mk_registration tac_lid assm_lid (fst(List.hd args)) bs
-                        else []
-                   | _ -> [])
+                  if (lid_equals PC.effect_Tac_lid (U.comp_effect_name comp)
+                      || lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)) // TODO: this is brittle
+                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics") // this too
+                  then begin
+                      let tac_lid = (right hd.lbname).fv_name.v in
+                      let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+                      mk_registration tac_lid assm_lid t bs
+                  end else []
                | _ -> []
               ) else [] in
 

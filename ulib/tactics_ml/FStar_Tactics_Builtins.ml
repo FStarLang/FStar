@@ -83,7 +83,7 @@ let unquote : RT.term -> 'a __tac = fun tm ->
         failwith "Sorry, unquote does not work in compiled tactics"
 
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
-let trytac: 'a E.tactic -> ('a option) __tac = fun t -> __trytac (E.reify_tactic t)
+let trytac: (unit -> 'a __tac) -> ('a option) __tac = fun t -> __trytac (E.reify_tactic t)
 
 let __trivial: unit __tac = from_tac_0 B.trivial
 let trivial: unit -> unit __tac = fun () -> __trivial
@@ -151,8 +151,8 @@ let __trefl: unit __tac = from_tac_0 B.trefl
 let trefl: unit -> unit __tac = fun () -> __trefl
 
 let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
-let pointwise: unit E.tactic -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
-let pointwise': unit E.tactic -> unit __tac = fun tau -> __pointwise TopDown (E.reify_tactic tau)
+let pointwise:  (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
+let pointwise': (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise TopDown  (E.reify_tactic tau)
 
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later
