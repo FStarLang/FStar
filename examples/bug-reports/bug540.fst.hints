@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
+      [ "@query" ],
       0,
-      "23304547f8842bd3a62ff54da06ac924"
+      "ec6d1df5cefc89e74d07c0b92efe522e"
     ]
   ]
 ]

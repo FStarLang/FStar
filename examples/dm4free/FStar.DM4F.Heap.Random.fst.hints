@@ -13,7 +13,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7c24b8c56e034efb054b9a871d447186"
+      "e4176b9a7aa1ee047ad8edd0f1bca7de"
     ],
     [
       "FStar.DM4F.Heap.Random.tape",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c5085befdbc37807f50174b74ab6a1c4"
+      "730462d464825366526ce75ac8b59c81"
     ],
     [
       "FStar.DM4F.Heap.Random.incr",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "840e43b931fd7de2a2b700540dd8fdc1"
+      "7a4a1b3a8bc76d0cf7abcb9c95a97ed2"
     ],
     [
       "FStar.DM4F.Heap.Random.index",
@@ -69,14 +69,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.DM4F.Heap.Random.elem",
-        "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.size",
-        "equation_FStar.DM4F.Heap.Random.tape", "equation_Prims.nat",
-        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98"
+        "equation_FStar.DM4F.Heap.Random.tape",
+        "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "6efe43f873048d42477f94c40f122d6f"
+      "e198224352bfe0503684336e071047d3"
     ],
     [
       "FStar.DM4F.Heap.Random.upd",
@@ -99,7 +97,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "df67d2d35ec8c7306d39fb5f81a4167d"
+      "0842e2807e14562fc0b1eeb45f65729f"
     ],
     [
       "FStar.DM4F.Heap.Random.create",
@@ -118,7 +116,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ec2ee8a97135cdfa85f94373ebb9196b"
+      "e484960d588c02c4f0d43da21f8f39ce"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_intro",
@@ -142,7 +140,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0d4805f1daabf21527ccb41d63f4d91c"
+      "d656a65fe8eb1ea7b7729fc57b170e6b"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_elim",
@@ -160,7 +158,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.Random_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "0c13d573c9801032f943758775ff78fa"
+      "a53ba027a698b59290905ef09861300c"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd1",
@@ -182,7 +180,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a91d393b6a9e9fc4d95ebd9903c2e0f3"
+      "b6a108414ef61f3eda5a5303bdc9df3a"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd2",
@@ -205,7 +203,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b8393f88cdb25ebb72310334c3e5e359"
+      "87766081bc8e2fe2562cd594654eae3a"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_create",
@@ -213,20 +211,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.DM4F.Heap.Random.create",
-        "equation_FStar.DM4F.Heap.Random.elem",
-        "equation_FStar.DM4F.Heap.Random.id",
+        "@query", "equation_FStar.DM4F.Heap.Random.create",
         "equation_FStar.DM4F.Heap.Random.index",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.size", "int_inversion",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "equation_FStar.DM4F.Heap.Random.size",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "500d3781219ed579c50fbd08d0f66224"
+      "d5f32d7290e4b520b6b1dd6ef9c58789"
     ]
   ]
 ]

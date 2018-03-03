@@ -193,7 +193,7 @@
     ],
     [
       "FStar.Constructive.uu___is_IntroL",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -202,7 +202,7 @@
     ],
     [
       "FStar.Constructive.__proj__IntroL__item__h",
-      1,
+      2,
       2,
       1,
       [
@@ -216,7 +216,7 @@
     ],
     [
       "FStar.Constructive.uu___is_IntroR",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -225,7 +225,7 @@
     ],
     [
       "FStar.Constructive.__proj__IntroR__item__h",
-      1,
+      2,
       2,
       1,
       [
@@ -239,7 +239,7 @@
     ],
     [
       "FStar.Constructive.__proj__ExIntro__item__h",
-      1,
+      2,
       2,
       1,
       [
@@ -251,7 +251,7 @@
     ],
     [
       "FStar.Constructive.eq_ind",
-      1,
+      2,
       2,
       1,
       [
@@ -263,7 +263,7 @@
     ],
     [
       "FStar.Constructive.ceq_congruence",
-      1,
+      2,
       2,
       1,
       [
@@ -275,7 +275,7 @@
     ],
     [
       "FStar.Constructive.ceq_symm",
-      1,
+      2,
       2,
       1,
       [
@@ -287,7 +287,7 @@
     ],
     [
       "FStar.Constructive.ceq_trans",
-      1,
+      2,
       2,
       1,
       [
@@ -299,7 +299,7 @@
     ],
     [
       "FStar.Constructive.cfalse_elim",
-      1,
+      2,
       2,
       1,
       [
@@ -311,7 +311,7 @@
     ],
     [
       "FStar.Constructive.false_elim2",
-      1,
+      2,
       2,
       1,
       [
@@ -323,7 +323,7 @@
     ],
     [
       "FStar.Constructive.false_elim",
-      1,
+      2,
       2,
       1,
       [

@@ -47,10 +47,18 @@ module PC = FStar.Parser.Const
 
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
+    //if the tbl has a counter for lid, we use that, else we start from 0
+    //this is useful when we verify the extracted interface alongside
+    let tbl = env.qtbl_name_and_index |> fst in
+    let get_n lid =
+      let n_opt = BU.smap_try_find tbl lid.str in
+      if is_some n_opt then n_opt |> must else 0
+    in
+    
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
-      {env with qname_and_index=Some (lid, 0)}
+      {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
 
     | None ->
       let lids = U.lids_of_sigelt se in
@@ -58,7 +66,7 @@ let set_hint_correlator env se =
             | [] -> Ident.lid_add_suffix (Env.current_module env)
                                          (S.next_id () |> BU.string_of_int)
             | l::_ -> l in
-      {env with qname_and_index=Some (lid, 0)}
+      {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
 
 let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
@@ -1823,24 +1831,33 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
     //pop AND use the old env for rest of the function
-    let en = pop_context en ("Ending modul " ^ m.name.str) in
+    let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+
+    //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from env
+    let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
+
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
-    let modul_iface = extract_interface en m in
+    let modul_iface = extract_interface en0 m in
     BU.print3 "Extracting and type checking module %s interface%s%s\n" m.name.str
               (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
               (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
-    let env0 = { en with is_iface = true } in
-    let modul_iface, must_be_none, env = tc_modul en modul_iface in
+    let env0 = { en0 with is_iface = true } in
+    let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
     else m, Some modul_iface, env
   end
   else
     let modul = if Options.use_extracted_interfaces () then { m with exports = m.declarations } else { m with exports=exports } in
     let env = Env.finish_module en modul in
+
+    //we can clear the lid to query index table
+    env.qtbl_name_and_index |> fst |> BU.smap_clear;
+
     if not (Options.lax()) && (not (Options.use_extracted_interfaces ()))
     && (not loading_from_cache)
     then check_exports env modul exports;
+
     //pop BUT ignore the old env
     pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
     env.solver.encode_modul env modul;

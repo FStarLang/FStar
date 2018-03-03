@@ -7,14 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug102.hst", "proj_equation_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_a", "projection_inverse_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_post",
-        "projection_inverse_Bug102.Hst_pre"
+        "@query", "proj_equation_Bug102.Hst_h",
+        "projection_inverse_Bug102.Hst_h"
       ],
       0,
-      "373d4b7396b94396aa5d1365439a489b"
+      "e6eb77ac9c4166095eb8abe7f0ddeae8"
     ],
     [
       "Bug102.__proj__Hst__item__post",
@@ -22,14 +19,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug102.hst", "proj_equation_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_a", "projection_inverse_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_post",
-        "projection_inverse_Bug102.Hst_pre"
+        "@query", "proj_equation_Bug102.Hst_h",
+        "projection_inverse_Bug102.Hst_h"
       ],
       0,
-      "d4f4d31c2de78656efec72b5a3070428"
+      "0b0c722049c82b9cf842422c125248d1"
     ],
     [
       "Bug102.__proj__Hst__item__e",

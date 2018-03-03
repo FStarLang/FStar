@@ -33,19 +33,16 @@
     ],
     [
       "FStar.SquashEffect.resquash'",
-      1,
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "7558c66305cd614d558b6f60138c6d93"
+      "f245f5b20f9fba063faeddf5e34946d9"
     ],
     [
       "FStar.SquashEffect.return_squash",
-      1,
+      2,
       2,
       1,
       [ "@query" ],
@@ -54,7 +51,7 @@
     ],
     [
       "FStar.SquashEffect.bind_squash",
-      1,
+      2,
       2,
       1,
       [ "@query" ],

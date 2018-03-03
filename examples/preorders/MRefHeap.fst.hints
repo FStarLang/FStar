@@ -6,13 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.dfst",
-        "equation_FStar.Preorder.preorder", "equation_MRefHeap.preorder_t",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
+      [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "24290873fb9ffa175ad2859711a29d46"
+      "02c909dd51b11a8030bc081a6008a136"
     ],
     [
       "MRefHeap.sel",
@@ -123,6 +119,7 @@
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
@@ -155,7 +152,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "f9c503465d7196cea03134b9681be7bb"
+      "fb749624444141e26294d57d8bd0e032"
     ],
     [
       "MRefHeap.emp",

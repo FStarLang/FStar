@@ -13,11 +13,11 @@
         "true_interp"
       ],
       0,
-      "3233982e0a9191d78a06028bdefdf83b"
+      "975e2983b11a8eed4581fdbfbeddbfec"
     ],
     [
       "FStar.Heap.trivial_preorder",
-      1,
+      2,
       2,
       1,
       [
@@ -27,7 +27,7 @@
         "true_interp"
       ],
       0,
-      "df1e3a9a9f0364f5fc98bfd8c9a653e7"
+      "50f83dea71f677c444fb0ccc247423cf"
     ]
   ]
 ]

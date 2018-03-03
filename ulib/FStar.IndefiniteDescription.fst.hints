@@ -48,21 +48,16 @@
     ],
     [
       "FStar.IndefiniteDescription.aux",
-      1,
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "bool_inversion", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
-      ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "92417fa62866d5a6ea875dfd3f4453c4"
+      "8deab880050016652cfbca6821933384"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
-      1,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -71,7 +66,7 @@
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
-      2,
+      4,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
@@ -80,7 +75,7 @@
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
-      1,
+      2,
       2,
       1,
       [
