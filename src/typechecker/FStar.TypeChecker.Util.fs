@@ -1820,7 +1820,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Noeq
         | Unopteq ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x)
 
         | TotalEffect ->
           quals
