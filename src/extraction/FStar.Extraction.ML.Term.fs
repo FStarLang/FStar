@@ -854,9 +854,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, {qopen = true })) ->
           let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
-          with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
+          with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
           E_PURE,
-          ml_unit_ty
+          ml_int_ty
 
         | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, {qopen = false})) ->
           let tv = R.embed_term_view t.pos (R.inspect qt) in
@@ -1313,9 +1313,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
              begin match mlbranches with
                 | [] ->
                     let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
-                    with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
+                    with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
-                    ml_unit_ty
+                    ml_int_ty
 
 
                 | (_, _, (_, f_first, t_first))::rest ->
