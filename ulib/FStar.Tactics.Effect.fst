@@ -90,6 +90,6 @@ let assert_by_tactic (p:Type) (t:unit -> Tac unit)
 val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm checks against this
+// TcTerm needs these two, but we should remove it eventually
 private let tactic a = unit -> Tac a
 let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
