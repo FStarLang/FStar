@@ -831,7 +831,7 @@ open FStar.Tactics
 
 let fetch_eq_side' #a : Tac (term * term) =
   gpm (fun (left right: a) (g: goal (squash (left == right))) ->
-         (`left, `right)) ()
+         (quote left, quote right)) ()
 
 let _ =
   assert_by_tactic (1 + 1 == 2)
@@ -839,10 +839,9 @@ let _ =
                print (term_to_string l ^ " / " ^ term_to_string r))
 
 let _ =
-  admit (); // typing a term fails due to #1269 while running the tactic
   assert_by_tactic (1 + 1 == 2)
     (gpm (fun (left right: int) (g: goal (squash (left == right))) ->
-            let l, r = `left, `right in
+            let l, r = quote left, quote right in
             print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
 
 /// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
