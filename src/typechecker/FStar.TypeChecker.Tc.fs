@@ -1739,7 +1739,7 @@ let extract_interface (env:env) (m:modul) :modul =
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
      //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
-     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
+     (is_pure_or_ghost_comp c || Env.is_reifiable_effect env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1851,7 +1851,8 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
 
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
-    let modul_iface = extract_interface en0 m in
+    //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
+    let modul_iface = extract_interface en m in
     BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
               (if Options.should_verify m.name.str then "" else " (in lax mode) ")
               (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
