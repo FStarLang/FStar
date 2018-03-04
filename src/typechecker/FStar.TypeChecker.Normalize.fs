@@ -1653,7 +1653,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
       (*                                                                            *)
       (* ****************************************************************************)
-      let ed = Env.get_effect_decl cfg.tcenv m in
+      let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
       let _, bind_repr = ed.bind_repr in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -1736,7 +1736,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         (* ****************************************************************************)
 
 
-        let ed = Env.get_effect_decl cfg.tcenv m in
+        let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
         let _, bind_repr = ed.bind_repr in
 
         (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
@@ -1823,7 +1823,7 @@ and reify_lift cfg e msrc mtgt t : term =
   (* if msrc is PURE or Tot we can use mtgt.return *)
   if U.is_pure_effect msrc
   then
-    let ed = Env.get_effect_decl env mtgt in
+    let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
     let _, return_repr = ed.return_repr in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
