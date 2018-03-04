@@ -918,16 +918,6 @@ let is_interpreted l =
      PC.op_Negation] in
   U.for_some (lid_equals l) theory_syms
 
-let is_fstar_tactics_embed t =
-    match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.fstar_refl_embed_lid
-    | _ -> false
-
-let is_fstar_tactics_quote t =
-    match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.quote_lid
-    | _ -> false
-
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with
     | Tm_fvar fv -> fv_eq_lid fv PC.by_tactic_lid

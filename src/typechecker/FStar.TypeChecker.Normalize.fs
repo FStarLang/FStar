@@ -236,11 +236,6 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let head_of t = let hd, _ = U.head_and_args' t in hd
-let is_embed_position_1 t =
-    let hd, args = U.head_and_args' t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_] when S.fv_eq_lid fv PC.fstar_refl_embed_lid -> true
-    | _ -> false
 
 let mk t r = mk t None r
 let set_memo cfg (r:memo<'a>) (t:'a) =
@@ -454,8 +449,10 @@ let rec closure_as_term cfg (env:env) t =
            | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
                  mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
 
-           | Tm_meta(t', Meta_quoted (t'', info)) ->
-                 mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(t'', info))) t.pos
+           | Tm_meta(t', Meta_quoted (t'', qi)) ->
+             if qi.qopen
+             then mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(closure_as_term_delayed cfg env t'', qi))) t.pos
+             else mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(t'', qi))) t.pos
 
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
@@ -1165,10 +1162,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_meta (t0, Meta_quoted (t1, inf)) ->
+          | Tm_meta (t0, Meta_quoted (t1, qi)) ->
             let t0 = closure_as_term cfg env t0 in
-            (* let t1 = closure_as_term cfg env t1 in *)
-            let t = { t with n = Tm_meta (t0, Meta_quoted (t1, inf)) } in
+            let t1 = if qi.qopen
+                     then closure_as_term cfg env t1
+                     else t1
+            in
+            let t = { t with n = Tm_meta (t0, Meta_quoted (t1, qi)) } in
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -1950,9 +1950,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     rebuild cfg env stack t
 
   | Arg (Clos(env_arg, tm, _, _), aq, r) :: stack
-        when U.is_fstar_tactics_quote     (head_of t)
-          || is_embed_position_1          t
-          || U.is_fstar_tactics_by_tactic (head_of t) ->
+        when U.is_fstar_tactics_by_tactic (head_of t) ->
     let t = S.extend_app t (closure_as_term cfg env_arg tm, aq) None r in
     rebuild cfg env stack t
 

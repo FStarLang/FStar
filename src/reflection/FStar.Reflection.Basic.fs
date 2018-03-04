@@ -63,7 +63,8 @@ let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (rng:Range.range) (t:term) : term =
-    S.mk (Tm_meta (tun, Meta_quoted (t, ()))) None rng
+    let qi = { qopen = false } in
+    S.mk (Tm_meta (tun, Meta_quoted (t, qi))) None rng
 
 let rec unembed_term (t:term) : option<term> =
     let t = U.unmeta_safe t in

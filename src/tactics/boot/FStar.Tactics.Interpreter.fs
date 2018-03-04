@@ -341,8 +341,6 @@ let rec primitive_steps () : list<N.primitive_step> =
 
       mktac2 "__fresh_binder_named"  fresh_binder_named unembed_string unembed_term embed_binder S.t_binder;
 
-      mktac2 "__embed"         (fun _ x -> ret x) get get embed_term S.t_term;
-
       decr_depth_step;
       incr_depth_step;
       tracepoint_step;

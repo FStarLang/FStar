@@ -1244,8 +1244,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         desugar_term env e
     | Paren e -> failwith "impossible"
 
-    | Quote e ->
-      mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, ()))
+    | Quote (e, qopen) ->
+      mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, { qopen = qopen }))
 
     | _ when (top.level=Formula) -> desugar_formula env top
 

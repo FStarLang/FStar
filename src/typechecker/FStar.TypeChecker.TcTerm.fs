@@ -304,9 +304,22 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  // quoted terms are of type `term`
-  | Tm_meta ({n = _}, Meta_quoted (_, _)) ->
+  // quoted terms are of type `term` ...
+  | Tm_meta ({n = _}, Meta_quoted (_, {qopen = false})) ->
     value_check_expected_typ env top (Inl S.t_term) Rel.trivial_guard
+
+  // ... but open quotes are in the TAC effect
+  | Tm_meta ({n = _}, Meta_quoted (_, {qopen = true})) ->
+    let c = mk_Comp ({ comp_univs = [U_zero];
+                       effect_name = Const.effect_Tac_lid;
+                       result_typ = S.t_term;
+                       effect_args = [];
+                       flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+                    }) in
+    let t, lc, g = value_check_expected_typ env top (Inr (U.lcomp_of_comp c)) Rel.trivial_guard in
+    let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
+               None t.pos in
+    t, lc, g
 
   // lazy terms have whichever type they're annotated with
   | Tm_lazy i ->
@@ -505,12 +518,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
-    let isquote =
-        let head, _ = U.head_and_args head in
-        match (U.un_uinst head).n with
-                  | Tm_fvar fv when S.fv_eq_lid fv Const.quote_lid -> true
-                  | _ -> false
-    in
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
@@ -525,10 +532,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                        //         then TcUtil.maybe_assume_result_eq_pure_term env e c
                        //         else c in
                        e, c, g
-                  else
-                    // If we're descending under `quote`, don't instantiate implicits
-                    let env = if isquote then no_inst env else env
-                    in check_application_args env head chead g_head args (Env.expected_typ env0) in
+                  else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in

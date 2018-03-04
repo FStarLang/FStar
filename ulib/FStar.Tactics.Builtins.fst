@@ -8,9 +8,6 @@ open FStar.Tactics.Effect
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
-assume private val __embed  : a:Type -> a -> __tac term
-unfold let quote #a (x:a) : Tac term = TAC?.reflect (__embed a x)
-
 assume private val __fail : a:Type -> string -> __tac a
 let fail (#a:Type) (msg:string) : Tac a = TAC?.reflect (__fail a msg)
 

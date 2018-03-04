@@ -289,7 +289,8 @@ and term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
-      | Tm_meta(t, Meta_quoted(s, _)) -> U.format1 "(Meta_quoted \"%s\")" (term_to_string s)
+      | Tm_meta(t, Meta_quoted(s, qi)) ->
+        U.format2 "(Meta_quoted \"%s\" {qopen=%s})" (term_to_string s) (string_of_bool qi.qopen)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x

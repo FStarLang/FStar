@@ -90,7 +90,9 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
-type quoteinfo     = unit
+type quoteinfo     = {
+    qopen : bool;       // True if the quotation is open, and should be substituted
+ }
 
 ///[@ PpxDerivingShow ]
 type delta_depth =
