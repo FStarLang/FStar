@@ -4315,9 +4315,7 @@ let get_norm_request :
           FStar_Pervasives_Native.Some (s, tm)
       | (steps,uu____13435)::uu____13436::(tm,uu____13438)::[] ->
           let add_exclude s z =
-            if Prims.op_Negation (FStar_List.contains z s)
-            then (Exclude z) :: s
-            else s  in
+            if FStar_List.contains z s then s else (Exclude z) :: s  in
           let uu____13475 =
             let uu____13480 = full_norm steps  in parse_steps uu____13480  in
           (match uu____13475 with
@@ -4633,9 +4631,7 @@ let rec (norm :
                                   fv.FStar_Syntax_Syntax.fv_delta l))
                      in
                   let should_delta1 =
-                    if Prims.op_Negation should_delta
-                    then false
-                    else
+                    should_delta &&
                       (let attrs =
                          FStar_TypeChecker_Env.attrs_of_qninfo qninfo  in
                        ((Prims.op_Negation (cfg.steps).unfold_tac) ||
