@@ -325,14 +325,6 @@ let (assert_by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "assert_by_tactic"] 
 let (reify_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "reify_tactic"] 
-let (quote_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "quote"]
-    FStar_Range.dummyRange
-  
-let (fstar_refl_embed_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "__embed"]
-    FStar_Range.dummyRange
-  
 let (fstar_syntax_syntax_term : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term" 
 let (binder_lid : FStar_Ident.lident) =
