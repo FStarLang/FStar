@@ -1105,7 +1105,7 @@ let get_norm_request (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil Delta_constant; Reify] in
       Some (s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if not (List.contains z s) then Exclude z::s else s in
+      let add_exclude s z = if List.contains z s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
@@ -1126,6 +1126,7 @@ let is_reify_head = function
 
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack = match stack with
+    // TODO: we should likely ignore the meta-level stack elements, such as Memo
     | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps.reify_
@@ -1237,9 +1238,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                          | Eager_unfolding_only -> true
                          | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l)
                  in
-                 let should_delta =
-                     if not should_delta then false
-                     else let attrs = Env.attrs_of_qninfo qninfo in
+                 let should_delta = should_delta && (
+                          let attrs = Env.attrs_of_qninfo qninfo in
                            // never unfold something marked tac_opaque when reducing tactics
                           (not cfg.steps.unfold_tac ||
                            not (cases (BU.for_some (attr_eq U.tac_opaque_attr)) false attrs)) &&
@@ -1252,7 +1252,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              match attrs, cfg.steps.unfold_attr with
                              | None, Some _ -> false
                              | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (attr_eq at) ats') ats
-                             | _, _ -> false))
+                             | _, _ -> false)))
                  in
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
@@ -1962,6 +1962,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
+    // GM: I actually get a regression if I just keep the second branch.
     if not cfg.steps.iota
     then if cfg.steps.hnf
          then let arg = closure_as_term cfg env_arg tm in
