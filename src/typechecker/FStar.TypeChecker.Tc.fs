@@ -1852,7 +1852,8 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
     let modul_iface = extract_interface en0 m in
-    BU.print3 "Extracting and type checking module %s interface%s%s\n" m.name.str
+    BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
+              (if Options.should_verify m.name.str then "" else " (in lax mode) ")
               (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
               (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
     let env0 = { en0 with is_iface = true } in
