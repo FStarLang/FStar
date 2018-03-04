@@ -1738,8 +1738,10 @@ let extract_interface (env:env) (m:modul) :modul =
      
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
-     //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
-     (is_pure_or_ghost_comp c || Env.is_reifiable_effect env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
+     //if c is pure or ghost then keep it if the return type is not unit
+     if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
+     //else keep it if the effect is reifiable
+     else Env.is_reifiable_effect env (comp_effect_name c))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
