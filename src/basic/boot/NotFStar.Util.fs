@@ -210,7 +210,7 @@ let set_elements ((s1, eq):set<'a>) :list<'a> =
                     then aux out tl
                     else aux (hd::out) tl in
    aux [] s1
-let set_add a ((s, b):set<'a>) = (a::s, b)
+let set_add a ((s, b):set<'a>) = (s@[a], b)
 let set_remove x ((s1, eq):set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):set<'a>) = List.exists (b a) s
 let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = (s1@s2, b)//set_elements (s1,b)@set_elements (s2,b), b)
@@ -224,38 +224,38 @@ let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter 
 (* (i.e. a list + equality) and the invariant that "insertion order" is preserved. *)
 (* The convention is that the first element in insertion order is at the end of the*)
 (* underlying list.                                                                *)
-type fifo_set<'a> = set<'a>
-
-let fifo_set_is_empty ((s, _):fifo_set<'a>) =
-    match s with
-    | [] -> true
-    | _ -> false
-
-let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
-    (l, fun x y -> cmp x y = 0)
-
-let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
-    as_fifo_set [] cmp
-
-(* The input list [s1] is in reverse order and we need to keep only the last       *)
-(* occurence of each elements in s1. Note that accumulating over such elements     *)
-(* will reverse the order of the input list so that we obtain back the insertion   *)
-(* order.                                                                          *)
-let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
-   let rec aux out = function
-        | [] -> out
-        | hd::tl -> if List.exists (eq hd) out
-                    then aux out tl
-                    else aux (hd::out) tl
-   in
-   aux [] s1
-let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
-let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
-let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
-let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
-let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
-let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
-  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+//type fifo_set<'a> = set<'a>
+//
+//let fifo_set_is_empty ((s, _):fifo_set<'a>) =
+//    match s with
+//    | [] -> true
+//    | _ -> false
+//
+//let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
+//    (l, fun x y -> cmp x y = 0)
+//
+//let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
+//    as_fifo_set [] cmp
+//
+//(* The input list [s1] is in reverse order and we need to keep only the last       *)
+//(* occurence of each elements in s1. Note that accumulating over such elements     *)
+//(* will reverse the order of the input list so that we obtain back the insertion   *)
+//(* order.                                                                          *)
+//let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
+//   let rec aux out = function
+//        | [] -> out
+//        | hd::tl -> if List.exists (eq hd) out
+//                    then aux out tl
+//                    else aux (hd::out) tl
+//   in
+//   aux [] s1
+//let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
+//let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
+//let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
+//let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
+//let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
+//let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
+//  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 type System.Collections.Generic.Dictionary<'K, 'V> with
   member x.TryFind(key) =

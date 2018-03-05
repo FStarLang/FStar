@@ -1373,7 +1373,7 @@ let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
 let gather_free_univnames env t : list<univ_name> =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
-    let univnames = BU.fifo_set_difference tm_univnames ctx_univnames |> BU.fifo_set_elements in
+    let univnames = BU.set_difference tm_univnames ctx_univnames |> BU.set_elements in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
     //     (Print.set_to_string Ident.text_of_id ctx_univnames)
@@ -1396,12 +1396,14 @@ let check_universe_generalization
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
     let univnames = gather_free_univnames env t in
+    if Env.debug env <| Options.Other "Gen"
+    then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
     let univs = Free.univs t in
     if Env.debug env <| Options.Other "Gen"
     then BU.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "After generalization: %s\n"  (Print.term_to_string t);
+    then BU.print2 "After generalization, t: %s and univs: %s\n"  (Print.term_to_string t) (Print.univ_names_to_string gen);
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in

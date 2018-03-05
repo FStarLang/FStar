@@ -54,7 +54,7 @@ let union f1 f2 = {
     free_names=(fst f1).free_names @ (fst f2).free_names;
     free_uvars=(fst f1).free_uvars @ (fst f2).free_uvars;
     free_univs=(fst f1).free_univs @ (fst f2).free_univs;
-    free_univ_names=(fst f2).free_univ_names @ (fst f1).free_univ_names; //THE ORDER HERE IS IMPORTANT!
+    free_univ_names=(fst f1).free_univ_names @ (fst f2).free_univ_names; //THE ORDER HERE IS IMPORTANT!
     //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
 }, Util.set_union (snd f1) (snd f2)
 
@@ -213,6 +213,6 @@ let new_universe_uvar_set () : set<universe_uvar> =
 let names t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_names Syntax.order_bv
 let uvars t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uvars compare_uv
 let univs t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univs compare_universe_uvar
-let univnames t = FStar.Util.as_fifo_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
+let univnames t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
 let fvars t = snd (free_names_and_uvars t false)
 let names_of_binders (bs:binders) = FStar.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv

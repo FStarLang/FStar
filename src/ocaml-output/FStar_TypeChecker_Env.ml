@@ -4637,16 +4637,16 @@ let (univ_vars : env -> FStar_Syntax_Syntax.universe_uvar FStar_Util.set) =
       | (Binding_sig uu____14116)::uu____14117 -> out  in
     aux no_univs env.gamma
   
-let (univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Util.fifo_set) =
+let (univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Util.set) =
   fun env  ->
     let no_univ_names = FStar_Syntax_Syntax.no_universe_names  in
-    let ext out uvs = FStar_Util.fifo_set_union out uvs  in
+    let ext out uvs = FStar_Util.set_union out uvs  in
     let rec aux out g =
       match g with
       | [] -> out
       | (Binding_sig_inst uu____14170)::tl1 -> aux out tl1
       | (Binding_univ uname)::tl1 ->
-          let uu____14186 = FStar_Util.fifo_set_add uname out  in
+          let uu____14186 = FStar_Util.set_add uname out  in
           aux uu____14186 tl1
       | (Binding_lid (uu____14189,(uu____14190,t)))::tl1 ->
           let uu____14205 =

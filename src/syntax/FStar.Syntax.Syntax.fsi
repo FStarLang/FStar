@@ -247,7 +247,7 @@ type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
-val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
+val new_universe_names_set: unit -> set<univ_name>
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
@@ -451,7 +451,7 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_universe_names: fifo_set<univ_name>
+val no_universe_names: set<univ_name>
 val no_fvars:          set<lident>
 
 val freenames_of_list:    list<bv> -> freenames

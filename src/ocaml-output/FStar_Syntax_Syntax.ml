@@ -1907,13 +1907,12 @@ let (order_univ_name : univ_name -> univ_name -> Prims.int) =
       FStar_String.compare (FStar_Ident.text_of_id x)
         (FStar_Ident.text_of_id y)
   
-let (new_universe_names_fifo_set :
-  Prims.unit -> univ_name FStar_Util.fifo_set) =
-  fun uu____5795  -> FStar_Util.new_fifo_set order_univ_name 
+let (new_universe_names_set : Prims.unit -> univ_name FStar_Util.set) =
+  fun uu____5795  -> FStar_Util.new_set order_univ_name 
 let (no_names : bv FStar_Util.set) = new_bv_set () 
 let (no_fvars : FStar_Ident.lident FStar_Util.set) = new_fv_set () 
-let (no_universe_names : univ_name FStar_Util.fifo_set) =
-  new_universe_names_fifo_set () 
+let (no_universe_names : univ_name FStar_Util.set) =
+  new_universe_names_set () 
 let (freenames_of_list : bv Prims.list -> freenames) =
   fun l  -> FStar_List.fold_right FStar_Util.set_add l no_names 
 let (list_of_freenames : freenames -> bv Prims.list) =
