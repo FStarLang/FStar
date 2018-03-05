@@ -53,7 +53,8 @@ reifiable reflectable new_effect {
      ; return   = __ret
      ; __get    = __get
 }
-effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
+effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
+effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (not type safety!)
 
 let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
     fun ps p -> wp (fun x -> p (Success(x, ps)))
@@ -90,6 +91,6 @@ let assert_by_tactic (p:Type) (t:unit -> Tac unit)
 val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm needs these two, but we should remove it eventually
-private let tactic a = unit -> Tac a
+// TcTerm needs these two names to be here, but we should remove it eventually
+private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
 let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
