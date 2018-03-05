@@ -156,8 +156,8 @@ let rec (lookup_ty_local :
   
 let tyscheme_of_td :
   'Auu____419 'Auu____420 'Auu____421 'Auu____422 .
-    ('Auu____422,'Auu____421,'Auu____420,FStar_Extraction_ML_Syntax.mlidents,
-      'Auu____419,FStar_Extraction_ML_Syntax.mltybody
+    ('Auu____419,'Auu____420,'Auu____421,FStar_Extraction_ML_Syntax.mlidents,
+      'Auu____422,FStar_Extraction_ML_Syntax.mltybody
                     FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.tuple6 ->
       FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option

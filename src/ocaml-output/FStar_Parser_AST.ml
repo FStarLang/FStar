@@ -1404,12 +1404,12 @@ let focusLetBindings :
   
 let focusAttrLetBindings :
   'Auu____4640 'Auu____4641 .
-    ('Auu____4641,(Prims.bool,('Auu____4640,term)
+    ('Auu____4640,(Prims.bool,('Auu____4641,term)
                                 FStar_Pervasives_Native.tuple2)
                     FStar_Pervasives_Native.tuple2)
       FStar_Pervasives_Native.tuple2 Prims.list ->
       FStar_Range.range ->
-        ('Auu____4641,('Auu____4640,term) FStar_Pervasives_Native.tuple2)
+        ('Auu____4640,('Auu____4641,term) FStar_Pervasives_Native.tuple2)
           FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun lbs  ->

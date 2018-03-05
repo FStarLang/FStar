@@ -762,18 +762,18 @@ type binary_format = (version,file Prims.list) FStar_Pervasives_Native.tuple2
 [@@deriving show]
 let fst3 :
   'Auu____2697 'Auu____2698 'Auu____2699 .
-    ('Auu____2699,'Auu____2698,'Auu____2697) FStar_Pervasives_Native.tuple3
-      -> 'Auu____2699
+    ('Auu____2697,'Auu____2698,'Auu____2699) FStar_Pervasives_Native.tuple3
+      -> 'Auu____2697
   = fun uu____2709  -> match uu____2709 with | (x,uu____2717,uu____2718) -> x 
 let snd3 :
   'Auu____2723 'Auu____2724 'Auu____2725 .
-    ('Auu____2725,'Auu____2724,'Auu____2723) FStar_Pervasives_Native.tuple3
+    ('Auu____2723,'Auu____2724,'Auu____2725) FStar_Pervasives_Native.tuple3
       -> 'Auu____2724
   = fun uu____2735  -> match uu____2735 with | (uu____2742,x,uu____2744) -> x 
 let thd3 :
   'Auu____2749 'Auu____2750 'Auu____2751 .
-    ('Auu____2751,'Auu____2750,'Auu____2749) FStar_Pervasives_Native.tuple3
-      -> 'Auu____2749
+    ('Auu____2749,'Auu____2750,'Auu____2751) FStar_Pervasives_Native.tuple3
+      -> 'Auu____2751
   = fun uu____2761  -> match uu____2761 with | (uu____2768,uu____2769,x) -> x 
 let (mk_width : Prims.string -> width FStar_Pervasives_Native.option) =
   fun uu___34_2775  ->

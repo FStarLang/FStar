@@ -522,8 +522,8 @@ let (fv_eq : fv -> fv -> Prims.bool) =
   
 let fv_sort :
   'Auu____1258 'Auu____1259 .
-    ('Auu____1259,'Auu____1258) FStar_Pervasives_Native.tuple2 ->
-      'Auu____1258
+    ('Auu____1258,'Auu____1259) FStar_Pervasives_Native.tuple2 ->
+      'Auu____1259
   = fun x  -> FStar_Pervasives_Native.snd x 
 let (freevar_eq : term -> term -> Prims.bool) =
   fun x  ->

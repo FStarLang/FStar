@@ -495,7 +495,7 @@ and (type_leq :
 
 let is_type_abstraction :
   'Auu____881 'Auu____882 'Auu____883 .
-    (('Auu____883,'Auu____882) FStar_Util.either,'Auu____881)
+    (('Auu____881,'Auu____882) FStar_Util.either,'Auu____883)
       FStar_Pervasives_Native.tuple2 Prims.list -> Prims.bool
   =
   fun uu___61_897  ->

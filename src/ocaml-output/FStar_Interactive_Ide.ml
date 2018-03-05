@@ -1279,9 +1279,9 @@ let (uu___is_QueryViolatesProtocol : query_status -> Prims.bool) =
   
 let try_assoc :
   'Auu____2674 'Auu____2675 .
-    'Auu____2675 ->
-      ('Auu____2675,'Auu____2674) FStar_Pervasives_Native.tuple2 Prims.list
-        -> 'Auu____2674 FStar_Pervasives_Native.option
+    'Auu____2674 ->
+      ('Auu____2674,'Auu____2675) FStar_Pervasives_Native.tuple2 Prims.list
+        -> 'Auu____2675 FStar_Pervasives_Native.option
   =
   fun key  ->
     fun a  ->
@@ -2114,9 +2114,9 @@ let (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
   
 let run_exit :
   'Auu____4180 'Auu____4181 .
-    'Auu____4181 ->
+    'Auu____4180 ->
       ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-        ('Auu____4180,Prims.int) FStar_Util.either)
+        ('Auu____4181,Prims.int) FStar_Util.either)
         FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -2124,9 +2124,9 @@ let run_exit :
   
 let run_describe_protocol :
   'Auu____4209 'Auu____4210 .
-    'Auu____4210 ->
+    'Auu____4209 ->
       ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-        ('Auu____4210,'Auu____4209) FStar_Util.either)
+        ('Auu____4209,'Auu____4210) FStar_Util.either)
         FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -2147,10 +2147,10 @@ let run_describe_repl :
   
 let run_protocol_violation :
   'Auu____4272 'Auu____4273 .
-    'Auu____4273 ->
+    'Auu____4272 ->
       Prims.string ->
         ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-          ('Auu____4273,'Auu____4272) FStar_Util.either)
+          ('Auu____4272,'Auu____4273) FStar_Util.either)
           FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -2160,10 +2160,10 @@ let run_protocol_violation :
   
 let run_generic_error :
   'Auu____4306 'Auu____4307 .
-    'Auu____4307 ->
+    'Auu____4306 ->
       Prims.string ->
         ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-          ('Auu____4307,'Auu____4306) FStar_Util.either)
+          ('Auu____4306,'Auu____4307) FStar_Util.either)
           FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -2893,10 +2893,10 @@ let run_module_autocomplete :
   'Auu____6444 'Auu____6445 'Auu____6446 .
     repl_state ->
       Prims.string ->
-        'Auu____6446 ->
+        'Auu____6444 ->
           'Auu____6445 ->
             ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-              (repl_state,'Auu____6444) FStar_Util.either)
+              (repl_state,'Auu____6446) FStar_Util.either)
               FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -2955,11 +2955,11 @@ let (candidates_of_fstar_option :
   
 let run_option_autocomplete :
   'Auu____6534 'Auu____6535 .
-    'Auu____6535 ->
+    'Auu____6534 ->
       Prims.string ->
         Prims.bool ->
           ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-            ('Auu____6535,'Auu____6534) FStar_Util.either)
+            ('Auu____6534,'Auu____6535) FStar_Util.either)
             FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -3008,8 +3008,8 @@ let run_autocomplete :
 let run_and_rewind :
   'Auu____6657 'Auu____6658 .
     repl_state ->
-      (repl_state -> 'Auu____6658) ->
-        ('Auu____6658,(repl_state,'Auu____6657) FStar_Util.either)
+      (repl_state -> 'Auu____6657) ->
+        ('Auu____6657,(repl_state,'Auu____6658) FStar_Util.either)
           FStar_Pervasives_Native.tuple2
   =
   fun st  ->
@@ -3029,7 +3029,7 @@ let run_with_parsed_and_tc_term :
   'Auu____6741 'Auu____6742 'Auu____6743 .
     repl_state ->
       Prims.string ->
-        'Auu____6743 ->
+        'Auu____6741 ->
           'Auu____6742 ->
             (FStar_TypeChecker_Env.env ->
                FStar_Syntax_Syntax.term ->
@@ -3037,7 +3037,7 @@ let run_with_parsed_and_tc_term :
                    FStar_Pervasives_Native.tuple2)
               ->
               ((query_status,FStar_Util.json) FStar_Pervasives_Native.tuple2,
-                (repl_state,'Auu____6741) FStar_Util.either)
+                (repl_state,'Auu____6743) FStar_Util.either)
                 FStar_Pervasives_Native.tuple2
   =
   fun st  ->

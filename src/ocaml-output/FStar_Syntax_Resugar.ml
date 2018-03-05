@@ -12,8 +12,8 @@ let (parser_term_to_string : FStar_Parser_AST.term -> Prims.string) =
 let map_opt :
   'Auu____12 'Auu____13 .
     Prims.unit ->
-      ('Auu____13 -> 'Auu____12 FStar_Pervasives_Native.option) ->
-        'Auu____13 Prims.list -> 'Auu____12 Prims.list
+      ('Auu____12 -> 'Auu____13 FStar_Pervasives_Native.option) ->
+        'Auu____12 Prims.list -> 'Auu____13 Prims.list
   = fun uu____27  -> FStar_List.filter_map 
 let (bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident) =
   fun x  ->

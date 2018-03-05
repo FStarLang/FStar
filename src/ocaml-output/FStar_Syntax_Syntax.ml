@@ -1885,9 +1885,9 @@ let (set_range_of_bv : bv -> FStar_Range.range -> bv) =
   
 let syn :
   'Auu____5698 'Auu____5699 'Auu____5700 .
-    'Auu____5700 ->
+    'Auu____5698 ->
       'Auu____5699 ->
-        ('Auu____5699 -> 'Auu____5700 -> 'Auu____5698) -> 'Auu____5698
+        ('Auu____5699 -> 'Auu____5698 -> 'Auu____5700) -> 'Auu____5700
   = fun p  -> fun k  -> fun f  -> f k p 
 let mk_fvs :
   'Auu____5736 .

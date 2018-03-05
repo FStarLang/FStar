@@ -422,8 +422,8 @@ and (should_invalidate_cache :
 
 let compare_uv :
   'Auu____1747 'Auu____1748 .
-    (FStar_Syntax_Syntax.uvar,'Auu____1748) FStar_Pervasives_Native.tuple2 ->
-      (FStar_Syntax_Syntax.uvar,'Auu____1747) FStar_Pervasives_Native.tuple2
+    (FStar_Syntax_Syntax.uvar,'Auu____1747) FStar_Pervasives_Native.tuple2 ->
+      (FStar_Syntax_Syntax.uvar,'Auu____1748) FStar_Pervasives_Native.tuple2
         -> Prims.int
   =
   fun uv1  ->
