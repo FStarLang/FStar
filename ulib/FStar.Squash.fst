@@ -19,17 +19,17 @@ let proof_irrelevance (p:Type) x y = ()
 let squash_double_arrow #a #p f =
     bind_squash f push_squash
 
-// let push_sum (#a:Type) (#b:(a -> Type)) ($p : dtuple2 a (fun (x:a) -> squash (b x))) =
-//     match p with
-//     | Mkdtuple2 x y ->
-//         bind_squash #(b x) #(dtuple2 a b) y (fun y' ->
-//         return_squash (Mkdtuple2 x y'))
+let push_sum (#a:Type) (#b:(a -> Type)) ($p : dtuple2 a (fun (x:a) -> squash (b x))) =
+    match p with
+    | Mkdtuple2 x y ->
+        bind_squash #(b x) #(dtuple2 a b) y (fun y' ->
+        return_squash (Mkdtuple2 x y'))
 
-// let squash_double_sum (#a:Type) (#b:(a -> Type)) (p : squash (dtuple2 a (fun (x:a) -> squash (b x)))) =
-//     bind_squash p (fun p' -> push_sum p') // Need eta...
+let squash_double_sum (#a:Type) (#b:(a -> Type)) (p : squash (dtuple2 a (fun (x:a) -> squash (b x)))) =
+    bind_squash p (fun p' -> push_sum p') // Need eta...
 
-// let map_squash (#a:Type) (#b:Type) s f =
-//     bind_squash #a #b s (fun x -> return_squash (f x))
+let map_squash (#a:Type) (#b:Type) s f =
+    bind_squash #a #b s (fun x -> return_squash (f x))
 
-// let join_squash (#a:Type) (x:squash (squash a)) =
-//     bind_squash x (fun x -> x)
+let join_squash (#a:Type) (x:squash (squash a)) =
+    bind_squash x (fun x -> x)
