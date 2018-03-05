@@ -14,7 +14,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "a0507738766f271fef9b02bc4add4b88"
+      "c6324ecffebdfd5ad069374a85370765"
     ],
     [
       "Bug1299.should_fail",
@@ -41,22 +41,7 @@
         "unit_typing"
       ],
       0,
-      "3d7d33bd9e29d88c1096b2e2b6aeb124"
-    ],
-    [
-      "Bug1299.make_term",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0,
-      "5212c62e6d2cfc890e62cafa58b9af05"
+      "c7a0e5ff34cb193af0455d025860ea44"
     ],
     [
       "Bug1299.test",
@@ -73,7 +58,7 @@
         "typing_FStar.Tactics.Builtins.__fail"
       ],
       0,
-      "936e9fe4455ceeb38552472e465bacf1"
+      "c8a9b0300f6ca954ad5ec9f5d02fd4c0"
     ]
   ]
 ]

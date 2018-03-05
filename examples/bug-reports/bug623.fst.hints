@@ -12,7 +12,7 @@
         "function_token_typing_Prims.unit"
       ],
       0,
-      "c7ef46229ab332918d1a14a368689768"
+      "843c20a8425e155c91b6d29648f36c5d"
     ],
     [
       "Bug623.null2",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "fd76571aa9724193e3eb3be14b4a4d10"
+      "3d2715edd90db4adce23b58a40c4008d"
     ],
     [
       "Bug623.null3",
@@ -30,7 +30,7 @@
       1,
       [ "@query" ],
       0,
-      "ba5eba72c59a6e168db9de120a03e385"
+      "9229c66eaf9133ae22daa8029b314066"
     ]
   ]
 ]

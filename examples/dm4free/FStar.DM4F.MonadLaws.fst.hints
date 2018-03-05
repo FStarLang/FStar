@@ -19,7 +19,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
-      "3f122531a3bbb77cd0052d85c0f8ff65"
+      "5044919c6865cb256fe70406a60d8973"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -36,7 +36,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "bd74cc8f62414a7d48fb4ed5a49dc70a"
+      "5be9b60412605851bc254ddb414a5d8f"
     ],
     [
       "FStar.DM4F.MonadLaws.assoc_st",
@@ -50,7 +50,7 @@
         "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "88f08873d15340d26a7124f63d9c5141"
+      "96748d9ff3b54a49aa617788d2c5c746"
     ],
     [
       "FStar.DM4F.MonadLaws.uu___is_Low",
@@ -59,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "4c5d476134decbe64459394c1325b4a3"
+      "daef94053255106709c6c668520f9652"
     ],
     [
       "FStar.DM4F.MonadLaws.uu___is_High",
@@ -68,7 +68,7 @@
       1,
       [ "@query" ],
       0,
-      "de19d7b812dac1d625cd47fe0c79bbff"
+      "51becdbe5d3d9aa802f3c69eb64c893a"
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -91,7 +91,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "30c7e53f65b8c479a2553daec21e7b6f"
+      "fff36e5a4a1ddea80ab0bc8d747d02d9"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit",
@@ -129,7 +129,7 @@
         "typing_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "9da3c822b0153484da666d4902f6d237"
+      "54df48e22b7f86add084a48bf6d3a732"
     ],
     [
       "FStar.DM4F.MonadLaws.right_unit",
@@ -153,7 +153,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "3fe79685d89754877c6011671a7b3223"
+      "1e26231172d5c6ec8bd010ca26ed1af0"
     ],
     [
       "FStar.DM4F.MonadLaws.associativity",
@@ -195,7 +195,7 @@
         "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "14e228e6c5d2d17a7ffdcab2417a9bc1"
+      "95509788fc414221d64cd2801fc73e9a"
     ]
   ]
 ]

@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c23035990e035ce38e145c1f508cd97c"
+      "49dbbeb633ca50a8924c353f3d76d7b0"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "8e9d287b269491853b295e5e33ebebc7"
+      "f9f04ddbc341fe904249d39f38b23df4"
     ],
     [
       "NegativeTests.Termination.uu___is_O",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "b8e1947d96a353b8cff1e041f80bb1de"
+      "a46d262d7e3ec5a7838c149d83718c79"
     ],
     [
       "NegativeTests.Termination.uu___is_S",
@@ -43,7 +43,7 @@
       1,
       [ "@query" ],
       0,
-      "bc66a66a3320546511b802cac13f18ae"
+      "25832b0390ea682500e3bfac535d7583"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -57,7 +57,7 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "cdbbca8c7419d53cf8a0eadae6adb99f"
+      "40fa7de3210f13ae3c2570ab10ed0a2b"
     ]
   ]
 ]

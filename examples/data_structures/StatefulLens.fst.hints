@@ -22,7 +22,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "08a0d3a2ebd37ee0f1dae93ba70549b7"
+      "f3679fd228c690450682c7e5fda3b7e4"
     ],
     [
       "StatefulLens.as_stlens",
@@ -44,7 +44,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "e718dabe735dc1b78464a69996b586c9"
+      "084e4128ea71c7380811e0cfe23d95ed"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -68,7 +68,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "f77a718e60ff5706232ff8848ff5e159"
+      "55923507f843396fc4cf41d82cee6397"
     ],
     [
       "StatefulLens.test0",
@@ -88,7 +88,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
-      "8d981738ab0fb30e1081cee7b75d9e2f"
+      "64c04f405625c98b97cc39db9c4a6497"
     ],
     [
       "StatefulLens.test1",
@@ -129,7 +129,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "8703d6954992b0ec268007c3f2f4f097"
+      "fcc047789130527dfd47557fb7eb2b3c"
     ],
     [
       "StatefulLens.test2",
@@ -171,7 +171,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "cfacad8d1ec957d6d7898d3cdd004cce"
+      "4a6bfbb74f25186614a01d937a7d03de"
     ],
     [
       "StatefulLens.test4",
@@ -210,7 +210,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Ref.upd", "typing_FStar.ST.ref"
       ],
       0,
-      "069baf533a04905d4a987d3e92a54023"
+      "f98ed4b5bc47d1fb0bf7ab5c6b9280e7"
     ],
     [
       "StatefulLens.move_x",
@@ -256,7 +256,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "0b9bfdb444cb4bbc24b35c8687795c99"
+      "97d45ef455523f3c1c00559a421fca61"
     ],
     [
       "StatefulLens.move_x2",
@@ -297,7 +297,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "950210a40b7b7b3ff535808f7ec8b76c"
+      "f4cdfe47b535e6b4098c985d022f183f"
     ]
   ]
 ]
