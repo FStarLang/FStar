@@ -1163,9 +1163,18 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                 | _ -> false)
         | _ -> occurs_univ v1 (U_max [u]) in
 
+    let rec filter_out_common_univs (u1:list<universe>) (u2:list<universe>) :(list<universe> * list<universe>) =
+      let elt_opt = u1 |> List.find (fun u_elt1 -> u2 |> List.existsb (fun u_elt2 -> U.compare_univs u_elt1 u_elt2 = 0)) in
+      if elt_opt = None then u1, u2
+      else
+        let filter (l:list<universe>) = l |> List.filter (fun u -> not (U.compare_univs u (elt_opt |> must) = 0)) in
+        filter_out_common_univs (filter u1) (filter u2)
+    in
+
     let try_umax_components u1 u2 msg =
         match u1, u2 with
             | U_max us1, U_max us2 ->
+              let us1, us2 = filter_out_common_univs us1 us2 in
               if List.length us1 = List.length us2 //go for a structural match
               then let rec aux wl us1 us2 = match us1, us2 with
                         | u1::us1, u2::us2 ->
