@@ -205,7 +205,7 @@ let new_set (cmp:'a -> 'a -> int) : set<'a> = as_set [] cmp
 
 let set_elements ((s1, eq):set<'a>) :list<'a> =
    let rec aux out = function
-        | [] -> out
+        | [] -> List.rev_append out []
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
                     else aux (hd::out) tl in
