@@ -177,47 +177,54 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
-let load_module_from_cache env fn
-    : option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
-    let cache_file = Dep.cache_file_name fn in
-    let fail tag =
-         FStar.Errors.log_issue
-            (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-            (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
-         None
-    in
-    if BU.file_exists cache_file then
-      match BU.load_value_from_file cache_file with
-      | None ->
-        fail "Corrupt"
-      | Some (digest, tcmod, tcmod_iface_opt, mii) ->
-         match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
-         | Some digest' ->
-           if digest=digest'
-           then Some (tcmod, tcmod_iface_opt, mii)
-           else begin
-                if Options.debug_any()
-                then begin
-                     BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
-                                (BU.string_of_int (List.length digest'))
-                                (FStar.Parser.Dep.print_digest digest')
-                                (BU.string_of_int (List.length digest))
-                                (FStar.Parser.Dep.print_digest digest);
-                    if List.length digest = List.length digest'
-                    then List.iter2
-                            (fun (x,y) (x', y') ->
-                                 if x<>x' || y<>y'
-                                 then BU.print2 "Differ at: Expected %s\n Got %s\n"
-                                        (FStar.Parser.Dep.print_digest [(x,y)])
-                                        (FStar.Parser.Dep.print_digest [(x',y')]))
-                         digest
-                         digest'
-                  end;
+let load_module_from_cache
+    : env -> string -> option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
+    let some_cache_invalid = BU.mk_ref None in
+    let invalidate_cache fn = some_cache_invalid := Some fn in
+    fun env fn ->
+        let cache_file = Dep.cache_file_name fn in
+        let fail tag =
+             invalidate_cache();
+             FStar.Errors.log_issue
+                (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+                (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn);
+             None
+        in
+        match !some_cache_invalid with
+        | Some _ -> None
+        | _ ->
+          if BU.file_exists cache_file then
+            match BU.load_value_from_file cache_file with
+            | None ->
+              fail "Corrupt"
+            | Some (digest, tcmod, tcmod_iface_opt, mii) ->
+                match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
+                | Some digest' ->
+                    if digest=digest'
+                    then Some (tcmod, tcmod_iface_opt, mii)
+                    else begin
+                        if Options.debug_any()
+                        then begin
+                                BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                                        (BU.string_of_int (List.length digest'))
+                                        (FStar.Parser.Dep.print_digest digest')
+                                        (BU.string_of_int (List.length digest))
+                                        (FStar.Parser.Dep.print_digest digest);
+                            if List.length digest = List.length digest'
+                            then List.iter2
+                                    (fun (x,y) (x', y') ->
+                                            if x<>x' || y<>y'
+                                            then BU.print2 "Differ at: Expected %s\n Got %s\n"
+                                                (FStar.Parser.Dep.print_digest [(x,y)])
+                                                (FStar.Parser.Dep.print_digest [(x',y')]))
+                                    digest
+                                    digest'
+                            end;
+                        fail "Stale"
+                    end
+                | _ ->
                 fail "Stale"
-            end
-         | _ ->
-           fail "Stale"
-    else fail "Absent"
+          else fail "Absent"
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
