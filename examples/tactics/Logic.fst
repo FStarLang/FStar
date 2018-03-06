@@ -11,7 +11,7 @@ let tau () : Tac unit =
     right ();
     and_elim (pack (Tv_Var (bv_of_binder h)));
     let h1 = implies_intro () in
-    let _ = implies_intro () in
+    implies_intro ();
     apply (`FStar.Squash.return_squash);
     exact (pack (Tv_Var (bv_of_binder h1)));
     qed ()

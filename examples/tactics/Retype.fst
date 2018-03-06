@@ -16,9 +16,9 @@ let assumption' () : Tac unit =
     assumption ()
 
 let tau () : Tac unit =
-    let _ = implies_intro () in
-    let _ = implies_intro () in
-    let _ = implies_intro () in
+    implies_intro ();
+    implies_intro ();
+    implies_intro ();
     let b = implies_intro () in
 
     binder_retype b; // call retype, get a goal `p == ?u`

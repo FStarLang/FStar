@@ -11,9 +11,9 @@ assume val p : squash xi
 let l1 (x : bool) (y : int) (z : unit) =
     assert_by_tactic (phi ==> (psi ==> xi))
             (fun () ->
-                let _ = implies_intro () in
+                implies_intro ();
                 clear_top ();
-                let _ = implies_intro () in
+                implies_intro ();
                 clear_top ();
                 exact (quote p)
              )
@@ -21,13 +21,13 @@ let l1 (x : bool) (y : int) (z : unit) =
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
     let bs = binders_of_env e in
-    let _ = map (fun b -> if term_eq (type_of_binder b) t
-                          then clear b
-                          else ())
+    map (fun b -> if term_eq (type_of_binder b) t
+                  then clear b
+                  else ())
          // We need to traverse the list backwards, to clear rightmost
          // binders first. Otherwise, if we go left-first, we will revert/intro
          // over a binder we want to clear and cause it to be refreshed.
-         (List.rev bs) in
+         (List.rev bs);
     ()
 
 let l2 (x : int) (y : bool) (z : int) =

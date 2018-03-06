@@ -179,8 +179,10 @@ let rec split_all () : Tac unit =
     iseq [split_all; split_all]
     end
   else
-    let _ = trytac trivial in
+    begin
+    trytac trivial;
     ()
+    end
 
 
 (*

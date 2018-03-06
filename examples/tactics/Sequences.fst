@@ -16,7 +16,7 @@ let clear_hypothesis (b:binder) : Tac unit = ()
 let retain_only (nss:list string) : Tac unit = 
   prune ""; //removes every top-level assertion which "" as a prefix; so prune everything
   addns "Prims" ; //keep prims always
-  let _ig = map addns nss in //add back only things in nss
+  map addns nss; //add back only things in nss
   ()
 
 let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
@@ -26,14 +26,13 @@ let prune_for_seq () : Tac unit =
   let e = cur_env () in 
   let bs = binders_of_env e in
   //prune the local environment
-  let _ = map (fun b ->
+  map (fun b ->
     match term_as_formula (type_of_binder b) with
     | Comp (Eq (Some t)) _ _ ->
       if is_seq_t t then //this is a sequence equality; keep it
         ()
       else clear_hypothesis b
-    | _ -> ()) bs
-  in
+    | _ -> ()) bs;
   retain_only ["FStar.Seq"]
   
 let try_unref_eq () : Tac unit =
@@ -54,7 +53,7 @@ val sequence_pruning : unit -> Tac unit
 let sequence_pruning () =
   norm [] ; //normalize the current goal
   // GM: if `seq a` is refined, applying lemma_eq_elim misbehaves and spins off a different goal, work around it by removing refinements here
-  let _ = repeat try_unref_eq in
+  repeat try_unref_eq;
   let g = cur_goal () in
   let f = term_as_formula g in
   debug ("This is the formula: " ^ (formula_to_string f));

@@ -6,7 +6,7 @@ let test =
   assert_by_tactic (True ==> True)
     (fun () ->
         (fun () ->
-          let _ = forall_intros () in
+          forall_intros ();
           let env = cur_env () in
           let hyps = binders_of_env env in
           match hyps with

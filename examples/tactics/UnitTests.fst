@@ -93,14 +93,14 @@ assume val dlem : squash True -> squash True -> squash True
 
 let _ = assert_by_tactic True (fun () ->
             apply (quote dlem);
-            let _ = divide 1 (fun () -> trivial (); qed ())
-                             (fun () -> trivial (); qed ()) in
+            divide 1 (fun () -> trivial (); qed ())
+                     (fun () -> trivial (); qed ());
             qed ())
 
 let _ = assert_by_tactic True (fun () ->
             apply (quote dlem);
-            let _ = divide 1 (fun () -> trivial (); qed ())
-                             (fun () -> trivial (); qed ()) in
+            divide 1 (fun () -> trivial (); qed ())
+                     (fun () -> trivial (); qed ());
             qed ())
 
 open FStar.Order

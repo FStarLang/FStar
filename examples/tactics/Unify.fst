@@ -10,8 +10,8 @@ let h : int =
         exact l;
         exact r;
         let ocho = `8 in
-        let _ = unify r ocho in
-        let _ = unify l r in
+        unify r ocho;
+        unify l r;
         ()
     )
 

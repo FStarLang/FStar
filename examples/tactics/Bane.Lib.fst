@@ -22,5 +22,5 @@ let rec repeat_or_fail (t : unit -> Tac unit) : Tac unit =
 let mytac () =
     norm [delta_only ["Bane.Lib.for_you12"]];
     seq (fun () -> repeatseq split)
-        (fun () -> or_else (fun () -> let _ = repeat split in ()) trivial)
+        (fun () -> or_else (fun () -> repeat split; ()) trivial)
 

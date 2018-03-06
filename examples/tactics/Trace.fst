@@ -124,7 +124,7 @@ let instrument (f : 'a) : Tac unit =
     dup ();
     let t = instrument_body ii t in
     dump "";
-    let _ = focus (fun () -> exact_guard t; repeat smt) in
+    focus (fun () -> exact_guard t; repeat smt);
     norm [];
     trefl ()
 

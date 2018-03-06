@@ -12,7 +12,7 @@ let _ =
     assert_by_tactic phi
         (fun () ->
              let psi' = quote psi in
-             let _ = tcut psi' in
+             tcut psi';
              flip ();
              exact (`p1); // TODO: kinda pointless example
              apply (`p2);
