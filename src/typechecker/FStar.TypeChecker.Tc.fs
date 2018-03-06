@@ -166,8 +166,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             ; repr        = snd (op ([], ed.repr))
             ; actions     = List.map (fun a ->
             { a with
-                action_defn = snd (op ([], a.action_defn));
-                action_typ  = snd (op ([], a.action_typ)) }) ed.actions
+                action_defn = snd (op (a.action_univs, a.action_defn));  //AR: can't assume that the action univs are empty
+                action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions
         }
   in
 //  printfn "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
@@ -383,6 +383,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // about what this action does. Please note that this "good" wp is
           // of the form [binders -> repr ...], i.e. is it properly curried.
 
+          //in case action has universes, open the action type etc. first
+          let act =
+            if act.action_univs = [] then act
+            else
+              let usubst, uvs = SS.univ_var_opening act.action_univs in
+              { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
+          in
+          
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
