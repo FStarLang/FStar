@@ -1851,10 +1851,11 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
 
     //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
     let modul_iface = extract_interface en m in
-    BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
-              (if Options.should_verify m.name.str then "" else " (in lax mode) ")
-              (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-              (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+    if Env.debug en <| Options.Low then
+      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
+                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
+                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
     let env0 = { en0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
