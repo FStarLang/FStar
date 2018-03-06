@@ -2624,7 +2624,7 @@ let (cps_and_elaborate :
                                                           with
                                                           | (bs1,body2,what')
                                                               ->
-                                                              let fail a413 =
+                                                              let fail a415 =
                                                                 (Obj.magic
                                                                    (fun
                                                                     uu____2850
@@ -2654,7 +2654,7 @@ let (cps_and_elaborate :
                                                                     ()
                                                                     (FStar_Errors.Fatal_WrongBodyTypeForReturnWP,
                                                                     error_msg)))
-                                                                  a413
+                                                                  a415
                                                                  in
                                                               ((match what'
                                                                 with
