@@ -407,11 +407,15 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
       | _ -> fail ("mk_sz: Not the right number of arguments (expected 3, found " ^ string_of_int (L.length ar) ^ ")")
     end else begin
       print "is something else" ;
-      let t' = unfold_fv v in
       if fuel = 0
       then fail "mk_sz: Not enough unfolding fuel"
       else
-        let res' = mk_sz (fuel - 1) ty (mk_app t' (neutralize_argv t ar)) in
+        let v' = unfold_fv v in
+        let t' = mk_app v' (neutralize_argv t ar) in
+        // unfolding might have introduced a redex,
+        // so we find an opportunity to reduce it here
+        let t' = T.norm_term [Prims.iota] t' in // beta implicit
+        let res' = mk_sz (fuel - 1) ty t' in
         let q = quote coerce_sz in
         let res = T.mk_app q [
           ty, T.Q_Explicit;
@@ -476,3 +480,10 @@ let example2 : (m unit) =
 
 let z2 : m_sz example2 =
   T.synth_by_tactic (fun () -> test_tac example2)
+
+let example3 (x: U8.t) : Tot (m unit) =
+  y <-- ret (if U8.lt 0uy x then U8.sub x 1uy else x) ;
+  print_char y
+
+let z3 (x: U8.t) : Tot (m_sz (example3 x)) =
+  T.synth_by_tactic (fun () -> test_tac (example3 x))
