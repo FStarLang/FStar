@@ -301,7 +301,7 @@ let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : unit -> Pure unit (requires True) (ensures (fun _ -> False))
-assume val magic   : #a:Type -> unit -> Tot a
+assume val magic   : #a:Type -> unit -> Pure a (requires True) (ensures (fun _ -> False))
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
