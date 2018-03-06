@@ -6,7 +6,7 @@ endif
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-OTHERFLAGS+=--use_two_phase_tc true
+OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
 
 ifeq ($(OS),Windows_NT)
   MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
