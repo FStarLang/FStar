@@ -35,6 +35,14 @@ module PC = FStar.Parser.Const
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
 
+(* A hook into FStar.Syntax.Print, only for debugging.
+ * The reference is set in FStar.Main *)
+let tts_f : ref<option<(term -> string)>> = U.mk_ref None
+let tts t : string =
+    match !tts_f with
+    | None -> "<<hook unset>>"
+    | Some f -> f t
+
 let qual_id lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
 
 let mk_discriminator lid =
