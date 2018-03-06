@@ -313,7 +313,7 @@ let fold_left_buffer_st #t f_spec f acc input =
    let bs = as_seq h input in
    let (s, _) = Some?.v (parse_abstract_store bs) in
    fold_left_store_n_spec f_spec acc s;
-   assert (num_entries == s.num_entries));
+   assert (num_entries == s.num_entries)) <: unit;
   let input = advance_slice input off in
   fold_left_buffer_n_st f_spec f acc input num_entries
 

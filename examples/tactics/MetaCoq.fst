@@ -87,6 +87,6 @@ let cut u : tactic = fun g ->
   [Goal ut; Goal u]
 
 let select (t:Type) (f : t -> tactic) : tactic = fun g ->
-  admit()
+  magic()
   // let g = goal_type u#0 g in
   (* match_goal ([| (x : T) |- G |] => f x) g *)

@@ -10,7 +10,7 @@ let unsquash #a : a -> squash a =
 let broken (a: Type0) =
   assert_by_tactic a (fun () ->
                         apply (quote (unsquash #a));
-                        let xx : a = admit () in
+                        let xx : a = magic () in
                         exact (quote xx))
 
 let yy : (Type0 -> unit) =

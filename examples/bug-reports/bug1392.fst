@@ -10,5 +10,5 @@ let broken (a: Type0) =
                         apply (`unsquash); //(unsquash #a));
                         let g = cur_goal () in
                         let aa = unquote #Type0 g in
-                        let xx : aa = admit #aa () in
+                        let xx : aa = magic () in
                         exact (quote xx))

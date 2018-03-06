@@ -167,7 +167,7 @@ let lemma_poly_reduce (n:int) (p:pos) (h:nat) (h2:nat) (h10:int) (c:int) (hh:int
 
 (* Provable, when we merge the UInt branch and use the lemmas
    from Poly1305_Bitvectors *)
-let lemma_poly_bits64 =
+let lemma_poly_bits64 () =
   admit()
 
 let lemma_mul_strict_upper_bound (x:nat) (x_bound:int) (y:nat) (y_bound:int) =

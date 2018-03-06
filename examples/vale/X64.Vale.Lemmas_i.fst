@@ -6,7 +6,7 @@ module S = X64.Semantics_s
 
 #reset-options "--initial_fuel 2 --max_fuel 2"
 
-let eval_while b c n s0 s1 : Type0 = admit ()
+let eval_while b c n s0 s1 : Type0 = magic ()
 
 let lemma_cmp_eq s o1 o2 = ()
 let lemma_cmp_ne s o1 o2 = ()
