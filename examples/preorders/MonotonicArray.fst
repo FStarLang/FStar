@@ -317,7 +317,7 @@ let lemma_sub_is_mutable
  *)
 let lemma_sub_frozen
   (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) (es:erased (Seq.seq a){frozen_with arr es})
-  :Lemma (requires True)
+  :Lemma (requires (Seq.length (reveal es) == n))
          (ensures  (frozen_with (sub arr i len) (hide (Seq.slice (reveal es) i (i + len)))))
 	 [SMTPat (frozen_with arr es); SMTPat (sub arr i len)]
   = let arr' = sub arr i len in
@@ -325,8 +325,8 @@ let lemma_sub_frozen
     lemma_functoriality (frozen_pred arr es) (frozen_pred arr' es')
 
 (*
- * if a subarray contains an init location, it remains init
- *)
+//  * if a subarray contains an init location, it remains init
+//  *)
 let lemma_sub_init_at
   (#a:Type0) (#n:nat) (arr:t a n) (i:index arr{arr `init_at` i})
   (j:index arr{j <= i}) (len:nat{j + len <= n /\ j + len > i})

@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "54c76843adc94cf15acdcb40431715b0"
+      "7cad094ce984c4eae6c83c8f968ccdd1"
     ],
     [
       "Calc.op_Amp_Bar",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "bcf4ce37e353c880f7e6af30b1dfa9b9"
+      "b8fec65fe87c7d7da172a9e16d4964bd"
     ],
     [
       "Calc.op_Amp_Bar_Bar",
@@ -26,10 +26,40 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Calc_Tm_refine_0ef3229582a160fc9566dff533e2700e"
+        "refinement_interpretation_Calc_Tm_refine_15c4f7abf5cd16781fdcc1fe07037726"
       ],
       0,
-      "e51a6cabb96ea81a5b5200dcf026f5c0"
+      "b36f5e54af0af9b7c47736c9a29b120a"
+    ],
+    [
+      "Calc.op_Amp_Equals",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "1318ec430b467de7e5f836324e59cf1b"
+    ],
+    [
+      "Calc.op_Amp_Bar",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "256978d993648e6972f30d082b545018"
+    ],
+    [
+      "Calc.op_Amp_Bar_Bar",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Calc_Tm_refine_358b67d4a56d5ed45fb2ec148fe32dfc"
+      ],
+      0,
+      "847c9e90ea4a9c3985aec00fa474fe4a"
     ]
   ]
 ]

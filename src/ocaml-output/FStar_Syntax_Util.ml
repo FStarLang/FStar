@@ -1205,7 +1205,7 @@ let (range_of_lbname :
   
 let range_of_arg :
   'Auu____3085 'Auu____3086 .
-    ('Auu____3086 FStar_Syntax_Syntax.syntax,'Auu____3085)
+    ('Auu____3085 FStar_Syntax_Syntax.syntax,'Auu____3086)
       FStar_Pervasives_Native.tuple2 -> FStar_Range.range
   =
   fun uu____3096  ->
@@ -1213,7 +1213,7 @@ let range_of_arg :
   
 let range_of_args :
   'Auu____3113 'Auu____3114 .
-    ('Auu____3114 FStar_Syntax_Syntax.syntax,'Auu____3113)
+    ('Auu____3113 FStar_Syntax_Syntax.syntax,'Auu____3114)
       FStar_Pervasives_Native.tuple2 Prims.list ->
       FStar_Range.range -> FStar_Range.range
   =

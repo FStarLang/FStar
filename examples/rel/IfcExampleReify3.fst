@@ -13,8 +13,12 @@ type env = id ->  Tot label
 type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). {:pattern (Low? (env x))} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
 
+(* AR: need to investigate what's happening without this is_x in p1 *)
+let is_x (hi:id) (x:int) :INT_STORE bool (fun s0 p -> p ((index s0 hi = x), s0))  =
+  read hi = x
+
  let p1 x y hi =
-  begin if read hi = 0 then
+  begin if is_x hi 0 then
     let vx = read x in
     let vy = read y in
     write x (vx + vy)

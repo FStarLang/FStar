@@ -532,9 +532,9 @@ let (check_expected_effect :
 let no_logical_guard :
   'Auu____559 'Auu____560 .
     FStar_TypeChecker_Env.env ->
-      ('Auu____560,'Auu____559,FStar_TypeChecker_Env.guard_t)
+      ('Auu____559,'Auu____560,FStar_TypeChecker_Env.guard_t)
         FStar_Pervasives_Native.tuple3 ->
-        ('Auu____560,'Auu____559,FStar_TypeChecker_Env.guard_t)
+        ('Auu____559,'Auu____560,FStar_TypeChecker_Env.guard_t)
           FStar_Pervasives_Native.tuple3
   =
   fun env  ->

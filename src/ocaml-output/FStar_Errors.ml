@@ -2669,8 +2669,8 @@ let (message_prefix : error_message_prefix) =
   { set_prefix; append_prefix; clear_prefix } 
 let findIndex :
   'Auu____3489 'Auu____3490 .
-    ('Auu____3490,'Auu____3489) FStar_Pervasives_Native.tuple2 Prims.list ->
-      'Auu____3490 -> Prims.int
+    ('Auu____3489,'Auu____3490) FStar_Pervasives_Native.tuple2 Prims.list ->
+      'Auu____3489 -> Prims.int
   =
   fun l  ->
     fun v1  ->

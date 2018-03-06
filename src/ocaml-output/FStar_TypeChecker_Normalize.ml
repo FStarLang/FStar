@@ -125,9 +125,9 @@ let (uu___is_Unascribe : step -> Prims.bool) =
 type steps = step Prims.list[@@deriving show]
 let cases :
   'Auu____162 'Auu____163 .
-    ('Auu____163 -> 'Auu____162) ->
-      'Auu____162 ->
-        'Auu____163 FStar_Pervasives_Native.option -> 'Auu____162
+    ('Auu____162 -> 'Auu____163) ->
+      'Auu____163 ->
+        'Auu____162 FStar_Pervasives_Native.option -> 'Auu____163
   =
   fun f  ->
     fun d  ->
@@ -1701,8 +1701,8 @@ let is_empty : 'Auu____2599 . 'Auu____2599 Prims.list -> Prims.bool =
   
 let lookup_bvar :
   'Auu____2615 'Auu____2616 .
-    ('Auu____2616,'Auu____2615) FStar_Pervasives_Native.tuple2 Prims.list ->
-      FStar_Syntax_Syntax.bv -> 'Auu____2615
+    ('Auu____2615,'Auu____2616) FStar_Pervasives_Native.tuple2 Prims.list ->
+      FStar_Syntax_Syntax.bv -> 'Auu____2616
   =
   fun env  ->
     fun x  ->
@@ -3354,10 +3354,10 @@ let mk_psc_subst :
 let reduce_primops :
   'Auu____8323 'Auu____8324 .
     cfg ->
-      ((FStar_Syntax_Syntax.bv,'Auu____8324) FStar_Pervasives_Native.tuple2
+      ((FStar_Syntax_Syntax.bv,'Auu____8323) FStar_Pervasives_Native.tuple2
          FStar_Pervasives_Native.option,closure)
         FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____8323 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+        'Auu____8324 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -3506,10 +3506,10 @@ let reduce_primops :
 let reduce_equality :
   'Auu____8553 'Auu____8554 .
     cfg ->
-      ((FStar_Syntax_Syntax.bv,'Auu____8554) FStar_Pervasives_Native.tuple2
+      ((FStar_Syntax_Syntax.bv,'Auu____8553) FStar_Pervasives_Native.tuple2
          FStar_Pervasives_Native.option,closure)
         FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____8553 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+        'Auu____8554 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun tm  ->
@@ -3555,10 +3555,10 @@ let reduce_equality :
 let maybe_simplify_aux :
   'Auu____8602 'Auu____8603 .
     cfg ->
-      ((FStar_Syntax_Syntax.bv,'Auu____8603) FStar_Pervasives_Native.tuple2
+      ((FStar_Syntax_Syntax.bv,'Auu____8602) FStar_Pervasives_Native.tuple2
          FStar_Pervasives_Native.option,closure)
         FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____8602 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+        'Auu____8603 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -4205,10 +4205,10 @@ let maybe_simplify_aux :
 let maybe_simplify :
   'Auu____13078 'Auu____13079 .
     cfg ->
-      ((FStar_Syntax_Syntax.bv,'Auu____13079) FStar_Pervasives_Native.tuple2
+      ((FStar_Syntax_Syntax.bv,'Auu____13078) FStar_Pervasives_Native.tuple2
          FStar_Pervasives_Native.option,closure)
         FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____13078 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+        'Auu____13079 -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->

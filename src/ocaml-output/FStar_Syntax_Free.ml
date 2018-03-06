@@ -129,8 +129,8 @@ let union :
               (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univs);
          FStar_Syntax_Syntax.free_univ_names =
            (FStar_List.append
-              (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univ_names
-              (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_univ_names)
+              (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_univ_names
+              (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univ_names)
        }, uu____227)
   
 let rec (free_univs :
@@ -422,8 +422,8 @@ and (should_invalidate_cache :
 
 let compare_uv :
   'Auu____1747 'Auu____1748 .
-    (FStar_Syntax_Syntax.uvar,'Auu____1748) FStar_Pervasives_Native.tuple2 ->
-      (FStar_Syntax_Syntax.uvar,'Auu____1747) FStar_Pervasives_Native.tuple2
+    (FStar_Syntax_Syntax.uvar,'Auu____1747) FStar_Pervasives_Native.tuple2 ->
+      (FStar_Syntax_Syntax.uvar,'Auu____1748) FStar_Pervasives_Native.tuple2
         -> Prims.int
   =
   fun uv1  ->
@@ -485,16 +485,14 @@ let (univs :
     FStar_Util.as_set uu____1884 compare_universe_uvar
   
 let (univnames :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.univ_name FStar_Util.fifo_set)
-  =
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.univ_name FStar_Util.set) =
   fun t  ->
     let uu____1902 =
       let uu____1905 =
         let uu____1906 = free_names_and_uvars t true  in
         FStar_Pervasives_Native.fst uu____1906  in
       uu____1905.FStar_Syntax_Syntax.free_univ_names  in
-    FStar_Util.as_fifo_set uu____1902 FStar_Syntax_Syntax.order_univ_name
+    FStar_Util.as_set uu____1902 FStar_Syntax_Syntax.order_univ_name
   
 let (fvars : FStar_Syntax_Syntax.term -> FStar_Ident.lident FStar_Util.set) =
   fun t  ->

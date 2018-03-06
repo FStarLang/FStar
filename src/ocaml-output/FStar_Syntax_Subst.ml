@@ -17,9 +17,9 @@ let subst_to_string :
   
 let rec apply_until_some :
   'Auu____53 'Auu____54 .
-    ('Auu____54 -> 'Auu____53 FStar_Pervasives_Native.option) ->
-      'Auu____54 Prims.list ->
-        ('Auu____54 Prims.list,'Auu____53) FStar_Pervasives_Native.tuple2
+    ('Auu____53 -> 'Auu____54 FStar_Pervasives_Native.option) ->
+      'Auu____53 Prims.list ->
+        ('Auu____53 Prims.list,'Auu____54) FStar_Pervasives_Native.tuple2
           FStar_Pervasives_Native.option
   =
   fun f  ->
@@ -35,10 +35,10 @@ let rec apply_until_some :
   
 let map_some_curry :
   'Auu____120 'Auu____121 'Auu____122 .
-    ('Auu____122 -> 'Auu____121 -> 'Auu____120) ->
-      'Auu____120 ->
-        ('Auu____122,'Auu____121) FStar_Pervasives_Native.tuple2
-          FStar_Pervasives_Native.option -> 'Auu____120
+    ('Auu____120 -> 'Auu____121 -> 'Auu____122) ->
+      'Auu____122 ->
+        ('Auu____120,'Auu____121) FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.option -> 'Auu____122
   =
   fun f  ->
     fun x  ->
@@ -49,10 +49,10 @@ let map_some_curry :
   
 let apply_until_some_then_map :
   'Auu____174 'Auu____175 'Auu____176 .
-    ('Auu____176 -> 'Auu____175 FStar_Pervasives_Native.option) ->
-      'Auu____176 Prims.list ->
-        ('Auu____176 Prims.list -> 'Auu____175 -> 'Auu____174) ->
-          'Auu____174 -> 'Auu____174
+    ('Auu____174 -> 'Auu____175 FStar_Pervasives_Native.option) ->
+      'Auu____174 Prims.list ->
+        ('Auu____174 Prims.list -> 'Auu____175 -> 'Auu____176) ->
+          'Auu____176 -> 'Auu____176
   =
   fun f  ->
     fun s  ->
@@ -63,11 +63,11 @@ let apply_until_some_then_map :
   
 let compose_subst :
   'Auu____243 'Auu____244 .
-    ('Auu____244 Prims.list,'Auu____243 FStar_Pervasives_Native.option)
+    ('Auu____243 Prims.list,'Auu____244 FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.tuple2 ->
-      ('Auu____244 Prims.list,'Auu____243 FStar_Pervasives_Native.option)
+      ('Auu____243 Prims.list,'Auu____244 FStar_Pervasives_Native.option)
         FStar_Pervasives_Native.tuple2 ->
-        ('Auu____244 Prims.list,'Auu____243 FStar_Pervasives_Native.option)
+        ('Auu____243 Prims.list,'Auu____244 FStar_Pervasives_Native.option)
           FStar_Pervasives_Native.tuple2
   =
   fun s1  ->
