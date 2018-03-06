@@ -109,6 +109,7 @@ open FStar.Tactics.Builtins
 open FStar.Tactics.Logic
 
 #set-options "--print_full_names"
+//sequential composition
 let swap (r:ref int) (s:ref int) =
   (let x = !r in
    let y = !s in
@@ -123,3 +124,16 @@ let swap (r:ref int) (s:ref int) =
              dump "B"; 
              FStar.Tactics.Derived.admit1(); //NS: not sure how the existing SL.Tactics.solve is supposed to tackle this
              qed())
+
+//branching
+let conditional_swap (r:ref int) (s:ref int) =
+  let x = !r in
+  if x = 0 then
+   let y = !s in
+   r := y
+
+//recursion
+let rec decr_n (n:nat) (r:ref int) : STATE unit (fun post h -> False) = 
+  if n <> 0 then ()
+  else (r := !r - 1; decr_n (n - 1) r)
+
