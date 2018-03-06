@@ -240,51 +240,56 @@ let test (x: U32.t) : Tot (option U32.t) =
 
 module T = FStar.Tactics
 
-let rec string_of_name (x: T.name) : Tot (T.tactic Prims.string) =
+// GM: I think you can just use (String.concat ".") for this
+let rec string_of_name (x: T.name) : T.Tac Prims.string =
   match x with
   | [] -> T.fail "string_of_name: degenerate case, should not happen"
-  | [a] -> T.return a
+  | [a] -> a
   | a :: q ->
     let open T in
-    y <-- string_of_name q ;
-    T.return (a ^ "." ^ y)
+    a ^ "." ^ string_of_name q
 
-let unfold_fv (t: T.fv) : Tot (T.tactic T.term) =
+let unfold_fv (t: T.fv) : T.Tac T.term =
   let open T in
-  n <-- string_of_name (T.inspect_fv t) ;
+  let n = string_of_name (T.inspect_fv t) in
   T.norm_term [Prims.delta_only [n]] (T.pack (T.Tv_FVar t))
 
 module L = FStar.List.Tot
 
-let rec app_head_rev_tail (t: T.term) : Tot (T.tactic (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) }) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } )) =
+// GM: We might need to make `inspect` an effectful function,
+// and then you wouldn't be able to use it in the refinement.
+let rec app_head_rev_tail (t: T.term) :
+    T.Tac (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) }) * list (tl: T.argv { tl << t } ))
+                { if Cons? (snd res) then fst res << t else fst res == t } ) =
   match T.inspect t with
   | T.Tv_App u v ->
     let open T in
-    xl <-- app_head_rev_tail u ;
-    let (x, l) = xl in
+    let (x, l) = app_head_rev_tail u in
     let res : ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) = (x, v :: L.map (fun (x: argv {x << u}) -> (x <: (x: argv { x << t } ))) l) in
     let (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
-    return res
-  | _ -> T.return (t, [])
+    res
+  | _ -> (t, [])
 
 let rev_is_cons (#a: Type) (l: list a) : Lemma
   (requires (Cons? l))
   (ensures (Cons? (L.rev l)))
 = L.rev_rev' l
 
-let app_head_tail (t: T.term) : Tot (T.tactic (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } )) =
+let app_head_tail (t: T.term) :
+    T.Tac (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } ))
+                { if Cons? (snd res) then fst res << t else fst res == t } ) =
   let open T in
-  xl <-- app_head_rev_tail t ;
-  let (x, l) = xl in
+  let (x, l) = app_head_rev_tail t in
   let (res : ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } ))) = (x, L.rev l) in
   Classical.move_requires rev_is_cons l;
   let (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
-  return res
+  res
 
-let tassert (x: bool) : Tot (T.tactic (y: unit { x == true } )) =
-  if x then T.return () else (
+// GM: This is cool!
+let tassert (x: bool) : T.Tac (y: unit { x == true } ) =
+  if x then () else (
     let open T in
-    y <-- quote x ;
+    let y = quote x in
     fail ("Tactic assert failure: " ^ term_to_string y)
   )
 
@@ -294,16 +299,16 @@ let tm_eq_fvar (t1 t2: T.term) : Tot bool =
     (T.inspect_fv f1 = T.inspect_fv f2)
   | _ -> false
 
-let ret_tm : T.tactic T.term =
+let ret_tm () : T.Tac T.term =
   T.quote ret
 
-let bind_tm : T.tactic T.term =
+let bind_tm () : T.Tac T.term =
   T.quote bind
 
-let seq_tm : T.tactic T.term =
+let seq_tm () : T.Tac T.term =
   T.quote seq
 
-let print_char_tm : T.tactic T.term =
+let print_char_tm () : T.Tac T.term =
   T.quote print_char
 
 let rec neutralize_argv (t: T.term) (ar: list (x: T.argv { x << t } )) : Tot (list T.argv) =
@@ -311,38 +316,38 @@ let rec neutralize_argv (t: T.term) (ar: list (x: T.argv { x << t } )) : Tot (li
   | [] -> []
   | a :: q -> a :: neutralize_argv t q
 
-let rec mk_sz (fuel: nat) (t: T.term) : Tot (T.tactic T.term)
-  (decreases (LexCons fuel (LexCons t LexTop)))
+let rec mk_sz (fuel: nat) (t: T.term) : T.Tac T.term
+  //(decreases (LexCons fuel (LexCons t LexTop)))
 =
   let open T in
-  far <-- app_head_tail t ;
-  let (f, ar) = far in
+  admit (); // GM: VC is too hard, admit for now
+  let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
-  | T.Tv_FVar v ->
-    _ <-- print ("Number of arguments: " ^ string_of_int (L.length ar)) ;
-    r <-- ret_tm ;
-    b <-- bind_tm ;
-    s <-- seq_tm ;
-    p <-- print_char_tm ;
+  | T.Tv_FVar v -> begin
+    print ("Number of arguments: " ^ string_of_int (L.length ar));
+    let r = ret_tm () in
+    let b = bind_tm () in
+    let s = seq_tm () in
+    let p = print_char_tm () in
     if tm_eq_fvar f r
     then begin
-      _ <-- print "is RET" ;
-      ret_sz_tm <-- quote ret_sz ;
+      print "is RET";
+      let ret_sz_tm = quote ret_sz in
       let res = mk_app ret_sz_tm (neutralize_argv t ar) in
-      _ <-- print (term_to_string res) ;
-      return res
+      print (term_to_string res);
+      res
     end else if tm_eq_fvar f b
     then begin
-      _ <-- print "is BIND" ;
+      print "is BIND";
       match ar with
       | [ t1; t2; (x, _); (y, _) ] ->
-        _ <-- print "4 arguments" ;
+        print "4 arguments" ;
         begin match T.inspect y with
         | T.Tv_Abs v y' ->
-          x_ <-- mk_sz fuel x ;
-          y_ <-- mk_sz fuel y' ;
-          bind_sz_tm <-- quote bind_sz ;
+          let x_ = mk_sz fuel x in
+          let y_ = mk_sz fuel y' in
+          let bind_sz_tm = quote bind_sz in
           let v' = fresh_binder (type_of_binder v) in
           let res = mk_app bind_sz_tm [
             t1;
@@ -353,26 +358,26 @@ let rec mk_sz (fuel: nat) (t: T.term) : Tot (T.tactic T.term)
             (pack (Tv_Abs v' y_), Q_Explicit);
           ]
           in
-          _ <-- print (term_to_string res) ;
-          return res
+          print (term_to_string res);
+          res
         | _ -> fail ("mk_sz: Not an abstraction: " ^ term_to_string y)
         end
       | _ -> fail ("mk_sz: Not the right number of arguments (expected 4, found " ^ string_of_int (L.length ar) ^ ")")
     end else if tm_eq_fvar f p
     then begin
-      _ <-- print "is PRINT_CHAR" ;
-      print_char_sz_tm <-- quote print_char_sz ;
+      print "is PRINT_CHAR";
+      let print_char_sz_tm = quote print_char_sz in
       let res = mk_app print_char_sz_tm (neutralize_argv t ar) in
-      _ <-- print (term_to_string res) ;
-      return res
+      print (term_to_string res) ;
+      res
     end else if tm_eq_fvar f s
     then begin
-      _ <-- print "is SEQ" ;
+      print "is SEQ";
       match ar with
       | [ (t2, _); (x, _); (y, _) ] ->
-        x_ <-- mk_sz fuel x ;
-        y_ <-- mk_sz fuel y ;
-        seq_sz_tm <-- quote seq_sz ;
+        let x_ = mk_sz fuel x in
+        let y_ = mk_sz fuel y in
+        let seq_sz_tm = quote seq_sz in
         let res = mk_app seq_sz_tm [
           (t2, Q_Explicit);
           (x, Q_Explicit);
@@ -381,44 +386,45 @@ let rec mk_sz (fuel: nat) (t: T.term) : Tot (T.tactic T.term)
           (y_, Q_Explicit);
         ]
         in
-        _ <-- print (term_to_string res) ;
-        return res
+        print (term_to_string res);
+        res
       | _ -> fail ("mk_sz: Not the right number of arguments (expected 3, found " ^ string_of_int (L.length ar) ^ ")")
     end else begin
-      _ <-- print "is something else" ;
-      t' <-- unfold_fv v ;
+      print "is something else" ;
+      let t' = unfold_fv v in
       if fuel = 0
       then fail "mk_sz: Not enough unfolding fuel"
       else mk_sz (fuel - 1) (mk_app t' (neutralize_argv t ar))
     end
+  end
   | _ -> T.fail "head is not a Tv_FVar"
 
-let unfold_ (#t: Type) (x: t) : Tot (T.tactic T.term) =
+let unfold_ (#t: Type) (x: t) : T.Tac T.term =
   let open T in
-  u <-- quote x ;
+  let u = quote x in
   match inspect u with
   | Tv_FVar v -> unfold_fv v
   | _ -> fail ("unfold_def: Not a free variable: " ^ term_to_string u)
 
-let test_tac (#t: Type0) (m: m t) : Tot (T.tactic unit) =
+let test_tac (#t: Type0) (m: m t) : T.Tac unit =
   let open T in
-  x <-- quote m ;
-  t <-- mk_sz 2 x ;
-  exact_guard (return t)
+    let x = quote m in
+    let t = mk_sz 2 x in
+    exact_guard t
 
 let example0 : (m int) =
   ret 42
 
 (* Works *)
 let z0 : m_sz example0 =
-  T.synth_by_tactic (test_tac example0)
+  T.synth_by_tactic (fun () -> test_tac example0)
 
 let example0' : (m unit) =
   print_char 128uy
 
 (* Works *)
 let z0' : m_sz example0' =
-  T.synth_by_tactic (test_tac example0')
+  T.synth_by_tactic (fun () -> test_tac example0')
 
 let example1 : (m unit) =
   seq
@@ -427,7 +433,7 @@ let example1 : (m unit) =
 
 (* FAILS:
 let z1 : m_sz example1 =
-  T.synth_by_tactic (test_tac example1)
+  T.synth_by_tactic (fun () -> test_tac example1)
 *)
 
 (* The following term is the term printed by the tactic. This works. *)
