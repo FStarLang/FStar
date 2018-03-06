@@ -364,14 +364,13 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
           in
           let y_ = mk_sz fuel t2' y' in
           let bind_sz_tm = quote bind_sz in
-          let v' = fresh_binder (type_of_binder v) in
           let res = mk_app bind_sz_tm [
             (t1, Q_Implicit);
             (t2, Q_Implicit);
             (x, Q_Implicit);
             (x_, Q_Explicit);
             (y, Q_Implicit);
-            (pack (Tv_Abs v' y_), Q_Explicit);
+            (pack (Tv_Abs v y_), Q_Explicit);
           ]
           in
           print (term_to_string res);
@@ -470,3 +469,10 @@ let z1_ : m_sz example1 =
   (print_char_sz (FStar.UInt8.uint_to_t 42))
   (ret ())
   (ret_sz ())
+
+let example2 : (m unit) =
+  x <-- ret 18uy ;
+  print_char x
+
+let z2 : m_sz example2 =
+  T.synth_by_tactic (fun () -> test_tac example2)
