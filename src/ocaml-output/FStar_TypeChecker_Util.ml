@@ -4756,68 +4756,74 @@ let (check_sigelt_quals :
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (x = FStar_Syntax_Syntax.Abstract))
-                          || (x = FStar_Syntax_Syntax.Inline_for_extraction))
-                         || (x = FStar_Syntax_Syntax.NoExtract))
-                        || (has_eq x))
-                       || (inferred x))
-                      || (visibility x)))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (x = FStar_Syntax_Syntax.Abstract))
+                           || (x = FStar_Syntax_Syntax.Inline_for_extraction))
+                          || (x = FStar_Syntax_Syntax.NoExtract))
+                         || (has_eq x))
+                        || (inferred x))
+                       || (visibility x))
+                      || (reification x)))
         | FStar_Syntax_Syntax.Visible_default  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (x = FStar_Syntax_Syntax.Abstract))
-                          || (x = FStar_Syntax_Syntax.Inline_for_extraction))
-                         || (x = FStar_Syntax_Syntax.NoExtract))
-                        || (has_eq x))
-                       || (inferred x))
-                      || (visibility x)))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (x = FStar_Syntax_Syntax.Abstract))
+                           || (x = FStar_Syntax_Syntax.Inline_for_extraction))
+                          || (x = FStar_Syntax_Syntax.NoExtract))
+                         || (has_eq x))
+                        || (inferred x))
+                       || (visibility x))
+                      || (reification x)))
         | FStar_Syntax_Syntax.Irreducible  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (x = FStar_Syntax_Syntax.Abstract))
-                          || (x = FStar_Syntax_Syntax.Inline_for_extraction))
-                         || (x = FStar_Syntax_Syntax.NoExtract))
-                        || (has_eq x))
-                       || (inferred x))
-                      || (visibility x)))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (x = FStar_Syntax_Syntax.Abstract))
+                           || (x = FStar_Syntax_Syntax.Inline_for_extraction))
+                          || (x = FStar_Syntax_Syntax.NoExtract))
+                         || (has_eq x))
+                        || (inferred x))
+                       || (visibility x))
+                      || (reification x)))
         | FStar_Syntax_Syntax.Abstract  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (x = FStar_Syntax_Syntax.Abstract))
-                          || (x = FStar_Syntax_Syntax.Inline_for_extraction))
-                         || (x = FStar_Syntax_Syntax.NoExtract))
-                        || (has_eq x))
-                       || (inferred x))
-                      || (visibility x)))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (x = FStar_Syntax_Syntax.Abstract))
+                           || (x = FStar_Syntax_Syntax.Inline_for_extraction))
+                          || (x = FStar_Syntax_Syntax.NoExtract))
+                         || (has_eq x))
+                        || (inferred x))
+                       || (visibility x))
+                      || (reification x)))
         | FStar_Syntax_Syntax.Noeq  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (x = FStar_Syntax_Syntax.Abstract))
-                          || (x = FStar_Syntax_Syntax.Inline_for_extraction))
-                         || (x = FStar_Syntax_Syntax.NoExtract))
-                        || (has_eq x))
-                       || (inferred x))
-                      || (visibility x)))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (x = FStar_Syntax_Syntax.Abstract))
+                           || (x = FStar_Syntax_Syntax.Inline_for_extraction))
+                          || (x = FStar_Syntax_Syntax.NoExtract))
+                         || (has_eq x))
+                        || (inferred x))
+                       || (visibility x))
+                      || (reification x)))
         | FStar_Syntax_Syntax.Unopteq  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (x = FStar_Syntax_Syntax.Abstract))
-                          || (x = FStar_Syntax_Syntax.Inline_for_extraction))
-                         || (x = FStar_Syntax_Syntax.NoExtract))
-                        || (has_eq x))
-                       || (inferred x))
-                      || (visibility x)))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (x = FStar_Syntax_Syntax.Abstract))
+                           || (x = FStar_Syntax_Syntax.Inline_for_extraction))
+                          || (x = FStar_Syntax_Syntax.NoExtract))
+                         || (has_eq x))
+                        || (inferred x))
+                       || (visibility x))
+                      || (reification x)))
         | FStar_Syntax_Syntax.TotalEffect  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
@@ -4836,14 +4842,16 @@ let (check_sigelt_quals :
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((reification x) || (inferred x)) || (visibility x)) ||
-                      (x = FStar_Syntax_Syntax.TotalEffect)))
+                    ((((reification x) || (inferred x)) || (visibility x)) ||
+                       (x = FStar_Syntax_Syntax.TotalEffect))
+                      || (x = FStar_Syntax_Syntax.Visible_default)))
         | FStar_Syntax_Syntax.Reflectable uu____11666 ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((reification x) || (inferred x)) || (visibility x)) ||
-                      (x = FStar_Syntax_Syntax.TotalEffect)))
+                    ((((reification x) || (inferred x)) || (visibility x)) ||
+                       (x = FStar_Syntax_Syntax.TotalEffect))
+                      || (x = FStar_Syntax_Syntax.Visible_default)))
         | FStar_Syntax_Syntax.Private  -> true
         | uu____11671 -> true  in
       let quals = FStar_Syntax_Util.quals_of_sigelt se  in
