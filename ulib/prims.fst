@@ -206,8 +206,6 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         PURE a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
 
-effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
-
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
 effect Tot (a:Type) = PURE a (pure_null_wp a)
 
@@ -302,7 +300,7 @@ let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
-assume val admit   : #a:Type -> unit -> Admit a
+assume val admit   : unit -> Pure unit (requires True) (ensures (fun _ -> False))
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x

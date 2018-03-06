@@ -334,8 +334,8 @@ let deps_and_repl_ld_tasks_of_our_file filename
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
-      [] in
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str))
+      in
 
   let tasks =
     repl_ld_tasks_of_deps real_deps intf_tasks in

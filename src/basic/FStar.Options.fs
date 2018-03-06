@@ -1079,7 +1079,7 @@ let set_options o s =
     try
         if s = ""
         then Success
-        else Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
+        else Getopt.parse_string specs (fun s -> let _ : unit = raise (File_argument s) in ()) s
     with
       | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
