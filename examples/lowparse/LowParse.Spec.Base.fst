@@ -21,6 +21,7 @@ module U32 = FStar.UInt32
 inline_for_extraction
 let consumed_length (b: bytes) : Tot Type0 = (n: nat { n <= Seq.length b } )
 
+inline_for_extraction
 let bare_parser (t:Type0) : Tot Type0 = (b: bytes) -> GTot (option (t * consumed_length b))
 
 let parse
@@ -375,23 +376,38 @@ let parser_subkind_prop (k: parser_subkind) (#t: Type0) (f: bare_parser t) : GTo
   | ParserConsumesAll ->
     consumes_all f
 
+type parser_kind_metadata_t = {
+  parser_kind_metadata_total: bool;
+}
+
 type parser_kind' = {
   parser_kind_low: nat;
   parser_kind_high: option nat;
-  parser_kind_total: bool;
   parser_kind_subkind: option parser_subkind;
+  parser_kind_metadata: parser_kind_metadata_t;
 }
 
 let parser_kind = (x: parser_kind' {
   Some? x.parser_kind_high ==> x.parser_kind_low <= Some?.v x.parser_kind_high
 })
 
+inline_for_extraction
+let strong_parser_kind (lo hi: nat) (md: parser_kind_metadata_t) : Pure parser_kind
+  (requires (lo <= hi))
+  (ensures (fun _ -> True))
+= {
+    parser_kind_low = lo;
+    parser_kind_high = Some hi;
+    parser_kind_subkind = Some ParserStrong;
+    parser_kind_metadata = md;
+  }
+
 let parser_kind_prop (#t: Type0) (k: parser_kind) (f: bare_parser t) : GTot Type0 =
   no_lookahead_weak f /\
   injective f /\
   parses_at_least k.parser_kind_low f /\
   (Some? k.parser_kind_high ==> (parses_at_most (Some?.v k.parser_kind_high) f)) /\
-  (((k.parser_kind_high == Some k.parser_kind_low) /\ (k.parser_kind_total == true)) ==> is_total_constant_size_parser k.parser_kind_low f) /\
+  (((k.parser_kind_high == Some k.parser_kind_low) /\ (k.parser_kind_metadata.parser_kind_metadata_total == true)) ==> is_total_constant_size_parser k.parser_kind_low f) /\
   (Some? k.parser_kind_subkind ==> parser_subkind_prop (Some?.v k.parser_kind_subkind) f)
 
 let parser_kind_prop_ext
@@ -405,6 +421,7 @@ let parser_kind_prop_ext
   no_lookahead_weak_ext f1 f2;
   injective_ext f1 f2
 
+inline_for_extraction
 let parser
   (k: parser_kind)
   (t: Type0)
@@ -434,7 +451,7 @@ let is_weaker_than
     Some? k2.parser_kind_high /\
     Some?.v k2.parser_kind_high <= Some?.v k1.parser_kind_high
   )) /\
-  (k1.parser_kind_total == true ==> k2.parser_kind_total == true) /\
+  (k1.parser_kind_metadata.parser_kind_metadata_total == true ==> k2.parser_kind_metadata.parser_kind_metadata_total == true) /\
   (Some? k1.parser_kind_subkind ==> k1.parser_kind_subkind == k2.parser_kind_subkind)
 
 #set-options "--use_two_phase_tc false"
@@ -472,7 +489,9 @@ let glb
 	   else k2.parser_kind_high
       else None
     );
-    parser_kind_total = k1.parser_kind_total && k2.parser_kind_total;
+    parser_kind_metadata = {
+      parser_kind_metadata_total = k1.parser_kind_metadata.parser_kind_metadata_total && k2.parser_kind_metadata.parser_kind_metadata_total;
+    };
     parser_kind_subkind = if k1.parser_kind_subkind = k2.parser_kind_subkind then k1.parser_kind_subkind else None
   }
 
@@ -483,7 +502,9 @@ let default_parser_kind : (x: parser_kind {
 = {
     parser_kind_low = 0;
     parser_kind_high = None;
-    parser_kind_total = false;
+    parser_kind_metadata = {
+      parser_kind_metadata_total = false;
+    };
     parser_kind_subkind = None;
   }
 
@@ -545,6 +566,7 @@ let coerce_parser
 
 (* Pure serializers *)
 
+inline_for_extraction
 let bare_serializer
   (t: Type0)
 : Tot Type0
@@ -607,6 +629,7 @@ let serializer_correct_implies_complete
   in
   Classical.forall_intro (Classical.move_requires prf)
 
+inline_for_extraction
 let serializer
   (#k: parser_kind)
   (#t: Type0)
