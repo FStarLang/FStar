@@ -56,20 +56,6 @@ let b32_reveal_create
   Seq.lemma_eq_intro lhs rhs;
   Seq.lemma_eq_elim lhs rhs
 
-inline_for_extraction
-let lb32set
-  (#n: nat)
-  (b: lbytes n)
-  (i: U32.t)
-  (x: byte)
-: Pure (lbytes n)
-  (requires (U32.v i < n))
-  (ensures (fun y ->
-    U32.v i < n /\
-    reveal y == Seq.upd (reveal b) (U32.v i) x
-  ))
-= set_byte b i x
-
 let reveal_empty () : Lemma
   (reveal empty_bytes == Seq.createEmpty)
 = assert (Seq.equal (reveal empty_bytes) Seq.createEmpty)
