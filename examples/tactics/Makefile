@@ -46,6 +46,7 @@ all:	Apply.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
+	StringPrinter.uver      \
 	neg
 	# launch			\
 
