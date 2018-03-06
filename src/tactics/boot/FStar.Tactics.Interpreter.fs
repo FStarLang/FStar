@@ -339,7 +339,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
 
-      mktac2 "__embed"         (fun _ x -> ret x) get get embed_term S.t_term;
+      mktac2 "__fresh_binder_named"  fresh_binder_named unembed_string unembed_term embed_binder S.t_binder;
 
       decr_depth_step;
       incr_depth_step;

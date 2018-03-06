@@ -1,5 +1,5 @@
 [
-  "Алa•tВPs№\u0015лA\b3Ьь",
+  "є%|р\u0000Ѕ§<oђxз\u001e\"\u001dK",
   [
     [
       "Sequences.is_seq_t",
@@ -14,7 +14,22 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "73d42e0c51cc69978440ee09f4022e72"
+      "dc6cebcfd49865d1686160e51f91e5b2"
+    ],
+    [
+      "Sequences.clear_hypothesis",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "9b71035eca8ae4e651eba0f713847356"
     ],
     [
       "Sequences.unrefine_eq_lem",
@@ -27,16 +42,31 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "2472dad4181c3b70bd2dc7fd86e9cef1"
+      "a9b6401764e097bdeaa67272d3ec1ae2"
     ],
     [
       "Sequences.prune_for_seq",
       1,
       2,
-      1,
-      [ "@query" ],
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
+      ],
       0,
-      "80b63ef973ca4f79eae24e36300959d3"
+      "a25a7f6d60a2d2ff7b63246b023e3d26"
     ],
     [
       "Sequences.try_unref_eq",
@@ -45,13 +75,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "11095f9c727ed60bbfe84b396490c12c"
+      "aeb97efa56ba242a1a6dbde2f8b0fbbe"
     ],
     [
       "Sequences.sequence_pruning",
@@ -60,13 +93,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "2178ee30fd4d7653b02aca4d9251af28"
+      "f348ecff9a6f9f56b3a69295c35625ab"
     ],
     [
       "Sequences.test",
@@ -88,7 +125,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "d2d1b333e513cb5091556ae2f0d06279"
+      "022fca1d4009945fad348ef4d084927a"
     ],
     [
       "Sequences.test",
@@ -108,7 +145,7 @@
         "unit_typing"
       ],
       0,
-      "5ff95bd6399bd1235c8f823efbdeabc1"
+      "5fa84040894fec4e9e1a3c595360c1b1"
     ],
     [
       "Sequences.test",
@@ -128,7 +165,7 @@
         "unit_typing"
       ],
       0,
-      "9b4573f44e4b8ea3051ca86ac05e4291"
+      "3225d1966b81a75de63ce3be78017e2c"
     ],
     [
       "Sequences.test",
@@ -161,7 +198,7 @@
         "unit_typing"
       ],
       0,
-      "800c83656c039bc8076caf836835862d"
+      "a96e29c07cf53d0d1c255a3dc8c059ab"
     ]
   ]
 ]

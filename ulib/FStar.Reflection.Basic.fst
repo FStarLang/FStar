@@ -88,9 +88,6 @@ let is_free (b:binder) (t:term) : bool = __is_free b t
 assume private val __term_eq : term -> term -> bool
 let term_eq t1 t2 : bool = __term_eq t1 t2
 
+(* Should be TAC, printing might depend on gensym *)
 assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t
-
-(* Shouldn't this be TAC??? *)
-assume val __fresh_binder : typ -> binder
-let fresh_binder t : binder = __fresh_binder t

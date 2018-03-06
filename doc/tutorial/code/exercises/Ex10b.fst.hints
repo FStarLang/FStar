@@ -126,7 +126,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ea4c85cc8d41dbdbc3de3c09d695e83a"
+      "f0efcf4da2df19a83a61781a0c7f9b99"
     ],
     [
       "Ex10b.new_point",
@@ -163,7 +163,7 @@
         "typing_FStar.Set.empty"
       ],
       0,
-      "b4aaa3924811489e5bc3c09734ff4ca6"
+      "a689415a273db95886aa05a4a9ae36cf"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -222,7 +222,7 @@
         "typing_Ex10b.__proj__Point__item__x", "typing_FStar.Ref.addr_of"
       ],
       0,
-      "1a662adcf135d73a314b9d62636577e2"
+      "7e3b9f9eef38ff6a56d0e006d74352ce"
     ],
     [
       "Ex10b.test",

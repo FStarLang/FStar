@@ -11,7 +11,7 @@ open FStar.Syntax.Syntax
 open FStar.Errors
 open FStar.TypeChecker.Env
 open FStar.Parser.ParseIt
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc

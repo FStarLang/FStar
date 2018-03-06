@@ -31,7 +31,7 @@ open FStar.TypeChecker.Env
 open FStar.Dependencies
 
 (* Module abbreviations for the universal type-checker  *)
-module DsEnv   = FStar.ToSyntax.Env
+module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
 module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
@@ -252,7 +252,7 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
         then SMT.with_hints_db (Pars.find_file fn) check_mod
         else check_mod () //don't add a hints file for modules that are not actually verified
       in
-      let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv (fst tcmod).name in
+      let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, tcmod_iface_opt, mii, env
   in
   if Options.cache_checked_modules ()

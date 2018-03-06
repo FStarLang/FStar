@@ -298,6 +298,8 @@ type raw_error =
   | Fatal_SMTEncodingArityMismatch
   | Warning_Defensive
   | Warning_CantInspect
+  | Warning_NilGivenExplicitArgs
+  | Warning_ConsAppliedExplicitArgs
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -598,6 +600,8 @@ let default_flags =
   (Fatal_SMTEncodingArityMismatch                    , CFatal);
   (Warning_Defensive                                 , CWarning);
   (Warning_CantInspect                               , CWarning);
+  (Warning_NilGivenExplicitArgs                      , CWarning);
+  (Warning_ConsAppliedExplicitArgs                   , CWarning);
   ]
 
 exception Err of raw_error* string

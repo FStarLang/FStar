@@ -19,6 +19,7 @@ all:	Apply.uver		\
 	GRewrite.uver		\
 	Rename.uver		\
 	Imp.uver		\
+	Inlining.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	DependentSynth.uver	\

@@ -381,8 +381,10 @@ let push_subst s t =
     | Tm_meta(t0, Meta_monadic_lift (m1, m2, t)) ->
         mk (Tm_meta(subst' s t0, Meta_monadic_lift (m1, m2, subst' s t)))
 
-    | Tm_meta(t0, Meta_quoted (t1, inf)) ->
-        mk (Tm_meta(subst' s t0, Meta_quoted (t1, inf)))
+    | Tm_meta(t0, Meta_quoted (t1, qi)) ->
+        if qi.qopen
+        then mk (Tm_meta(subst' s t0, Meta_quoted (subst' s t1, qi)))
+        else mk (Tm_meta(subst' s t0, Meta_quoted (t1, qi)))
 
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))

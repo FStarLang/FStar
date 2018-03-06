@@ -1038,8 +1038,9 @@ let rec (mk_tac_param_type :
         | uu____1743 when Prims.op_Negation unrefined ->
             let t2 =
               FStar_TypeChecker_Normalize.normalize
-                [FStar_TypeChecker_Normalize.UnfoldUntil
-                   FStar_Syntax_Syntax.Delta_constant] tcenv t1
+                [FStar_TypeChecker_Normalize.AllowUnboundUniverses;
+                FStar_TypeChecker_Normalize.UnfoldUntil
+                  FStar_Syntax_Syntax.Delta_constant] tcenv t1
                in
             let uu____1745 = FStar_Syntax_Util.unrefine t2  in
             try_mk uu____1745 true
@@ -1211,8 +1212,9 @@ let rec (mk_tac_embedding_path :
           | uu____1972 when Prims.op_Negation unrefined ->
               let t2 =
                 FStar_TypeChecker_Normalize.normalize
-                  [FStar_TypeChecker_Normalize.UnfoldUntil
-                     FStar_Syntax_Syntax.Delta_constant] tcenv t1
+                  [FStar_TypeChecker_Normalize.AllowUnboundUniverses;
+                  FStar_TypeChecker_Normalize.UnfoldUntil
+                    FStar_Syntax_Syntax.Delta_constant] tcenv t1
                  in
               let uu____1974 = FStar_Syntax_Util.unrefine t2  in
               try_mk uu____1974 true

@@ -550,7 +550,7 @@ let wl_to_string wl =
 (* <solving problems>                               *)
 (* ------------------------------------------------ *)
 
-let u_abs (k : typ) (ys : binders) (t : term) =
+let u_abs (k : typ) (ys : binders) (t : term) : term =
     let (ys, t), (xs, c) = match (SS.compress k).n with
         | Tm_arrow(bs, c) ->
           if List.length bs = List.length ys
@@ -978,7 +978,8 @@ let arg_of_tc = function
     | T (t, _) -> as_arg t
     | _ -> failwith "Impossible"
 
-let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>) =
+let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>)
+    : (list<prob> * list<tc> * formula) =
    //U p1..pn REL h q1..qm
    //if h is not a free variable
    //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
@@ -1045,10 +1046,15 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                 let sub_probs, tcs, f = aux scope args qs in
                 let f = match bopt with
                     | None ->
-                      U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst)))
+                      let f = U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                      def_check_closed (p_loc orig) "imitation_sub_probs (1)" f;
+                      f
                     | Some b ->
                       let u_b = env.universe_of env (fst b).sort in
-                      U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                      let f = U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                      def_check_closed (p_loc orig) "imitation_sub_probs (2)" f;
+                      f
+                in
 
                 probs@sub_probs, tc::tcs, f in
 

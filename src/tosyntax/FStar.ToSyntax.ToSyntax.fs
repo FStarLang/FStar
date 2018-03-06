@@ -25,7 +25,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Parser
-open FStar.ToSyntax.Env
+open FStar.Syntax.DsEnv
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
@@ -34,7 +34,7 @@ module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
-module Env = FStar.ToSyntax.Env
+module Env = FStar.Syntax.DsEnv
 module P = FStar.Syntax.Print
 
 let desugar_disjunctive_pattern pats when_opt branch =
@@ -851,7 +851,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let _ = Env.fail_if_qualified_by_curmodule env l in
         begin match Env.try_lookup_datacon env l with
         | Some head ->
-            let head, is_data = mk (Tm_fvar head), true in
+            let head = mk (Tm_fvar head) in
             begin match args with
               | [] -> head
               | _ ->
@@ -861,10 +861,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                   let te = desugar_term env t in
                   arg_withimp_e imp te) args in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
-                let app = mk (Tm_app(head, args)) in
-                if is_data
-                then mk (Tm_meta(app, Meta_desugared Data_app))
-                else app
+                mk (Tm_app (head, args))
             end
         | None ->
             let err =
@@ -1228,11 +1225,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_term env recterm in
       begin match e.n with
-        | Tm_meta({n=Tm_app({n=Tm_fvar fv}, args)}, Meta_desugared Data_app) ->
-          let e = mk <| Tm_app(S.fvar (Ident.set_lid_range fv.fv_name.v e.pos) Delta_constant (Some (Record_ctor(record.typename, record.fields |> List.map fst))),
-                               args)  in
-          mk <| Tm_meta(e, Meta_desugared Data_app)
-
+        | Tm_app ({n=Tm_fvar fv}, args) ->
+          mk <| Tm_app(S.fvar (Ident.set_lid_range fv.fv_name.v e.pos) Delta_constant
+                             (Some (Record_ctor(record.typename, record.fields |> List.map fst))),
+                      args)
         | _ -> e
       end
 
@@ -1248,8 +1244,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         desugar_term env e
     | Paren e -> failwith "impossible"
 
-    | Quote e ->
-      mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, ()))
+    | Quote (e, qopen) ->
+      mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, { qopen = qopen }))
 
     | _ when (top.level=Formula) -> desugar_formula env top
 

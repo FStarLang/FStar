@@ -63,7 +63,8 @@ let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (rng:Range.range) (t:term) : term =
-    S.mk (Tm_meta (tun, Meta_quoted (t, ()))) None rng
+    let qi = { qopen = false } in
+    S.mk (Tm_meta (tun, Meta_quoted (t, qi))) None rng
 
 let rec unembed_term (t:term) : option<term> =
     let t = U.unmeta_safe t in
@@ -77,8 +78,7 @@ let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
 let pack_fv (ns:list<string>) : fv =
-    // TODO: Delta_equational and None ok?
-    lid_as_fv (PC.p2l ns) Delta_equational None
+    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) None
 
 let embed_fvar (rng:Range.range) (fv:fv) : term =
     U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
@@ -707,5 +707,4 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let type_of_binder (b : binder) = match b with (b, _) -> b.sort
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
-let fresh_binder t : binder = (gen_bv "__refl" None t, None)
 let term_to_string t = Print.term_to_string t

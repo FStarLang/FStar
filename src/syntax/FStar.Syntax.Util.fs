@@ -667,10 +667,10 @@ let mk_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk (Tm_meta(fvar l Delta_constant (Some Data_ctor), Meta_desugared Data_app)) None (range_of_lid l)
+      mk (fvar l Delta_constant (Some Data_ctor)) None (range_of_lid l)
     | _ ->
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
-      mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
+      mk e None e.pos
 
 let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
 let unmangle_field_name x =
@@ -917,16 +917,6 @@ let is_interpreted l =
      PC.op_Or          ;
      PC.op_Negation] in
   U.for_some (lid_equals l) theory_syms
-
-let is_fstar_tactics_embed t =
-    match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.fstar_refl_embed_lid
-    | _ -> false
-
-let is_fstar_tactics_quote t =
-    match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.quote_lid
-    | _ -> false
 
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with

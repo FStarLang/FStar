@@ -255,11 +255,7 @@ let pat_as_exp (allow_implicits:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, Rel.conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], Rel.trivial_guard, [])
              in
-             let e = mk (Tm_meta(mk_Tm_app (Syntax.fv_to_tm fv)
-                                           (args |> List.rev) None p.p,
-                                 Meta_desugared Data_app))
-                     None
-                     p.p in
+             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) None p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
               List.rev w |> List.flatten,

@@ -5,4 +5,4 @@ open FStar.Mul
 
 let mult_ass (x y z : int) =
     assert_by_tactic ((x + x) * (y * z) = (x * y) * z + (z * x * y))
-                     (set_options "--smtencoding.elim_box true --z3rlimit 1")
+                     (fun () -> set_options "--smtencoding.elim_box true --z3rlimit 1")

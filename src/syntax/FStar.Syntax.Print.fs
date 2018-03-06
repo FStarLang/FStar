@@ -27,6 +27,7 @@ open FStar.Syntax.Util
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
+
 module U = FStar.Util
 module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
@@ -219,7 +220,13 @@ let quals_to_string' quals =
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
+
 let paren s = "(" ^ s ^ ")"
+
+let term_to_string' env x =
+  let e = Resugar.resugar_term' env x in
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string (float_of_string "1.0") 100 d
 
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
@@ -282,7 +289,8 @@ and term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
-      | Tm_meta(t, Meta_quoted(s, _)) -> U.format1 "(Meta_quoted \"%s\")" (term_to_string s)
+      | Tm_meta(t, Meta_quoted(s, qi)) ->
+        U.format2 "(Meta_quoted \"%s\" {qopen=%s})" (term_to_string s) (string_of_bool qi.qopen)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
@@ -331,7 +339,7 @@ and term_to_string x =
 
 and pat_to_string x =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_pat x in
+    let e = Resugar.resugar_pat x (new_bv_set ()) in
     let d = ToDocument.pat_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else match x.v with
@@ -427,6 +435,11 @@ and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
 
+and comp_to_string' env c =
+  let e = Resugar.resugar_comp' env c in
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string (float_of_string "1.0") 100 d
+
 and comp_to_string c =
   if not (Options.ugly()) then
     let e = Resugar.resugar_comp c in
@@ -514,15 +527,14 @@ and metadata_to_string = function
     | Meta_quoted (qt, qi) ->
         "`(" ^ term_to_string qt ^ ")"
 
-let binder_to_json b =
-
+let binder_to_json env b =
     let (a, imp) = b in
     let n = if is_null_binder b then JsonNull else JsonStr (imp_to_string (nm_to_string a) imp) in
-    let t = JsonStr (term_to_string a.sort) in
+    let t = JsonStr (term_to_string' env a.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
-let binders_to_json bs =
-    JsonList (List.map binder_to_json bs)
+let binders_to_json env bs =
+    JsonList (List.map (binder_to_json env) bs)
 
 
 //let subst_to_string subst =

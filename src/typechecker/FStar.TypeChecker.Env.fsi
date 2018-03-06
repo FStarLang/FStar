@@ -108,7 +108,7 @@ type env = {
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env;        (* The desugaring environment from the front-end *)
+  dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps          (* The result of the dependency analysis *)
 }
 and solver_t = {
@@ -150,6 +150,8 @@ val string_of_delta_level : delta_level -> string
 val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val dep_graph: env -> FStar.Parser.Dep.deps
+
+val dsenv : env -> FStar.Syntax.DsEnv.env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env

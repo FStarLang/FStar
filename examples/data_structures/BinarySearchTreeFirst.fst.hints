@@ -121,7 +121,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "c7c7cbcdce6bbab0966c7d0968378836"
+      "ab20af3a3534304c3fbc622ba8395ced"
     ],
     [
       "BinarySearchTreeFirst.max",
@@ -130,7 +130,7 @@
       1,
       [ "@query" ],
       0,
-      "93c6e743bcb95afd65d9f1bf6b0b491b"
+      "acfd06cd46c44a92ecfe23251c690942"
     ],
     [
       "BinarySearchTreeFirst.insert",
@@ -163,7 +163,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "cc5d0392d4faa8e94bd77db14faa2ead"
+      "1f94691db5c30a375c5d23c09f76e0d3"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -187,7 +187,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "e92b0fd02afc029da0ffe033e9e6658c"
+      "6a6b4c880c5daa2fded3ed92b6dee23e"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -210,7 +210,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "dac6edc2151f8dde0d6742656679f7e6"
+      "bd3f21241ada3829a06cfa768683467d"
     ],
     [
       "BinarySearchTreeFirst.index_is_max",
@@ -219,7 +219,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5d19a3e3050c3ec57ffb5e3855993d5f"
+      "ffeb900cdb2248f0f875037c9a14271c"
     ],
     [
       "BinarySearchTreeFirst.index_is_max2",
@@ -228,7 +228,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "286dd6d9a2a65d37489d5858ae28711b"
+      "72c21f96b11cf54093f652a561969c2c"
     ]
   ]
 ]
