@@ -19,7 +19,6 @@ dm4free \
 incl \
 struct \
 micro-benchmarks \
-bytes \
 tactics \
 pattern-matching \
 kv_parsing \

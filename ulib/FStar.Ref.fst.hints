@@ -2,33 +2,6 @@
   "‡\u0011þŒðº‚\u0018´ê¦¾\u001aõ„L",
   [
     [
-      "FStar.Ref.contains",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a5d1804b6747f724d5ac580cf018d3fd"
-    ],
-    [
-      "FStar.Ref.unused_in",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "05aed1562ee6a962e32e899d74ed12e4"
-    ],
-    [
-      "FStar.Ref.fresh",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e9f4547027a04255ff9295e8ed0b517e"
-    ],
-    [
       "FStar.Ref.only",
       1,
       2,
@@ -38,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d98d0e410f4f61410066aa5a7f6b12ba"
+      "9bc96e691e3886226fba1ac65168ef6c"
     ],
     [
       "FStar.Ref.recall",
@@ -47,7 +20,7 @@
       1,
       [ "@query", "equation_FStar.Ref.contains" ],
       0,
-      "e9269daaff94a891c4abbbc00b3ffa58"
+      "3d120871aad111387a883d4c25b0ffed"
     ],
     [
       "FStar.Ref.alloc",
@@ -61,7 +34,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ccf62389c1ff31f63f3216a77ea08cbc"
+      "6b5e907db32e9432ef31ed19c048a42e"
     ],
     [
       "FStar.Ref.read",
@@ -70,7 +43,7 @@
       1,
       [ "@query", "equation_FStar.Ref.sel" ],
       0,
-      "320d46d4cba0ff0aead0623878326a86"
+      "4620b9ae25ee17bcf158dae6c3c503a0"
     ],
     [
       "FStar.Ref.write",
@@ -90,7 +63,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "1085afd04e46779a81101bb98fba582e"
+      "66f182aa8bdf9e0048be8214531b3516"
     ],
     [
       "FStar.Ref.only",
@@ -102,7 +75,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9ac3b9355eb0a321cf6d2611eace5af7"
+      "3866eedfdafd73196d1282c4fb4f470b"
     ],
     [
       "FStar.Ref.alloc",
@@ -114,7 +87,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1a0a95fa3c5a53a5bd5159ac6c30eb52"
+      "00fd1108d229205ce6981aa59a1a3b1e"
     ]
   ]
 ]

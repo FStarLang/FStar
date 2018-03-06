@@ -457,7 +457,7 @@
       1,
       [ "@query" ],
       0,
-      "d266471efb6d9df84a8449ed8ec2e96d"
+      "19c07c56d87144ec001f9fc9a5a5d53e"
     ],
     [
       "Bug126.invert_lam",
@@ -488,7 +488,7 @@
         "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "09a92943b9a5588400d635abdd63818c"
+      "114311a60070b47f752b849890bb31d6"
     ],
     [
       "Bug126.invert_lam",
@@ -523,7 +523,7 @@
         "typing_Bug126.value", "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "78a3e1fb169bf80ec00916ee1140c67e"
+      "8a269c56ab09b90071fffe9cc5963cb4"
     ]
   ]
 ]

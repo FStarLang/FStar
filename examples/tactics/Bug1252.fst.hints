@@ -8,7 +8,16 @@
       1,
       [ "@query", "function_token_typing_Bug1252.p1" ],
       0,
-      "5f019414534ff8ee5085447eb8176f54"
+      "88f640981c63d28f610d86e34515b080"
+    ],
+    [
+      "Bug1252.f",
+      2,
+      2,
+      1,
+      [ "@query", "function_token_typing_Bug1252.p1" ],
+      0,
+      "5d16bcdf95bc48fee0cbe0320f1732b7"
     ]
   ]
 ]
