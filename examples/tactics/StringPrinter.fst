@@ -300,23 +300,34 @@ let tm_eq_fvar (t1 t2: T.term) : Tot bool =
   | _ -> false
 
 let ret_tm () : T.Tac T.term =
-  T.quote ret
+  quote ret
 
 let bind_tm () : T.Tac T.term =
-  T.quote bind
+  quote bind
 
 let seq_tm () : T.Tac T.term =
-  T.quote seq
+  quote seq
 
 let print_char_tm () : T.Tac T.term =
-  T.quote print_char
+  quote print_char
 
 let rec neutralize_argv (t: T.term) (ar: list (x: T.argv { x << t } )) : Tot (list T.argv) =
   match ar with
   | [] -> []
   | a :: q -> a :: neutralize_argv t q
 
-let rec mk_sz (fuel: nat) (t: T.term) : T.Tac T.term
+inline_for_extraction
+let coerce_sz
+  (t: Type0)
+  (ft1: m t)
+  (ft1_sz: m_sz ft1)
+  (ft2: m t)
+: Pure (m_sz ft2)
+  (requires (ft1 () == ft2 ()))
+  (ensures (fun _ -> True))
+= fun g -> ft1_sz g
+
+let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
   //(decreases (LexCons fuel (LexCons t LexTop)))
 =
   let open T in
@@ -341,17 +352,22 @@ let rec mk_sz (fuel: nat) (t: T.term) : T.Tac T.term
     then begin
       print "is BIND";
       match ar with
-      | [ t1; t2; (x, _); (y, _) ] ->
+      | [ (t1, _); (t2, _); (x, _); (y, _) ] ->
         print "4 arguments" ;
         begin match T.inspect y with
         | T.Tv_Abs v y' ->
-          let x_ = mk_sz fuel x in
-          let y_ = mk_sz fuel y' in
+          let x_ = mk_sz fuel t1 x in
+          let v' = pack (T.Tv_Var v) in
+          let t2' = mk_app t2 [
+            v', Q_Explicit;
+          ]
+          in
+          let y_ = mk_sz fuel t2' y' in
           let bind_sz_tm = quote bind_sz in
           let v' = fresh_binder (type_of_binder v) in
           let res = mk_app bind_sz_tm [
-            t1;
-            t2;
+            (t1, Q_Implicit);
+            (t2, Q_Implicit);
             (x, Q_Implicit);
             (x_, Q_Explicit);
             (y, Q_Implicit);
@@ -375,8 +391,9 @@ let rec mk_sz (fuel: nat) (t: T.term) : T.Tac T.term
       print "is SEQ";
       match ar with
       | [ (t2, _); (x, _); (y, _) ] ->
-        let x_ = mk_sz fuel x in
-        let y_ = mk_sz fuel y in
+        let q = quote unit in
+        let x_ = mk_sz fuel q x in
+        let y_ = mk_sz fuel t2 y in
         let seq_sz_tm = quote seq_sz in
         let res = mk_app seq_sz_tm [
           (t2, Q_Explicit);
@@ -394,7 +411,17 @@ let rec mk_sz (fuel: nat) (t: T.term) : T.Tac T.term
       let t' = unfold_fv v in
       if fuel = 0
       then fail "mk_sz: Not enough unfolding fuel"
-      else mk_sz (fuel - 1) (mk_app t' (neutralize_argv t ar))
+      else
+        let res' = mk_sz (fuel - 1) ty (mk_app t' (neutralize_argv t ar)) in
+        let q = quote coerce_sz in
+        let res = T.mk_app q [
+          ty, T.Q_Explicit;
+          t', T.Q_Explicit;
+          res', T.Q_Explicit;
+          t, T.Q_Explicit;
+        ]
+        in
+        res
     end
   end
   | _ -> T.fail "head is not a Tv_FVar"
@@ -406,10 +433,11 @@ let unfold_ (#t: Type) (x: t) : T.Tac T.term =
   | Tv_FVar v -> unfold_fv v
   | _ -> fail ("unfold_def: Not a free variable: " ^ term_to_string u)
 
-let test_tac (#t: Type0) (m: m t) : T.Tac unit =
+let test_tac (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
-    let t = mk_sz 2 x in
+    let ty' = quote ty in
+    let t = mk_sz 2 ty' x in
     exact_guard t
 
 let example0 : (m int) =
@@ -431,13 +459,12 @@ let example1 : (m unit) =
     (print_char 42uy)
     (ret ())
 
-(* FAILS:
+(* Works, finally *)
 let z1 : m_sz example1 =
   T.synth_by_tactic (fun () -> test_tac example1)
-*)
 
 (* The following term is the term printed by the tactic. This works. *)
-let z1 : m_sz example1 =
+let z1_ : m_sz example1 =
   seq_sz Prims.unit
   (print_char (FStar.UInt8.uint_to_t 42))
   (print_char_sz (FStar.UInt8.uint_to_t 42))
