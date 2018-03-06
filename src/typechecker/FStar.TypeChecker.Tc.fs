@@ -1119,7 +1119,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env = {env with lax=true} in
     let lift = match lift with
     | None -> None
-    | Some (_, lift) ->
+    | Some (uvs, lift) ->
+      let lift = SS.subst (fst (SS.univ_var_opening uvs)) lift in
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let wp_a = S.new_bv None wp_a_src in
       let a_typ = S.bv_to_name a in
