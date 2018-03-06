@@ -1169,9 +1169,19 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                 | _ -> false)
         | _ -> occurs_univ v1 (U_max [u]) in
 
+    let rec filter_out_common_univs (u1:list<universe>) (u2:list<universe>) :(list<universe> * list<universe>) =
+      let common_elts = u1 |> List.fold_left (fun uvs uv1 -> if u2 |> List.existsML (fun uv2 -> U.compare_univs uv1 uv2 = 0) then uv1::uvs else uvs) [] in
+      let filter = List.filter (fun u -> not (common_elts |> List.existsML (fun u' -> U.compare_univs u u' = 0))) in
+      filter u1, filter u2
+    in
+
     let try_umax_components u1 u2 msg =
         match u1, u2 with
             | U_max us1, U_max us2 ->
+              //filter out common universes in us1 and us2
+              //this allows more cases to unify, e.g. us1 = [uvar; un] and us2=[un; un']
+              //with just structural comparison, this would fail to unify, but after filtering away un, we can unify uvar with un'
+              let us1, us2 = filter_out_common_univs us1 us2 in
               if List.length us1 = List.length us2 //go for a structural match
               then let rec aux wl us1 us2 = match us1, us2 with
                         | u1::us1, u2::us2 ->

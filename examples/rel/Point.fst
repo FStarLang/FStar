@@ -22,7 +22,10 @@ private type point_t (inv:heap -> fp -> Type0) = move_t inv * get_t inv
 noeq type point =
   | C: inv:(heap -> fp -> Type0) -> fp:fp -> p:(point_t inv) -> point
 
-abstract let live (p:point) (h:heap) = (C?.inv p) h (C?.fp p)
+(*
+ * AR: 06/03: proofs below rely on this being non-abstract
+ *)
+let live (p:point) (h:heap) = (C?.inv p) h (C?.fp p)
 
  let move
   (p:point) :ST unit (fun h0 -> live p h0) (fun h0 _ h1 -> live p h1)

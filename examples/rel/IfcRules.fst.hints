@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "269d363eb1f65201ea99e1c428fe956f"
+      "5782be1eeddfe529626fe7ca8cd7fff7"
     ],
     [
       "IfcRules.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "1ff035a981e8a91bc4b2245b74b636ce"
+      "9161d78fa73f94881c6aab5157ca8ef7"
     ],
     [
       "IfcRules.op_Less",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "fed15084621ed50338f7f13706fe3b3c"
+      "acae1d8907eba5521c25631f00f4c007"
     ],
     [
       "IfcRules.op_Less_Equals",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "d0f932c662f217219a1e94a57b4c6d10"
+      "5490c304ab959cebde4ce0d3609724ba"
     ],
     [
       "IfcRules.join",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "d1cc15a259ac611efd94021b56c2cc3c"
+      "30dec4947a843b2e0aefaec96957bd3c"
     ],
     [
       "IfcRules.low_equiv",
@@ -56,7 +56,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "06d4fd9631eb035c54f2970672c287db"
+      "639a21426dc0d7d3c27b2c7b6cb68e3c"
     ],
     [
       "IfcRules.ni_exp",
@@ -65,7 +65,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8618d0e2aa39d88dde5d631ddeac3dad"
+      "fce6165815ee213f989b76ae3506c07a"
     ],
     [
       "IfcRules.ni_com'",
@@ -74,7 +74,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5d5b443c0d294029ad8ce08513f58550"
+      "2b27b06b3032f701e4bfca5611a40bf2"
     ],
     [
       "IfcRules.sub_exp",
@@ -96,7 +96,7 @@
         "typing_IfcRules.uu___is_Low"
       ],
       0,
-      "e40c10cfa4bbcccf002f025e1359fb67"
+      "563582bde9cc308fc85880ff8b792d13"
     ],
     [
       "IfcRules.avar_exp",
@@ -116,7 +116,7 @@
         "projection_inverse_While.AVar__0"
       ],
       0,
-      "b7621794e870a6b22aae6aa114528277"
+      "2a1dbaf4dfb6796527e734dd4e250076"
     ],
     [
       "IfcRules.aint_exp",
@@ -133,7 +133,7 @@
         "projection_inverse_While.AInt__0"
       ],
       0,
-      "37f588197f0282ef628f63d2dea3af87"
+      "9852fbba14ece56335600db78f2905f9"
     ],
     [
       "IfcRules.binop_exp",
@@ -151,7 +151,7 @@
         "projection_inverse_While.AOp__2"
       ],
       0,
-      "e8c941eac0747182787917eeb6fd1e10"
+      "f24eba490c39578bdb553b355afcb653"
     ],
     [
       "IfcRules.sub_com",
@@ -176,7 +176,7 @@
         "typing_IfcRules.op_Less_Equals", "typing_tok_IfcRules.Low@tok"
       ],
       0,
-      "8787db8f1277fb8ac232b623e555f982"
+      "1afca58ec587050af13d3cbc187fb724"
     ],
     [
       "IfcRules.assign_com",
@@ -229,7 +229,7 @@
         "typing_While.interpret_exp"
       ],
       0,
-      "de0438f52f009cd0eec7b545a800321c"
+      "846f947f9c358dacb2bd4e8b5357375f"
     ],
     [
       "IfcRules.seq_com'",
@@ -275,7 +275,7 @@
         "typing_While.interpret_com"
       ],
       0,
-      "3fd0bb2b30123bf512617705c7cc8785"
+      "5907a4ae5774af73578d87c69f187a02"
     ],
     [
       "IfcRules.seq_com",
@@ -284,7 +284,7 @@
       1,
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
-      "280001e17b5a7149c34b86527753d3fa"
+      "3da7d7e601b30d92f0199889b9674921"
     ],
     [
       "IfcRules.cond_com",
@@ -330,7 +330,7 @@
         "typing_tok_IfcRules.Low@tok"
       ],
       0,
-      "1ae25f664430ba0f0f6cd9285a7bd279"
+      "4e82d24cdbe427b0dcf88d24dcbfa8ad"
     ],
     [
       "IfcRules.skip_com",
@@ -351,7 +351,7 @@
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r"
       ],
       0,
-      "357a8ba21813e2523f63b9b71dda6d5c"
+      "01e2f0ef92756b74c64d477ac3731058"
     ],
     [
       "IfcRules.decr_while",
@@ -369,7 +369,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "c42cb50a2205fa218988131c52bf0c18"
+      "089c275064e7ee8f345d317797ec8fe3"
     ],
     [
       "IfcRules.while_com'",
@@ -443,7 +443,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5bb7f9b4efac02780e333075c8c034ff"
+      "3f5bb8dadc3a5eccbaef7ed1845de2d9"
     ],
     [
       "IfcRules.while_com",
@@ -452,7 +452,100 @@
       1,
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
-      "f661c2ff7bc7a15d09b50557958aadc2"
+      "ebc55d7964fc8bf81a9dc14cb2d49416"
+    ],
+    [
+      "IfcRules.uu___is_Low",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "28d8494aeac874053ec7f9fa706493f3"
+    ],
+    [
+      "IfcRules.uu___is_High",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cb35143ed5d03a70f484740b8efc9491"
+    ],
+    [
+      "IfcRules.op_Less",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "917f00422f089a895d1cd9b088392932"
+    ],
+    [
+      "IfcRules.op_Less_Equals",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6a53e28054ec5d7390143546da4b40e3"
+    ],
+    [
+      "IfcRules.join",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e2b3c6296a0f2750b6b906e8716857fb"
+    ],
+    [
+      "IfcRules.low_equiv",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_IfcRules.label__uu___haseq",
+        "assumption_Prims.HasEq_int"
+      ],
+      0,
+      "e8184b566c7919193c4a60c095ed3859"
+    ],
+    [
+      "IfcRules.ni_exp",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "0aa2af9aa4c302c7cc5c7ac656815c7a"
+    ],
+    [
+      "IfcRules.ni_com'",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "54ca03f13d440405190d46dea131609d"
+    ],
+    [
+      "IfcRules.decr_while",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "911308b77c485d3e9bdefb01f4b6ed0d"
     ]
   ]
 ]

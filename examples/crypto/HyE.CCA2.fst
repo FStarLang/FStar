@@ -24,7 +24,7 @@ type log_t (r:rid) = m_rref r (seq entry) grows
 noeq abstract type pkey = 
   | PKey: #region:rid -> rawpk:RSA.pkey -> log: log_t region -> pkey
 
-let access_pk_raw (pk:pkey) =
+abstract let access_pk_raw (pk:pkey) =
   PKey?.rawpk pk
 
 

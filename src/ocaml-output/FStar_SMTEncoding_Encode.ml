@@ -8,15 +8,15 @@ let add_fuel :
   
 let withenv :
   'Auu____28 'Auu____29 'Auu____30 .
-    'Auu____30 ->
-      ('Auu____29,'Auu____28) FStar_Pervasives_Native.tuple2 ->
-        ('Auu____29,'Auu____28,'Auu____30) FStar_Pervasives_Native.tuple3
+    'Auu____28 ->
+      ('Auu____29,'Auu____30) FStar_Pervasives_Native.tuple2 ->
+        ('Auu____29,'Auu____30,'Auu____28) FStar_Pervasives_Native.tuple3
   = fun c  -> fun uu____48  -> match uu____48 with | (a,b) -> (a, b, c) 
 let vargs :
   'Auu____59 'Auu____60 'Auu____61 .
-    (('Auu____61,'Auu____60) FStar_Util.either,'Auu____59)
+    (('Auu____59,'Auu____60) FStar_Util.either,'Auu____61)
       FStar_Pervasives_Native.tuple2 Prims.list ->
-      (('Auu____61,'Auu____60) FStar_Util.either,'Auu____59)
+      (('Auu____59,'Auu____60) FStar_Util.either,'Auu____61)
         FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun args  ->
@@ -389,8 +389,8 @@ let (__proj__Binding_fvar__item___0 : binding -> fvar_binding) =
   fun projectee  -> match projectee with | Binding_fvar _0 -> _0 
 let binder_of_eithervar :
   'Auu____1770 'Auu____1771 .
-    'Auu____1771 ->
-      ('Auu____1771,'Auu____1770 FStar_Pervasives_Native.option)
+    'Auu____1770 ->
+      ('Auu____1770,'Auu____1771 FStar_Pervasives_Native.option)
         FStar_Pervasives_Native.tuple2
   = fun v1  -> (v1, FStar_Pervasives_Native.None) 
 type cache_entry =
@@ -9863,7 +9863,7 @@ let (encode_env_bindings :
 let encode_labels :
   'Auu____25648 'Auu____25649 .
     ((Prims.string,FStar_SMTEncoding_Term.sort)
-       FStar_Pervasives_Native.tuple2,'Auu____25649,'Auu____25648)
+       FStar_Pervasives_Native.tuple2,'Auu____25648,'Auu____25649)
       FStar_Pervasives_Native.tuple3 Prims.list ->
       (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Term.decl
                                                 Prims.list)

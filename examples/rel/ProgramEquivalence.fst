@@ -26,7 +26,10 @@ private type ctr_t (inv:heap -> fp -> Type0) = incr_t inv * get_t inv
 noeq type counter =
   | C: inv:(heap -> fp -> Type0) -> fp:fp -> c:(ctr_t inv) -> counter
 
-abstract let live (c:counter) (h:heap) = (C?.inv c) h (C?.fp c)
+(*
+ * AR: 06/03: proofs below rely on this being non-abstract
+ *)
+let live (c:counter) (h:heap) = (C?.inv c) h (C?.fp c)
 
 (*
  * TODO: make this abstract,  should be allowed with abstract

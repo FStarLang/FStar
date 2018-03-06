@@ -211,7 +211,7 @@ let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
-    | [] -> out
+    | [] -> BatList.rev_append out []
     | hd::tl ->
        if BatList.exists (eq hd) out then
          aux out tl
@@ -219,7 +219,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
          aux (hd::out) tl in
   aux [] s1
 
-let set_add a ((s, b):'a set) = (a::s, b)
+let set_add a ((s, b):'a set) = (s@[a], b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):'a set) = BatList.exists (b a) s
@@ -230,40 +230,6 @@ let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
   BatList.for_all (fun y -> BatList.exists (eq y) s2) s1
 let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
-  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
-
-
-(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
-type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
-[@@deriving show]
-
-let fifo_set_is_empty ((s, _):'a fifo_set) =
-  match s with
-  | [] -> true
-  | _ -> false
-
-let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
-  (l, fun x y -> cmp x y = Z.zero)
-
-let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
-    as_fifo_set [] cmp
-
-let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
-  let rec aux out = function
-    | [] -> out
-    | hd::tl ->
-       if BatList.exists (eq hd) out then
-         aux out tl
-       else
-         aux (hd::out) tl in
-  aux [] s1
-let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
-let fifo_set_remove x ((s1, eq):'a fifo_set) =
-  (BatList.filter (fun y -> not (eq x y)) s1, eq)
-let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
-let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
-let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
-let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
 type 'value smap = (string, 'value) BatHashtbl.t

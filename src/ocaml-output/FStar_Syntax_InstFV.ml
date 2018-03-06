@@ -4,8 +4,8 @@ type inst_t =
     FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 let mk :
   'Auu____11 'Auu____12 .
-    'Auu____12 FStar_Syntax_Syntax.syntax ->
-      'Auu____11 -> 'Auu____11 FStar_Syntax_Syntax.syntax
+    'Auu____11 FStar_Syntax_Syntax.syntax ->
+      'Auu____12 -> 'Auu____12 FStar_Syntax_Syntax.syntax
   =
   fun t  ->
     fun s  ->
