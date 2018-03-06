@@ -704,6 +704,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       || debug env <| Options.Other "bind"
       then f ()
   in
+  debug (fun () ->
+    BU.print3 "(0) bind:\n\tlc1 = %s\n\tb=%s\n\tlc2=%s\n"
+                    (Print.lcomp_to_string lc1)
+                    (match b with | Some bv -> Print.bv_to_string bv | None -> "(none")
+                    (Print.lcomp_to_string lc2));
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
   let joined_eff = join_lcomp env lc1 lc2 in
