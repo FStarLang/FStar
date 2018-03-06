@@ -70,14 +70,6 @@ let set_hint_correlator env se =
 
 let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
-let get_tactic_fv env (tac_lid: lident) (h: term) =
-  match h.n with
-  | Tm_uinst (h', _) ->
-    (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) -> Some fv
-      | _ -> None)
-  | _ -> None
-
 (* This reference keeps a list of modules which contain user-defined tactics. It is only
    modified in tc_decl to add these modules and only read in FStar.Main (via FStar.Universal,
    in order to compile these modules when generating native tactics. *)
@@ -1376,13 +1368,11 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
       (* __native_tac x *)
 
-      let reflect_head = mk (Tm_constant (Const_reflect PC.tac_effect_lid)) None Range.dummyRange in
+      let reflect_head = mk (Tm_constant (Const_reflect PC.effect_TAC_lid)) None Range.dummyRange in
       let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
-      let app = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
+      let body = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
       (* TAC?. reflect (__native_tac x) *)
 
-      let unit_binder = mk_binder <| new_bv None t_unit in
-      let body = abs [unit_binder] app <| Some (U.residual_comp_of_comp comp) in
       let func = abs bs body <| Some (U.residual_comp_of_comp comp) in
       {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids)} in
 
@@ -1390,34 +1380,31 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       (match (snd lbs) with
         | [hd] ->
           let bs, comp = U.arrow_formals_comp hd.lbtyp in
-          let t = comp_result comp in
-          (match (SS.compress t).n with
-            | Tm_app(h, args) ->
-                let h = SS.compress h in
-                let tac_lid = (right hd.lbname).fv_name.v in
-                let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                (match get_tactic_fv env assm_lid h with
-                 | Some fv ->
-                    (* check if the tactic has already been typechecked *)
-                    if not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
-                      (* if it's a user tactic, add the name of the module to the list of modules which contain user tactics,
-                         if the module has not already been added *)
-                      if (not (is_builtin_tactic env.curmodule)) then
-                        let added_modules = !user_tactics_modules in
-                        let module_name = Ident.ml_path_of_lid env.curmodule in
-                        if not (List.contains module_name added_modules) then
-                          user_tactics_modules := added_modules @ [module_name]
-                         else ()
-                      else ();
-                      (* check if tactic has been dynamically loaded *)
-                      if env.is_native_tactic assm_lid then begin
-                        let se_assm = reified_tactic_decl assm_lid hd in
-                        let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
-                        Some (se_assm, se_refl)
-                      end else None
-                    end else None
-                 | None -> None)
-            | _ -> None)
+          if (lid_equals PC.effect_Tac_lid (U.comp_effect_name comp)
+              || lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)) then
+          begin
+              let t = comp_result comp in
+              let tac_lid = (right hd.lbname).fv_name.v in
+              let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+              (* check if the tactic has already been typechecked, do nothing if so *)
+              if is_some <| Env.try_lookup_val_decl env tac_lid then None else begin
+                (* if it's a user tactic, add the name of the module to the list of modules which contain user tactics,
+                   if the module has not already been added *)
+                if (not (is_builtin_tactic env.curmodule)) then
+                  let added_modules = !user_tactics_modules in
+                  let module_name = Ident.ml_path_of_lid env.curmodule in
+                  if not (List.contains module_name added_modules) then
+                    user_tactics_modules := added_modules @ [module_name]
+                   else ()
+                else ();
+                (* check if tactic has been dynamically loaded *)
+                if env.is_native_tactic assm_lid then begin
+                  let se_assm = reified_tactic_decl assm_lid hd in
+                  let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
+                  Some (se_assm, se_refl)
+                end else None
+              end
+          end else None
         | _ -> None
       ) in
 
@@ -1802,13 +1789,13 @@ let extract_interface (env:env) (m:modul) :modul =
 
 //AR: moving these push and pop functions from Universal, using them in extracting interface etc.
 let pop_context env msg =
-    ToSyntax.Env.pop () |> ignore;
+    Syntax.DsEnv.pop () |> ignore;
     let en = TypeChecker.Env.pop env msg in
     env.solver.refresh();
     en
 
 let push_context env msg =
-    let dsenv = ToSyntax.Env.push env.dsenv in
+    let dsenv = Syntax.DsEnv.push env.dsenv in
     let env = TypeChecker.Env.push env msg in
     {env with dsenv=dsenv}
 

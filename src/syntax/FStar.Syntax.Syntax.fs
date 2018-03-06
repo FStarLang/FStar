@@ -90,12 +90,14 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
-type quoteinfo     = unit
+type quoteinfo     = {
+    qopen : bool;       // True if the quotation is open, and should be substituted
+ }
 
 ///[@ PpxDerivingShow ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n times to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
@@ -191,7 +193,6 @@ and metadata =
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
   | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -620,6 +621,7 @@ let t_float  = tconst PC.float_lid
 let t_char   = tabbrev PC.char_lid
 let t_range  = tconst PC.range_lid
 let t_term   = tconst PC.term_lid
+let t_binder = tconst PC.binder_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange

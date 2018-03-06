@@ -33,7 +33,7 @@ open FStar.Interactive
 open FStar.Parser.ParseIt
 
 module SS = FStar.Syntax.Syntax
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable

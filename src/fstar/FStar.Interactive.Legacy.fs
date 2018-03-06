@@ -26,7 +26,7 @@ open FStar.Ident
 open FStar.Universal
 open FStar.TypeChecker.Env
 
-module DsEnv   = FStar.ToSyntax.Env
+module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
@@ -436,7 +436,7 @@ let rec go (line_col:(int*int))
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
-      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path env.dsenv prefix naked_match in
+      let stripped_ns, shortened = Syntax.DsEnv.shorten_module_path env.dsenv prefix naked_match in
       (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
     let prepare_candidate (prefix, matched, stripped_ns, match_len) =
       if prefix = "" then
@@ -487,7 +487,7 @@ let rec go (line_col:(int*int))
             | [] -> case_b_find_matches_in_env ()
             | _ ->
               let l = Ident.lid_of_path ns Range.dummyRange in
-              match FStar.ToSyntax.Env.resolve_module_name env.dsenv l true with
+              match FStar.Syntax.DsEnv.resolve_module_name env.dsenv l true with
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->

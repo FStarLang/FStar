@@ -675,7 +675,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "047185f55012347a231aac4d6966e366"
+      "6f597de04d1ceca009ca970f158b6856"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_same",
@@ -746,7 +746,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "47f447c438d6daa1fcaedca830d599ea"
+      "11aac662376a02d6fec589793176a16e"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence",

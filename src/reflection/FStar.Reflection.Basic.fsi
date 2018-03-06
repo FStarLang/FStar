@@ -15,7 +15,6 @@ val is_free        : binder -> term -> bool
 val binders_of_env : FStar.TypeChecker.Env.env -> binders
 val type_of_binder : binder -> typ
 val term_eq        : term -> term -> bool
-val fresh_binder   : typ -> binder // DANGER! unpure, we should move it to tactics
 val term_to_string : term -> string
 
 (* Lazy unfoldings *)

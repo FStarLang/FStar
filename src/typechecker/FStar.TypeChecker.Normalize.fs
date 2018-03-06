@@ -236,11 +236,6 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let head_of t = let hd, _ = U.head_and_args' t in hd
-let is_embed_position_1 t =
-    let hd, args = U.head_and_args' t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_] when S.fv_eq_lid fv PC.fstar_refl_embed_lid -> true
-    | _ -> false
 
 let mk t r = mk t None r
 let set_memo cfg (r:memo<'a>) (t:'a) =
@@ -454,8 +449,10 @@ let rec closure_as_term cfg (env:env) t =
            | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
                  mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
 
-           | Tm_meta(t', Meta_quoted (t'', info)) ->
-                 mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(t'', info))) t.pos
+           | Tm_meta(t', Meta_quoted (t'', qi)) ->
+             if qi.qopen
+             then mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(closure_as_term_delayed cfg env t'', qi))) t.pos
+             else mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(t'', qi))) t.pos
 
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
@@ -839,7 +836,7 @@ let mk_psc_subst cfg env =
             | Some b, Clos(env, term, _, _) ->
                 // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
                 let bv,_ = b in
-                if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
+                if not (U.is_constructed_typ bv.sort PC.binder_lid)
                 then subst
                 else let term = closure_as_term cfg env term in
                      begin match unembed_binder term with
@@ -989,6 +986,19 @@ let maybe_simplify_aux cfg env stack tm =
              then w U.t_true
              else squashed_head_un_auto_squash_args tm
            | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.iff_lid
+      then match args |> List.map simplify with
+           | [(Some true, _)  ; (Some true, _)]
+           | [(Some false, _) ; (Some false, _)] -> w U.t_true
+           | [(Some true, _)  ; (Some false, _)]
+           | [(Some false, _) ; (Some true, _)]  -> w U.t_false
+           | [(_, (arg, _))   ; (Some true, _)]
+           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+           | [(_, (p, _)); (_, (q, _))] ->
+             if U.term_eq p q
+             then w U.t_true
+             else squashed_head_un_auto_squash_args tm
+           | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.not_lid
       then match args |> List.map simplify with
            | [(Some true, _)] ->  w U.t_false
@@ -1092,7 +1102,7 @@ let get_norm_request (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil Delta_constant; Reify] in
       Some (s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if not (List.contains z s) then Exclude z::s else s in
+      let add_exclude s z = if List.contains z s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
@@ -1113,6 +1123,7 @@ let is_reify_head = function
 
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack = match stack with
+    // TODO: we should likely ignore the meta-level stack elements, such as Memo
     | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps.reify_
@@ -1151,10 +1162,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_meta (t0, Meta_quoted (t1, inf)) ->
+          | Tm_meta (t0, Meta_quoted (t1, qi)) ->
             let t0 = closure_as_term cfg env t0 in
-            (* let t1 = closure_as_term cfg env t1 in *)
-            let t = { t with n = Tm_meta (t0, Meta_quoted (t1, inf)) } in
+            let t1 = if qi.qopen
+                     then closure_as_term cfg env t1
+                     else t1
+            in
+            let t = { t with n = Tm_meta (t0, Meta_quoted (t1, qi)) } in
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -1224,9 +1238,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                          | Eager_unfolding_only -> true
                          | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l)
                  in
-                 let should_delta =
-                     if not should_delta then false
-                     else let attrs = Env.attrs_of_qninfo qninfo in
+                 let should_delta = should_delta && (
+                          let attrs = Env.attrs_of_qninfo qninfo in
                            // never unfold something marked tac_opaque when reducing tactics
                           (not cfg.steps.unfold_tac ||
                            not (cases (BU.for_some (attr_eq U.tac_opaque_attr)) false attrs)) &&
@@ -1239,7 +1252,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              match attrs, cfg.steps.unfold_attr with
                              | None, Some _ -> false
                              | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (attr_eq at) ats') ats
-                             | _, _ -> false))
+                             | _, _ -> false)))
                  in
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
@@ -1640,7 +1653,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
       (*                                                                            *)
       (* ****************************************************************************)
-      let ed = Env.get_effect_decl cfg.tcenv m in
+      let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
       let _, bind_repr = ed.bind_repr in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -1723,7 +1736,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         (* ****************************************************************************)
 
 
-        let ed = Env.get_effect_decl cfg.tcenv m in
+        let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
         let _, bind_repr = ed.bind_repr in
 
         (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
@@ -1810,7 +1823,7 @@ and reify_lift cfg e msrc mtgt t : term =
   (* if msrc is PURE or Tot we can use mtgt.return *)
   if U.is_pure_effect msrc
   then
-    let ed = Env.get_effect_decl env mtgt in
+    let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
     let _, return_repr = ed.return_repr in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
@@ -1937,9 +1950,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     rebuild cfg env stack t
 
   | Arg (Clos(env_arg, tm, _, _), aq, r) :: stack
-        when U.is_fstar_tactics_quote     (head_of t)
-          || is_embed_position_1          t
-          || U.is_fstar_tactics_by_tactic (head_of t) ->
+        when U.is_fstar_tactics_by_tactic (head_of t) ->
     let t = S.extend_app t (closure_as_term cfg env_arg tm, aq) None r in
     rebuild cfg env stack t
 
@@ -1949,6 +1960,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
+    // GM: I actually get a regression if I just keep the second branch.
     if not cfg.steps.iota
     then if cfg.steps.hnf
          then let arg = closure_as_term cfg env_arg tm in
@@ -2215,14 +2227,14 @@ let term_to_string env t =
     try normalize [AllowUnboundUniverses] env t
     with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
-  Print.term_to_string t
+  Print.term_to_string' env.dsenv t
 
 let comp_to_string env c =
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
     with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
   in
-  Print.comp_to_string c
+  Print.comp_to_string' env.dsenv c
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in

@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "21df7ba347670fdd164f4a51175a441e"
+      "641633f331e6ef14a4956cf37a4b51ad"
     ],
     [
       "BinarySearchTree0.uu___is_Node",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "896a14843e42925120d2aba89d7eb42d"
+      "51728f8b93f605b0dd365068208555b3"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___0",
@@ -86,7 +86,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "dd7ce94f05d424d7c1bf268045ed3b2a"
+      "2f66a4edbbeecf0961b4340a03347d95"
     ],
     [
       "BinarySearchTree0.insert",
@@ -104,7 +104,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "9ca3600c9dfbd8576436d391b24a5f26"
+      "1c3fcd0bfaf8ca8e73347d2d711b64c6"
     ]
   ]
 ]

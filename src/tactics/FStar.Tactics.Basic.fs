@@ -124,7 +124,7 @@ let ps_to_string (msg, ps) =
                ]
 
 let goal_to_json g =
-    let g_binders = Env.all_binders g.context |> Print.binders_to_json in
+    let g_binders = Env.all_binders g.context |> Print.binders_to_json (Env.dsenv g.context) in
     JsonAssoc [("hyps", g_binders);
                ("goal", JsonAssoc [("witness", JsonStr (tts g.context g.witness));
                                    ("type", JsonStr (tts g.context g.goal_ty))])]
@@ -1127,6 +1127,12 @@ let launch_process (prog : string) (args : string) (input : string) : tac<string
         ret s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
+    )
+
+let fresh_binder_named (nm : string) (t : typ) : tac<binder> =
+    // The `bind idtac` thunks the tactic. Not really needed, just being paranoid
+    bind idtac (fun () ->
+        ret (gen_bv nm None t, None)
     )
 
 let goal_of_goal_ty env typ : goal * guard_t =

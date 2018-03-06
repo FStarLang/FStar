@@ -24,7 +24,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Parser
-open FStar.ToSyntax.Env
+open FStar.Syntax.DsEnv
 open FStar.Parser.AST
 open FStar.Ident
 

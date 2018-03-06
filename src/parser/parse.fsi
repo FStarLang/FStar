@@ -42,6 +42,7 @@ type token =
   | RARROW
   | RANGE_OF
   | RANGE of (string)
+  | QUOTE
   | QMARK_DOT
   | QMARK
   | PRIVATE
@@ -184,6 +185,7 @@ type tokenId =
     | TOKEN_RARROW
     | TOKEN_RANGE_OF
     | TOKEN_RANGE
+    | TOKEN_QUOTE
     | TOKEN_QMARK_DOT
     | TOKEN_QMARK
     | TOKEN_PRIVATE

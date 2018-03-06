@@ -126,6 +126,7 @@ open FStar.String
 %token PRIVATE
 %token QMARK
 %token QMARK_DOT
+%token QUOTE
 %token <string> RANGE
 %token RANGE_OF
 %token RARROW
@@ -177,7 +178,7 @@ open FStar.String
 %left OPINFIX0d
 %left PIPE_RIGHT
 %right OPINFIX1
-%left MINUS OPINFIX2
+%left MINUS OPINFIX2 QUOTE
 %left OPINFIX3
 %left BACKTICK
 %right OPINFIX4
@@ -1993,9 +1994,12 @@ in
 | MINUS tmEqWith_appTerm_
     {let (_1, e) = ((), $2) in
       ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
+| QUOTE tmEqWith_appTerm_
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Quote (e, true)) (rhs2 parseState 1 3) Un )}
 | BACKTICK tmEqWith_appTerm_
     {let (_1, e) = ((), $2) in
-      ( mk_term (Quote e) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Quote (e, false)) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_appTerm_
     {let e = $1 in
       ( e )}
@@ -2058,9 +2062,12 @@ in
 | MINUS tmEqWith_tmRefinement_
     {let (_1, e) = ((), $2) in
       ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
+| QUOTE tmEqWith_tmRefinement_
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Quote (e, true)) (rhs2 parseState 1 3) Un )}
 | BACKTICK tmEqWith_tmRefinement_
     {let (_1, e) = ((), $2) in
-      ( mk_term (Quote e) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Quote (e, false)) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_tmRefinement_
     {let e = $1 in
       ( e )}

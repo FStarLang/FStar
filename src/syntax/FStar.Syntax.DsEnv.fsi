@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module FStar.ToSyntax.Env
+module FStar.Syntax.DsEnv
 open FStar.ST
 open FStar.All
 

@@ -71,8 +71,6 @@
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" />
   <ItemGroup>
-    <Compile Include="FStar.ToSyntax.Env.fsi" />
-    <Compile Include="FStar.ToSyntax.Env.fs" />
     <Compile Include="FStar.ToSyntax.Interleave.fsi" />
     <Compile Include="FStar.ToSyntax.Interleave.fs" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fsi" />

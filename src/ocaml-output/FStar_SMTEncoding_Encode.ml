@@ -2117,7 +2117,7 @@ and (encode_term :
            ({ FStar_Syntax_Syntax.n = uu____5669;
               FStar_Syntax_Syntax.pos = uu____5670;
               FStar_Syntax_Syntax.vars = uu____5671;_},FStar_Syntax_Syntax.Meta_quoted
-            (qt,qi))
+            (qt,uu____5673))
            ->
            let tv =
              let uu____5683 = FStar_Reflection_Basic.inspect qt  in

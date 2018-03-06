@@ -112,7 +112,7 @@ type env = {
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env;           (* The desugaring environment from the front-end *)
+  dsenv          : FStar.Syntax.DsEnv.env;           (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
 }
 and solver_t = {
@@ -211,13 +211,15 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.ToSyntax.Env.empty_env();
+    dsenv = FStar.Syntax.DsEnv.empty_env();
     dep_graph = deps
   }
 
-(* Marking and resetting the environment, for the interactive mode *)
+let dsenv env = env.dsenv
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
+
+(* Marking and resetting the environment, for the interactive mode *)
 
 let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with
@@ -1319,4 +1321,4 @@ let dummy_solver = {
 let mk_copy en =
   { en with gamma_cache = BU.smap_copy en.gamma_cache;
             sigtab = BU.smap_copy en.sigtab;
-            dsenv = ToSyntax.Env.mk_copy en.dsenv }
+            dsenv = Syntax.DsEnv.mk_copy en.dsenv }

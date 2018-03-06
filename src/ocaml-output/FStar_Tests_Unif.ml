@@ -275,7 +275,7 @@ let (run_all : Prims.unit -> Prims.unit) =
                      (let uu____371 =
                         let uu____372 =
                           FStar_Tests_Pars.tc
-                            "forall (x:int). (forall (y:int). y==x <==> True)"
+                            "forall (x:int). (forall (y:int). y==x)"
                            in
                         FStar_TypeChecker_Common.NonTrivial uu____372  in
                       unify1 (Prims.parse_int "11") tm11 tm21 uu____371);

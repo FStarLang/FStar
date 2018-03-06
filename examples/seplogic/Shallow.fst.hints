@@ -1,14 +1,55 @@
 [
-  "\u0002Ë\u001c¶Y}yük–Ï\u0003\u0014ÀS›",
+  "!Á\\½Üh\u000b¯†Éº·ÿ\\Åñ",
   [
     [
       "Shallow.return",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Shallow_Tm_refine_20e4bdf63e2d7262f90a049fd6ba5b46"
+      ],
       0,
-      "f620fad79a63a7a827ea7332d0941080"
+      "7d52222839ca0e52aa9b5fb668aa872e"
+    ],
+    [
+      "Shallow.frame",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_Exists", "equation_Prims.squash",
+        "equation_Shallow.frame_post", "equation_Shallow.frame_wp",
+        "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
+        "equation_Shallow.result", "fuel_guarded_inversion_Prims.dtuple2",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_is_comm",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Shallow_Tm_refine_2f1e4349df0318d68ef6b84d7c911b0a",
+        "refinement_interpretation_Shallow_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
+        "token_correspondence_Shallow.frame_post", "unit_typing"
+      ],
+      0,
+      "1c940eb26222d3d6496d0ed1eea25829"
+    ],
+    [
+      "Shallow.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Shallow.result",
+        "interpretation_Shallow_Tm_abs_5674c24c74bae1fa0c80fe820a466851",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Shallow_Tm_refine_2f1e4349df0318d68ef6b84d7c911b0a"
+      ],
+      0,
+      "92dad2a88f276ed316ff26f80938441d"
     ],
     [
       "Shallow.points_to_sel",
@@ -17,19 +58,7 @@
       1,
       [ "@query", "lemma_Shallow.points_to_contains" ],
       0,
-      "036cdefbf6965b919e3a909b2af731f7"
-    ],
-    [
-      "Shallow.read",
-      1,
-      2,
-      1,
-      [
-        "@query", "lemma_Shallow.points_to_contains",
-        "lemma_Shallow.points_to_sel"
-      ],
-      0,
-      "8a1c03066a34f2d2811bb79516962ba8"
+      "5dd94abe3b5defc40dbe03756f082e93"
     ],
     [
       "Shallow.points_to_upd",
@@ -38,7 +67,20 @@
       1,
       [ "@query", "lemma_Shallow.points_to_contains" ],
       0,
-      "034c7c809e18821c2b75827e9ccc98d6"
+      "4200d261f69d91c23425960e17249658"
+    ],
+    [
+      "Shallow.read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_sel",
+        "refinement_interpretation_Shallow_Tm_refine_136ac9e480741292d2ebe1886bdbbe08"
+      ],
+      0,
+      "453af9c30c9015a5d2aefef9d3bca1ed"
     ],
     [
       "Shallow.write",
@@ -46,11 +88,21 @@
       2,
       1,
       [
-        "@query", "lemma_Shallow.points_to_contains",
-        "lemma_Shallow.points_to_upd"
+        "@MaxIFuel_assumption", "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_upd",
+        "refinement_interpretation_Shallow_Tm_refine_f5696e88926274d02cf3b3d843374c63"
       ],
       0,
-      "22736e4acfa1fb21a5b48e9a4910e4dc"
+      "7e82ca743a76db12fb64761bd1c3ac33"
+    ],
+    [
+      "Shallow.swap",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "459af2388266b61c06d315bdf730df1b"
     ]
   ]
 ]

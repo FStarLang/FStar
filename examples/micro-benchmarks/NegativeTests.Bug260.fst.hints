@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "27b880e809c30fb138cf41ba281be09e"
+      "34834714859e35a31cb53d0b4fd9a1ac"
     ],
     [
       "NegativeTests.Bug260.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "a6cc432d3958e2cca06ddf12a796a679"
+      "0c230d9fa4fcd7b2798d42d35e8edd52"
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",

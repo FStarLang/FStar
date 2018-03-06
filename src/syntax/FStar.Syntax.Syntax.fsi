@@ -73,7 +73,9 @@ and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
-type quoteinfo     = unit
+type quoteinfo     = {
+    qopen : bool
+ }
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
@@ -171,7 +173,6 @@ and metadata =
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
   | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -510,6 +511,7 @@ val t_float       : term
 val t_char        : term
 val t_range       : term
 val t_term        : term
+val t_binder      : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term
