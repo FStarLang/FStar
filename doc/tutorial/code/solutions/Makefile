@@ -44,7 +44,7 @@ FSTAR_HOME=../../../../
 include ../Makefile.include
 
 verify-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
+	$(FSTAR) --use_extracted_interfaces --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
 all: uall sall Ex01a-ocaml
 
