@@ -558,7 +558,7 @@
         "typing_FStar.Integers.nat_of_width"
       ],
       0,
-      "6d2159356ccbefd21307fcdaa9d5fe3e"
+      "7a4f23804f660b30766bc209952b1d5c"
     ],
     [
       "FStar.Integers.modulo",
@@ -1860,7 +1860,7 @@
         "typing_FStar.Integers.nat_of_width"
       ],
       0,
-      "8b8fcc09471fb3d6d7b77f2c020b864c"
+      "bdcb2bbb7af9353a371ec4b44309cac6"
     ],
     [
       "FStar.Integers.op_Plus_Question",

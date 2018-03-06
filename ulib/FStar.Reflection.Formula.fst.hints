@@ -533,7 +533,7 @@
         "typing_tok_FStar.Reflection.Formula.F_Unknown@tok"
       ],
       0,
-      "7ac02407f0208429ca8daa9c4bdcd964"
+      "530fa740a43c5185617af2dc755d4b05"
     ],
     [
       "FStar.Reflection.Formula.is_name_imp",
@@ -593,7 +593,7 @@
         "typing_tok_FStar.Reflection.Formula.F_Unknown@tok"
       ],
       0,
-      "160654cfdbea7228330df01f66b33f6f"
+      "63918b9c583a2075c0e850d414f33566"
     ],
     [
       "FStar.Reflection.Formula.formula_as_term_view",
