@@ -533,7 +533,7 @@
         "typing_tok_FStar.Reflection.Formula.F_Unknown@tok"
       ],
       0,
-      "4bbc6652fc7dad0063b4991a8faabd62"
+      "090b078a096ec3107e4dc56209dc1ab9"
     ],
     [
       "FStar.Reflection.Formula.is_name_imp",
@@ -593,7 +593,7 @@
         "typing_tok_FStar.Reflection.Formula.F_Unknown@tok"
       ],
       0,
-      "6eb82961ae945f4bc5d0723dfbdb7ef4"
+      "981e5e7ab378ea998180058a956041fc"
     ],
     [
       "FStar.Reflection.Formula.formula_as_term_view",
@@ -1217,7 +1217,7 @@
         "typing_tok_FStar.Reflection.Formula.F_Unknown@tok"
       ],
       0,
-      "47a7f64b4a292288535f31d142049fb7"
+      "636d8b2626022bc18bddb1d50dd2dee4"
     ],
     [
       "FStar.Reflection.Formula.is_name_imp",
@@ -1277,7 +1277,7 @@
         "typing_tok_FStar.Reflection.Formula.F_Unknown@tok"
       ],
       0,
-      "83360f40f53f48888a6477e6e1715b15"
+      "4c3be220ea9eb7072d4811c8cac89210"
     ],
     [
       "FStar.Reflection.Formula.formula_as_term_view",

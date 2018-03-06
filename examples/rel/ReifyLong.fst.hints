@@ -27,7 +27,27 @@
         "unit_typing"
       ],
       0,
-      "b9d7ed952a4f03bbd895b56c3f5b56cb"
+      "1f7f58555b38be63b2bed4188d40ad75"
+    ],
+    [
+      "ReifyLong.p1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7a49a0272ebab53f972fa765bce02f70"
+    ],
+    [
+      "ReifyLong.bidule",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit"
+      ],
+      0,
+      "98a9f276efc980c6f5747d30dcd7c9f9"
     ]
   ]
 ]

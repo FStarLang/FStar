@@ -1,1 +1,37 @@
-["0319c56c4f631b15cb3ac792e8f4c34a",[["FStar.DM4F.Random.bind",1,2,1,["@MaxIFuel_assumption","@query","bool_inversion","disc_equation_FStar.Pervasives.Native.None","disc_equation_FStar.Pervasives.Native.Some","lemma_FStar.Pervasives.invertOption","projection_inverse_BoxBool_proj_0","typing_FStar.Pervasives.Native.uu___is_Some"],0,"c4330edb6dd7f817003b7e44981d2407"],["FStar.DM4F.Random.bind",2,2,1,["@MaxIFuel_assumption","@query","bool_inversion","disc_equation_FStar.Pervasives.Native.None","disc_equation_FStar.Pervasives.Native.Some","lemma_FStar.Pervasives.invertOption","projection_inverse_BoxBool_proj_0","typing_FStar.Pervasives.Native.uu___is_Some"],0,"ff8d0fcd501f5fea95ed752cb1d2bf54"]]]
+[
+  "\u0003\u0019ÅlOc\u001b\u0015Ë:Ç’èôÃJ",
+  [
+    [
+      "FStar.DM4F.Random.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "c4330edb6dd7f817003b7e44981d2407"
+    ],
+    [
+      "FStar.DM4F.Random.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "d8fdcd67a47c80df08e8e356b48627ca"
+    ]
+  ]
+]

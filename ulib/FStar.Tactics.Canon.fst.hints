@@ -292,7 +292,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "19fbdb0769e16718a632bda48deab96d"
+      "da2f4fb5ae547de2ba64d31f236b04c0"
     ],
     [
       "FStar.Tactics.Canon.canon",
@@ -316,7 +316,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "d47a55cc867e3929279a3eb5e5047800"
+      "a1bc96236231931f1bebf98ed3c98f29"
     ],
     [
       "FStar.Tactics.Canon.canon_point",
@@ -325,7 +325,7 @@
       1,
       [ "@query" ],
       0,
-      "6e66dcf0199a0519ae4c8c357760c1af"
+      "fe90b154220715c8f7aec56b9792e880"
     ],
     [
       "FStar.Tactics.Canon.canon_point_entry",
@@ -345,7 +345,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "9cd4f3eecc2cf94bc4bacd069f23b31c"
+      "00580de3335d43d6b6990d7fc2d8bb7e"
     ],
     [
       "FStar.Tactics.Canon.canon",
@@ -369,7 +369,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "45191f9a52658f7445546b628d275e6d"
+      "f71a7136553a8ad93392ba9bffccfc9f"
     ]
   ]
 ]
