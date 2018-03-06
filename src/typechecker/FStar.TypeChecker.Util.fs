@@ -1814,7 +1814,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Noeq
         | Unopteq ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
 
         | TotalEffect ->
           quals
@@ -1827,7 +1827,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Reifiable
         | Reflectable _ ->
           quals
-          |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect)
+          |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect || x=Visible_default)
 
         | Private ->
           true //only about visibility; always legal in combination with others
