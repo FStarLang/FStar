@@ -21,7 +21,7 @@ let lemma_block (b0:codes) (s0:state) (sN:state) =
   // let Some s1' = S.eval_code c1 fuel s0' in
   // let s1 = state_of_S s1' in
   // (s1, c1, b1)
-  admit () // TODO
+  magic () // TODO
 
 let lemma_empty (s0:state) (sN:state) =
   assume False; // TODO
@@ -30,7 +30,6 @@ let lemma_empty (s0:state) (sN:state) =
 let lemma_ifElse (ifb:S.ocmp) (ct:code) (cf:code) (s0:state) (sN:state) =
   (eval_ocmp s0 ifb, s0)
 
-let lemma_while b c s0 sN = admit () // TODO
-let lemma_whileTrue b c n s0 sN = admit () // TODO
-let lemma_whileFalse b c s0 sN = admit () // TODO
-
+let lemma_while b c s0 sN = magic () // TODO
+let lemma_whileTrue b c n s0 sN = magic () // TODO
+let lemma_whileFalse b c s0 sN = magic () // TODO
