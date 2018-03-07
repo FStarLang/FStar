@@ -23,10 +23,6 @@ private let equal_extensional (h0 h1:heap)
   : Lemma (requires True) (ensures (equal h0 h1 <==> h0 == h1))
   = ()
 
-private let init_heap : heap = 
-  let memory = fun r -> None in
-  { next_addr = 0; memory = memory}
-
 let join_tot h0 h1 =
   let memory = (fun r' ->  match (h0.memory r', h1.memory r') with
                               | (Some v1, None) -> Some v1
@@ -43,6 +39,15 @@ let disjoint_heaps h0 h1 =
   (forall (r:nat). ~(Some?(h0.memory r) && Some?(h1.memory r)))
 
 let emp = fun h -> h.next_addr = 0 /\ (forall r . None? (h.memory r))
+
+private let init_heap : heap = 
+  let memory = fun r -> None in
+  { next_addr = 0; memory = memory}
+
+private let lemma_init_heap_emp ()
+  : Lemma (emp (init_heap))
+          [SMTPat (emp (init_heap))]
+  = ()
 
 let ( |> ) #a r x = 
   fun h -> h.memory r == Some (| a , x |) /\ (forall r' . r =!= r' ==> None? (h.memory r'))
@@ -61,29 +66,19 @@ private let lemma_join_tot_emp_1 (h0 h1:heap)
 
 private let lemma_join_tot_emp (h0 h1:heap)
   : Lemma (emp h1 ==> (join_tot h0 h1) == h0)
-          [SMTPat (join_tot h0 h1); SMTPat (emp h0)]
+          [SMTPat (join_tot h0 h1); SMTPat (emp h1)]
   = lemma_join_tot_emp_1 h0 h1
 
 private let emp_unit_1  (p:hpred) (h:heap) (h0 h1:heap)
   : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
   = lemma_join_tot_emp h0 h1
 
-private let emp_unit_2  (p:hpred) (h:heap) 
-  : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
-  = FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit_1 p h h0 h1))
+let emp_unit p h = 
+  assert_norm ((p <*> emp) h ==> (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)));
+  FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit_1 p h h0 h1));
+  FStar.Classical.move_requires (fun h -> 
+    FStar.Classical.exists_intro (fun h1 -> exists h0 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) init_heap) h
   
-private let emp_unit_3  (p:hpred) (h:heap) 
-  : Lemma ((p <*> emp) h ==> p h)
-  = admit () //emp_unit_2 p h                   // <-- LHS of this impl is (up to unfolding) equal to LHS of emp_unit_2
-
-// (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1))
-//
-// <==>
-//
-// p h
-
-let emp_unit p h = admit ()
-
 private let lemma_disjoint_heaps_comm (h0 h1:heap) 
   : Lemma ((disjoint_heaps h0 h1) <==> (disjoint_heaps h0 h1))
           [SMTPat (disjoint_heaps h0 h1)]
