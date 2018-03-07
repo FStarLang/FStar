@@ -130,10 +130,16 @@ let points_to_disj #a #b r s x y h =
   sep_interp (r |> x) (s |> y) h;
   points_to_disj''' r s x y h
 
-let sel_tot #a h r = admit ()
+let sel_tot #a h r =
+  let Some (| _, x |) = h.memory r in
+  x
 
-let upd_tot #a h r x = admit ()
+let upd_tot' (#a:Type0) (h:heap) (r:ref a) (x:a) =
+  { h with memory = (fun r' -> if r = r' then Some (| a, x |)
+                                         else h.memory r') }
 
-let points_to_sel #a r x h = admit ()
+let upd_tot #a h r x = upd_tot' h r x
 
-let points_to_upd #a r x v h = admit ()
+let points_to_sel #a r x h = ()
+
+let points_to_upd #a r x v h = ()
