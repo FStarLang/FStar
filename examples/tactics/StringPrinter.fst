@@ -179,14 +179,17 @@ let print_char_sz
 : Tot (m_sz (print_char c))
 = fun g -> g () 1ul ()
 
+let cond_unit (c: bool) (b: bool) : Tot Type0 =
+  (u: unit { c == b } )
+
 inline_for_extraction
 let ifthenelse_sz
-  (#t: Type0)
+  (t: Type0)
   (c: bool)
-  (#ft: (u: unit { c == true } ) -> Tot (m t))
-  (ft_sz: (u: unit { c == true } ) -> m_sz (ft u))
-  (#ff: (u: unit { c == false } ) -> Tot (m t))
-  (ff_sz: (u: unit { c == false } ) -> m_sz (ff u))
+  (ft: (cond_unit true c -> Tot (m t)))
+  (ft_sz: ((u: cond_unit true c) -> m_sz (ft u)))
+  (ff: (cond_unit false c -> Tot (m t)))
+  (ff_sz: (u: cond_unit false c ) -> m_sz (ff u))
 : Tot (m_sz (if c then ft () else ff ()))
 = fun g ->
     if c
@@ -230,12 +233,16 @@ let example (x: U32.t) : Tot (m unit) =
 inline_for_extraction
 let example_sz (x: U32.t) : Tot (m_sz (example x)) =
   ifthenelse_sz
+    _
     (U32.lt x 256ul)
+    _
     (fun _ -> bind_sz (ret_sz (cast x)) (fun g -> print_char_sz g))
+    _
     (fun _ -> ret_sz ())
 
+(* This should give the same thing as the test function at the very end of this file *)
 inline_for_extraction
-let test (x: U32.t) : Tot (option U32.t) =
+let test_ (x: U32.t) : Tot (option U32.t) =
   log_size (example_sz x)
 
 module T = FStar.Tactics
@@ -427,7 +434,30 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
         res
     end
   end
-  | _ -> T.fail "head is not a Tv_FVar"
+  | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; _, tf] ->
+    (* ifthenelse: the second branch can be a wildcard or false *)
+    let ct = quote (cond_unit true) in
+    let ut = T.mk_app ct [cond, T.Q_Explicit] in
+    let vt = T.fresh_binder ut in
+    let ft = T.pack (T.Tv_Abs vt tt) in
+    let ft_sz_body = mk_sz (fuel - 1) ty tt in
+    let ft_sz = T.pack (T.Tv_Abs vt ft_sz_body) in
+    let cf = quote (cond_unit false) in
+    let uf = T.mk_app cf [cond, T.Q_Explicit] in
+    let vf = T.fresh_binder uf in
+    let ff = T.pack (T.Tv_Abs vf tf) in
+    let ff_sz_body = mk_sz (fuel - 1) ty tf in
+    let ff_sz = T.pack (T.Tv_Abs vf ff_sz_body) in
+    let i = quote ifthenelse_sz in
+    T.mk_app i [
+      ty, T.Q_Explicit;
+      cond, T.Q_Explicit;
+      ft, T.Q_Explicit;
+      ft_sz, T.Q_Explicit;
+      ff, T.Q_Explicit;
+      ff_sz, T.Q_Explicit;
+    ]
+  | _ -> T.fail ("head is not a Tv_FVar, we have instead: " ^ T.term_to_string t)
 
 let unfold_ (#t: Type) (x: t) : T.Tac T.term =
   let open T in
@@ -487,3 +517,11 @@ let example3 (x: U8.t) : Tot (m unit) =
 
 let z3 (x: U8.t) : Tot (m_sz (example3 x)) =
   T.synth_by_tactic (fun () -> test_tac (example3 x))
+
+inline_for_extraction
+let z (x: U32.t) : Tot (m_sz (example x)) =
+  T.synth_by_tactic (fun () -> test_tac (example x))
+
+inline_for_extraction
+let test (x: U32.t) : Tot (option U32.t) =
+  log_size (z x)
