@@ -847,7 +847,9 @@ let (push_subst :
                         (uu___56_3007.FStar_Syntax_Syntax.lbeff);
                       FStar_Syntax_Syntax.lbdef = lbd;
                       FStar_Syntax_Syntax.lbattrs =
-                        (uu___56_3007.FStar_Syntax_Syntax.lbattrs)
+                        (uu___56_3007.FStar_Syntax_Syntax.lbattrs);
+                      FStar_Syntax_Syntax.lbpos =
+                        (uu___56_3007.FStar_Syntax_Syntax.lbpos)
                     }))
              in
           mk1 (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs1), body1))
@@ -1432,7 +1434,9 @@ let (open_let_rec :
                            FStar_Syntax_Syntax.lbdef =
                              (uu___73_5411.FStar_Syntax_Syntax.lbdef);
                            FStar_Syntax_Syntax.lbattrs =
-                             (uu___73_5411.FStar_Syntax_Syntax.lbattrs)
+                             (uu___73_5411.FStar_Syntax_Syntax.lbattrs);
+                           FStar_Syntax_Syntax.lbpos =
+                             (uu___73_5411.FStar_Syntax_Syntax.lbpos)
                          }) :: lbs1), ((FStar_Syntax_Syntax.DB (i, x)) ::
                        out))) lbs ((Prims.parse_int "0"), [], [])
          in
@@ -1478,7 +1482,9 @@ let (open_let_rec :
                             (uu___74_5529.FStar_Syntax_Syntax.lbeff);
                           FStar_Syntax_Syntax.lbdef = uu____5533;
                           FStar_Syntax_Syntax.lbattrs =
-                            (uu___74_5529.FStar_Syntax_Syntax.lbattrs)
+                            (uu___74_5529.FStar_Syntax_Syntax.lbattrs);
+                          FStar_Syntax_Syntax.lbpos =
+                            (uu___74_5529.FStar_Syntax_Syntax.lbpos)
                         }))
              in
           let t1 = subst let_rec_opening t  in (lbs2, t1)
@@ -1551,7 +1557,9 @@ let (close_let_rec :
                             (uu___75_5691.FStar_Syntax_Syntax.lbeff);
                           FStar_Syntax_Syntax.lbdef = uu____5695;
                           FStar_Syntax_Syntax.lbattrs =
-                            (uu___75_5691.FStar_Syntax_Syntax.lbattrs)
+                            (uu___75_5691.FStar_Syntax_Syntax.lbattrs);
+                          FStar_Syntax_Syntax.lbpos =
+                            (uu___75_5691.FStar_Syntax_Syntax.lbpos)
                         }))
              in
           let t1 = subst let_rec_closing t  in (lbs1, t1)
