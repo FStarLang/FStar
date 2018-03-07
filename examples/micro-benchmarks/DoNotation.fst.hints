@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4d1fd0fddd93272b1d3a76e323d82ce7"
+      "57c886ef79c24bcd4e010bf6f4ad5ad0"
     ],
     [
       "DoNotation.uu___13",
@@ -28,7 +28,23 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "99b2d2fe2f90c700533a01ef175d4799"
+      "f09ed329273608c3fea2a4e793249aa3"
+    ],
+    [
+      "DoNotation.add",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "bdc398588f08df5468197c9b2e8d95c5"
     ]
   ]
 ]

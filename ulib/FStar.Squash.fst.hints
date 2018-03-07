@@ -1,5 +1,5 @@
 [
-  "tMm&nRf<ìóÄª\bãE2",
+  "ÿ¿=}Hð³\"\u001dfç\"\u0006+\u001ay",
   [
     [
       "FStar.Squash.return_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c9cbc7b5b5c807196d5624f81bc0b33e"
+      "50af0ed90fc45a131816133d361e0d0d"
     ],
     [
       "FStar.Squash.get_proof",
@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "a6f902fc094bdca646b563ca285d6bc4"
+      "24a01099803d3abf6acbebe353709cf5"
     ],
     [
       "FStar.Squash.give_proof",
@@ -36,7 +36,7 @@
         "unit_typing"
       ],
       0,
-      "adbacfd10b9acb7b3d87cee7be453c29"
+      "035954c2ef41e9b84cb9576f90fa2ddc"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -49,7 +49,7 @@
         "unit_inversion"
       ],
       0,
-      "555b617564b464e1a0374ed8aacc0da5"
+      "032ffc311f160d88c28ee42c6d05995d"
     ],
     [
       "FStar.Squash.return_squash",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "61d37fdcf9fb718145911aad903b5093"
+      "a8bbac3f6c5ed8c9ca06e91905240b67"
     ],
     [
       "FStar.Squash.get_proof",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "9a49454126854494586eddd81efe33a7"
+      "97c0c1d43cb9c21df9495184fd346d7a"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -80,7 +80,7 @@
         "unit_inversion"
       ],
       0,
-      "5ddf1e9c9629c6f86399dbf00617326b"
+      "2240a666199a5a1999e8c724a582a7e0"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -89,7 +89,7 @@
       1,
       [ "@query" ],
       0,
-      "c55c7a5df72c3696adf4144e758939ef"
+      "914db8ebc3b8666a524d18425647eb6a"
     ]
   ]
 ]

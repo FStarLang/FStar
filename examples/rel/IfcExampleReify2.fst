@@ -51,5 +51,11 @@ let cmd_ni () = tc_com_hybrid env c_1_4 [Seq c_2 c_3, Low]
 (*   assert (reify (tc_com_hybrid env c_body [Seq c_2 c_3, Low]) () == Inl Low) ; *)
 (*   assert (reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) () == Inl Low) *)
 
-let c_1_4_ni' () : Lemma (ensures ni_com env c_1_4 Low) =
+(*
+ * AR: 06/03/18: this lemma crucially relies on abstraction leaks in DM4F.Heap.IntStorefixed
+ *               e.g. https://github.com/FStarLang/FStar/commit/d35b38915094276d2e4c2d01fe7e6b3dd5114a63
+ *                    commit fixes the leaks, and if we revert those changes, the lemma goes through
+ *               adding admit
+ *)
+let c_1_4_ni' () : Lemma (ensures ni_com env c_1_4 Low) = admit ();
   c_2_3_ni(); match (reify (tc_com_hybrid env c_1_4 [Seq c_2 c_3, Low]) ()) with | Inl l -> ()

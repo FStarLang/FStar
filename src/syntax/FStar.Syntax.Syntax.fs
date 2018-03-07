@@ -143,13 +143,14 @@ and pat' =
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
-and letbinding = {  //let f : forall u1..un. M t = e
+and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
     lbdef  :term;            //e
-    lbattrs:list<attribute>
+    lbattrs:list<attribute>; //attrs
+    lbpos  :range;           //original position of 'e'
 }
 and comp_typ = {
   comp_univs:universes;
@@ -351,7 +352,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {
@@ -456,11 +458,11 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
-let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
+let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_fifo_set ()
+let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
@@ -495,7 +497,16 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e; lbattrs=[]}
+let mk_lb (x, univs, eff, t, e, pos) = {
+    lbname=x;
+    lbunivs=univs;
+    lbtyp=t;
+    lbeff=eff;
+    lbdef=e;
+    lbattrs=[];
+    lbpos=pos;
+  }
+
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s

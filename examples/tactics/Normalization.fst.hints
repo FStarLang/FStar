@@ -21,7 +21,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "0acd85f6a59bf1c94ff41cf649b379e7"
+      "a04cb0f474f27bf00d2105fae3afd2a7"
     ],
     [
       "Normalization.uu___45",
@@ -46,7 +46,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "482eb2056a3dd5a989da409d273e83a6"
+      "b71d54e6fcb756284a79bdab4c48fc83"
     ],
     [
       "Normalization.uu___45",
@@ -71,7 +71,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "5038aebf566d6db8ee134ab95b4c916c"
+      "894e35b69b2ae3e7615439f8885fff6d"
     ],
     [
       "Normalization.uu___46",
@@ -96,7 +96,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "9cf6e830d09c88b66fbd021381d9f452"
+      "32eac09daf926fef8c44af15239f5c22"
     ],
     [
       "Normalization.uu___46",
@@ -121,7 +121,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "08f4dc0f215c8f636420a0ecaf3f19b6"
+      "fe3433e3aaca172571c47c7acb2b650e"
     ],
     [
       "Normalization.uu___47",
@@ -146,7 +146,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "a8244faac587df97764dcc3d050a3e07"
+      "39646d4bb5482868ea6c90ae498f41dd"
     ],
     [
       "Normalization.uu___47",
@@ -171,7 +171,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "dc140043eae74c3abfc08513e403f96a"
+      "cb73deef763cca380dfc6fc694243ba7"
     ],
     [
       "Normalization.uu___48",
@@ -186,7 +186,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3c16d56e03e61125f2cd5aa702d87a84"
+      "6af54614c020b0e8861141ade6f33275"
     ],
     [
       "Normalization.uu___49",
@@ -211,7 +211,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "7331094823bcd54c8bf8929bfe3c3e68"
+      "23d33951cbcd77376b5529375bb254d9"
     ],
     [
       "Normalization.uu___49",
@@ -236,7 +236,29 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "2a49f02067bf9650a62cd738de912f26"
+      "bdb5e70abe38719d05dd082ed71275da"
+    ],
+    [
+      "Normalization.def_of",
+      2,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
+      ],
+      0,
+      "5abaafcbc160136247a9ba959940a22f"
     ]
   ]
 ]

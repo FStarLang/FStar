@@ -223,11 +223,6 @@ let quals_to_string' quals =
 
 let paren s = "(" ^ s ^ ")"
 
-let term_to_string' env x =
-  let e = Resugar.resugar_term' env x in
-  let d = ToDocument.term_to_document e in
-  Pp.pretty_string (float_of_string "1.0") 100 d
-
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -527,6 +522,13 @@ and metadata_to_string = function
     | Meta_quoted (qt, qi) ->
         "`(" ^ term_to_string qt ^ ")"
 
+let term_to_string' env x =
+  if Options.ugly ()
+  then term_to_string x
+  else let e = Resugar.resugar_term' env x in
+       let d = ToDocument.term_to_document e in
+       Pp.pretty_string (float_of_string "1.0") 100 d
+
 let binder_to_json env b =
     let (a, imp) = b in
     let n = if is_null_binder b then JsonNull else JsonStr (imp_to_string (nm_to_string a) imp) in
@@ -646,7 +648,7 @@ let rec sigelt_to_string (x: sigelt) =
              U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
         else U.format2 "datacon %s : %s" lid.str (term_to_string t)
       | Sig_declare_typ(lid, univs, t) ->
-        let univs, t = Subst.open_univ_vars univs t in
+        //let univs, t = Subst.open_univ_vars univs t in
         U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
             (if (Options.print_universes())
              then U.format1 "<%s>" (univ_names_to_string univs)

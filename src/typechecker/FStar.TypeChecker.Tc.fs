@@ -158,8 +158,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             ; repr        = snd (op ([], ed.repr))
             ; actions     = List.map (fun a ->
             { a with
-                action_defn = snd (op ([], a.action_defn));
-                action_typ  = snd (op ([], a.action_typ)) }) ed.actions
+                action_defn = snd (op (a.action_univs, a.action_defn));  //AR: can't assume that the action univs are empty
+                action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions
         }
   in
 //  printfn "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
@@ -324,12 +324,18 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                    None Range.dummyRange in
                 mk_repr b wp in
 
-            let expected_k = U.arrow [S.mk_binder a;
-                                         S.mk_binder b;
-                                         S.mk_binder wp_f;
+            let maybe_range_arg =
+                if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                then [S.null_binder S.t_range]
+                else []
+            in
+            let expected_k = U.arrow ([S.mk_binder a;
+                                         S.mk_binder b] @
+                                         maybe_range_arg @
+                                        [S.mk_binder wp_f;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.mk_binder wp_g;
-                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
+                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))])
                                         (S.mk_Total res) in
 //            printfn "About to check expected_k %s\n"
 //                     (Print.term_to_string expected_k);
@@ -375,6 +381,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // about what this action does. Please note that this "good" wp is
           // of the form [binders -> repr ...], i.e. is it properly curried.
 
+          //in case action has universes, open the action type etc. first
+          let act =
+            if act.action_univs = [] then act
+            else
+              let usubst, uvs = SS.univ_var_opening act.action_univs in
+              { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
+          in
+          
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
@@ -1103,7 +1117,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env = {env with lax=true} in
     let lift = match lift with
     | None -> None
-    | Some (_, lift) ->
+    | Some (uvs, lift) ->
+      let lift = SS.subst (fst (SS.univ_var_opening uvs)) lift in
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let wp_a = S.new_bv None wp_a_src in
       let a_typ = S.bv_to_name a in
@@ -1268,7 +1283,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def, lb.lbpos),
               quals_opt
           in
           gen, lb::lbs, quals_opt)
@@ -1535,7 +1550,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
-    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
+    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se
@@ -1700,7 +1715,7 @@ let extract_interface (env:env) (m:modul) :modul =
     match s.sigel with
     | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
       let s1 = { s with sigel = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng);
-                        sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
+                        sigquals = Assumption::New::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
       [s1]
     | _ -> failwith "Impossible!"
@@ -1725,8 +1740,10 @@ let extract_interface (env:env) (m:modul) :modul =
      
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
-     //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
-     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
+     //if c is pure or ghost then keep it if the return type is not unit
+     if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
+     //else keep it if the effect is reifiable
+     else Env.is_reifiable_effect env (comp_effect_name c))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1838,10 +1855,13 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
 
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
-    let modul_iface = extract_interface en0 m in
-    BU.print3 "Extracting and type checking module %s interface%s%s\n" m.name.str
-              (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-              (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+    //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
+    let modul_iface = extract_interface en m in
+    if Env.debug en <| Options.Low then
+      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
+                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
+                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
     let env0 = { en0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"

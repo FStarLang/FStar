@@ -70,7 +70,8 @@ let (mk_let :
                    FStar_Syntax_Syntax.lbeff =
                      FStar_Parser_Const.effect_Tot_lid;
                    FStar_Syntax_Syntax.lbdef = e;
-                   FStar_Syntax_Syntax.lbattrs = []
+                   FStar_Syntax_Syntax.lbattrs = [];
+                   FStar_Syntax_Syntax.lbpos = FStar_Range.dummyRange
                  }]), e'1)) FStar_Pervasives_Native.None
           FStar_Range.dummyRange
   
@@ -228,7 +229,8 @@ let (minus_nat :
           FStar_Syntax_Syntax.lbtyp = FStar_Syntax_Syntax.tun;
           FStar_Syntax_Syntax.lbeff = uu____484;
           FStar_Syntax_Syntax.lbdef = uu____485;
-          FStar_Syntax_Syntax.lbattrs = []
+          FStar_Syntax_Syntax.lbattrs = [];
+          FStar_Syntax_Syntax.lbpos = FStar_Range.dummyRange
         }  in
       let uu____541 =
         let uu____544 =

@@ -1058,9 +1058,9 @@ let try_lookup_id'' :
 let found_local_binding :
   'Auu____2924 'Auu____2925 .
     FStar_Range.range ->
-      ('Auu____2925,FStar_Syntax_Syntax.bv,'Auu____2924)
+      ('Auu____2924,FStar_Syntax_Syntax.bv,'Auu____2925)
         FStar_Pervasives_Native.tuple3 ->
-        (FStar_Syntax_Syntax.term,'Auu____2924)
+        (FStar_Syntax_Syntax.term,'Auu____2925)
           FStar_Pervasives_Native.tuple2
   =
   fun r  ->

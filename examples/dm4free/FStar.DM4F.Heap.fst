@@ -15,7 +15,7 @@ abstract noeq type heap_rec = {
 abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
 (* Consistency of heaps. aka, no strong updates *)
-private let consistent (h0:heap) (h1:heap) =
+private abstract let consistent (h0:heap) (h1:heap) =
   forall n x y. h0.memory n == Some x /\ h1.memory n == Some y ==> dfst x == dfst y
 
 (* References. *)
@@ -142,7 +142,7 @@ let equal_dom (h1:heap) (h2:heap) :Tot Type0 =
   forall (a:Type0) (r:ref a). h1 `contains` r <==> h2 `contains` r
 
 (* Empty. *)
-val emp : heap
+abstract val emp : heap
 let emp = {
   next_addr = 0;
   memory    = (fun (r:nat) -> None)

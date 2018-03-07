@@ -556,7 +556,7 @@ let (display_version : Prims.unit -> Prims.unit) =
   
 let display_usage_aux :
   'Auu____1768 'Auu____1769 .
-    ('Auu____1769,Prims.string,'Auu____1768 FStar_Getopt.opt_variant,
+    ('Auu____1768,Prims.string,'Auu____1769 FStar_Getopt.opt_variant,
       Prims.string) FStar_Pervasives_Native.tuple4 Prims.list -> Prims.unit
   =
   fun specs  ->

@@ -417,7 +417,7 @@ let rec add_sigelt env se = match se.sigel with
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = U.action_as_lb ne.mname a in
+          let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -1204,11 +1204,11 @@ let univ_vars env =
 
 let univnames env =
     let no_univ_names = Syntax.no_universe_names in
-    let ext out uvs = BU.fifo_set_union out uvs in
+    let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
         | [] -> out
         | Binding_sig_inst _::tl -> aux out tl
-        | Binding_univ uname :: tl -> aux (BU.fifo_set_add uname out) tl
+        | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
         | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)

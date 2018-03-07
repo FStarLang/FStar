@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2a9ed74ab56ccdb4ea84dc89cecd72ee"
+      "4f03cc7cf7248d967bab1fb15aac77df"
     ],
     [
       "Loops.sum_up_eq",
@@ -75,7 +75,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "4439a220d2cd4c63b06a1407199ca9fc"
+      "f82f2b8c02412be4f415d06d5aa784d7"
     ],
     [
       "Loops.sum_up_commute",
@@ -132,7 +132,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "041086b4c35fb105953ccc3f01e04a77"
+      "f42eb8ebb8c50dc7a7f0be10104dda97"
     ],
     [
       "Loops.sum_dn",
@@ -151,7 +151,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a5e2e557f0f7bba921119cd02968f7c5"
+      "b715eb0aee46e4e6bac58bc871469385"
     ],
     [
       "Loops.sum_dn_eq",
@@ -207,7 +207,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "af5d9eb52e20de66f7a412742669a1d3"
+      "55a00752fc412277a4c94e8521d0112f"
     ],
     [
       "Loops.sum_dn_commute",
@@ -264,7 +264,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "20af3e8ed1f8e595377bab7b479cc099"
+      "7f6c46f0c334b90f95f4eefb870f3755"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -273,7 +273,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "88de7b4f87fcb7f80fbc7ef510c9bfc1"
+      "e90a2e052b6b2521b0a658c0bbfdb1a3"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -286,7 +286,7 @@
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "4789dc31cba6ec8434251b791668b419"
+      "549f8e5167081d4ce04ebaf878b57e72"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -354,7 +354,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "8b15c2b9349c3000d80a95446ba11f72"
+      "2e513596bef70cfb945e4c8425cefb74"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -397,7 +397,125 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "8467d7c9851f46eeaa65ce41f6841100"
+      "d5d3319f3ea1d308fd2a953efe98d812"
+    ],
+    [
+      "Loops.sum_up",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_6bc3f3d403bc21efda18ffafe436948a_2",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "equality_tok_Prims.LexTop@tok", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Loops_Tm_refine_b154ce3b342a495bb8730cab2e6b9e58",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b12aa0af11cdeb467923dc9cba9368eb"
+    ],
+    [
+      "Loops.sum_up_eq",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
+      ],
+      0,
+      "c3e1f33d0c8997b409ed6261570f17f3"
+    ],
+    [
+      "Loops.sum_up_commute",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "int_inversion", "int_typing",
+        "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
+        "primitive_Prims.op_Addition",
+        "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
+      ],
+      0,
+      "5a6f3f6ec15a034b6826fc69770161fe"
+    ],
+    [
+      "Loops.sum_dn",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_6bc3f3d403bc21efda18ffafe436948a_2",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "equality_tok_Prims.LexTop@tok", "int_inversion", "int_typing",
+        "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Loops_Tm_refine_b154ce3b342a495bb8730cab2e6b9e58",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "a59f6fb8f79bce28d9fb0b4211ff3c62"
+    ],
+    [
+      "Loops.sum_dn_eq",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
+      ],
+      0,
+      "778ad3e965987d9e39d7357fae464a0a"
+    ],
+    [
+      "Loops.sum_dn_commute",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "int_inversion", "int_typing",
+        "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
+        "primitive_Prims.op_Addition",
+        "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
+      ],
+      0,
+      "5572b4d2a2287c4781da8bedbd15c311"
+    ],
+    [
+      "Loops.sum_up_dn_aux",
+      4,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f",
+        "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
+      ],
+      0,
+      "34ab84b88d9a59c6c717a7e17a220c7a"
+    ],
+    [
+      "Loops.equiv_sum_up_dn",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
+      ],
+      0,
+      "37d3753cdb9319f62ec22d15e2cbc5b7"
     ]
   ]
 ]

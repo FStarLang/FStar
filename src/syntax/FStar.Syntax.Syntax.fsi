@@ -129,7 +129,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
     lbdef  :term;            //e
-    lbattrs:list<attribute>
+    lbattrs:list<attribute>; //attrs
+    lbpos  :range;           //original position of 'e'
 }
 and comp_typ = {
   comp_univs:universes;
@@ -248,7 +249,7 @@ type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
-val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
+val new_universe_names_set: unit -> set<univ_name>
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
@@ -328,7 +329,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {
@@ -417,7 +419,7 @@ val withinfo: 'a -> Range.range -> withinfo_t<'a>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a>>
 
-val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
@@ -452,7 +454,7 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_universe_names: fifo_set<univ_name>
+val no_universe_names: set<univ_name>
 val no_fvars:          set<lident>
 
 val freenames_of_list:    list<bv> -> freenames

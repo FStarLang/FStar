@@ -16,8 +16,8 @@ let (mkAssume :
   
 let norng :
   'Auu____23 'Auu____24 .
-    ('Auu____24 -> FStar_Range.range -> 'Auu____23) ->
-      'Auu____24 -> 'Auu____23
+    ('Auu____23 -> FStar_Range.range -> 'Auu____24) ->
+      'Auu____23 -> 'Auu____24
   = fun f  -> fun x  -> f x FStar_Range.dummyRange 
 let (mkTrue : FStar_SMTEncoding_Term.term) =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange 
@@ -189,8 +189,8 @@ let (mkExists :
   = norng FStar_SMTEncoding_Term.mkExists 
 let norng2 :
   'Auu____502 'Auu____503 'Auu____504 .
-    ('Auu____504 -> 'Auu____503 -> FStar_Range.range -> 'Auu____502) ->
-      'Auu____504 -> 'Auu____503 -> 'Auu____502
+    ('Auu____502 -> 'Auu____503 -> FStar_Range.range -> 'Auu____504) ->
+      'Auu____502 -> 'Auu____503 -> 'Auu____504
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange 
 let (mk_Term_app :
   FStar_SMTEncoding_Term.term ->
