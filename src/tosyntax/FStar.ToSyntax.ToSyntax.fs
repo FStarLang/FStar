@@ -997,18 +997,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       aux [] top
 
     | Bind(x, t1, t2) ->
-      let tac_bind_lid = Ident.lid_of_path ["FStar"; "Tactics"; "Effect"; "bind"] x.idRange in
       let xpat = AST.mk_pattern (AST.PatVar(x, None)) x.idRange in
       let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
       let bind_lid = Ident.lid_of_path ["bind"] x.idRange in
       let bind = AST.mk_term (AST.Var bind_lid) x.idRange AST.Expr in
-      begin match Env.resolve_to_fully_qualified_name env bind_lid with
-      | Some flid when lid_equals flid tac_bind_lid ->
-        let r = AST.mk_term (Const (Const_range t2.range)) t2.range AST.Expr in
-        desugar_term env (AST.mkExplicitApp bind [r; t1; k] top.range)
-      | _ ->
-        desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
-      end
+      desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
 
     | Seq(t1, t2) ->
       mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [None, (mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
