@@ -5,7 +5,7 @@ module TS = FStar.TSet
 
 private noeq type heap_rec = {
   next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & a))  //type, preorder, mm flag, and value
+  memory   : nat -> Tot (option (a:Type0 & a))
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -23,14 +23,18 @@ private let equal_extensional (h0 h1:heap)
   : Lemma (requires True) (ensures (equal h0 h1 <==> h0 == h1))
   = ()
 
+private let init_heap : heap = 
+  let memory = fun r -> None in
+  { next_addr = 0; memory = memory}
+
 let join_tot h0 h1 =
   let memory = (fun r' ->  match (h0.memory r', h1.memory r') with
                               | (Some v1, None) -> Some v1
 			      | (None, Some v2) -> Some v2
 			      | _               -> None) in
   if (h0.next_addr < h1.next_addr)
-  then { next_addr = h1.next_addr;  memory = memory }
-  else { next_addr = h0.next_addr;  memory = memory }
+  then { next_addr = h1.next_addr; memory = memory }
+  else { next_addr = h0.next_addr; memory = memory }
 
 let disjoint #a #b r0 r1 = r0 =!= r1
 
@@ -38,7 +42,7 @@ let disjoint_heaps h0 h1 =
   let _ = () in
   (forall (r:nat). ~(Some?(h0.memory r) && Some?(h1.memory r)))
 
-let emp = fun h -> forall r . None? (h.memory r)
+let emp = fun h -> h.next_addr = 0 /\ (forall r . None? (h.memory r))
 
 let ( |> ) #a r x = 
   fun h -> h.memory r == Some (| a , x |) /\ (forall r' . r =!= r' ==> None? (h.memory r'))
@@ -47,14 +51,30 @@ let ( <*> ) p q =
   fun h -> exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1 
 
 private let lemma_disjoint_heaps_emp (h0 h1:heap)
-  : Lemma (requires (emp h1))
-          (ensures  (disjoint_heaps h0 h1))
+  : Lemma (emp h1 ==> disjoint_heaps h0 h1)
+          [SMTPat (disjoint_heaps h0 h1); SMTPat (emp h1)]
   = ()
 
-(*private let lemma_join_tot_emp (h0 h1:heap)
-  : Lemma (requires (emp h1))
-          (ensures  (join_tot h0 h1 == h0))    //not necessarily if h1.next_addr > h0.next_addr
-  = ()*)
+private let lemma_join_tot_emp_1 (h0 h1:heap)
+  : Lemma (emp h1 ==> equal (join_tot h0 h1) h0)
+  = ()
+
+private let lemma_join_tot_emp (h0 h1:heap)
+  : Lemma (emp h1 ==> (join_tot h0 h1) == h0)
+          [SMTPat (join_tot h0 h1); SMTPat (emp h0)]
+  = lemma_join_tot_emp_1 h0 h1
+
+private let emp_unit_1  (p:hpred) (h:heap) (h0 h1:heap)
+  : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
+  = lemma_join_tot_emp h0 h1
+
+private let emp_unit_2  (p:hpred) (h:heap) 
+  : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
+  = FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit_1 p h h0 h1))
+  
+private let emp_unit_3  (p:hpred) (h:heap) 
+  : Lemma ((p <*> emp) h ==> p h)
+  = admit () //emp_unit_2 p h                   // <-- LHS of this impl is (up to unfolding) equal to LHS of emp_unit_2
 
 // (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1))
 //
@@ -69,14 +89,14 @@ private let lemma_disjoint_heaps_comm (h0 h1:heap)
           [SMTPat (disjoint_heaps h0 h1)]
   = ()
 
-private let lemma_join_tot_comm' (h0 h1:heap)
+private let lemma_join_tot_comm_1 (h0 h1:heap)
   : Lemma (equal (join_tot h0 h1) (join_tot h1 h0))
   = ()
 
 private let lemma_join_tot_comm (h0 h1:heap)
   : Lemma ((join_tot h0 h1) == (join_tot h1 h0))
           [SMTPat (join_tot h0 h1)]
-  = lemma_join_tot_comm' h0 h1
+  = lemma_join_tot_comm_1 h0 h1
 
 private let lemma_sep_comm (p q:hpred) (h:heap)
   : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1) 
