@@ -956,6 +956,12 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None dummyRange, u
 
+// works on anything, really
+let attr_eq a a' =
+   match eq_tm a a' with
+   | Equal -> true
+   | _ -> false
+
 let attr_substitute =
 mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
 
@@ -978,6 +984,7 @@ let t_true  = fvar_const PC.true_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
 let tac_opaque_attr = exp_string "tac_opaque"
+let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2

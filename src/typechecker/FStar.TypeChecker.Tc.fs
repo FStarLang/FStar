@@ -324,12 +324,18 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                    None Range.dummyRange in
                 mk_repr b wp in
 
-            let expected_k = U.arrow [S.mk_binder a;
-                                         S.mk_binder b;
-                                         S.mk_binder wp_f;
+            let maybe_range_arg =
+                if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                then [S.null_binder S.t_range]
+                else []
+            in
+            let expected_k = U.arrow ([S.mk_binder a;
+                                         S.mk_binder b] @
+                                         maybe_range_arg @
+                                        [S.mk_binder wp_f;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.mk_binder wp_g;
-                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
+                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))])
                                         (S.mk_Total res) in
 //            printfn "About to check expected_k %s\n"
 //                     (Print.term_to_string expected_k);
