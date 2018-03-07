@@ -78,14 +78,6 @@ let step_lemma (lem : term) : Tac unit =
 
 val canon_point : expr -> Tac expr
 let rec canon_point e =
-    // Need this stupid indirection or I get:
-    //
-    // ulib/FStar.Tactics.Canon.fst(105,8-107,28): (Error 54)
-    // FStar.Tactics.Effect.Tac FStar.Reflection.Arith.expr
-    // is not a subtype of the expected type
-    // Prims.Tot ((*?u2035*) _ e uu___4175)
-    //
-    // This didn't happen before adding the `e` argument
     let skip () : Tac expr = 
         trefl (); e
     in

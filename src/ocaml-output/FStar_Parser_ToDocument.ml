@@ -3,7 +3,7 @@ let (should_print_fs_typ_app : Prims.bool FStar_ST.ref) =
   FStar_Util.mk_ref false 
 let with_fs_typ_app :
   'Auu____19 'Auu____20 .
-    Prims.bool -> ('Auu____20 -> 'Auu____19) -> 'Auu____20 -> 'Auu____19
+    Prims.bool -> ('Auu____19 -> 'Auu____20) -> 'Auu____19 -> 'Auu____20
   =
   fun b  ->
     fun printer  ->
@@ -17,9 +17,9 @@ let (str : Prims.string -> FStar_Pprint.document) =
   fun s  -> FStar_Pprint.doc_of_string s 
 let default_or_map :
   'Auu____107 'Auu____108 .
-    'Auu____108 ->
-      ('Auu____107 -> 'Auu____108) ->
-        'Auu____107 FStar_Pervasives_Native.option -> 'Auu____108
+    'Auu____107 ->
+      ('Auu____108 -> 'Auu____107) ->
+        'Auu____108 FStar_Pervasives_Native.option -> 'Auu____107
   =
   fun n1  ->
     fun f  ->

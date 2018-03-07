@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "efc64af4d241999cab1d9ba5f68851ff"
+      "7587f511150d12ec301da64d9521d17e"
     ],
     [
       "DependentSynth.f",
@@ -20,7 +20,28 @@
         "equation_DependentSynth.myty", "int_typing", "unit_typing"
       ],
       0,
-      "af586d27b71603feb9700b22a85dc33e"
+      "ba0bc699204358eac3af54921380db12"
+    ],
+    [
+      "DependentSynth.myty",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "80e1f3c83e4cccbabc5417665a4bc9d3"
+    ],
+    [
+      "DependentSynth.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
+      ],
+      0,
+      "b0723aeca38ecdd3edf5c8013331abce"
     ]
   ]
 ]

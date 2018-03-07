@@ -4,8 +4,8 @@ type inst_t =
     FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 let mk :
   'Auu____11 'Auu____12 .
-    'Auu____12 FStar_Syntax_Syntax.syntax ->
-      'Auu____11 -> 'Auu____11 FStar_Syntax_Syntax.syntax
+    'Auu____11 FStar_Syntax_Syntax.syntax ->
+      'Auu____12 -> 'Auu____12 FStar_Syntax_Syntax.syntax
   =
   fun t  ->
     fun s  ->
@@ -128,7 +128,9 @@ let rec (inst :
                           (uu___26_759.FStar_Syntax_Syntax.lbeff);
                         FStar_Syntax_Syntax.lbdef = uu____763;
                         FStar_Syntax_Syntax.lbattrs =
-                          (uu___26_759.FStar_Syntax_Syntax.lbattrs)
+                          (uu___26_759.FStar_Syntax_Syntax.lbattrs);
+                        FStar_Syntax_Syntax.lbpos =
+                          (uu___26_759.FStar_Syntax_Syntax.lbpos)
                       }))
                in
             ((FStar_Pervasives_Native.fst lbs), uu____745)  in

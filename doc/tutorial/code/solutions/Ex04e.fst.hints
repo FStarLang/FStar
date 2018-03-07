@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "efba14644bffdb3ab99bec4e5f7286be"
+      "057c5b1f231dc5871d531bd64285bf82"
     ],
     [
       "Ex04e.uu___is_None",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "cc67fcff83fa9f893c9031833e44330d"
+      "0ae31fc9151d7af3d724365821cd77a6"
     ],
     [
       "Ex04e.uu___is_Some",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "79a4c6515f0d26e565dc60f7af3fc7f6"
+      "f45c40223a866281f5bf4e4b671f672e"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "1bd987d9ef7b4ed6bf025e26af85ec61"
+      "cdc4be1764234e9f6df6ad03262bde7d"
     ],
     [
       "Ex04e.find",
@@ -55,7 +55,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3712411fff2a4dc5bd253258505ac7c2"
+      "d8ff4aad62014576aac2296e602554a2"
     ],
     [
       "Ex04e.find'",
@@ -70,7 +70,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "41ae9bedd2674bfb46b862c731154f93"
+      "f52b0d1c440383526bfdc30b666eb44b"
     ],
     [
       "Ex04e.find_some",
@@ -85,7 +85,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_Ex04e.find_"
       ],
       0,
-      "e764801ec161f7ce5338910d326f69b0"
+      "939880a5d5b66cefbf3d853daeb82ef9"
     ],
     [
       "Ex04e.find_some",
@@ -109,7 +109,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f38fbf3c494f413eb1fdc8d798269d73"
+      "85b2c8fac4fba8eccc5dd671a61661bc"
     ],
     [
       "Ex04e.find_some'",
@@ -123,7 +123,7 @@
         "fuel_guarded_inversion_Ex04e.option", "typing_Ex04e.find"
       ],
       0,
-      "c8b1fd56301ae3c2787cf671fed7d9b9"
+      "278e016ca02dad7e3398660e9dce1c0a"
     ],
     [
       "Ex04e.find_some'",
@@ -151,7 +151,108 @@
         "subterm_ordering_Prims.Cons", "typing_Ex04e.find"
       ],
       0,
-      "063f296fdaf8587855b9a6f071f9bc32"
+      "fb8240ba04d795e267ebcb3cadb63246"
+    ],
+    [
+      "Ex04e.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "653e0cfc49500baa237af77efbc70758"
+    ],
+    [
+      "Ex04e.uu___is_None",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ee4b90763049c6b7cd7119e673fd82a4"
+    ],
+    [
+      "Ex04e.uu___is_Some",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a6cf43740ea9182ff852fe30fcd593f7"
+    ],
+    [
+      "Ex04e.__proj__Some__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ex04e.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
+      ],
+      0,
+      "de332175e5d47a1ec3a3a39314e9254a"
+    ],
+    [
+      "Ex04e.find",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "e7a04543c1554ce148d2e90cafc0f53d"
+    ],
+    [
+      "Ex04e.find'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "33fc856dbbbd8da19c11cb546bf4c9e7"
+    ],
+    [
+      "Ex04e.find_some",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Ex04e.find_.fuel_instrumented", "@query",
+        "disc_equation_Ex04e.None", "disc_equation_Ex04e.Some",
+        "fuel_guarded_inversion_Ex04e.option",
+        "projection_inverse_BoxBool_proj_0", "typing_Ex04e.find_"
+      ],
+      0,
+      "483c35575065376be93c7aeb550b7e77"
+    ],
+    [
+      "Ex04e.find_some'",
+      3,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Ex04e.find.fuel_instrumented", "@query",
+        "constructor_distinct_Ex04e.None", "disc_equation_Ex04e.None",
+        "disc_equation_Ex04e.Some",
+        "equation_with_fuel_Ex04e.find.fuel_instrumented",
+        "fuel_guarded_inversion_Ex04e.option",
+        "projection_inverse_Ex04e.None__a", "typing_Ex04e.find"
+      ],
+      0,
+      "19aadeda1c232f794d0c20d58d6d081d"
     ]
   ]
 ]

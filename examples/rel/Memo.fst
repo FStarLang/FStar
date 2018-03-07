@@ -235,9 +235,10 @@ let memo_extr_p_computes (p:dom -> Type0) (f: (x:dom{p x} -> Memo codom)) (g:dom
 (* Given a function [f : x0:dom -> f0:(x:dom{x << x0} -> Tot codom) -> Tot codom] *)
 (* we can compute its fixpoint as follow with [fix f] *)
 
-let fix (f : (x0:dom -> f0:(x:dom{x << x0} -> Tot codom) -> Tot codom)) (x0:dom) : Tot codom
-= let rec f0 (x:dom{x << x0}) = f x f0 in
-  f x0 f0
+(* AR: investigate this doesn't work with extracted interfaces *)
+// let fix (f : (x0:dom -> f0:(x:dom{x << x0} -> Tot codom) -> Tot codom)) (x0:dom) : Tot codom
+// = let rec f0 (x:dom{x << x0}) = f x f0 in
+//   f x0 f0
 
 (* A first idea would be to extend the fixpoint to a memoized fixpoint but this clearly *)
 (* does not work since the [f0] continuation that we would feed to [f] would need *)

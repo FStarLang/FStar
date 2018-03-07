@@ -357,17 +357,19 @@ let main : 'Auu____617 . Prims.unit -> 'Auu____617 =
     try
       FStar_ST.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
         (FStar_Pervasives_Native.Some lazy_chooser);
-      (let uu____666 = FStar_Util.record_time go  in
-       match uu____666 with
-       | (uu____671,time) ->
-           ((let uu____674 = FStar_Options.query_stats ()  in
-             if uu____674
+      FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f
+        (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
+      (let uu____697 = FStar_Util.record_time go  in
+       match uu____697 with
+       | (uu____702,time) ->
+           ((let uu____705 = FStar_Options.query_stats ()  in
+             if uu____705
              then
-               let uu____675 = FStar_Util.string_of_int time  in
-               let uu____676 =
-                 let uu____677 = FStar_Getopt.cmdline ()  in
-                 FStar_String.concat " " uu____677  in
-               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____675 uu____676
+               let uu____706 = FStar_Util.string_of_int time  in
+               let uu____707 =
+                 let uu____708 = FStar_Getopt.cmdline ()  in
+                 FStar_String.concat " " uu____708  in
+               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____706 uu____707
              else ());
             cleanup ();
             FStar_All.exit (Prims.parse_int "0")))
@@ -375,19 +377,19 @@ let main : 'Auu____617 . Prims.unit -> 'Auu____617 =
     | e ->
         let trace = FStar_Util.trace_of_exn e  in
         (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____694 = FStar_Options.trace_error ()  in
-          if uu____694
+         (let uu____725 = FStar_Options.trace_error ()  in
+          if uu____725
           then
-            let uu____695 = FStar_Util.message_of_exn e  in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____695
+            let uu____726 = FStar_Util.message_of_exn e  in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____726
               trace
           else
             if Prims.op_Negation (FStar_Errors.handleable e)
             then
-              (let uu____697 = FStar_Util.message_of_exn e  in
+              (let uu____728 = FStar_Util.message_of_exn e  in
                FStar_Util.print1_error
                  "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____697)
+                 uu____728)
             else ());
          cleanup ();
          report_errors [];

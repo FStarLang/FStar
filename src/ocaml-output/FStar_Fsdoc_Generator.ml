@@ -38,9 +38,9 @@ let (htree : mforest FStar_Util.smap) =
   FStar_Util.smap_create (Prims.parse_int "50") 
 let string_of_optiont :
   'Auu____143 'Auu____144 .
-    ('Auu____144 -> 'Auu____143) ->
-      'Auu____143 ->
-        'Auu____144 FStar_Pervasives_Native.option -> 'Auu____143
+    ('Auu____143 -> 'Auu____144) ->
+      'Auu____144 ->
+        'Auu____143 FStar_Pervasives_Native.option -> 'Auu____144
   =
   fun f  ->
     fun y  ->
