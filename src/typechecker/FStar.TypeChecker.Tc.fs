@@ -324,12 +324,18 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                    None Range.dummyRange in
                 mk_repr b wp in
 
-            let expected_k = U.arrow [S.mk_binder a;
-                                         S.mk_binder b;
-                                         S.mk_binder wp_f;
+            let maybe_range_arg =
+                if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                then [S.null_binder S.t_range]
+                else []
+            in
+            let expected_k = U.arrow ([S.mk_binder a;
+                                         S.mk_binder b] @
+                                         maybe_range_arg @
+                                        [S.mk_binder wp_f;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.mk_binder wp_g;
-                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
+                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))])
                                         (S.mk_Total res) in
 //            printfn "About to check expected_k %s\n"
 //                     (Print.term_to_string expected_k);
@@ -1277,7 +1283,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def, lb.lbpos),
               quals_opt
           in
           gen, lb::lbs, quals_opt)
@@ -1544,7 +1550,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
-    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
+    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se

@@ -1276,7 +1276,7 @@ let (pack : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
         let lb =
           FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
-            []
+            [] FStar_Range.dummyRange
            in
         let uu____2899 =
           let uu____2902 =

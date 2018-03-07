@@ -43,6 +43,7 @@ all:	Apply.uver		\
 	Sequences.uver		\
 	Caller.uver		\
 	Retype.uver		\
+	Pose.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\

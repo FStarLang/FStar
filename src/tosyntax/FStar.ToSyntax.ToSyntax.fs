@@ -350,13 +350,14 @@ type env_t = Env.env
 type lenv_t = list<bv>
 
 (* TODO : shouldn't this be Tot by default ? *)
-let mk_lb (attrs, n, t, e) = {
+let mk_lb (attrs, n, t, e, pos) = {
     lbname=n;
     lbunivs=[];
     lbeff=C.effect_ALL_lid;
     lbtyp=t;
     lbdef=e;
-    lbattrs=attrs
+    lbattrs=attrs;
+    lbpos=pos;
 }
 let no_annot_abs bs t = U.abs bs t None
 
@@ -996,18 +997,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       aux [] top
 
     | Bind(x, t1, t2) ->
-      let tac_bind_lid = Ident.lid_of_path ["FStar"; "Tactics"; "Effect"; "bind"] x.idRange in
       let xpat = AST.mk_pattern (AST.PatVar(x, None)) x.idRange in
       let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
       let bind_lid = Ident.lid_of_path ["bind"] x.idRange in
       let bind = AST.mk_term (AST.Var bind_lid) x.idRange AST.Expr in
-      begin match Env.resolve_to_fully_qualified_name env bind_lid with
-      | Some flid when lid_equals flid tac_bind_lid ->
-        let r = AST.mk_term (Const (Const_range t2.range)) t2.range AST.Expr in
-        desugar_term env (AST.mkExplicitApp bind [r; t1; k] top.range)
-      | _ ->
-        desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
-      end
+      desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
 
     | Seq(t1, t2) ->
       mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [None, (mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
@@ -1074,6 +1068,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
          *)
         let desugar_one_def env lbname (attrs_opt, (_, args, result_t), def) =
             let args = args |> List.map replace_unit_pattern in
+            let pos = def.range in
             let def =
               match result_t with
               | None -> def
@@ -1108,7 +1103,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               | None -> []
               | Some l -> List.map (desugar_term env) l
             in
-            mk_lb (attrs, lbname, tun, body)
+            mk_lb (attrs, lbname, tun, body, pos)
         in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_term env' body in
@@ -1135,7 +1130,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             | LetBinder(l, t) ->
               let body = desugar_term env t2 in
               let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
-              mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1)]), body)
+              mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body)
 
             | LocalBinder (x,_) ->
               let body = desugar_term env t2 in
@@ -1144,7 +1139,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 | [{v=Pat_wild _}] -> body
                 | _ ->
                   S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range in
-              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
+              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body)
         in
         if is_mutable
         then mk <| Tm_meta (tm, Meta_desugared Mutable_alloc)
@@ -1650,7 +1645,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                 lbtyp=tun;
                 lbeff=C.effect_Tot_lid;
                 lbdef=tun;
-                lbattrs=[]
+                lbattrs=[];
+                lbpos=Range.dummyRange;
             } in
             let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                          sigquals = quals;
@@ -1698,7 +1694,8 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbdef=no_annot_abs typars t;
         lbtyp=U.arrow typars (S.mk_Total k);
         lbeff=C.effect_Tot_lid;
-        lbattrs=[]
+        lbattrs=[];
+        lbpos=rng;
     } in
     { sigel = Sig_let((false, [lb]), lids);
       sigquals = quals;
@@ -1959,7 +1956,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
@@ -2070,6 +2067,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              bind_repr   = lookup "bind";
              return_repr = lookup "return";
              actions     = actions;
+             eff_attrs   = List.map (desugar_term env) attrs;
            }));
            sigquals = qualifiers;
            sigrng = d.drange;
@@ -2099,6 +2097,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              bind_repr   = (if rr then lookup "bind" else un_ts);
              return_repr = (if rr then lookup "return" else un_ts);
              actions     = actions;
+             eff_attrs   = List.map (desugar_term env) attrs;
            }));
            sigquals = qualifiers;
            sigrng = d.drange;
@@ -2109,7 +2108,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let env = push_doc env mname d.doc in
     let env = actions_docs |> List.fold_left (fun env (a, doc) ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        let env = push_sigelt env (U.action_as_lb mname a) in
+        let env = push_sigelt env (U.action_as_lb mname a a.action_defn.pos) in
         push_doc env a.action_name doc) env
     in
     let env = push_reflect_effect env qualifiers mname d.drange in
@@ -2180,6 +2179,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                     action_typ =snd (sub ([], action.action_typ))
                 })
                 ed.actions;
+            eff_attrs   = ed.eff_attrs;
     } in
     let se =
       (* An effect for free has a type of the shape "a:Type -> Effect" *)
@@ -2195,7 +2195,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env = push_doc env ed_lid d.doc in // FIXME: Docs of actions?
     let env = ed.actions |> List.fold_left (fun env a ->
         let doc = Env.try_lookup_doc env a.action_name in
-        let env = push_sigelt env (U.action_as_lb mname a) in
+        let env = push_sigelt env (U.action_as_lb mname a a.action_defn.pos) in
         push_doc env a.action_name doc
     ) env in
     let env =
@@ -2461,7 +2461,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
 
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
+    let attrs = d.attrs in
+    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls attrs
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with

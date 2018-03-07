@@ -1129,10 +1129,6 @@ let should_reify cfg stack = match stack with
         cfg.steps.reify_
     | _ -> false
 
-let attr_eq a a' =
-   let r = match U.eq_tm a a' with | U.Equal -> true | _ -> false in
-   r
-
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
@@ -1242,7 +1238,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           let attrs = Env.attrs_of_qninfo qninfo in
                            // never unfold something marked tac_opaque when reducing tactics
                           (not cfg.steps.unfold_tac ||
-                           not (cases (BU.for_some (attr_eq U.tac_opaque_attr)) false attrs)) &&
+                           not (cases (BU.for_some (U.attr_eq U.tac_opaque_attr)) false attrs)) &&
                           //otherwise, unfold fv if it appears in "Delta_only" or if one of the Delta_attr matches
                           ( //delta_only l
                             (match cfg.steps.unfold_only with
@@ -1251,7 +1247,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                            ( //delta_attrs a
                              match attrs, cfg.steps.unfold_attr with
                              | None, Some _ -> false
-                             | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (attr_eq at) ats') ats
+                             | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
                              | _, _ -> false)))
                  in
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
@@ -1706,9 +1702,15 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                     None rng
                 | _ -> failwith "NIY : Reification of indexed effects"
               in
+              let maybe_range_arg =
+                if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                then [as_arg (EMB.embed_range lb.lbpos lb.lbpos)]
+                else []
+              in
               let reified = S.mk (Tm_app(bind_inst, [
                   (* a, b *)
-                  as_arg lb.lbtyp; as_arg t;
+                  as_arg lb.lbtyp; as_arg t] @
+                  maybe_range_arg @ [
                   (* wp_head, head--the term shouldn't depend on wp_head *)
                   as_arg S.tun; as_arg head;
                   (* wp_body, body--the term shouldn't depend on wp_body *)
