@@ -6,9 +6,26 @@ open FStar.Reflection.Arith
 open FStar.Mul
 module O = FStar.Order
 
+(* TODO: The implementation from FStar.Tactics.Canon seems *very* naive:
+   - it repeatedly turns terms into exprs, but that's fixed below
+   - more importantly, a lot of work seems to be done repeatedly and
+     the computational complexity seems huge, way over O(n^2)
+     + terms are traversed both bottom-up and top-down, so that's already O(n^2)
+     + canon_point calls itself recursively even on exprs of the same size
+   Q: Is there a good canonicalization algorithm from literature we can use?
+      A purely functional one?
+ *)
+
+(* TODO: expr is mixing up int and uint expressions in a very untyped way.
+   How am I supposed to write an expr_to_term function that always produces
+   well-typed terms when types are so badly mixed up? Tempted to roll out
+   a simplified version of expr that only does ints. *)
+
 (* This is the pure part of canon_point *)
-(* TODO: need Tot to state the lemma Nik wanted,
-         but order not easy at all *)
+
+(* TODO: need Tot to state the lemma Nik wanted, but order not easy at all,
+   and I'm not sure it's worth investing time in verifying such a bad algorithm *)
+
 let rec canon_point (e:expr) : Dv expr =
   match e with
   // Evaluate constants
