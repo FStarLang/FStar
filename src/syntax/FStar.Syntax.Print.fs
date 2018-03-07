@@ -646,7 +646,7 @@ let rec sigelt_to_string (x: sigelt) =
              U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
         else U.format2 "datacon %s : %s" lid.str (term_to_string t)
       | Sig_declare_typ(lid, univs, t) ->
-        let univs, t = Subst.open_univ_vars univs t in
+        //let univs, t = Subst.open_univ_vars univs t in
         U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
             (if (Options.print_universes())
              then U.format1 "<%s>" (univ_names_to_string univs)

@@ -3,9 +3,9 @@ open FStar.SL.Heap
 
 let post a = a * heap -> Type0
 let pre = heap -> Type0
-let st_wp (a:Type0) = post a -> pre
+let st_wp (a:Type) = post a -> pre
 let result (a:Type) post = x:(a * heap){ post x }
-let st (a:Type0) (wp:st_wp a) =
+let st (a:Type) (wp:st_wp a) =
     post:post a ->
     h0:heap{wp post h0} ->
     GTot (squash (result a post))

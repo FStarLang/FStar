@@ -1,7 +1,7 @@
 module LowParse.SLow.Base
 include LowParse.Spec.Base
 
-module B32 = FStar.Bytes
+module B32 = LowParse.Bytes32
 module U32 = FStar.UInt32
 
 let bytes32 = B32.bytes
@@ -23,6 +23,7 @@ let parser32_correct
       U32.v consumed == (consumed' <: nat)
     )
 
+unfold
 let parser32
   (#k: parser_kind)
   (#t: Type0)
@@ -111,16 +112,6 @@ let serializer32_then_parser32
   (p32 (s32 input) == Some (input, B32.len (s32 input)))
 = ()
 
-inline_for_extraction
-let b32slice
-  (b: bytes32)
-  (s: U32.t)
-  (e: U32.t)
-: Pure bytes32
-  (requires (U32.v s <= U32.v e /\ U32.v e <= B32.length b))
-  (ensures (fun res -> B32.reveal res == Seq.slice (B32.reveal b) (U32.v s) (U32.v e)))
-= B32.slice b s e
-
 let parser32_then_serializer32
   (#k: parser_kind)
   (#t: Type0)
@@ -134,7 +125,7 @@ let parser32_then_serializer32
   (ensures (
     let (Some (v, consumed)) = p32 input in
     U32.v consumed <= B32.length input /\
-    s32 v == b32slice input 0ul consumed
+    s32 v == B32.b32slice input 0ul consumed
   ))
 = serializer_correct_implies_complete p s
 
@@ -184,7 +175,7 @@ let parser32_injective
     consumed1 == consumed2 /\
     U32.v consumed1 <= B32.length input1 /\
     U32.v consumed2 <= B32.length input2 /\
-    b32slice input1 0ul consumed1 == b32slice input2 0ul consumed2
+    B32.b32slice input1 0ul consumed1 == B32.b32slice input2 0ul consumed2
   )))
 = assert (injective_precond p (B32.reveal input1) (B32.reveal input2));
   assert (injective_postcond p (B32.reveal input1) (B32.reveal input2))
@@ -228,7 +219,7 @@ let parse32_total
 : Lemma
   (requires (
     k.parser_kind_high == Some k.parser_kind_low /\
-    k.parser_kind_total == true /\
+    k.parser_kind_metadata.parser_kind_metadata_total == true /\
     k.parser_kind_low <= B32.length input
   ))
   (ensures (
@@ -236,62 +227,6 @@ let parse32_total
   ))
 = ()
   
-(* TODO: move to FStar.Bytes *)
-
-let b32_index_reveal
-  (b: B32.bytes)
-  (i: nat { i < B32.length b })
-: Lemma
-  (Seq.index (B32.reveal b) i == B32.index b i)
-= ()
-
-let b32_reveal_create
-  (len: U32.t)
-  (v: byte)
-: Lemma
-  (B32.reveal (B32.create len v) == Seq.create (U32.v len) v)
-  [SMTPat (B32.reveal (B32.create len v))]
-= let b = B32.create len v in
-  let lhs = B32.reveal b in
-  let rhs = Seq.create (U32.v len) v in
-  let pty = (i: nat { i < Seq.length lhs }) in
-  let post
-    (i: pty)
-  : GTot Type0
-  = Seq.index lhs (i <: nat) == Seq.index rhs (i <: nat)
-  in
-  let f
-    (i: pty)
-  : Lemma
-    (post i)
-  = assert (B32.get b (U32.uint_to_t i) == v)
-  in
-  Classical.forall_intro #pty #post f;
-  Seq.lemma_eq_intro lhs rhs;
-  Seq.lemma_eq_elim lhs rhs
-
-inline_for_extraction
-let b32append
-  (b1: B32.bytes)
-  (b2: B32.bytes)
-: Pure B32.bytes
-  (requires (B32.length b1 + B32.length b2 < 4294967296))
-  (ensures (fun y -> B32.reveal y == Seq.append (B32.reveal b1) (B32.reveal b2)))
-= B32.append b1 b2
-
-inline_for_extraction
-let lb32set
-  (#n: nat)
-  (b: B32.lbytes n)
-  (i: U32.t)
-  (x: byte)
-: Pure (B32.lbytes n)
-  (requires (U32.v i < n))
-  (ensures (fun y ->
-    U32.v i < n /\
-    B32.reveal y == Seq.upd (B32.reveal b) (U32.v i) x
-  ))
-= B32.set_byte b i x
 
 let u32_max : (y: U32.t { forall (x: U32.t) . U32.v x <= U32.v y } ) =
   4294967295ul

@@ -4,8 +4,8 @@ type z3_replay_result =
     FStar_Util.either[@@deriving show]
 let z3_result_as_replay_result :
   'Auu____9 'Auu____10 'Auu____11 .
-    ('Auu____11,('Auu____10,'Auu____9) FStar_Pervasives_Native.tuple2)
-      FStar_Util.either -> ('Auu____11,'Auu____10) FStar_Util.either
+    ('Auu____9,('Auu____10,'Auu____11) FStar_Pervasives_Native.tuple2)
+      FStar_Util.either -> ('Auu____9,'Auu____10) FStar_Util.either
   =
   fun uu___58_27  ->
     match uu___58_27 with

@@ -158,8 +158,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             ; repr        = snd (op ([], ed.repr))
             ; actions     = List.map (fun a ->
             { a with
-                action_defn = snd (op ([], a.action_defn));
-                action_typ  = snd (op ([], a.action_typ)) }) ed.actions
+                action_defn = snd (op (a.action_univs, a.action_defn));  //AR: can't assume that the action univs are empty
+                action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions
         }
   in
 //  printfn "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
@@ -381,6 +381,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // about what this action does. Please note that this "good" wp is
           // of the form [binders -> repr ...], i.e. is it properly curried.
 
+          //in case action has universes, open the action type etc. first
+          let act =
+            if act.action_univs = [] then act
+            else
+              let usubst, uvs = SS.univ_var_opening act.action_univs in
+              { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
+          in
+          
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
@@ -1109,7 +1117,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env = {env with lax=true} in
     let lift = match lift with
     | None -> None
-    | Some (_, lift) ->
+    | Some (uvs, lift) ->
+      let lift = SS.subst (fst (SS.univ_var_opening uvs)) lift in
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let wp_a = S.new_bv None wp_a_src in
       let a_typ = S.bv_to_name a in
@@ -1706,7 +1715,7 @@ let extract_interface (env:env) (m:modul) :modul =
     match s.sigel with
     | Sig_inductive_typ (lid, uvs, bs, t, _, _) ->  //add a val declaration for the type
       let s1 = { s with sigel = Sig_declare_typ (lid, uvs, mk_typ_for_abstract_inductive bs t s.sigrng);
-                        sigquals = Assumption::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
+                        sigquals = Assumption::New::(filter_out_abstract_and_noeq s.sigquals) }  //Assumption qualifier seems necessary, else smt encoding waits for the definition for the symbol to be encoded
       in
       [s1]
     | _ -> failwith "Impossible!"
@@ -1731,8 +1740,10 @@ let extract_interface (env:env) (m:modul) :modul =
      
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
-     //if c is pure or ghost or reifiable AND c.result_typ is not unit, keep the body
-     (is_pure_or_ghost_comp c || TcUtil.is_reifiable env (comp_effect_name c)) && not (c |> comp_result |> is_unit))
+     //if c is pure or ghost then keep it if the return type is not unit
+     if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
+     //else keep it if the effect is reifiable
+     else Env.is_reifiable_effect env (comp_effect_name c))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -1844,10 +1855,13 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
 
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
-    let modul_iface = extract_interface en0 m in
-    BU.print3 "Extracting and type checking module %s interface%s%s\n" m.name.str
-              (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-              (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+    //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
+    let modul_iface = extract_interface en m in
+    if Env.debug en <| Options.Low then
+      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
+                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
+                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
     let env0 = { en0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"

@@ -458,11 +458,11 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
-let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
+let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_fifo_set ()
+let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names

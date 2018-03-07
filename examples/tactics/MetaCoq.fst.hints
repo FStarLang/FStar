@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "860bcf0ab78948508daec778a0352072"
+      "11c8cd223b7afb7033397e9311bdc296"
     ],
     [
       "MetaCoq.apply",
@@ -23,7 +23,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "607a540e381aa882ae27ce54fd781ddf"
+      "a4a68ca2afea8e55e2e093ae417c25f3"
     ],
     [
       "MetaCoq.cut",
@@ -35,7 +35,43 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "dfdfebaeebc89657d18f0ceecb91c36c"
+      "84cd423d85b7789ff79f9ba49235d7a5"
+    ],
+    [
+      "MetaCoq.exact",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "eb53380af4afc0ad37522a61581b1396"
+    ],
+    [
+      "MetaCoq.apply",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "27dd7550586176897ae311b01372a931"
+    ],
+    [
+      "MetaCoq.cut",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "7573ba9fd5e414b2fcf2ecd3a80b4b33"
     ]
   ]
 ]
