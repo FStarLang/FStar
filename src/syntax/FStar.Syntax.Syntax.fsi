@@ -329,7 +329,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {

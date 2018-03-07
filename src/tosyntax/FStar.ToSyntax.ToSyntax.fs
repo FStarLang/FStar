@@ -1956,7 +1956,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
@@ -2067,6 +2067,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              bind_repr   = lookup "bind";
              return_repr = lookup "return";
              actions     = actions;
+             eff_attrs   = List.map (desugar_term env) attrs;
            }));
            sigquals = qualifiers;
            sigrng = d.drange;
@@ -2096,6 +2097,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
              bind_repr   = (if rr then lookup "bind" else un_ts);
              return_repr = (if rr then lookup "return" else un_ts);
              actions     = actions;
+             eff_attrs   = List.map (desugar_term env) attrs;
            }));
            sigquals = qualifiers;
            sigrng = d.drange;
@@ -2177,6 +2179,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                     action_typ =snd (sub ([], action.action_typ))
                 })
                 ed.actions;
+            eff_attrs   = ed.eff_attrs;
     } in
     let se =
       (* An effect for free has a type of the shape "a:Type -> Effect" *)
@@ -2458,7 +2461,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
 
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
+    let attrs = d.attrs in
+    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls attrs
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with
