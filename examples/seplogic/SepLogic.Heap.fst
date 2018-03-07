@@ -46,7 +46,6 @@ private let init_heap : heap =
 
 private let lemma_init_heap_emp ()
   : Lemma (emp (init_heap))
-          [SMTPat (emp (init_heap))]
   = ()
 
 let ( |> ) #a r x = 
