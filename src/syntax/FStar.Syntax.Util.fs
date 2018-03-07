@@ -829,15 +829,19 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-let mk_letbinding lbname univ_vars typ eff def lbattrs =
+// TODO: remove? note the argument order is different, ugh
+let mk_letbinding lbname univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
      lbdef=def;
-     lbattrs=lbattrs}
+     lbattrs=lbattrs;
+     lbpos=pos;
+    }
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
+
+let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs pos =
     let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
@@ -848,7 +852,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
     in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
-    mk_letbinding lbname univ_vars typ eff def attrs
+    mk_letbinding lbname univ_vars typ eff def attrs pos
 
 let open_univ_vars_binders_and_comp uvs binders c =
     match binders with
@@ -1360,7 +1364,7 @@ let unthunk_lemma_post t =
     | _ ->
         mk_app t [as_arg exp_unit]
 
-let action_as_lb eff_lid a =
+let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
@@ -1370,6 +1374,7 @@ let action_as_lb eff_lid a =
       PC.effect_Tot_lid
       (abs a.action_params a.action_defn None)
       []
+      pos
   in
   { sigel = Sig_let((false, [lb]), [a.action_name]);
     sigrng = a.action_defn.pos;

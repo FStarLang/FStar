@@ -349,7 +349,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let c = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (None, c2) in
           let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
           let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, t_unit, e1)]), e2)) None e.pos in
+          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, t_unit, e1, e1.pos)]), e2)) None e.pos in
           let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) None top.pos in
           e, c, Rel.conj_guard g1 g2
@@ -597,14 +597,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       else
         (* generate a let binding for e1 *)
         let e_match = mk_match (S.bv_to_name guard_x) in
-        let lb = {
-          lbname=Inl guard_x;
-          lbunivs=[];
-          lbtyp=c1.res_typ;
-          lbeff=Env.norm_eff_name env c1.eff_name;
-          lbdef=e1;
-          lbattrs=[]
-        } in
+        let lb = U.mk_letbinding (Inl guard_x) [] c1.res_typ (Env.norm_eff_name env c1.eff_name) e1 [] e1.pos in
         let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) None top.pos in
         TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
     in
@@ -1389,7 +1382,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           let bind_lifted_args e = function
             | None -> e
             | Some (x, m, t, e1) ->
-              let lb = U.mk_letbinding (Inl x) [] t m e1 [] in
+              let lb = U.mk_letbinding (Inl x) [] t m e1 [] e1.pos in
               let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) None e.pos in
               mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) None e.pos
           in
@@ -1915,7 +1908,7 @@ and check_top_level_let env e =
          (* the result has the same effect as c1, except it returns unit *)
          let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
 
-(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs in
+(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
          mk (Tm_let((false, [lb]), e2))
             None
             e.pos,
@@ -1957,7 +1950,7 @@ and check_inner_let env e =
          TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
-       let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 lb.lbattrs in
+       let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 lb.lbattrs lb.lbpos in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
@@ -2011,7 +2004,7 @@ and check_top_level_let_rec env top =
                     let lbdef = N.reduce_uvar_solutions env lb.lbdef in
                     if lb.lbunivs = []
                     then lb
-                    else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef lb.lbattrs)
+                    else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef lb.lbattrs lb.lbpos)
               else let ecs = TcUtil.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
@@ -2024,7 +2017,8 @@ and check_top_level_let_rec env top =
                                         (U.comp_result c)
                                         (U.comp_effect_name c)
                                         e
-                                        lb.lbattrs)
+                                        lb.lbattrs
+                                        lb.lbpos)
                               ecs
                               lbs
            in
@@ -2172,7 +2166,7 @@ and check_let_recs env lbs =
         if not (U.is_total_lcomp c)
         then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
         (* replace the body lb.lbdef with the type checked body e with elaboration on monadic application *)
-        let lb = U.mk_letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e lb.lbattrs in
+        let lb = U.mk_letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e lb.lbattrs lb.lbpos in
         lb, g) |> List.unzip in
     let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in
     lbs, g_lbs

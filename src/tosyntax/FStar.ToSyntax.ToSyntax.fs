@@ -350,13 +350,14 @@ type env_t = Env.env
 type lenv_t = list<bv>
 
 (* TODO : shouldn't this be Tot by default ? *)
-let mk_lb (attrs, n, t, e) = {
+let mk_lb (attrs, n, t, e, pos) = {
     lbname=n;
     lbunivs=[];
     lbeff=C.effect_ALL_lid;
     lbtyp=t;
     lbdef=e;
-    lbattrs=attrs
+    lbattrs=attrs;
+    lbpos=pos;
 }
 let no_annot_abs bs t = U.abs bs t None
 
@@ -1074,6 +1075,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
          *)
         let desugar_one_def env lbname (attrs_opt, (_, args, result_t), def) =
             let args = args |> List.map replace_unit_pattern in
+            let pos = def.range in
             let def =
               match result_t with
               | None -> def
@@ -1108,7 +1110,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               | None -> []
               | Some l -> List.map (desugar_term env) l
             in
-            mk_lb (attrs, lbname, tun, body)
+            mk_lb (attrs, lbname, tun, body, pos)
         in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_term env' body in
@@ -1135,7 +1137,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             | LetBinder(l, t) ->
               let body = desugar_term env t2 in
               let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
-              mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1)]), body)
+              mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body)
 
             | LocalBinder (x,_) ->
               let body = desugar_term env t2 in
@@ -1144,7 +1146,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 | [{v=Pat_wild _}] -> body
                 | _ ->
                   S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range in
-              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
+              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body)
         in
         if is_mutable
         then mk <| Tm_meta (tm, Meta_desugared Mutable_alloc)
@@ -1650,7 +1652,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                 lbtyp=tun;
                 lbeff=C.effect_Tot_lid;
                 lbdef=tun;
-                lbattrs=[]
+                lbattrs=[];
+                lbpos=Range.dummyRange;
             } in
             let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                          sigquals = quals;
@@ -1698,7 +1701,8 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbdef=no_annot_abs typars t;
         lbtyp=U.arrow typars (S.mk_Total k);
         lbeff=C.effect_Tot_lid;
-        lbattrs=[]
+        lbattrs=[];
+        lbpos=rng;
     } in
     { sigel = Sig_let((false, [lb]), lids);
       sigquals = quals;
@@ -2109,7 +2113,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let env = push_doc env mname d.doc in
     let env = actions_docs |> List.fold_left (fun env (a, doc) ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        let env = push_sigelt env (U.action_as_lb mname a) in
+        let env = push_sigelt env (U.action_as_lb mname a a.action_defn.pos) in
         push_doc env a.action_name doc) env
     in
     let env = push_reflect_effect env qualifiers mname d.drange in
@@ -2195,7 +2199,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env = push_doc env ed_lid d.doc in // FIXME: Docs of actions?
     let env = ed.actions |> List.fold_left (fun env a ->
         let doc = Env.try_lookup_doc env a.action_name in
-        let env = push_sigelt env (U.action_as_lb mname a) in
+        let env = push_sigelt env (U.action_as_lb mname a a.action_defn.pos) in
         push_doc env a.action_name doc
     ) env in
     let env =

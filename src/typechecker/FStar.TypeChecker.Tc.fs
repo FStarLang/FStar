@@ -1268,7 +1268,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def, lb.lbpos),
               quals_opt
           in
           gen, lb::lbs, quals_opt)
@@ -1535,7 +1535,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
-    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
+    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se

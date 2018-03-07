@@ -417,7 +417,7 @@ let rec add_sigelt env se = match se.sigel with
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = U.action_as_lb ne.mname a in
+          let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
