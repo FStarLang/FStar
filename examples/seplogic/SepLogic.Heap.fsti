@@ -40,25 +40,36 @@ val contains : #a:Type -> heap -> ref a -> Type0
 
 val points_to_contains (#a:Type) (r:ref a) (x:a) (h:heap)
   : Lemma (requires (r |> x) h)
-          (ensures (h `contains` r))
+          (ensures  (h `contains` r))
           [SMTPat ((r |> x) h);
            SMTPat (h `contains` r)]
 
 val points_to_disj (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap)
     : Lemma (requires (r |> x <*> s |> y) h)
-            (ensures disjoint r s)
+            (ensures  (disjoint r s))
 
 val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot a
 val upd_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> x:a -> Tot heap
 
 val points_to_sel (#a:Type) (r:ref a) (x:a) (h:heap)
   : Lemma (requires (r |> x) h)
-          (ensures (sel_tot h r == x))
+          (ensures  (sel_tot h r == x))
           [SMTPat ((r |> x) h);
            SMTPat (sel_tot h r)]
 
 val points_to_upd (#a:Type) (r:ref a) (x:a) (v:a) (h:heap)
   : Lemma  (requires (r |> x) h)
-           (ensures ((r |> v) (upd_tot h r v)))
+           (ensures  ((r |> v) (upd_tot h r v)))
            [SMTPat ((r |> x) h);
             SMTPat (upd_tot h r v)]
+
+val restrict: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot heap
+val minus: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot heap
+
+val minus_contains (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (~((h `minus` r) `contains` r)))
+
+val restrict_points_to (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (exists x . (r |> x) (restrict h r)))

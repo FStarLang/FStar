@@ -149,7 +149,7 @@ private let sep_assoc_l2r'' (p q r:hpred) (h h0 h1 h1' h1'':heap)
           (exists h0 h1 h0' h0'' . 
              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
              disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1))
-  = FStar.Classical.move_requires (fun _ -> sep_assoc_l2r' p q r h h0 h1 h1' h1'') ()
+  = FStar.Classical.move_requires (fun h -> sep_assoc_l2r' p q r h h0 h1 h1' h1'') h
 
 private let forall_to_exists_4 (#a0:Type) (#a1:Type) (#a2:Type) (#a3:Type) 
                                (#p:(a0 -> a1 -> a2 -> a3 -> Type)) (#r:Type) 
@@ -160,15 +160,31 @@ private let forall_to_exists_4 (#a0:Type) (#a1:Type) (#a2:Type) (#a3:Type)
     FStar.Classical.forall_to_exists (fun (x1:a1) -> 
     FStar.Classical.forall_to_exists (fun (x0:a0) -> f x0 x1 x2 x3))))
 
-private let sep_assoc_l2r (p q r:hpred) (h:heap)
-  : Lemma ((exists h0 h1 h1' h1'' . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
-              disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')
+private let sep_assoc_l2r''' (p q r:hpred) (h:heap)
+  : Lemma ((exists h0 h1 . 
+              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
+              (exists h1' h1'' . disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1''))
            ==> 
-           (exists h0 h1 h0' h0'' . 
+           (exists h0 h1 . 
               disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
-              disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1))
+              (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1))
   = forall_to_exists_4 (fun h0 h1 h1' h1'' -> sep_assoc_l2r'' p q r h h0 h1 h1' h1'')
 
+private let sep_assoc_l2r'''' (p q r:hpred) (h:heap)
+  : Lemma ((exists h0 h1 . 
+              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
+              (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1) 
+           ==> 
+           ((p <*> q) <*> r) h)
+  = sep_interp (p <*> q) r h;
+    sep_assoc_l2r''' p q r h
+
+private let sep_assoc_l2r (p q r:hpred) (h:heap)
+  : Lemma ((p <*> (q <*> r)) h ==> ((p <*> q) <*> r) h)
+  = sep_assoc_l2r'''' p q r h;
+    sep_interp p (q <*> r) h;
+    admit ()
+    
 private let sep_assoc_r2l' (p q r:hpred) (h h0 h1 h0' h0'':heap)
   : Lemma (requires (disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
                      disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1))
@@ -187,35 +203,35 @@ private let sep_assoc_r2l'' (p q r:hpred) (h h0 h1 h0' h0'':heap)
            (exists h0 h1 h1' h1'' . 
               disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
               disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1''))
-  = FStar.Classical.move_requires (fun _ -> sep_assoc_r2l' p q r h h0 h1 h0' h0'') ()
+  = FStar.Classical.move_requires (fun h -> sep_assoc_r2l' p q r h h0 h1 h0' h0'') h
 
-private let sep_assoc_r2l (p q r:hpred) (h:heap)
-  : Lemma ((exists h0 h1 h0' h0'' . 
+private let sep_assoc_r2l''' (p q r:hpred) (h:heap)
+  : Lemma ((exists h0 h1 . 
               disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
-              disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1)
+              (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1)
            ==>
-           (exists h0 h1 h1' h1'' . 
+           (exists h0 h1 . 
               disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
-              disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1''))
+              (exists h1' h1'' . disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')))
   = forall_to_exists_4 (fun h0 h1 h0' h0'' -> sep_assoc_r2l'' p q r h h0 h1 h0' h0'')
 
-private let sep_assoc' (p q r:hpred) (h:heap)
-  : Lemma ((p <*> (q <*> r)) h ==> ((p <*> q) <*> r) h)
+private let sep_assoc_r2l'''' (p q r:hpred) (h:heap)
+  : Lemma ((exists h0 h1 . 
+              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
+              (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1)
+           ==>
+           (p <*> (q <*> r)) h)
   = sep_interp p (q <*> r) h;
-    sep_interp (p <*> q) r h;
-    sep_assoc_l2r p q r h;
-    admit ()
+    sep_assoc_r2l''' p q r h
 
-private let sep_assoc'' (p q r:hpred) (h:heap)
+private let sep_assoc_r2l (p q r:hpred) (h:heap)
   : Lemma (((p <*> q) <*> r) h ==> (p <*> (q <*> r)) h)
-  = sep_interp p (q <*> r) h;
-    sep_interp (p <*> q) r h;
-    sep_assoc_r2l p q r h;
-    admit ()
-
+  = sep_assoc_r2l'''' p q r h;
+    sep_interp (p <*> q) r h
+    
 let sep_assoc p q r h = 
-  sep_assoc' p q r h;
-  sep_assoc'' p q r h
+  sep_assoc_l2r p q r h;
+  sep_assoc_r2l p q r h
 
 let fresh #a r = fun h -> h.memory r == None
 
@@ -254,3 +270,14 @@ let upd_tot #a h r x = upd_tot' h r x
 let points_to_sel #a r x h = ()
 
 let points_to_upd #a r x v h = ()
+
+let restrict #a h r =
+  { next_addr = r + 1;
+    memory    = (fun (r':nat) -> if r' = r then h.memory r' else None) }
+
+let minus #a h r =
+  { h with memory = (fun (r':nat) -> if r' = r then None else h.memory r') }
+
+let minus_contains #a r h = ()
+
+let restrict_points_to #a r h = ()
