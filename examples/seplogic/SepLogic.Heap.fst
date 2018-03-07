@@ -103,15 +103,6 @@ private let lemma_sep_comm (p q:hpred) (h:heap)
 
 let sep_comm p q h = lemma_sep_comm p q h
 
-// exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (exists h1' h1'' . disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')
-
-// exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1
-
-
-// exists h0 h1 h1' h1'' . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1''
-
-// exists h0 h1 h0' h0'' . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1
-
 private let lemma_join_tot_assoc' (h0 h1 h2:heap)
   : Lemma (requires (disjoint_heaps h0 h1 /\ disjoint_heaps h1 h2 /\ disjoint_heaps h0 h2))
           (ensures  (equal (join_tot h0 (join_tot h1 h2)) (join_tot (join_tot h0 h1) h2)))
@@ -171,8 +162,8 @@ private let sep_assoc_l2r''' (p q r:hpred) (h:heap)
 
 private let sep_assoc_l2r'''' (p q r:hpred) (h:heap)
   : Lemma ((exists h0 h1 . 
-              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
-              (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1) 
+              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
+              (exists h1' h1'' . disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')) 
            ==> 
            ((p <*> q) <*> r) h)
   = sep_interp (p <*> q) r h;
@@ -180,9 +171,8 @@ private let sep_assoc_l2r'''' (p q r:hpred) (h:heap)
 
 private let sep_assoc_l2r (p q r:hpred) (h:heap)
   : Lemma ((p <*> (q <*> r)) h ==> ((p <*> q) <*> r) h)
-  = sep_assoc_l2r'''' p q r h;
-    sep_interp p (q <*> r) h;
-    admit ()
+  = sep_interp p (q <*> r) h;
+    sep_assoc_l2r'''' p q r h
     
 private let sep_assoc_r2l' (p q r:hpred) (h h0 h1 h0' h0'':heap)
   : Lemma (requires (disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
