@@ -104,6 +104,71 @@ private let lemma_sep_comm (p q:hpred) (h:heap)
 
 let sep_comm p q h = lemma_sep_comm p q h
 
+// exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (exists h1' h1'' . disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')
+
+// exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ (exists h0' h0'' . disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'') /\ r h1
+
+
+// exists h0 h1 h1' h1'' . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1''
+
+// exists h0 h1 h0' h0'' . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1
+
+private let lemma_join_tot_assoc' (h0 h1 h2:heap)
+  : Lemma (requires (disjoint_heaps h0 h1 /\ disjoint_heaps h1 h2 /\ disjoint_heaps h0 h2))
+          (ensures  (equal (join_tot h0 (join_tot h1 h2)) (join_tot (join_tot h0 h1) h2)))
+  = ()
+
+private let lemma_join_tot_assoc (h0 h1 h2:heap)
+  : Lemma (requires (disjoint_heaps h0 h1 /\ disjoint_heaps h1 h2 /\ disjoint_heaps h0 h2))
+          (ensures  (join_tot h0 (join_tot h1 h2) == join_tot (join_tot h0 h1) h2))
+          [SMTPat (join_tot h0 (join_tot h1 h2)); SMTPat (join_tot (join_tot h0 h1) h2)]
+  = lemma_join_tot_assoc' h0 h1 h2
+
+private let exists_intro_4 (#a0:Type) (#a1:Type) (#a2:Type) (#a3:Type) 
+                           (p:(a0 -> a1 -> a2 -> a3 -> Type)) 
+                           (witness0:a0) (witness1:a1) (witness2:a2) (witness3:a3)
+  : Lemma (requires (p witness0 witness1 witness2 witness3))
+          (ensures  (exists x0 x1 x2 x3 . p x0 x1 x2 x3))
+  = ()
+
+private let sep_assoc' (p q r:hpred) (h h0 h1 h1' h1'':heap)
+  : Lemma (requires (disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
+                     disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1''))
+          (ensures  (exists h0 h1 h0' h0'' . 
+                       disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
+                       disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1))
+  = exists_intro_4 (fun h0 h1 h0' h0'' -> 
+                      disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
+                      disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1)
+                   (join_tot h0 h1') h1'' h0 h1'
+
+private let sep_assoc'' (p q r:hpred) (h h0 h1 h1' h1'':heap)
+  : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
+            disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')
+           ==> 
+          (exists h0 h1 h0' h0'' . 
+             disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
+             disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1))
+  = FStar.Classical.move_requires (fun _ -> sep_assoc' p q r h h0 h1 h1' h1'') ()
+
+private let forall_to_exists_4 (#a0:Type) (#a1:Type) (#a2:Type) (#a3:Type) 
+                               (#p:(a0 -> a1 -> a2 -> a3 -> Type)) (#r:Type) 
+                               ($f:(x0:a0 -> x1:a1 -> x2:a2 -> x3:a3 -> Lemma (p x0 x1 x2 x3 ==> r)))
+  : Lemma ((exists (x0:a0) (x1:a1) (x2:a2) (x3:a3) . p x0 x1 x2 x3) ==> r)
+  = FStar.Classical.forall_to_exists (fun (x3:a3) -> 
+    FStar.Classical.forall_to_exists (fun (x2:a2) -> 
+    FStar.Classical.forall_to_exists (fun (x1:a1) -> 
+    FStar.Classical.forall_to_exists (fun (x0:a0) -> f x0 x1 x2 x3))))
+
+private let sep_assoc''' (p q r:hpred) (h:heap)
+  : Lemma ((exists h0 h1 h1' h1'' . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ 
+              disjoint_heaps h1' h1'' /\ h1 == join_tot h1' h1'' /\ q h1' /\ r h1'')
+           ==> 
+           (exists h0 h1 h0' h0'' . 
+              disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ 
+              disjoint_heaps h0' h0'' /\ h0 == join_tot h0' h0'' /\ p h0' /\ q h0'' /\ r h1))
+  = forall_to_exists_4 (fun h0 h1 h1' h1'' -> sep_assoc'' p q r h h0 h1 h1' h1'')
+
 let sep_assoc p q r h = admit ()
 
 let fresh #a r = fun h -> h.memory r == None
