@@ -99,8 +99,8 @@ let err_ill_typed_application :
   'Auu____159 'Auu____160 .
     FStar_Extraction_ML_UEnv.env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,'Auu____160) FStar_Pervasives_Native.tuple2
-          Prims.list -> FStar_Extraction_ML_Syntax.mlty -> 'Auu____159
+        (FStar_Syntax_Syntax.term,'Auu____159) FStar_Pervasives_Native.tuple2
+          Prims.list -> FStar_Extraction_ML_Syntax.mlty -> 'Auu____160
   =
   fun env  ->
     fun t  ->

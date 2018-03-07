@@ -16,7 +16,7 @@ else
 endif
 
 %.uver: %.fst
-	$(FSTAR) $^
+	$(FSTAR) --use_extracted_interfaces $^
 
 %.fail-uver: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

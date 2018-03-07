@@ -20,7 +20,7 @@ type rid = FStar.Monotonic.Seq.rid
 noeq abstract type pkey =
   | PKey: #region:rid{HyperStack.ST.witnessed (region_contains_pred region)} -> rawpk:RSA.pkey -> cca_pk:C.pkey  -> pkey
 
-let access_pkraw (pk:pkey) =
+abstract let access_pkraw (pk:pkey) =
   PKey?.rawpk pk
 
 noeq abstract type skey =
