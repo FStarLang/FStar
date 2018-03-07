@@ -14,9 +14,17 @@ val ref (a:Type0) :Type0
 
 val addr_of: #a:Type0 -> ref a -> GTot nat
 
+val join_tot: h1:heap -> h2:heap -> Tot heap
+
+val disjoint : #a:Type -> #b:Type -> ref a -> ref b -> Type0
+val disjoint_heaps : heap -> heap -> Type0
+
 val emp : hpred
 val ( |> ) : #a:Type0 -> r:ref a -> x:a -> hpred
 val ( <*> ) : hpred -> hpred -> hpred
+
+val emp_unit  (p:hpred) (h:heap) 
+    : Lemma ((p <*> emp) h <==> p h)
 
 val sep_comm (p q:hpred) (h:heap)
     : Lemma ((p <*> q) h <==> (q <*> p) h)
@@ -24,17 +32,8 @@ val sep_comm (p q:hpred) (h:heap)
 val sep_assoc (p q r:hpred) (h:heap)
     : Lemma ((p <*> (q <*> r)) h <==> ((p <*> q) <*> r) h)
 
-val emp_unit  (p:hpred) (h:heap) 
-    : Lemma ((p <*> emp) h <==> p h)
-
-val join_tot: h1:heap -> h2:heap -> Tot heap
-
-// val join: h1:heap -> h2:heap -> GTot heap
-val disjoint : #a:Type -> #b:Type -> ref a -> ref b -> Type0
-val disjoint_heaps : heap -> heap -> Type0
-
 val sep_interp (p q:hpred) (h:heap)
-    : Lemma ((p <*> q) h <==> (exists h0 h1. h == join_tot h0 h1 /\ disjoint_heaps h0 h1 /\ p h0 /\ q h1))
+    : Lemma ((p <*> q) h <==> (exists h0 h1. disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1))
 
 val points_to_disj (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap)
     : Lemma (requires (r |> x <*> s |> y) h)
