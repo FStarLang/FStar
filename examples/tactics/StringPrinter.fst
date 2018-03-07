@@ -179,22 +179,35 @@ let print_char_sz
 : Tot (m_sz (print_char c))
 = fun g -> g () 1ul ()
 
-let cond_unit (c: bool) (b: bool) : Tot Type0 =
-  (u: unit { c == b } )
+let cond_eq (#t: Type) (lhs rhs: t) : Tot Type0 =
+  (u: unit { lhs == rhs } )
 
 inline_for_extraction
 let ifthenelse_sz
   (t: Type0)
   (c: bool)
-  (ft: (cond_unit true c -> Tot (m t)))
-  (ft_sz: ((u: cond_unit true c) -> m_sz (ft u)))
-  (ff: (cond_unit false c -> Tot (m t)))
-  (ff_sz: (u: cond_unit false c ) -> m_sz (ff u))
+  (ft: (cond_eq true c -> Tot (m t)))
+  (ft_sz: ((u: cond_eq true c) -> m_sz (ft u)))
+  (ff: (cond_eq false c -> Tot (m t)))
+  (ff_sz: (u: cond_eq false c ) -> m_sz (ff u))
 : Tot (m_sz (if c then ft () else ff ()))
 = fun g ->
     if c
     then ft_sz () g
     else ff_sz () g
+
+inline_for_extraction
+let destruct_pair_sz
+  (t1: Type0)
+  (t2: Type0)
+  (t: Type0)
+  (x: t1 * t2)
+  (f: ((x1: t1) -> (x2: t2) -> cond_eq x (x1, x2) -> Tot (m t)))
+  (f_sz: ((x1: t1) -> (x2: t2) -> cond_eq x (x1, x2) -> Tot (m_sz (f x1 x2 ()))))
+: Tot (m_sz (let (x1, x2) = x in f x1 x2 ()))
+= fun g ->
+    let (x1, x2) = x in
+    f_sz x1 x2 () g
 
 inline_for_extraction
 let log_size
@@ -436,13 +449,13 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
   end
   | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; _, tf] ->
     (* ifthenelse: the second branch can be a wildcard or false *)
-    let ct = quote (cond_unit true) in
+    let ct = quote (cond_eq true) in
     let ut = T.mk_app ct [cond, T.Q_Explicit] in
     let vt = T.fresh_binder ut in
     let ft = T.pack (T.Tv_Abs vt tt) in
     let ft_sz_body = mk_sz (fuel - 1) ty tt in
     let ft_sz = T.pack (T.Tv_Abs vt ft_sz_body) in
-    let cf = quote (cond_unit false) in
+    let cf = quote (cond_eq false) in
     let uf = T.mk_app cf [cond, T.Q_Explicit] in
     let vf = T.fresh_binder uf in
     let ff = T.pack (T.Tv_Abs vf tf) in
