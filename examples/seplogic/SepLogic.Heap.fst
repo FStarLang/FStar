@@ -50,32 +50,35 @@ private let lemma_init_heap_emp ()
   = ()
 
 let ( |> ) #a r x = 
-  fun h -> h.memory r == Some (| a , x |) /\ (forall r' . r =!= r' ==> None? (h.memory r'))
+  fun h -> h.memory r == Some (| a , x |) /\ (forall r' . r =!= r' ==> None? (h.memory r'))  
 
 let ( <*> ) p q = 
   fun h -> exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1 
+
+let sep_interp p q h = 
+  assert_norm ((p <*> q) h ==> (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (q h1)))
 
 private let lemma_disjoint_heaps_emp (h0 h1:heap)
   : Lemma (emp h1 ==> disjoint_heaps h0 h1)
           [SMTPat (disjoint_heaps h0 h1); SMTPat (emp h1)]
   = ()
 
-private let lemma_join_tot_emp_1 (h0 h1:heap)
+private let lemma_join_tot_emp' (h0 h1:heap)
   : Lemma (emp h1 ==> equal (join_tot h0 h1) h0)
   = ()
 
 private let lemma_join_tot_emp (h0 h1:heap)
   : Lemma (emp h1 ==> (join_tot h0 h1) == h0)
           [SMTPat (join_tot h0 h1); SMTPat (emp h1)]
-  = lemma_join_tot_emp_1 h0 h1
+  = lemma_join_tot_emp' h0 h1
 
-private let emp_unit_1  (p:hpred) (h:heap) (h0 h1:heap)
+private let emp_unit'  (p:hpred) (h:heap) (h0 h1:heap)
   : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
   = lemma_join_tot_emp h0 h1
 
 let emp_unit p h = 
-  assert_norm ((p <*> emp) h ==> (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)));
-  FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit_1 p h h0 h1));
+  sep_interp p emp h;
+  FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit' p h h0 h1));
   FStar.Classical.move_requires (fun h -> 
     FStar.Classical.exists_intro (fun h1 -> exists h0 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) init_heap) h
   
@@ -84,14 +87,14 @@ private let lemma_disjoint_heaps_comm (h0 h1:heap)
           [SMTPat (disjoint_heaps h0 h1)]
   = ()
 
-private let lemma_join_tot_comm_1 (h0 h1:heap)
+private let lemma_join_tot_comm' (h0 h1:heap)
   : Lemma (equal (join_tot h0 h1) (join_tot h1 h0))
   = ()
 
 private let lemma_join_tot_comm (h0 h1:heap)
   : Lemma ((join_tot h0 h1) == (join_tot h1 h0))
           [SMTPat (join_tot h0 h1)]
-  = lemma_join_tot_comm_1 h0 h1
+  = lemma_join_tot_comm' h0 h1
 
 private let lemma_sep_comm (p q:hpred) (h:heap)
   : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1) 
@@ -103,15 +106,29 @@ let sep_comm p q h = lemma_sep_comm p q h
 
 let sep_assoc p q r h = admit ()
 
-let sep_interp p q h = admit ()
+let fresh #a r = fun h -> h.memory r == None
 
-let points_to_disj #a #b r s x y h = admit ()
+let contains #a h r = 
+  let _ = () in 
+  exists x . h.memory r == Some (| a , x |)
 
-let fresh #a r = admit ()
+let points_to_contains #a r x h = ()
 
-let contains #a h r = admit ()
+private let points_to_disj' (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap) (h0:heap) (h1:heap)
+  : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ (r |> x) h0 /\ (s |> y) h1) ==> disjoint r s)
+  = ()
 
-let points_to_contains #a r x h = admit ()
+private let points_to_disj'' (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap) (h0:heap) 
+  : Lemma ((exists h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ (r |> x) h0 /\ (s |> y) h1) ==> disjoint r s)
+  = FStar.Classical.forall_to_exists (fun h1 -> points_to_disj' r s x y h h0 h1)
+
+private let points_to_disj''' (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap) 
+  : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ (r |> x) h0 /\ (s |> y) h1) ==> disjoint r s)
+  = FStar.Classical.forall_to_exists (fun h0 -> points_to_disj'' r s x y h h0)
+
+let points_to_disj #a #b r s x y h = 
+  sep_interp (r |> x) (s |> y) h;
+  points_to_disj''' r s x y h
 
 let sel_tot #a h r = admit ()
 
