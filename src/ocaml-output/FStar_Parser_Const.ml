@@ -183,6 +183,8 @@ let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
+let (dm4f_bind_range_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (gen_reset :
   (Prims.unit -> Prims.int,Prims.unit -> Prims.unit)
     FStar_Pervasives_Native.tuple2)

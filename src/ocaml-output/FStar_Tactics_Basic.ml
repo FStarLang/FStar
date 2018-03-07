@@ -1231,6 +1231,7 @@ let (intro_rec :
                       FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl bv) []
                         goal.FStar_Tactics_Types.goal_ty
                         FStar_Parser_Const.effect_Tot_lid uu____2135 []
+                        FStar_Range.dummyRange
                        in
                     let body = FStar_Syntax_Syntax.bv_to_name bv  in
                     let uu____2141 =

@@ -2325,6 +2325,7 @@ let rec (add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> Prims.unit) =
                         let se_let =
                           FStar_Syntax_Util.action_as_lb
                             ne.FStar_Syntax_Syntax.mname a
+                            (a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos
                            in
                         FStar_Util.smap_add (sigtab env)
                           (a.FStar_Syntax_Syntax.action_name).FStar_Ident.str
