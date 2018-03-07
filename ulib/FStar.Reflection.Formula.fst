@@ -40,7 +40,6 @@ let mk_Exists (typ : term) (pred : term) : Tac formula =
     let b = fresh_binder typ in
     Exists b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
-#reset-options "--z3rlimit 15"
 let term_as_formula' (t:term) : Tac formula =
     match inspect t with
     | Tv_Var n ->
@@ -81,10 +80,8 @@ let term_as_formula' (t:term) : Tac formula =
 
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit)] ->
             let qn = inspect_fv fv in
-                 if qn = forall_qn then (admit(); //TODO: admitting termination check for now
-                                             mk_Forall a1 a2) //a1 is type, a2 predicate
-            else if qn = exists_qn then (admit(); //TODO: admitting termination check for now
-                                             mk_Exists a1 a2) //a1 is type, a2 predicate
+                 if qn = forall_qn then mk_Forall a1 a2
+            else if qn = exists_qn then mk_Exists a1 a2
             else App h0 (fst t)
         | Tv_FVar fv, [(a, Q_Explicit)] ->
             let qn = inspect_fv fv in
@@ -141,8 +138,6 @@ let rec term_as_formula (t:term) : Tac formula =
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
-
-#reset-options
 
 let formula_as_term_view (f:formula) : Tot term_view =
     let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
