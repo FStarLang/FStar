@@ -4722,13 +4722,14 @@ let (check_sigelt_quals :
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                         (inferred x))
-                        || (visibility x))
-                       || (assumption x))
-                      ||
-                      (env.FStar_TypeChecker_Env.is_iface &&
-                         (x = FStar_Syntax_Syntax.Inline_for_extraction))))
+                    ((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                          (inferred x))
+                         || (visibility x))
+                        || (assumption x))
+                       ||
+                       (env.FStar_TypeChecker_Env.is_iface &&
+                          (x = FStar_Syntax_Syntax.Inline_for_extraction)))
+                      || (x = FStar_Syntax_Syntax.NoExtract)))
         | FStar_Syntax_Syntax.New  ->
             FStar_All.pipe_right quals
               (FStar_List.for_all
