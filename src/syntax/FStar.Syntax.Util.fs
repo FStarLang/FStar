@@ -830,8 +830,7 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-// TODO: remove? note the argument order is different, ugh
-let mk_letbinding lbname univ_vars typ eff def lbattrs pos =
+let mk_letbinding (lbname : either<bv,fv>) univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;

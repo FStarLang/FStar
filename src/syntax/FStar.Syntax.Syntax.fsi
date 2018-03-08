@@ -94,6 +94,7 @@ type lazy_kind =
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_sigelt
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index

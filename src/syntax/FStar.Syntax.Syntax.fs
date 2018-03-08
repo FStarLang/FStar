@@ -112,6 +112,7 @@ type lazy_kind =
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
+  | Lazy_sigelt
   | Lazy_proofstate
 
 ///[@ PpxDerivingShow ]

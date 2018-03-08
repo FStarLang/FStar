@@ -55,6 +55,9 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__inspect_comp" inspect_comp E.unembed_comp E.embed_comp_view;
         mk1 "__pack_comp"    pack_comp E.unembed_comp_view E.embed_comp;
 
+        mk1 "__inspect_sigelt" inspect_sigelt E.unembed_sigelt E.embed_sigelt_view;
+        mk1 "__pack_sigelt"    pack_sigelt E.unembed_sigelt_view E.embed_sigelt;
+
         mk1 "__inspect_bv" inspect_bv E.unembed_binder embed_string;
         mk2 "__compare_binder" compare_binder E.unembed_binder E.unembed_binder E.embed_order;
         mk1 "__type_of_binder" type_of_binder E.unembed_binder E.embed_term;
@@ -64,5 +67,5 @@ let reflection_primops : list<N.primitive_step> =
 
         mk1 "__term_to_string" term_to_string E.unembed_term embed_string;
         mk1 "__binders_of_env" binders_of_env E.unembed_env E.embed_binders;
-        mk2 "__lookup_typ" lookup_typ E.unembed_env unembed_string_list E.embed_sigelt_view;
+        mk2 "__lookup_typ" lookup_typ E.unembed_env unembed_string_list (embed_option E.embed_sigelt fstar_refl_sigelt);
     ]

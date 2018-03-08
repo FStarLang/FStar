@@ -21,14 +21,20 @@ let inspect_comp (c:comp) : Tac comp_view = __inspect_comp c
 assume private val __pack_comp : comp_view -> comp
 let pack_comp (cv:comp_view) : Tac comp = __pack_comp cv
 
+assume private val __inspect_sigelt : sigelt -> sigelt_view
+let inspect_sigelt (se:sigelt) : Tac sigelt_view = __inspect_sigelt se
+
+assume private val __pack_sigelt : sigelt_view -> sigelt
+let pack_sigelt (sv:sigelt_view) : Tac sigelt = __pack_sigelt sv
+
 assume private val __inspect_fv : fv -> name
 let inspect_fv (fv:fv) : Tac name = __inspect_fv fv
 
 assume private val __pack_fv : name -> fv
 let pack_fv (ns:name) : Tac fv = __pack_fv ns
 
-assume private val __lookup_typ : env -> name -> sigelt_view
-let lookup_typ (e:env) (ns:name) : Tac sigelt_view = __lookup_typ e ns
+assume private val __lookup_typ : env -> name -> option sigelt
+let lookup_typ (e:env) (ns:name) : Tac (option sigelt) = __lookup_typ e ns
 
 assume private val __compare_binder : binder -> binder -> order
 let compare_binder (b1:binder) (b2:binder) : Tac order = __compare_binder b1 b2
