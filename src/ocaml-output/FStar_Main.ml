@@ -349,6 +349,8 @@ let (lazy_chooser :
           FStar_Reflection_Embeddings.unfold_lazy_comp i
       | FStar_Syntax_Syntax.Lazy_env  ->
           FStar_Reflection_Embeddings.unfold_lazy_env i
+      | FStar_Syntax_Syntax.Lazy_sigelt  ->
+          FStar_Reflection_Embeddings.unfold_lazy_sigelt i
       | FStar_Syntax_Syntax.Lazy_proofstate  ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
   

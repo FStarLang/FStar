@@ -8840,6 +8840,7 @@ let rec (elim_uvars :
                    (uu___215_24566.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_pragma uu____24577 -> s
+      | FStar_Syntax_Syntax.Sig_splice uu____24578 -> s
   
 let (erase_universes :
   FStar_TypeChecker_Env.env ->
