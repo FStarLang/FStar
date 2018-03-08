@@ -5,6 +5,8 @@ open FStar_Tactics_Effect
 module N = FStar_TypeChecker_Normalize
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
+module RB = FStar_Reflection_Basic
+module RD = FStar_Reflection_Data
 module RT = FStar_Reflection_Types
 module EMB = FStar_Syntax_Embeddings
 
@@ -183,3 +185,23 @@ let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
 
 let __fresh_binder_named (nm : string) (ty : RT.term) : RT.binder __tac = from_tac_2 B.fresh_binder_named nm ty
 let fresh_binder_named : string -> RT.term -> RT.binder __tac = fun nm ty -> __fresh_binder_named nm ty
+
+let comp1 f g x = f (g x)
+let comp2 f g x y  = f (g x y)
+
+let type_of_binder = comp1 E.__ret RB.type_of_binder
+let inspect        = comp1 E.__ret RB.inspect
+let pack           = comp1 E.__ret RB.pack
+let inspect_comp   = comp1 E.__ret RB.inspect_comp
+let pack_comp      = comp1 E.__ret RB.pack_comp
+let inspect_sigelt = comp1 E.__ret RB.inspect_sigelt
+let pack_sigelt    = comp1 E.__ret RB.pack_sigelt
+let inspect_fv     = comp1 E.__ret RB.inspect_fv
+let pack_fv        = comp1 E.__ret RB.pack_fv
+let lookup_typ     = comp2 E.__ret RB.lookup_typ
+let compare_binder = comp2 E.__ret RB.compare_binder
+let inspect_bv     = comp1 E.__ret RB.inspect_bv
+let binders_of_env = comp1 E.__ret RB.binders_of_env
+let is_free        = comp2 E.__ret RB.is_free
+let term_eq        = comp2 E.__ret RB.term_eq
+let term_to_string = comp1 E.__ret RB.term_to_string

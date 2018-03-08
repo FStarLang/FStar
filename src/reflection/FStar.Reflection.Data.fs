@@ -74,9 +74,10 @@ let fstar_refl_data_const s =
     let lid = fstar_refl_data_lid s in
     { lid = lid ; t = tdataconstr lid }
 
+(* Every type here is assumed, so constant *)
 let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
-let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
-let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
+(* Every type here is defined, so tabbrev *)
+let mk_refl_data_lid_as_term   (s:string) = tabbrev (fstar_refl_data_lid s)
 
 let fstar_refl_inspect_lid = Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "inspect"] Range.dummyRange
 let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
