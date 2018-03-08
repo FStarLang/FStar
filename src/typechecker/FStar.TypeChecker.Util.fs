@@ -1791,7 +1791,13 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         match q with
         | Assumption ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x || (env.is_iface && x=Inline_for_extraction))
+          |> List.for_all (fun x -> x=q
+                              || x=Logic
+                              || inferred x
+                              || visibility x
+                              || assumption x
+                              || (env.is_iface && x=Inline_for_extraction)
+                              || x=NoExtract)
 
         | New -> //no definition provided
           quals
