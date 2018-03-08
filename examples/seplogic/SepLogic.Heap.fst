@@ -23,6 +23,8 @@ private let equal_extensional (h0 h1:heap)
   : Lemma (requires True) (ensures (equal h0 h1 <==> h0 == h1))
   = ()
 
+let emp = fun h -> h.next_addr = 0 /\ (forall r . None? (h.memory r))
+
 let join_tot h0 h1 =
   let memory = (fun r' ->  match (h0.memory r', h1.memory r') with
                               | (Some v1, None) -> Some v1
@@ -34,11 +36,15 @@ let join_tot h0 h1 =
 
 let disjoint #a #b r0 r1 = r0 =!= r1
 
+let disjoint_comm #a #b r0 r1 = ()
+
 let disjoint_heaps h0 h1 =
   let _ = () in
   (forall (r:nat). ~(Some?(h0.memory r) && Some?(h1.memory r)))
 
-let emp = fun h -> h.next_addr = 0 /\ (forall r . None? (h.memory r))
+let disjoint_heaps_emp h0 h1 = ()
+
+let disjoint_heaps_comm h0 h1 = ()
 
 private let init_heap : heap = 
   let memory = fun r -> None in
@@ -56,12 +62,6 @@ let ( <*> ) p q =
 
 let sep_interp p q h = 
   assert_norm ((p <*> q) h ==> (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (q h1)))
-
-private let lemma_disjoint_heaps_emp (h0 h1:heap)
-  : Lemma (emp h1 ==> disjoint_heaps h0 h1)
-          [SMTPat (disjoint_heaps h0 h1); 
-           SMTPat (emp h1)]
-  = ()
 
 private let lemma_join_tot_emp' (h0 h1:heap)
   : Lemma (emp h1 ==> equal (join_tot h0 h1) h0)
@@ -214,7 +214,7 @@ let points_to_sel #a r x h = ()
 let points_to_upd #a r x v h = ()
 
 let restrict #a h r =
-  { next_addr = r + 1;
+  { next_addr = h.next_addr;
     memory    = (fun (r':nat) -> if r' = r then h.memory r' else None) }
 
 let minus #a h r =
@@ -234,9 +234,10 @@ private let join_tot_restrict_minus' (#a:Type0) (r:ref a) (h:heap)
 let join_tot_restrict_minus #a r h = 
   join_tot_restrict_minus' #a r h
 
-(*private let join_tot_minus_restrict' (#a:Type0) (r:ref a) (h:heap)
+private let join_tot_minus_restrict' (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))
           (ensures  (equal (join_tot (minus h r) h) (restrict h r)))
   = ()
 
-let join_tot_minus_restrict #a r h = ()*)
+let join_tot_minus_restrict #a r h = 
+  join_tot_minus_restrict' r h

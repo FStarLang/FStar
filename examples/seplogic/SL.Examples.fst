@@ -20,8 +20,7 @@ let write_read (r:ref int) =
   (r := 2;
    !r)
   
-  <: STATE int (fun p h2 -> h2 `contains` r /\
-                            (exists x. (r |> x) h2) /\ 
+  <: STATE int (fun p h2 -> (exists x. (r |> x) h2) /\ 
                             (forall h3. (r |> 2) h3 ==> p 2 h3))
 
   by (fun () -> 
@@ -42,5 +41,5 @@ let write_read (r:ref int) =
 	     let _ = forall_intro () in
              let _ = implies_intro () in
              split ();
-             smt ();
+             //let _ = apply_lemma (`disjoint_heaps_restrict_minus) in 
 	     dump "After")
