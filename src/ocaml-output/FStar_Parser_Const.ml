@@ -157,10 +157,9 @@ let (try_with_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "try_with"]
 let (as_requires : FStar_Ident.lident) = pconst "as_requires" 
 let (as_ensures : FStar_Ident.lident) = pconst "as_ensures" 
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases" 
+let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"] 
 let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"] 
-let (decls_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "decls"] 
 let (range_lid : FStar_Ident.lident) = pconst "range" 
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of" 
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled" 

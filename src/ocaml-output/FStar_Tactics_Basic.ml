@@ -11,8 +11,7 @@ let (normalize :
   fun s  ->
     fun e  ->
       fun t  ->
-        FStar_TypeChecker_Normalize.normalize_with_primitive_steps
-          FStar_Reflection_Interpreter.reflection_primops s e t
+        FStar_TypeChecker_Normalize.normalize_with_primitive_steps [] s e t
   
 let (bnorm :
   FStar_TypeChecker_Env.env ->
@@ -2180,9 +2179,9 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac) =
                                                                 =
                                                                 Obj.magic
                                                                   (filter' ()
-                                                                    (fun a435
+                                                                    (fun a415
                                                                      ->
-                                                                    fun a436 
+                                                                    fun a416 
                                                                     ->
                                                                     (Obj.magic
                                                                     (fun g 
@@ -2196,7 +2195,7 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac) =
                                                                     goals  in
                                                                     Prims.op_Negation
                                                                     uu____4051))
-                                                                    a435 a436)
+                                                                    a415 a416)
                                                                     (Obj.magic
                                                                     sub_goals))
                                                                  in

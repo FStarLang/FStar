@@ -159,8 +159,8 @@ type lazy_kind =
   | Lazy_fvar 
   | Lazy_comp 
   | Lazy_env 
-  | Lazy_sigelt 
-  | Lazy_proofstate [@@deriving show]
+  | Lazy_proofstate 
+  | Lazy_sigelt [@@deriving show]
 let (uu___is_BadLazy : lazy_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | BadLazy  -> true | uu____336 -> false
@@ -181,13 +181,13 @@ let (uu___is_Lazy_env : lazy_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Lazy_env  -> true | uu____352 -> false
   
-let (uu___is_Lazy_sigelt : lazy_kind -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | Lazy_sigelt  -> true | uu____356 -> false
-  
 let (uu___is_Lazy_proofstate : lazy_kind -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Lazy_proofstate  -> true | uu____360 -> false
+    match projectee with | Lazy_proofstate  -> true | uu____356 -> false
+  
+let (uu___is_Lazy_sigelt : lazy_kind -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Lazy_sigelt  -> true | uu____360 -> false
   
 type term' =
   | Tm_bvar of bv 
@@ -2370,7 +2370,7 @@ let (t_float : term) = tconst FStar_Parser_Const.float_lid
 let (t_char : term) = tabbrev FStar_Parser_Const.char_lid 
 let (t_range : term) = tconst FStar_Parser_Const.range_lid 
 let (t_term : term) = tconst FStar_Parser_Const.term_lid 
-let (t_decls : term) = tabbrev FStar_Parser_Const.decls_lid 
+let (t_order : term) = tconst FStar_Parser_Const.order_lid 
 let (t_binder : term) = tconst FStar_Parser_Const.binder_lid 
 let (t_tactic_unit : term' syntax) =
   let uu____7117 =

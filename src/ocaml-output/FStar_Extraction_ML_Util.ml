@@ -807,15 +807,15 @@ let (fstar_syn_syn_prefix :
 let (fstar_tc_common_prefix :
   Prims.string -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun s  -> str_to_name (Prims.strcat "FStar_TypeChecker_Common." s) 
-let (fstar_refl_basic_prefix :
-  Prims.string -> FStar_Extraction_ML_Syntax.mlexpr') =
-  fun s  -> str_to_name (Prims.strcat "FStar_Reflection_Basic." s) 
 let (fstar_refl_data_prefix :
   Prims.string -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun s  -> str_to_name (Prims.strcat "FStar_Reflection_Data." s) 
 let (fstar_emb_basic_prefix :
   Prims.string -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun s  -> str_to_name (Prims.strcat "FStar_Syntax_Embeddings." s) 
+let (fstar_refl_emb_prefix :
+  Prims.string -> FStar_Extraction_ML_Syntax.mlexpr') =
+  fun s  -> str_to_name (Prims.strcat "FStar_Reflection_Embeddings." s) 
 let (mk_basic_embedding :
   emb_decl -> Prims.string -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun m  ->
@@ -829,8 +829,8 @@ let (mk_embedding :
   fun m  ->
     fun s  ->
       match m with
-      | Embed  -> fstar_refl_basic_prefix (Prims.strcat "embed_" s)
-      | Unembed  -> fstar_refl_basic_prefix (Prims.strcat "unembed_" s)
+      | Embed  -> fstar_refl_emb_prefix (Prims.strcat "embed_" s)
+      | Unembed  -> fstar_refl_emb_prefix (Prims.strcat "unembed_" s)
   
 let (mk_tactic_unembedding :
   FStar_Extraction_ML_Syntax.mlexpr' Prims.list ->

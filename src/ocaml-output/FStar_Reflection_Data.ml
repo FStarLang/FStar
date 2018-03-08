@@ -293,23 +293,30 @@ let (mk_refl_syntax_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
 let (mk_refl_data_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s  ->
     let uu____770 = fstar_refl_data_lid s  in
-    FStar_Syntax_Syntax.tconst uu____770
+    FStar_Syntax_Syntax.tabbrev  uu____770
   
 let (fstar_refl_inspect_lid : FStar_Ident.lident) =
-  fstar_refl_basic_lid "inspect" 
+  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "inspect"]
+    FStar_Range.dummyRange
+  
 let (fstar_refl_inspect : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar fstar_refl_inspect_lid
     (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
     FStar_Pervasives_Native.None
   
-let (fstar_refl_pack_lid : FStar_Ident.lident) = fstar_refl_basic_lid "pack" 
+let (fstar_refl_pack_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "pack"]
+    FStar_Range.dummyRange
+  
 let (fstar_refl_pack : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar fstar_refl_pack_lid
     (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
     FStar_Pervasives_Native.None
   
 let (fstar_refl_pack_fv_lid : FStar_Ident.lident) =
-  fstar_refl_basic_lid "pack_fv" 
+  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "pack_fv"]
+    FStar_Range.dummyRange
+  
 let (fstar_refl_pack_fv : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar fstar_refl_pack_fv_lid
     (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
@@ -331,10 +338,14 @@ let (fstar_refl_comp_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "comp_view" 
 let (fstar_refl_term_view : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "term_view" 
+let (fstar_refl_sigelt_view : FStar_Syntax_Syntax.term) =
+  mk_refl_data_lid_as_term "sigelt_view" 
 let (fstar_refl_pattern : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "pattern" 
 let (fstar_refl_branch : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "branch" 
+let (fstar_refl_decls : FStar_Syntax_Syntax.term) =
+  mk_refl_data_lid_as_term "decls" 
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit" 
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit" 
 let (ref_C_Unit : refl_constant) = fstar_refl_data_const "C_Unit" 
