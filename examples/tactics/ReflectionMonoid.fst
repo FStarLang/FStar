@@ -108,7 +108,7 @@ assume val f:int->int
 let _ = assert_by_tactic (f (3 + 5) > 0)
              (fun () -> change_sq (`(f 8 > 0)); admit1())
 
-let monoid_tac (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
+let canon_monoid (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
@@ -126,7 +126,7 @@ let monoid_tac (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c) + d)
-  (fun _ -> monoid_tac int_plus_monoid string_of_int; trefl())
+  (fun _ -> canon_monoid int_plus_monoid string_of_int; trefl())
 
 (* TODO: should extend this to a commutative monoid and 
          sort the list to prove things like a + b = b + a; *)
