@@ -8,10 +8,6 @@ open FStar.Reflection
 (* "A Monoid Expression Simplifier" ported from
    http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html *)
 
-(* TODO: This development (like the Coq from which it is inspired)
-         doesn't use any of the monoid laws, not even associativity.
-         There is something shady happening here. *)
-
 type exp (a:Type) : Type =
   | Unit : exp a
   | Var : a -> exp a
@@ -41,18 +37,22 @@ let rec flatten (#a:Type) (e:exp a) : list a =
   | Var x -> [x]
   | Mult e1 e2 -> flatten e1 @ flatten e2
 
-let rec flatten_correct' (#a:Type) (m:monoid a) ml1 ml2 :
-  Lemma (Monoid?.mult m (mldenote m ml1)
-                        (mldenote m ml2) == mldenote m (ml1 @ ml2)) =
+(* This proof internally uses the monoid laws; the SMT solver picks up
+   on them because they are written as squashed formulas in the
+   definition of monoid; need to be careful with this since these are
+   quantified formulas without any patterns. Dangerous stuff! *)
+let rec flatten_correct_aux (#a:Type) (m:monoid a) ml1 ml2 :
+  Lemma (mldenote m (ml1 @ ml2) == Monoid?.mult m (mldenote m ml1)
+                                                  (mldenote m ml2)) =
   match ml1 with
   | [] -> ()
-  | e::es1' -> flatten_correct' m es1' ml2
+  | e::es1' -> flatten_correct_aux m es1' ml2
 
 let rec flatten_correct (#a:Type) (m:monoid a) (e:exp a) :
     Lemma (mdenote m e == mldenote m (flatten e)) =
   match e with
   | Unit | Var _ -> ()
-  | Mult e1 e2 -> flatten_correct' m (flatten e1) (flatten e2);
+  | Mult e1 e2 -> flatten_correct_aux m (flatten e1) (flatten e2);
                   flatten_correct m e1; flatten_correct m e2
 
 let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a) :
@@ -127,3 +127,6 @@ let monoid_tac (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c) + d)
   (fun _ -> monoid_tac int_plus_monoid string_of_int; trefl())
+
+(* TODO: should extend this to a commutative monoid and 
+         sort the list to prove things like a + b = b + a; *)
