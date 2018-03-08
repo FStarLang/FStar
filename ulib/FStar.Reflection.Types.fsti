@@ -6,6 +6,6 @@ assume new type env
 assume new type fv
 assume new type comp
 
-type name    = list string
+type name : eqtype = list string
 type typ     = term
 type binders = list binder
