@@ -50,29 +50,29 @@ type comp_view =
   | C_Unknown   : comp_view
 
 noeq
-type ctor =
-  | Ctor :
-    (name:name) ->              // constructor name "C"
-    (typ:typ) ->                // type of the constructor "C : xn:tn -> I ps"
-    ctor
-
-noeq
 type sigelt_view =
-  // Sg_Inductive basically coallesces the Sig_bundle used internally,
-  // where the type definition and its constructors are split.
-  // While that might be better for typechecking, this is probably better for metaprogrammers
-  // (no mutually defined types for now)
-  | Sg_Inductive :
-      (name:name) ->            // name of the inductive type being defined
-      (params:binders) ->       // parameters
-      (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
-      list ctor ->              // constructors
-      sigelt_view
-
   | Sg_Let :
       (fv:fv) ->
       (typ:typ) ->
       (def:term) ->
       sigelt_view
 
+  // Sg_Inductive basically coallesces the Sig_bundle used internally,
+  // where the type definition and its constructors are split.
+  // While that might be better for typechecking, this is probably better for metaprogrammers
+  // (no mutually defined types for now)
+  | Sg_Inductive :
+      (nm:name) ->              // name of the inductive type being defined
+      (params:binders) ->       // parameters
+      (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
+      (cts:list name) ->        // constructor names
+      sigelt_view
+
+  | Sg_Constructor :
+      (name:name) ->
+      (typ:typ) ->
+      sigelt_view
+
   | Unk
+
+type decls = list sigelt

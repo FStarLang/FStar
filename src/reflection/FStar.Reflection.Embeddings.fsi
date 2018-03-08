@@ -13,7 +13,9 @@ val unfold_lazy_fvar   : lazyinfo -> term
 val unfold_lazy_binder : lazyinfo -> term
 val unfold_lazy_comp   : lazyinfo -> term
 val unfold_lazy_env    : lazyinfo -> term
-(* Embeddings, split out of here? *)
+val unfold_lazy_sigelt : lazyinfo -> term
+
+(* Embeddings *)
 
 val embed_binder        : embedder<binder>
 val unembed_binder      : unembedder<binder>
@@ -57,8 +59,8 @@ val unembed_argv        : unembedder<argv>
 val embed_order         : embedder<order>
 val unembed_order       : unembedder<order>
 
+val embed_sigelt        : embedder<sigelt>
+val unembed_sigelt      : unembedder<sigelt>
+
 val embed_sigelt_view   : embedder<sigelt_view>
 val unembed_sigelt_view : unembedder<sigelt_view>
-
-val embed_ctor          : embedder<ctor>
-val unembed_ctor        : unembedder<ctor>

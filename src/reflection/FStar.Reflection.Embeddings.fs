@@ -159,29 +159,30 @@ let embed_order (rng:Range.range) (o:order) : term =
     | Gt -> ord_Gt
     in { r with pos = rng }
 
-let embed_ctor (rng:Range.range) (c:ctor) : term =
-    match c with
-    | Ctor (nm, t) ->
-        S.mk_Tm_app ref_Ctor.t
-                    [S.as_arg (embed_string_list rng nm);
-                     S.as_arg (embed_term rng t)]
-                    None rng
+let embed_sigelt (rng:Range.range) (se:sigelt) : term =
+    U.mk_lazy se fstar_refl_sigelt Lazy_sigelt (Some rng)
 
 let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     match sev with
-    | Sg_Inductive (nm, bs, t, dcs) ->
-        S.mk_Tm_app ref_Sg_Inductive.t
-                    [S.as_arg (embed_string_list rng nm);
-                        S.as_arg (embed_binders rng bs);
-                        S.as_arg (embed_term rng t);
-                        S.as_arg (embed_list embed_ctor fstar_refl_ctor rng dcs)]
-                    None rng
-
     | Sg_Let (fv, ty, t) ->
         S.mk_Tm_app ref_Sg_Let.t
                     [S.as_arg (embed_fvar rng fv);
                         S.as_arg (embed_term rng ty);
                         S.as_arg (embed_term rng t)]
+                    None rng
+
+    | Sg_Constructor (nm, ty) ->
+        S.mk_Tm_app ref_Sg_Constructor.t
+                    [S.as_arg (embed_string_list rng nm);
+                        S.as_arg (embed_term rng ty)]
+                    None rng
+
+    | Sg_Inductive (nm, bs, t, dcs) ->
+        S.mk_Tm_app ref_Sg_Inductive.t
+                    [S.as_arg (embed_string_list rng nm);
+                        S.as_arg (embed_binders rng bs);
+                        S.as_arg (embed_term rng t);
+                        S.as_arg (embed_list embed_string_list (S.t_list_of S.t_string) rng dcs)]
                     None rng
 
     | Unk ->
@@ -391,16 +392,12 @@ let unembed_order (t:term) : option<order> =
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded order: %s" (Print.term_to_string t)));
         None
 
-let unembed_ctor (t:term) : option<ctor> =
-    let t = U.unascribe t in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(nm, _); (t, _)] when S.fv_eq_lid fv ref_Ctor.lid ->
-        BU.bind_opt (unembed_string_list nm) (fun nm ->
-        BU.bind_opt (unembed_term t) (fun t ->
-        Some <| Ctor (nm, t)))
+let unembed_sigelt (t:term) : option<sigelt> =
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_sigelt ->
+        Some (undyn i.blob)
     | _ ->
-        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctor: %s" (Print.term_to_string t)));
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (Print.term_to_string t)));
         None
 
 let unembed_sigelt_view (t:term) : option<sigelt_view> =
@@ -411,7 +408,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
         BU.bind_opt (unembed_string_list nm) (fun nm ->
         BU.bind_opt (unembed_binders bs) (fun bs ->
         BU.bind_opt (unembed_term t) (fun t ->
-        BU.bind_opt (unembed_list unembed_ctor dcs) (fun dcs ->
+        BU.bind_opt (unembed_list (unembed_list unembed_string) dcs) (fun dcs ->
         Some <| Sg_Inductive (nm, bs, t, dcs)))))
 
     | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
@@ -443,4 +440,7 @@ let unfold_lazy_comp (i : lazyinfo) : term =
     U.exp_unit
 
 let unfold_lazy_env (i : lazyinfo) : term =
+    U.exp_unit
+
+let unfold_lazy_sigelt (i : lazyinfo) : term =
     U.exp_unit

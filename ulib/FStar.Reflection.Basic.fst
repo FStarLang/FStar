@@ -64,14 +64,20 @@ let pack_comp (cv:comp_view) = __pack_comp cv
 assume val pack_inspect_inv : (t:term) -> Lemma (pack (inspect t) == t)
 assume val inspect_pack_inv : (tv:term_view) -> Lemma (inspect (pack tv) == tv)
 
-assume val __inspect_fv : fv -> name
-let inspect_fv (fv:fv) = __inspect_fv fv
+assume private val __inspect_sigelt : sigelt -> sigelt_view
+let inspect_sigelt (se:sigelt) : sigelt_view = __inspect_sigelt se
+
+assume private val __pack_sigelt : sigelt_view -> sigelt
+let pack_sigelt (sv:sigelt_view) : sigelt = __pack_sigelt sv
+
+assume private val __inspect_fv : fv -> name
+let inspect_fv (fv:fv) : name = __inspect_fv fv
 
 assume val __pack_fv : name -> fv
 let pack_fv (ns:name) = __pack_fv ns
 
-assume val __lookup_typ : env -> name -> sigelt_view
-let lookup_typ (e:env) (ns:name) = __lookup_typ e ns
+assume private val __lookup_typ : env -> name -> option sigelt
+let lookup_typ (e:env) (ns:name) : option sigelt = __lookup_typ e ns
 
 assume val __compare_binder : binder -> binder -> order
 let compare_binder (b1:binder) (b2:binder) = __compare_binder b1 b2

@@ -282,42 +282,46 @@ let compare_binder (x:binder) (y:binder) : order =
 let is_free (x:binder) (t:term) : bool =
     U.is_free_in (fst x) t
 
-// Only for inductives, at the moment
-let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
+let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in
-    let res = Env.lookup_qname env lid in
-    match res with
-    | None ->
-        Unk
-    | Some (BU.Inl _, rng) ->
-        Unk
-    | Some (BU.Inr (se, us), rng) ->
-        begin match se.sigel with
-        | Sig_inductive_typ (lid, us, bs, t, _, dc_lids) ->
-            let nm = Ident.path_of_lid lid in
-            let ctor1 dc_lid =
-                begin match Env.lookup_qname env dc_lid with
-                | Some (BU.Inr (se, us), rng) ->
-                    begin match se.sigel with
-                    | Sig_datacon (lid, us, t, _, n, _) ->
-                        Ctor (Ident.path_of_lid lid, t)
-                    | _ -> failwith "wat 1"
-                    end
-                | _ -> failwith "wat 2"
-                end
-            in
-            let ctors = List.map ctor1 dc_lids in
-            Sg_Inductive (nm, bs, t, ctors)
-        | Sig_let ((false, [lb]), _) ->
-            let fv = match lb.lbname with
-                     | BU.Inr fv -> fv
-                     | BU.Inl _  -> failwith "global Sig_let has bv"
-            in
-            Sg_Let (fv, lb.lbtyp, lb.lbdef)
+    match Env.lookup_qname env lid with
+    | None -> None
+    | Some (BU.Inl _, rng) -> None
+    | Some (BU.Inr (se, us), rng) -> Some se
 
-        | _ ->
-            Unk
-        end
+let inspect_sigelt (se : sigelt) : sigelt_view =
+    match se.sigel with
+    | Sig_let ((false, [lb]), _) ->
+        let fv = match lb.lbname with
+                 | BU.Inr fv -> fv
+                 | BU.Inl _  -> failwith "global Sig_let has bv"
+        in
+        Sg_Let (fv, lb.lbtyp, lb.lbdef)
+
+    | Sig_inductive_typ (lid, us, bs, t, _, c_lids) ->
+        let nm = Ident.path_of_lid lid in
+        Sg_Inductive (nm, bs, t, List.map Ident.path_of_lid c_lids)
+
+    | Sig_datacon (lid, us, t, _, n, _) ->
+        Sg_Constructor (Ident.path_of_lid lid, t)
+
+    | _ ->
+        Unk
+
+let pack_sigelt (sv:sigelt_view) : sigelt =
+    match sv with
+    | Sg_Let (fv, ty, def) ->
+        let lb = U.mk_letbinding (BU.Inr fv) [] ty PC.effect_Tot_lid def [] def.pos in
+        mk_sigelt <| Sig_let ((false, [lb]), [])
+
+    | Sg_Constructor _ ->
+        failwith "packing Sg_Constructor, sorry"
+
+    | Sg_Inductive _ ->
+        failwith "packing Sg_Inductive, sorry"
+
+    | Unk ->
+        failwith "packing Unk, sorry"
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let type_of_binder (b : binder) = match b with (b, _) -> b.sort
