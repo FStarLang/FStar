@@ -1865,7 +1865,7 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
     let env0 = { en0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
-    else m, Some modul_iface, env
+    else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
     let modul = if Options.use_extracted_interfaces () then { m with exports = m.declarations } else { m with exports=exports } in
