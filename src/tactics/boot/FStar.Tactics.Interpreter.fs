@@ -30,6 +30,7 @@ open FStar.Syntax.Embeddings
 open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
+module RE = FStar.Reflection.Embeddings
 open FStar.Tactics.Native
 
 let tacdbg = BU.mk_ref false
@@ -280,36 +281,36 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac2 "__fail"          (fun _ -> fail) get unembed_string put t_unit; //nb: the put embedding is never used
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) get (unembed_tactic_0' get) (embed_option put t_unit) t_unit;
-      mktac0 "__intro"         intro embed_binder RD.fstar_refl_binder;
+      mktac0 "__intro"         intro RE.embed_binder RD.fstar_refl_binder;
       mktac0 "__intro_rec"     intro_rec (embed_pair
-                                              embed_binder RD.fstar_refl_binder
-                                              embed_binder RD.fstar_refl_binder)
+                                              RE.embed_binder RD.fstar_refl_binder
+                                              RE.embed_binder RD.fstar_refl_binder)
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
-      mktac3 "__norm_term_env" norm_term_env unembed_env (unembed_list unembed_norm_step) unembed_term embed_term S.t_term;
+      mktac3 "__norm_term_env" norm_term_env RE.unembed_env (unembed_list unembed_norm_step) RE.unembed_term RE.embed_term S.t_term;
       mktac2 "__norm_binder_type"
-                               norm_binder_type (unembed_list unembed_norm_step) unembed_binder embed_unit t_unit;
-      mktac2 "__rename_to"     rename_to unembed_binder unembed_string embed_unit t_unit;
-      mktac1 "__binder_retype" binder_retype unembed_binder embed_unit t_unit;
+                               norm_binder_type (unembed_list unembed_norm_step) RE.unembed_binder embed_unit t_unit;
+      mktac2 "__rename_to"     rename_to RE.unembed_binder unembed_string embed_unit t_unit;
+      mktac1 "__binder_retype" binder_retype RE.unembed_binder embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear_top"     clear_top embed_unit t_unit;
-      mktac1 "__clear"         clear unembed_binder embed_unit t_unit;
-      mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
+      mktac1 "__clear"         clear RE.unembed_binder embed_unit t_unit;
+      mktac1 "__rewrite"       rewrite RE.unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac0 "__refine_intro"  refine_intro embed_unit t_unit;
-      mktac3 "__t_exact"       t_exact unembed_bool unembed_bool unembed_term embed_unit t_unit;
-      mktac1 "__apply"         (apply  true) unembed_term embed_unit t_unit;
-      mktac1 "__apply_raw"     (apply false) unembed_term embed_unit t_unit;
-      mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
+      mktac3 "__t_exact"       t_exact unembed_bool unembed_bool RE.unembed_term embed_unit t_unit;
+      mktac1 "__apply"         (apply  true) RE.unembed_term embed_unit t_unit;
+      mktac1 "__apply_raw"     (apply false) RE.unembed_term embed_unit t_unit;
+      mktac1 "__apply_lemma"   apply_lemma RE.unembed_term embed_unit t_unit;
       // A tac 5... oh my...
       mktac5 "__divide"        (fun _ _ -> divide) get get unembed_int (unembed_tactic_0' get) (unembed_tactic_0' get)
                                                             (embed_pair put t_unit put t_unit) t_unit;
       mktac1 "__set_options"   set_options unembed_string embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0' unembed_unit) (unembed_tactic_0' unembed_unit) embed_unit t_unit;
 
-      mktac1 "__tc"            tc unembed_term embed_term S.t_term;
-      mktac1 "__unshelve"      unshelve unembed_term embed_unit t_unit;
-      mktac2 "__unquote"       unquote get unembed_term put t_unit;
+      mktac1 "__tc"            tc RE.unembed_term RE.embed_term S.t_term;
+      mktac1 "__unshelve"      unshelve RE.unembed_term embed_unit t_unit;
+      mktac2 "__unquote"       unquote get RE.unembed_term put t_unit;
 
       mktac1 "__prune"         prune unembed_string embed_unit t_unit;
       mktac1 "__addns"         addns unembed_string embed_unit t_unit;
@@ -324,22 +325,22 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__dup"           dup embed_unit t_unit;
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
-      mktac1 "__cases"         cases unembed_term (embed_pair
-                                                      embed_term S.t_term
-                                                      embed_term S.t_term)
+      mktac1 "__cases"         cases RE.unembed_term (embed_pair
+                                                      RE.embed_term S.t_term
+                                                      RE.embed_term S.t_term)
                                                   (E.pair_typ S.t_term S.t_term);
 
-      mktac0 "__top_env"       top_env     embed_env RD.fstar_refl_env;
-      mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
-      mktac0 "__cur_goal"      cur_goal'   embed_term S.t_term;
-      mktac0 "__cur_witness"   cur_witness embed_term S.t_term;
+      mktac0 "__top_env"       top_env     RE.embed_env RD.fstar_refl_env;
+      mktac0 "__cur_env"       cur_env     RE.embed_env RD.fstar_refl_env;
+      mktac0 "__cur_goal"      cur_goal'   RE.embed_term S.t_term;
+      mktac0 "__cur_witness"   cur_witness RE.embed_term S.t_term;
       mktac0 "__is_guard"      is_guard    embed_bool t_bool;
 
-      mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term S.t_term;
-      mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
+      mktac2 "__uvar_env"      uvar_env RE.unembed_env (unembed_option RE.unembed_term) RE.embed_term S.t_term;
+      mktac2 "__unify"         unify RE.unembed_term RE.unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
 
-      mktac2 "__fresh_binder_named"  fresh_binder_named unembed_string unembed_term embed_binder S.t_binder;
+      mktac2 "__fresh_binder_named"  fresh_binder_named unembed_string RE.unembed_term RE.embed_binder S.t_binder;
 
       decr_depth_step;
       incr_depth_step;
