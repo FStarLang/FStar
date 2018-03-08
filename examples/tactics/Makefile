@@ -5,6 +5,7 @@ include ../Makefile.include
 
 all:	Apply.uver		\
 	Canon.uver		\
+	CanonMonoid.uver	\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\

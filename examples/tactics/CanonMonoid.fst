@@ -29,6 +29,7 @@ let rec mdenote (#a:Type) (m:monoid a) (e:exp a) : a =
 let rec mldenote (#a:Type) (m:monoid a) (xs:list a) : a =
   match xs with
   | [] -> Monoid?.unit m
+  | [x] -> x
   | x::xs' -> Monoid?.mult m x (mldenote m xs')
 
 let rec flatten (#a:Type) (e:exp a) : list a =
@@ -60,7 +61,7 @@ let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
     : squash (mdenote m e1 == mdenote m e2) =
   flatten_correct m e1; flatten_correct m e2
 
-// TODO: this is not very efficieny,
+// TODO: this is not very efficient, but not sure it matters
 //       for instance there is delta reduction that happens repeatedly
 let rec reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
   let hd, tl = collect_app_ref me in
@@ -122,8 +123,8 @@ let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
         //     "; r2=" ^ exp_to_string a_to_string r2);
         change_sq (quote (mdenote m r1 == mdenote m r2));
         apply (`monoid_reflect);
-        norm [delta_only ["ReflectionMonoid.mldenote";
-                          "ReflectionMonoid.flatten";
+        norm [delta_only ["CanonMonoid.mldenote";
+                          "CanonMonoid.flatten";
                           "FStar.List.Tot.Base.op_At";
                           "FStar.List.Tot.Base.append"]]; dump "done"
       else fail "Goal should be an equality at the right monoid type"
