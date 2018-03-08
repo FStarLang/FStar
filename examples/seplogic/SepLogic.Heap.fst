@@ -48,7 +48,7 @@ let disjoint_heaps_comm h0 h1 = ()
 
 private let init_heap : heap = 
   let memory = fun r -> None in
-  { next_addr = 0; memory = memory}
+  {next_addr = 0; memory = memory}
 
 private let lemma_init_heap_emp ()
   : Lemma (emp (init_heap))
@@ -73,13 +73,13 @@ private let lemma_join_tot_emp (h0 h1:heap)
            SMTPat (emp h1)]
   = lemma_join_tot_emp' h0 h1
 
-private let emp_unit'  (p:hpred) (h:heap) (h0 h1:heap)
+private let sep_emp'  (p:hpred) (h:heap) (h0 h1:heap)
   : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
   = lemma_join_tot_emp h0 h1
 
 let sep_emp p h = 
   sep_interp p emp h;
-  FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit' p h h0 h1));
+  FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> sep_emp' p h h0 h1));
   FStar.Classical.move_requires (fun h -> 
     FStar.Classical.exists_intro (fun h1 -> exists h0 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) init_heap) h
   
@@ -225,6 +225,8 @@ let minus_contains #a r h = ()
 let restrict_points_to #a r h = ()
 
 let disjoint_heaps_restrict_minus #a r h = ()
+
+let disjoint_heaps_minus #a r h = ()
 
 private let join_tot_restrict_minus' (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))

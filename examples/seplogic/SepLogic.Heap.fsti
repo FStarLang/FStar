@@ -20,14 +20,15 @@ val join_tot: h1:heap -> h2:heap -> Tot heap
 
 val disjoint : #a:Type0 -> #b:Type0 -> ref a -> ref b -> Type0
 
-val disjoint_comm (#a:Type0) (#b:Type0) (r:ref a) (r':ref b)
-  : Lemma (requires (disjoint r r'))
-          (ensures  (disjoint r' r))
+val disjoint_comm (#a:Type0) (#b:Type0) (r0:ref a) (r1:ref b)
+  : Lemma (requires (disjoint r0 r1))
+          (ensures  (disjoint r1 r0))
 
 val disjoint_heaps : heap -> heap -> Type0
 
 val disjoint_heaps_emp (h0 h1:heap)
-  : Lemma (emp h1 ==> disjoint_heaps h0 h1)
+  : Lemma (requires (emp h1)) 
+          (ensures  (disjoint_heaps h0 h1))
           [SMTPat (disjoint_heaps h0 h1); 
            SMTPat (emp h1)]
 
@@ -60,8 +61,10 @@ val points_to_contains (#a:Type) (r:ref a) (x:a) (h:heap)
            SMTPat (h `contains` r)]
 
 val points_to_disj (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap)
-    : Lemma (requires (r |> x <*> s |> y) h)
+    : Lemma (requires ((r |> x <*> s |> y) h))
             (ensures  (disjoint r s))
+            [SMTPat ((r |> x <*> s |> y) h);
+             SMTPat (disjoint r s)]
 
 val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot a
 val upd_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> x:a -> Tot heap
@@ -98,9 +101,14 @@ val disjoint_heaps_restrict_minus (#a:Type0) (r:ref a) (h:heap)
           (ensures  (disjoint_heaps (restrict h r) (minus h r)))
           [SMTPat (disjoint_heaps (restrict h r) (minus h r))]
 
+val disjoint_heaps_minus (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r /\ (exists x . (r |> x) h)))
+          (ensures  (disjoint_heaps (minus h r) h))
+          [SMTPat (disjoint_heaps (minus h r) h)]
+
 val join_tot_restrict_minus (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))
-          (ensures  (h == join_tot (restrict h r) (minus h r)))
+          (ensures  (join_tot (restrict h r) (minus h r) == h))
           [SMTPat (join_tot (restrict h r) (minus h r))]
 
 val join_tot_minus_restrict (#a:Type0) (r:ref a) (h:heap)
