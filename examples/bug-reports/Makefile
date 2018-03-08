@@ -28,8 +28,8 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug590.fst bug601.fst bug605.fst bug609.fst bug613.fst bug686.fst bug705.fst bug706.fst bug707.fst bug709.fst\
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug836.fst bug844.fst bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
-  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1362.fst bug1291.fst \
-  bug1287.fst bug1347.fst bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst
+  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1362.fst \
+  bug1347.fst bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
@@ -51,7 +51,8 @@ SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug607.fst bug812.f
 # described in their corresponding GitHub issue.
 SHOULD_VERIFY_NOT_WORKING=bug015.fst bug021.fst bug023.fst  bug060.fst bug062.fst bug029.fst bug096.fst bug097a.fst\
   bug100.fst bug101.fst bug111.fst bug117.fst bug148.fst bug179.fst bug184b.fst bug185.fst bug189.fst bug203.fst\
-  bug237.fst bug295.fst bug377.fst bug389.fst bug422.fst bug463a.fst bug713.fst bug974.fst
+  bug237.fst bug295.fst bug377.fst bug389.fst bug422.fst bug463a.fst bug713.fst bug974.fst \
+  bug1287.fst bug1291.fst # library changed
 
 
 ##################
