@@ -302,6 +302,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
           g, [return_decl;bind_decl]@actions
 
+        | Sig_splice _ ->
+          failwith "impossible: trying to extract splice"
+
         | Sig_new_effect _ ->
           g, []
 

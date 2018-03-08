@@ -2301,7 +2301,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     in
     match se.sigel with
      | Sig_new_effect_for_free _ ->
-         failwith "impossible -- removed by tc.fs"
+         failwith "impossible -- new_effect_for_free should have been removed by Tc.fs"
+     | Sig_splice _ ->
+         failwith "impossible -- splice should have been removed by Tc.fs"
      | Sig_pragma _
      | Sig_main _
      | Sig_effect_abbrev _

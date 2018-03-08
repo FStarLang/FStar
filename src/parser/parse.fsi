@@ -23,6 +23,7 @@ type token =
   | TOTAL
   | TILDE of (string)
   | THEN
+  | SPLICE
   | SUB_EFFECT
   | SUBTYPE
   | SUBKIND
@@ -166,6 +167,7 @@ type tokenId =
     | TOKEN_TOTAL
     | TOKEN_TILDE
     | TOKEN_THEN
+    | TOKEN_SPLICE
     | TOKEN_SUB_EFFECT
     | TOKEN_SUBTYPE
     | TOKEN_SUBKIND

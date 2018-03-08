@@ -2482,6 +2482,15 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [] } in
     env, [se]
 
+  | Splice t ->
+    let t = desugar_term env t in
+    let se = { sigel = Sig_splice(t);
+               sigquals = [];
+               sigrng = d.drange;
+               sigmeta = default_sigmeta;
+               sigattrs = [] } in
+    env, [se]
+
 let desugar_decls env decls =
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
