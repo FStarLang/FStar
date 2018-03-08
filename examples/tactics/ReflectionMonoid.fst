@@ -55,9 +55,9 @@ let rec flatten_correct (#a:Type) (m:monoid a) (e:exp a) :
   | Mult e1 e2 -> flatten_correct_aux m (flatten e1) (flatten e2);
                   flatten_correct m e1; flatten_correct m e2
 
-let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a) :
-    Lemma (requires (mldenote m (flatten e1) == mldenote m (flatten e2)))
-          (ensures (mdenote m e1 == mdenote m e2)) =
+let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
+    (_ : squash (mldenote m (flatten e1) == mldenote m (flatten e2)))
+    : squash (mdenote m e1 == mdenote m e2) =
   flatten_correct m e1; flatten_correct m e2
 
   // Ltac reify me :=
@@ -94,7 +94,7 @@ let change t1 =
     focus (fun () ->
         let t = mk_app (`conv) [(t1, Q_Implicit)] in
         apply t;
-        norm [delta;primops];
+        norm [delta;primops;zeta];
         trefl ()
     )
 
@@ -120,13 +120,16 @@ let canon_monoid (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
         // dump ("r1=" ^ exp_to_string a_to_string r1 ^
         //     "; r2=" ^ exp_to_string a_to_string r2);
         change_sq (quote (mdenote m r1 == mdenote m r2));
-        mapply (quote (monoid_reflect m r1 r2)); simpl()
+        apply (`monoid_reflect);
+        simpl()
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c) + d)
-  (fun _ -> canon_monoid int_plus_monoid string_of_int; trefl())
+  (fun _ -> canon_monoid int_plus_monoid string_of_int;
+            norm [delta;primops;zeta];
+            trefl())
 
-(* TODO: should extend this to a commutative monoid and 
+(* TODO: should extend this to a commutative monoid and
          sort the list to prove things like a + b = b + a; *)
