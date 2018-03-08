@@ -150,7 +150,21 @@ let rec inspect (t:term) : term_view =
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            Tv_Let (b, lb.lbdef, t2)
+            Tv_Let (false, b, lb.lbdef, t2)
+        end
+
+    | Tm_let ((true, [lb]), t2) ->
+        if lb.lbunivs <> [] then Tv_Unknown else
+        begin match lb.lbname with
+        | BU.Inr _ -> Tv_Unknown // no top level lets
+        | BU.Inl bv ->
+            let lbs, t2 = SS.open_let_rec [lb] t2 in
+            match lbs with
+            | [lb] ->
+                (match lb.lbname with
+                 | BU.Inr _ -> Tv_Unknown
+                 | BU.Inl bv -> Tv_Let (true, S.mk_binder bv, lb.lbdef, t2))
+            | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
     | Tm_match (t, brs) ->
@@ -231,10 +245,17 @@ let pack (tv:term_view) : term =
     | Tv_Uvar (u, t) ->
         U.uvar_from_id (Z.to_int_fs u) t
 
-    | Tv_Let (b, t1, t2) ->
+    | Tv_Let (false, b, t1, t2) ->
         let bv = fst b in
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
         S.mk (Tm_let ((false, [lb]), SS.close [b] t2)) None Range.dummyRange
+
+    | Tv_Let (true, b, t1, t2) ->
+        let bv = fst b in
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+        let lbs_open, body_open = SS.open_let_rec [lb] t2 in
+        let lbs, body = SS.close_let_rec [lb] body_open in
+        S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
