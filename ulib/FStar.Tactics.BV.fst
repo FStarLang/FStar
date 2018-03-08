@@ -158,7 +158,7 @@ let arith_to_bv_tac () : Tac unit =
             seq (fun () -> arith_expr_to_bv e) trefl
         end
     | _ ->
-        fail ("impossible: ")
+        fail ("arith_to_bv_tac: unexpected: " ^ term_to_string g)
 
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
