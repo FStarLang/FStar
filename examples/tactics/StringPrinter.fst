@@ -538,3 +538,66 @@ let z (x: U32.t) : Tot (m_sz (example x)) =
 inline_for_extraction
 let test (x: U32.t) : Tot (option U32.t) =
   log_size (z x)
+
+module B = FStar.Buffer
+module HST = FStar.HyperStack.ST
+
+type m_st #t (f: m t) =
+  (b: B.buffer U8.t) ->
+  HST.StackInline (t * B.buffer U8.t)
+  (requires (fun h ->
+    B.live h b /\
+    S.length (log f) <= B.length b
+  ))
+  (ensures (fun h (r, b') h' ->
+    let (r', log) = f () in
+    let sz = U32.uint_to_t (S.length log) in
+    let bl = B.sub b 0ul sz in
+    r' == r /\
+    B.modifies_1 bl h h' /\
+    B.as_seq h' bl == log /\
+    b' == B.sub b sz (U32.uint_to_t (B.length b - S.length log))
+  ))
+
+inline_for_extraction
+let ret_st (#t: Type0) (x: t) : Tot (m_st (ret x)) =
+  fun b -> (x, b)
+
+module G = FStar.Ghost
+
+#reset-options "--z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+
+inline_for_extraction
+let bind_st
+  (#t1 #t2: Type0)
+  (#x: m t1)
+  (x_st: m_st x)
+  (#y: t1 -> Tot (m t2))
+  (y_st: (r: t1) -> Tot (m_st (y r)))
+: Tot (m_st (bind x y))
+= fun b ->
+  let h = HST.get () in
+  let (rx, br_x) = x_st b in
+  let hx = HST.get () in
+  let (ry, br) = y_st rx br_x in
+  let h' = HST.get () in
+  let len_bl : G.erased U32.t = G.hide (U32.uint_to_t (B.length b - B.length br)) in
+  let len_bl_x : G.erased U32.t = G.hide (U32.uint_to_t (B.length b - B.length br_x)) in
+  let bl : G.erased (B.buffer U8.t) = G.hide (B.sub b 0ul (G.reveal len_bl)) in
+  let bl_x : G.erased (B.buffer U8.t) = G.hide (B.sub b 0ul (G.reveal len_bl_x)) in
+  assert (B.modifies_1 (G.reveal bl_x) h hx);
+  assert (G.reveal bl_x == B.sub (G.reveal bl) 0ul (G.reveal len_bl_x));
+  assert (B.modifies_1 (G.reveal bl) h hx);
+  let len_bl_y : G.erased U32.t = G.hide (U32.uint_to_t (B.length br_x - B.length br)) in
+  let bl_y : G.erased (B.buffer U8.t) = G.hide (B.sub br_x 0ul (G.reveal len_bl_y)) in
+  assert (B.modifies_1 (G.reveal bl_y) hx h');
+  assert (G.reveal bl_y == B.sub (G.reveal bl) (G.reveal len_bl_x) (G.reveal len_bl_y));
+  assert (B.modifies_1 (G.reveal bl) hx h');
+  assert (B.as_seq h' (G.reveal bl_x) == log x);
+  assert (B.as_seq h' (G.reveal bl_y) == log (y (fst (x ()))));
+  assert (S.equal (B.as_seq h' (G.reveal bl)) (S.append (B.as_seq h' (G.reveal bl_x)) (B.as_seq h' (G.reveal bl_y))));
+  (ry, br)
+
+#reset-options
+
+#set-options "--use_two_phase_tc true"
