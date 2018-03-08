@@ -17,7 +17,7 @@ val smaller : term_view -> term -> Type0
 let smaller tv t =
     match tv with
     | Tv_App l r ->
-        l << t /\ r << t
+        l << t /\ r << t /\ fst r << t
 
     | Tv_Abs b t'
     | Tv_Arrow b t'
