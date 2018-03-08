@@ -274,8 +274,15 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
          tcmod, env
        | Some (tcmod, tcmod_iface_opt, mii) ->
-         let tcmod = if is_some tcmod_iface_opt then tcmod_iface_opt |> must else tcmod in
-         if Options.dump_module tcmod.name.str then BU.print1 "Adding to env this from cache: %s\n" (Syntax.Print.modul_to_string tcmod);
+         let tcmod =
+           //if use_extracted_interfaces is set, and tcmod is not an interface, we better find an interface in the cache file
+           if Options.use_extracted_interfaces () && not tcmod.is_interface then
+             if tcmod_iface_opt = None then
+               Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces is set, but could not find the interface in the cache for: " ^ tcmod.name.str)
+                                  Range.dummyRange
+             else tcmod_iface_opt |> must
+          else tcmod
+         in
          let _, env =
             with_tcenv env <|
             FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
