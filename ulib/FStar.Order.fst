@@ -25,10 +25,10 @@ let eq o = o = Eq
 // Lexicographical combination, thunked to be lazy
 val lex : order -> (unit -> order) -> order
 let lex o1 o2 =
-    match o1, o2 with
-    | Lt, _ -> Lt
-    | Eq, _ -> o2 ()
-    | Gt, _ -> Gt
+    match o1 with
+    | Lt -> Lt
+    | Eq -> o2 ()
+    | Gt -> Gt
 
 val order_from_int : int -> order
 let order_from_int i =
