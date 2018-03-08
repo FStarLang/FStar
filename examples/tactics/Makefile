@@ -12,7 +12,6 @@ all:	Apply.uver		\
 	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
-	Splice.uver		\
 	Tutorial.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
@@ -50,6 +49,7 @@ all:	Apply.uver		\
 	MetaCoq.uver		\
 	neg
 	# launch			\
+	# Splice.uver		\
 
 launch: Launch.fst
 	$(FSTAR) --unsafe_tactic_exec $^
