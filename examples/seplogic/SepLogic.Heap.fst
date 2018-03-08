@@ -94,7 +94,7 @@ private let lemma_sep_comm (p q:hpred) (h h0 h1:heap)
   : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1) 
            ==> 
            (exists h0 h1 . disjoint_heaps h1 h0 /\ h == join_tot h1 h0 /\ p h0 /\ q h1))
-  = lemma_join_tot_comm h0 h1
+  = join_tot_comm h0 h1
 
 private let lemma_sep_comm' (p q:hpred) (h:heap)
   : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1) 
