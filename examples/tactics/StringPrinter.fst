@@ -342,12 +342,21 @@ let coerce_sz
   (ft1: m t)
   (ft1_sz: m_sz ft1)
   (ft2: m t)
-: Pure (m_sz ft2)
-  (requires (ft1 () == ft2 ()))
-  (ensures (fun _ -> True))
+  (u: cond_eq (ft1 ()) (ft2 ()))
+: Tot (m_sz ft2)
 = fun g -> ft1_sz g
 
-let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
+let rec compile
+  (
+    ret_sz_tm
+    bind_sz_tm
+    seq_sz_tm
+    print_char_sz_tm
+    coerce_sz_tm
+    ifthenelse_sz_tm
+  : T.term)
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
   //(decreases (LexCons fuel (LexCons t LexTop)))
 =
   let open T in
@@ -364,7 +373,6 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
     if tm_eq_fvar f r
     then begin
       print "is RET";
-      let ret_sz_tm = quote ret_sz in
       let res = mk_app ret_sz_tm (neutralize_argv t ar) in
       print (term_to_string res);
       res
@@ -376,14 +384,13 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
         print "4 arguments" ;
         begin match T.inspect y with
         | T.Tv_Abs v y' ->
-          let x_ = mk_sz fuel t1 x in
+          let x_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t1 x in
           let v' = pack (T.Tv_Var v) in
           let t2' = mk_app t2 [
             v', Q_Explicit;
           ]
           in
-          let y_ = mk_sz fuel t2' y' in
-          let bind_sz_tm = quote bind_sz in
+          let y_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t2' y' in
           let res = mk_app bind_sz_tm [
             (t1, Q_Implicit);
             (t2, Q_Implicit);
@@ -395,13 +402,12 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
           in
           print (term_to_string res);
           res
-        | _ -> fail ("mk_sz: Not an abstraction: " ^ term_to_string y)
+        | _ -> fail ("compile: Not an abstraction: " ^ term_to_string y)
         end
-      | _ -> fail ("mk_sz: Not the right number of arguments (expected 4, found " ^ string_of_int (L.length ar) ^ ")")
+      | _ -> fail ("compile: Not the right number of arguments (expected 4, found " ^ string_of_int (L.length ar) ^ ")")
     end else if tm_eq_fvar f p
     then begin
       print "is PRINT_CHAR";
-      let print_char_sz_tm = quote print_char_sz in
       let res = mk_app print_char_sz_tm (neutralize_argv t ar) in
       print (term_to_string res) ;
       res
@@ -411,9 +417,8 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
       match ar with
       | [ (t2, _); (x, _); (y, _) ] ->
         let q = quote unit in
-        let x_ = mk_sz fuel q x in
-        let y_ = mk_sz fuel t2 y in
-        let seq_sz_tm = quote seq_sz in
+        let x_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel q x in
+        let y_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t2 y in
         let res = mk_app seq_sz_tm [
           (t2, Q_Explicit);
           (x, Q_Explicit);
@@ -424,24 +429,25 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
         in
         print (term_to_string res);
         res
-      | _ -> fail ("mk_sz: Not the right number of arguments (expected 3, found " ^ string_of_int (L.length ar) ^ ")")
+      | _ -> fail ("compile: Not the right number of arguments (expected 3, found " ^ string_of_int (L.length ar) ^ ")")
     end else begin
       print "is something else" ;
       if fuel = 0
-      then fail "mk_sz: Not enough unfolding fuel"
+      then fail "compile: Not enough unfolding fuel"
       else
         let v' = unfold_fv v in
         let t' = mk_app v' (neutralize_argv t ar) in
         // unfolding might have introduced a redex,
         // so we find an opportunity to reduce it here
         let t' = T.norm_term [Prims.iota] t' in // beta implicit
-        let res' = mk_sz (fuel - 1) ty t' in
-        let q = quote coerce_sz in
-        let res = T.mk_app q [
+        let res' = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty t' in
+        let u = quote () in
+        let res = T.mk_app coerce_sz_tm [
           ty, T.Q_Explicit;
           t', T.Q_Explicit;
           res', T.Q_Explicit;
           t, T.Q_Explicit;
+          u, T.Q_Explicit;
         ]
         in
         res
@@ -453,16 +459,15 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
     let ut = T.mk_app ct [cond, T.Q_Explicit] in
     let vt = T.fresh_binder ut in
     let ft = T.pack (T.Tv_Abs vt tt) in
-    let ft_sz_body = mk_sz (fuel - 1) ty tt in
+    let ft_sz_body = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty tt in
     let ft_sz = T.pack (T.Tv_Abs vt ft_sz_body) in
     let cf = quote (cond_eq false) in
     let uf = T.mk_app cf [cond, T.Q_Explicit] in
     let vf = T.fresh_binder uf in
     let ff = T.pack (T.Tv_Abs vf tf) in
-    let ff_sz_body = mk_sz (fuel - 1) ty tf in
+    let ff_sz_body = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty tf in
     let ff_sz = T.pack (T.Tv_Abs vf ff_sz_body) in
-    let i = quote ifthenelse_sz in
-    T.mk_app i [
+    T.mk_app ifthenelse_sz_tm [
       ty, T.Q_Explicit;
       cond, T.Q_Explicit;
       ft, T.Q_Explicit;
@@ -471,6 +476,20 @@ let rec mk_sz (fuel: nat) (ty: T.term) (t: T.term) : T.Tac T.term
       ff_sz, T.Q_Explicit;
     ]
   | _ -> T.fail ("head is not a Tv_FVar, we have instead: " ^ T.term_to_string t)
+
+let mk_sz
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
+= compile
+    (quote ret_sz)
+    (quote bind_sz)
+    (quote seq_sz)
+    (quote print_char_sz)
+    (quote coerce_sz)
+    (quote ifthenelse_sz)
+    fuel
+    ty
+    t
 
 let unfold_ (#t: Type) (x: t) : T.Tac T.term =
   let open T in
@@ -541,6 +560,20 @@ let test (x: U32.t) : Tot (option U32.t) =
 
 module B = FStar.Buffer
 module HST = FStar.HyperStack.ST
+module HS = FStar.HyperStack
+
+let m_st_post (#t: Type) (f: m t) (b: B.buffer U8.t) (h: HS.mem) (rb': t * B.buffer U8.t) (h': HS.mem) : GTot Type0 =
+  B.live h b /\
+  S.length (log f) <= B.length b /\ (
+    let (r, b') = rb' in
+    let (r', log) = f () in
+    let sz = U32.uint_to_t (S.length log) in
+    let bl = B.sub b 0ul sz in
+    r' == r /\
+    B.modifies_1 bl h h' /\
+    B.as_seq h' bl == log /\
+    b' == B.sub b sz (U32.uint_to_t (B.length b - S.length log))
+  )
 
 type m_st #t (f: m t) =
   (b: B.buffer U8.t) ->
@@ -549,14 +582,8 @@ type m_st #t (f: m t) =
     B.live h b /\
     S.length (log f) <= B.length b
   ))
-  (ensures (fun h (r, b') h' ->
-    let (r', log) = f () in
-    let sz = U32.uint_to_t (S.length log) in
-    let bl = B.sub b 0ul sz in
-    r' == r /\
-    B.modifies_1 bl h h' /\
-    B.as_seq h' bl == log /\
-    b' == B.sub b sz (U32.uint_to_t (B.length b - S.length log))
+  (ensures (fun h rb' h' ->
+    m_st_post f b h rb' h'
   ))
 
 inline_for_extraction
@@ -636,3 +663,38 @@ let ifthenelse_st
     if c
     then ft_st () b
     else ff_st () b
+
+inline_for_extraction
+let coerce_st
+  (t: Type0)
+  (ft1: m t)
+  (ft1_st: m_st ft1)
+  (ft2: m t)
+  (u: unit { ft1 () == ft2 () } )
+: Tot (m_st ft2)
+= fun b -> ft1_st b
+
+let mk_st
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
+= compile
+    (quote ret_st)
+    (quote bind_st)
+    (quote seq_st)
+    (quote print_char_st)
+    (quote coerce_st)
+    (quote ifthenelse_st)
+    fuel
+    ty
+    t
+
+let test_tac_st (#ty: Type0) (m: m ty) : T.Tac unit =
+  let open T in
+    let x = quote m in
+    let ty' = quote ty in
+    let t = mk_st 2 ty' x in
+    exact_guard t
+
+inline_for_extraction
+let z_st (x: U32.t) : Tot (m_st (example x)) =
+  T.synth_by_tactic (fun () -> test_tac_st (example x))
