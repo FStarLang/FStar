@@ -28,10 +28,11 @@ module E = FStar.Tactics.Embedding
 module Core = FStar.Tactics.Basic
 open FStar.Syntax.Embeddings
 open FStar.Reflection.Basic
-open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
 module RE = FStar.Reflection.Embeddings
 open FStar.Tactics.Native
+
+(* TODO: GM: This file is awful, clean it up *)
 
 let tacdbg = BU.mk_ref false
 
@@ -157,6 +158,24 @@ let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+(* Why total? There are tactics which simply do syntax handling, and do not need
+ * to be in the tactic monad here in the compiler. However they must be marked
+ * as effectful in the users view to maintain soundness (effects are unification, gensym,
+ * Subst.compress, variable conventions and more!), and return a Tac result. So we
+ * handle them here, simply lifting the result into the userland monad *)
+let mk_total_interpretation_1 (f : 'a -> 'r)
+                              (unembed_a:unembedder<'a>)
+                              (embed_r:embedder<'r>) (t_r:typ)
+                              (nm:Ident.lid) (psc:N.psc) (args : args) : option<term> =
+    mk_tactic_interpretation_1 (fun x -> ret (f x)) unembed_a embed_r t_r nm psc args
+
+let mk_total_interpretation_2 (f : 'a -> 'b -> 'r)
+                              (unembed_a:unembedder<'a>)
+                              (unembed_b:unembedder<'b>)
+                              (embed_r:embedder<'r>) (t_r:typ)
+                              (nm:Ident.lid) (psc:N.psc) (args : args) : option<term> =
+    mk_tactic_interpretation_2 (fun x y -> ret (f x y)) unembed_a unembed_b embed_r t_r nm psc args
+
 let step_from_native_step (s: native_primitive_step): N.primitive_step =
     { N.name=s.name;
       N.arity=s.arity;
@@ -199,6 +218,17 @@ let rec primitive_steps () : list<N.primitive_step> =
                (u_d : unembedder<'d>) (u_e : unembedder<'e>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
         mk name 6 (mk_tactic_interpretation_5 f u_a u_b u_c u_d u_e e_r tr)
+    in
+    let mktot1 (name : string) (f : 'a -> 'r)
+               (u_a : unembedder<'a>)
+               (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
+        mk name 2 (mk_total_interpretation_1 f u_a e_r tr)
+    in
+    let mktot2 (name : string) (f : 'a -> 'b -> 'r)
+               (u_a : unembedder<'a>)
+               (u_b : unembedder<'b>)
+               (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
+        mk name 3 (mk_total_interpretation_2 f u_a u_b e_r tr)
     in
     let decr_depth_interp psc (args : args) =
         match args with
@@ -342,11 +372,36 @@ let rec primitive_steps () : list<N.primitive_step> =
 
       mktac2 "__fresh_binder_named"  fresh_binder_named unembed_string RE.unembed_term RE.embed_binder S.t_binder;
 
+
+
+      mktot1 "__inspect"       inspect RE.unembed_term RE.embed_term_view RD.fstar_refl_term_view;
+      mktot1 "__pack"          pack    RE.unembed_term_view RE.embed_term S.t_term;
+
+      mktot1 "__inspect_fv"    inspect_fv RE.unembed_fvar embed_string_list  (S.t_list_of S.t_string);
+      mktot1 "__pack_fv"       pack_fv (unembed_list unembed_string) RE.embed_fvar RD.fstar_refl_fv;
+
+      mktot1 "__inspect_comp"  inspect_comp RE.unembed_comp RE.embed_comp_view RD.fstar_refl_comp_view;
+      mktot1 "__pack_comp"     pack_comp RE.unembed_comp_view RE.embed_comp    RD.fstar_refl_comp;
+
+      mktot1 "__inspect_sigelt" inspect_sigelt RE.unembed_sigelt RE.embed_sigelt_view RD.fstar_refl_sigelt_view;
+      mktot1 "__pack_sigelt"    pack_sigelt RE.unembed_sigelt_view RE.embed_sigelt    RD.fstar_refl_sigelt;
+
+      mktot1 "__inspect_bv"     inspect_bv RE.unembed_binder embed_string S.t_string;
+      mktot2 "__compare_binder" compare_binder RE.unembed_binder RE.unembed_binder RE.embed_order S.t_order;
+      mktot1 "__type_of_binder" type_of_binder RE.unembed_binder RE.embed_term S.t_term;
+      mktot2 "__is_free"        is_free RE.unembed_binder RE.unembed_term embed_bool S.t_bool;
+
+      mktot2 "__term_eq"        term_eq RE.unembed_term RE.unembed_term embed_bool S.t_bool;
+
+      mktot1 "__term_to_string" term_to_string RE.unembed_term embed_string S.t_string;
+      mktot1 "__binders_of_env" binders_of_env RE.unembed_env RE.embed_binders (S.t_list_of RD.fstar_refl_binder);
+      mktot2 "__lookup_typ"     lookup_typ RE.unembed_env unembed_string_list (embed_option RE.embed_sigelt RD.fstar_refl_sigelt) (S.t_list_of S.t_string);
+
       decr_depth_step;
       incr_depth_step;
       tracepoint_step;
       set_proofstate_range_step;
-    ]@reflection_primops @native_tactics_steps
+    ]@native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 
@@ -679,7 +734,7 @@ let synth (env:Env.env) (typ:typ) (tau:term) : term =
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     tacdbg := Env.debug env (Options.Other "Tac");
-    let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
+    let typ = RD.fstar_refl_decls in // running with goal type FStar.Reflection.Data.decls
     let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.

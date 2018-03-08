@@ -10,7 +10,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
         Pointer.Base \
 	Pointer BufferNG Tactics.Builtins \
         TaggedUnion \
-	Reflection.Types Reflection.Basic Reflection.Data \
+	Reflection.Types Reflection.Data \
 	Tactics.Result Tactics.Types Bytes Util \
 	Pervasives Order Range \
         Vector.Base Vector.Properties Vector

@@ -57,7 +57,6 @@
     <Compile Include="FStar.Reflection.Basic.fs" />
     <Compile Include="FStar.Reflection.Embeddings.fsi" />
     <Compile Include="FStar.Reflection.Embeddings.fs" />
-    <Compile Include="FStar.Reflection.Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

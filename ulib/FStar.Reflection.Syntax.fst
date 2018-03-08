@@ -1,9 +1,9 @@
 module FStar.Reflection.Syntax
 
 open FStar.Reflection.Types
-open FStar.Reflection.Basic
 open FStar.Reflection.Data
 open FStar.Tactics.Effect
+open FStar.Tactics.Builtins
 open FStar.Order
 
 val flatten_name : name -> Tot string

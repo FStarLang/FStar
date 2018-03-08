@@ -210,8 +210,8 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
+let order_lid      = p2l ["FStar"; "Order"; "order"]
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
-let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"

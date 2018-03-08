@@ -37,7 +37,7 @@ type env = Env.env
 type implicits = Env.implicits
 
 // Beta reduce
-let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
+let normalize s e t = N.normalize_with_primitive_steps [] s e t
 let bnorm e t = normalize [] e t
 let tts = N.term_to_string
 

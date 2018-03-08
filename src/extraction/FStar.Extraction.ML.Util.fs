@@ -377,9 +377,9 @@ let str_to_top_name s = lid_to_top_name (lid_of_str s)
 
 let fstar_syn_syn_prefix s = str_to_name ("FStar_Syntax_Syntax." ^ s)
 let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s)
-let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s)
 let fstar_refl_data_prefix s = str_to_name ("FStar_Reflection_Data." ^ s)
 let fstar_emb_basic_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s)
+let fstar_refl_emb_prefix s = str_to_name ("FStar_Reflection_Embeddings." ^ s)
 
 let mk_basic_embedding (m: emb_decl) (s: string) =
     match m with
@@ -387,8 +387,8 @@ let mk_basic_embedding (m: emb_decl) (s: string) =
     | Unembed -> fstar_emb_basic_prefix ("unembed_" ^ s)
 let mk_embedding (m: emb_decl) (s: string) =
     match m with
-    | Embed -> fstar_refl_basic_prefix ("embed_" ^ s)
-    | Unembed -> fstar_refl_basic_prefix ("unembed_" ^ s)
+    | Embed -> fstar_refl_emb_prefix ("embed_" ^ s)
+    | Unembed -> fstar_refl_emb_prefix ("unembed_" ^ s)
 
 let mk_tactic_unembedding (args: list<mlexpr'>) =
     let tac_arg = "t" in

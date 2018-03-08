@@ -515,10 +515,11 @@ val t_float       : term
 val t_char        : term
 val t_range       : term
 val t_term        : term
-val t_decls       : term
 val t_binder      : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term
 val t_option_of   : term -> term
 val unit_const    : term
+
+val t_order     : term

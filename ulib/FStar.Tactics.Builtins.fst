@@ -5,8 +5,10 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
-open FStar.Reflection.Types
 open FStar.Tactics.Types
+open FStar.Reflection.Types
+open FStar.Reflection.Data
+open FStar.Order
 
 assume private val __fail : a:Type -> string -> __tac a
 let fail (#a:Type) (msg:string) : Tac a = TAC?.reflect (__fail a msg)
@@ -289,3 +291,55 @@ for pretty-printing, since there is a fresh unaccessible integer within
 the binder too. *)
 assume val __fresh_binder_named : string -> typ -> __tac binder
 let fresh_binder_named nm t : Tac binder = TAC?.reflect (__fresh_binder_named nm t)
+
+
+
+(** Tactics for syntax handling (used to be in FStar.Reflection) *)
+
+assume private val __type_of_binder: binder -> __tac term
+let type_of_binder (b:binder) : Tac term = TAC?.reflect (__type_of_binder b)
+
+assume private val __inspect : term -> __tac term_view
+let inspect t : Tac term_view = TAC?.reflect (__inspect t)
+
+assume private val __pack : term_view -> __tac term
+let pack tv : Tac term = TAC?.reflect (__pack tv)
+
+assume private val __inspect_comp : comp -> __tac comp_view
+let inspect_comp (c:comp) : Tac comp_view = TAC?.reflect (__inspect_comp c)
+
+assume private val __pack_comp : comp_view -> __tac comp
+let pack_comp (cv:comp_view) : Tac comp = TAC?.reflect (__pack_comp cv)
+
+assume private val __inspect_sigelt : sigelt -> __tac sigelt_view
+let inspect_sigelt (se:sigelt) : Tac sigelt_view = TAC?.reflect (__inspect_sigelt se)
+
+assume private val __pack_sigelt : sigelt_view -> __tac sigelt
+let pack_sigelt (sv:sigelt_view) : Tac sigelt = TAC?.reflect (__pack_sigelt sv)
+
+assume private val __inspect_fv : fv -> __tac name
+let inspect_fv (fv:fv) : Tac name = TAC?.reflect (__inspect_fv fv)
+
+assume private val __pack_fv : name -> __tac fv
+let pack_fv (ns:name) : Tac fv = TAC?.reflect (__pack_fv ns)
+
+assume private val __lookup_typ : env -> name -> __tac (option sigelt)
+let lookup_typ (e:env) (ns:name) : Tac (option sigelt) = TAC?.reflect (__lookup_typ e ns)
+
+assume private val __compare_binder : binder -> binder -> __tac order
+let compare_binder (b1:binder) (b2:binder) : Tac order = TAC?.reflect (__compare_binder b1 b2)
+
+assume private val __inspect_bv : binder -> __tac string
+let inspect_bv (b:binder) : Tac string = TAC?.reflect (__inspect_bv b)
+
+assume private val __binders_of_env : env -> __tac binders
+let binders_of_env (e:env) : Tac binders = TAC?.reflect (__binders_of_env e)
+
+assume private val __is_free : binder -> term -> __tac bool
+let is_free (b:binder) (t:term) : Tac bool = TAC?.reflect (__is_free b t)
+
+assume private val __term_eq : term -> term -> __tac bool
+let term_eq t1 t2 : Tac bool = TAC?.reflect (__term_eq t1 t2)
+
+assume private val __term_to_string : term -> __tac string
+let term_to_string t : Tac string = TAC?.reflect (__term_to_string t)

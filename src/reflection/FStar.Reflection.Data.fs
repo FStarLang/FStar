@@ -78,11 +78,13 @@ let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 
-let fstar_refl_inspect_lid = fstar_refl_basic_lid "inspect"
+let fstar_refl_inspect_lid = Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "inspect"] Range.dummyRange
 let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_lid    = fstar_refl_basic_lid "pack"
+
+let fstar_refl_pack_lid    = Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "pack"] Range.dummyRange
 let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_fv_lid = fstar_refl_basic_lid "pack_fv"
+
+let fstar_refl_pack_fv_lid = Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "pack_fv"] Range.dummyRange
 let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
 
 (* assumed types *)
@@ -93,11 +95,13 @@ let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
 let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
 
 (* auxiliary types *)
-let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
-let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
-let fstar_refl_term_view = mk_refl_data_lid_as_term "term_view"
-let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
-let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
+let fstar_refl_aqualv      = mk_refl_data_lid_as_term "aqualv"
+let fstar_refl_comp_view   = mk_refl_data_lid_as_term "comp_view"
+let fstar_refl_term_view   = mk_refl_data_lid_as_term "term_view"
+let fstar_refl_sigelt_view = mk_refl_data_lid_as_term "sigelt_view"
+let fstar_refl_pattern     = mk_refl_data_lid_as_term "pattern"
+let fstar_refl_branch      = mk_refl_data_lid_as_term "branch"
+let fstar_refl_decls       = mk_refl_data_lid_as_term "decls"
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
