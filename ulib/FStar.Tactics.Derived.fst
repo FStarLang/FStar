@@ -5,10 +5,22 @@ open FStar.Reflection.Formula
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
+(* Common list functions, brought to the Tac effect *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
+
+val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
+let rec fold_left f x l = match l with
+  | [] -> x
+  | hd::tl -> fold_left f (f x hd) tl
+
+val fold_right: ('a -> 'b -> Tac 'b) -> list 'a -> 'b -> Tac 'b
+let rec fold_right f l x = match l with
+  | [] -> x
+  | hd::tl -> f hd (fold_right f tl x)
+
 
 // TODO: maybe we can increase a counter on each call
 let fresh_binder t = fresh_binder_named "x" t
@@ -187,11 +199,11 @@ let grewrite' (t1 t2 eq : term) : Tac unit =
     | _ ->
         fail "impossible"
 
-let mk_squash (t : term) : term =
+let mk_squash (t : term) : Tac term =
     let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
     mk_e_app sq [t]
 
-let mk_sq_eq (t1 t2 : term) : term =
+let mk_sq_eq (t1 t2 : term) : Tac term =
     let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
     mk_squash (mk_e_app eq [t1; t2])
 

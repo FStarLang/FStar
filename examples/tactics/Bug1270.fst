@@ -2,6 +2,8 @@ module Bug1270
 
 open FStar.Tactics
 
+#set-options "--admit_smt_queries true" // VC.. ugh
+
 let test =
   assert_by_tactic (True ==> True)
     (fun () ->

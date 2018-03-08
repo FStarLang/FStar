@@ -9,6 +9,10 @@ open FStar.Reflection.Data
 
 // Cannot open FStar.Tactics.Derived here
 let fresh_binder = fresh_binder_named "x"
+val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
+let rec fold_left f x l = match l with
+  | [] -> x
+  | hd::tl -> fold_left f (f x hd) tl
 
 noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
@@ -41,7 +45,9 @@ let mk_Exists (typ : term) (pred : term) : Tac formula =
     Exists b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
-    match inspect t with
+    admit(); // hard VC
+    let tv = inspect t in
+    match tv with
     | Tv_Var n ->
         Name n
 
@@ -52,8 +58,6 @@ let term_as_formula' (t:term) : Tac formula =
         else if qn = false_qn then False_
         else FV fv
 
-    // TODO: l_Forall
-    // ...or should we just try to drop all squashes?
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
@@ -91,7 +95,7 @@ let term_as_formula' (t:term) : Tac formula =
             App h0 (fst t)
         end
 
-    // This case is shady, our logical connectives are squashed and we
+    // TODO: This case is shady, our logical connectives are squashed and we
     // usually don't get arrows. Nevertheless keeping it in case it helps.
     | Tv_Arrow b c ->
         begin match inspect_comp c with
@@ -113,7 +117,7 @@ let term_as_formula' (t:term) : Tac formula =
     | _ -> 
         F_Unknown
 
-let rec is_name_imp (nm : name) (t : term) : bool =
+let rec is_name_imp (nm : name) (t : term) : Tac bool =
     begin match inspect t with
     | Tv_FVar fv ->
         if inspect_fv fv = nm
@@ -124,7 +128,7 @@ let rec is_name_imp (nm : name) (t : term) : bool =
     | _ -> false
     end
 
-let unsquash (t : term) : option term =
+let unsquash (t : term) : Tac (option term) =
     match inspect t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l
@@ -139,8 +143,8 @@ let rec term_as_formula (t:term) : Tac formula =
     | Some t ->
         term_as_formula' t
 
-let formula_as_term_view (f:formula) : Tot term_view =
-    let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
+let formula_as_term_view (f:formula) : Tac term_view =
+    let mk_app' tv args = fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
     let e = Q_Explicit in
     let i = Q_Implicit in
     match f with
@@ -177,10 +181,10 @@ let formula_as_term_view (f:formula) : Tot term_view =
     | F_Unknown ->
         Tv_Unknown
 
-let formula_as_term (f:formula) : Tot term =
+let formula_as_term (f:formula) : Tac term =
     pack (formula_as_term_view f)
 
-let formula_to_string (f:formula) : string =
+let formula_to_string (f:formula) : Tac string =
     match f with
     | True_ -> "True_"
     | False_ -> "False_"

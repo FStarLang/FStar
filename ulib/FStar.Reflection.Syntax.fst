@@ -3,6 +3,7 @@ module FStar.Reflection.Syntax
 open FStar.Reflection.Types
 open FStar.Reflection.Basic
 open FStar.Reflection.Data
+open FStar.Tactics.Effect
 open FStar.Order
 
 val flatten_name : name -> Tot string
@@ -71,26 +72,26 @@ let mul_mod_qn = ["FStar" ; "UInt" ; "mul_mod"]
 let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
 
 (* Helpers for dealing with nested applications and arrows *)
-let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
+let rec collect_app' (args : list argv) (t : term) : Tac (term * list argv) =
     match inspect t with
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
 
-val collect_app : term -> term * list argv
+val collect_app : term -> Tac (term * list argv)
 let collect_app = collect_app' []
 
-let rec mk_app (t : term) (args : list argv) : Tot term (decreases args) =
+let rec mk_app (t : term) (args : list argv) : Tac term =
     match args with
     | [] -> t
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
 
 // Helper for when all arguments are explicit
-let mk_e_app (t : term) (args : list term) : Tot term =
+let mk_e_app (t : term) (args : list term) : Tac term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decreases c) =
+let rec collect_arr' (typs : list typ) (c : comp) : Tac (list typ * comp) =
     begin match inspect_comp c with
     | C_Total t ->
         begin match inspect t with
@@ -103,31 +104,31 @@ let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decre
     | _ -> (typs, c)
     end
 
-val collect_arr : typ -> list typ * comp
+val collect_arr : typ -> Tac (list typ * comp)
 let collect_arr t =
     let (ts, c) = collect_arr' [] (pack_comp (C_Total t)) in
     (List.Tot.rev ts, c)
 
-let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
+let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder * term) =
     match inspect t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
 
-val collect_abs : term -> list binder * term
+val collect_abs : term -> Tac (list binder * term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
-let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+let fv_to_string (fv:fv) : Tac string = String.concat "." (inspect_fv fv)
 
 let binder_to_string b =
   "(" ^ inspect_bv b ^ ":" ^ term_to_string (type_of_binder b) ^ ")"
 
-let compare_fv (f1 f2 : fv) : order =
+let compare_fv (f1 f2 : fv) : Tac order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
 
-let rec compare_const (c1 c2 : vconst) : order =
+let rec compare_const (c1 c2 : vconst) : Tac order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
     | C_Int i, C_Int j -> order_from_int (i - j)
@@ -140,7 +141,15 @@ let rec compare_const (c1 c2 : vconst) : order =
     | C_False, _ -> Lt    | _, C_False -> Gt
     | C_String _, _ -> Lt | _, C_String _ -> Gt
 
-let rec compare_term (s t : term) : order =
+// Need this, no effect polymorphism
+val lex : order -> (unit -> Tac order) -> Tac order
+let lex o1 o2 =
+    match o1 with
+    | Lt -> Lt
+    | Eq -> o2 ()
+    | Gt -> Gt
+
+let rec compare_term (s t : term) : Tac order =
     match inspect s, inspect t with
     | Tv_Var sv, Tv_Var tv ->
         compare_binder sv tv
@@ -190,14 +199,14 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
     | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
-and compare_argv (a1 a2 : argv) : order =
+and compare_argv (a1 a2 : argv) : Tac order =
     let a1, q1 = a1 in
     let a2, q2 = a2 in
     match q1, q2 with
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2
-and compare_comp (c1 c2 : comp) : order =
+and compare_comp (c1 c2 : comp) : Tac order =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
@@ -209,24 +218,24 @@ and compare_comp (c1 c2 : comp) : order =
     | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
     | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
 
-let mk_stringlit (s : string) : term =
+let mk_stringlit (s : string) : Tac term =
     pack (Tv_Const (C_String s))
 
-let mk_strcat (t1 t2 : term) : term =
+let mk_strcat (t1 t2 : term) : Tac term =
     mk_e_app (pack (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
 
-let mk_cons (h t : term) : term =
+let mk_cons (h t : term) : Tac term =
    mk_e_app (pack (Tv_FVar (pack_fv cons_qn))) [h; t]
 
-let mk_cons_t (ty h t : term) : term =
+let mk_cons_t (ty h t : term) : Tac term =
    mk_app (pack (Tv_FVar (pack_fv cons_qn))) [(ty, Q_Implicit); (h, Q_Explicit); (t, Q_Explicit)]
 
-let rec mk_list (ts : list term) : term =
+let rec mk_list (ts : list term) : Tac term =
     match ts with
     | [] -> pack (Tv_FVar (pack_fv nil_qn))
     | t::ts -> mk_cons t (mk_list ts)
 
-let mktuple_n (ts : list term) : term =
+let mktuple_n (ts : list term) : Tac term =
     assume (List.Tot.length ts <= 8);
     match List.Tot.length ts with
     | 0 -> pack (Tv_Const C_Unit)
@@ -243,5 +252,5 @@ let mktuple_n (ts : list term) : term =
            in mk_e_app (pack (Tv_FVar (pack_fv qn))) ts
            end
 
-let mkpair (t1 t2 : term) : term =
+let mkpair (t1 t2 : term) : Tac term =
     mktuple_n [t1;t2]

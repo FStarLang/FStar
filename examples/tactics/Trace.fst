@@ -29,6 +29,7 @@ module Trace
  *)
 
 open FStar.Tactics
+module T = FStar.Tactics
 
 type mynat =
     | Z
@@ -40,7 +41,7 @@ let rec tick_last (ns:list string) =
   | [x] -> [x ^ "'"] // forgetting braces gave me a uvar explosion
   | x::xs -> x :: (tick_last xs)
 
-let tick (nm : fv) : fv =
+let tick (nm : fv) : Tac fv =
   let ns = inspect_fv nm in
   pack_fv (tick_last ns)
 
@@ -50,6 +51,7 @@ let cons_fst (x : 'a) (p : list 'a * 'b) : list 'a * 'b =
 let cons_fst_qn = ["Trace"; "cons_fst"]
 
 let term_is_fv hd nm =
+    admit(); // VC... surprising
     match inspect hd with
     | Tv_FVar fv -> inspect_fv fv = inspect_fv nm
     | _ -> false
@@ -63,6 +65,7 @@ type ins_info = {
 }
 
 let rec instrument_body (ii : ins_info) (t : term) : Tac term =
+  admit(); //VC
   match inspect t with
   // descend into matches
   | Tv_Match t brs -> begin
@@ -111,7 +114,7 @@ let instrument (f : 'a) : Tac unit =
     let n' = tick n in
     let all_args = intros () in
     let real, trace_arg = cutlast all_args in 
-    let real = List.Tot.map (fun b -> pack (Tv_Var b)) real in
+    let real = T.map (fun b -> pack (Tv_Var b)) real in
     let ii = {
         orig_name = n;
         ins_name = n';

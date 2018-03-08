@@ -30,6 +30,7 @@ let test2 = assert_by_tactic True
 
 
 let rec blah (t : term) : Tac term =
+    admit(); // VC
     let tv = match inspect t with
              | Tv_Var b -> Tv_Var b
              | Tv_FVar f -> Tv_FVar f

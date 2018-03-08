@@ -30,13 +30,15 @@ let clear_all_of_type (t : typ) : Tac unit =
          (List.rev bs) in
     ()
 
-#set-options "--use_two_phase_tc false"
+let tau_test () : Tac unit =
+    admit (); //VC
+    let e = cur_env () in
+    let n = List.length (binders_of_env e) in
+    let u = quote int in
+    clear_all_of_type u;
+    let e = cur_env () in
+    // We're removing two binders
+    guard (List.length (binders_of_env e) + 2 = n)
+
 let l2 (x : int) (y : bool) (z : int) =
-    assert_by_tactic (phi ==> (psi ==> xi))
-            (fun () -> let e = cur_env () in
-                       let n = List.length (binders_of_env e) in
-                       let u = quote int in
-                       clear_all_of_type u;
-                       let e = cur_env () in
-                       // We're removing two binders
-                       guard (List.length (binders_of_env e) = n - 2))
+    assert_by_tactic (phi ==> (psi ==> xi)) tau_test
