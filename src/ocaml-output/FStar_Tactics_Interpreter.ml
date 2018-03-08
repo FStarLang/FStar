@@ -623,16 +623,16 @@ let rec (primitive_steps :
           let uu____1930 =
             let uu____1933 =
               mktac0 () "__intro" (Obj.magic FStar_Tactics_Basic.intro)
-                (Obj.magic FStar_Reflection_Basic.embed_binder)
+                (Obj.magic FStar_Reflection_Embeddings.embed_binder)
                 FStar_Reflection_Data.fstar_refl_binder
                in
             let uu____1934 =
               let uu____1937 =
                 let uu____1938 =
                   FStar_Syntax_Embeddings.embed_pair
-                    FStar_Reflection_Basic.embed_binder
+                    FStar_Reflection_Embeddings.embed_binder
                     FStar_Reflection_Data.fstar_refl_binder
-                    FStar_Reflection_Basic.embed_binder
+                    FStar_Reflection_Embeddings.embed_binder
                     FStar_Reflection_Data.fstar_refl_binder
                    in
                 let uu____1945 =
@@ -668,10 +668,10 @@ let rec (primitive_steps :
                            fun a440  ->
                              (Obj.magic FStar_Tactics_Basic.norm_term_env)
                                a438 a439 a440)
-                      (Obj.magic FStar_Reflection_Basic.unembed_env)
+                      (Obj.magic FStar_Reflection_Embeddings.unembed_env)
                       (Obj.magic uu____1969)
-                      (Obj.magic FStar_Reflection_Basic.unembed_term)
-                      (Obj.magic FStar_Reflection_Basic.embed_term)
+                      (Obj.magic FStar_Reflection_Embeddings.unembed_term)
+                      (Obj.magic FStar_Reflection_Embeddings.embed_term)
                       FStar_Syntax_Syntax.t_term
                      in
                   let uu____1978 =
@@ -685,7 +685,7 @@ let rec (primitive_steps :
                            fun a442  ->
                              (Obj.magic FStar_Tactics_Basic.norm_binder_type)
                                a441 a442) (Obj.magic uu____1982)
-                        (Obj.magic FStar_Reflection_Basic.unembed_binder)
+                        (Obj.magic FStar_Reflection_Embeddings.unembed_binder)
                         (Obj.magic FStar_Syntax_Embeddings.embed_unit)
                         FStar_Syntax_Syntax.t_unit
                        in
@@ -696,7 +696,8 @@ let rec (primitive_steps :
                              fun a444  ->
                                (Obj.magic FStar_Tactics_Basic.rename_to) a443
                                  a444)
-                          (Obj.magic FStar_Reflection_Basic.unembed_binder)
+                          (Obj.magic
+                             FStar_Reflection_Embeddings.unembed_binder)
                           (Obj.magic FStar_Syntax_Embeddings.unembed_string)
                           (Obj.magic FStar_Syntax_Embeddings.embed_unit)
                           FStar_Syntax_Syntax.t_unit
@@ -707,7 +708,8 @@ let rec (primitive_steps :
                             (fun a445  ->
                                (Obj.magic FStar_Tactics_Basic.binder_retype)
                                  a445)
-                            (Obj.magic FStar_Reflection_Basic.unembed_binder)
+                            (Obj.magic
+                               FStar_Reflection_Embeddings.unembed_binder)
                             (Obj.magic FStar_Syntax_Embeddings.embed_unit)
                             FStar_Syntax_Syntax.t_unit
                            in
@@ -732,7 +734,7 @@ let rec (primitive_steps :
                                      (Obj.magic FStar_Tactics_Basic.clear)
                                        a446)
                                   (Obj.magic
-                                     FStar_Reflection_Basic.unembed_binder)
+                                     FStar_Reflection_Embeddings.unembed_binder)
                                   (Obj.magic
                                      FStar_Syntax_Embeddings.embed_unit)
                                   FStar_Syntax_Syntax.t_unit
@@ -744,7 +746,7 @@ let rec (primitive_steps :
                                        (Obj.magic FStar_Tactics_Basic.rewrite)
                                          a447)
                                     (Obj.magic
-                                       FStar_Reflection_Basic.unembed_binder)
+                                       FStar_Reflection_Embeddings.unembed_binder)
                                     (Obj.magic
                                        FStar_Syntax_Embeddings.embed_unit)
                                     FStar_Syntax_Syntax.t_unit
@@ -780,7 +782,7 @@ let rec (primitive_steps :
                                           (Obj.magic
                                              FStar_Syntax_Embeddings.unembed_bool)
                                           (Obj.magic
-                                             FStar_Reflection_Basic.unembed_term)
+                                             FStar_Reflection_Embeddings.unembed_term)
                                           (Obj.magic
                                              FStar_Syntax_Embeddings.embed_unit)
                                           FStar_Syntax_Syntax.t_unit
@@ -793,7 +795,7 @@ let rec (primitive_steps :
                                                   (FStar_Tactics_Basic.apply
                                                      true)) a451)
                                             (Obj.magic
-                                               FStar_Reflection_Basic.unembed_term)
+                                               FStar_Reflection_Embeddings.unembed_term)
                                             (Obj.magic
                                                FStar_Syntax_Embeddings.embed_unit)
                                             FStar_Syntax_Syntax.t_unit
@@ -806,7 +808,7 @@ let rec (primitive_steps :
                                                     (FStar_Tactics_Basic.apply
                                                        false)) a452)
                                               (Obj.magic
-                                                 FStar_Reflection_Basic.unembed_term)
+                                                 FStar_Reflection_Embeddings.unembed_term)
                                               (Obj.magic
                                                  FStar_Syntax_Embeddings.embed_unit)
                                               FStar_Syntax_Syntax.t_unit
@@ -819,7 +821,7 @@ let rec (primitive_steps :
                                                       FStar_Tactics_Basic.apply_lemma)
                                                      a453)
                                                 (Obj.magic
-                                                   FStar_Reflection_Basic.unembed_term)
+                                                   FStar_Reflection_Embeddings.unembed_term)
                                                 (Obj.magic
                                                    FStar_Syntax_Embeddings.embed_unit)
                                                 FStar_Syntax_Syntax.t_unit
@@ -901,9 +903,9 @@ let rec (primitive_steps :
                                                               FStar_Tactics_Basic.tc)
                                                              a462)
                                                         (Obj.magic
-                                                           FStar_Reflection_Basic.unembed_term)
+                                                           FStar_Reflection_Embeddings.unembed_term)
                                                         (Obj.magic
-                                                           FStar_Reflection_Basic.embed_term)
+                                                           FStar_Reflection_Embeddings.embed_term)
                                                         FStar_Syntax_Syntax.t_term
                                                        in
                                                     let uu____2072 =
@@ -915,7 +917,7 @@ let rec (primitive_steps :
                                                                 FStar_Tactics_Basic.unshelve)
                                                                a463)
                                                           (Obj.magic
-                                                             FStar_Reflection_Basic.unembed_term)
+                                                             FStar_Reflection_Embeddings.unembed_term)
                                                           (Obj.magic
                                                              FStar_Syntax_Embeddings.embed_unit)
                                                           FStar_Syntax_Syntax.t_unit
@@ -931,7 +933,7 @@ let rec (primitive_steps :
                                                                    a464 a465)
                                                             (Obj.magic get1)
                                                             (Obj.magic
-                                                               FStar_Reflection_Basic.unembed_term)
+                                                               FStar_Reflection_Embeddings.unembed_term)
                                                             (Obj.magic put1)
                                                             FStar_Syntax_Syntax.t_unit
                                                            in
@@ -1112,9 +1114,9 @@ let rec (primitive_steps :
                                                                     let uu____2132
                                                                     =
                                                                     FStar_Syntax_Embeddings.embed_pair
-                                                                    FStar_Reflection_Basic.embed_term
+                                                                    FStar_Reflection_Embeddings.embed_term
                                                                     FStar_Syntax_Syntax.t_term
-                                                                    FStar_Reflection_Basic.embed_term
+                                                                    FStar_Reflection_Embeddings.embed_term
                                                                     FStar_Syntax_Syntax.t_term
                                                                      in
                                                                     let uu____2139
@@ -1132,7 +1134,7 @@ let rec (primitive_steps :
                                                                     FStar_Tactics_Basic.cases)
                                                                     a473)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.unembed_term)
+                                                                    FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
                                                                     uu____2132)
                                                                     uu____2139
@@ -1146,7 +1148,7 @@ let rec (primitive_steps :
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.top_env)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.embed_env)
+                                                                    FStar_Reflection_Embeddings.embed_env)
                                                                     FStar_Reflection_Data.fstar_refl_env
                                                                      in
                                                                     let uu____2150
@@ -1158,7 +1160,7 @@ let rec (primitive_steps :
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cur_env)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.embed_env)
+                                                                    FStar_Reflection_Embeddings.embed_env)
                                                                     FStar_Reflection_Data.fstar_refl_env
                                                                      in
                                                                     let uu____2154
@@ -1170,7 +1172,7 @@ let rec (primitive_steps :
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cur_goal')
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.embed_term)
+                                                                    FStar_Reflection_Embeddings.embed_term)
                                                                     FStar_Syntax_Syntax.t_term
                                                                      in
                                                                     let uu____2158
@@ -1182,7 +1184,7 @@ let rec (primitive_steps :
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cur_witness)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.embed_term)
+                                                                    FStar_Reflection_Embeddings.embed_term)
                                                                     FStar_Syntax_Syntax.t_term
                                                                      in
                                                                     let uu____2162
@@ -1204,7 +1206,7 @@ let rec (primitive_steps :
                                                                     let uu____2170
                                                                     =
                                                                     FStar_Syntax_Embeddings.unembed_option
-                                                                    FStar_Reflection_Basic.unembed_term
+                                                                    FStar_Reflection_Embeddings.unembed_term
                                                                      in
                                                                     mktac2 ()
                                                                     () ()
@@ -1217,11 +1219,11 @@ let rec (primitive_steps :
                                                                     FStar_Tactics_Basic.uvar_env)
                                                                     a474 a475)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.unembed_env)
+                                                                    FStar_Reflection_Embeddings.unembed_env)
                                                                     (Obj.magic
                                                                     uu____2170)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.embed_term)
+                                                                    FStar_Reflection_Embeddings.embed_term)
                                                                     FStar_Syntax_Syntax.t_term
                                                                      in
                                                                     let uu____2179
@@ -1239,9 +1241,9 @@ let rec (primitive_steps :
                                                                     FStar_Tactics_Basic.unify)
                                                                     a476 a477)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.unembed_term)
+                                                                    FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.unembed_term)
+                                                                    FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.embed_bool)
                                                                     FStar_Syntax_Syntax.t_bool
@@ -1290,9 +1292,9 @@ let rec (primitive_steps :
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.unembed_term)
+                                                                    FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
-                                                                    FStar_Reflection_Basic.embed_binder)
+                                                                    FStar_Reflection_Embeddings.embed_binder)
                                                                     FStar_Syntax_Syntax.t_binder
                                                                      in
                                                                     [uu____2190;
