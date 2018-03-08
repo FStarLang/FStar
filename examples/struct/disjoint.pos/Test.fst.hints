@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-      "95fe7b3e90da9598cb5e5162c8ff0af0"
+      "794fa569a03992ba6fbc925d83f2af4c"
     ],
     [
       "Test.callee",
@@ -118,7 +118,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "732b0bd85ad8f78373dd6c9df960d0cb"
+      "f77c43a6d51899ee955daf0ba7effa92"
     ],
     [
       "Test.more_struct",
@@ -175,7 +175,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "743788e17189615e5434f510524bb79e"
+      "b89cfa8c133eaed7f9970128777f31c8"
     ],
     [
       "Test.caller",
@@ -343,7 +343,7 @@
         "typing_Prims.uu___is_Cons", "unit_typing"
       ],
       0,
-      "c319541b3e026b8836bf7a2497ae2481"
+      "238b8d21f8ca49c026018506f1b3181b"
     ]
   ]
 ]
