@@ -47,19 +47,25 @@ let m_sz_res_pred
     S.length log == U32.v r
 
 let m_sz_correct
-  #t (f: m t) (g: (x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r }) ->
-  Tot (option U32.t)) (y: option U32.t)
+  #t (f: m t) (t' : Type)
+    (g: (x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r }) -> Tot t')
+    (g' : (u: unit { S.length (log f) > 4294967295 } ) -> Tot t')
+    (y: t')
 : GTot Type0
 = match f () with
   | (r, log) ->
   let l = S.length log in
   if l > 4294967295
-  then y == None
+  then y == g' ()
   else y == g r (U32.uint_to_t l) ()
  
-type m_sz #t (f: m t) = ((g: ((x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r } ) -> Tot (option U32.t))) -> Tot (y: option U32.t {
-  m_sz_correct f g y
-}))
+type m_sz #t (f: m t) = (
+  (t' : Type) ->
+  (g: ((x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r } ) -> Tot t')) -> 
+  (g' : ((u: unit { S.length (log f) > 4294967295 } ) -> Tot t')) ->
+  Tot (y: t' {
+    m_sz_correct f t' g g' y
+  }))
 
 inline_for_extraction
 let add_overflow (u v: U32.t) : Tot (y: option U32.t {
@@ -77,7 +83,7 @@ let add_overflow (u v: U32.t) : Tot (y: option U32.t {
 
 inline_for_extraction
 let ret_sz (#t: Type0) (x: t) : Tot (m_sz (ret x)) =
-  (fun g -> g x 0ul ())
+  (fun _ g _ -> g x 0ul ())
 
 let m_sz_res_pred_bind
   (#t1 #t2: Type0)
@@ -109,11 +115,11 @@ let bind_sz
   (#y: t1 -> Tot (m t2))
   (y_sz: (r: t1) -> Tot (m_sz (y r)))
 : Tot (m_sz (bind x y))
-= (fun g ->
+= (fun t' g g' ->
    [@inline_let]
-   let gx (rx: t1) (sx: U32.t) (u: unit { m_sz_res_pred x rx sx } ) : Tot (res: option U32.t { m_sz_correct (bind x y) g res } ) =
+   let gx (rx: t1) (sx: U32.t) (u: unit { m_sz_res_pred x rx sx } ) : Tot (res: t' { m_sz_correct (bind x y) t' g g' res } ) =
      [@inline_let]
-     let gy (ry: t2) (sy: U32.t) (u: unit { m_sz_res_pred (y rx) ry sy } ) : Tot (res: option U32.t { m_sz_correct (bind x y) g res } ) =
+     let gy (ry: t2) (sy: U32.t) (u: unit { m_sz_res_pred (y rx) ry sy } ) : Tot (res: t' { m_sz_correct (bind x y) t' g g' res } ) =
        [@inline_let]
        let su = U32.sub 4294967295ul sy in
        [@inline_let]
@@ -129,7 +135,7 @@ let bind_sz
              True
            )
            in
-           None
+           g' ()
          else
            [@inline_let]
            let r = U32.add sx sy in
@@ -138,26 +144,26 @@ let bind_sz
            g ry r ()
        in
        [@inline_let]
-       let _ = assert (m_sz_correct (bind x y) g res) in
+       let _ = assert (m_sz_correct (bind x y) t' g g' res) in
        res
      in
      [@inline_let]
-     let res = y_sz rx gy in
+     let res = y_sz rx t' gy g' in
      [@inline_let]
      let _ = assert (
        let (_, _) = x () in
        let (_, _) = y rx () in
-       m_sz_correct (bind x y) g res
+       m_sz_correct (bind x y) t' g g' res
      ) in
      res
    in
    [@inline_let]
-   let res : option U32.t = x_sz gx in
+   let res : t' = x_sz t' gx g' in
    [@inline_let]
    let _ = assert (
      let (rx, _) = x () in
      let (_, _) = y rx () in
-     m_sz_correct (bind x y) g res
+     m_sz_correct (bind x y) t' g g' res
    )
    in
    res
@@ -177,7 +183,7 @@ inline_for_extraction
 let print_char_sz
   (c: U8.t)
 : Tot (m_sz (print_char c))
-= fun g -> g () 1ul ()
+= fun _ g _ -> g () 1ul ()
 
 let cond_eq (#t: Type) (lhs rhs: t) : Tot Type0 =
   (u: unit { lhs == rhs } )
@@ -191,10 +197,10 @@ let ifthenelse_sz
   (ff: (cond_eq false c -> Tot (m t)))
   (ff_sz: (u: cond_eq false c ) -> m_sz (ff u))
 : Tot (m_sz (if c then ft () else ff ()))
-= fun g ->
+= fun _ g g' ->
     if c
-    then ft_sz () g
-    else ff_sz () g
+    then ft_sz () _ g g'
+    else ff_sz () _ g g'
 
 inline_for_extraction
 let destruct_pair_sz
@@ -205,9 +211,9 @@ let destruct_pair_sz
   (f: ((x1: t1) -> (x2: t2) -> cond_eq x (x1, x2) -> Tot (m t)))
   (f_sz: ((x1: t1) -> (x2: t2) -> cond_eq x (x1, x2) -> Tot (m_sz (f x1 x2 ()))))
 : Tot (m_sz (let (x1, x2) = x in f x1 x2 ()))
-= fun g ->
+= fun _ g ->
     let (x1, x2) = x in
-    f_sz x1 x2 () g
+    f_sz x1 x2 () _ g
 
 inline_for_extraction
 let log_size
@@ -225,7 +231,7 @@ let log_size
       let (Some sz') = y in
       U32.v sz' == sz
   ))))
-= f_sz (fun _ r _ -> Some r)
+= f_sz _ (fun _ r _ -> Some r) (fun _ -> None)
 
 module Cast = FStar.Int.Cast
 
@@ -344,7 +350,7 @@ let coerce_sz
   (ft2: m t)
   (u: cond_eq (ft1 ()) (ft2 ()))
 : Tot (m_sz ft2)
-= fun g -> ft1_sz g
+= fun t' -> ft1_sz t'
 
 let rec compile
   (
@@ -555,7 +561,7 @@ let z (x: U32.t) : Tot (m_sz (example x)) =
   T.synth_by_tactic (fun () -> test_tac (example x))
 
 inline_for_extraction
-let test (x: U32.t) : Tot (option U32.t) =
+let test1 (x: U32.t) : Tot (option U32.t) =
   log_size (z x)
 
 module B = FStar.Buffer
@@ -577,7 +583,7 @@ let m_st_post (#t: Type) (f: m t) (b: B.buffer U8.t) (h: HS.mem) (rb': t * B.buf
 
 type m_st #t (f: m t) =
   (b: B.buffer U8.t) ->
-  HST.StackInline (t * B.buffer U8.t)
+  HST.ST (t * B.buffer U8.t)
   (requires (fun h ->
     B.live h b /\
     S.length (log f) <= B.length b
@@ -698,3 +704,84 @@ let test_tac_st (#ty: Type0) (m: m ty) : T.Tac unit =
 inline_for_extraction
 let z_st (x: U32.t) : Tot (m_st (example x)) =
   T.synth_by_tactic (fun () -> test_tac_st (example x))
+
+inline_for_extraction
+let redirect_to_dev_null'
+  (#t: Type0)
+  (x: m t)
+  (x_sz: U32.t)
+  (x_st: m_st x)
+: HST.ST t
+  (requires (fun _ ->
+    U32.v x_sz == S.length (log x)
+  ))
+  (ensures (fun h res h' ->
+    B.modifies_0 h h' /\
+    res == (fst (x ()))
+  ))
+= HST.push_frame ();
+  let b = B.create 42uy x_sz in
+  let (r, _) = x_st b in
+  HST.pop_frame ();
+  r
+
+let phi_post
+  (#t: Type0)
+  (x: m t)
+  (h: HS.mem)
+  (res: option t)
+  (h' : HS.mem)
+: GTot Type0
+= B.modifies_0 h h' /\ (
+    if S.length (log x) > 4294967295
+    then res == None
+    else res == Some (fst (x ()))
+  )
+
+let phi_t (#t: Type0) (x: m t) : Type =
+  unit ->
+  HST.ST (option t)
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+    phi_post x h res h'
+  ))
+
+inline_for_extraction
+let phi
+  (#t: Type0)
+  (x: m t)
+  (x_sz: m_sz x)
+  (x_st: m_st x)
+: Tot (phi_t x)
+= fun () ->
+  let h0 = HST.get () in
+  x_sz
+    (unit -> HST.ST (option t) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
+    (fun _ sz u () -> Some (redirect_to_dev_null' x sz x_st))
+    (fun _ () -> None)
+    ()
+
+let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
+  let open T in
+    let x = quote m in
+    let ty' = quote ty in
+    let t_sz = mk_sz fuel ty' x in
+    let t_st = mk_st fuel ty' x in
+    let q = quote phi in
+    let t = mk_app q [
+      ty', Q_Implicit;
+      x, Q_Explicit;
+      t_sz, Q_Explicit;
+      t_st, Q_Explicit;
+    ]
+    in
+    exact_guard t
+
+#set-options "--print_implicits --print_bound_var_types"
+
+let test' (x: U32.t) : Tot (phi_t (example x)) =
+  phi (example x) (T.synth_by_tactic (fun () -> test_tac (example x))) (T.synth_by_tactic (fun () -> test_tac_st (example x)))
+
+let test (x: U32.t) : HST.ST unit (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
+  let _ = (T.synth_by_tactic (fun () -> phi_tac 2 (example x)) <: phi_t (example x)) () in
+  ()
