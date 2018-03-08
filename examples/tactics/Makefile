@@ -12,6 +12,7 @@ all:	Apply.uver		\
 	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
+	Splice.uver		\
 	Tutorial.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
