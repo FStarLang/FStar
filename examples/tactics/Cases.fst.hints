@@ -1,38 +1,42 @@
 [
-  "X\u001dPÅý›}t\nM‡ë«ž[Æ",
+  "…ÕYîø°¸ö\u001a\u000e›R‰ìJâ",
   [
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
       0,
-      "ebf817ddfb4db98a950d6f9fccb2a639"
+      "c891414e3e5669bf893c879612fae56f"
     ],
     [
       "Cases.test_cases_bool_2",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
       0,
-      "a6c8f93d8c6da44d0fde88d323d997f3"
+      "8a57c934d136cec02f5ed5bfd13a5c0a"
     ],
     [
       "Cases.test_cases_bool_2",
       3,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4d33827400e2df0996483f45ad10c921"
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      4,
-      2,
-      1,
       [
         "@query", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
@@ -40,21 +44,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "230a5b1fe2db5e2a315e57bc7fc22730"
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      5,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "c5658a9639100c0796701b21c58337c3"
+      "be47d4f8702f8e0515adac3d4ef64359"
     ]
   ]
 ]

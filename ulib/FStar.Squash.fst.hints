@@ -1,5 +1,5 @@
 [
-  "tMm&nRf<ìóÄª\bãE2",
+  "ÿ¿=}Hð³\"\u001dfç\"\u0006+\u001ay",
   [
     [
       "FStar.Squash.return_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c07a8ad9428558c0ff987c20d9001be2"
+      "50af0ed90fc45a131816133d361e0d0d"
     ],
     [
       "FStar.Squash.get_proof",
@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "3eeba88b55361c3acb8bc6dad5b34208"
+      "24a01099803d3abf6acbebe353709cf5"
     ],
     [
       "FStar.Squash.give_proof",
@@ -36,7 +36,7 @@
         "unit_typing"
       ],
       0,
-      "eb8475e0dc02a9a4153ceeaf9bab37fc"
+      "035954c2ef41e9b84cb9576f90fa2ddc"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -49,7 +49,47 @@
         "unit_inversion"
       ],
       0,
-      "0dde3973dea4d13e5bfdbeb6c85fa844"
+      "032ffc311f160d88c28ee42c6d05995d"
+    ],
+    [
+      "FStar.Squash.return_squash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a8bbac3f6c5ed8c9ca06e91905240b67"
+    ],
+    [
+      "FStar.Squash.get_proof",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "97c0c1d43cb9c21df9495184fd346d7a"
+    ],
+    [
+      "FStar.Squash.proof_irrelevance",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_inversion"
+      ],
+      0,
+      "2240a666199a5a1999e8c724a582a7e0"
+    ],
+    [
+      "FStar.Squash.proof_irrelevance",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "914db8ebc3b8666a524d18425647eb6a"
     ]
   ]
 ]

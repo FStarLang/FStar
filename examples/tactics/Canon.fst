@@ -10,16 +10,17 @@ assume val y : int
 assume val z : int
 
 // Testing the canonizer, it should be the only thing needed for this file
-let check_canon =
-    canon;;
+let check_canon () =
+    canon ();
     or_else qed
-            (dump "`canon` left the following goals";;
-             fail "")
+            (fun () -> dump "`canon` left the following goals";
+                       fail "")
 
 let lem0 =  assert_by_tactic (x * (y * z) == (x * y) * z) check_canon
 let lem0' = assert_by_tactic (w * (x * (y * z)) == ((z * y) * x) * w) check_canon
 
-// TODO: for now, canon is not enough as we don't collect factors
+// TODO: for now, canon is not enough as we don't collect factors, so we
+// leave the rest to the SMT
 let lem1 =
     assert_by_tactic ((x + y) * (z + z) == 2 * z * (y + x))
                      canon

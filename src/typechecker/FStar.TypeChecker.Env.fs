@@ -106,13 +106,13 @@ type env = {
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
+  qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env;           (* The desugaring environment from the front-end *)
+  dsenv          : FStar.Syntax.DsEnv.env;           (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
 }
 and solver_t = {
@@ -205,32 +205,34 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     check_type_of=check_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
-    qname_and_index=None;
+    qtbl_name_and_index=BU.smap_create 10, None;  //10?
     proof_ns = Options.using_facts_from ();
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.ToSyntax.Env.empty_env();
+    dsenv = FStar.Syntax.DsEnv.empty_env();
     dep_graph = deps
   }
 
-(* Marking and resetting the environment, for the interactive mode *)
+let dsenv env = env.dsenv
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
 
+(* Marking and resetting the environment, for the interactive mode *)
+
 let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with
-    | [] -> failwith "Empty query indices!"
-    | _ -> query_indices := (List.hd !query_indices)::!query_indices
+  | [] -> failwith "Empty query indices!"
+  | _ -> query_indices := (List.hd !query_indices)::!query_indices
 
 let pop_query_indices () = match !query_indices with
-    | [] -> failwith "Empty query indices!"
-    | hd::tl -> query_indices := tl
+  | [] -> failwith "Empty query indices!"
+  | hd::tl -> query_indices := tl
 
 let add_query_index (l, n) = match !query_indices with
-    | hd::tl -> query_indices := ((l,n)::hd)::tl
-    | _ -> failwith "Empty query indices"
+  | hd::tl -> query_indices := ((l,n)::hd)::tl
+  | _ -> failwith "Empty query indices"
 
 let peek_query_indices () = List.hd !query_indices
 
@@ -239,7 +241,8 @@ let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
-              identifier_info=BU.mk_ref !env.identifier_info}
+              identifier_info=BU.mk_ref !env.identifier_info;
+              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd}
 
 let pop_stack () =
     match !stack with
@@ -249,29 +252,31 @@ let pop_stack () =
     | _ -> failwith "Impossible: Too many pops"
 
 let push env msg =
-    push_query_indices();
+    push_query_indices ();
     env.solver.push msg;
     push_stack env
 
 let pop env msg =
     env.solver.pop msg;
-    pop_query_indices();
+    pop_query_indices ();
     pop_stack ()
 
 let incr_query_index env =
-    let qix = peek_query_indices () in
-    match env.qname_and_index with
-    | None -> env
-    | Some (l, n) ->
+  let qix = peek_query_indices () in
+  match env.qtbl_name_and_index with
+  | _, None -> env
+  | tbl, Some (l, n) ->
     match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
     | None ->
-        let next = n + 1 in
-        add_query_index (l, next);
-        {env with qname_and_index=Some (l, next)}
+      let next = n + 1 in
+      add_query_index (l, next);
+      BU.smap_add tbl l.str next;
+      {env with qtbl_name_and_index=tbl, Some (l, next)}
     | Some (_, m) ->
-        let next = m + 1 in
-        add_query_index (l, next);
-        {env with qname_and_index=Some (l, next)}
+      let next = m + 1 in
+      add_query_index (l, next);
+      BU.smap_add tbl l.str next;
+      {env with qtbl_name_and_index=tbl, Some (l, next)}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
@@ -1199,11 +1204,11 @@ let univ_vars env =
 
 let univnames env =
     let no_univ_names = Syntax.no_universe_names in
-    let ext out uvs = BU.fifo_set_union out uvs in
+    let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
         | [] -> out
         | Binding_sig_inst _::tl -> aux out tl
-        | Binding_univ uname :: tl -> aux (BU.fifo_set_add uname out) tl
+        | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
         | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
@@ -1281,6 +1286,7 @@ let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
 let unbound_vars (e : env) (t : term) : BU.set<bv> =
+    // FV(t) \ Vars(Γ)
     List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
 
 let closed (e : env) (t : term) =
@@ -1311,3 +1317,8 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 (* </Move> *)
+
+let mk_copy en =
+  { en with gamma_cache = BU.smap_copy en.gamma_cache;
+            sigtab = BU.smap_copy en.sigtab;
+            dsenv = Syntax.DsEnv.mk_copy en.dsenv }

@@ -982,6 +982,10 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
+  | Quote (e, true) ->
+    group (str "quote" ^/^ p_noSeqTerm ps pb e)
+  | Quote (e, false) ->
+    group (str "`" ^^ p_noSeqTerm ps pb e)
   | _ -> p_typ ps pb e
 
 and p_attrs_opt = function
@@ -1307,6 +1311,7 @@ and p_projectionLHS e = match e.tm with
   | Requires _  (* p_noSeqTerm *)
   | Ensures _   (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
+  | Quote _     (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
 
 and p_constant = function

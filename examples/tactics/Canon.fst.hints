@@ -1,5 +1,5 @@
 [
-  "?[π\\\u000eï\u000bÑÂHÖÅM2Õ⁄",
+  "J(\tÑ≠\u0011\rd)Jó-LÂ¯",
   [
     [
       "Canon.lem1",
@@ -7,21 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b413062e764cfa1ba644b75017fa0bac"
-    ],
-    [
-      "Canon.lem8",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8cfab36f7f4894de92a618c654bf003b"
+      "7706e3424129011f71b398cb01349442"
     ],
     [
       "Canon.lem9",
@@ -30,7 +20,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5f799b5a8d30de37e0eb3e2e785cbf91"
+      "a3c13c24b3b17319a70286e3b504dae2"
     ]
   ]
 ]

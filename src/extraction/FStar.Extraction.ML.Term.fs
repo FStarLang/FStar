@@ -41,6 +41,8 @@ module PC = FStar.Parser.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
+module R  = FStar.Reflection.Basic
+module RD = FStar.Reflection.Data
 
 exception Un_extractable
 
@@ -148,6 +150,7 @@ let rec is_arity env t =
     | Tm_delayed _
     | Tm_ascribed _
     | Tm_meta _ -> failwith "Impossible"
+    | Tm_lazy i -> is_arity env (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
     | Tm_name _
@@ -186,6 +189,8 @@ let rec is_type_aux env t =
     | Tm_delayed _
     | Tm_unknown ->
         failwith (BU.format1 "Impossible: %s" (Print.tag_of_term t))
+
+    | Tm_lazy i -> is_type_aux env (U.unfold_lazy i)
 
     | Tm_constant _ ->
       false
@@ -232,6 +237,9 @@ let rec is_type_aux env t =
           is_type_aux env e
         | _ -> false
       end
+
+    | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, qi)) ->
+      false
 
     | Tm_meta(t, _) ->
       is_type_aux env t
@@ -448,6 +456,8 @@ and term_as_mlty' env t =
       | Tm_bvar _
       | Tm_delayed _
       | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+
+      | Tm_lazy i -> term_as_mlty' env (U.unfold_lazy i)
 
       | Tm_constant _ -> unknownType
 
@@ -835,10 +845,23 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_uvar _
         | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
 
+        | Tm_lazy i -> term_as_mlexpr' g (U.unfold_lazy i)
+
         | Tm_type _
         | Tm_refine _
         | Tm_arrow _ ->
           ml_unit, E_PURE, ml_unit_ty
+
+        | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, {qopen = true })) ->
+          let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
+          with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
+          E_PURE,
+          ml_int_ty
+
+        | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, {qopen = false})) ->
+          let tv = R.embed_term_view t.pos (R.inspect qt) in
+          let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
+          term_as_mlexpr' g t
 
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
             raise_err (Error_NoLetMutable, "let-mutable no longer supported")
@@ -905,26 +928,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           term_as_mlexpr' g t
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
-
-        | Tm_app(head, [_; (v, _)]) when U.is_fstar_tactics_embed head && false ->
-          let _ = BU.format2 "Trying to extract a quotation of %s" (Print.term_to_string v) in
-          let s = with_ty ml_string_ty (MLE_Const(MLC_Bytes(BU.bytes_of_string (BU.marshal v)))) in
-          let zero = with_ty ml_int_ty (MLE_Const (MLC_Int("0", None))) in
-          let term_ty =
-            term_as_mlty g (S.fvar PC.fstar_syntax_syntax_term Delta_constant None) in
-          let marshal_from_string =
-            let string_to_term_ty = MLTY_Fun (ml_string_ty, E_PURE, term_ty) in
-            with_ty string_to_term_ty (MLE_Name(["Marshal"], "from_string"))
-          in
-          //This is pure, to coincide with the type of __embed;
-          //note that __embed is marked private so as to not compromise soundness
-          with_ty term_ty <| MLE_App (marshal_from_string, [ s; zero ]),
-          E_PURE,
-          term_ty
-
-        | Tm_app(head, _) when U.is_fstar_tactics_embed head && (Options.codegen() = Some "tactics") &&
-                               not (U.is_builtin_tactic (g.currentModule |> string_of_mlpath |> lid_of_str)) ->
-            raise_error (Fatal_FailToExtractNativeTactic, "Quotation not supported in native tactics") t.pos
 
         | Tm_app(head, args) ->
           let is_total rc =
@@ -1020,15 +1023,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else let head = U.un_uinst head in
                    begin match head.n with
-                    | Tm_fvar fv when S.fv_eq_lid fv PC.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
-                        (* handle applications of __embed differently *)
-                        (match args with
-                         | [a;b] ->
-                            // BU.print1 "First term %s \n" (Print.term_to_string (fst a));
-                            // BU.print1 "Second term %s \n" (Print.term_to_string (fst b));
-                            // BU.print1 "Embedded term %s \n" (Print.term_to_string embedded);
-                            term_as_mlexpr g (fst a)
-                         | _ -> failwith (Print.args_to_string args))
                     | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
@@ -1319,9 +1313,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
              begin match mlbranches with
                 | [] ->
                     let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
-                    with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
+                    with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
-                    ml_unit_ty
+                    ml_int_ty
 
 
                 | (_, _, (_, f_first, t_first))::rest ->

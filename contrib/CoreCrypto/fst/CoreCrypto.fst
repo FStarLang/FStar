@@ -2,6 +2,8 @@ module CoreCrypto
 
 open FStar.Bytes
 
+assume val now: unit -> EXT UInt32.t
+
 (* ------------ Hashing ------------ *)
 type hash_alg =
   | MD5

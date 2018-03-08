@@ -31,6 +31,8 @@ module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const
 module Range = FStar.Range
+module N = FStar.TypeChecker.Normalize
+module S = FStar.Syntax.Syntax
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -428,11 +430,8 @@ let rec mk_tac_param_type tcenv (t: term): mlexpr' =
      | _ when not unrefined ->
         // We failed to recognize the type, try unrefining (after unfolding).
         // This will make `nat` fall into the `int` case.
-        let t = FStar.TypeChecker.Normalize.normalize
-                    [FStar.TypeChecker.Normalize.UnfoldUntil FStar.Syntax.Syntax.Delta_constant]
-                    tcenv
-                    t
-        in try_mk (FStar.Syntax.Util.unrefine t) true
+        let t = N.normalize [N.AllowUnboundUniverses; N.UnfoldUntil S.Delta_constant] tcenv t in
+        try_mk (FStar.Syntax.Util.unrefine t) true
      | _ ->
          raise_err (Fatal_CallNotImplemented, ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))
   in try_mk t false
@@ -484,11 +483,8 @@ let rec mk_tac_embedding_path tcenv (m: emb_decl) (t: term): mlexpr' =
     | _ when not unrefined ->
         // We failed to recognize the type, try unrefining (after unfolding).
         // This will make `nat` fall into the `int` case.
-        let t = FStar.TypeChecker.Normalize.normalize
-                    [FStar.TypeChecker.Normalize.UnfoldUntil FStar.Syntax.Syntax.Delta_constant]
-                    tcenv
-                    t
-        in try_mk (FStar.Syntax.Util.unrefine t) true
+        let t = N.normalize [N.AllowUnboundUniverses; N.UnfoldUntil S.Delta_constant] tcenv t in
+        try_mk (FStar.Syntax.Util.unrefine t) true
 
     | _ ->
         raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))

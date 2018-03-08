@@ -250,7 +250,7 @@ let prefix_one_decl iface impl =
 //////////////////////////////////////////////////////////////////////////
 //Top-level interface
 //////////////////////////////////////////////////////////////////////////
-module E = FStar.ToSyntax.Env
+module E = FStar.Syntax.DsEnv
 let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
   fun (env:E.env) ->
     let decls =

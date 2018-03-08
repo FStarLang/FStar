@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c309cb362e3e1b8af7a8f151f1279284"
+      "d6646651d6ad2f5b25a6090d5bb79325"
     ],
     [
       "Ex04c.mem",
@@ -28,7 +28,36 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a0c1e86e86dd2c2ca60d5e0ae8e23334"
+      "7b50a21b4d0b3a81ae03ca4ced02dd8a"
+    ],
+    [
+      "Ex04c.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "38a74d807d4182d1829dcd2af5fa3ec2"
+    ],
+    [
+      "Ex04c.mem",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "0886db69de13d8ac8ff75fb5c2a2a606"
     ]
   ]
 ]

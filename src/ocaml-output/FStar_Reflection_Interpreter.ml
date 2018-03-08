@@ -164,62 +164,49 @@ let (reflection_primops :
                        in
                     let uu____434 =
                       let uu____437 =
-                        mk11 () () "__fresh_binder"
+                        mk2 () () () "__term_eq"
                           (fun a427  ->
-                             (Obj.magic FStar_Reflection_Basic.fresh_binder)
-                               a427)
+                             fun a428  ->
+                               (Obj.magic FStar_Reflection_Basic.term_eq)
+                                 a427 a428)
                           (Obj.magic FStar_Reflection_Basic.unembed_term)
-                          (Obj.magic FStar_Reflection_Basic.embed_binder)
+                          (Obj.magic FStar_Reflection_Basic.unembed_term)
+                          (Obj.magic FStar_Syntax_Embeddings.embed_bool)
                          in
                       let uu____438 =
                         let uu____441 =
-                          mk2 () () () "__term_eq"
-                            (fun a428  ->
-                               fun a429  ->
-                                 (Obj.magic FStar_Reflection_Basic.term_eq)
-                                   a428 a429)
+                          mk11 () () "__term_to_string"
+                            (fun a429  ->
+                               (Obj.magic
+                                  FStar_Reflection_Basic.term_to_string) a429)
                             (Obj.magic FStar_Reflection_Basic.unembed_term)
-                            (Obj.magic FStar_Reflection_Basic.unembed_term)
-                            (Obj.magic FStar_Syntax_Embeddings.embed_bool)
+                            (Obj.magic FStar_Syntax_Embeddings.embed_string)
                            in
                         let uu____442 =
                           let uu____445 =
-                            mk11 () () "__term_to_string"
+                            mk11 () () "__binders_of_env"
                               (fun a430  ->
                                  (Obj.magic
-                                    FStar_Reflection_Basic.term_to_string)
+                                    FStar_Reflection_Basic.binders_of_env)
                                    a430)
-                              (Obj.magic FStar_Reflection_Basic.unembed_term)
-                              (Obj.magic FStar_Syntax_Embeddings.embed_string)
+                              (Obj.magic FStar_Reflection_Basic.unembed_env)
+                              (Obj.magic FStar_Reflection_Basic.embed_binders)
                              in
                           let uu____446 =
                             let uu____449 =
-                              mk11 () () "__binders_of_env"
+                              mk2 () () () "__lookup_typ"
                                 (fun a431  ->
-                                   (Obj.magic
-                                      FStar_Reflection_Basic.binders_of_env)
-                                     a431)
+                                   fun a432  ->
+                                     (Obj.magic
+                                        FStar_Reflection_Basic.lookup_typ)
+                                       a431 a432)
                                 (Obj.magic FStar_Reflection_Basic.unembed_env)
                                 (Obj.magic
-                                   FStar_Reflection_Basic.embed_binders)
+                                   FStar_Syntax_Embeddings.unembed_string_list)
+                                (Obj.magic
+                                   FStar_Reflection_Basic.embed_sigelt_view)
                                in
-                            let uu____450 =
-                              let uu____453 =
-                                mk2 () () () "__lookup_typ"
-                                  (fun a432  ->
-                                     fun a433  ->
-                                       (Obj.magic
-                                          FStar_Reflection_Basic.lookup_typ)
-                                         a432 a433)
-                                  (Obj.magic
-                                     FStar_Reflection_Basic.unembed_env)
-                                  (Obj.magic
-                                     FStar_Syntax_Embeddings.unembed_string_list)
-                                  (Obj.magic
-                                     FStar_Reflection_Basic.embed_sigelt_view)
-                                 in
-                              [uu____453]  in
-                            uu____449 :: uu____450  in
+                            [uu____449]  in
                           uu____445 :: uu____446  in
                         uu____441 :: uu____442  in
                       uu____437 :: uu____438  in

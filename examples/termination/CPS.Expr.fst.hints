@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "774fd9c05fc95733dfe5c27ad539381c"
+      "89ebcc677a74ddb7bc27290e6c97ea23"
     ],
     [
       "CPS.Expr.uu___is_Const",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "642bb19c8ea7c82cbf59ff07b6aeaeb2"
+      "d950aad09dbaf7ea6e86541b5c271f06"
     ],
     [
       "CPS.Expr.__proj__Const__item___0",
@@ -30,7 +30,7 @@
         "refinement_interpretation_CPS.Expr_Tm_refine_61068dfb8b28ba423ea3dca285d5c282"
       ],
       0,
-      "61ad1f39616de1db6adb2e545228153a"
+      "5b6d5248ad021dc976df1e79e999ebc6"
     ],
     [
       "CPS.Expr.uu___is_Plus",
@@ -39,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "53c05cac9fb711318fc5845a9646bbdb"
+      "f1b0e6e6a07064ee0e3abaab9696b8f6"
     ],
     [
       "CPS.Expr.__proj__Plus__item___0",
@@ -52,7 +52,7 @@
         "refinement_interpretation_CPS.Expr_Tm_refine_1ca93587daff7a0ff146b7192bd79c66"
       ],
       0,
-      "d5f4ee554df3fbe4035a98616843d80f"
+      "87b6318019958076d365712563e3e18b"
     ],
     [
       "CPS.Expr.__proj__Plus__item___1",
@@ -65,7 +65,73 @@
         "refinement_interpretation_CPS.Expr_Tm_refine_1ca93587daff7a0ff146b7192bd79c66"
       ],
       0,
-      "124f4d6c122f97a60c8a9c28bb143215"
+      "a9b3824fdad386d7a5ba25f437eb81e7"
+    ],
+    [
+      "CPS.Expr.expr",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "404a7e99f89e0823f71c19179f01277d"
+    ],
+    [
+      "CPS.Expr.uu___is_Const",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f7450ff0138c154a5f57ae927108e84e"
+    ],
+    [
+      "CPS.Expr.__proj__Const__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.Expr.Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_CPS.Expr_Tm_refine_61068dfb8b28ba423ea3dca285d5c282"
+      ],
+      0,
+      "cb75b5e9c80527f76a43595ef3317e65"
+    ],
+    [
+      "CPS.Expr.uu___is_Plus",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7fe3d142a2d9560ebc2fcb75fd167b4a"
+    ],
+    [
+      "CPS.Expr.__proj__Plus__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.Expr.Plus",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_CPS.Expr_Tm_refine_1ca93587daff7a0ff146b7192bd79c66"
+      ],
+      0,
+      "c050119426a72c96ffa67f29ce14d309"
+    ],
+    [
+      "CPS.Expr.__proj__Plus__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.Expr.Plus",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_CPS.Expr_Tm_refine_1ca93587daff7a0ff146b7192bd79c66"
+      ],
+      0,
+      "3a14c766b951f56eb2cee99c5d17cb77"
     ]
   ]
 ]

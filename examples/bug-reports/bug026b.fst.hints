@@ -15,12 +15,9 @@
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug026b_Tm_refine_908043d23d9b610a14feef808af9da3d"
-      ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "875d83f9aada9bbf60b03bb18039ecd0"
+      "2f06c988a196783bb5905b1552c3650e"
     ]
   ]
 ]

@@ -295,6 +295,11 @@ type raw_error =
   | Error_NoLetMutable
   | Error_BadImplicit
   | Warning_DeprecatedDefinition
+  | Fatal_SMTEncodingArityMismatch
+  | Warning_Defensive
+  | Warning_CantInspect
+  | Warning_NilGivenExplicitArgs
+  | Warning_ConsAppliedExplicitArgs
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -589,8 +594,15 @@ let default_flags =
   (Warning_MissingInterfaceOrImplementation          , CWarning);
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
   (Warning_ModuleOrFileNotFoundWarning               , CWarning);
+  (Error_NoLetMutable                                , CError);
   (Error_BadImplicit                                 , CError);
-  (Warning_DeprecatedDefinition                      , CWarning)]
+  (Warning_DeprecatedDefinition                      , CWarning);
+  (Fatal_SMTEncodingArityMismatch                    , CFatal);
+  (Warning_Defensive                                 , CWarning);
+  (Warning_CantInspect                               , CWarning);
+  (Warning_NilGivenExplicitArgs                      , CWarning);
+  (Warning_ConsAppliedExplicitArgs                   , CWarning);
+  ]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -734,9 +746,15 @@ let init_warn_error_flags =
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
 
+let defensive_errno = errno_of_error Warning_Defensive
+let lookup flags errno =
+    if errno = defensive_errno && Options.defensive_fail ()
+    then CError
+    else List.nth flags errno
+
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
-  match List.nth !flags errno with
+  match lookup !flags errno with
   | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->

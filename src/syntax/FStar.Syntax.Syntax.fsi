@@ -73,11 +73,28 @@ and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
+type quoteinfo     = {
+    qopen : bool
+ }
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+///[@ PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -96,6 +113,7 @@ type term' =
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -153,9 +171,8 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
+  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -215,13 +232,23 @@ and residual_comp = {
 
 and attribute = term
 
+and lazyinfo = {
+    blob : dyn;
+    kind : lazy_kind;
+    typ : typ;
+    rng : Range.range;
+ }
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
+
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
-val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
+val new_universe_names_set: unit -> set<univ_name>
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
@@ -425,7 +452,7 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_universe_names: fifo_set<univ_name>
+val no_universe_names: set<univ_name>
 val no_fvars:          set<lident>
 
 val freenames_of_list:    list<bv> -> freenames
@@ -484,6 +511,7 @@ val t_float       : term
 val t_char        : term
 val t_range       : term
 val t_term        : term
+val t_binder      : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term

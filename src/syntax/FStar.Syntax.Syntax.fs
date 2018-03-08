@@ -90,11 +90,29 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
+type quoteinfo     = {
+    qopen : bool;       // True if the quotation is open, and should be substituted
+ }
+
+///[@ PpxDerivingShow ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n times to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+///[@ PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
 
 ///[@ PpxDerivingShow ]
 type term' =
@@ -115,6 +133,7 @@ type term' =
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -172,9 +191,8 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
+  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -232,7 +250,17 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and lazyinfo = {
+    blob : dyn;
+    kind : lazy_kind;
+    typ : typ;
+    rng : Range.range;
+ }
+
 and attribute = term
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
 
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
@@ -428,11 +456,11 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
-let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
+let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_fifo_set ()
+let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
@@ -593,6 +621,7 @@ let t_float  = tconst PC.float_lid
 let t_char   = tabbrev PC.char_lid
 let t_range  = tconst PC.range_lid
 let t_term   = tconst PC.term_lid
+let t_binder = tconst PC.binder_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange

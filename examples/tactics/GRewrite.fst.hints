@@ -1,5 +1,5 @@
 [
-  "«)—¸ò≈M\u007f∞\u0011Vç\u0018#\u0002e",
+  "ßd.@\u0001`öfΩ®˜4\rÙb\u000f",
   [
     [
       "GRewrite.test_grewrite2",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "bf0229f8da100a72275b9da99bf73166"
+      "1a864f2843d1e27bbacf6ebb9d0f0f1a"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "a95b98ee6821c9d44f86d572debf84a5"
+      "4f8491f268680449537cb2c66fab5bd5"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "176dd8ee68f45bd9e72cba93a78e6f30"
+      "570f35cd446aac0b6f936216a5f85c02"
     ],
     [
       "GRewrite.test_grewrite2",
@@ -38,7 +38,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f45159d8bbc4f87c986bc282efb2a206"
+      "9f3cd9dac70682c94ee43f9463ea8e1f"
     ],
     [
       "GRewrite.test_grewrite4",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "eq2-interp", "equation_Prims.eq2" ],
       0,
-      "5cf89f4f7dcb9d4963a4dbba068fff22"
+      "ce6cc584dcdcb2dc15dec930af692d07"
     ],
     [
       "GRewrite.test_grewrite5",
@@ -61,16 +61,41 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "3d3b5544b42242b29633d13ad46410d0"
+      "3321b07268592d6d671f3c49374d68bd"
     ],
     [
       "GRewrite.guard",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
+      ],
       0,
-      "28bb59c2845b6332fbc13bb91750efaf"
+      "0cf0ce62e7d959dc7c85c48c1f6aa40d"
+    ],
+    [
+      "GRewrite.guard",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "ff179ec0d2517d0910373d1d1f3383d8"
     ]
   ]
 ]

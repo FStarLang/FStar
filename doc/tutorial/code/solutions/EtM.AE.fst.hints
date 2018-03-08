@@ -1,5 +1,5 @@
 [
-  "ÁMe]&<Ñ]z„Ëˇ¨.\u0004a",
+  "Ïh Œ‚√•aó0õ…\f\b=Ã",
   [
     [
       "EtM.AE.__proj__Key__item__ke",
@@ -20,7 +20,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_region"
       ],
       0,
-      "7af5638dff795707c05b3b9a8b211c77"
+      "7e80723310f6ab00886d5f7ee79d2e26"
     ],
     [
       "EtM.AE.__proj__Key__item__km",
@@ -44,7 +44,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_region"
       ],
       0,
-      "eecb503da4a4e3a3035aaed36b8c20f7"
+      "7fdc3e65c236c6364dc0e9f1ee0780d6"
     ],
     [
       "EtM.AE.__proj__Key__item__log",
@@ -56,7 +56,7 @@
         "projection_inverse_EtM.AE.Key_region"
       ],
       0,
-      "2c65924290c9398cf2e46c55a7d42377"
+      "050325785500f06a448d4f47d5a926a0"
     ],
     [
       "EtM.AE.invariant",
@@ -76,7 +76,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7c636285b3ec7b479ec24c889ae92a46"
+      "c67029c3b27440056904771335405b12"
     ],
     [
       "EtM.AE.keygen",
@@ -227,7 +227,16 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "86444fa57e6f39effc76658d46eaa376"
+      "25964a38c46188e61f42bba233661abd"
+    ],
+    [
+      "EtM.AE.log_of",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.AE.region_of" ],
+      0,
+      "261111dd38aac87eb80bdaa9fb9ed94e"
     ],
     [
       "EtM.AE.encrypt",
@@ -245,7 +254,8 @@
         "eq2-interp", "equation_EtM.AE.cipher",
         "equation_EtM.AE.get_cpa_log", "equation_EtM.AE.get_log",
         "equation_EtM.AE.get_mac_log", "equation_EtM.AE.invariant",
-        "equation_EtM.AE.log_t", "equation_EtM.AE.rid",
+        "equation_EtM.AE.log_of", "equation_EtM.AE.log_t",
+        "equation_EtM.AE.region_of", "equation_EtM.AE.rid",
         "equation_EtM.CPA.cipher", "equation_EtM.CPA.log_t",
         "equation_EtM.CPA.msg", "equation_EtM.CPA.rid",
         "equation_EtM.MAC.log_t", "equation_EtM.MAC.msg",
@@ -358,7 +368,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "8b5145e8a453f56e74e06f0919340bd3"
+      "e73acd73508ee80f59574b51705a4a4c"
     ],
     [
       "EtM.AE.decrypt",
@@ -366,7 +376,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Platform.Bytes.HasEq_bytes",
         "equality_tok_CoreCrypto.AES_128_CBC@tok",
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
@@ -380,7 +390,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "f3c845959f22ef8867bcb62890402e04"
+      "d8021d5e2be2da483e75b2dac710c5fe"
     ],
     [
       "EtM.AE.decrypt",
@@ -508,7 +518,29 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "749c7d241fb4c30b9b6633f594a14a74"
+      "16e62892ac926044b0630792f4eedf05"
+    ],
+    [
+      "EtM.AE.decrypt",
+      3,
+      0,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes",
+        "equality_tok_CoreCrypto.AES_128_CBC@tok",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
+        "equation_CoreCrypto.hashSize", "equation_EtM.AE.cipher",
+        "equation_EtM.CPA.cipher", "equation_EtM.CPA.ivsize",
+        "equation_EtM.MAC.macsize", "equation_EtM.MAC.tag",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "function_token_typing_EtM.CPA.cipher",
+        "function_token_typing_EtM.MAC.tag",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "092db7bdffd4f19c3db7e3541abe80ba"
     ]
   ]
 ]

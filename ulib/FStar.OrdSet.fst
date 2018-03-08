@@ -13,7 +13,7 @@ let rec sorted #a f l = match l with
   | x::[]    -> true
   | x::y::tl -> f x y && x <> y && sorted f (y::tl)
 
-abstract type ordset (a:Type u#a{hasEq a}) (f:cmp a) :Type u#a = l:(list a){sorted f l}
+abstract type ordset (a:eqtype) (f:cmp a) = l:(list a){sorted f l}
 
 val hasEq_ordset: a:eqtype -> f:cmp a -> Lemma (requires (True)) (ensures (hasEq (ordset a f))) [SMTPat (hasEq (ordset a f))]
 let hasEq_ordset a f = ()

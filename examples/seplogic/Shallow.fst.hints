@@ -1,0 +1,211 @@
+[
+  "!Á\\½Üh\u000b¯†Éº·ÿ\\Åñ",
+  [
+    [
+      "Shallow.return",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Shallow_Tm_refine_20e4bdf63e2d7262f90a049fd6ba5b46"
+      ],
+      0,
+      "3b267f9821b08e765a69ad99c7e879ce"
+    ],
+    [
+      "Shallow.frame",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_Exists", "equation_Prims.squash",
+        "equation_Shallow.frame_post", "equation_Shallow.frame_wp",
+        "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
+        "equation_Shallow.result", "fuel_guarded_inversion_Prims.dtuple2",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_is_comm",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Shallow_Tm_refine_2f1e4349df0318d68ef6b84d7c911b0a",
+        "refinement_interpretation_Shallow_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
+        "token_correspondence_Shallow.frame_post", "unit_typing"
+      ],
+      0,
+      "63e84a2410ee4fb03371627722f0a994"
+    ],
+    [
+      "Shallow.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Shallow.result",
+        "interpretation_Shallow_Tm_abs_5674c24c74bae1fa0c80fe820a466851",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Shallow_Tm_refine_2f1e4349df0318d68ef6b84d7c911b0a"
+      ],
+      0,
+      "72f417963a0566e688c424bc255d021e"
+    ],
+    [
+      "Shallow.points_to_sel",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Shallow.points_to_contains" ],
+      0,
+      "0c9cc75c4dacbbdf52f821ba13e4aea0"
+    ],
+    [
+      "Shallow.points_to_upd",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Shallow.points_to_contains" ],
+      0,
+      "4ffb51585a457ec65db056ecd712f615"
+    ],
+    [
+      "Shallow.read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_sel",
+        "refinement_interpretation_Shallow_Tm_refine_136ac9e480741292d2ebe1886bdbbe08"
+      ],
+      0,
+      "204877d1aa639a73a05d97dd5384fc56"
+    ],
+    [
+      "Shallow.write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_upd",
+        "refinement_interpretation_Shallow_Tm_refine_f5696e88926274d02cf3b3d843374c63"
+      ],
+      0,
+      "1ac612495f3af3b30da4ba5f15a1d5ac"
+    ],
+    [
+      "Shallow.swap",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8b1490009dec3d4e1b6df36e3da72086"
+    ],
+    [
+      "Shallow.return",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Shallow_Tm_refine_20e4bdf63e2d7262f90a049fd6ba5b46"
+      ],
+      0,
+      "75f0cdb7ac4b0f2996339aca138af836"
+    ],
+    [
+      "Shallow.frame",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_Exists", "equation_Prims.squash",
+        "equation_Shallow.frame_post", "equation_Shallow.frame_wp",
+        "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
+        "equation_Shallow.result", "fuel_guarded_inversion_Prims.dtuple2",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_is_comm",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Shallow_Tm_refine_2f1e4349df0318d68ef6b84d7c911b0a",
+        "refinement_interpretation_Shallow_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
+        "token_correspondence_Shallow.frame_post", "unit_typing"
+      ],
+      0,
+      "a5edfa6c25827f7328fda010d0e91523"
+    ],
+    [
+      "Shallow.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Shallow.result",
+        "interpretation_Shallow_Tm_abs_5674c24c74bae1fa0c80fe820a466851",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Shallow_Tm_refine_2f1e4349df0318d68ef6b84d7c911b0a"
+      ],
+      0,
+      "58cc831fb998f29479aa92dce73a4539"
+    ],
+    [
+      "Shallow.points_to_sel",
+      2,
+      2,
+      1,
+      [ "@query", "lemma_Shallow.points_to_contains" ],
+      0,
+      "1204baad41385488745df16348471c10"
+    ],
+    [
+      "Shallow.points_to_upd",
+      2,
+      2,
+      1,
+      [ "@query", "lemma_Shallow.points_to_contains" ],
+      0,
+      "7fdb689711a82ff754cacc40673523a9"
+    ],
+    [
+      "Shallow.read",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_sel",
+        "refinement_interpretation_Shallow_Tm_refine_136ac9e480741292d2ebe1886bdbbe08"
+      ],
+      0,
+      "23fc15b26a7607ee182a16967fa1ccef"
+    ],
+    [
+      "Shallow.write",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_Shallow.points_to_contains",
+        "lemma_Shallow.points_to_upd",
+        "refinement_interpretation_Shallow_Tm_refine_f5696e88926274d02cf3b3d843374c63"
+      ],
+      0,
+      "9fdbbf1953098e4b22d9c74da5389ccf"
+    ],
+    [
+      "Shallow.swap",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "935bf82e6563113eb597c7529dce6f4b"
+    ]
+  ]
+]

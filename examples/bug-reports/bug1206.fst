@@ -19,11 +19,11 @@ let ser_id (s1: serializer_ty) : serializer_ty =
 
 assume val ser : serializer_ty
 
-let normalize (#t:Type) (x:t) : tactic unit =
-  dup;;
-  exact (quote x);;
-  norm [delta];;
-  trefl
+let normalize (#t:Type) (x:t) : Tac unit =
+  dup ();
+  exact (quote x);
+  norm [delta];
+  trefl ()
 
 let ser' : serializer_ty =
-  synth_by_tactic (normalize (ser_id ser))
+  synth_by_tactic (fun () -> normalize (ser_id ser))

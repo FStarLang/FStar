@@ -26,7 +26,7 @@ open FStar.Ident
 open FStar.Universal
 open FStar.TypeChecker.Env
 
-module DsEnv   = FStar.ToSyntax.Env
+module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
@@ -436,7 +436,7 @@ let rec go (line_col:(int*int))
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
-      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path env.dsenv prefix naked_match in
+      let stripped_ns, shortened = Syntax.DsEnv.shorten_module_path env.dsenv prefix naked_match in
       (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
     let prepare_candidate (prefix, matched, stripped_ns, match_len) =
       if prefix = "" then
@@ -487,7 +487,7 @@ let rec go (line_col:(int*int))
             | [] -> case_b_find_matches_in_env ()
             | _ ->
               let l = Ident.lid_of_path ns Range.dummyRange in
-              match FStar.ToSyntax.Env.resolve_module_name env.dsenv l true with
+              match FStar.Syntax.DsEnv.resolve_module_name env.dsenv l true with
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->
@@ -577,6 +577,6 @@ let interactive_mode (filename:string): unit =
   if FStar.Options.record_hints() //and if we're recording or using hints
   || FStar.Options.use_hints()
   then FStar.SMTEncoding.Solver.with_hints_db
-            (List.hd (Options.file_list ())) false  //passing false for using_or_checking_extracted_interfaces, since --use_checked_interface is not allowed in interactive mode, and this is for the main file (not a dependency)
+            (List.hd (Options.file_list ()))
             (fun () -> go (1, 0) filename stack None env ts)
   else go (1, 0) filename stack None env ts

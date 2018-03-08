@@ -96,6 +96,9 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
+        // Do not remove these
+        | Tm_meta(_, Meta_quoted _) -> e
+
         | Tm_meta(e, _)
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
@@ -107,7 +110,7 @@ let rec unmeta_safe e =
             begin match m with
             | Meta_monadic _
             | Meta_monadic_lift _
-            | Meta_alien _ ->
+            | Meta_quoted _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
             end
@@ -409,6 +412,23 @@ let rec ascribe t k = match t.n with
   | Tm_ascribed (t', _, _) -> ascribe t' k
   | _ -> mk (Tm_ascribed(t, k, None)) None t.pos
 
+let unfold_lazy i = must !lazy_chooser i.kind i
+
+let rec unlazy t =
+    match (compress t).n with
+    | Tm_lazy i -> unlazy <| unfold_lazy i
+    | _ -> t
+
+let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
+    let rng = (match r with | Some r -> r | None -> dummyRange) in
+    let i = {
+        kind = k;
+        blob = mkdyn t;
+        typ = typ;
+        rng = rng;
+      } in
+    mk (Tm_lazy i) None rng
+
 (* ---------------------------------------------------------------------- *)
 (* <eq_tm> Syntactic equality of zero-order terms                         *)
 (* ---------------------------------------------------------------------- *)
@@ -466,6 +486,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Unknown, _
       | _, Unknown -> Unknown
     in
+    let notq t =
+        match t.n with
+        | Tm_meta (_, Meta_quoted _) -> false
+        | _ -> true
+    in
     let equal_data f1 args1 f2 args2 =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
@@ -482,6 +507,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->
       equal_if (bv1.index = bv2.index)
+
+    | Tm_lazy _, _ -> eq_tm (unlazy t1) t2
+    | _, Tm_lazy _ -> eq_tm t1 (unlazy t2)
 
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
@@ -520,10 +548,13 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
 
-    | Tm_meta(t1, _), _ ->
-      eq_tm t1 t2
+    | Tm_meta(t1', _), _ when notq t1 ->
+      eq_tm t1' t2
 
-    | _, Tm_meta(t2, _) ->
+    | _, Tm_meta(t2', _) when notq t2 ->
+      eq_tm t1 t2'
+
+    | Tm_meta (_, Meta_quoted (t1, _)), Tm_meta (_, Meta_quoted (t2, _)) ->
       eq_tm t1 t2
 
     | _ -> Unknown
@@ -620,9 +651,9 @@ let quals_of_sigelt (x: sigelt) = x.sigquals
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let range_of_lb = function
-  | (Inl x, _, _) -> range_of_bv  x
-  | (Inr l, _, _) -> range_of_lid l
+let range_of_lbname = function
+  | Inl x -> range_of_bv  x
+  | Inr fv -> range_of_lid fv.fv_name.v
 
 let range_of_arg (hd, _) = hd.pos
 
@@ -636,10 +667,10 @@ let mk_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk (Tm_meta(fvar l Delta_constant (Some Data_ctor), Meta_desugared Data_app)) None (range_of_lid l)
+      mk (fvar l Delta_constant (Some Data_ctor)) None (range_of_lid l)
     | _ ->
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
-      mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
+      mk e None e.pos
 
 let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
 let unmangle_field_name x =
@@ -886,16 +917,6 @@ let is_interpreted l =
      PC.op_Or          ;
      PC.op_Negation] in
   U.for_some (lid_equals l) theory_syms
-
-let is_fstar_tactics_embed t =
-    match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.fstar_refl_embed_lid
-    | _ -> false
-
-let is_fstar_tactics_quote t =
-    match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.quote_lid
-    | _ -> false
 
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with
@@ -1360,6 +1381,7 @@ let rec delta_qualifier t =
     let t = Subst.compress t in
     match t.n with
         | Tm_delayed _ -> failwith "Impossible"
+        | Tm_lazy i -> delta_qualifier (unfold_lazy i)
         | Tm_fvar fv -> fv.fv_delta
         | Tm_bvar _
         | Tm_name _
@@ -1489,6 +1511,7 @@ let rec term_eq t1 t2 =
         lid_equals n1 n2 && term_eq ty1 ty2
     | Meta_monadic_lift (s1, t1, ty1), Meta_monadic_lift (s2, t2, ty2) ->
         lid_equals s1 s2 && lid_equals t1 t2 && term_eq ty1 ty2
+    | _ -> false
     end
 
   | Tm_unknown, Tm_unknown -> false // ?
@@ -1559,17 +1582,6 @@ let is_fvar lid t =
 
 let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
-
-(* Spooky behaviours are possible with this, proceed with caution *)
-
-let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
-    mk (Tm_meta (tun, Meta_alien (mkdyn b, s, ty))) None (match r with | Some r -> r | None -> dummyRange)
-
-let un_alien (t : term) : dyn =
-    let t = Subst.compress t in
-    match t.n with
-    | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
-    | _ -> failwith "unexpected: term was not an alien embedding"
 
 ///////////////////////////////////////////
 // Setting pragmas

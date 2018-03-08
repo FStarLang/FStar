@@ -124,7 +124,7 @@ let ps_to_string (msg, ps) =
                ]
 
 let goal_to_json g =
-    let g_binders = Env.all_binders g.context |> Print.binders_to_json in
+    let g_binders = Env.all_binders g.context |> Print.binders_to_json (Env.dsenv g.context) in
     JsonAssoc [("hyps", g_binders);
                ("goal", JsonAssoc [("witness", JsonStr (tts g.context g.witness));
                                    ("type", JsonStr (tts g.context g.goal_ty))])]
@@ -259,23 +259,25 @@ let dismiss_all : tac<unit> =
 let nwarn = BU.mk_ref 0
 
 let check_valid_goal g =
-    let b = true in
-    let env = g.context in
-    let b = b && Env.closed env g.witness in
-    let b = b && Env.closed env g.goal_ty in
-    let rec aux b e =
-        match Env.pop_bv e with
-        | None -> b
-        | Some (bv, e) -> (
-            let b = b && Env.closed e bv.sort in
-            aux b e
-            )
-    in
-    if not (aux b env) && !nwarn < 5
-    then (Err.log_issue g.goal_ty.pos
-              (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                          (goal_to_string g));
-          nwarn := !nwarn + 1)
+    if Options.defensive () then begin
+        let b = true in
+        let env = g.context in
+        let b = b && Env.closed env g.witness in
+        let b = b && Env.closed env g.goal_ty in
+        let rec aux b e =
+            match Env.pop_bv e with
+            | None -> b
+            | Some (bv, e) -> (
+                let b = b && Env.closed e bv.sort in
+                aux b e
+                )
+        in
+        if not (aux b env) && !nwarn < 5
+        then (Err.log_issue g.goal_ty.pos
+                  (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
+                              (goal_to_string g));
+              nwarn := !nwarn + 1)
+    end
 
 let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
@@ -354,7 +356,11 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
-    try ret (ps.main_context.type_of e t) with e -> fail "not typeable")
+    try ret (ps.main_context.type_of e t)
+    with ex ->
+           //printfn "%A\n" ex;
+           fail2 "Cannot type %s in context (%s)" (tts e t)
+                                                  (Env.all_binders e |> Print.binders_to_string ", "))
 
 let must_trivial (e : env) (g : guard_t) : tac<unit> =
     try if not (Rel.is_trivial <| Rel.discharge_guard_no_smt e g)
@@ -453,7 +459,7 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
         bind (map t2) (fun _ -> ret ()))
     )
 
-let intro : tac<binder> =
+let intro : tac<binder> = wrap_err "intro" <|
     bind cur_goal (fun goal ->
     match U.arrow_one goal.goal_ty with
     | Some (b, c) ->
@@ -467,10 +473,10 @@ let intro : tac<binder> =
                                                  goal_ty = bnorm env' typ';
                                                  witness = bnorm env' u})) (fun _ ->
                   ret b)
-             else fail "intro: unification failed"
+             else fail "unification failed"
              )
     | None ->
-        fail1 "intro: goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
+        fail1 "goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
     )
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
@@ -515,12 +521,13 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
     mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
+    mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
     bind (__tc e t) (fun (t, _, guard) ->
     Rel.force_trivial_guard e guard;
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    )))
+    ))))
 
 let refine_intro : tac<unit> = wrap_err "refine_intro" <|
     bind cur_goal (fun g ->
@@ -601,10 +608,12 @@ exception NoUnif
 // TODO: this should probably be made into a user tactic
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
+    mlog (fun () -> BU.print1 ">>> Calling __exact(%s)\n" (Print.term_to_string tm)) (fun () ->
     bind (trytac (t_exact false true tm)) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
+        mlog (fun () -> BU.print1 ">>> typ = %s\n" (Print.term_to_string typ)) (fun () ->
         match U.arrow_one typ with
         | None -> raise NoUnif
         | Some ((bv, aq), c) ->
@@ -613,7 +622,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
             if not (U.is_total_comp c) then fail "apply: not total codomain" else
             bind (new_uvar "apply" goal.context bv.sort) (fun u ->
             (* BU.print1 "__apply: witness is %s\n" (Print.term_to_string u); *)
-            let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
+            let tm' = mk_Tm_app tm [(u, aq)] None tm.pos in
             let typ' = SS.subst [S.NT (bv, u)] <| comp_to_typ c in
             bind (__apply uopt tm' typ') (fun _ ->
             let u = bnorm goal.context u in
@@ -634,7 +643,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                 (* BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u); *)
                 ret ()
                 end
-            )))))
+            )))))))
 
 // The exception is thrown only when the tactic runs, not when it's defined,
 // so we need to do this to catch it
@@ -1118,6 +1127,12 @@ let launch_process (prog : string) (args : string) (input : string) : tac<string
         ret s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
+    )
+
+let fresh_binder_named (nm : string) (t : typ) : tac<binder> =
+    // The `bind idtac` thunks the tactic. Not really needed, just being paranoid
+    bind idtac (fun () ->
+        ret (gen_bv nm None t, None)
     )
 
 let goal_of_goal_ty env typ : goal * guard_t =

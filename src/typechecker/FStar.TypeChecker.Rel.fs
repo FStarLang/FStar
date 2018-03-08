@@ -65,27 +65,29 @@ let abstract_guard_n bs g =
 let abstract_guard b g =
     abstract_guard_n [b] g
 
-let guard_unbound_vars env g =
-    match g.guard_f with
-    | Trivial      -> BU.new_set S.order_bv
-    | NonTrivial f -> unbound_vars env f
+let def_check_closed_in rng msg e t =
+    if Options.defensive () then begin
+        let s = unbound_vars e t in
+        if not (BU.set_is_empty s)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ", "))
+    end
 
-let check_guard msg env g =
-    let s = guard_unbound_vars env g in
-    if BU.set_is_empty s
-    then ()
-    else raise_err (Errors.Fatal_FreeVariables, BU.format2 "Guard has free variables (%s): %s"
-                                msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
-
-let check_term msg env t =
-    let s = unbound_vars env t in
-    if BU.set_is_empty s
-    then ()
-    else raise_err (Errors.Fatal_FreeVariables, BU.format3 "Term <%s> has free variables (%s): %s"
-                                (Print.term_to_string t)
-                                msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
+let def_check_closed rng msg t =
+    if Options.defensive () then begin
+        let s = Free.names t in
+        if not (BU.set_is_empty s)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ", "))
+    end
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
@@ -316,9 +318,20 @@ let p_loc = function
 let p_guard = function
    | TProb p -> p.logical_guard
    | CProb p -> p.logical_guard
-let p_scope = function
+
+let p_scope prob =
+   let r = match prob with
    | TProb p -> p.scope
    | CProb p -> p.scope
+   in
+   begin match r with
+   | [] -> r
+   | (bv, _)::_ ->
+       // A simple sanity check, the head of the environment must have a closed type.
+       def_check_closed (p_loc prob) "p_scope" bv.sort;
+       r
+   end
+
 let p_invert = function
    | TProb p -> TProb <| invert p
    | CProb p -> CProb <| invert p
@@ -405,7 +418,10 @@ let commit uvis = uvis |> List.iter (function
         | U_unif u' -> UF.univ_union u u'
         | _ -> UF.univ_change u t
       end
-    | TERM((u, _), t) -> U.set_uvar u t)
+    | TERM((u, _), t) ->
+      def_check_closed t.pos "commit" t;
+      U.set_uvar u t
+    )
 
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
@@ -464,6 +480,8 @@ let base_and_refinement_maybe_delta should_delta env t1 =
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
+
+        | Tm_lazy i -> aux norm (U.unfold_lazy i)
 
         | Tm_uinst _
         | Tm_fvar _
@@ -532,7 +550,7 @@ let wl_to_string wl =
 (* <solving problems>                               *)
 (* ------------------------------------------------ *)
 
-let u_abs (k : typ) (ys : binders) (t : term) =
+let u_abs (k : typ) (ys : binders) (t : term) : term =
     let (ys, t), (xs, c) = match (SS.compress k).n with
         | Tm_arrow(bs, c) ->
           if List.length bs = List.length ys
@@ -560,6 +578,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (string_of_int (p_pid prob))
                             (Print.term_to_string uv)
                             (Print.term_to_string phi);
+          def_check_closed (p_loc prob) "solve_prob'" phi;
           U.set_uvar uvar phi
         | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     commit uvis;
@@ -752,7 +771,8 @@ let and_match m1 m2 =
 
 let fv_delta_depth env fv = match fv.fv_delta with
     | Delta_abstract d ->
-      if env.curmodule.str = fv.fv_name.v.nsstr
+      if env.curmodule.str = fv.fv_name.v.nsstr && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
+                                                                     //    a better way would be create new fvs with appripriate delta_depth at extraction time
       then d //we're in the defining module
       else Delta_constant
     | Delta_defined_at_level _ ->
@@ -768,6 +788,7 @@ let rec delta_depth_of_term env t =
     match t.n with
     | Tm_meta _
     | Tm_delayed _  -> failwith "Impossible"
+    | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
     | Tm_unknown
     | Tm_bvar _
     | Tm_name _
@@ -957,7 +978,8 @@ let arg_of_tc = function
     | T (t, _) -> as_arg t
     | _ -> failwith "Impossible"
 
-let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>) =
+let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>)
+    : (list<prob> * list<tc> * formula) =
    //U p1..pn REL h q1..qm
    //if h is not a free variable
    //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
@@ -1024,10 +1046,15 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                 let sub_probs, tcs, f = aux scope args qs in
                 let f = match bopt with
                     | None ->
-                      U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst)))
+                      let f = U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                      def_check_closed (p_loc orig) "imitation_sub_probs (1)" f;
+                      f
                     | Some b ->
                       let u_b = env.universe_of env (fst b).sort in
-                      U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                      let f = U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                      def_check_closed (p_loc orig) "imitation_sub_probs (2)" f;
+                      f
+                in
 
                 probs@sub_probs, tc::tcs, f in
 
@@ -1142,9 +1169,19 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                 | _ -> false)
         | _ -> occurs_univ v1 (U_max [u]) in
 
+    let rec filter_out_common_univs (u1:list<universe>) (u2:list<universe>) :(list<universe> * list<universe>) =
+      let common_elts = u1 |> List.fold_left (fun uvs uv1 -> if u2 |> List.existsML (fun uv2 -> U.compare_univs uv1 uv2 = 0) then uv1::uvs else uvs) [] in
+      let filter = List.filter (fun u -> not (common_elts |> List.existsML (fun u' -> U.compare_univs u u' = 0))) in
+      filter u1, filter u2
+    in
+
     let try_umax_components u1 u2 msg =
         match u1, u2 with
             | U_max us1, U_max us2 ->
+              //filter out common universes in us1 and us2
+              //this allows more cases to unify, e.g. us1 = [uvar; un] and us2=[un; un']
+              //with just structural comparison, this would fail to unify, but after filtering away un, we can unify uvar with un'
+              let us1, us2 = filter_out_common_univs us1 us2 in
               if List.length us1 = List.length us2 //go for a structural match
               then let rec aux wl us1 us2 = match us1, us2 with
                         | u1::us1, u2::us2 ->
@@ -1827,6 +1864,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     (Print.tag_of_term im);
                     (List.map (prob_to_string env) sub_probs |> String.concat ", ");
                     (N.term_to_string env formula)];
+        def_check_closed (p_loc orig) "imitate" im;
         let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate> *)
@@ -1898,7 +1936,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
                              let k' = U.arrow xs c in
                              let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
-                             UF.change uvar uv_sol;
+                             def_check_closed (p_loc orig) "solve_t_flex_rigid.subterms" uv_sol;
+                             U.set_uvar uvar uv_sol;
                              Some (xs, c))
                         | _ -> None
                        end
@@ -2224,7 +2263,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if debug env (Options.Other "RelCheck")
         then BU.print1 "Attempting %s\n" (string_of_int problem.pid) in
     let r = Env.get_range env in
-
+    let not_quote t =
+        match (SS.compress t).n with
+        | Tm_meta (_, Meta_quoted _) -> false
+        | _ -> true
+    in
     match t1.n, t2.n with
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
@@ -2235,13 +2278,22 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         // this works (I couldn't figure it out).
         failwith "Impossible: terms were not compressed"
 
-      | Tm_ascribed _, _
-      | Tm_meta _, _ ->
+      | Tm_ascribed _, _ ->
+        solve_t' env ({problem with lhs=U.unascribe t1}) wl
+
+      | Tm_meta _, _ when not_quote t1 ->
         solve_t' env ({problem with lhs=U.unmeta t1}) wl
 
-      | _, Tm_ascribed _
-      | _, Tm_meta _ ->
+      | _, Tm_ascribed _ ->
+        solve_t' env ({problem with rhs=U.unascribe t2}) wl
+
+      | _, Tm_meta _ when not_quote t2 ->
         solve_t' env ({problem with rhs=U.unmeta t2}) wl
+
+      | Tm_meta (_, Meta_quoted (t1, _)), Tm_meta (_, Meta_quoted (t2, _)) ->
+        (* solve_prob orig None [] wl *)
+        solve env (solve_prob orig None [] wl)
+        (* solve_t' env ({problem with lhs = t1; rhs = t2}) wl *)
 
       | Tm_bvar _, _
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"
@@ -2871,6 +2923,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
+      def_check_closed_in (Env.get_range env) "discharge_guard'" env vc;
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->

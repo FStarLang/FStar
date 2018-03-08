@@ -38,6 +38,8 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Const = FStar.Parser.Const
+module R  = FStar.Reflection.Basic
+module RD = FStar.Reflection.Data
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -116,10 +118,19 @@ let varops =
 (* ---------------------------------------------------- *)
 (* <Environment> *)
 (* Each entry maps a Syntax variable to its encoding as a SMT2 term *)
+(* free variables, depending on whether or not they are fully applied ...  *)
+(* ... are mapped either to SMT2 functions, or to nullary tokens *)
+type fvar_binding = {
+    fvar_lid:  lident;
+    smt_arity: int;
+    smt_id:    string;
+    smt_token: option<term>;
+    smt_fuel_partial_app:option<term>
+}
+
 type binding =
     | Binding_var   of bv * term
-    | Binding_fvar  of lident * string * option<term> * option<term> (* free variables, depending on whether or not they are fully applied ...  *)
-                                                                     (* ... are mapped either to SMT2 functions, or to nullary tokens *)
+    | Binding_fvar  of fvar_binding //lident * string * option<term> * option<term>
 
 let binder_of_eithervar v = (v, None)
 type cache_entry = {
@@ -158,7 +169,7 @@ let use_cache_entry ce =
 let print_env e =
     e.bindings |> List.map (function
         | Binding_var  (x, _) -> Print.bv_to_string x
-        | Binding_fvar (l, _, _, _) -> Print.lid_to_string l) |> String.concat ", "
+        | Binding_fvar fvb -> Print.lid_to_string fvb.fvar_lid) |> String.concat ", "
 
 let lookup_binding env f = BU.find_map env.bindings f
 
@@ -197,62 +208,99 @@ let lookup_term_var env a =
     | Some (b,t) -> t
 
 (* Qualified term names *)
-let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
+let mk_fvb lid fname arity ftok fuel_partial_app = {
+        fvar_lid  = lid;
+        smt_arity = arity;
+        smt_id    = fname;
+        smt_token = ftok;
+        smt_fuel_partial_app = fuel_partial_app
+}
+let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
     let fname = varops.new_fvar x in
-    let ftok = fname^"@tok" in
+    let ftok_name = fname^"@tok" in
+    let ftok = mkApp(ftok_name, []) in
+    let fvb = mk_fvb x fname arity (Some ftok) None in
 //    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
-    fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
+    fname, ftok_name, {env with bindings=(Binding_fvar fvb)::env.bindings}
 let try_lookup_lid env a =
-    lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None)
+    lookup_binding env (function
+      | Binding_fvar fvb
+            when lid_equals fvb.fvar_lid a ->
+        Some fvb
+      | _ -> None)
 let contains_name env (s:string) =
-    lookup_binding env (function Binding_fvar(b, t1, t2, t3) when (b.str=s) -> Some () | _ -> None) |> Option.isSome
+    lookup_binding env (function
+      | Binding_fvar fvb
+            when (fvb.fvar_lid.str=s) ->
+        Some ()
+      | _ -> None) |> Option.isSome
 let lookup_lid env a =
     match try_lookup_lid env a with
     | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a))
     | Some s -> s
-let push_free_var env (x:lident) fname ftok =
-    {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
+let push_free_var env (x:lident) arity fname ftok =
+    let fvb = mk_fvb x fname arity ftok None in
+    {env with bindings=Binding_fvar fvb::env.bindings}
 let push_zfuel_name env (x:lident) f =
-    let t1, t2, _ = lookup_lid env x in
+    let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
-    {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
+    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) in
+    {env with bindings=Binding_fvar fvb::env.bindings}
 let try_lookup_free_var env l =
     match try_lookup_lid env l with
-        | None -> None
-        | Some (name, sym, zf_opt) ->
-            match zf_opt with
-                | Some f when (env.use_zfuel_name) -> Some f
-                | _ ->
-                  match sym with
-                    | Some t ->
-                        begin match t.tm with
-                            | App(_, [fuel]) ->
-                                if (BU.starts_with (Term.fv_of_term fuel |> fst) "fuel")
-                                then Some <| mk_ApplyTF(mkFreeV (name, Term_sort)) fuel
-                                else Some t
-                            | _ -> Some t
-                        end
-                    | _ -> None
+    | None -> None
+    | Some fvb ->
+      begin
+      match fvb.smt_fuel_partial_app with
+      | Some f when env.use_zfuel_name -> Some f
+      | _ ->
+        begin
+        match fvb.smt_token with
+        | Some t ->
+          begin
+          match t.tm with
+          | App(_, [fuel]) ->
+            if (BU.starts_with (Term.fv_of_term fuel |> fst) "fuel")
+            then Some <| mk_ApplyTF(mkFreeV (fvb.smt_id, Term_sort)) fuel
+            else Some t
+          | _ -> Some t
+          end
+        | _ -> None
+        end
+      end
 let lookup_free_var env a =
     match try_lookup_free_var env a.v with
         | Some t -> t
         | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a.v))
-let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
+let lookup_free_var_name env a =
+    let fvb = lookup_lid env a.v in
+    fvb.smt_id, fvb.smt_arity
 let lookup_free_var_sym env a =
-    let name, sym, zf_opt = lookup_lid env a.v in
-    match zf_opt with
-        | Some({tm=App(g, zf)}) when env.use_zfuel_name -> g, zf
-        | _ ->
-            match sym with
-                | None -> Var name, []
-                | Some sym ->
-                    match sym.tm with
-                        | App(g, [fuel]) -> g, [fuel]
-                        | _ -> Var name, []
+    let fvb = lookup_lid env a.v in
+    match fvb.smt_fuel_partial_app with
+    | Some({tm=App(g, zf)})
+        when env.use_zfuel_name ->
+        g, zf, fvb.smt_arity + 1
+    | _ ->
+        begin
+        match fvb.smt_token with
+        | None ->
+            Var fvb.smt_id, [], fvb.smt_arity
+        | Some sym ->
+            begin
+            match sym.tm with
+            | App(g, [fuel]) ->
+                g, [fuel], fvb.smt_arity + 1
+            | _ ->
+                Var fvb.smt_id, [], fvb.smt_arity
+            end
+        end
 
 let tok_of_name env nm =
     BU.find_map env.bindings (function
-        | Binding_fvar(_, nm', tok, _) when (nm=nm') -> tok
+        | Binding_fvar fvb
+            when fvb.smt_id=nm ->
+          fvb.smt_token
         | _ -> None)
 
 (* </Environment> *)
@@ -323,6 +371,23 @@ let mk_Apply e vars =
             | Fuel_sort -> mk_ApplyTF out (mkFreeV var)
             | s -> assert (s=Term_sort); mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
+let raise_arity_mismatch head arity n_args rng =
+    Errors.raise_error (Errors.Fatal_SMTEncodingArityMismatch,
+                                 BU.format3 "Head symbol %s expects at least %s arguments; got only %s"
+                                        head
+                                        (BU.string_of_int arity)
+                                        (BU.string_of_int n_args))
+                                rng
+
+let maybe_curry_app rng (head:op) (arity:int) (args:list<term>) =
+    let n_args = List.length args in
+    if n_args = arity
+    then Util.mkApp'(head, args)
+    else if n_args > arity
+    then let args, rest = BU.first_N arity args in
+         let head = Util.mkApp'(head, args) in
+         mk_Apply_args head rest
+    else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
 
 let is_app = function
     | Var "ApplyTT"
@@ -540,8 +605,9 @@ and encode_arith_term env head args_e =
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
     let mk_default () =
-        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
-        Util.mkApp'(fname, fuel_args@arg_tms)
+        let fname, fuel_args, arity = lookup_free_var_sym env head_fv.fv_name in
+        let args = fuel_args@arg_tms in
+        maybe_curry_app head.pos fname arity args
     in
     let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts ->
@@ -680,6 +746,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_delayed  _
       | Tm_unknown    -> failwith (BU.format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
 
+      | Tm_lazy i -> encode_term (U.unfold_lazy i) env
+
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
@@ -688,11 +756,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         then Term.mk_Term_unit, []
         else encode_term t env
 
-      | Tm_meta ({n = Tm_unknown}, Meta_alien (obj, desc, ty)) ->
-        let tsym = varops.fresh "t", Term_sort in
-        let t = mkFreeV tsym in
-        let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "alien term (%s)" desc)) in
-        t, [decl]
+      | Tm_meta({n = _}, Meta_quoted (qt, _)) ->
+        // Inspect the term and encode its view, recursively.
+        // Quoted terms are, in a way, simply an optimization.
+        // They should be equivalent to a fully spelled out view.
+        //
+        // Actual encoding: `q ~> pack qv where qv is the view of q
+        let tv = R.embed_term_view t.pos (R.inspect qt) in
+        let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
+        encode_term t env
 
       | Tm_meta(t, _) ->
         encode_term t env
@@ -753,7 +825,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
                   let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
 
-                  let t = mkApp(tsym, List.map mkFreeV cvars) in
+                  let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
                   let t_has_kind = mk_HasType t mk_Term_type in
 
                   let k_assumption =
@@ -953,9 +1025,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 end in
 
             let encode_full_app fv =
-                let fname, fuel_args = lookup_free_var_sym env fv in
-                let tm = mkApp'(fname, fuel_args@args) in
-                tm, decls in
+                let fname, fuel_args, arity = lookup_free_var_sym env fv in
+                let tm = maybe_curry_app t0.pos fname arity (fuel_args@args) in
+                tm, decls
+            in
 
             let head = SS.compress head in
 
@@ -1078,7 +1151,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let fsym = varops.mk_unique ("Tm_abs_" ^ (BU.digest_of_string tkey_hash)) in
                         module_name ^ "_" ^ fsym in
                     let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                    let f = mkApp(fsym, List.map mkFreeV cvars) in
+                    let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
                     let app = mk_Apply f vars in
                     let typing_f =
                       match arrow_t_opt with
@@ -1173,7 +1246,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             in
             let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                mk_guard arg (mkApp(proj, [scrutinee]))) in
+                mk_guard arg (mkApp(proj, [scrutinee]))) in //arity ok, primitive projector (#1383)
             mk_and_l (is_f::sub_term_guards)
     in
 
@@ -1189,7 +1262,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             args
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                mk_projections arg (mkApp(proj, [scrutinee])))
+                mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
             |> List.flatten in
 
     let pat_term () = encode_term pat_term env in
@@ -1456,7 +1529,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 (* ----------------------------------------------------------------------------------------------- *)
 
 type prims_t = {
-    mk:lident -> string -> term * list<decl>;
+    mk:lident -> string -> term * int * list<decl>;
     is:lident -> bool;
 }
 
@@ -1465,14 +1538,15 @@ let prims =
     let asym, a = fresh_fvar "a" Term_sort in
     let xsym, x = fresh_fvar "x" Term_sort in
     let ysym, y = fresh_fvar "y" Term_sort in
-    let quant vars body : string -> term * list<decl> = fun x ->
+    let quant vars body : string -> term * int * list<decl> = fun x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
-        let xapp = mkApp(x, List.map mkFreeV vars) in
-        let xtok = mkApp(xtok, []) in
+        let xapp = mkApp(x, List.map mkFreeV vars) in //arity ok, see decl (#1383)
+        let xtok = mkApp(xtok, []) in //arity ok, see decl (#1383)
         let xtok_app = mk_Apply xtok vars in
         xtok,
+        List.length vars,
         [xname_decl;
          xtok_decl;
          Util.mkAssume(mkForall([[xapp]], vars, mkEq(xapp, body)), None, "primitive_" ^x);
@@ -1503,7 +1577,7 @@ let prims =
         (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
         ]
     in
-    let mk : lident -> string -> term * list<decl> =
+    let mk : lident -> string -> term * int * list<decl> =
         fun l v ->
             prims |>
             List.find (fun (l', _) -> lid_equals l l') |>
@@ -1748,17 +1822,18 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
     if not <| (U.is_pure_or_ghost_function t_norm || is_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     || uninterpreted
-    then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
-         let arg_sorts = match (SS.compress t_norm).n with
+    then let arg_sorts = match (SS.compress t_norm).n with
             | Tm_arrow(binders, _) -> binders |> List.map (fun _ -> Term_sort)
             | _ -> [] in
+         let arity = List.length arg_sorts in
+         let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity in
          let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
          let dd = Term.DeclFun(vtok, [], Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd], env
     else if prims.is lid
          then let vname = varops.new_fvar lid in
-              let tok, definition = prims.mk lid vname in
-              let env = push_free_var env lid vname (Some tok) in
+              let tok, arity, definition = prims.mk lid vname in
+              let env = push_free_var env lid arity vname (Some tok) in
               definition, env
          else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
               let formals, (pre_opt, res_t) =
@@ -1772,7 +1847,8 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                 then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
                 else args, (None, U.comp_result comp)
               in
-              let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
+              let arity = List.length formals in
+              let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity in
               let vtok_tm = match formals with
                 | [] -> mkFreeV(vname, Term_sort)
                 | _ -> mkApp(vtok, []) in
@@ -1789,7 +1865,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     let _, (xxsym, _) = BU.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
                     let f = {ppname=f; index=0; sort=tun} in
-                    let tp_name = mk_term_projector_name d f in
+                    let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
                     let prim_app = mkApp(tp_name, [xx]) in
                     [Util.mkAssume(mkForall([[vapp]], vars,
                                             mkEq(vapp, prim_app)), Some "Projector equation", ("proj_equation_"^tp_name))]
@@ -1800,7 +1876,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
               let vtok_app = mk_Apply vtok_tm vars in
 
-              let vapp = mkApp(vname, List.map mkFreeV vars) in
+              let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |formals| = |vars| (#1383)
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (fun _ -> Term_sort), Term_sort, None) in
                 let tok_typing, decls2 =
@@ -1830,7 +1906,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     | _ ->
                       Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname)) in
                 let tok_decl, env = match formals with
-                        | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
+                        | [] -> decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
@@ -1859,12 +1935,12 @@ let declare_top_level_let env x t t_norm =
   (* Need to introduce a new name decl *)
   | None ->
       let decls, env = encode_free_var false env x t t_norm [] in
-      let n, x', _ = lookup_lid env x.fv_name.v in
-      (n, x'), decls, env
+      let fvb = lookup_lid env x.fv_name.v in
+      fvb, decls, env
 
   (* already declared, only need an equation *)
-  | Some (n, x, _) ->
-      (n, x), [], env
+  | Some fvb ->
+      fvb, [], env
 
 
 let encode_top_level_val uninterpreted env lid t quals =
@@ -1992,30 +2068,42 @@ let encode_top_level_let :
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
             (* the encoded term *)
             let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) lb.lbtyp t_norm in
-            (BU.right lb.lbname, tok)::toks, t_norm::typs, decl::decls, env)
+            tok::toks, t_norm::typs, decl::decls, env)
             ([], [], [], env)
         in
-        let toks = List.rev toks in
+        let toks_fvbs = List.rev toks in
         let decls = List.rev decls |> List.flatten in
         let typs = List.rev typs in
 
-        let mk_app curry f ftok vars =
+        let mk_app rng curry fvb vars =
+            let mk_fv () =
+              if fvb.smt_arity = 0
+              then mkFreeV(fvb.smt_id, Term_sort)
+              else raise_arity_mismatch fvb.smt_id fvb.smt_arity 0 rng
+            in
             match vars with
-            | [] -> mkFreeV(f, Term_sort)
+            | [] ->
+              mk_fv ()
             | _ ->
               if curry
-                  then match ftok with
-                      | Some ftok -> mk_Apply ftok vars
-                      | None -> mk_Apply (mkFreeV(f, Term_sort)) vars
-                  else mkApp(f, List.map mkFreeV vars)
+              then match fvb.smt_token with
+                   | Some ftok ->
+                     mk_Apply ftok vars
+                   | None ->
+                     mk_Apply (mk_fv()) vars
+              else maybe_curry_app rng (Var fvb.smt_id) fvb.smt_arity (List.map mkFreeV vars)
         in
 
-        let encode_non_rec_lbdef (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
+        let encode_non_rec_lbdef
+                (bindings:list<letbinding>)
+                (typs:list<S.term>)
+                (toks:list<fvar_binding>)
+                (env:env_t) =
             match bindings, typs, toks with
-            | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
+            | [{lbunivs=uvs;lbdef=e;lbname=lbn}], [t_norm], [fvb] ->
 
                 (* Open universes *)
-                let flid = flid_fv.fv_name.v in
+                let flid = fvb.fvar_lid in
                 let env', e, t_norm =
                   let tcenv', _, e_t =
                       Env.open_universes_in env.tcenv uvs [e; t_norm] in
@@ -2041,7 +2129,7 @@ let encode_top_level_let :
                   then TcUtil.reify_body env'.tcenv body
                   else U.ascribe body (BU.Inl t_body, None)
                 in
-                let app = mk_app curry f ftok vars in
+                let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
                     if quals |> List.contains Logic
                     then mk_Valid app, encode_formula body env'
@@ -2052,29 +2140,32 @@ let encode_top_level_let :
                 //But the guard is unnecessary given the pattern
                 let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
                                     Some (BU.format1 "Equation for %s" flid.str),
-                                    ("equation_"^f)) in
-                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
+                                    ("equation_"^fvb.smt_id)) in
+                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid fvb.smt_id app,
                 env
             | _ -> failwith "Impossible"
         in
 
-        let encode_rec_lbdefs (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
+        let encode_rec_lbdefs (bindings:list<letbinding>)
+                              (typs:list<S.term>)
+                              (toks:list<fvar_binding>)
+                              (env:env_t) =
           (* encoding recursive definitions using fuel to throttle unfoldings *)
           (* We create a new variable corresponding to the current fuel *)
           let fuel = varops.fresh "fuel", Fuel_sort in
           let fuel_tm = mkFreeV fuel in
           let env0 = env in
           (* For each declaration, we push in the environment its fuel-guarded copy (using current fuel) *)
-          let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid_fv, (f, ftok)) ->
-            let flid = flid_fv.fv_name.v in
+          let gtoks, env = toks |> List.fold_left (fun (gtoks, env) fvb -> //(flid_fv, (f, ftok)) ->
+            let flid = fvb.fvar_lid in
             let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
             let gtok = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented_token") in
-            let env = push_free_var env flid gtok (Some <| mkApp(g, [fuel_tm])) in
-            (flid, f, ftok, g, gtok)::gtoks, env) ([], env)
+            let env = push_free_var env flid fvb.smt_arity gtok (Some <| mkApp(g, [fuel_tm])) in
+            (fvb, g, gtok)::gtoks, env) ([], env)
           in
           let gtoks = List.rev gtoks in
 
-          let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
+          let encode_one_binding env0 (fvb, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
 
             (* Open universes *)
             let env', e, t_norm =
@@ -2093,7 +2184,7 @@ let encode_top_level_let :
                         (Print.term_to_string e);
 
             (* Open binders *)
-            let (binders, body, formals, tres), curry = destruct_bound_function flid t_norm e in
+            let (binders, body, formals, tres), curry = destruct_bound_function fvb.fvar_lid t_norm e in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print4 "Encoding let rec: binders=[%s], body=%s, formals=[%s], tres=%s\n"
                               (Print.binders_to_string ", " binders)
@@ -2105,10 +2196,10 @@ let encode_top_level_let :
 
             let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
             let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
-            let env0 = push_zfuel_name env0 flid g in
+            let env0 = push_zfuel_name env0 fvb.fvar_lid g in
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
             let vars_tm = List.map mkFreeV vars in
-            let app = mkApp(f, List.map mkFreeV vars) in
+            let app = mkApp(fvb.smt_id, List.map mkFreeV vars) in
             let gsapp = mkApp(g, mkApp("SFuel", [fuel_tm])::vars_tm) in
             let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
             let body = if is_reifiable_function env'.tcenv t_norm then TcUtil.reify_body env'.tcenv body else body in
@@ -2118,7 +2209,7 @@ let encode_top_level_let :
             //But, the pattern ensures that this only applies to well-typed terms
             //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
             let eqn_g = Util.mkAssume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
-                                    Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
+                                    Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" fvb.fvar_lid.str),
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Util.mkAssume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
@@ -2172,9 +2263,9 @@ let encode_top_level_let :
             if not is_rec
             then
               (* Encoding non-recursive definitions *)
-              encode_non_rec_lbdef bindings typs toks env
+              encode_non_rec_lbdef bindings typs toks_fvbs env
             else
-              encode_rec_lbdefs bindings typs toks env
+              encode_rec_lbdefs bindings typs toks_fvbs env
           with Inner_let_rec -> decls, env  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
@@ -2236,8 +2327,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             in
 
             let encode_action env (a:S.action) =
-              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name in
               let formals, _ = U.arrow_formals_comp a.action_typ in
+              let arity = List.length formals in
+              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity in
               let tm, decls = encode_term (close_effect_params a.action_defn) env in
               let a_decls =
                 [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
@@ -2251,7 +2343,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 List.fold_right aux formals (env, [], [])
               in
               (* let app = mkApp("Reify", [mkApp(aname, xs)]) in *)
-              let app = mkApp(aname, xs) in
+              let app = mkApp(aname, xs) in //arity ok; length xs = length formals = arity
               let a_eq =
                 Util.mkAssume(mkForall([[app]], xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
                             Some "Action equality",
@@ -2270,7 +2362,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             List.flatten decls2, env
 
      | Sig_declare_typ(lid, _, _) when (lid_equals lid Const.precedes_lid) ->
-        let tname, ttok, env = new_term_constant_and_tok_from_lid env lid in
+        let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 
      | Sig_declare_typ(lid, _, t) ->
@@ -2312,7 +2404,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        List.flatten decls, env
 
      | Sig_let((_, [{lbname=BU.Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
-       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
+       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
        let b2t_x = mkApp("Prims.b2t", [x]) in
@@ -2409,11 +2501,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         let formals, res = SS.open_term formals res in
         let vars, guards, env', binder_decls, _ = encode_binders None formals env in
-
-        let tname, ttok, env = new_term_constant_and_tok_from_lid env t in
+        let arity = List.length vars in
+        let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
         let ttok_tm = mkApp(ttok, []) in
         let guard = mk_and_l guards in
-        let tapp = mkApp(tname, List.map mkFreeV vars) in
+        let tapp = mkApp(tname, List.map mkFreeV vars) in //arity ok
         let decls, env =
             //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
             //See: https://github.com/FStarLang/FStar/issues/349
@@ -2422,8 +2514,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                              Term_sort,
                                                              varops.next_id(),
                                                              false) in
-            let tok_decls, env = match vars with
-                | [] -> [], push_free_var env t tname (Some <| mkApp(tname, []))
+            let tok_decls, env =
+                match vars with
+                | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
                 | _ ->
                         let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
                         let ttok_fresh = Term.fresh_token (ttok, Term_sort) (varops.next_id()) in
@@ -2457,9 +2550,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, t, _, n_tps, _) ->
         let quals = se.sigquals in
-        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
-        let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = U.arrow_formals t in
+        let arity = List.length formals in
+        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
+        let ddtok_tm = mkApp(ddtok, []) in
         let fuel_var, fuel_tm = fresh_fvar "f" Fuel_sort in
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
@@ -2475,7 +2569,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let app = mk_Apply ddtok_tm vars in
         let guard = mk_and_l guards in
         let xvars = List.map mkFreeV vars in
-        let dapp =  mkApp(ddconstrsym, xvars) in
+        let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
 
         let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
         let tok_typing =
@@ -2499,7 +2593,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
         let ty_pred', decls_pred =
              let xvars = List.map mkFreeV vars' in
-             let dapp =  mkApp(ddconstrsym, xvars) in
+             let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
              encode_term_pred (Some fuel_tm) t_res env'' dapp in
         let guard' = mk_and_l guards' in
         let proxy_fresh = match formals with
@@ -2511,7 +2605,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             match (SS.compress head).n with
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv ->
-                  let encoded_head = lookup_free_var_name env' fv.fv_name in
+                  let encoded_head, encoded_head_arity = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
                   let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
                     let fv =
@@ -2544,9 +2638,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       (env', [], [], 0) (FStar.List.zip args encoded_args)
                   in
                   let arg_vars = List.rev arg_vars in
-                  let ty = mkApp(encoded_head, arg_vars) in
+                  let ty = maybe_curry_app fv.fv_name.p (Var encoded_head) encoded_head_arity arg_vars in
                   let xvars = List.map mkFreeV vars in
-                  let dapp =  mkApp(ddconstrsym, xvars) in
+                  let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
                   let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
                   let arg_binders = List.map fv_of_term arg_vars in
                   let typing_inversion =

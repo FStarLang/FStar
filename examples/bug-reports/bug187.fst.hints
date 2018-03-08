@@ -13,12 +13,12 @@
         "function_token_typing_Bug187.test",
         "function_token_typing_Prims.unit", "kinding_Prims.dtuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
         "typing_Bug187_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "d86d72e7f2357535c5dac7dd85b247ec"
+      "0a95f806cf07d6f5dc14883293dc0a34"
     ],
     [
       "Bug187.no_fail",
@@ -27,7 +27,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "4f9140164a5d301026863beba7f9ec73"
+      "15512781ce9736e7c0241635cfe85d5d"
     ]
   ]
 ]

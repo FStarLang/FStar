@@ -53,7 +53,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env = [N.Beta; N.Eager_unfolding]
+let steps env = [N.Beta; N.Eager_unfolding; N.NoFullNorm]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt =
@@ -140,7 +140,8 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
-let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t =
+let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * comp * guard_t =
+  let e, c = ec in
   let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
      if U.is_pure_comp c
      then mk_Total (U.comp_result c)
@@ -303,8 +304,26 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  | Tm_meta ({n = Tm_unknown}, Meta_alien (_, _, ty)) ->
-    top, S.mk_Total ty |> U.lcomp_of_comp, Rel.trivial_guard
+  // quoted terms are of type `term` ...
+  | Tm_meta ({n = _}, Meta_quoted (_, {qopen = false})) ->
+    value_check_expected_typ env top (Inl S.t_term) Rel.trivial_guard
+
+  // ... but open quotes are in the TAC effect
+  | Tm_meta ({n = _}, Meta_quoted (_, {qopen = true})) ->
+    let c = mk_Comp ({ comp_univs = [U_zero];
+                       effect_name = Const.effect_Tac_lid;
+                       result_typ = S.t_term;
+                       effect_args = [];
+                       flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+                    }) in
+    let t, lc, g = value_check_expected_typ env top (Inr (U.lcomp_of_comp c)) Rel.trivial_guard in
+    let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
+               None t.pos in
+    t, lc, g
+
+  // lazy terms have whichever type they're annotated with
+  | Tm_lazy i ->
+    value_check_expected_typ env top (Inl i.typ) Rel.trivial_guard
 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
@@ -499,12 +518,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
-    let isquote =
-        let head, _ = U.head_and_args head in
-        match (U.un_uinst head).n with
-                  | Tm_fvar fv when S.fv_eq_lid fv Const.quote_lid -> true
-                  | _ -> false
-    in
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
@@ -519,10 +532,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                        //         then TcUtil.maybe_assume_result_eq_pure_term env e c
                        //         else c in
                        e, c, g
-                  else
-                    // If we're descending under `quote`, don't instantiate implicits
-                    let env = if isquote then no_inst env else env
-                    in check_application_args env head chead g_head args (Env.expected_typ env0) in
+                  else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in
@@ -875,7 +885,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ ->
-        FStar.ToSyntax.Env.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
+        FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
         |> BU.must
         |> fst
 
@@ -2382,6 +2392,7 @@ let rec universe_of_aux env e =
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
+   | Tm_lazy i -> universe_of_aux env (U.unfold_lazy i)
    | Tm_ascribed(_, (Inl t, _), _) -> t
    | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
    //also easy, since we can quickly recompute the type
@@ -2491,6 +2502,9 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
 
   | Tm_name x ->
     Some x.sort
+
+  | Tm_lazy i ->
+    type_of_well_typed_term env (U.unfold_lazy i)
 
   | Tm_fvar fv ->
     bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->

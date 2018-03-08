@@ -8,7 +8,7 @@
       4,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "22ed05cca948a45d031028213c0b3745"
+      "c2328afbbed5f1062a460fb188e6e0bd"
     ],
     [
       "OneTimePad.xor_properties",
@@ -17,7 +17,7 @@
       4,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.tuple4_haseq",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
         "assumption_Prims.HasEq_bool", "bool_inversion", "bool_typing",
         "data_elim_FStar.Pervasives.Native.Mktuple4",
         "equation_OneTimePad.nib", "equation_OneTimePad.xor",
@@ -35,7 +35,16 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "a16c338fccbe4c694ade6b71f878f2b2"
+      "d1fd3fbf35aa447969f821f2bd70a968"
+    ],
+    [
+      "OneTimePad.xor_b",
+      2,
+      0,
+      4,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "1321ea4e294a946d7f5a5d1f8948a511"
     ]
   ]
 ]

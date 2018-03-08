@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "e74fdcccccd9bf987106f40800b2e7b0"
+      "51e721880dadb5ad027be0fdd303ff33"
     ],
     [
       "Bug260.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "4bdf748d0a379b5701d9c2fa546f559e"
+      "c8fa0bdf05b92a8b5416b8161dd2b4f5"
     ],
     [
       "Bug260.__proj__S__item___0",
@@ -46,18 +46,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "bffebed14caac7ec19ce01d75be50d57"
+      "0ce6855a7ed30bcd36a82678331e8330"
     ],
     [
       "Bug260.validity'",
       1,
       2,
       1,
-      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "eb3efb2e8c78d05250cdddfc2e868a33"
+      "6e57254079b702a227c122dbbfbc792a"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",

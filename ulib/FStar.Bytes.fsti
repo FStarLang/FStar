@@ -97,22 +97,6 @@ val get:
 
 unfold let op_String_Access = get
 
-val set_byte:
-    b:bytes
-  -> pos:u32{U32.v pos < length b}
-  -> byte
-  -> bytes
-
-unfold let op_String_Assignment = set_byte
-
-val reveal_set_byte:
-    b:bytes
-  -> pos:u32 {U32.v pos < length b}
-  -> x:byte
-  -> Lemma
-    (reveal (set_byte b pos x) == Seq.upd (reveal b) (U32.v pos) x)
-    [SMTPat (set_byte b pos x)]
-
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
 
 let equal b1 b2 =

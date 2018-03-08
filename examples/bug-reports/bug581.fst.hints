@@ -9,11 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_typing_intro_FStar.Pervasives.V@tok",
-        "function_token_typing_Prims.int",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
+        "function_token_typing_Prims.int"
       ],
       0,
-      "b857037dd861065b3a4a2892b6196cd6"
+      "ae0311e21e6d0f6ba400d654a2b4bf46"
     ]
   ]
 ]

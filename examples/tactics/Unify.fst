@@ -3,16 +3,16 @@ module Unify
 open FStar.Tactics
 
 let h : int =
-    synth_by_tactic (
-        l <-- fresh_uvar None; // None: we don't provide a type
-        r <-- fresh_uvar None;
-        apply (quote op_Addition);;
-        exact (return l);;
-        exact (return r);;
-        ocho <-- quote 8;
-        unify r ocho;;
-        unify l r;;
-        return ()
+    synth_by_tactic (fun () ->
+        let l = fresh_uvar None in // None: we don't provide a type
+        let r = fresh_uvar None in
+        apply (`op_Addition);
+        exact l;
+        exact r;
+        let ocho = `8 in
+        let _ = unify r ocho in
+        let _ = unify l r in
+        ()
     )
 
 let _ = assert (h == 16)

@@ -63,6 +63,8 @@
     <Compile Include="FStar.Syntax.InstFV.fsi" />
     <Compile Include="FStar.Syntax.InstFV.fs" />
     <Compile Include="FStar.Syntax.Util.fs" />
+    <Compile Include="FStar.Syntax.DsEnv.fsi" />
+    <Compile Include="FStar.Syntax.DsEnv.fs" />
     <Compile Include="FStar.Syntax.Resugar.fsi" />
     <Compile Include="FStar.Syntax.Resugar.fs" />
     <Compile Include="FStar.Syntax.Print.fsi" />

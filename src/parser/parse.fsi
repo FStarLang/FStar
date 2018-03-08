@@ -42,6 +42,7 @@ type token =
   | RARROW
   | RANGE_OF
   | RANGE of (string)
+  | QUOTE
   | QMARK_DOT
   | QMARK
   | PRIVATE
@@ -184,6 +185,7 @@ type tokenId =
     | TOKEN_RARROW
     | TOKEN_RANGE_OF
     | TOKEN_RANGE
+    | TOKEN_QUOTE
     | TOKEN_QMARK_DOT
     | TOKEN_QMARK
     | TOKEN_PRIVATE
@@ -299,7 +301,6 @@ type nonTerminalId =
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
-    | NONTERM_option_mainDecl_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_boption_SQUIGGLY_RARROW_
@@ -336,7 +337,6 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
-    | NONTERM_mainDecl
     | NONTERM_pragma
     | NONTERM_attribute
     | NONTERM_decoration
@@ -397,11 +397,19 @@ type nonTerminalId =
     | NONTERM_tmImplies
     | NONTERM_tmArrow_tmFormula_
     | NONTERM_tmArrow_tmNoEq_
+    | NONTERM_simpleArrow
+    | NONTERM_simpleArrowDomain
     | NONTERM_tmFormula
     | NONTERM_tmConjunction
     | NONTERM_tmTuple
+    | NONTERM_tmEqWith_appTerm_
+    | NONTERM_tmEqWith_tmRefinement_
+    | NONTERM_tmNoEqWith_appTerm_
+    | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq
+    | NONTERM_tmRefinement
     | NONTERM_refineOpt
     | NONTERM_recordExp
     | NONTERM_simpleDef

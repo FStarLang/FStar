@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "26fc1ce76cb6259bb97c6a0d8f3b8b73"
+      "11c8cd223b7afb7033397e9311bdc296"
     ],
     [
       "MetaCoq.apply",
@@ -20,11 +20,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.V",
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "1884c2b8d06dc559943708729c4a58b0"
+      "a4a68ca2afea8e55e2e093ae417c25f3"
     ],
     [
       "MetaCoq.cut",
@@ -33,21 +32,46 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_FStar.Pervasives.E",
-        "constructor_distinct_FStar.Pervasives.Err",
-        "constructor_distinct_FStar.Pervasives.V",
-        "fuel_guarded_inversion_FStar.Pervasives.result",
-        "projection_inverse_FStar.Pervasives.E_a",
-        "projection_inverse_FStar.Pervasives.E_e",
-        "projection_inverse_FStar.Pervasives.Err_a",
-        "projection_inverse_FStar.Pervasives.Err_msg",
-        "projection_inverse_FStar.Pervasives.V_a",
-        "projection_inverse_FStar.Pervasives.V_v", "unit_inversion",
-        "unit_typing"
+        "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "f14d8f6d9eac7ffeff8baebbb1b88314"
+      "84cd423d85b7789ff79f9ba49235d7a5"
+    ],
+    [
+      "MetaCoq.exact",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "eb53380af4afc0ad37522a61581b1396"
+    ],
+    [
+      "MetaCoq.apply",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "27dd7550586176897ae311b01372a931"
+    ],
+    [
+      "MetaCoq.cut",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "7573ba9fd5e414b2fcf2ecd3a80b4b33"
     ]
   ]
 ]

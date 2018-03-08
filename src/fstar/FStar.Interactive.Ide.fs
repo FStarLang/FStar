@@ -33,7 +33,7 @@ open FStar.Interactive
 open FStar.Parser.ParseIt
 
 module SS = FStar.Syntax.Syntax
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
@@ -1396,9 +1396,7 @@ let interactive_mode' (filename: string): unit =
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
-      //passing false for using_or_checking_extracted_interfaces, since --use_checked_interface is not allowed in interactive mode
-      //and this is for the main file (not a dependency), so we don't want to extract interface for this file
-      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) false (fun () -> go init_st)
+      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
     else
       go init_st in
   exit exit_code

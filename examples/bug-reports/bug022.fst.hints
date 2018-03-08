@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c7791f394e32d950c3964a55420f8960"
+      "cd38709ef74f41a00db17c74d1187b6f"
     ],
     [
       "Bug022.__proj__EAbs__item___0",
@@ -39,22 +39,16 @@
       1,
       [ "@query" ],
       0,
-      "7e31717724df12099e764a920ecf689b"
+      "2e537561bce3f1006c05db51af5b9c0c"
     ],
     [
       "Bug022.subst",
       1,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "constructor_distinct_Bug022.EAbs", "disc_equation_Bug022.EAbs",
-        "equality_tok_Bug022.EFalse@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug022.EAbs__0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fdf2e2eaf7f6c31fb150692741be5883"
+      "17c18de5f603941fb061c53647d73d45"
     ]
   ]
 ]

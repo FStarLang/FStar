@@ -82,7 +82,6 @@ val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
-val is_reifiable: env -> lident -> bool
 val reify_body: env -> term -> term
 val reify_body_with_arg: env -> term -> arg -> term
 val remove_reify: term -> term
@@ -97,4 +96,7 @@ val check_sigelt_quals: env -> sigelt -> unit
 //inductive types utilities
 
 val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
+
+val is_haseq_lid: lid -> bool  //see if the given lid is that of an haseq axiom
+val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get the haseq axiom lid
 val get_optimized_haseq_axiom: env -> sigelt -> list<subst_elt> -> univ_names -> (lident * term * binders * binders * term)
