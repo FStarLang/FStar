@@ -5,8 +5,12 @@ open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 
-(* Inspired by the A Monoid Expression Simplifier from
+(* "A Monoid Expression Simplifier" ported from
    http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html *)
+
+(* TODO: This development (like the Coq from which it is inspired)
+         doesn't use any of the monoid laws, not even associativity.
+         There is something shady happening here. *)
 
 type exp (a:Type) : Type =
   | Unit : exp a
@@ -73,9 +77,11 @@ let rec reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
   match inspect hd, tl with
   | Tv_FVar fv, [(me1, Q_Explicit) ; (me2, Q_Explicit)] ->
     let t1 = norm_term [] (pack (Tv_FVar fv)) in
-    let t2 = norm_term [simplify; delta] (quote (Monoid?.mult m)) in
-    // dump ("t1=" ^ term_to_string t1 ^
-    //     "; t2=" ^ term_to_string t2);
+    let t2 = norm_term [simplify; delta// _only ["__proj__Monoid__item__mult"]
+  ]
+                       (quote (Monoid?.mult m)) in
+    dump ("t1=" ^ term_to_string t1 ^
+        "; t2=" ^ term_to_string t2);
     if term_eq t1 t2 then Mult (reification m me1) (reification m me2)
     else fail ("Unrecognized binary operator: " ^ term_to_string me)
          (* or just use var *)
@@ -110,10 +116,11 @@ let monoid_tac (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
       if term_eq t (quote a) then
         let r1 = reification m me1 in
         let r2 = reification m me2 in
-        dump ("r1=" ^ exp_to_string a_to_string r1 ^
-            "; r2=" ^ exp_to_string a_to_string r2);
+        // this one causes a "Tactic gets stuck!" error
+        // dump ("r1=" ^ exp_to_string a_to_string r1 ^
+        //     "; r2=" ^ exp_to_string a_to_string r2);
         change_sq (quote (mdenote m r1 == mdenote m r2));
-        apply_lemma (`monoid_reflect m r1 r2); simpl()
+        mapply (quote (monoid_reflect m r1 r2)); simpl()
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
