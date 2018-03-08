@@ -40,11 +40,22 @@ module CTable = FStar.Interactive.CompletionTable
 
 exception ExitREPL of int
 
+(** Checkpoint the current (typechecking and desugaring) environment **)
 let push env msg =
   let res = push_context env msg in
   Options.push();
   res
 
+(** Revert to the last checkpoint.
+
+Usage note: [pop] alters the value returned by [push], but not the value that
+[push] operated on.  That is, a proper push/pop pair looks like this:
+
+  let noop =
+    let env_snapshot = push env in
+    // [Do stuff with env]
+    pop env_snapshot;
+    env_snapshot // Discard env **)
 let pop env msg =
   pop_context env msg;
   Options.pop()
@@ -1147,12 +1158,18 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
+// let string_of_sigmap sigmap =
+//   Util.smap_fold sigmap
+//     (fun k (v, _) acc ->
+//        (k ^ ": " ^ (sigelt_to_string v)) :: acc) []
+//   |> Util.concat_l "\n"
+
 let run_and_rewind st task =
   let env' = push st.repl_env "#compute" in
   let results = try Inl <| task st with e -> Inr e in
   pop env' "#compute";
   match results with
-  | Inl results -> (results, Inl st)
+  | Inl results -> (results, Inl ({ st with repl_env = env' }))
   | Inr e -> raise e
 
 let run_with_parsed_and_tc_term st term line column continuation =
