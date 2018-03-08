@@ -2580,5 +2580,9 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_pragma _ ->
       s
 
+    (* This should never happen, it should have been run by now *)
+    | Sig_splice _ ->
+      s
+
 let erase_universes env t =
     normalize [EraseUniverses; AllowUnboundUniverses] env t

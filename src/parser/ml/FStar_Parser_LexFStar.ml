@@ -427,6 +427,7 @@ let regexp ident       = ident_start_char ident_char*
 let regexp tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 
 let rec token = lexer
+ | "%splice" -> SPLICE
  | "quote" -> QUOTE
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS

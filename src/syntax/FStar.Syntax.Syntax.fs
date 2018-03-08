@@ -399,6 +399,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of term
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
