@@ -59,7 +59,8 @@ let sep_interp p q h =
 
 private let lemma_disjoint_heaps_emp (h0 h1:heap)
   : Lemma (emp h1 ==> disjoint_heaps h0 h1)
-          [SMTPat (disjoint_heaps h0 h1); SMTPat (emp h1)]
+          [SMTPat (disjoint_heaps h0 h1); 
+           SMTPat (emp h1)]
   = ()
 
 private let lemma_join_tot_emp' (h0 h1:heap)
@@ -68,14 +69,15 @@ private let lemma_join_tot_emp' (h0 h1:heap)
 
 private let lemma_join_tot_emp (h0 h1:heap)
   : Lemma (emp h1 ==> (join_tot h0 h1) == h0)
-          [SMTPat (join_tot h0 h1); SMTPat (emp h1)]
+          [SMTPat (join_tot h0 h1); 
+           SMTPat (emp h1)]
   = lemma_join_tot_emp' h0 h1
 
 private let emp_unit'  (p:hpred) (h:heap) (h0 h1:heap)
   : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) ==> p h)
   = lemma_join_tot_emp h0 h1
 
-let emp_unit p h = 
+let sep_emp p h = 
   sep_interp p emp h;
   FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> emp_unit' p h h0 h1));
   FStar.Classical.move_requires (fun h -> 
@@ -111,7 +113,8 @@ private let lemma_join_tot_assoc' (h0 h1 h2:heap)
 private let lemma_join_tot_assoc (h0 h1 h2:heap)
   : Lemma (requires (disjoint_heaps h0 h1 /\ disjoint_heaps h1 h2 /\ disjoint_heaps h0 h2))
           (ensures  (join_tot h0 (join_tot h1 h2) == join_tot (join_tot h0 h1) h2))
-          [SMTPat (join_tot h0 (join_tot h1 h2)); SMTPat (join_tot (join_tot h0 h1) h2)]
+          [SMTPat (join_tot h0 (join_tot h1 h2)); 
+           SMTPat (join_tot (join_tot h0 h1) h2)]
   = lemma_join_tot_assoc' h0 h1 h2
 
 private let exists_intro_4 (#a0:Type) (#a1:Type) (#a2:Type) (#a3:Type) 
@@ -220,3 +223,20 @@ let minus #a h r =
 let minus_contains #a r h = ()
 
 let restrict_points_to #a r h = ()
+
+let disjoint_heaps_restrict_minus #a r h = ()
+
+private let join_tot_restrict_minus' (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (equal h (join_tot (restrict h r) (minus h r))))
+  = ()
+
+let join_tot_restrict_minus #a r h = 
+  join_tot_restrict_minus' #a r h
+
+(*private let join_tot_minus_restrict' (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (equal (join_tot (minus h r) h) (restrict h r)))
+  = ()
+
+let join_tot_minus_restrict #a r h = ()*)

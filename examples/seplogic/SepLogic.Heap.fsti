@@ -26,7 +26,7 @@ val ( <*> ) : hpred -> hpred -> hpred
 val sep_interp (p q:hpred) (h:heap)
     : Lemma ((p <*> q) h <==> (exists h0 h1. disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1))
 
-val emp_unit  (p:hpred) (h:heap) 
+val sep_emp  (p:hpred) (h:heap) 
     : Lemma ((p <*> emp) h <==> p h)
 
 val sep_comm (p q:hpred) (h:heap)
@@ -69,7 +69,24 @@ val minus: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot heap
 val minus_contains (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))
           (ensures  (~((h `minus` r) `contains` r)))
+          [SMTPat ((h `minus` r) `contains` r)]
 
 val restrict_points_to (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))
           (ensures  (exists x . (r |> x) (restrict h r)))
+          [SMTPat (restrict h r);
+           SMTPat (h `contains` r)]
+
+val disjoint_heaps_restrict_minus (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (disjoint_heaps (restrict h r) (minus h r)))
+          [SMTPat (disjoint_heaps (restrict h r) (minus h r))]
+
+val join_tot_restrict_minus (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (h == join_tot (restrict h r) (minus h r)))
+          [SMTPat (join_tot (restrict h r) (minus h r))]
+
+(*val join_tot_minus_restrict (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (h `contains` r))
+          (ensures  (join_tot (minus h r) h == restrict h r))*)
