@@ -2385,11 +2385,21 @@ let (splice :
                  (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                    "splice left open goals") typ.FStar_Syntax_Syntax.pos
              else ());
-            (let uu____4724 =
-               let uu____4729 =
+            (let w1 =
+               FStar_TypeChecker_Normalize.normalize
+                 [FStar_TypeChecker_Normalize.Weak;
+                 FStar_TypeChecker_Normalize.HNF;
+                 FStar_TypeChecker_Normalize.UnfoldUntil
+                   FStar_Syntax_Syntax.Delta_constant;
+                 FStar_TypeChecker_Normalize.Primops;
+                 FStar_TypeChecker_Normalize.Unascribe;
+                 FStar_TypeChecker_Normalize.Unmeta] env w
+                in
+             let uu____4725 =
+               let uu____4730 =
                  FStar_Syntax_Embeddings.unembed_list
                    FStar_Reflection_Embeddings.unembed_sigelt
                   in
-               uu____4729 w  in
-             FStar_All.pipe_left FStar_Util.must uu____4724)))
+               uu____4730 w1  in
+             FStar_All.pipe_left FStar_Util.must uu____4725)))
   

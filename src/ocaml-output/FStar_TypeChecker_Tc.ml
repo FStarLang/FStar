@@ -4928,7 +4928,7 @@ let (tc_decl :
                FStar_Util.print2 "%s: Found splice of (%s)\n" uu____5965
                  uu____5966
              else ());
-            (let ses = env1.FStar_TypeChecker_Env.splice env1 t  in (ses, [])))
+            (let ses = env1.FStar_TypeChecker_Env.splice env1 t  in ([], ses)))
        | FStar_Syntax_Syntax.Sig_let (lbs,lids) ->
            let env2 = FStar_TypeChecker_Env.set_range env1 r  in
            let check_quals_eq l qopt q =
