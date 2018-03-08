@@ -34,6 +34,13 @@ let join_tot h0 h1 =
   then { next_addr = h1.next_addr; memory = memory }
   else { next_addr = h0.next_addr; memory = memory }
 
+private let join_tot_comm' (h0 h1:heap)
+  : Lemma (equal (join_tot h0 h1) (join_tot h1 h0))
+  = ()
+
+let join_tot_comm h0 h1
+  = join_tot_comm' h0 h1
+
 let disjoint #a #b r0 r1 = r0 =!= r1
 
 let disjoint_comm #a #b r0 r1 = ()
@@ -83,27 +90,19 @@ let sep_emp p h =
   FStar.Classical.move_requires (fun h -> 
     FStar.Classical.exists_intro (fun h1 -> exists h0 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ (emp h1)) init_heap) h
   
-private let lemma_disjoint_heaps_comm (h0 h1:heap) 
-  : Lemma ((disjoint_heaps h0 h1) <==> (disjoint_heaps h0 h1))
-          [SMTPat (disjoint_heaps h0 h1)]
-  = ()
+private let lemma_sep_comm (p q:hpred) (h h0 h1:heap)
+  : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1) 
+           ==> 
+           (exists h0 h1 . disjoint_heaps h1 h0 /\ h == join_tot h1 h0 /\ p h0 /\ q h1))
+  = lemma_join_tot_comm h0 h1
 
-private let lemma_join_tot_comm' (h0 h1:heap)
-  : Lemma (equal (join_tot h0 h1) (join_tot h1 h0))
-  = ()
-
-private let lemma_join_tot_comm (h0 h1:heap)
-  : Lemma ((join_tot h0 h1) == (join_tot h1 h0))
-          [SMTPat (join_tot h0 h1)]
-  = lemma_join_tot_comm' h0 h1
-
-private let lemma_sep_comm (p q:hpred) (h:heap)
+private let lemma_sep_comm' (p q:hpred) (h:heap)
   : Lemma ((exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h0 /\ q h1) 
-           <==> 
-           (exists h0 h1 . disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ p h1 /\ q h0))
-  = ()
+           ==> 
+           (exists h0 h1 . disjoint_heaps h1 h0 /\ h == join_tot h1 h0 /\ p h0 /\ q h1))
+  = FStar.Classical.forall_to_exists (fun h1 -> FStar.Classical.forall_to_exists (fun h0 -> lemma_sep_comm p q h h0 h1))
 
-let sep_comm p q h = lemma_sep_comm p q h
+let sep_comm p q h = lemma_sep_comm' p q h; lemma_sep_comm' q p h
 
 private let lemma_join_tot_assoc' (h0 h1 h2:heap)
   : Lemma (requires (disjoint_heaps h0 h1 /\ disjoint_heaps h1 h2 /\ disjoint_heaps h0 h2))
@@ -199,6 +198,8 @@ let points_to_disj #a #b r s x y h =
   sep_interp (r |> x) (s |> y) h;
   points_to_disj''' r s x y h
 
+let join_tot_contains #a r h0 h1 = ()
+
 let sel_tot #a h r =
   let Some (| _, x |) = h.memory r in
   x
@@ -226,7 +227,9 @@ let restrict_points_to #a r h = ()
 
 let disjoint_heaps_restrict_minus #a r h = ()
 
-let disjoint_heaps_minus #a r h = ()
+let disjoint_heaps_minus_1 #a r x h = ()
+
+let disjoint_heaps_minus_2 #a r x0 x1 h0 h1 = ()
 
 private let join_tot_restrict_minus' (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))
