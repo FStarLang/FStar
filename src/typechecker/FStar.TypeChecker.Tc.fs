@@ -1221,7 +1221,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
     let ses = env.splice env t in
-    ses, []
+    [], ses
 
   | Sig_let(lbs, lids) ->
     let env = Env.set_range env r in

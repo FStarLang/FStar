@@ -686,4 +686,9 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("splice left open goals")) typ.pos;
 
+    // Fully normalize the witness
+    let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil Delta_constant;
+                         N.Primops; N.Unascribe; N.Unmeta] env w in
+
+    // Unembed it, this must work if things are well-typed
     BU.must <| unembed_list RE.unembed_sigelt w
