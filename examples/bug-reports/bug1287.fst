@@ -88,7 +88,7 @@ let term_head t : Tac string =
   | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let b t1 t2 -> "Tv_Let"
+  | Tv_Let r b t1 t2 -> "Tv_Let"
   | Tv_Match t branches -> "Tv_Match"
   | Tv_Unknown -> "Tv_Unknown"
 
