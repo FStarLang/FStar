@@ -24,7 +24,7 @@ let smaller tv t =
     | Tv_Refine b t' ->
         type_of_binder b << t /\ t' << t
 
-    | Tv_Let b t1 t2 ->
+    | Tv_Let r b t1 t2 ->
         type_of_binder b << t /\ t1 << t /\ t2 << t
 
     | Tv_Match t1 brs ->

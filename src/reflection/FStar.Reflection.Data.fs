@@ -41,7 +41,7 @@ type term_view =
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * typ
-    | Tv_Let    of binder * term * term
+    | Tv_Let    of bool * binder * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
 
