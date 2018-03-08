@@ -14,7 +14,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "594f4fbd08e5f368c2a96ea62afbad81"
+      "bb251e17cd347ea2942f7655a5dbccc6"
     ],
     [
       "Bug1299.should_fail",
@@ -41,7 +41,7 @@
         "unit_typing"
       ],
       0,
-      "c8947dcfe49efa4d3801d7f44a1a77fb"
+      "96f9b63420fac10b23b8a39b6bf8d2db"
     ],
     [
       "Bug1299.test",
@@ -58,7 +58,7 @@
         "typing_FStar.Tactics.Builtins.__fail"
       ],
       0,
-      "b266e7017580337f74b51e0d421a2765"
+      "50a53ee00a6907d73b93c9605107ab45"
     ],
     [
       "Bug1299.id",
@@ -73,7 +73,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "b14f8baaa95da46ce36ce8cebdeba596"
+      "f70ccf84dfee024c88aa8a633c61fbb1"
     ],
     [
       "Bug1299.should_fail",
@@ -100,7 +100,7 @@
         "unit_typing"
       ],
       0,
-      "a17652bbbb16954abb48fd4cad6a8141"
+      "b9b579367adf3653114926a24e008b14"
     ]
   ]
 ]
