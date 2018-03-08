@@ -81,12 +81,9 @@ let make_constant_size_parser_injective
 let constant_size_parser_kind
   (sz: nat)
 : Tot parser_kind
-= {
-    parser_kind_low = sz;
-    parser_kind_high = Some sz;
-    parser_kind_total = false;
-    parser_kind_subkind = Some ParserStrong;
-  }
+= strong_parser_kind sz sz ({
+    parser_kind_metadata_total = false;
+  })
 
 let make_constant_size_parser
   (sz: nat)
@@ -113,15 +110,13 @@ let make_total_constant_size_parser_precond
 = forall (s1: bytes {Seq.length s1 == sz}) (s2: bytes {Seq.length s2 == sz}) .
   f s1 == f s2 ==> Seq.equal s1 s2
 
+inline_for_extraction
 let total_constant_size_parser_kind
   (sz: nat)
 : Tot parser_kind
-= {
-    parser_kind_low = sz;
-    parser_kind_high = Some sz;
-    parser_kind_total = true;
-    parser_kind_subkind = Some ParserStrong;
-  }
+= strong_parser_kind sz sz ({
+    parser_kind_metadata_total = true;
+  })
 
 let make_total_constant_size_parser
   (sz: nat)
@@ -148,12 +143,10 @@ let parse_ret' (#t:Type) (v:t) : Tot (bare_parser t) =
   fun (b: bytes) -> Some (v, (0 <: consumed_length b))
 
 // unfold
-let parse_ret_kind : parser_kind = {
-  parser_kind_low = 0;
-  parser_kind_high = Some 0;
-  parser_kind_total = true;
-  parser_kind_subkind = Some ParserStrong;
-}
+let parse_ret_kind : parser_kind =
+  strong_parser_kind 0 0 ({
+    parser_kind_metadata_total = true;
+  })
 
 unfold
 let parse_ret (#t:Type) (v:t) : Tot (parser parse_ret_kind t) =
@@ -170,7 +163,7 @@ let serialize_empty : serializer parse_empty =
 let fail_parser_kind_precond
   (k: parser_kind)
 : GTot Type0
-= k.parser_kind_total == false /\
+= k.parser_kind_metadata.parser_kind_metadata_total == false /\
   (Some? k.parser_kind_high ==> k.parser_kind_low <= Some?.v k.parser_kind_high)
 
 let fail_parser'
@@ -415,6 +408,13 @@ let and_then_no_lookahead_on #t #t' p p' x x' =
       else ()
     | _ -> ()
 
+let and_then_metadata
+  (k1 k2: parser_kind_metadata_t)
+: Tot parser_kind_metadata_t
+= {
+    parser_kind_metadata_total = k1.parser_kind_metadata_total && k2.parser_kind_metadata_total;
+  }
+
 // unfold
 let and_then_kind
   (k1 k2: parser_kind)
@@ -427,7 +427,7 @@ let and_then_kind
 	then Some (Some?.v k1.parser_kind_high + Some?.v k2.parser_kind_high)
 	else None
       end;
-    parser_kind_total = k1.parser_kind_total && k2.parser_kind_total;
+    parser_kind_metadata = and_then_metadata k1.parser_kind_metadata k2.parser_kind_metadata;
     parser_kind_subkind =
       begin
         if k2.parser_kind_subkind = Some ParserConsumesAll
@@ -737,6 +737,15 @@ let synth_injective
 : GTot Type0
 = forall (x x' : t1) . f x == f x' ==> x == x'
 
+let synth_injective_intro
+  (#t1: Type0)
+  (#t2: Type0)
+  (f: (t1 -> GTot t2))
+: Lemma
+  (requires (forall (x x' : t1) . f x == f x' ==> x == x'))
+  (ensures (synth_injective f))
+= ()
+
 let parse_synth
   (#k: parser_kind)
   (#t1: Type0)
@@ -811,6 +820,16 @@ let synth_inverse
 : GTot Type0
 = (forall (x : t2) . f2 (g1 x) == x)
 
+let synth_inverse_intro
+  (#t1: Type0)
+  (#t2: Type0)
+  (f2: (t1 -> GTot t2))
+  (g1: (t2 -> GTot t1))
+: Lemma
+  (requires (forall (x : t2) . f2 (g1 x) == x))
+  (ensures (synth_inverse f2 g1))
+= ()
+
 let serialize_synth
   (#k: parser_kind)
   (#t1: Type0)
@@ -861,18 +880,17 @@ let parse_filter_kind (k: parser_kind) : Tot parser_kind =
   {
     parser_kind_low = k.parser_kind_low;
     parser_kind_high = k.parser_kind_high;
-    parser_kind_total = false;
+    parser_kind_metadata = {
+      parser_kind_metadata_total = false;
+    };
     parser_kind_subkind = k.parser_kind_subkind;
   }
 
 // unfold
 let parse_filter_payload_kind : parser_kind =
-  {
-    parser_kind_low = 0;
-    parser_kind_high = Some 0;
-    parser_kind_total = false;
-    parser_kind_subkind = Some ParserStrong;
-  }
+  strong_parser_kind 0 0 ({
+    parser_kind_metadata_total = false;
+  })
 
 let parse_filter_payload
   (#t: Type0)

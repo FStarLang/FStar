@@ -35,6 +35,14 @@ module PC = FStar.Parser.Const
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
 
+(* A hook into FStar.Syntax.Print, only for debugging.
+ * The reference is set in FStar.Main *)
+let tts_f : ref<option<(term -> string)>> = U.mk_ref None
+let tts t : string =
+    match !tts_f with
+    | None -> "<<hook unset>>"
+    | Some f -> f t
+
 let qual_id lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
 
 let mk_discriminator lid =
@@ -821,15 +829,19 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-let mk_letbinding lbname univ_vars typ eff def lbattrs =
+// TODO: remove? note the argument order is different, ugh
+let mk_letbinding lbname univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
      lbdef=def;
-     lbattrs=lbattrs}
+     lbattrs=lbattrs;
+     lbpos=pos;
+    }
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
+
+let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs pos =
     let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
@@ -840,7 +852,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs =
     in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
-    mk_letbinding lbname univ_vars typ eff def attrs
+    mk_letbinding lbname univ_vars typ eff def attrs pos
 
 let open_univ_vars_binders_and_comp uvs binders c =
     match binders with
@@ -944,6 +956,12 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None dummyRange, u
 
+// works on anything, really
+let attr_eq a a' =
+   match eq_tm a a' with
+   | Equal -> true
+   | _ -> false
+
 let attr_substitute =
 mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
 
@@ -966,6 +984,7 @@ let t_true  = fvar_const PC.true_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
 let tac_opaque_attr = exp_string "tac_opaque"
+let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -1352,7 +1371,7 @@ let unthunk_lemma_post t =
     | _ ->
         mk_app t [as_arg exp_unit]
 
-let action_as_lb eff_lid a =
+let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
@@ -1362,6 +1381,7 @@ let action_as_lb eff_lid a =
       PC.effect_Tot_lid
       (abs a.action_params a.action_defn None)
       []
+      pos
   in
   { sigel = Sig_let((false, [lb]), [a.action_name]);
     sigrng = a.action_defn.pos;

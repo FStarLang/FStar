@@ -95,6 +95,13 @@ let tcut (t:term) : Tac binder =
     apply tt;
     intro ()
 
+let pose (t:term) : Tac binder =
+    apply (`__cut);
+    flip ();
+    exact t;
+    let _ = trytac flip in // maybe we have less than 2 goals now
+    intro ()
+
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()

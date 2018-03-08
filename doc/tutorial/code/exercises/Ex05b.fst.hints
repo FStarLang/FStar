@@ -67,7 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fae46b45124536f11cc1542c27c2d9c3"
+      "61b972e48248bcaf131f80cae116c881"
     ],
     [
       "Ex05b.fib",
@@ -87,7 +87,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "58402a97ef1f10b86407f3e123ace342"
+      "b77d165076a045c18bf13b5f8dc218d9"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -99,7 +99,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b7dfe5315313e024b20d1f119a4bcd85"
+      "c2178730a9a6f99eea4798cd9a5dc3ba"
     ]
   ]
 ]

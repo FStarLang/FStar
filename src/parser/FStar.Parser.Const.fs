@@ -239,6 +239,7 @@ let steps_unfoldattr = pconst "delta_attr"
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
+let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 
 let gen_reset =
     let x = U.mk_ref 0 in

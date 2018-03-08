@@ -104,6 +104,7 @@ let _ =
 // Many of the tactics are written in the ``Tac`` effect, which isn't
 // well-supported in SMT.  FIXME: remove this once ``Tac`` is marked as a stable
 // effect.
+// GM: Tac is now stable, but some VCs are still tough on z3, so there are a few admit()s.
 
 /// Some utility functions
 /// ======================
@@ -737,9 +738,8 @@ let specialize_abspat_continuation (continuation: abspat_continuation)
   let applied = specialize_abspat_continuation' continuation solution_term in
   let thunked = pack (Tv_Abs solution_binder applied) in
   debug ("Specialized into " ^ (term_to_string thunked));
-  // FIXME normalizing causes unquote to fail with "not typeable". Why?
-  // let normalized = beta_reduce thunked in
-  // debug ("… which reduces to " ^ (term_to_string normalized));
+  let normalized = beta_reduce thunked in
+  debug ("… which reduces to " ^ (term_to_string normalized));
   thunked
 
 (** Interpret a continuation of type ``abspat_continuation``.
@@ -826,8 +826,6 @@ open FStar.Tactics
 /// ---------------
 ///
 /// Here's the example from the intro, which we can now run!
-
-#set-options "--ugly" // FIXME: F* crashes with “wrong data-app head format”
 
 let fetch_eq_side' #a : Tac (term * term) =
   gpm (fun (left right: a) (g: goal (squash (left == right))) ->
