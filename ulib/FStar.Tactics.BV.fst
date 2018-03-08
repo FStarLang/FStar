@@ -173,9 +173,9 @@ let bv_tac ()  =
   smt ()
 
 let bv_tac_lt n =
-  // apply_lemma (fun () -> `(lt_to_bv #n));
-  // dump "after lt_to_bv";
-  apply_lemma (quote (trans_lt2 #n));
+  let nn = pack (Tv_Const (C_Int n)) in
+  let t = mk_app (`lt_to_bv) [(nn, Q_Implicit)] in
+  apply_lemma t;
   arith_to_bv_tac ();
   arith_to_bv_tac ();
   set_options "--smtencoding.elim_box true";
