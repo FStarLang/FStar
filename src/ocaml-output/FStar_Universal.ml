@@ -83,6 +83,8 @@ let with_tcenv :
                  (uu___51_61.FStar_TypeChecker_Env.proof_ns);
                FStar_TypeChecker_Env.synth =
                  (uu___51_61.FStar_TypeChecker_Env.synth);
+               FStar_TypeChecker_Env.splice =
+                 (uu___51_61.FStar_TypeChecker_Env.splice);
                FStar_TypeChecker_Env.is_native_tactic =
                  (uu___51_61.FStar_TypeChecker_Env.is_native_tactic);
                FStar_TypeChecker_Env.identifier_info =
@@ -242,6 +244,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.proof_ns =
           (uu___53_242.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth = FStar_Tactics_Interpreter.synth;
+        FStar_TypeChecker_Env.splice =
+          (uu___53_242.FStar_TypeChecker_Env.splice);
         FStar_TypeChecker_Env.is_native_tactic =
           (uu___53_242.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
@@ -315,6 +319,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___54_244.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth =
           (uu___54_244.FStar_TypeChecker_Env.synth);
+        FStar_TypeChecker_Env.splice =
+          (uu___54_244.FStar_TypeChecker_Env.splice);
         FStar_TypeChecker_Env.is_native_tactic =
           FStar_Tactics_Native.is_native_tactic;
         FStar_TypeChecker_Env.identifier_info =

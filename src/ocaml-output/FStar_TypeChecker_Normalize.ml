@@ -7820,6 +7820,8 @@ let (eta_expand :
                                      (uu___191_21800.FStar_TypeChecker_Env.proof_ns);
                                    FStar_TypeChecker_Env.synth =
                                      (uu___191_21800.FStar_TypeChecker_Env.synth);
+                                   FStar_TypeChecker_Env.splice =
+                                     (uu___191_21800.FStar_TypeChecker_Env.splice);
                                    FStar_TypeChecker_Env.is_native_tactic =
                                      (uu___191_21800.FStar_TypeChecker_Env.is_native_tactic);
                                    FStar_TypeChecker_Env.identifier_info =
@@ -7898,6 +7900,8 @@ let (eta_expand :
                              (uu___192_21813.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth =
                              (uu___192_21813.FStar_TypeChecker_Env.synth);
+                           FStar_TypeChecker_Env.splice =
+                             (uu___192_21813.FStar_TypeChecker_Env.splice);
                            FStar_TypeChecker_Env.is_native_tactic =
                              (uu___192_21813.FStar_TypeChecker_Env.is_native_tactic);
                            FStar_TypeChecker_Env.identifier_info =

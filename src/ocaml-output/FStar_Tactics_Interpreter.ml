@@ -1635,6 +1635,8 @@ let (run_tactic_on_typ :
                           (uu___59_2555.FStar_TypeChecker_Env.proof_ns);
                         FStar_TypeChecker_Env.synth =
                           (uu___59_2555.FStar_TypeChecker_Env.synth);
+                        FStar_TypeChecker_Env.splice =
+                          (uu___59_2555.FStar_TypeChecker_Env.splice);
                         FStar_TypeChecker_Env.is_native_tactic =
                           (uu___59_2555.FStar_TypeChecker_Env.is_native_tactic);
                         FStar_TypeChecker_Env.identifier_info =
@@ -2350,4 +2352,44 @@ let (synth :
                  (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                    "synthesis left open goals") typ.FStar_Syntax_Syntax.pos
              else w)
+  
+let (splice :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.sigelt Prims.list)
+  =
+  fun env  ->
+    fun tau  ->
+      (let uu____4677 =
+         FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac")  in
+       FStar_ST.op_Colon_Equals tacdbg uu____4677);
+      (let typ = FStar_Syntax_Syntax.t_decls  in
+       let uu____4698 =
+         let uu____4705 = reify_tactic tau  in
+         run_tactic_on_typ uu____4705 env typ  in
+       match uu____4698 with
+       | (gs,w) ->
+           ((let uu____4715 =
+               FStar_List.existsML
+                 (fun g  ->
+                    let uu____4719 =
+                      let uu____4720 =
+                        getprop g.FStar_Tactics_Types.context
+                          g.FStar_Tactics_Types.goal_ty
+                         in
+                      FStar_Option.isSome uu____4720  in
+                    Prims.op_Negation uu____4719) gs
+                in
+             if uu____4715
+             then
+               FStar_Errors.raise_error
+                 (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                   "splice left open goals") typ.FStar_Syntax_Syntax.pos
+             else ());
+            (let uu____4724 =
+               let uu____4729 =
+                 FStar_Syntax_Embeddings.unembed_list
+                   FStar_Reflection_Embeddings.unembed_sigelt
+                  in
+               uu____4729 w  in
+             FStar_All.pipe_left FStar_Util.must uu____4724)))
   
