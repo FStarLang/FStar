@@ -12,7 +12,7 @@ unfold let frame_wp (#a:Type) (wp:st_wp a) (post:heap -> post a) (h:heap) =
   exists (h0 h1:heap). disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ wp (post h1) h0
 
 unfold let frame_post (#a:Type) (p:post a) (h:heap) :post a =
-  fun x h1 -> p x (join_tot h h1)  //h1 is the frame
+  fun x h1 -> disjoint_heaps h h1 /\ p x (join_tot h h1)  //h1 is the frame
 
 unfold let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
   :st_wp b
@@ -64,11 +64,11 @@ sub_effect DIV ~> STATE = lift_div_st
 
 assume
 val ( ! ) (#a:Type) (r:ref a)
-  :STATE a (fun post h0 -> exists (x:a). (r |> x) h0 /\ post x h0)
+  :STATE a (fun post h0 -> (exists (x:a). (r |> x) h0) /\ (forall (x:a). (r |> x) h0 ==> post x h0))
 
 assume
 val ( := ) (#a:Type) (r:ref a) (v:a)
-  :STATE unit (fun post h0 -> (exists (x:a). (r |> x) h0 /\ (forall h1. (r |> v) h1 ==> post () h1)))
+  :STATE unit (fun post h0 -> (exists (x:a). (r |> x) h0) /\ (forall h1. (r |> v) h1 ==> post () h1))
 
 // open SL.Tactics
 // open FStar.Tactics.Builtins
