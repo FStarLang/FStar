@@ -601,3 +601,38 @@ let bind_st
 #reset-options
 
 #set-options "--use_two_phase_tc true"
+
+inline_for_extraction
+let seq_st
+  (t2: Type0)
+  (x: m unit)
+  (x_st: m_st x)
+  (y: m t2)
+  (y_st: m_st y)
+: Tot (m_st (seq x y))
+= bind_st x_st (fun _ -> y_st)
+
+inline_for_extraction
+let print_char_st (c: U8.t) : Tot (m_st (print_char c)) =
+  fun b ->
+  [@inline_let]
+  let b0 = B.sub b 0ul 1ul in
+  B.upd b0 0ul c ;
+  let b' = B.offset b 1ul in
+  let h' = HST.get () in
+  assert (Seq.equal (B.as_seq h' b0) (Seq.create 1 c));
+  ((), b')
+
+inline_for_extraction
+let ifthenelse_st
+  (t: Type0)
+  (c: bool)
+  (ft: (cond_eq true c -> Tot (m t)))
+  (ft_st: ((u: cond_eq true c) -> m_st (ft u)))
+  (ff: (cond_eq false c -> Tot (m t)))
+  (ff_st: (u: cond_eq false c ) -> m_st (ff u))
+: Tot (m_st (if c then ft () else ff ()))
+= fun b ->
+    if c
+    then ft_st () b
+    else ff_st () b
