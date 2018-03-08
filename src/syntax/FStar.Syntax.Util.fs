@@ -1562,7 +1562,8 @@ and branch_eq (p1,w1,t1) (p2,w2,t2) =
     else false
 
 and letbinding_eq lb1 lb2 =
-       eqsum bv_eq fv_eq lb1.lbname lb2.lbname
+    // bvars have no meaning here, so we just check they have the same name
+       eqsum (fun bv1 bv2 -> bv1.ppname = bv2.ppname) fv_eq lb1.lbname lb2.lbname
     && lb1.lbunivs = lb2.lbunivs
     && term_eq lb1.lbtyp lb2.lbtyp
     && term_eq lb1.lbdef lb2.lbdef
