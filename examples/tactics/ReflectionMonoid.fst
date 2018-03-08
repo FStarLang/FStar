@@ -60,32 +60,30 @@ let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
     : squash (mdenote m e1 == mdenote m e2) =
   flatten_correct m e1; flatten_correct m e2
 
-  // Ltac reify me :=
-  //   match me with
-  //     | e => Ident
-  //     | ?me1 + ?me2 =>
-  //       let r1 := reify me1 in
-  //       let r2 := reify me2 in
-  //         constr:(Op r1 r2)
-  //     | _ => constr:(Var me)
-  //   end.
-
+// TODO: this is not very efficieny,
+//       for instance there is delta reduction that happens repeatedly
 let rec reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
   let hd, tl = collect_app_ref me in
   // Admitting this subtyping on lists for now, it's provable, but tedious right now
   let tl : list ((a:term{a << me}) * aqualv) = admit(); tl in
   match inspect hd, tl with
   | Tv_FVar fv, [(me1, Q_Explicit) ; (me2, Q_Explicit)] ->
-    let t1 = norm_term [] (pack (Tv_FVar fv)) in
-    let t2 = norm_term [simplify; delta// _only ["__proj__Monoid__item__mult"]
-  ]
-                       (quote (Monoid?.mult m)) in
-    dump ("t1=" ^ term_to_string t1 ^
-        "; t2=" ^ term_to_string t2);
-    if term_eq t1 t2 then Mult (reification m me1) (reification m me2)
-    else fail ("Unrecognized binary operator: " ^ term_to_string me)
-         (* or just use var *)
-  | _, _ -> Var (unquote me)
+    // if unify (pack (Tv_FVar fv)) (quote (Monoid?.mult m)) then -- doesn't work
+    let t1 = norm_term [delta] (pack (Tv_FVar fv)) in
+    let t2 = norm_term [delta] (quote (Monoid?.mult m)) in
+    // dump ("t1=" ^ term_to_string t1 ^
+    //     "; t2=" ^ term_to_string t2);
+    if term_eq t1 t2
+    then Mult (reification m me1) (reification m me2)
+    else Var (unquote me)
+  | _, _ ->
+    let t1 = norm_term [delta] me in
+    let t2 = norm_term [delta] (quote (Monoid?.unit m)) in
+    // dump ("t1=" ^ term_to_string t1 ^
+    //     "; t2=" ^ term_to_string t2);
+    if term_eq t1 t2
+    then Unit
+    else Var (unquote me)
 
 private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
 private let conv #x #y eq w = w
@@ -108,10 +106,13 @@ assume val f:int->int
 let _ = assert_by_tactic (f (3 + 5) > 0)
              (fun () -> change_sq (`(f 8 > 0)); admit1())
 
-let canon_monoid (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
+let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
+  (* TODO: would be nice to just find all terms of monoid type in the
+           goal and replace them with their canonicalization;
+           basically use flatten_correct instead of monoid_reflect *)
   | Comp (Eq (Some t)) me1 me2 ->
       if term_eq t (quote a) then
         let r1 = reification m me1 in
@@ -121,15 +122,16 @@ let canon_monoid (#a:Type) (m:monoid a) (a_to_string:a->string) : Tac unit =
         //     "; r2=" ^ exp_to_string a_to_string r2);
         change_sq (quote (mdenote m r1 == mdenote m r2));
         apply (`monoid_reflect);
-        simpl()
+        norm [delta_only ["ReflectionMonoid.mldenote";
+                          "ReflectionMonoid.flatten";
+                          "FStar.List.Tot.Base.op_At";
+                          "FStar.List.Tot.Base.append"]]; dump "done"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c) + d)
-  (fun _ -> canon_monoid int_plus_monoid string_of_int;
-            norm [delta;primops;zeta];
-            trefl())
+  (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
 
 (* TODO: should extend this to a commutative monoid and
          sort the list to prove things like a + b = b + a; *)
