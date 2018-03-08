@@ -224,7 +224,7 @@ noeq type match_exception =
 | UnsupportedTermInPattern of term
 | IncorrectTypeInAbsPatBinder of typ
 
-let term_head t : string =
+let term_head t : Tac string =
   match inspect t with
   | Tv_Var bv -> "Tv_Var"
   | Tv_FVar fv -> "Tv_FVar"
