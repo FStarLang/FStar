@@ -821,12 +821,13 @@ let equality_ops : BU.psmap<primitive_step> =
 
     prim_from_list [propositional_equality; hetero_propositional_equality]
 
-// Should match FStar.Reflection.Basic.unembed_binder
+(* A hacky knot, set by FStar.Main *)
+let unembed_binder_knot : ref<option<EMB.unembedder<binder>>> = BU.mk_ref None
 let unembed_binder (t : term) : option<S.binder> =
-    match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_binder ->
-        Some (FStar.Dyn.undyn i.blob)
-    | _ ->
+    match !unembed_binder_knot with
+    | Some f -> f t
+    | None ->
+        Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
 
 let mk_psc_subst cfg env =
