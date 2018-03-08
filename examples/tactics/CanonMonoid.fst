@@ -1,4 +1,4 @@
-module ReflectionMonoid
+module CanonMonoid
 
 open FStar.Algebra.Monoid
 open FStar.List
