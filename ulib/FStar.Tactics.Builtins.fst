@@ -218,6 +218,9 @@ what to do (to not do anything, use [trefl]). *)
 let pointwise  (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise BottomUp (reify (tau ())))
 let pointwise' (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise TopDown  (reify (tau ())))
 
+assume private val __topdown_rewrite : __tac (bool * int) -> __tac unit
+let topdown_rewrite (tau : unit -> Tac (bool * int)) : Tac unit = TAC?.reflect (__topdown_rewrite (reify (tau ())))
+
 assume private val __later : __tac unit
 (** Push the current goal to the back. *)
 let later () : Tac unit = TAC?.reflect __later
