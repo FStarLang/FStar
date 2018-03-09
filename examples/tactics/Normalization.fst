@@ -18,8 +18,8 @@ let def_of (#t:Type) (x:t) : Tac term =
   let t = quote x in
   match inspect t with
   | Tv_FVar fv ->
-    begin match lookup_typ e (inspect_fv fv) with
-    | Sg_Let _ _ def -> def
+    begin match inspect_sigelt se with
+    | Sg_Let _ _ _ def -> def
     | _ -> fail "not a sig_let"
     end
   | _ -> fail "not an fvar"

@@ -291,12 +291,12 @@ let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
-    | Sig_let ((false, [lb]), _) ->
+    | Sig_let ((r, [lb]), _) ->
         let fv = match lb.lbname with
                  | BU.Inr fv -> fv
                  | BU.Inl _  -> failwith "global Sig_let has bv"
         in
-        Sg_Let (fv, lb.lbtyp, lb.lbdef)
+        Sg_Let (r, fv, lb.lbtyp, lb.lbdef)
 
     | Sig_inductive_typ (lid, us, bs, t, _, c_lids) ->
         let nm = Ident.path_of_lid lid in
@@ -310,9 +310,9 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
     match sv with
-    | Sg_Let (fv, ty, def) ->
+    | Sg_Let (r, fv, ty, def) ->
         let lb = U.mk_letbinding (BU.Inr fv) [] ty PC.effect_Tot_lid def [] def.pos in
-        mk_sigelt <| Sig_let ((false, [lb]), [])
+        mk_sigelt <| Sig_let ((r, [lb]), [])
 
     | Sg_Constructor _ ->
         failwith "packing Sg_Constructor, sorry"
