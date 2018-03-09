@@ -142,8 +142,8 @@ let rec arith_expr_to_bv (e:expr) : Tac unit =
     | _ ->
         trefl ()
 
-let arith_to_bv_tac () : Tac unit =
-    // norm [simpl];
+let arith_to_bv_tac () : Tac unit = focus (fun () ->
+    norm [delta_only ["FStar.BV.bvult"]];
     let g = cur_goal () in
     let f = term_as_formula g in
     match f with
@@ -158,12 +158,13 @@ let arith_to_bv_tac () : Tac unit =
             seq (fun () -> arith_expr_to_bv e) trefl
         end
     | _ ->
-        fail ("impossible: ")
+        fail ("arith_to_bv_tac: unexpected: " ^ term_to_string g)
+)
 
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
-let bv_tac ()  =
+let bv_tac () = focus (fun () ->
   mapply (`eq_to_bv);
   mapply (`trans);
   arith_to_bv_tac ();
@@ -171,18 +172,21 @@ let bv_tac ()  =
   set_options "--smtencoding.elim_box true";
   norm [delta] ;
   smt ()
+)
 
-let bv_tac_lt n =
-  // apply_lemma (fun () -> `(lt_to_bv #n));
-  // dump "after lt_to_bv";
-  apply_lemma (quote (trans_lt2 #n));
+let bv_tac_lt n = focus (fun () ->
+  let nn = pack (Tv_Const (C_Int n)) in
+  let t = mk_app (`trans_lt2) [(nn, Q_Implicit)] in
+  apply_lemma t;
   arith_to_bv_tac ();
   arith_to_bv_tac ();
   set_options "--smtencoding.elim_box true";
   smt ()
+)
 
-let to_bv_tac ()  =
+let to_bv_tac ()  = focus (fun () ->
   apply_lemma (`eq_to_bv);
   apply_lemma (`trans);
   arith_to_bv_tac ();
   arith_to_bv_tac ()
+)

@@ -94,6 +94,7 @@ type lazy_kind =
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_sigelt
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -387,6 +388,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of term
 
 and sigelt = {
     sigel:    sigelt';
@@ -513,6 +515,7 @@ val t_float       : term
 val t_char        : term
 val t_range       : term
 val t_term        : term
+val t_decls       : term
 val t_binder      : term
 val t_tactic_unit : term
 val t_tac_unit    : term

@@ -17,14 +17,14 @@ val smaller : term_view -> term -> Type0
 let smaller tv t =
     match tv with
     | Tv_App l r ->
-        l << t /\ r << t
+        l << t /\ r << t /\ fst r << t
 
     | Tv_Abs b t'
     | Tv_Arrow b t'
     | Tv_Refine b t' ->
         type_of_binder b << t /\ t' << t
 
-    | Tv_Let b t1 t2 ->
+    | Tv_Let r b t1 t2 ->
         type_of_binder b << t /\ t1 << t /\ t2 << t
 
     | Tv_Match t1 brs ->
@@ -64,14 +64,20 @@ let pack_comp (cv:comp_view) = __pack_comp cv
 assume val pack_inspect_inv : (t:term) -> Lemma (pack (inspect t) == t)
 assume val inspect_pack_inv : (tv:term_view) -> Lemma (inspect (pack tv) == tv)
 
-assume val __inspect_fv : fv -> name
-let inspect_fv (fv:fv) = __inspect_fv fv
+assume private val __inspect_sigelt : sigelt -> sigelt_view
+let inspect_sigelt (se:sigelt) : sigelt_view = __inspect_sigelt se
+
+assume private val __pack_sigelt : sigelt_view -> sigelt
+let pack_sigelt (sv:sigelt_view) : sigelt = __pack_sigelt sv
+
+assume private val __inspect_fv : fv -> name
+let inspect_fv (fv:fv) : name = __inspect_fv fv
 
 assume val __pack_fv : name -> fv
 let pack_fv (ns:name) = __pack_fv ns
 
-assume val __lookup_typ : env -> name -> sigelt_view
-let lookup_typ (e:env) (ns:name) = __lookup_typ e ns
+assume private val __lookup_typ : env -> name -> option sigelt
+let lookup_typ (e:env) (ns:name) : option sigelt = __lookup_typ e ns
 
 assume val __compare_binder : binder -> binder -> order
 let compare_binder (b1:binder) (b2:binder) = __compare_binder b1 b2

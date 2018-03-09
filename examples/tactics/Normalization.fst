@@ -14,12 +14,17 @@ let normalize (#t:Type) (steps : list norm_step) (x:t) : Tac unit =
 
 (* This tactic also depends on said behaviour of quote, and returns the definition of a top-level fvar *)
 let def_of (#t:Type) (x:t) : Tac term =
+  admit();
   let e = cur_env () in
   let t = quote x in
   match inspect t with
-  | Tv_FVar fv ->
-    begin match lookup_typ e (inspect_fv fv) with
-    | Sg_Let _ _ def -> def
+  | Tv_FVar fv -> begin
+    let se = match lookup_typ e (inspect_fv fv) with
+             | None -> fail "Not found..?"
+             | Some se -> se
+    in
+    match inspect_sigelt se with
+    | Sg_Let _ _ _ def -> def
     | _ -> fail "not a sig_let"
     end
   | _ -> fail "not an fvar"

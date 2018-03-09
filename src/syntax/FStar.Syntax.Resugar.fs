@@ -141,34 +141,34 @@ and resugar_universe (u:S.universe) r: A.term =
 
 let string_to_op s =
   let name_of_op = function
-    | "Amp" -> Some ("&", 0)
-    | "At" -> Some ("@", 0)
-    | "Plus" -> Some ("+", 0)
-    | "Minus" -> Some ("-", 0)
-    | "Subtraction" -> Some ("-", 2)
-    | "Tilde" -> Some ("~", 0)
-    | "Slash" -> Some ("/", 0)
-    | "Backslash" -> Some ("\\", 0)
-    | "Less" -> Some ("<", 0)
-    | "Equals" -> Some ("=", 0)
-    | "Greater" -> Some (">", 0)
-    | "Underscore" -> Some ("_", 0)
-    | "Bar" -> Some ("|", 0)
-    | "Bang" -> Some ("!", 0)
-    | "Hat" -> Some ("^", 0)
-    | "Percent" -> Some ("%", 0)
-    | "Star" -> Some ("*", 0)
-    | "Question" -> Some ("?", 0)
-    | "Colon" -> Some (":", 0)
-    | "Dollar" -> Some ("$", 0)
-    | "Dot" -> Some (".", 0)
+    | "Amp" ->  Some ("&", None)
+    | "At" -> Some ("@", None)
+    | "Plus" -> Some ("+", None)
+    | "Minus" -> Some ("-", None)
+    | "Subtraction" -> Some ("-", Some 2)
+    | "Tilde" -> Some ("~", None)
+    | "Slash" -> Some ("/", None)
+    | "Backslash" -> Some ("\\", None)
+    | "Less" -> Some ("<", None)
+    | "Equals" -> Some ("=", None)
+    | "Greater" -> Some (">", None)
+    | "Underscore" -> Some ("_", None)
+    | "Bar" -> Some ("|", None)
+    | "Bang" -> Some ("!", None)
+    | "Hat" -> Some ("^", None)
+    | "Percent" -> Some ("%", None)
+    | "Star" -> Some ("*", None)
+    | "Question" -> Some ("?", None)
+    | "Colon" -> Some (":", None)
+    | "Dollar" -> Some ("$", None)
+    | "Dot" -> Some (".", None)
     | _ -> None
   in
   match s with
-  | "op_String_Assignment" -> Some (".[]<-", 0)
-  | "op_Array_Assignment" -> Some (".()<-", 0)
-  | "op_String_Access" -> Some (".[]", 0)
-  | "op_Array_Access" -> Some (".()", 0)
+  | "op_String_Assignment" -> Some (".[]<-", None)
+  | "op_Array_Assignment" -> Some (".()<-", None)
+  | "op_String_Access" -> Some (".[]", None)
+  | "op_Array_Access" -> Some (".()", None)
   | _ ->
     if BU.starts_with s "op_" then
       let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
@@ -179,11 +179,12 @@ let string_to_op s =
                                   | Some (op, _) -> acc ^ op
                                   | None -> failwith "wrong composed operator format")
                                   "" (List.map name_of_op s)  in
-        Some (op, 0)
+        Some (op, None)
     else
       None
 
-let rec resugar_term_as_op (t:S.term) : option<(string*int)> =
+type expected_arity = option<int>
+let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
@@ -222,15 +223,15 @@ let rec resugar_term_as_op (t:S.term) : option<(string*int)> =
   let fallback fv =
     match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
     | Some op ->
-      Some (snd op, 0)
+      Some (snd op, None)
     | _ ->
       let length = String.length(fv.fv_name.v.nsstr) in
       let str = if length=0 then fv.fv_name.v.str
           else BU.substring_from fv.fv_name.v.str (length+1) in
-      if BU.starts_with str "dtuple" then Some ("dtuple", 0)
-      else if BU.starts_with str "tuple" then Some ("tuple", 0)
-      else if BU.starts_with str "try_with" then Some ("try_with", 0)
-      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, 0)
+      if BU.starts_with str "dtuple" then Some ("dtuple", None)
+      else if BU.starts_with str "tuple" then Some ("tuple", None)
+      else if BU.starts_with str "try_with" then Some ("try_with", None)
+      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, None)
       else None
   in
   match (SS.compress t).n with
@@ -406,11 +407,6 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             | [a1;a2] -> [a1;a2]
             | _::t -> last_two t
       in
-      let rec last_three = function
-            | [] | [_] | [_;_] -> failwith "last three elements of a list with less than three elements "
-            | [a1;a2;a3] -> [a1;a2;a3]
-            | _::t -> last_three t
-      in
       let resugar_as_app e args =
         let args =
           List.map (fun (e, qual) -> (resugar_term' env e, resugar_imp qual)) args in
@@ -559,22 +555,28 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           let (e, _ ) = List.hd args in
           resugar_term' env e
 
-        | Some (op, arity) ->
+        | Some (op, expected_arity) ->
           let op = Ident.id_of_text op in
           let resugar args = args |> List.map (fun (e, qual) ->
-              resugar_term' env e)
+            resugar_term' env e, resugar_imp qual)
           in
-          (* ignore the arguments added by typechecker *)
+           (* ignore the arguments added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           //NS: this seems to produce the wrong output on things like
-          begin match arity with
-          | 0 -> begin match D.handleable_args_length op with
-                 | 1 when List.length args > 0 -> mk (A.Op(op, resugar (last args)))
-                 | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
-                 | 3 when List.length args > 2 -> mk (A.Op(op, resugar (last_three args)))
-                 | _ -> resugar_as_app e args
-                 end
-          | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
+          begin
+          match expected_arity with
+          | None ->
+            let resugared_args = resugar args in
+            let expect_n = D.handleable_args_length op in
+            if List.length resugared_args >= expect_n
+            then let op_args, rest = BU.first_N expect_n resugared_args in
+                 let head = mk (A.Op(op, List.map fst op_args)) in
+                 List.fold_left
+                        (fun head (arg, qual) -> mk (A.App (head, arg, qual)))
+                        head
+                        rest
+            else resugar_as_app e args
+          | Some n when List.length args = n -> mk (A.Op(op, List.map fst (resugar args)))
           | _ -> resugar_as_app e args
           end
     end
@@ -1155,6 +1157,9 @@ let resugar_sigelt' env se : option<A.decl> =
           label universes (resugar_term' env t)
       in
       Some (decl'_to_decl se (A.Val (lid.ident,t')))
+
+  | Sig_splice t ->
+    Some (decl'_to_decl se (A.Splice (resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

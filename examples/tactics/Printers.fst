@@ -25,7 +25,7 @@ let mk_print_binder (b : binder) : Tac term =
     | _ ->
         mk_stringlit "?"
 
-let printer () : Tac unit =
+let printer_fun () : Tac unit =
     admit ();
     let x = intro () in
     let e = cur_env () in
@@ -34,10 +34,20 @@ let printer () : Tac unit =
                 | Tv_FVar fv -> (inspect_fv fv)
                 | _ -> fail "not a qname type?"
     in
-    match lookup_typ e xt_ns with
-    | Sg_Let _ _ _ -> fail "cannot create printer for let"
+    let se = match lookup_typ e xt_ns with
+             | None -> fail "Type not found..?"
+             | Some se -> se
+    in
+    match inspect_sigelt se with
+    | Sg_Let _ _ _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ bs t ctors ->
-        let br1 ctor : Tac branch = match ctor with | Ctor name t ->
+        let br1 ctor : Tac branch =
+            let se = match lookup_typ e ctor with
+                     | None -> fail "Constructor not found..?"
+                     | Some se -> se
+            in
+            begin match inspect_sigelt se with
+            | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
             let bv_pats = TD.map (fun ti -> let b = fresh_binder ti in (b, Pat_Var b)) t_args in
@@ -46,6 +56,9 @@ let printer () : Tac unit =
             let bod = mk_concat (mk_stringlit " ") (head :: TD.map mk_print_binder bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
             (Pat_Cons (pack_fv name) pats, bod)
+            | _ ->
+                fail "Not a constructor..?"
+            end
         in
         let branches = TD.map br1 ctors in
         let m = pack (Tv_Match (pack (Tv_Var x)) branches) in
@@ -58,7 +71,7 @@ type t1 =
     | B : string -> t1
     | C : t1
 
-let t1_print : t1 -> string = synth_by_tactic printer
+let t1_print : t1 -> string = synth_by_tactic printer_fun
 
 let _ = assert_norm (t1_print (A 5 8) = "(Printers.A 5 8)")
 let _ = assert_norm (t1_print (B "thing") = "(Printers.B \"thing\")")

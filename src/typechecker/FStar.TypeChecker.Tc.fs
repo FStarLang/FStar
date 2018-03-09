@@ -1217,6 +1217,12 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let se = { se with sigel = Sig_main(e) } in
     [se], []
 
+  | Sig_splice t ->
+    if Options.debug_any () then
+        BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
+    let ses = env.splice env t in
+    [], ses
+
   | Sig_let(lbs, lids) ->
     let env = Env.set_range env r in
     let check_quals_eq l qopt q = match qopt with
@@ -1465,6 +1471,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
    match se.sigel with
   | Sig_pragma         _ -> [], hidden
 
+  | Sig_splice _
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible (Already handled)"
 
@@ -1674,6 +1681,7 @@ let check_exports env (modul:modul) exports =
         | Sig_new_effect _
         | Sig_new_effect_for_free _
         | Sig_sub_effect _
+        | Sig_splice _
         | Sig_pragma _ -> ()
     in
     if Ident.lid_equals modul.name PC.prims_lid
@@ -1750,6 +1758,8 @@ let extract_interface (env:env) (m:modul) :modul =
     match s.sigel with
     | Sig_inductive_typ _
     | Sig_datacon _ -> failwith "Impossible! Bare data constructor"
+
+    | Sig_splice _ -> failwith "Impossible! Trying to extract splice"
     
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
@@ -1865,7 +1875,7 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
     let env0 = { en0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
     if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
-    else m, Some modul_iface, env
+    else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
     let modul = if Options.use_extracted_interfaces () then { m with exports = m.declarations } else { m with exports=exports } in

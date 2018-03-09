@@ -177,16 +177,18 @@ let go _ =
 
 let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
-    | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Basic.unfold_lazy_binder      i
-    | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Basic.unfold_lazy_fvar        i
-    | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Basic.unfold_lazy_comp        i
-    | FStar.Syntax.Syntax.Lazy_env        -> FStar.Reflection.Basic.unfold_lazy_env         i
+    | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Embeddings.unfold_lazy_binder      i
+    | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Embeddings.unfold_lazy_fvar        i
+    | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Embeddings.unfold_lazy_comp        i
+    | FStar.Syntax.Syntax.Lazy_env        -> FStar.Reflection.Embeddings.unfold_lazy_env         i
+    | FStar.Syntax.Syntax.Lazy_sigelt     -> FStar.Reflection.Embeddings.unfold_lazy_sigelt      i
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
 
 let main () =
   try
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.unembed_binder;
     let _, time = FStar.Util.record_time go in
     if FStar.Options.query_stats()
     then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
