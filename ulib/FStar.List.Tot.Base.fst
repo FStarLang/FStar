@@ -476,7 +476,7 @@ let rec strict_prefix_of (#a: Type) (l1 l2: list a)
   | [] -> False
   | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
 
-val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> list a
+val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
 let rec list_unref #a #p l =
     match l with
     | [] -> []
