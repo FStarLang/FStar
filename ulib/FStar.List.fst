@@ -347,9 +347,3 @@ let index f l =
           index tl (i + 1)
   in
   index l 0
-
-val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> list a
-let rec list_unref #a #p l =
-    match l with
-    | [] -> []
-    | x::xs -> x :: list_unref xs
