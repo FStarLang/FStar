@@ -52,6 +52,7 @@ type comp_view =
 noeq
 type sigelt_view =
   | Sg_Let :
+      (r:bool) ->
       (fv:fv) ->
       (typ:typ) ->
       (def:term) ->

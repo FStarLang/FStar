@@ -164,9 +164,10 @@ let embed_sigelt (rng:Range.range) (se:sigelt) : term =
 
 let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     match sev with
-    | Sg_Let (fv, ty, t) ->
+    | Sg_Let (r, fv, ty, t) ->
         S.mk_Tm_app ref_Sg_Let.t
-                    [S.as_arg (embed_fvar rng fv);
+                    [S.as_arg (embed_bool rng r);
+                        S.as_arg (embed_fvar rng fv);
                         S.as_arg (embed_term rng ty);
                         S.as_arg (embed_term rng t)]
                     None rng
@@ -411,11 +412,12 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
         BU.bind_opt (unembed_list (unembed_list unembed_string) dcs) (fun dcs ->
         Some <| Sg_Inductive (nm, bs, t, dcs)))))
 
-    | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
+    | Tm_fvar fv, [(r, _); (fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        BU.bind_opt (unembed_bool r) (fun r ->
         BU.bind_opt (unembed_fvar fvar) (fun fvar ->
         BU.bind_opt (unembed_term ty) (fun ty ->
         BU.bind_opt (unembed_term t) (fun t ->
-        Some <| Sg_Let (fvar, ty, t))))
+        Some <| Sg_Let (r, fvar, ty, t)))))
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
         Some Unk

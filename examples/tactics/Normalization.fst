@@ -24,7 +24,7 @@ let def_of (#t:Type) (x:t) : Tac term =
              | None -> fail "not found"
     in
     begin match inspect_sigelt se with
-    | Sg_Let _ _ def -> def
+    | Sg_Let _ _ _ def -> def
     | _ -> fail "not a sig_let"
     end
   | _ -> fail "not an fvar"
