@@ -84,22 +84,22 @@ val points_to_mcontains (#a:Type0) (r:ref a) (x:a)
   : Lemma ((r |> x) `mcontains` r)
           [SMTPat ((r |> x) `mcontains` r)]
 
-val sel_tot : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot a
-val upd_tot : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> x:a -> Tot heap
+val sel : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot a
+val upd : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> x:a -> Tot heap
 
 val points_to_sel (#a:Type) (r:ref a) (x:a) (h:heap)
   : Lemma (requires (h `hcontains` r /\ heap_memory h == (r |> x)))    //F* doesn't see that (h `hcontains` r) follows from (heap_memory h == (r |> x))
-          (ensures  (sel_tot h r == x))
+          (ensures  (sel h r == x))
           [SMTPat (heap_memory h);
            SMTPat (r |> x);
-           SMTPat (sel_tot h r)]
+           SMTPat (sel h r)]
 
 val points_to_upd (#a:Type) (r:ref a) (x:a) (v:a) (h:heap)
   : Lemma  (requires (h `hcontains` r /\ heap_memory h == (r |> x)))  //F* doesn't see that (h `hcontains` r) follows from (heap_memory h == (r |> x))
-           (ensures  (heap_memory ((upd_tot h r v)) == (r |> v)))
+           (ensures  (heap_memory ((upd h r v)) == (r |> v)))
            [SMTPat (heap_memory h);
             SMTPat (r |> x);
-            SMTPat (upd_tot h r v)]
+            SMTPat (upd h r v)]
 
 val hfresh : #a:Type0 -> ref a -> hpred
 val mfresh : #a:Type0 -> ref a -> mpred
@@ -120,9 +120,9 @@ val alloc_contains (#a:Type0) (h0:heap) (x:a)
            h1 `hcontains` r)
           [SMTPat (alloc h0 x)]
 
-val alloc_sel_tot (#a:Type0) (h0:heap) (x:a)
+val alloc_sel (#a:Type0) (h0:heap) (x:a)
   : Lemma (let (r,h1) = alloc h0 x in
-           sel_tot h1 r == x)
+           sel h1 r == x)
           [SMTPat (alloc h0 x)]
 
 val alloc_emp_points_to (#a:Type0) (h0:heap) (x:a)

@@ -95,10 +95,10 @@ let read (#a:Type0) (r:ref a)
   : st a (fun post m0 -> (exists (x:a). m0 == (r |> x) /\ post (x, m0)))
   = fun post h0 -> 
       assert (mcontains (heap_memory h0) r);
-      FStar.Squash.return_squash (sel_tot h0 r, h0)
+      FStar.Squash.return_squash (sel h0 r, h0)
 
 let write (#a:Type0) (r:ref a) (v:a)
   : st unit (fun post m0 -> (exists (x:a). m0 == (r |> x) /\ post ((), (r |> v))))
     = fun post h0 -> 
         assert (mcontains (heap_memory h0) r);
-        FStar.Squash.return_squash ((), upd_tot h0 r v)
+        FStar.Squash.return_squash ((), upd h0 r v)
