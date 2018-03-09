@@ -1640,6 +1640,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
     let head0 = head in
     let head = U.unascribe head in
     log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
+    let head = U.unmeta_safe head in
     match (SS.compress head).n with
     | Tm_let ((false, [lb]), body) ->
       (* ****************************************************************************)
@@ -1800,10 +1801,6 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         let lifted = reify_lift cfg e msrc mtgt (closure_as_term cfg env t') in
         log cfg (fun () -> BU.print1 "Reified lift to (2): %s\n" (Print.term_to_string lifted));
         norm cfg env (List.tl stack) lifted
-
-    // Ignore all other metas
-    | Tm_meta(e, _) ->
-        do_reify_monadic fallback cfg env stack e m t
 
     | Tm_match(e, branches) ->
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
