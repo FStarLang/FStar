@@ -266,19 +266,17 @@ let test_ (x: U32.t) : Tot (option U32.t) =
 
 module T = FStar.Tactics
 
-// GM: I think you can just use (String.concat ".") for this
-let rec string_of_name (x: T.name) : T.Tac Prims.string =
-  match x with
-  | [] -> T.fail "string_of_name: degenerate case, should not happen"
-  | [a] -> a
-  | a :: q ->
-    let open T in
-    a ^ "." ^ string_of_name q
-
 let unfold_fv (t: T.fv) : T.Tac T.term =
-  let open T in
-  let n = string_of_name (T.inspect_fv t) in
-  T.norm_term [Prims.delta_only [n]] (T.pack (T.Tv_FVar t))
+  let env = T.cur_env () in
+  let n = T.inspect_fv t in
+  match T.lookup_typ env n with
+  | Some s ->
+    begin match T.inspect_sigelt s with
+    | T.Sg_Let false _ _ def -> def
+    | _ -> T.fail "Not a non-recursive let definition"
+    end
+  | _ -> T.fail "Definition not found"
+
 
 module L = FStar.List.Tot
 
