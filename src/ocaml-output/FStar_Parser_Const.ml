@@ -335,3 +335,7 @@ let (binder_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
     FStar_Range.dummyRange
   
+let (bv_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "bv"]
+    FStar_Range.dummyRange
+  

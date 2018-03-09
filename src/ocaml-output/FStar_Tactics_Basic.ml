@@ -2190,9 +2190,9 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac) =
                                                                 =
                                                                 Obj.magic
                                                                   (filter' ()
-                                                                    (fun a435
+                                                                    (fun a438
                                                                      ->
-                                                                    fun a436 
+                                                                    fun a439 
                                                                     ->
                                                                     (Obj.magic
                                                                     (fun g 
@@ -2206,7 +2206,7 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac) =
                                                                     goals  in
                                                                     Prims.op_Negation
                                                                     uu____4069))
-                                                                    a435 a436)
+                                                                    a438 a439)
                                                                     (Obj.magic
                                                                     sub_goals))
                                                                  in
@@ -3429,19 +3429,15 @@ let (launch_process :
                fail
                  "launch_process: will not run anything unless --unsafe_tactic_exec is provided")
   
-let (fresh_binder_named :
-  Prims.string -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.binder tac)
-  =
+let (fresh_bv_named :
+  Prims.string -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.bv tac) =
   fun nm  ->
     fun t  ->
       bind idtac
-        (fun uu____6315  ->
-           let uu____6316 =
-             let uu____6323 =
-               FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None t
-                in
-             (uu____6323, FStar_Pervasives_Native.None)  in
-           ret uu____6316)
+        (fun uu____6309  ->
+           let uu____6310 =
+             FStar_Syntax_Syntax.gen_bv nm FStar_Pervasives_Native.None t  in
+           ret uu____6310)
   
 let (goal_of_goal_ty :
   env ->
@@ -3451,19 +3447,19 @@ let (goal_of_goal_ty :
   =
   fun env  ->
     fun typ  ->
-      let uu____6346 =
+      let uu____6325 =
         FStar_TypeChecker_Util.new_implicit_var "proofstate_of_goal_ty"
           typ.FStar_Syntax_Syntax.pos env typ
          in
-      match uu____6346 with
-      | (u,uu____6364,g_u) ->
+      match uu____6325 with
+      | (u,uu____6343,g_u) ->
           let g =
-            let uu____6379 = FStar_Options.peek ()  in
+            let uu____6358 = FStar_Options.peek ()  in
             {
               FStar_Tactics_Types.context = env;
               FStar_Tactics_Types.witness = u;
               FStar_Tactics_Types.goal_ty = typ;
-              FStar_Tactics_Types.opts = uu____6379;
+              FStar_Tactics_Types.opts = uu____6358;
               FStar_Tactics_Types.is_guard = false
             }  in
           (g, g_u)
@@ -3476,8 +3472,8 @@ let (proofstate_of_goal_ty :
   =
   fun env  ->
     fun typ  ->
-      let uu____6390 = goal_of_goal_ty env typ  in
-      match uu____6390 with
+      let uu____6369 = goal_of_goal_ty env typ  in
+      match uu____6369 with
       | (g,g_u) ->
           let ps =
             {
