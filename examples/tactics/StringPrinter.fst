@@ -391,7 +391,8 @@ let rec compile
         begin match T.inspect y with
         | T.Tv_Abs v y' ->
           let x_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t1 x in
-          let v' = pack (T.Tv_Var v) in
+          let (v_, _) = T.inspect_binder v in
+          let v' = pack (T.Tv_Var v_) in
           let t2' = mk_app t2 [
             v', Q_Explicit;
           ]
