@@ -1,6 +1,6 @@
 module Shallow
 
-open SepLogic.HeapMemory
+open SepLogic.Heap
 
 (* postcondition, a predicate on the return value and the output heap *)
 let post (a:Type) = a * memory -> Type0

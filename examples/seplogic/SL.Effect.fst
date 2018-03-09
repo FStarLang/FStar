@@ -1,49 +1,50 @@
 module SL.Effect
+
 open SepLogic.Heap
 
-let pre = heap -> Type0
-let post (a:Type) = a -> heap -> Type0
+let pre = memory -> Type0
+let post (a:Type) = a -> memory -> Type0
 let st_wp (a:Type) = post a -> pre
 
 unfold let return_wp (a:Type) (x:a) :st_wp a = 
-  fun post h0 -> h0 == emp /\ post x h0
+  fun post m0 -> m0 == emp /\ post x m0
 
-unfold let frame_wp (#a:Type) (wp:st_wp a) (post:heap -> post a) (h:heap) =
-  exists (h0 h1:heap). h == (h0 <*> h1) /\ wp (post h1) h0
+unfold let frame_wp (#a:Type) (wp:st_wp a) (post:memory -> post a) (m:memory) =
+  exists (m0 m1:memory). disjoint_memories m0 m1 /\ m == (m0 <*> m1) /\ wp (post m1) m0
 
-unfold let frame_post (#a:Type) (p:post a) (h:heap) :post a =
-  fun x h1 -> p x (h1 <*> h)  //h1 is the frame
+unfold let frame_post (#a:Type) (p:post a) (m0:memory) :post a =
+  fun x m1 -> disjoint_memories m1 m0 /\ p x (m1 <*> m0)  //m1 is the frame
 
 unfold let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
   :st_wp b
-  = fun post h ->
-    frame_wp wp1 (frame_post (fun x h1 -> frame_wp (wp2 x) (frame_post post) h1)) h
+  = fun post m0 ->
+    frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0
 
-unfold  let st_if_then_else (a:Type) (p:Type) (wp_then:st_wp a) (wp_else:st_wp a) (post:post a) (h0:heap) =
-  l_ITE p (wp_then post h0) (wp_else post h0)
+unfold  let st_if_then_else (a:Type) (p:Type) (wp_then:st_wp a) (wp_else:st_wp a) (post:post a) (m0:memory) =
+  l_ITE p (wp_then post m0) (wp_else post m0)
 
-unfold  let st_ite_wp (a:Type) (wp:st_wp a) (p:post a) (h0:heap) =
+unfold  let st_ite_wp (a:Type) (wp:st_wp a) (p:post a) (m0:memory) =
   forall (k:post a).
-    (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> p x h)
-    ==> wp k h0
+    (forall (x:a) (m:memory).{:pattern (guard_free (k x m))} k x m <==> p x m)
+    ==> wp k m0
 
 unfold  let st_stronger (a:Type) (wp1:st_wp a) (wp2:st_wp a) =
-  forall (p:post a) (h:heap). wp1 p h ==> wp2 p h
+  forall (p:post a) (m:memory). wp1 p m ==> wp2 p m
 
-unfold let st_close_wp (a:Type) (b:Type) (wp:(b -> GTot (st_wp a))) (p:post a) (h:heap) =
-  forall (b:b). wp b p h
+unfold let st_close_wp (a:Type) (b:Type) (wp:(b -> GTot (st_wp a))) (p:post a) (m:memory) =
+  forall (b:b). wp b p m
 
-unfold  let st_assert_p (a:Type) (p:Type) (wp:st_wp a) (q:post a) (h:heap) =
-  p /\ wp q h
+unfold  let st_assert_p (a:Type) (p:Type) (wp:st_wp a) (q:post a) (m:memory) =
+  p /\ wp q m
 
-unfold  let st_assume_p (a:Type) (p:Type) (wp:st_wp a) (q:post a) (h:heap) =
-  p ==> wp q h
+unfold  let st_assume_p (a:Type) (p:Type) (wp:st_wp a) (q:post a) (m:memory) =
+  p ==> wp q m
 
-unfold  let st_null_wp (a:Type) (p:post a) (h:heap) =
-  forall (x:a) (h:heap). p x h
+unfold  let st_null_wp (a:Type) (p:post a) (m:memory) =
+  forall (x:a) (m:memory). p x m
 
 unfold let st_trivial (a:Type) (wp:st_wp a) =
-  forall h0. wp (fun _ _ -> True) h0
+  forall m0. wp (fun _ _ -> True) m0
       
 new_effect {
   STATE : result:Type -> wp:st_wp result -> Effect
@@ -59,16 +60,19 @@ new_effect {
      ; trivial      = st_trivial
 }
 
-unfold let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (h:heap) = wp (fun a -> p a emp)
+unfold let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = wp (fun a -> p a emp)
 sub_effect DIV ~> STATE = lift_div_st
 
 assume
 val ( ! ) (#a:Type) (r:ref a)
-  :STATE a (fun post h0 -> exists (x:a). h0 == (r |> x) /\ post x h0)
+  :STATE a (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post x m0)
 
 assume
 val ( := ) (#a:Type) (r:ref a) (v:a)
-  :STATE unit (fun post h0 -> exists (x:a). h0 == (r |> x) /\ post () (r |> v))
+  :STATE unit (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post () (r |> v))
+
+
+
 
 // open SL.Tactics
 // open FStar.Tactics.Builtins
