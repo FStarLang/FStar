@@ -201,6 +201,8 @@ let inspect_comp (c : comp) : comp_view =
                 C_Lemma (pre, post)
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
+        else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
+            C_Total ct.result_typ
         else
             C_Unknown
       end
