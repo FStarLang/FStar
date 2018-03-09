@@ -746,6 +746,16 @@ let phi_t (#t: Type0) (x: m t) : Type =
     phi_post x h res h'
   ))
 
+unfold
+let phi_t_internal
+  (#t: Type0)
+  (x: m t)
+  (h0: HS.mem)
+: Tot Type
+= (unit -> HST.ST (option t) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
+
+(* FIXME: the following does not extract to KreMLin. This was an attempt to push the CPS-style down to the effectful code as well, but does not work.
+
 inline_for_extraction
 let phi
   (#t: Type0)
@@ -756,10 +766,25 @@ let phi
 = fun () ->
   let h0 = HST.get () in
   x_sz
+//    (phi_t_internal x h0) // does not typecheck
     (unit -> HST.ST (option t) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
     (fun _ sz u () -> Some (redirect_to_dev_null' x sz x_st))
     (fun _ () -> None)
     ()
+*)
+
+inline_for_extraction
+let phi
+  (#t: Type0)
+  (x: m t)
+  (x_sz: m_sz x)
+  (x_st: m_st x)
+: Tot (phi_t x)
+= fun () ->
+  match log_size x_sz with
+  | Some sz ->
+    Some (redirect_to_dev_null' x sz x_st)
+  | None -> None
 
 let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
@@ -782,6 +807,7 @@ let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
 let test' (x: U32.t) : Tot (phi_t (example x)) =
   phi (example x) (T.synth_by_tactic (fun () -> test_tac (example x))) (T.synth_by_tactic (fun () -> test_tac_st (example x)))
 
+inline_for_extraction
 let test (x: U32.t) : HST.ST unit (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
   let _ = (T.synth_by_tactic (fun () -> phi_tac 2 (example x)) <: phi_t (example x)) () in
   ()
