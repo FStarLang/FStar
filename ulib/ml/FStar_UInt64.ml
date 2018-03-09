@@ -81,6 +81,7 @@ let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
 
 let to_string s = Stdint.Uint64.to_string s
+let to_string_hex s = Printf.sprintf "%016llx" s
 let of_string s = Stdint.Uint64.of_string s
 
 let uint_to_t s = Stdint.Uint64.of_string (Z.to_string s)
