@@ -236,7 +236,7 @@ type raw_error =
   | Fatal_WrongResultTypeAfterConstrutor 
   | Fatal_WrongTerm 
   | Fatal_WhenClauseNotSupported 
-  | Fatal_CallNotImplemented 
+  | Unused01 
   | Warning_AddImplicitAssumeNewQualifier 
   | Warning_AdmitWithoutDefinition 
   | Warning_CachedFile 
@@ -1684,11 +1684,9 @@ let (uu___is_Fatal_WhenClauseNotSupported : raw_error -> Prims.bool) =
     | Fatal_WhenClauseNotSupported  -> true
     | uu____944 -> false
   
-let (uu___is_Fatal_CallNotImplemented : raw_error -> Prims.bool) =
+let (uu___is_Unused01 : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with
-    | Fatal_CallNotImplemented  -> true
-    | uu____948 -> false
+    match projectee with | Unused01  -> true | uu____948 -> false
   
 let (uu___is_Warning_AddImplicitAssumeNewQualifier : raw_error -> Prims.bool)
   =
@@ -2283,7 +2281,7 @@ let (default_flags :
   (Fatal_WrongResultTypeAfterConstrutor, CFatal);
   (Fatal_WrongTerm, CFatal);
   (Fatal_WhenClauseNotSupported, CFatal);
-  (Fatal_CallNotImplemented, CFatal);
+  (Unused01, CFatal);
   (Warning_CallNotImplementedAsWarning, CWarning);
   (Warning_AddImplicitAssumeNewQualifier, CWarning);
   (Warning_AdmitWithoutDefinition, CWarning);
