@@ -14,10 +14,10 @@ type vconst =
 // This is shadowing `pattern` from Prims (for smt_pats)
 noeq
 type pattern =
-    | Pat_Constant : vconst -> pattern                  // A built-in constant
-    | Pat_Cons     : fv -> list pattern -> pattern      // A fully applied constructor
-    | Pat_Var      : binder -> pattern                  // Pattern bound variable
-    | Pat_Wild     : binder -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
+    | Pat_Constant : vconst -> pattern              // A built-in constant
+    | Pat_Cons     : fv -> list pattern -> pattern  // A fully applied constructor
+    | Pat_Var      : bv -> pattern                  // Pattern bound variable
+    | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
 
 type branch = pattern * term  // | pattern -> term
 

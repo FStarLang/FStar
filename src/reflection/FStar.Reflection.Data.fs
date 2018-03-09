@@ -20,8 +20,8 @@ type vconst =
 type pattern =
     | Pat_Constant of vconst
     | Pat_Cons     of fv * list<pattern>
-    | Pat_Var      of binder
-    | Pat_Wild     of binder
+    | Pat_Var      of bv
+    | Pat_Wild     of bv
 
 type branch = pattern * term
 

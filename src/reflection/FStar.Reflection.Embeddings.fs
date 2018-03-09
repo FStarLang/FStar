@@ -80,10 +80,10 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed_const rng c)] None rng
     | Pat_Cons (fv, ps) ->
         S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
-    | Pat_Var b ->
-        S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_binder rng b)] None rng
-    | Pat_Wild b ->
-        S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_binder rng b)] None rng
+    | Pat_Var bv ->
+        S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_bv rng bv)] None rng
+    | Pat_Wild bv ->
+        S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_bv rng bv)] None rng
 
 let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
 let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
@@ -304,13 +304,13 @@ let rec unembed_pattern (t : term) : option<pattern> =
         BU.bind_opt (unembed_list unembed_pattern ps) (fun ps ->
         Some <| Pat_Cons (f, ps)))
 
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
-        BU.bind_opt (unembed_binder b) (fun b ->
-        Some <| Pat_Var b)
+    | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        Some <| Pat_Var bv)
 
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
-        BU.bind_opt (unembed_binder b) (fun b ->
-        Some <| Pat_Wild b)
+    | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        Some <| Pat_Wild bv)
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
