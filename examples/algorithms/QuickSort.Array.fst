@@ -25,6 +25,7 @@ open FStar.ST
 FStar namespace,Array resolves to QuickSort.Array instead of
 FStar.Array, so we have to fix this explicitly as a module abbrev. *)
 module Array = FStar.Array
+module Seq   = FStar.Seq
 
 type partition_inv (a:eqtype) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
