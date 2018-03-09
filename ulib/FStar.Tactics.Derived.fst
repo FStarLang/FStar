@@ -108,6 +108,16 @@ let pose (t:term) : Tac binder =
     let _ = trytac flip in // maybe we have less than 2 goals now
     intro ()
 
+let intro_as (s:string) : Tac binder =
+    let b = intro () in
+    rename_to b s;
+    b
+
+let pose_as (s:string) (t:term) : Tac binder =
+    let b = pose t in
+    rename_to b s;
+    b
+
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
