@@ -58,10 +58,17 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__inspect_sigelt" inspect_sigelt E.unembed_sigelt E.embed_sigelt_view;
         mk1 "__pack_sigelt"    pack_sigelt E.unembed_sigelt_view E.embed_sigelt;
 
-        mk1 "__inspect_bv" inspect_bv E.unembed_binder embed_string;
-        mk2 "__compare_binder" compare_binder E.unembed_binder E.unembed_binder E.embed_order;
-        mk1 "__type_of_binder" type_of_binder E.unembed_binder E.embed_term;
-        mk2 "__is_free" is_free E.unembed_binder E.unembed_term embed_bool;
+        mk1 "__inspect_bv" inspect_bv E.unembed_bv   E.embed_bv_view;
+        mk1 "__pack_bv"    pack_bv E.unembed_bv_view E.embed_bv;
+
+        mk1 "__inspect_binder" inspect_binder E.unembed_binder
+            (embed_pair E.embed_bv fstar_refl_bv_view E.embed_aqualv fstar_refl_aqualv);
+
+        mk2 "__pack_binder"    pack_binder E.unembed_bv E.unembed_aqualv E.embed_binder;
+
+        mk2 "__compare_bv" compare_bv E.unembed_bv E.unembed_bv E.embed_order;
+
+        mk2 "__is_free" is_free E.unembed_bv E.unembed_term embed_bool;
 
         mk2 "__term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
 

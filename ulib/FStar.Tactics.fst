@@ -4,8 +4,9 @@ module FStar.Tactics
 include FStar.Reflection.Types
 include FStar.Reflection.Data
 include FStar.Reflection.Basic
-include FStar.Reflection.Syntax
+include FStar.Reflection.Derived
 include FStar.Reflection.Formula
+include FStar.Reflection.Const
 
 include FStar.Tactics.Types
 include FStar.Tactics.Effect

@@ -9,20 +9,16 @@ open FStar.TypeChecker.Env
 open FStar.Reflection.Data
 
 (* Primitives *)
-val compare_binder : binder -> binder -> order
+val compare_bv     : bv -> bv -> order
 val lookup_typ     : FStar.TypeChecker.Env.env -> list<string> -> option<sigelt>
-val is_free        : binder -> term -> bool
+val is_free        : bv -> term -> bool
 val binders_of_env : FStar.TypeChecker.Env.env -> binders
-val type_of_binder : binder -> typ
 val term_eq        : term -> term -> bool
 val term_to_string : term -> string
 
 (* Views *)
 val inspect_fv    : fv -> list<string>
 val pack_fv       : list<string> -> fv
-
-val inspect_bv    : binder -> string
-// no bv pack
 
 val inspect_const : sconst -> vconst
 val pack_const    : vconst -> sconst
@@ -35,3 +31,9 @@ val pack_comp     : comp_view -> comp
 
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
+
+val inspect_bv     : bv -> bv_view
+val pack_bv        : bv_view -> bv
+
+val inspect_binder : binder -> bv * aqualv
+val pack_binder    : bv -> aqualv -> binder

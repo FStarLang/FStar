@@ -32,18 +32,30 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of binder
+    | Tv_Var    of bv
+    | Tv_BVar   of bv
     | Tv_FVar   of fv
     | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * comp
     | Tv_Type   of unit
-    | Tv_Refine of binder * term
+    | Tv_Refine of bv * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * typ
-    | Tv_Let    of bool * binder * term * term
+    | Tv_Let    of bool * bv * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
+
+(* These names are different from the ones in ulib/, they have
+ * a bv_ prefix here, so it doesn't clash with the fields in the
+ * real bv type (F* doesn't like that). This is not serious at all,
+ * since records are really inductives with a single constructor. We
+ * don't care about how the projections are called. *)
+type bv_view = {
+    bv_ppname : string;
+    bv_index : Z.t;
+    bv_sort : typ;
+}
 
 type comp_view =
     | C_Total of typ
@@ -87,6 +99,7 @@ let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level
 
 (* assumed types *)
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
+let fstar_refl_bv        = mk_refl_types_lid_as_term "bv"
 let fstar_refl_fv        = mk_refl_types_lid_as_term "fv"
 let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
@@ -98,6 +111,10 @@ let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
 let fstar_refl_term_view = mk_refl_data_lid_as_term "term_view"
 let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
+let fstar_refl_bv_view   = mk_refl_data_lid_as_term "bv_view"
+
+(* bv_view *)
+let ref_Mk_bv = fstar_refl_data_const "Mkbv_view"
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
@@ -118,6 +135,7 @@ let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
 
 (* term_view *)
 let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"
+let ref_Tv_BVar    = fstar_refl_data_const "Tv_BVar"
 let ref_Tv_FVar    = fstar_refl_data_const "Tv_FVar"
 let ref_Tv_App     = fstar_refl_data_const "Tv_App"
 let ref_Tv_Abs     = fstar_refl_data_const "Tv_Abs"

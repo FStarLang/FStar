@@ -21,7 +21,7 @@ let mk_print_binder (b : binder) : Tac term =
     match inspect (type_of_binder b) with
     | Tv_FVar fv ->
         let f = mk ["Printers"; "print_" ^ (String.concat "_" (inspect_fv fv))] in
-        mk_e_app f [pack (Tv_Var b)]
+        mk_e_app f [pack (Tv_Var (bv_of_binder b))]
     | _ ->
         mk_stringlit "?"
 
@@ -61,7 +61,7 @@ let printer_fun () : Tac unit =
             end
         in
         let branches = TD.map br1 ctors in
-        let m = pack (Tv_Match (pack (Tv_Var x)) branches) in
+        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder x))) branches) in
         exact_guard m;
         smt ()
     | _ -> fail "type not found?"

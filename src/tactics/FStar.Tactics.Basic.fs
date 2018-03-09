@@ -855,6 +855,7 @@ let binder_retype (b : binder) : tac<unit> =
                   (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts)))
          end)
 
+(* TODO: move to bv *)
 let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> =
     bind cur_goal (fun goal ->
     let bv, _ = b in
@@ -1130,10 +1131,10 @@ let launch_process (prog : string) (args : string) (input : string) : tac<string
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
     )
 
-let fresh_binder_named (nm : string) (t : typ) : tac<binder> =
+let fresh_bv_named (nm : string) (t : typ) : tac<bv> =
     // The `bind idtac` thunks the tactic. Not really needed, just being paranoid
     bind idtac (fun () ->
-        ret (gen_bv nm None t, None)
+        ret (gen_bv nm None t)
     )
 
 let goal_of_goal_ty env typ : goal * guard_t =
