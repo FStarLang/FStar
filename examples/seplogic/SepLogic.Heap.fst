@@ -182,6 +182,8 @@ let contains #a h r =
 
 let points_to_contains #a r x h = ()
 
+let points_to_ext #a r x y h = ()
+
 private let points_to_disj' (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap) (h0:heap) (h1:heap)
   : Lemma ((disjoint_heaps h0 h1 /\ h == join_tot h0 h1 /\ (r |> x) h0 /\ (s |> y) h1) ==> disjoint r s)
   = ()
@@ -221,7 +223,7 @@ let restrict #a h r =
 let minus #a h r =
   { h with memory = (fun (r':nat) -> if r' = r then None else h.memory r') }
 
-let minus_contains #a r h = ()
+let minus_not_contains #a r h = ()
 
 let restrict_points_to #a r h = ()
 
@@ -246,3 +248,7 @@ private let join_tot_minus_restrict' (#a:Type0) (r:ref a) (h:heap)
 
 let join_tot_minus_restrict #a r h = 
   join_tot_minus_restrict' r h
+
+let points_to_join_tot_minus #a r x y h h' = ()
+
+let points_to_join_tot_restrict #a r x y h h' = ()

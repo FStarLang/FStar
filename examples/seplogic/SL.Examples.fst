@@ -14,32 +14,45 @@ let lemma_read_write (phi:heap -> heap -> Type0) (r:ref int) (h:heap)
     join_tot_restrict_minus r h;
     restrict_points_to r h
 
-//#set-options "--ugly"
+//#set-options "--print_full_names"
 
 let write_read (r:ref int) =
   (r := 2;
    !r)
   
-  <: STATE int (fun p h2 -> (exists x. (r |> x) h2) /\ 
+  <: STATE int (fun p h2 -> h2 `contains` r /\
+                            (exists x. (r |> x) h2) /\ 
                             (forall h3. (r |> 2) h3 ==> p 2 h3))
 
   by (fun () -> 
-             let _ = forall_intro () in
-             let _ = forall_intro () in
+             let p = forall_intro () in
+             let h = forall_intro () in
 	     let _ = implies_intro () in
 	     let _ = apply_lemma (`lemma_read_write) in
 	     split ();
 	     smt ();
-	     //dump "Before";
-	     let _ = forall_intro () in
+	     let h' = forall_intro () in
 	     let _ = implies_intro () in
 	     split ();
 	     smt ();
 	     let _ = apply_lemma (`lemma_read_write) in
 	     split ();
+             let _ = apply_lemma (`join_tot_contains) in
+             smt ();
+             let x = forall_intro () in
+             let _ = implies_intro () in
+             split ();
+             let _ = apply_lemma (`disjoint_heaps_comm) in
+             let _ = apply_lemma (`disjoint_heaps_restrict_minus) in  
+             let _ = apply_lemma (`join_tot_contains) in
+             smt ();
+             dump "Breakpoint";
+             admit_all ())(*
 	     smt ();
 	     let _ = forall_intro () in
              let _ = implies_intro () in
              split ();
-             //let _ = apply_lemma (`disjoint_heaps_restrict_minus) in 
-	     dump "After")
+             let _ = apply_lemma (`disjoint_heaps_comm) in
+             let _ = apply_lemma (`disjoint_heaps_restrict_minus) in  
+             //let _ = apply_lemma (`join_tot_minus_restrict) in
+	     dump "After")*)

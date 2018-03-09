@@ -54,16 +54,20 @@ val sep_comm (p q:hpred) (h:heap)
 val sep_assoc (p q r:hpred) (h:heap)
   : Lemma ((p <*> (q <*> r)) h <==> ((p <*> q) <*> r) h)
 
-val fresh : #a:Type -> ref a -> hpred
-val contains : #a:Type -> heap -> ref a -> Type0
+val fresh : #a:Type0 -> ref a -> hpred
+val contains : #a:Type0 -> heap -> ref a -> Type0
 
-val points_to_contains (#a:Type) (r:ref a) (x:a) (h:heap)
-  : Lemma (requires (r |> x) h)
+val points_to_contains (#a:Type0) (r:ref a) (x:a) (h:heap)
+  : Lemma (requires ((r |> x) h))
           (ensures  (h `contains` r))
           [SMTPat ((r |> x) h);
            SMTPat (h `contains` r)]
 
-val points_to_disj (#a:Type) (#b:Type) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap)
+val points_to_ext (#a:Type0) (r:ref a) (x y:a) (h:heap)
+  : Lemma (requires ((r |> x) h /\ (r |> y) h))
+          (ensures  (x == y))
+
+val points_to_disj (#a:Type0) (#b:Type0) (r:ref a) (s:ref b) (x:a) (y:b) (h:heap)
     : Lemma (requires ((r |> x <*> s |> y) h))
             (ensures  (disjoint r s))
             [SMTPat ((r |> x <*> s |> y) h);
@@ -92,7 +96,7 @@ val points_to_upd (#a:Type) (r:ref a) (x:a) (v:a) (h:heap)
 val restrict: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot heap
 val minus: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot heap
 
-val minus_contains (#a:Type0) (r:ref a) (h:heap)
+val minus_not_contains (#a:Type0) (r:ref a) (h:heap)
   : Lemma (requires (h `contains` r))
           (ensures  (~((h `minus` r) `contains` r)))
           [SMTPat ((h `minus` r) `contains` r);
@@ -132,3 +136,15 @@ val join_tot_minus_restrict (#a:Type0) (r:ref a) (h:heap)
           (ensures  (join_tot (minus h r) h == restrict h r))
           [SMTPat (join_tot (minus h r) h);
            SMTPat (restrict h r)]
+
+val points_to_join_tot_minus (#a:Type0) (r:ref a) (x y:a) (h h':heap)
+  : Lemma (requires ((r |> x) h /\ (r |> y) h'))
+          (ensures  ((r |> y) (join_tot (minus h r) h')))
+          [SMTPat ((r |> x) h);
+           SMTPat ((r |> y) (join_tot (minus h r) h'))]
+
+val points_to_join_tot_restrict (#a:Type0) (r:ref a) (x y:a) (h h':heap)
+  : Lemma (requires ((r |> x) h /\ (r |> y) h'))
+          (ensures  ((r |> y) (restrict (join_tot (minus h r) h') r)))
+          [SMTPat ((r |> x) h);
+           SMTPat ((r |> y) (restrict (join_tot (minus h r) h') r))]
