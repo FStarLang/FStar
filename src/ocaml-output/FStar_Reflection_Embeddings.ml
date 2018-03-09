@@ -169,11 +169,11 @@ let rec (embed_pattern :
               uu____131
              in
           uu____130 FStar_Pervasives_Native.None rng
-      | FStar_Reflection_Data.Pat_Var b ->
+      | FStar_Reflection_Data.Pat_Var bv ->
           let uu____150 =
             let uu____151 =
               let uu____152 =
-                let uu____153 = embed_binder rng b  in
+                let uu____153 = embed_bv rng bv  in
                 FStar_Syntax_Syntax.as_arg uu____153  in
               [uu____152]  in
             FStar_Syntax_Syntax.mk_Tm_app
@@ -181,11 +181,11 @@ let rec (embed_pattern :
               uu____151
              in
           uu____150 FStar_Pervasives_Native.None rng
-      | FStar_Reflection_Data.Pat_Wild b ->
+      | FStar_Reflection_Data.Pat_Wild bv ->
           let uu____157 =
             let uu____158 =
               let uu____159 =
-                let uu____160 = embed_binder rng b  in
+                let uu____160 = embed_bv rng bv  in
                 FStar_Syntax_Syntax.as_arg uu____160  in
               [uu____159]  in
             FStar_Syntax_Syntax.mk_Tm_app
@@ -901,26 +901,26 @@ let rec (unembed_pattern :
                        FStar_All.pipe_left
                          (fun _0_43  -> FStar_Pervasives_Native.Some _0_43)
                          (FStar_Reflection_Data.Pat_Cons (f1, ps1))))
-         | (FStar_Syntax_Syntax.Tm_fvar fv,(b,uu____1225)::[]) when
+         | (FStar_Syntax_Syntax.Tm_fvar fv,(bv,uu____1225)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_Pat_Var.FStar_Reflection_Data.lid
              ->
-             let uu____1250 = unembed_binder b  in
+             let uu____1250 = unembed_bv bv  in
              FStar_Util.bind_opt uu____1250
-               (fun b1  ->
+               (fun bv1  ->
                   FStar_All.pipe_left
                     (fun _0_44  -> FStar_Pervasives_Native.Some _0_44)
-                    (FStar_Reflection_Data.Pat_Var b1))
-         | (FStar_Syntax_Syntax.Tm_fvar fv,(b,uu____1259)::[]) when
+                    (FStar_Reflection_Data.Pat_Var bv1))
+         | (FStar_Syntax_Syntax.Tm_fvar fv,(bv,uu____1259)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_Pat_Wild.FStar_Reflection_Data.lid
              ->
-             let uu____1284 = unembed_binder b  in
+             let uu____1284 = unembed_bv bv  in
              FStar_Util.bind_opt uu____1284
-               (fun b1  ->
+               (fun bv1  ->
                   FStar_All.pipe_left
                     (fun _0_45  -> FStar_Pervasives_Native.Some _0_45)
-                    (FStar_Reflection_Data.Pat_Wild b1))
+                    (FStar_Reflection_Data.Pat_Wild bv1))
          | uu____1291 ->
              ((let uu____1305 =
                  let uu____1310 =
