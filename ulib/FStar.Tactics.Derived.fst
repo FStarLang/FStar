@@ -88,8 +88,9 @@ let guards_to_smt () : Tac unit =
     let _ = repeat skip_guard in
     ()
 
-let simpl () : Tac unit = norm [simplify; primops]
-let whnf  () : Tac unit = norm [weak; hnf; primops]
+let simpl   () : Tac unit = norm [simplify; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops]
+let compute () : Tac unit = norm [primopfs; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
 
