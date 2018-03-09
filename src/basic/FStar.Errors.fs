@@ -243,7 +243,7 @@ type raw_error =
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
   | Fatal_WhenClauseNotSupported
-  | Fatal_CallNotImplemented
+  | Unused01
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
   | Warning_CachedFile
@@ -546,7 +546,7 @@ let default_flags =
   (Fatal_WrongResultTypeAfterConstrutor              , CFatal);
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
-  (Fatal_CallNotImplemented                          , CFatal);
+  (Unused01                                          , CFatal);
   (Warning_CallNotImplementedAsWarning               , CWarning);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
