@@ -10,6 +10,11 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
+val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a (decreases l)
+let rec fold_left f x l = match l with
+  | [] -> x
+  | hd::tl -> fold_left f (f x hd) tl
+
 // TODO: maybe we can increase a counter on each call
 let fresh_bv t = fresh_bv_named "x" t
 
