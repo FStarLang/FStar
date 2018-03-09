@@ -68,7 +68,7 @@ let frame #a #wp f =
                       sqres
                       (fun (x_h0':result a (frame_post post (heap_memory h1))) -> 
                          let (x, h0') = x_h0' in
-                         let res = (x, join_tot h1 h0') in 
+                         let res = (x, join h1 h0') in 
                          FStar.Squash.return_squash res)))
       
 val bind (#a:Type) (#wp1:st_wp a)

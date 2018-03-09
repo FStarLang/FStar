@@ -14,7 +14,6 @@ val emp : memory
 val ref (a:Type0) : Type0
 val addr_of : #a:Type0 -> ref a -> GTot nat
 
-val heap_next_addr : heap -> GTot nat
 val heap_memory : heap -> GTot memory
 
 let hpred = heap -> Type0
@@ -37,19 +36,19 @@ val disjoint_heaps_memories (h0 h1:heap)
   : Lemma (disjoint_heaps h0 h1 <==> disjoint_memories (heap_memory h0) (heap_memory h1))
           [SMTPat (disjoint_memories (heap_memory h0) (heap_memory h1))]
 
-val join_tot: h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
+val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
 
-val join_tot_comm (h0 h1:heap)
+val join_comm (h0 h1:heap)
   : Lemma (requires (disjoint_heaps h0 h1 /\ disjoint_heaps h1 h0))
-          (ensures  (join_tot h0 h1 == join_tot h1 h0))
+          (ensures  (join h0 h1 == join h1 h0))
 
 val ( |> ) : #a:Type0 -> r:ref a -> x:a -> memory
 val ( <*> ) : m0:memory -> m1:memory{disjoint_memories m0 m1} -> memory
 
-val sep_join_tot (h0 h1:heap)
+val sep_join (h0 h1:heap)
   : Lemma (requires (disjoint_heaps h0 h1))
-          (ensures  (heap_memory (join_tot h0 h1) == ((heap_memory h0) <*> (heap_memory h1))))
-          [SMTPat (heap_memory (join_tot h0 h1))]
+          (ensures  (heap_memory (join h0 h1) == ((heap_memory h0) <*> (heap_memory h1))))
+          [SMTPat (heap_memory (join h0 h1))]
 
 val split_heap : (m0:memory) 
               -> (m1:memory{disjoint_memories m0 m1})
@@ -62,10 +61,10 @@ val split_heap_disjoint (m0 m1:memory) (h:heap)
                      disjoint_heaps h0 h1))
           [SMTPat (split_heap m0 m1 h)]
 
-val split_heap_join_tot (m0 m1:memory) (h:heap)
+val split_heap_join (m0 m1:memory) (h:heap)
   : Lemma (requires (disjoint_memories m0 m1 /\ heap_memory h == (m0 <*> m1)))
           (ensures  (let (h0,h1) = split_heap m0 m1 h in
-                     h == join_tot h0 h1))
+                     h == join h0 h1))
           [SMTPat (split_heap m0 m1 h)]
 
 val split_heap_memories (m0 m1:memory) (h:heap)
