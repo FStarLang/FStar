@@ -113,6 +113,8 @@ let (push_with_kind :
                 (uu___56_233.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth =
                 (uu___56_233.FStar_TypeChecker_Env.synth);
+              FStar_TypeChecker_Env.splice =
+                (uu___56_233.FStar_TypeChecker_Env.splice);
               FStar_TypeChecker_Env.is_native_tactic =
                 (uu___56_233.FStar_TypeChecker_Env.is_native_tactic);
               FStar_TypeChecker_Env.identifier_info =

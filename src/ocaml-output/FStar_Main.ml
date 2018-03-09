@@ -342,13 +342,15 @@ let (lazy_chooser :
       | FStar_Syntax_Syntax.BadLazy  ->
           failwith "lazy chooser: got a BadLazy"
       | FStar_Syntax_Syntax.Lazy_binder  ->
-          FStar_Reflection_Basic.unfold_lazy_binder i
+          FStar_Reflection_Embeddings.unfold_lazy_binder i
       | FStar_Syntax_Syntax.Lazy_fvar  ->
-          FStar_Reflection_Basic.unfold_lazy_fvar i
+          FStar_Reflection_Embeddings.unfold_lazy_fvar i
       | FStar_Syntax_Syntax.Lazy_comp  ->
-          FStar_Reflection_Basic.unfold_lazy_comp i
+          FStar_Reflection_Embeddings.unfold_lazy_comp i
       | FStar_Syntax_Syntax.Lazy_env  ->
-          FStar_Reflection_Basic.unfold_lazy_env i
+          FStar_Reflection_Embeddings.unfold_lazy_env i
+      | FStar_Syntax_Syntax.Lazy_sigelt  ->
+          FStar_Reflection_Embeddings.unfold_lazy_sigelt i
       | FStar_Syntax_Syntax.Lazy_proofstate  ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
   
@@ -359,17 +361,21 @@ let main : 'Auu____617 . Prims.unit -> 'Auu____617 =
         (FStar_Pervasives_Native.Some lazy_chooser);
       FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f
         (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
-      (let uu____697 = FStar_Util.record_time go  in
-       match uu____697 with
-       | (uu____702,time) ->
-           ((let uu____705 = FStar_Options.query_stats ()  in
-             if uu____705
+      FStar_ST.op_Colon_Equals
+        FStar_TypeChecker_Normalize.unembed_binder_knot
+        (FStar_Pervasives_Native.Some
+           FStar_Reflection_Embeddings.unembed_binder);
+      (let uu____728 = FStar_Util.record_time go  in
+       match uu____728 with
+       | (uu____733,time) ->
+           ((let uu____736 = FStar_Options.query_stats ()  in
+             if uu____736
              then
-               let uu____706 = FStar_Util.string_of_int time  in
-               let uu____707 =
-                 let uu____708 = FStar_Getopt.cmdline ()  in
-                 FStar_String.concat " " uu____708  in
-               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____706 uu____707
+               let uu____737 = FStar_Util.string_of_int time  in
+               let uu____738 =
+                 let uu____739 = FStar_Getopt.cmdline ()  in
+                 FStar_String.concat " " uu____739  in
+               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____737 uu____738
              else ());
             cleanup ();
             FStar_All.exit (Prims.parse_int "0")))
@@ -377,19 +383,19 @@ let main : 'Auu____617 . Prims.unit -> 'Auu____617 =
     | e ->
         let trace = FStar_Util.trace_of_exn e  in
         (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____725 = FStar_Options.trace_error ()  in
-          if uu____725
+         (let uu____756 = FStar_Options.trace_error ()  in
+          if uu____756
           then
-            let uu____726 = FStar_Util.message_of_exn e  in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____726
+            let uu____757 = FStar_Util.message_of_exn e  in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____757
               trace
           else
             if Prims.op_Negation (FStar_Errors.handleable e)
             then
-              (let uu____728 = FStar_Util.message_of_exn e  in
+              (let uu____759 = FStar_Util.message_of_exn e  in
                FStar_Util.print1_error
                  "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____728)
+                 uu____759)
             else ());
          cleanup ();
          report_errors [];
