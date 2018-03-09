@@ -29,9 +29,9 @@ type argv = term * aqualv
 
 noeq
 type bv_view = {
-    ppname : string;
-    index : int;
-    sort : typ;
+    bv_ppname : string;
+    bv_index : int;
+    bv_sort : typ;
 }
 
 noeq
@@ -131,7 +131,7 @@ let smaller_comp cv c =
 
 val smaller_bv : bv_view -> bv -> Type0
 let smaller_bv bvv bv =
-    bvv.sort << bv
+    bvv.bv_sort << bv
 
 val smaller_binder : binder -> (bv * aqualv) -> Type0
 let smaller_binder b (bv, _) =

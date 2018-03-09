@@ -7,14 +7,14 @@ open FStar.Reflection.Const
 open FStar.Order
 
 let name_of_bv (bv : bv) : string =
-    (inspect_bv bv).ppname
+    (inspect_bv bv).bv_ppname
 
 let type_of_bv (bv : bv) : typ =
-    (inspect_bv bv).sort
+    (inspect_bv bv).bv_sort
 
 let bv_to_string (bv : bv) : string =
     let bvv = inspect_bv bv in
-    "(" ^ bvv.ppname ^ ":" ^ term_to_string bvv.sort ^ ")"
+    "(" ^ bvv.bv_ppname ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
 
 let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in

@@ -46,11 +46,6 @@ type term_view =
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
 
-(* These names are different from the ones in ulib/, they have
- * a bv_ prefix here, so it doesn't clash with the fields in the
- * real bv type (F* doesn't like that). This is not serious at all,
- * since records are really inductives with a single constructor. We
- * don't care about how the projections are called. *)
 type bv_view = {
     bv_ppname : string;
     bv_index : Z.t;
