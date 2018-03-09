@@ -341,6 +341,8 @@ let (lazy_chooser :
       match k with
       | FStar_Syntax_Syntax.BadLazy  ->
           failwith "lazy chooser: got a BadLazy"
+      | FStar_Syntax_Syntax.Lazy_bv  ->
+          FStar_Reflection_Embeddings.unfold_lazy_bv i
       | FStar_Syntax_Syntax.Lazy_binder  ->
           FStar_Reflection_Embeddings.unfold_lazy_binder i
       | FStar_Syntax_Syntax.Lazy_fvar  ->

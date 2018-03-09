@@ -89,6 +89,7 @@ type delta_depth =
 // output_value on them (serious).
 type lazy_kind =
   | BadLazy
+  | Lazy_bv
   | Lazy_binder
   | Lazy_fvar
   | Lazy_comp
@@ -517,6 +518,7 @@ val t_range       : term
 val t_term        : term
 val t_decls       : term
 val t_binder      : term
+val t_bv          : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term

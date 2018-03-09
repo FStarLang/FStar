@@ -111,12 +111,12 @@ let instrument (f : 'a) : Tac unit =
     let n' = tick n in
     let all_args = intros () in
     let real, trace_arg = cutlast all_args in 
-    let real = List.Tot.map (fun b -> pack (Tv_Var b)) real in
+    let real = List.Tot.map (fun b -> pack (Tv_Var (bv_of_binder b))) real in
     let ii = {
         orig_name = n;
         ins_name = n';
         args = real;
-        trace_arg = pack (Tv_Var trace_arg)
+        trace_arg = pack (Tv_Var (bv_of_binder trace_arg))
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)

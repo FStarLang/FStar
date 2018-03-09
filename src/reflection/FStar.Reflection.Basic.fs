@@ -40,6 +40,19 @@ open FStar.Dyn
   * We should really allow for some metaprogramming in F*. Oh wait....
   *)
 
+(* private *)
+let inspect_aqual (aq : aqual) : aqualv =
+    match aq with
+    | Some (Implicit _) -> Data.Q_Implicit
+    | Some Equality
+    | None -> Data.Q_Explicit
+
+(* private *)
+let pack_aqual (aqv : aqualv) : aqual =
+    match aqv with
+    | Data.Q_Explicit -> None
+    | Data.Q_Implicit -> Some (Implicit false)
+
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
@@ -59,11 +72,6 @@ let rec init (l:list<'a>) : list<'a> =
     | [x] -> []
     | x::xs -> x :: init xs
 
-let inspect_bv (b:binder) : string =
-    Print.bv_to_string (fst b)
-    // calling into Print, which really doesn't make guarantees
-    // ... should be safe as we give no semantics to these names: they're just for debugging
-
 let inspect_const (c:sconst) : vconst =
     match c with
     | FStar.Const.Const_unit -> C_Unit
@@ -81,7 +89,10 @@ let rec inspect (t:term) : term_view =
         inspect t
 
     | Tm_name bv ->
-        Tv_Var (S.mk_binder bv)
+        Tv_Var bv
+
+    | Tm_bvar bv ->
+        Tv_BVar bv
 
     | Tm_fvar fv ->
         Tv_FVar fv
@@ -93,11 +104,7 @@ let rec inspect (t:term) : term_view =
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
-        let q' = match q with
-                 | Some (Implicit _) -> Data.Q_Implicit
-                 | Some Equality
-                 | None -> Data.Q_Explicit
-        in
+        let q' = inspect_aqual q in
         Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
@@ -130,7 +137,7 @@ let rec inspect (t:term) : term_view =
         let b = (match b' with
         | [b'] -> b'
         | _ -> failwith "impossible") in
-        Tv_Refine (b, t)
+        Tv_Refine (fst b, t)
 
     | Tm_constant c ->
         Tv_Const (inspect_const c)
@@ -150,7 +157,7 @@ let rec inspect (t:term) : term_view =
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            Tv_Let (false, b, lb.lbdef, t2)
+            Tv_Let (false, fst b, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
@@ -163,7 +170,7 @@ let rec inspect (t:term) : term_view =
             | [lb] ->
                 (match lb.lbname with
                  | BU.Inr _ -> Tv_Unknown
-                 | BU.Inl bv -> Tv_Let (true, S.mk_binder bv, lb.lbdef, t2))
+                 | BU.Inl bv -> Tv_Let (true, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -172,8 +179,8 @@ let rec inspect (t:term) : term_view =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
-            | Pat_var bv -> Pat_Var (S.mk_binder bv)
-            | Pat_wild bv -> Pat_Wild (S.mk_binder bv)
+            | Pat_var bv -> Pat_Var bv
+            | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term _ -> failwith "NYI: Pat_dot_term"
         in
         let brs = List.map SS.open_branch brs in
@@ -215,17 +222,18 @@ let pack_const (c:vconst) : sconst =
 // TODO: pass in range?
 let pack (tv:term_view) : term =
     match tv with
-    | Tv_Var (bv, _) ->
+    | Tv_Var bv ->
         S.bv_to_name bv
+
+    | Tv_BVar bv ->
+        S.bv_to_tm bv
 
     | Tv_FVar fv ->
         S.fv_to_tm fv
 
     | Tv_App (l, (r, q)) ->
-        begin match q with
-        | Data.Q_Explicit -> U.mk_app l [S.as_arg r]
-        | Data.Q_Implicit -> U.mk_app l [S.iarg r]
-        end
+        let q' = pack_aqual q in
+        U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
         U.abs [b] t None // TODO: effect?
@@ -236,7 +244,7 @@ let pack (tv:term_view) : term =
     | Tv_Type () ->
         U.ktype
 
-    | Tv_Refine ((bv, _), t) ->
+    | Tv_Refine (bv, t) ->
         U.refine bv t
 
     | Tv_Const c ->
@@ -245,13 +253,11 @@ let pack (tv:term_view) : term =
     | Tv_Uvar (u, t) ->
         U.uvar_from_id (Z.to_int_fs u) t
 
-    | Tv_Let (false, b, t1, t2) ->
-        let bv = fst b in
+    | Tv_Let (false, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), SS.close [b] t2)) None Range.dummyRange
+        S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
 
-    | Tv_Let (true, b, t1, t2) ->
-        let bv = fst b in
+    | Tv_Let (true, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
         let lbs_open, body_open = SS.open_let_rec [lb] t2 in
         let lbs, body = SS.close_let_rec [lb] body_open in
@@ -263,8 +269,8 @@ let pack (tv:term_view) : term =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
-            | Pat_Var  (bv, _) -> wrap <| Pat_var bv
-            | Pat_Wild (bv,_ ) -> wrap <| Pat_wild bv
+            | Pat_Var  bv -> wrap <| Pat_var bv
+            | Pat_Wild bv -> wrap <| Pat_wild bv
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
@@ -273,14 +279,14 @@ let pack (tv:term_view) : term =
     | Tv_Unknown ->
         failwith "pack: unexpected term view"
 
-let compare_binder (x:binder) (y:binder) : order =
-    let n = S.order_bv (fst x) (fst y) in
+let compare_bv (x:bv) (y:bv) : order =
+    let n = S.order_bv x y in
     if n < 0 then Lt
     else if n = 0 then Eq
     else Gt
 
-let is_free (x:binder) (t:term) : bool =
-    U.is_free_in (fst x) t
+let is_free (x:bv) (t:term) : bool =
+    U.is_free_in x t
 
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in
@@ -323,7 +329,27 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
     | Unk ->
         failwith "packing Unk, sorry"
 
+let inspect_bv (bv:bv) : bv_view =
+    {
+      bv_ppname = Ident.string_of_ident bv.ppname;
+      bv_index = Z.of_int_fs bv.index;
+      bv_sort = bv.sort;
+    }
+
+let pack_bv (bvv:bv_view) : bv =
+    {
+      ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
+      index = Z.to_int_fs bvv.bv_index;
+      sort = bvv.bv_sort;
+    }
+
+let inspect_binder (b:binder) : bv * aqualv =
+    let bv, aq = b in
+    bv, inspect_aqual aq
+
+let pack_binder (bv:bv) (aqv:aqualv) : binder =
+    bv, pack_aqual aqv
+
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
-let type_of_binder (b : binder) = match b with (b, _) -> b.sort
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t

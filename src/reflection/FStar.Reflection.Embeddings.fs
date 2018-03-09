@@ -31,6 +31,9 @@ open FStar.Dyn
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
+let embed_bv (rng:Range.range) (bv:bv) : term =
+    U.mk_lazy bv fstar_refl_binder Lazy_bv (Some rng)
+
 let embed_binder (rng:Range.range) (b:binder) : term =
     U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
 
@@ -77,10 +80,10 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed_const rng c)] None rng
     | Pat_Cons (fv, ps) ->
         S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
-    | Pat_Var b ->
-        S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_binder rng b)] None rng
-    | Pat_Wild b ->
-        S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_binder rng b)] None rng
+    | Pat_Var bv ->
+        S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_bv rng bv)] None rng
+    | Pat_Wild bv ->
+        S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_bv rng bv)] None rng
 
 let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
 let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
@@ -91,8 +94,12 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
         S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fvar rng fv)]
                     None rng
 
+    | Tv_BVar fv ->
+        S.mk_Tm_app ref_Tv_BVar.t [S.as_arg (embed_bv rng fv)]
+                    None rng
+
     | Tv_Var bv ->
-        S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed_binder rng bv)]
+        S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed_bv rng bv)]
                     None rng
 
     | Tv_App (hd, a) ->
@@ -112,7 +119,7 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
                     None rng
 
     | Tv_Refine (bv, t) ->
-        S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed_binder rng bv); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed_bv rng bv); S.as_arg (embed_term rng t)]
                     None rng
 
     | Tv_Const c ->
@@ -125,7 +132,7 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
 
     | Tv_Let (r, b, t1, t2) ->
         S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed_bool rng r);
-                                  S.as_arg (embed_binder rng b);
+                                  S.as_arg (embed_bv rng b);
                                   S.as_arg (embed_term rng t1);
                                   S.as_arg (embed_term rng t2)]
                     None rng
@@ -136,6 +143,12 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
 
     | Tv_Unknown ->
         { ref_Tv_Unknown.t with pos = rng }
+
+let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
+    S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed_string rng bvv.bv_ppname);
+                             S.as_arg (embed_int    rng bvv.bv_index);
+                             S.as_arg (embed_term   rng bvv.bv_sort)]
+                None rng
 
 let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
     match cv with
@@ -192,6 +205,14 @@ let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------ UNEMBEDDINGS ------------------------------------ *)
 (* -------------------------------------------------------------------------------------- *)
+
+let unembed_bv (t:term) : option<bv> =
+    match (SS.compress t).n with
+    | Tm_lazy i when i.kind = Lazy_bv ->
+        Some (undyn i.blob)
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (Print.term_to_string t)));
+        None
 
 let unembed_binder (t:term) : option<binder> =
     match (SS.compress t).n with
@@ -283,13 +304,13 @@ let rec unembed_pattern (t : term) : option<pattern> =
         BU.bind_opt (unembed_list unembed_pattern ps) (fun ps ->
         Some <| Pat_Cons (f, ps)))
 
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
-        BU.bind_opt (unembed_binder b) (fun b ->
-        Some <| Pat_Var b)
+    | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        Some <| Pat_Var bv)
 
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
-        BU.bind_opt (unembed_binder b) (fun b ->
-        Some <| Pat_Wild b)
+    | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        Some <| Pat_Wild bv)
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
@@ -303,8 +324,12 @@ let unembed_term_view (t:term) : option<term_view> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var.lid ->
-        BU.bind_opt (unembed_binder b) (fun b ->
+        BU.bind_opt (unembed_bv b) (fun b ->
         Some <| Tv_Var b)
+
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_BVar.lid ->
+        BU.bind_opt (unembed_bv b) (fun b ->
+        Some <| Tv_BVar b)
 
     | Tm_fvar fv, [(f, _)] when S.fv_eq_lid fv ref_Tv_FVar.lid ->
         BU.bind_opt (unembed_fvar f) (fun f ->
@@ -330,7 +355,7 @@ let unembed_term_view (t:term) : option<term_view> =
         Some <| Tv_Type u)
 
     | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine.lid ->
-        BU.bind_opt (unembed_binder b) (fun b ->
+        BU.bind_opt (unembed_bv b) (fun b ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Tv_Refine (b, t)))
 
@@ -345,7 +370,7 @@ let unembed_term_view (t:term) : option<term_view> =
 
     | Tm_fvar fv, [(r, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
         BU.bind_opt (unembed_bool r) (fun r ->
-        BU.bind_opt (unembed_binder b) (fun b ->
+        BU.bind_opt (unembed_bv b) (fun b ->
         BU.bind_opt (unembed_term t1) (fun t1 ->
         BU.bind_opt (unembed_term t2) (fun t2 ->
         Some <| Tv_Let (r, b, t1, t2)))))
@@ -360,6 +385,20 @@ let unembed_term_view (t:term) : option<term_view> =
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term_view: %s" (Print.term_to_string t)));
+        None
+
+let unembed_bv_view (t : term) : option<bv_view> =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(nm, _); (idx, _); (s, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
+        BU.bind_opt (unembed_string nm) (fun nm ->
+        BU.bind_opt (unembed_int idx) (fun idx ->
+        BU.bind_opt (unembed_term s) (fun s ->
+        Some <| { bv_ppname = nm ; bv_index = idx ; bv_sort = s })))
+
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv_view: %s" (Print.term_to_string t)));
         None
 
 let unembed_comp_view (t : term) : option<comp_view> =
@@ -429,6 +468,13 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------- UNFOLDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
+
+(* Note that most of these are never needed during normalization, since
+ * the types are abstract.
+ *)
+
+let unfold_lazy_bv  (i : lazyinfo) : term =
+    U.exp_unit
 
 let unfold_lazy_binder (i : lazyinfo) : term =
     U.exp_unit

@@ -640,26 +640,6 @@ let read_interactive_query stream : query =
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
 
-let json_of_pos pos =
-  JsonList [JsonInt (Range.line_of_pos pos); JsonInt (Range.col_of_pos pos)]
-
-let json_of_range_fields file b e =
-  JsonAssoc [("fname", JsonStr file);
-             ("beg", json_of_pos b);
-             ("end", json_of_pos e)]
-
-let json_of_use_range r =
-    json_of_range_fields
-            (Range.file_of_use_range r)
-            (Range.start_of_use_range r)
-            (Range.end_of_use_range r)
-
-let json_of_def_range r =
-    json_of_range_fields
-            (Range.file_of_range r)
-            (Range.start_of_range r)
-            (Range.end_of_range r)
-
 let json_of_issue_level i =
   JsonStr (match i with
            | ENotImplemented -> "not-implemented"

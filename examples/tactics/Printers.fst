@@ -16,12 +16,12 @@ let mk_flatten = mk_concat (pack (Tv_Const (C_String "")))
 let paren (e : term) : term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
-let mk_print_binder (b : binder) : Tac term =
+let mk_print_binder (bv : bv) : Tac term =
     let mk n = pack (Tv_FVar (pack_fv n)) in
-    match inspect (type_of_binder b) with
+    match inspect (type_of_bv bv) with
     | Tv_FVar fv ->
         let f = mk ["Printers"; "print_" ^ (String.concat "_" (inspect_fv fv))] in
-        mk_e_app f [pack (Tv_Var b)]
+        mk_e_app f [pack (Tv_Var bv)]
     | _ ->
         mk_stringlit "?"
 
@@ -50,7 +50,7 @@ let printer_fun () : Tac unit =
             | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TD.map (fun ti -> let b = fresh_binder ti in (b, Pat_Var b)) t_args in
+            let bv_pats = TD.map (fun ti -> let bv = fresh_bv ti in (bv, Pat_Var bv)) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TD.map mk_print_binder bvs) in
@@ -61,7 +61,7 @@ let printer_fun () : Tac unit =
             end
         in
         let branches = TD.map br1 ctors in
-        let m = pack (Tv_Match (pack (Tv_Var x)) branches) in
+        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder x))) branches) in
         exact_guard m;
         smt ()
     | _ -> fail "type not found?"

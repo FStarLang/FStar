@@ -108,12 +108,13 @@ type delta_depth =
 // output_value on them (serious).
 type lazy_kind =
   | BadLazy
+  | Lazy_bv
   | Lazy_binder
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
-  | Lazy_sigelt
   | Lazy_proofstate
+  | Lazy_sigelt
 
 ///[@ PpxDerivingShow ]
 type term' =
@@ -636,6 +637,7 @@ let t_range  = tconst PC.range_lid
 let t_term   = tconst PC.term_lid
 let t_decls  = tabbrev PC.decls_lid
 let t_binder = tconst PC.binder_lid
+let t_bv     = tconst PC.bv_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
