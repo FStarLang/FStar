@@ -125,7 +125,7 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
 assume type has_type : #a:Type -> a -> Type -> Type0
-  
+
 (* forall (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
@@ -249,6 +249,11 @@ assume val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume val op_LessThan           : int -> int -> Tot bool
 assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
 assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
+
+assume val land : int -> int -> int
+assume val lor  : int -> int -> int
+assume val lxor : int -> int -> int
+
 assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
