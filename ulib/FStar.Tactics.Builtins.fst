@@ -284,8 +284,8 @@ performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
 let launch_process (prog args input : string) : Tac string = TAC?.reflect (__launch_process prog args input)
 
-(** Get a fresh binder of some name and type. The name is only useful
+(** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
-the binder too. *)
-assume val __fresh_binder_named : string -> typ -> __tac binder
-let fresh_binder_named nm t : Tac binder = TAC?.reflect (__fresh_binder_named nm t)
+the bv too. *)
+assume val __fresh_bv_named : string -> typ -> __tac bv
+let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)

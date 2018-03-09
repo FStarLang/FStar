@@ -4278,6 +4278,8 @@ let (check_and_ascribe :
                 (uu___124_10596.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth =
                 (uu___124_10596.FStar_TypeChecker_Env.synth);
+              FStar_TypeChecker_Env.splice =
+                (uu___124_10596.FStar_TypeChecker_Env.splice);
               FStar_TypeChecker_Env.is_native_tactic =
                 (uu___124_10596.FStar_TypeChecker_Env.is_native_tactic);
               FStar_TypeChecker_Env.identifier_info =

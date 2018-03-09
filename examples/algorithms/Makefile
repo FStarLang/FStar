@@ -4,7 +4,7 @@ include ../Makefile.include
 
 all: uall
 
-uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver GC.uver Unification.uver Huffman.uver #downgrade QuickSort.Array.uver //TODO
+uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver GC.uver Unification.uver Huffman.uver QuickSort.Array.uver #downgrade  //TODO
 
 downgrade: QuickSort.Array.fst downgrade.fst
 	$(FSTAR) --include $(FSTAR_HOME)/ulib/reclaimable downgrade.fst

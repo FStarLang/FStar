@@ -14,6 +14,7 @@ all:	Apply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
+	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
 	Normalization.uver	\

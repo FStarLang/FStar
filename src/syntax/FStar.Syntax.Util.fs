@@ -649,7 +649,8 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _ -> []
+  | Sig_main _
+  | Sig_splice _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -829,8 +830,7 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
-// TODO: remove? note the argument order is different, ugh
-let mk_letbinding lbname univ_vars typ eff def lbattrs pos =
+let mk_letbinding (lbname : either<bv,fv>) univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
@@ -1562,7 +1562,8 @@ and branch_eq (p1,w1,t1) (p2,w2,t2) =
     else false
 
 and letbinding_eq lb1 lb2 =
-       eqsum bv_eq fv_eq lb1.lbname lb2.lbname
+    // bvars have no meaning here, so we just check they have the same name
+       eqsum (fun bv1 bv2 -> bv1.ppname = bv2.ppname) fv_eq lb1.lbname lb2.lbname
     && lb1.lbunivs = lb2.lbunivs
     && term_eq lb1.lbtyp lb2.lbtyp
     && term_eq lb1.lbdef lb2.lbdef

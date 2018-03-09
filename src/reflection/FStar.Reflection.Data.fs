@@ -32,32 +32,36 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of binder
+    | Tv_Var    of bv
+    | Tv_BVar   of bv
     | Tv_FVar   of fv
     | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * comp
     | Tv_Type   of unit
-    | Tv_Refine of binder * term
+    | Tv_Refine of bv * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * typ
-    | Tv_Let    of binder * term * term
+    | Tv_Let    of bool * bv * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
+
+type bv_view = {
+    bv_ppname : string;
+    bv_index : Z.t;
+    bv_sort : typ;
+}
 
 type comp_view =
     | C_Total of typ
     | C_Lemma of term * term
     | C_Unknown
 
-// See ulib/FStar.Reflection.Syntax.fst for explanations of these two
-type ctor =
-    | Ctor of  name * typ
 type sigelt_view =
-    | Sg_Inductive of name * list<binder> * typ * list<ctor>
-    | Sg_Let of fv * typ * term
+    | Sg_Let of bool * fv * typ * term
+    | Sg_Inductive of name * list<binder> * typ * list<name> // name, params, type, constructors
+    | Sg_Constructor of name * typ
     | Unk
-
 
 (* Contains all lids and terms needed for embedding/unembedding *)
 
@@ -88,17 +92,24 @@ let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1)
 let fstar_refl_pack_fv_lid = fstar_refl_basic_lid "pack_fv"
 let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
 
-(* types *)
-let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
+(* assumed types *)
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
+let fstar_refl_bv        = mk_refl_types_lid_as_term "bv"
 let fstar_refl_fv        = mk_refl_types_lid_as_term "fv"
 let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
-let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
+let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
+
+(* auxiliary types *)
+let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
+let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
 let fstar_refl_term_view = mk_refl_data_lid_as_term "term_view"
-let fstar_refl_ctor      = mk_refl_data_lid_as_term "ctor"
 let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
+let fstar_refl_bv_view   = mk_refl_data_lid_as_term "bv_view"
+
+(* bv_view *)
+let ref_Mk_bv = fstar_refl_data_const "Mkbv_view"
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
@@ -119,6 +130,7 @@ let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
 
 (* term_view *)
 let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"
+let ref_Tv_BVar    = fstar_refl_data_const "Tv_BVar"
 let ref_Tv_FVar    = fstar_refl_data_const "Tv_FVar"
 let ref_Tv_App     = fstar_refl_data_const "Tv_App"
 let ref_Tv_Abs     = fstar_refl_data_const "Tv_Abs"
@@ -137,10 +149,10 @@ let ref_C_Lemma   = fstar_refl_data_const "C_Lemma"
 let ref_C_Unknown = fstar_refl_data_const "C_Unknown"
 
 (* inductives & sigelts *)
-let ref_Sg_Inductive = fstar_refl_data_const "Sg_Inductive"
-let ref_Sg_Let       = fstar_refl_data_const "Sg_Let"
-let ref_Unk          = fstar_refl_data_const "Unk"
-let ref_Ctor         = fstar_refl_data_const "Ctor"
+let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
+let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
+let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
+let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* Should not be here *)
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange

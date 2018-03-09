@@ -211,6 +211,7 @@ let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
@@ -343,3 +344,4 @@ let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
 let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange
+let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange

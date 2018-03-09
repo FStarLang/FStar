@@ -97,6 +97,7 @@ let init_env deps : TcEnv.env =
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth = FStar.Tactics.Interpreter.synth } in
+  let env = { env with splice = FStar.Tactics.Interpreter.splice} in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
   env

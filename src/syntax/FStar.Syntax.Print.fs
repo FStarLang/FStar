@@ -682,6 +682,8 @@ let rec sigelt_to_string (x: sigelt) =
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+      | Sig_splice t ->
+        U.format1 "splice (%s)" (term_to_string t)
       in
       match x.sigattrs with
       | [] -> basic

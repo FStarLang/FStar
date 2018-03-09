@@ -1,0 +1,5 @@
+{"query-id":"1","query":"vfs-add","args":{"filename":null,"contents":"module Minimal\nlet hello : string = \"Hello F*!\"\n"}}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"module Minimal\n","line":1,"column":0}}
+{"query-id":"3","query":"compute","args":{"term":"1 + 1","rules":["beta","delta","iota","zeta","reify","pure-subterms"]}}
+{"query-id":"4","query":"compute","args":{"term":"2 + 2","rules":["beta","delta","iota","zeta","reify","pure-subterms"]}}
+{"query-id":"5","query":"compute","args":{"term":"3 + 3","rules":["beta","delta","iota","zeta","reify","pure-subterms"]}}

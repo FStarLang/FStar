@@ -105,11 +105,16 @@ private let atom (t:term) : tm expr = fun (n, atoms) ->
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
+val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> list a
+let rec list_unref #a #p l =
+    match l with
+    | [] -> []
+    | x::xs -> x :: list_unref xs
+
 val as_arith_expr : term -> tm expr
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
-    // Admitting this subtyping on lists for now, it's provable, but tedious right now
-    let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
+    let tl = list_unref tl in
     match inspect hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in

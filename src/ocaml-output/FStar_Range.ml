@@ -230,3 +230,45 @@ let (prims_to_fstar_range :
                   let r21 = mk_rng f2 s21 e21  in
                   { def_range = r11; use_range = r21 }))
   
+let (json_of_pos : pos -> FStar_Util.json) =
+  fun pos  ->
+    let uu____473 =
+      let uu____476 =
+        let uu____477 = line_of_pos pos  in FStar_Util.JsonInt uu____477  in
+      let uu____478 =
+        let uu____481 =
+          let uu____482 = col_of_pos pos  in FStar_Util.JsonInt uu____482  in
+        [uu____481]  in
+      uu____476 :: uu____478  in
+    FStar_Util.JsonList uu____473
+  
+let (json_of_range_fields : Prims.string -> pos -> pos -> FStar_Util.json) =
+  fun file  ->
+    fun b  ->
+      fun e  ->
+        let uu____492 =
+          let uu____499 =
+            let uu____506 =
+              let uu____511 = json_of_pos b  in ("beg", uu____511)  in
+            let uu____512 =
+              let uu____519 =
+                let uu____524 = json_of_pos e  in ("end", uu____524)  in
+              [uu____519]  in
+            uu____506 :: uu____512  in
+          ("fname", (FStar_Util.JsonStr file)) :: uu____499  in
+        FStar_Util.JsonAssoc uu____492
+  
+let (json_of_use_range : range -> FStar_Util.json) =
+  fun r  ->
+    let uu____544 = file_of_use_range r  in
+    let uu____545 = start_of_use_range r  in
+    let uu____546 = end_of_use_range r  in
+    json_of_range_fields uu____544 uu____545 uu____546
+  
+let (json_of_def_range : range -> FStar_Util.json) =
+  fun r  ->
+    let uu____550 = file_of_range r  in
+    let uu____551 = start_of_range r  in
+    let uu____552 = end_of_range r  in
+    json_of_range_fields uu____550 uu____551 uu____552
+  

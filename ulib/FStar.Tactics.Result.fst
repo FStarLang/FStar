@@ -12,3 +12,8 @@ noeq type __result a =
     | Success of a * proofstate
     | Failed  of string    //error message
               * proofstate //the proofstate at time of failure
+
+val result_split : #a:Type -> r:(__result a) ->
+                        Lemma (Success? r \/ Failed? r) [SMTPat (Success? r);
+                                                         SMTPat (Failed? r)]
+let result_split #a r = ()
