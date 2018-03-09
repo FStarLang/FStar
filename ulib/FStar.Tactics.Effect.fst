@@ -59,25 +59,8 @@ reifiable reflectable new_effect {
      ; return   = __ret
      ; __get    = __get
 }
-// The effect of satisfiable tactics
 effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
-
-// An unsound tactics effects, meaning the can contain failing assertions and
-// even be partly ill-typed. They can NEVER prove false things, however.
-effect TacU (a:Type) = TAC a (fun _ _ -> False)
-
-// Tactics that always succeed. Both this and TacF are used to better specify
-// primitives and get easier VCs
-effect TacS (a:Type) = TAC a (fun _ post -> forall x ps. post (Success (x, ps)))
-
-// Tactics that always fail
-effect TacF (a:Type) = TAC a (fun _ post -> forall s ps. post (Failed (s, ps)))
-
-// For TacS and TacF, we need these:
-let __result_s a = r:(__result a){Success? r}
-let __result_f a = r:(__result a){Failed? r}
-let __tac_s (a:Type) = proofstate -> M (__result_s a)
-let __tac_f (a:Type) = proofstate -> M (__result_f a)
+effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (not type safety!)
 
 let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
     fun ps p -> wp (fun x -> p (Success(x, ps)))
@@ -107,5 +90,5 @@ val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tac
 let by_tactic_seman a tau phi = ()
 
 // TcTerm needs these two names to be here, but we should remove it eventually
-private let tactic a = unit -> TacU a // we don't care if the tactic is satisfiable before running it
+private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
 let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())

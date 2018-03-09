@@ -8,13 +8,13 @@ open FStar.Tactics.Effect
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
-assume private val __fail : a:Type -> string -> __tac_f a
-let fail (#a:Type) (msg:string) : TacF a = TAC?.reflect (__fail a msg)
+assume private val __fail : a:Type -> string -> __tac a
+let fail (#a:Type) (msg:string) : Tac a = TAC?.reflect (__fail a msg)
 
-assume private val __top_env     : __tac_s env
+assume private val __top_env     : __tac env
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
-let top_env () : TacS env = TAC?.reflect __top_env
+let top_env () = TAC?.reflect __top_env
 
 assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
@@ -187,19 +187,19 @@ As a small optimization, [unit] arguments are discharged by the engine. *)
 // TODO: do the unit thing too for [apply].
 let apply_lemma (t:term) : Tac unit = TAC?.reflect (__apply_lemma t)
 
-assume private val __print : string -> __tac_s unit
+assume private val __print : string -> __tac unit
 (** [print str] has no effect on the proofstate, but will have the side effect
 of printing [str] on the compiler's standard output. *)
-let print (msg:string) : TacS unit = TAC?.reflect (__print msg)
+let print (msg:string) : Tac unit = TAC?.reflect (__print msg)
 
-assume private val __dump : string -> __tac_s unit
+assume private val __dump : string -> __tac unit
 (** Similar to [print], but will dump a text representation of the proofstate
 along with the message. *)
-let dump (msg:string) : TacS unit = TAC?.reflect (__dump msg)
+let dump (msg:string) : Tac unit = TAC?.reflect (__dump msg)
 
-assume private val __dump1 : string -> __tac_s unit
+assume private val __dump1 : string -> __tac unit
 (** Similar to [dump], but only dumping the current goal. *)
-let dump1 (msg:string) : TacS unit = TAC?.reflect (__dump1 msg)
+let dump1 (msg:string) : Tac unit = TAC?.reflect (__dump1 msg)
 
 assume private val __trefl : __tac unit
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
@@ -265,17 +265,17 @@ assume private val __set_options : string -> __tac unit
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 let set_options s : Tac unit = TAC?.reflect (__set_options s)
 
-assume private val __uvar_env : env -> option typ -> __tac_s term
+assume private val __uvar_env : env -> option typ -> __tac term
 (** Creates a new, unconstrained unification variable in environment
 [env]. The type of the uvar can optionally be provided in [o]. If not
 provided, a second uvar is created for the type. *)
-let uvar_env (e : env) (o : option typ) : TacS term = TAC?.reflect (__uvar_env e o)
+let uvar_env (e : env) (o : option typ) : Tac term = TAC?.reflect (__uvar_env e o)
 
-assume private val __unify : term -> term -> __tac_s bool
+assume private val __unify : term -> term -> __tac bool
 (** Call the unifier on two terms. The return value is whether
 unification was possible. When the tactics returns true, the terms may
 have been instantited by unification. When false, there is no effect. *)
-let unify (t1 t2 : term) : TacS bool = TAC?.reflect(__unify t1 t2)
+let unify (t1 t2 : term) : Tac bool = TAC?.reflect(__unify t1 t2)
 
 assume private val __launch_process : string -> string -> string -> __tac string
 (** Launches an external process [prog] with arguments [args] and input
@@ -287,5 +287,5 @@ let launch_process (prog args input : string) : Tac string = TAC?.reflect (__lau
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
 the bv too. *)
-assume val __fresh_bv_named : string -> typ -> __tac_s bv
-let fresh_bv_named nm t : TacS bv = TAC?.reflect (__fresh_bv_named nm t)
+assume val __fresh_bv_named : string -> typ -> __tac bv
+let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
