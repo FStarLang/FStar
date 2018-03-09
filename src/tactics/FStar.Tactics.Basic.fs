@@ -132,6 +132,7 @@ let goal_to_json g =
 let ps_to_json (msg, ps) =
     JsonAssoc [("label", JsonStr msg);
                ("position", Range.json_of_def_range ps.entry_range);
+               ("depth", JsonInt ps.depth);
                ("goals", JsonList (List.map goal_to_json ps.goals));
                ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
 
