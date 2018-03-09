@@ -114,7 +114,7 @@ let dump_cur ps msg =
 let ps_to_string (msg, ps) =
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
-                format1 "Position: %s\n" (Range.string_of_range ps.entry_range);
+                format1 "Location: %s\n" (Range.string_of_range ps.entry_range);
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
                     (String.concat "\n" (List.map goal_to_string ps.goals));
@@ -131,7 +131,7 @@ let goal_to_json g =
 
 let ps_to_json (msg, ps) =
     JsonAssoc [("label", JsonStr msg);
-               ("position", Range.json_of_def_range ps.entry_range);
+               ("location", Range.json_of_def_range ps.entry_range);
                ("depth", JsonInt ps.depth);
                ("goals", JsonList (List.map goal_to_json ps.goals));
                ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
