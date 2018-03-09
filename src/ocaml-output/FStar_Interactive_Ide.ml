@@ -1249,7 +1249,8 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "push";
   "search";
   "segment";
-  "vfs-add"] 
+  "vfs-add";
+  "tactic-ranges"] 
 exception InvalidQuery of Prims.string 
 let (uu___is_InvalidQuery : Prims.exn -> Prims.bool) =
   fun projectee  ->
