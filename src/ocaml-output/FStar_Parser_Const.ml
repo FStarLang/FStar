@@ -159,6 +159,8 @@ let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases" 
 let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"] 
+let (decls_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Data"; "decls"] 
 let (range_lid : FStar_Ident.lident) = pconst "range" 
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of" 
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled" 
@@ -331,5 +333,9 @@ let (fstar_syntax_syntax_term : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term" 
 let (binder_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
+    FStar_Range.dummyRange
+  
+let (bv_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "bv"]
     FStar_Range.dummyRange
   

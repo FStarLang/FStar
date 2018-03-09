@@ -300,6 +300,7 @@ type raw_error =
   | Warning_CantInspect
   | Warning_NilGivenExplicitArgs
   | Warning_ConsAppliedExplicitArgs
+  | Warning_UnembedBinderKnot
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -602,6 +603,7 @@ let default_flags =
   (Warning_CantInspect                               , CWarning);
   (Warning_NilGivenExplicitArgs                      , CWarning);
   (Warning_ConsAppliedExplicitArgs                   , CWarning);
+  (Warning_UnembedBinderKnot                         , CWarning);
   ]
 
 exception Err of raw_error* string

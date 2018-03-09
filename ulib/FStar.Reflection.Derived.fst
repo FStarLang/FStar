@@ -1,9 +1,36 @@
-module FStar.Reflection.Syntax
+module FStar.Reflection.Derived
 
 open FStar.Reflection.Types
 open FStar.Reflection.Basic
 open FStar.Reflection.Data
+open FStar.Reflection.Const
 open FStar.Order
+
+let name_of_bv (bv : bv) : string =
+    (inspect_bv bv).bv_ppname
+
+let type_of_bv (bv : bv) : typ =
+    (inspect_bv bv).bv_sort
+
+let bv_to_string (bv : bv) : string =
+    let bvv = inspect_bv bv in
+    "(" ^ bvv.bv_ppname ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
+
+let bv_of_binder (b : binder) : bv =
+    let bv, _ = inspect_binder b in
+    bv
+
+let mk_binder (bv : bv) : binder =
+    pack_binder bv Q_Explicit
+
+let name_of_binder (b : binder) : string =
+    name_of_bv (bv_of_binder b)
+
+let type_of_binder (b : binder) : typ =
+    type_of_bv (bv_of_binder b)
+
+let binder_to_string (b : binder) : string =
+    bv_to_string (bv_of_binder b) //TODO: print aqual
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
@@ -11,64 +38,6 @@ let rec flatten_name ns =
     | [] -> ""
     | [n] -> n
     | n::ns -> n ^ "." ^ flatten_name ns
-
-
-// TODO: these are awful names
-let imp_qn       = ["Prims"; "l_imp"]
-let and_qn       = ["Prims"; "l_and"]
-let or_qn        = ["Prims"; "l_or"]
-let not_qn       = ["Prims"; "l_not"]
-let iff_qn       = ["Prims"; "l_iff"]
-let eq2_qn       = ["Prims"; "eq2"]
-let eq1_qn       = ["Prims"; "eq"]
-let true_qn      = ["Prims"; "l_True"]
-let false_qn     = ["Prims"; "l_False"]
-let b2t_qn       = ["Prims"; "b2t"]
-let forall_qn    = ["Prims"; "l_Forall"]
-let exists_qn    = ["Prims"; "l_Exists"]
-let squash_qn    = ["Prims"; "squash"]
-
-let bool_true_qn  = ["Prims"; "true"]
-let bool_false_qn = ["Prims"; "false"]
-
-let int_lid      = ["Prims"; "int"]
-let bool_lid     = ["Prims"; "bool"]
-let unit_lid     = ["Prims"; "unit"]
-
-let add_qn       = ["Prims"; "op_Addition"]
-let neg_qn       = ["Prims"; "op_Minus"]
-let minus_qn     = ["Prims"; "op_Subtraction"]
-let mult_qn      = ["Prims"; "op_Multiply"]
-let mult'_qn     = ["FStar"; "Mul"; "op_Star"]
-let div_qn       = ["Prims"; "op_Division"]
-let lt_qn        = ["Prims"; "op_LessThan"]
-let lte_qn       = ["Prims"; "op_LessThanOrEqual"]
-let gt_qn        = ["Prims"; "op_GreaterThan"]
-let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
-let mod_qn       = ["Prims"; "op_Modulus"]
-
-let nil_qn       = ["Prims"; "Nil"]
-let cons_qn      = ["Prims"; "Cons"]
-
-let mktuple2_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
-let mktuple3_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple3"]
-let mktuple4_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple4"]
-let mktuple5_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple5"]
-let mktuple6_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple6"]
-let mktuple7_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple7"]
-let mktuple8_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple8"]
-
-let land_qn    = ["FStar" ; "UInt" ; "logand"]
-let lxor_qn    = ["FStar" ; "UInt" ; "logxor"]
-let lor_qn     = ["FStar" ; "UInt" ; "logor"]
-let ladd_qn    = ["FStar" ; "UInt" ; "add_mod"]
-let lsub_qn    = ["FStar" ; "UInt" ; "sub_mod"]
-let shiftl_qn  = ["FStar" ; "UInt" ; "shift_left"]
-let shiftr_qn  = ["FStar" ; "UInt" ; "shift_right"]
-let udiv_qn    = ["FStar" ; "UInt" ; "udiv"]
-let umod_qn    = ["FStar" ; "UInt" ; "mod"]
-let mul_mod_qn = ["FStar" ; "UInt" ; "mul_mod"]
-let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
@@ -121,9 +90,6 @@ let collect_abs t =
 
 let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
 
-let binder_to_string b =
-  "(" ^ inspect_bv b ^ ":" ^ term_to_string (type_of_binder b) ^ ")"
-
 let compare_fv (f1 f2 : fv) : order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
 
@@ -140,10 +106,18 @@ let rec compare_const (c1 c2 : vconst) : order =
     | C_False, _ -> Lt    | _, C_False -> Gt
     | C_String _, _ -> Lt | _, C_String _ -> Gt
 
+let compare_binder (b1 b2 : binder) : order =
+    let bv1, _ = inspect_binder b1 in
+    let bv2, _ = inspect_binder b2 in
+    compare_bv bv1 bv2
+
 let rec compare_term (s t : term) : order =
     match inspect s, inspect t with
     | Tv_Var sv, Tv_Var tv ->
-        compare_binder sv tv
+        compare_bv sv tv
+
+    | Tv_BVar sv, Tv_BVar tv ->
+        compare_bv sv tv
 
     | Tv_FVar sv, Tv_FVar tv ->
         compare_fv sv tv
@@ -151,9 +125,11 @@ let rec compare_term (s t : term) : order =
     | Tv_App h1 a1, Tv_App h2 a2 ->
         lex (compare_term h1 h2) (fun () -> compare_argv a1 a2)
 
-    | Tv_Abs b1 e1, Tv_Abs b2 e2
-    | Tv_Refine b1 e1, Tv_Refine b2 e2 ->
+    | Tv_Abs b1 e1, Tv_Abs b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_term e1 e2)
+
+    | Tv_Refine bv1 e1, Tv_Refine bv2 e2 ->
+        lex (compare_bv bv1 bv2) (fun () -> compare_term e1 e2)
 
     | Tv_Arrow b1 e1, Tv_Arrow b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_comp e1 e2)
@@ -167,8 +143,8 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar u1 _, Tv_Uvar u2 _->
         compare_int u1 u2
 
-    | Tv_Let b1 t1 t1', Tv_Let b2 t2 t2' ->
-        lex (compare_binder b1 b2) (fun () ->
+    | Tv_Let r1 bv1 t1 t1', Tv_Let r2 bv2 t2 t2' ->
+        lex (compare_bv bv1 bv2) (fun () ->
         lex (compare_term t1 t2) (fun () ->
              compare_term t1' t2'))
 
@@ -180,6 +156,7 @@ let rec compare_term (s t : term) : order =
 
     // From here onwards, they must have different constructors. Order them arbitrarilly as in the definition.
     | Tv_Var _, _      -> Lt   | _, Tv_Var _      -> Gt
+    | Tv_BVar _, _     -> Lt   | _, Tv_BVar _     -> Gt
     | Tv_FVar _, _     -> Lt   | _, Tv_FVar _     -> Gt
     | Tv_App _ _, _    -> Lt   | _, Tv_App _ _    -> Gt
     | Tv_Abs _ _, _    -> Lt   | _, Tv_Abs _ _    -> Gt
@@ -245,3 +222,4 @@ let mktuple_n (ts : list term) : term =
 
 let mkpair (t1 t2 : term) : term =
     mktuple_n [t1;t2]
+

@@ -557,6 +557,8 @@ and p_rawDecl d = match d.d with
     failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
+  | Splice t ->
+    str "%splice" ^^ space ^^ p_term false false t
 
 (* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function

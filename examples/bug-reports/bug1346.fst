@@ -29,8 +29,8 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
                let hh = intro () in
                apply (quote FStar.Squash.return_squash) ;
                dump "D" ;
-               exact (pack (Tv_Var hh)) ; //USED TO FAIL
-               exact (pack (Tv_Var h)))
+               exact (pack (Tv_Var (bv_of_binder hh))) ; //USED TO FAIL
+               exact (pack (Tv_Var (bv_of_binder h))))
 
 let t1 () : Tac unit =
   let x     = forall_intro  () in
@@ -42,7 +42,7 @@ let t1 () : Tac unit =
   dump "***************After rewrite";
   squash_intro ();
   dump "***************After squash" ;
-  exact (pack (Tv_Var px));
+  exact (pack (Tv_Var (bv_of_binder px)));
   dump "End"
 
 let foo1 () =

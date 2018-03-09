@@ -821,12 +821,13 @@ let equality_ops : BU.psmap<primitive_step> =
 
     prim_from_list [propositional_equality; hetero_propositional_equality]
 
-// Should match FStar.Reflection.Basic.unembed_binder
+(* A hacky knot, set by FStar.Main *)
+let unembed_binder_knot : ref<option<EMB.unembedder<binder>>> = BU.mk_ref None
 let unembed_binder (t : term) : option<S.binder> =
-    match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_binder ->
-        Some (FStar.Dyn.undyn i.blob)
-    | _ ->
+    match !unembed_binder_knot with
+    | Some f -> f t
+    | None ->
+        Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
 
 let mk_psc_subst cfg env =
@@ -1639,6 +1640,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
     let head0 = head in
     let head = U.unascribe head in
     log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
+    let head = U.unmeta_safe head in
     match (SS.compress head).n with
     | Tm_let ((false, [lb]), body) ->
       (* ****************************************************************************)
@@ -1799,10 +1801,6 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         let lifted = reify_lift cfg e msrc mtgt (closure_as_term cfg env t') in
         log cfg (fun () -> BU.print1 "Reified lift to (2): %s\n" (Print.term_to_string lifted));
         norm cfg env (List.tl stack) lifted
-
-    // Ignore all other metas
-    | Tm_meta(e, _) ->
-        do_reify_monadic fallback cfg env stack e m t
 
     | Tm_match(e, branches) ->
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
@@ -2577,6 +2575,10 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       {s with sigel = Sig_effect_abbrev (lid, univ_names, binders, comp, flags)}
 
     | Sig_pragma _ ->
+      s
+
+    (* This should never happen, it should have been run by now *)
+    | Sig_splice _ ->
       s
 
 let erase_universes env t =

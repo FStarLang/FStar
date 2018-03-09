@@ -19,7 +19,7 @@ module FStar.Range
 open FStar.ST
 open FStar.All
 open FStar.BaseTypes
-module BU = FStar.Util
+open FStar.Util
 
 type file_name = string
 
@@ -93,9 +93,9 @@ let union_ranges r1 r2 = {
   use_range=union_rng r1.use_range r2.use_range
 }
 let string_of_pos pos =
-    BU.format2 "%s,%s" (BU.string_of_int pos.line) (BU.string_of_int pos.col)
+    format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
 let string_of_rng r =
-    BU.format3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
+    format3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
 let string_of_use_range r = string_of_rng r.use_range
 let string_of_range r     = string_of_def_range r
@@ -127,7 +127,7 @@ let compare r1 r2 = compare_rng r1.def_range r2.def_range
 let compare_use_range r1 r2 = compare_rng r1.use_range r2.use_range
 let range_before_pos m1 p =
     pos_geq p (end_of_range m1)
-let end_of_line p = {p with col=BU.max_int}
+let end_of_line p = {p with col=max_int}
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
                                        (end_of_line (end_of_range r))
@@ -145,3 +145,23 @@ let prims_to_fstar_range (r : (string * (int * int) * (int * int)) * (string * (
     let r1 = mk_rng f1 s1 e1 in
     let r2 = mk_rng f2 s2 e2 in
     { def_range = r1; use_range = r2 }
+
+let json_of_pos pos =
+  JsonList [JsonInt (line_of_pos pos); JsonInt (col_of_pos pos)]
+
+let json_of_range_fields file b e =
+  JsonAssoc [("fname", JsonStr file);
+             ("beg", json_of_pos b);
+             ("end", json_of_pos e)]
+
+let json_of_use_range r =
+    json_of_range_fields
+            (file_of_use_range r)
+            (start_of_use_range r)
+            (end_of_use_range r)
+
+let json_of_def_range r =
+    json_of_range_fields
+            (file_of_range r)
+            (start_of_range r)
+            (end_of_range r)

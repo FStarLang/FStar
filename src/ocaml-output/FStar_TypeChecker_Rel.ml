@@ -6451,6 +6451,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                  (uu___148_17645.FStar_TypeChecker_Env.proof_ns);
                                FStar_TypeChecker_Env.synth =
                                  (uu___148_17645.FStar_TypeChecker_Env.synth);
+                               FStar_TypeChecker_Env.splice =
+                                 (uu___148_17645.FStar_TypeChecker_Env.splice);
                                FStar_TypeChecker_Env.is_native_tactic =
                                  (uu___148_17645.FStar_TypeChecker_Env.is_native_tactic);
                                FStar_TypeChecker_Env.identifier_info =
@@ -6666,6 +6668,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                  (uu___148_17916.FStar_TypeChecker_Env.proof_ns);
                                FStar_TypeChecker_Env.synth =
                                  (uu___148_17916.FStar_TypeChecker_Env.synth);
+                               FStar_TypeChecker_Env.splice =
+                                 (uu___148_17916.FStar_TypeChecker_Env.splice);
                                FStar_TypeChecker_Env.is_native_tactic =
                                  (uu___148_17916.FStar_TypeChecker_Env.is_native_tactic);
                                FStar_TypeChecker_Env.identifier_info =
@@ -9870,6 +9874,8 @@ let (resolve_implicits' :
                                    (uu___168_23224.FStar_TypeChecker_Env.proof_ns);
                                  FStar_TypeChecker_Env.synth =
                                    (uu___168_23224.FStar_TypeChecker_Env.synth);
+                                 FStar_TypeChecker_Env.splice =
+                                   (uu___168_23224.FStar_TypeChecker_Env.splice);
                                  FStar_TypeChecker_Env.is_native_tactic =
                                    (uu___168_23224.FStar_TypeChecker_Env.is_native_tactic);
                                  FStar_TypeChecker_Env.identifier_info =
