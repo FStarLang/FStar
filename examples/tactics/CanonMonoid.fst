@@ -64,8 +64,7 @@ let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
 // This expects that mult, unit, and me have already been normalized
 let rec reification_aux (#a:Type) (mult unit me : term) : Tac (exp a) =
   let hd, tl = collect_app_ref me in
-  // Admitting this subtyping on lists for now, it's provable, but tedious right now
-  let tl : list ((a:term{a << me}) * aqualv) = admit(); tl in
+  let tl = list_unref tl in
   match inspect hd, tl with
   | Tv_FVar fv, [(me1, Q_Explicit) ; (me2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
@@ -127,7 +126,7 @@ let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
   | _ -> fail "Goal should be an equality"
 
 let lem0 (a b c d : int) =
-  assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c) + d)
+  assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
   (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
 
 (* TODO: should extend this to a commutative monoid and
