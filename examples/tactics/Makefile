@@ -19,6 +19,7 @@ all:	Apply.uver		\
 	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
+	VQuote.uver		\
 	Rename.uver		\
 	Imp.uver		\
 	Inlining.uver		\

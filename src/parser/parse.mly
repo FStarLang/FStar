@@ -70,6 +70,7 @@ open FStar_String
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE
 %token BACKTICK UNIV_HASH
+%token PERC_BACKTICK
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
@@ -709,6 +710,8 @@ tmNoEqWith(X):
   | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | LBRACE e=recordExp RBRACE { e }
+  | PERC_BACKTICK e=atomicTerm
+      { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=X { e }
