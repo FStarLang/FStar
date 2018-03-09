@@ -88,6 +88,8 @@ let split_heap_join m0 m1 h =
 
 let split_heap_memories m0 m1 h = ()
 
+let points_to_addr_of_disjoint #a #b r s x y = ()
+
 let hcontains #a h r = 
   let _ = () in 
   exists x . h.memory r == Some (| a , x |)

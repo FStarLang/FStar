@@ -73,6 +73,11 @@ val split_heap_memories (m0 m1:memory) (h:heap)
                      heap_memory h0 == m0 /\ heap_memory h1 == m1))
           [SMTPat (split_heap m0 m1 h)]
 
+val points_to_addr_of_disjoint (#a:Type0) (#b:Type0) (r:ref a) (s:ref b) (x:a) (y:b)
+  : Lemma (requires (addr_of r =!= addr_of s))
+          (ensures  (disjoint_memories (r |> x) (s |> y)))
+          [SMTPat (disjoint_memories (r |> x) (s |> y))]
+
 val hcontains : #a:Type0 -> heap -> ref a -> Type0
 val mcontains : #a:Type0 -> memory -> ref a -> Type0
 
