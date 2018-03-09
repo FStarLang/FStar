@@ -318,7 +318,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
     match sv with
     | Sg_Let (r, fv, ty, def) ->
         let lb = U.mk_letbinding (BU.Inr fv) [] ty PC.effect_Tot_lid def [] def.pos in
-        mk_sigelt <| Sig_let ((r, [lb]), [])
+        mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
     | Sg_Constructor _ ->
         failwith "packing Sg_Constructor, sorry"
