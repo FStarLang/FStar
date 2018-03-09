@@ -61,30 +61,29 @@ let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
     : squash (mdenote m e1 == mdenote m e2) =
   flatten_correct m e1; flatten_correct m e2
 
-// TODO: this is not very efficient, but not sure it matters
-//       for instance there is delta reduction that happens repeatedly
-let rec reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
+// This expects that mult, unit, and me have already been normalized
+let rec reification_aux (#a:Type) (mult unit me : term) : Tac (exp a) =
   let hd, tl = collect_app_ref me in
   // Admitting this subtyping on lists for now, it's provable, but tedious right now
   let tl : list ((a:term{a << me}) * aqualv) = admit(); tl in
   match inspect hd, tl with
   | Tv_FVar fv, [(me1, Q_Explicit) ; (me2, Q_Explicit)] ->
-    // if unify (pack (Tv_FVar fv)) (quote (Monoid?.mult m)) then -- doesn't work
-    let t1 = norm_term [delta] (pack (Tv_FVar fv)) in
-    let t2 = norm_term [delta] (quote (Monoid?.mult m)) in
-    // dump ("t1=" ^ term_to_string t1 ^
-    //     "; t2=" ^ term_to_string t2);
-    if term_eq t1 t2
-    then Mult (reification m me1) (reification m me2)
+    if term_eq (pack (Tv_FVar fv)) mult
+    then Mult (reification_aux mult unit me1) (reification_aux mult unit me2)
     else Var (unquote me)
   | _, _ ->
-    let t1 = norm_term [delta] me in
-    let t2 = norm_term [delta] (quote (Monoid?.unit m)) in
-    // dump ("t1=" ^ term_to_string t1 ^
-    //     "; t2=" ^ term_to_string t2);
-    if term_eq t1 t2
+    if term_eq me unit
     then Unit
     else Var (unquote me)
+
+let reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
+    let mult = norm_term [delta] (quote (Monoid?.mult m)) in
+    let unit = norm_term [delta] (quote (Monoid?.unit m)) in
+    let me   = norm_term [delta] me in
+    dump ("mult = " ^ term_to_string mult ^
+        "; unit = " ^ term_to_string unit ^
+        "; me   = " ^ term_to_string me);
+    reification_aux mult unit me
 
 private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
 private let conv #x #y eq w = w
@@ -111,9 +110,6 @@ let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
-  (* TODO: would be nice to just find all terms of monoid type in the
-           goal and replace them with their canonicalization;
-           basically use flatten_correct instead of monoid_reflect *)
   | Comp (Eq (Some t)) me1 me2 ->
       if term_eq t (quote a) then
         let r1 = reification m me1 in
@@ -135,4 +131,11 @@ let lem0 (a b c d : int) =
   (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
 
 (* TODO: should extend this to a commutative monoid and
-         sort the list to prove things like a + b = b + a; *)
+         sort the list to prove things like a + b = b + a;
+         - even better, the user can provide the ordering *)
+
+(* TODO: would be nice to just find all terms of monoid type in the
+         goal and replace them with their canonicalization;
+         basically use flatten_correct instead of monoid_reflect
+         - even better, the user would have control over the place(s)
+           where the canonicalization is done *)
