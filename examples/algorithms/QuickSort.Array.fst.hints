@@ -38,7 +38,7 @@
         "refinement_interpretation_QuickSort.Array_Tm_refine_bfd27ef7426b2a0c6302bf816720e659"
       ],
       0,
-      "9b414373261e7f7bf52d9f5b92f503e2"
+      "22a9531237aa2a6ee9ca6f6642fc4665"
     ],
     [
       "QuickSort.Array.partition",
@@ -100,7 +100,7 @@
         "typing_FStar.Seq.Properties.head", "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "c05921416e6a23b44a21e3b40c8c161f"
+      "925c07e1c2a0a63be42f39450a8b7d10"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -237,7 +237,7 @@
         "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "91565af8d4a584c99536a7c00b24d40b"
+      "7524b7bd7f7a51d80bc67347a822333e"
     ],
     [
       "QuickSort.Array.qsort",
@@ -299,7 +299,7 @@
         "refinement_interpretation_QuickSort.Array_Tm_refine_bfd27ef7426b2a0c6302bf816720e659"
       ],
       0,
-      "b0a21ac7d635cdd9da47e6bcbd438793"
+      "66fe66b269333a5d0963638fa6ca0ee8"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -340,7 +340,7 @@
         "typing_FStar.Array.contains"
       ],
       0,
-      "b9a6b064c37f3f5360a209127ca1ead9"
+      "9b0bbb7d80db3c4bbde51594bc963ed7"
     ]
   ]
 ]
