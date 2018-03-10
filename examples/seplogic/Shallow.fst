@@ -2,6 +2,8 @@ module Shallow
 
 open SepLogic.Heap
 
+unfold let memory = m:memory{defined m}
+
 (* postcondition, a predicate on the return value and the output heap *)
 let post (a:Type) = a * memory -> Type0
 
@@ -25,7 +27,7 @@ let return (#a:Type) (x:a)
 
 (* frame wp by partitioning a heap whose memory is m into h0 and h1, and then prove post on the resulting heap and h1 *)
 let frame_wp0 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0 m1:memory) =
-  defined m /\ m == (m0 <*> m1) /\ wp (post m1) m0
+  disjoint_memories m0 m1 /\ m == (m0 <*> m1) /\ wp (post m1) m0
 
 let frame_wp1 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0:memory) =
   exists (m1:memory). frame_wp0 wp post m m0 m1

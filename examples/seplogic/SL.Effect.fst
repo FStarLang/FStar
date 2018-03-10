@@ -2,6 +2,8 @@ module SL.Effect
 
 open SepLogic.Heap
 
+unfold let memory = m:memory{defined m}
+
 let pre = memory -> Type0
 let post (a:Type) = a -> memory -> Type0
 let st_wp (a:Type) = post a -> pre
@@ -60,7 +62,7 @@ new_effect {
      ; trivial      = st_trivial
 }
 
-unfold let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = wp (fun a -> p a emp)
+unfold let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = emp_defined(); wp (fun a -> p a emp)
 sub_effect DIV ~> STATE = lift_div_st
 
 assume
