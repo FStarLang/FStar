@@ -346,6 +346,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
 
       mktac2 "__fresh_bv_named"  fresh_bv_named unembed_string RE.unembed_term RE.embed_bv S.t_bv;
+      mktac1 "__change"          change RE.unembed_term embed_unit t_unit;
 
       decr_depth_step;
       incr_depth_step;

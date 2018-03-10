@@ -317,3 +317,8 @@ for pretty-printing, since there is a fresh unaccessible integer within
 the bv too. *)
 assume val __fresh_bv_named : string -> typ -> __tac bv
 let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
+
+(** Change the goal to another type, given that it is convertible
+ * to the current type. *)
+assume val __change : typ -> __tac unit
+let change (t : typ) : Tac unit = TAC?.reflect (__change t)

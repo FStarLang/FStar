@@ -85,6 +85,7 @@ val uvar_env : env -> option<typ> -> tac<term>
 val unshelve : term -> tac<unit>
 
 val unify : term -> term -> tac<bool>
+val change : typ -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
 val proofstate_of_goal_ty : env -> typ -> proofstate * term (* Returns proofstate and uvar for main witness *)

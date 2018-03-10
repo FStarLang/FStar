@@ -301,12 +301,5 @@ let change_with t1 t2 =
 private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
 private let conv #x #y eq w = w
 
-let change t1 =
-    focus (fun () ->
-        let t = mk_app (`conv) [(t1, Q_Implicit)] in
-        apply t;
-        trivial ()
-    )
-
 let change_sq t1 =
     change (mk_e_app (`squash) [t1])
