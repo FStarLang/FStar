@@ -309,19 +309,6 @@ let add_implicits (i:implicits) : tac<unit> =
     bind get (fun p ->
     set ({p with all_implicits=i@p.all_implicits}))
 
-let remove_implicits (js:implicits) : tac<unit> =
-    let exists_in_j (_, _, u_i, _, _, _) =
-        js |> BU.for_some (fun (_, _, u_j, _, _, _) -> FStar.Syntax.Unionfind.equiv u_j u_i)
-    in
-    bind get (fun p ->
-    set ({p with all_implicits=p.all_implicits |> List.filter (fun i ->
-            not (exists_in_j i))}))
-
-let new_uvar_i (reason:string) (env:env) (typ:typ) : tac<(term * implicits)> =
-    let u, _, g_u = TcUtil.new_implicit_var reason typ.pos env typ in
-    bind (add_implicits g_u.implicits) (fun _ ->
-    ret (u, g_u.implicits))
-
 let new_uvar (reason:string) (env:env) (typ:typ) : tac<term> =
     let u, _, g_u = TcUtil.new_implicit_var reason typ.pos env typ in
     bind (add_implicits g_u.implicits) (fun _ ->
@@ -990,7 +977,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                                     (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
           focus (
                 bind tau (fun _ ->
-                // Try to get rid of all the unification lambdas
+                // Try to get rid  of all the unification lambdas
                 let ut = N.reduce_uvar_solutions env ut in
                 log ps (fun () ->
                     BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
@@ -1066,36 +1053,47 @@ and ctrl_tac_fold_args
       ret ((t,q)::ts, ctrl)))
 
 let rewrite_rec (ps : proofstate)
-                (maybe_rewrite : ctrl_tac<rewrite_result>)
+                (ctrl:term -> ctrl_tac<rewrite_result>)
+                (rewriter: tac<unit>)
                 opts
                 (env : Env.env)
                 (t : term) : ctrl_tac<term> =
-    let t, lcomp, g = TcTerm.tc_term env t in //re-typechecking the goal is expensive
-    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
-        ret (t, globalStop) // Don't do anything for possibly impure terms
-    else let typ = lcomp.res_typ in
-         bind (new_uvar_i "pointwise_rec" env typ) (fun (ut, ut_imps) ->
-         log ps (fun () ->
-              BU.print2 "Pointwise_rec: making equality\n\t%s ==\n\t%s\n" (Print.term_to_string t)
-
-                                                                   (Print.term_to_string ut));
-          bind (add_irrelevant_goal "pointwise_rec equation" env
-                             (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
-          focus
-            (bind maybe_rewrite (fun (res, ctrl) ->
-             if res = skipThisTerm
-             then bind dismiss (fun _ ->
-                  bind (remove_implicits ut_imps) (fun _ ->
-                  ret (t, ctrl)))
-             else // Try to get rid of all the unification lambdas
-                let ut = N.reduce_uvar_solutions env ut in
-                log ps (fun () ->
-                BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+    let t = SS.compress t in
+    bind (bind (add_irrelevant_goal "dummy"
+                    env
+                    U.t_true
+                    opts) (fun _ ->
+          bind (ctrl t) (fun res ->
+          bind trivial (fun _ ->
+          ret res)))) (fun (should_rewrite, ctrl) ->
+    if not should_rewrite
+    then ret (t, ctrl)
+    else let t, lcomp, g = TcTerm.tc_term env t in //re-typechecking the goal is expensive
+         if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
+           ret (t, globalStop) // Don't do anything for possibly impure terms
+         else
+           let typ = lcomp.res_typ in
+           bind (new_uvar "pointwise_rec" env typ) (fun ut ->
+           log ps (fun () ->
+              BU.print2 "Pointwise_rec: making equality\n\t%s ==\n\t%s\n"
+                (Print.term_to_string t) (Print.term_to_string ut));
+           bind (add_irrelevant_goal
+                             "rewrite_rec equation"
+                             env
+                             (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)
+                             opts) (fun _ ->
+           focus
+            (bind rewriter (fun _ ->
+             // Try to get rid of all the unification lambdas
+             let ut = N.reduce_uvar_solutions env ut in
+             log ps (fun () ->
+                BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                             (Print.term_to_string t)
                             (Print.term_to_string ut));
-                ret (ut, ctrl)))))
+             ret (ut, ctrl))))))
 
-let topdown_rewrite (tau:ctrl_tac<rewrite_result>) : tac<unit> =
+let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
+                    (rewriter:tac<unit>) : tac<unit> =
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
@@ -1105,7 +1103,7 @@ let topdown_rewrite (tau:ctrl_tac<rewrite_result>) : tac<unit> =
     log ps (fun () ->
         BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
-    bind (ctrl_tac_fold (rewrite_rec ps tau g.opts) g.context keepGoing gt) (fun (gt', _) ->
+    bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) g.context keepGoing gt) (fun (gt', _) ->
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
