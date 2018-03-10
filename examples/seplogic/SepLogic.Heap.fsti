@@ -52,8 +52,7 @@ val ( |> ) : #a:Type0 -> r:ref a -> x:a -> GTot memory
 val ( <*> ) : m0:memory -> m1:memory -> GTot memory
 
 val sep_emp (m:memory)
-  : Lemma (requires (defined m))
-          (ensures  ((m <*> emp) == m))
+  : Lemma ((m <*> emp) == m)
           [SMTPat (m <*> emp)]
 
 val sep_comm (m0 m1:memory)
