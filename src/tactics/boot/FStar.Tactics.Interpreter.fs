@@ -36,7 +36,7 @@ open FStar.Tactics.Native
 let tacdbg = BU.mk_ref false
 
 let tac_reflect t =
-    let refl = S.mk (Tm_constant (FStar.Const.Const_reflect FStar.Parser.Const.tac_effect_lid)) None t.pos in
+    let refl = S.mk (Tm_constant (FStar.Const.Const_reflect FStar.Parser.Const.effect_TAC_lid)) None t.pos in
     U.mk_app refl [(t, None)]
 let maybe_reflect reflect t =
     if reflect then tac_reflect t else t

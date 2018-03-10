@@ -368,7 +368,7 @@ module RD = FStar.Reflection.Data
 exception NoTacticEmbedding of string
 
 let not_implemented_warning r t msg =
-    Errors.log_issue r (Errors.Warning_CallNotImplementedAsWarning, BU.format2 "Tactic %s will not run natively because %s.\n" t msg)
+    Errors.log_issue r (Errors.Warning_CallNotImplementedAsWarning, BU.format2 "Plugin %s will not run natively because %s.\n" t msg)
 
 type emb_decl =
     | Embed
@@ -496,7 +496,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
             embed_type_app fv arg_embeddings
 
           | _ ->
-            raise_err (Fatal_CallNotImplemented, ("Embedding not defined for type " ^ (Print.term_to_string t)))
+            raise (NoTacticEmbedding("Embedding not defined for type " ^ (Print.term_to_string t)))
           end
     in
     let abstract_tvars tvar_names (body:mlexpr) : mlexpr =
@@ -570,7 +570,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
                   true)
           end
           else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
-                                 PC.tac_effect_lid
+                                    PC.effect_TAC_lid
           then begin
             let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
             let tac_fun = w <| MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name fv]) in
@@ -590,9 +590,14 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
                   arity,
                   false)
           end
-          else raise_err (Fatal_CallNotImplemented, ("Plugins not defined for type " ^ Print.term_to_string t))
+          else raise (NoTacticEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
 
         | (b, _)::bs ->
           aux (mk_embedding env b.sort::accum_embeddings) env bs
     in
-    aux [] tvar_context bs
+    try
+        aux [] tvar_context bs
+    with
+    | NoTacticEmbedding msg ->
+      not_implemented_warning t.pos (string_of_lid fv) msg;
+      None
