@@ -1,11 +1,17 @@
 FSTAR?=fstar $(OTHERFLAGS) --cache_checked_modules
 
-all: test
+ALL=Plugin.Simple Plugin.Tactic
+
+all: $(addsuffix .test, $(ALL))
 
 .depend:
-	$(FSTAR) --dep full Plugin.Simple.Test.fst > .depend
+	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
 
 include .depend
+
+%.test: taclib %.fst.checked
+	$(FSTAR) $*.fst --codegen Plugin --extract $*
+	$(FSTAR) $*.Test.fst --load $*
 
 test: taclib Plugin.Simple.fst.checked
 	$(FSTAR) Plugin.Simple.fst --codegen Plugin --extract Plugin.Simple
