@@ -5922,8 +5922,10 @@ and (do_unfold_fv :
                                       :: env1) env)
                              in
                           norm cfg env1 stack1 t1
-                      | uu____17989 when (cfg.steps).erase_universes ->
-                          norm cfg env stack t1
+                      | uu____17989 when
+                          (cfg.steps).erase_universes ||
+                            (cfg.steps).allow_unbound_universes
+                          -> norm cfg env stack t1
                       | uu____17992 ->
                           let uu____17995 =
                             let uu____17996 =
