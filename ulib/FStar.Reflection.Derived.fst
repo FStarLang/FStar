@@ -178,7 +178,13 @@ and compare_comp (c1 c2 : comp) : order =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
-    | C_Total t1 md1, C_Total t2 md2 -> lex (compare_term t1 t2) (fun () -> compare_option compare_term md1 md2)
+    | C_Total t1 md1, C_Total t2 md2 -> lex (compare_term t1 t2)
+                                        (fun () -> match md1, md2 with
+                                                   | None, None -> Eq
+                                                   | None, Some _ -> Lt
+                                                   | Some _, None -> Gt
+                                                   | Some x, Some y -> compare_term x y)
+
     | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
 
     | C_Unknown, C_Unknown -> Eq
