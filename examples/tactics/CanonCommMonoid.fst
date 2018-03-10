@@ -296,6 +296,14 @@ let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (b + 0) + d + (c + a + 0) + 0)
   (fun _ -> canon_monoid int_plus_cm; trefl())
 
+(* TODO: FStar.OrdMap abstraction was getting in the way of
+         computation, find a cleaner way to remove it *)
+(* TODO: Is the vmap really needed though? What's wrong with storing
+         everything in the Var/Atom nodes of the exprs? What's gained
+         with the vmaps? Easier to implement by quote tactic in Coq? *)
+
+(* TODO: Allow the tactic to compute with constants beyond unit *)
+
 (* TODO: Allow the user control over the sorting ordering by allowing
          him to store extra information in the vmap and using that for
          the sorting. *)
