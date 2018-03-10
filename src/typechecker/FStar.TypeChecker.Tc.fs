@@ -326,7 +326,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
             let maybe_range_arg =
                 if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                then [S.null_binder S.t_range]
+                then [S.null_binder S.t_range; S.null_binder S.t_range]
                 else []
             in
             let expected_k = U.arrow ([S.mk_binder a;

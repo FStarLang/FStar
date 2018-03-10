@@ -174,20 +174,20 @@ let rec wp_code (inss : list ins) (post: state -> Type0) (s0:state) : Type0 =
     end
 
 let wp_code_delta = [
-  "X64.Vale.StrongPost_i.wp_code";
-  "X64.Vale.StrongPost_i.all_regs_match";
-  "X64.Vale.StrongPost_i.regs_match";
-  "X64.Vale.StrongPost_i.eval_operand_norm";
-  "X64.Vale.State_i.update_reg";
-  "X64.Vale.State_i.update_mem";
-  "X64.Semantics_s.eval_maddr";
-  "X64.Vale.State_i.__proj__Mkstate__item__regs";
-  "X64.Vale.State_i.__proj__Mkstate__item__ok" ;
-  "X64.Vale.State_i.__proj__Mkstate__item__flags";
-  "X64.Vale.State_i.__proj__Mkstate__item__mem";
-  "X64.Vale.StrongPost_i.valid_operand_norm";
-  "X64.Vale.StrongPost_i.valid_maddr_norm";
-  "X64.Vale.StrongPost_i.augment"
+  %`(wp_code);
+  %`(all_regs_match);
+  %`(regs_match);
+  %`(eval_operand_norm);
+  %`(update_reg);
+  %`(update_mem);
+  %`(eval_maddr);
+  %`(Mkstate?.regs);
+  %`(Mkstate?.ok);
+  %`(Mkstate?.flags);
+  %`(Mkstate?.mem);
+  %`(valid_operand_norm);
+  %`(valid_maddr_norm);
+  %`(augment)
   ]
 
 

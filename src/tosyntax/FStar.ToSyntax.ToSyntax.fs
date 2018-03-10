@@ -251,6 +251,7 @@ and free_type_vars env t = match (unparen t).tm with
   | TryWith _
   | Bind _
   | Quote _
+  | VQuote _
   | Seq _ -> []
 
 let head_and_args t =
@@ -1239,13 +1240,22 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         desugar_term env e
     | Paren e -> failwith "impossible"
 
+    | VQuote e ->
+      (* Just get the lid and replace the VQuote for a string of it *)
+      let tm = desugar_term env e in
+      begin match (Subst.compress tm).n with
+      | Tm_fvar fv -> { U.exp_string (string_of_lid (lid_of_fv fv)) with pos = e.range }
+      | _ ->
+        raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) top.range
+      end
+
     | Quote (e, qopen) ->
       mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, { qopen = qopen }))
 
     | _ when (top.level=Formula) -> desugar_formula env top
 
     | _ ->
-      raise_error (Fatal_UnexpectedTerm, ("Unexpected term" ^ term_to_string top)) top.range
+      raise_error (Fatal_UnexpectedTerm, ("Unexpected term: " ^ term_to_string top)) top.range
   end
 
 and not_ascribed t =

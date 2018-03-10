@@ -1047,8 +1047,7 @@ let rec (extract_sig :
                            in
                         let uu____2528 =
                           ((FStar_Ident.lid_equals
-                              FStar_Parser_Const.effect_TAC_lid
-                              (FStar_Syntax_Util.comp_effect_name comp))
+                              FStar_Parser_Const.effect_TAC_lid eff)
                              &&
                              (let uu____2530 =
                                 let uu____2531 =

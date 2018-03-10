@@ -152,8 +152,9 @@ let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
 
 let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
     match cv with
-    | C_Total t ->
-        S.mk_Tm_app ref_C_Total.t [S.as_arg (embed_term rng t)]
+    | C_Total (t, md) ->
+        S.mk_Tm_app ref_C_Total.t [S.as_arg (embed_term rng t);
+                                   S.as_arg (embed_option embed_term S.t_term rng md)]
                     None rng
 
     | C_Lemma (pre, post) ->
@@ -405,9 +406,10 @@ let unembed_comp_view (t : term) : option<comp_view> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_C_Total.lid ->
+    | Tm_fvar fv, [(t, _); (md, _)] when S.fv_eq_lid fv ref_C_Total.lid ->
         BU.bind_opt (unembed_term t) (fun t ->
-        Some <| C_Total t)
+        BU.bind_opt (unembed_option unembed_term md) (fun md ->
+        Some <| C_Total (t, md)))
 
     | Tm_fvar fv, [(pre, _); (post, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
         BU.bind_opt (unembed_term pre) (fun pre ->

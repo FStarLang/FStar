@@ -1706,7 +1706,8 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
               in
               let maybe_range_arg =
                 if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                then [as_arg (EMB.embed_range lb.lbpos lb.lbpos)]
+                then [as_arg (EMB.embed_range lb.lbpos lb.lbpos);
+                      as_arg (EMB.embed_range body.pos body.pos)]
                 else []
               in
               let reified = S.mk (Tm_app(bind_inst, [

@@ -11,7 +11,7 @@ FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 .PRECIOUS: _cache/%.cmxs
 .PHONY: %.test fstartaclib
 
-MODULES=Print Split Canon UnitTests
+MODULES=Print Split BV Canon UnitTests
 
 all: $(patsubst %,%.test,$(MODULES))
 
