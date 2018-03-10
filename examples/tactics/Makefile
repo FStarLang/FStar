@@ -5,6 +5,7 @@ include ../Makefile.include
 
 all:	Apply.uver		\
 	Canon.uver		\
+	CanonMonoid.uver	\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -13,10 +14,12 @@ all:	Apply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
+	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
+	VQuote.uver		\
 	Rename.uver		\
 	Imp.uver		\
 	Inlining.uver		\
@@ -49,7 +52,6 @@ all:	Apply.uver		\
 	MetaCoq.uver		\
 	neg
 	# launch			\
-	# Splice.uver		\
 
 launch: Launch.fst
 	$(FSTAR) --unsafe_tactic_exec $^

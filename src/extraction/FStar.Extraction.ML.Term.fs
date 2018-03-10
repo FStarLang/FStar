@@ -853,13 +853,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_arrow _ ->
           ml_unit, E_PURE, ml_unit_ty
 
-        | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, {qopen = true })) ->
+        | Tm_meta ({ n = _ }, Meta_quoted (qt, {qopen = true })) ->
           let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
           E_PURE,
           ml_int_ty
 
-        | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, {qopen = false})) ->
+        | Tm_meta ({ n = _ }, Meta_quoted (qt, {qopen = false})) ->
           let tv = RE.embed_term_view t.pos (R.inspect qt) in
           let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
           term_as_mlexpr' g t

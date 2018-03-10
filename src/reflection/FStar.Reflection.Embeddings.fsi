@@ -9,6 +9,7 @@ open FStar.Reflection.Data
 
 
 (* Lazy unfoldings *)
+val unfold_lazy_bv     : lazyinfo -> term
 val unfold_lazy_fvar   : lazyinfo -> term
 val unfold_lazy_binder : lazyinfo -> term
 val unfold_lazy_comp   : lazyinfo -> term
@@ -16,6 +17,9 @@ val unfold_lazy_env    : lazyinfo -> term
 val unfold_lazy_sigelt : lazyinfo -> term
 
 (* Embeddings *)
+
+val embed_bv            : embedder<bv>
+val unembed_bv          : unembedder<bv>
 
 val embed_binder        : embedder<binder>
 val unembed_binder      : unembedder<binder>
@@ -64,3 +68,6 @@ val unembed_sigelt      : unembedder<sigelt>
 
 val embed_sigelt_view   : embedder<sigelt_view>
 val unembed_sigelt_view : unembedder<sigelt_view>
+
+val embed_bv_view       : embedder<bv_view>
+val unembed_bv_view     : unembedder<bv_view>

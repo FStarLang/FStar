@@ -119,6 +119,7 @@ open FStar.String
 %token <string> OP_MIXFIX_ACCESS
 %token <string> OP_MIXFIX_ASSIGNMENT
 %token PERCENT_LBRACK
+%token PERC_BACKTICK
 %token PIPE_RIGHT
 %token PRAGMALIGHT
 %token PRAGMA_RESET_OPTIONS
@@ -2105,6 +2106,9 @@ tmNoEqWith_appTerm_:
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
+| PERC_BACKTICK atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (VQuote e) (rhs2 parseState 1 3) Un )}
 | TILDE atomicTerm
     {let (op, e) = ($1, $2) in
       ( mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}
@@ -2141,6 +2145,9 @@ tmNoEqWith_tmRefinement_:
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
+| PERC_BACKTICK atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (VQuote e) (rhs2 parseState 1 3) Un )}
 | TILDE atomicTerm
     {let (op, e) = ($1, $2) in
       ( mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}

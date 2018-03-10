@@ -164,12 +164,12 @@ let repeat' #a (f: unit -> Tac a) : Tac unit =
   let _ = repeat f in ()
 
 let and_elim' (h: binder) : Tac unit =
-  and_elim (pack (Tv_Var h));
+  and_elim (pack (Tv_Var (bv_of_binder h)));
   clear h
 
 let exact_hyp (a: Type0) (h: binder) : Tac unit =
   let hd = quote (FStar.Squash.return_squash #a) in
-  exact (mk_app hd [((pack (Tv_Var h)), Q_Explicit)])
+  exact (mk_app hd [((pack (Tv_Var (bv_of_binder h))), Q_Explicit)])
 
 let print_binder (b: binder) : Tac unit =
   print (term_to_string (type_of_binder b))
@@ -227,6 +227,7 @@ noeq type match_exception =
 let term_head t : string =
   match inspect t with
   | Tv_Var bv -> "Tv_Var"
+  | Tv_BVar fv -> "Tv_BVar"
   | Tv_FVar fv -> "Tv_FVar"
   | Tv_App f x -> "Tv_App"
   | Tv_Abs x t -> "Tv_Abs"
@@ -407,7 +408,7 @@ let string_of_matching_solution ms =
   let hyps =
     String.concat "\n        "
       (List.Tot.map (fun (nm, binder) ->
-        nm ^ ": " ^ (inspect_bv binder)) ms.ms_hyps) in
+        nm ^ ": " ^ (binder_to_string binder)) ms.ms_hyps) in
   "\n{ vars: " ^ vars ^ "\n" ^
   "  hyps: " ^ hyps ^ " }"
 
@@ -528,7 +529,7 @@ let any_qn = ["PatternMatching"; "__"]
 let rec pattern_of_term_ex tm : match_res pattern =
   match inspect tm with
   | Tv_Var bv ->
-    return (PVar (inspect_bv bv))
+    return (PVar (name_of_bv bv))
   | Tv_FVar fv ->
     let qn = inspect_fv fv in
     return (if qn = any_qn then PAny else PQn qn)
@@ -648,11 +649,11 @@ let matching_problem_of_abs (tm: term)
 
   let binders, body = binders_and_body_of_abs (cleanup_abspat tm) in
   debug ("Got binders: " ^ (String.concat ", "
-         (List.Tot.map inspect_bv binders)));
+         (List.Tot.map name_of_binder binders)));
 
   let classified_binders =
     tacmap (fun binder ->
-        let bv_name = inspect_bv binder in
+        let bv_name = name_of_binder binder in
         debug ("Got binder: " ^ bv_name ^ "; type is " ^
                term_to_string (type_of_binder binder));
         let binder_kind, typ = classify_abspat_binder binder in
@@ -662,7 +663,7 @@ let matching_problem_of_abs (tm: term)
   let problem =
     tacfold_left
       (fun problem (binder, bv_name, binder_kind, typ) ->
-         debug ("Compiling binder " ^ inspect_bv binder ^
+         debug ("Compiling binder " ^ name_of_binder binder ^
                 ", classified as " ^ string_of_abspat_binder_kind binder_kind ^
                 ", with type " ^ term_to_string typ);
          match binder_kind with
@@ -712,7 +713,7 @@ matching solution ``solution_term``. **)
 let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
     : Tac term =
   let loc_fn = locate_fn_of_binder_kind argspec.asa_kind in
-  let name_tm = pack (Tv_Const (C_String (inspect_bv argspec.asa_name))) in
+  let name_tm = pack (Tv_Const (C_String (name_of_binder argspec.asa_name))) in
   let locate_args = [(arg_type_of_binder_kind argspec.asa_kind, Q_Explicit);
                      (solution_term, Q_Explicit); (name_tm, Q_Explicit)] in
   mk_app loc_fn locate_args
@@ -734,7 +735,7 @@ bindings. **)
 let specialize_abspat_continuation (continuation: abspat_continuation)
     : Tac term =
   let solution_binder = fresh_binder (`matching_solution) in
-  let solution_term = pack (Tv_Var solution_binder) in
+  let solution_term = pack (Tv_Var (bv_of_binder solution_binder)) in
   let applied = specialize_abspat_continuation' continuation solution_term in
   let thunked = pack (Tv_Abs solution_binder applied) in
   debug ("Specialized into " ^ (term_to_string thunked));

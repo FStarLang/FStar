@@ -11,7 +11,13 @@ let rec map f x = match x with
   | a::tl -> f a::map f tl
 
 // TODO: maybe we can increase a counter on each call
-let fresh_binder t = fresh_binder_named "x" t
+let fresh_bv t = fresh_bv_named "x" t
+
+let fresh_binder_named nm t =
+    mk_binder (fresh_bv_named nm t)
+
+let fresh_binder t =
+    fresh_binder_named "x" t
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
@@ -82,8 +88,9 @@ let guards_to_smt () : Tac unit =
     let _ = repeat skip_guard in
     ()
 
-let simpl () : Tac unit = norm [simplify; primops]
-let whnf  () : Tac unit = norm [weak; hnf; primops]
+let simpl   () : Tac unit = norm [simplify; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops]
+let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
 
@@ -102,6 +109,16 @@ let pose (t:term) : Tac binder =
     let _ = trytac flip in // maybe we have less than 2 goals now
     intro ()
 
+let intro_as (s:string) : Tac binder =
+    let b = intro () in
+    rename_to b s;
+    b
+
+let pose_as (s:string) (t:term) : Tac binder =
+    let b = pose t in
+    rename_to b s;
+    b
+
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
@@ -115,7 +132,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = pack (Tv_Var b) in
+        let t = pack (Tv_Var (bv_of_binder b)) in
         or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
 
 let assumption () : Tac unit =
@@ -197,7 +214,7 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack (Tv_Var e)))
+    pointwise (fun () -> grewrite' t1 t2 (pack (Tv_Var (bv_of_binder e))))
 
 let focus (f : unit -> Tac 'a) : Tac 'a =
     let res, _ = divide 1 f idtac in
@@ -250,7 +267,7 @@ let rec apply_squash_or_lem d t =
            | _ ->
                fail "mapply: can't apply (1)"
        end
-    | C_Total rt ->
+    | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some _ -> apply t

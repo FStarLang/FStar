@@ -355,10 +355,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                | [hd] ->
                   let bs, comp = U.arrow_formals_comp hd.lbtyp in
                   let t = U.comp_result comp in
-                  if (lid_equals PC.effect_Tac_lid (U.comp_effect_name comp)
-                      || lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)) // TODO: this is brittle
-                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics") // this too
-                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Reflection") // this too
+                  let eff = Env.norm_eff_name g.tcenv (U.comp_effect_name comp) in
+                  if lid_equals PC.effect_TAC_lid eff
+                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics")
+                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Reflection")
                   then begin
                       let tac_lid = (right hd.lbname).fv_name.v in
                       let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in

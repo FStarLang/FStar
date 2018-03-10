@@ -320,6 +320,11 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac2 "__pointwise"     pointwise E.unembed_direction (unembed_tactic_0' unembed_unit) embed_unit t_unit;
+      mktac2 "__topdown_rewrite" topdown_rewrite
+                                 (unembed_tactic_1 RE.embed_term (unembed_pair unembed_bool unembed_int))
+                                 (unembed_tactic_0' unembed_unit)
+                                 embed_unit t_unit;
+
       mktac0 "__trefl"         trefl embed_unit t_unit;
       mktac0 "__later"         later embed_unit t_unit;
       mktac0 "__dup"           dup embed_unit t_unit;
@@ -340,7 +345,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac2 "__unify"         unify RE.unembed_term RE.unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
 
-      mktac2 "__fresh_binder_named"  fresh_binder_named unembed_string RE.unembed_term RE.embed_binder S.t_binder;
+      mktac2 "__fresh_bv_named"  fresh_bv_named unembed_string RE.unembed_term RE.embed_bv S.t_bv;
 
       decr_depth_step;
       incr_depth_step;
@@ -349,6 +354,14 @@ let rec primitive_steps () : list<N.primitive_step> =
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
+
+//IN F*: and unembed_tactic_1 (#a:Type) (#b:Type) (arg:embedder a) (res:unembedder b) (f:term) : option (a -> tac b) =
+and unembed_tactic_1<'a,'b> (arg:embedder<'a>) (res:unembedder<'b>) (f:term) : option<('a -> tac<'b>)> = //JUST FSHARP
+    Some (fun x ->
+      let rng = FStar.Range.dummyRange  in
+      let x_tm = arg rng x in
+      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      unembed_tactic_0 res app)
 
 //IN F*: and unembed_tactic_0 (#b:Type) (unembed_b:unembedder b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<'b> = //JUST FSHARP

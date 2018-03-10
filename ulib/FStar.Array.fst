@@ -43,7 +43,7 @@ let heap_upd #a h r v = Heap.upd h r v
 
 abstract let addr_of (#a:Type) (a:array a) :GTot nat = addr_of a
 
-abstract let only (#a:Type) (a:array a) :GTot (Set.set nat) = Set.singleton (addr_of a)
+let only (#a:Type) (a:array a) :GTot (Set.set nat) = Set.singleton (addr_of a)
 
 abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
   (requires (fun h -> contains h s1 /\ contains h s2))

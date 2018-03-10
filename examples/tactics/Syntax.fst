@@ -33,6 +33,7 @@ let rec blah (t : term) : Tac term =
     let tv = match inspect t with
              | Tv_Var b -> Tv_Var b
              | Tv_FVar f -> Tv_FVar f
+             | Tv_BVar f -> Tv_BVar f
              | Tv_App l (r, q) -> let l = blah l in
                                   let r = blah r in
                                   Tv_App l (r, q)
@@ -123,9 +124,9 @@ let _ = assert_by_tactic True
             (fun () ->
                 let t = quote (let x = 2 in x + 6) in
                 match inspect t with
-                | Tv_Let r b t1 t2 -> (
+                | Tv_Let r bv t1 t2 -> (
                    print ("r = " ^ (if r then "true" else "false"));
-                   print ("b = " ^ binder_to_string b);
+                   print ("bv = " ^ bv_to_string bv);
                    print ("t1 = " ^ term_to_string t1);
                    print ("t2 = " ^ term_to_string t2)
                    )
@@ -135,9 +136,9 @@ let _ = assert_by_tactic True
             (fun () ->
                 let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
                 match inspect t with
-                | Tv_Let r b t1 t2 -> (
+                | Tv_Let r bv t1 t2 -> (
                    print ("r = " ^ (if r then "true" else "false"));
-                   print ("b = " ^ binder_to_string b);
+                   print ("bv = " ^ bv_to_string bv);
                    print ("t1 = " ^ term_to_string t1);
                    print ("t2 = " ^ term_to_string t2)
                    )

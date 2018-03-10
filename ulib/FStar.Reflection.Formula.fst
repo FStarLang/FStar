@@ -4,11 +4,12 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Reflection.Basic
 open FStar.Reflection.Types
-open FStar.Reflection.Syntax
+open FStar.Reflection.Derived
+open FStar.Reflection.Const
 open FStar.Reflection.Data
 
 // Cannot open FStar.Tactics.Derived here
-let fresh_binder = fresh_binder_named "x"
+let fresh_bv = fresh_bv_named "x"
 
 noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
@@ -24,20 +25,20 @@ noeq type formula =
   | Not    : term -> formula
   | Implies: term -> term -> formula
   | Iff    : term -> term -> formula
-  | Forall : binder -> term -> formula
-  | Exists : binder -> term -> formula
+  | Forall : bv -> term -> formula
+  | Exists : bv -> term -> formula
   | App    : term -> term -> formula
-  | Name   : binder -> formula
+  | Name   : bv -> formula
   | FV     : fv -> formula
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
 let mk_Forall (typ : term) (pred : term) : Tac formula =
-    let b = fresh_binder typ in
+    let b = fresh_bv typ in
     Forall b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : Tac formula =
-    let b = fresh_binder typ in
+    let b = fresh_bv typ in
     Exists b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
@@ -94,11 +95,12 @@ let term_as_formula' (t:term) : Tac formula =
     // This case is shady, our logical connectives are squashed and we
     // usually don't get arrows. Nevertheless keeping it in case it helps.
     | Tv_Arrow b c ->
+        let bv, _ = inspect_binder b in
         begin match inspect_comp c with
-        | C_Total t ->
-            if is_free b t
-            then Forall b t
-            else Implies (type_of_binder b) t
+        | C_Total t _ ->
+            if is_free bv t
+            then Forall bv t
+            else Implies (type_of_bv bv) t
         | _ -> F_Unknown
         end
 
@@ -206,7 +208,7 @@ let formula_to_string (f:formula) : string =
     | Forall bs t -> "Forall <bs> (" ^ term_to_string t ^ ")"
     | Exists bs t -> "Exists <bs> (" ^ term_to_string t ^ ")"
     | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
-    | Name b ->  "Name (" ^ inspect_bv b ^ ")"
+    | Name bv ->  "Name (" ^ bv_to_string bv ^ ")"
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
     | IntLit i -> "Int " ^ string_of_int i
     | F_Unknown -> "?"

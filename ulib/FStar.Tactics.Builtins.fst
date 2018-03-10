@@ -218,6 +218,34 @@ what to do (to not do anything, use [trefl]). *)
 let pointwise  (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise BottomUp (reify (tau ())))
 let pointwise' (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise TopDown  (reify (tau ())))
 
+assume private val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __tac unit
+
+(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
+    of the goal on which [fst (ctrl t)] returns true.
+
+    On each such sub-term, [rw] is presented with an equality of goal
+    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
+    the engine will rewrite [t] for [?u] in the original goal
+    type.
+    
+    The goal formula is traversed top-down and the traversal can be
+    controlled by [snd (ctrl t)]:
+    
+    When [snd (ctrl t) = 0], the traversal continues down through the
+    position in the goal term.
+    
+    When [snd (ctrl t) = 1], the traversal continues to the next
+    sub-tree of the goal.
+
+    When [snd (ctrl t) = 2], no more rewrites are performed in the
+    goal.
+*)
+let topdown_rewrite
+       (ctrl : term -> Tac (bool * int))
+       (rw:unit -> Tac unit)
+    : Tac unit
+    = TAC?.reflect (__topdown_rewrite (fun x -> reify (ctrl x)) (reify (rw ())))
+
 assume private val __later : __tac unit
 (** Push the current goal to the back. *)
 let later () : Tac unit = TAC?.reflect __later
@@ -284,8 +312,8 @@ performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
 let launch_process (prog args input : string) : Tac string = TAC?.reflect (__launch_process prog args input)
 
-(** Get a fresh binder of some name and type. The name is only useful
+(** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
-the binder too. *)
-assume val __fresh_binder_named : string -> typ -> __tac binder
-let fresh_binder_named nm t : Tac binder = TAC?.reflect (__fresh_binder_named nm t)
+the bv too. *)
+assume val __fresh_bv_named : string -> typ -> __tac bv
+let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
