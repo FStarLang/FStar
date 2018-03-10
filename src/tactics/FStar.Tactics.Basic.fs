@@ -1285,14 +1285,16 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
     then replace_cur ({ g with goal_ty = ty })
     else begin
         (* Give it a second try, fully normalize the term the user gave
-         * and unify with that. If that succeeds, we use the original one
-         * as the new goal *)
+         * and unify it with the fully normalized goal. If that succeeds,
+         * we use the original one as the new goal. This is sometimes needed
+         * since the unifier has some bugs. *)
         let steps =
             [N.Reify; N.UnfoldUntil Delta_constant;
              N.AllowUnboundUniverses;
              N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
+        let ng  = normalize steps g.context g.goal_ty in
         let nty = normalize steps g.context ty in
-        bind (do_unify g.context g.goal_ty nty) (fun b ->
+        bind (do_unify g.context ng nty) (fun b ->
         if b
         then replace_cur ({ g with goal_ty = ty })
         else fail "not convertible")
