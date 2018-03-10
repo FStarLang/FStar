@@ -249,24 +249,6 @@ let reification (#a:Type) (m:cm a) (ts:list term) : Tac (list exp * vmap a) =
         ([],[],empty) ts
     in (List.rev es,vars)
 
-private val conv : #x:Type0 -> #y:Type0 -> squash (y == x) -> x -> y
-private let conv #x #y eq w = w
-
-let change t1 =
-    focus (fun () ->
-        let g = cur_goal () in
-        let t = mk_app (`conv) [(t1, Q_Implicit); (g,Q_Implicit)] in
-        dump (term_to_string t1);
-        apply t; // <- the problem is actually here
-        dump "1";
-        norm [delta;primops];
-        dump "2";
-        trivial ()
-    )
-
-let change_sq t1 =
-    change (mk_e_app (`squash) [t1])
-
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =
   norm [];
   let g = cur_goal () in
@@ -286,6 +268,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
             (quote ((xsdenote m vars (sort (flatten r1)) ==
                      xsdenote m vars (sort (flatten r2)))))));
           change_sq (quote (mdenote m vars r1 == mdenote m vars r2));
+          dump ("after change_sq");
           apply (`monoid_reflect);
           norm [delta_only ["CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
