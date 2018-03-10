@@ -38,7 +38,10 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"
  * optimization, which causes VCs (for well-formedness of tactics) to blow up.
  *
- * Work around that by overriding `bind_wp` for the effect with an efficient one.
+ * Plus, we don't need to model the ranges and depths: they make no difference since the
+ * proofstate type is abstract and the SMT never sees a concrete one.
+ *
+ * So, override `bind_wp` for the effect with an efficient one.
  *)
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
