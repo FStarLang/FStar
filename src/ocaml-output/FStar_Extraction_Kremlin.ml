@@ -2591,16 +2591,18 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
             FStar_All.pipe_right uu____6192
               (FStar_Util.for_some
                  (fun c1  ->
-                    c1 = (FStar_Char.char_of_int (Prims.parse_int "0"))))
+                    let uu____6204 =
+                      FStar_Char.char_of_int (Prims.parse_int "0")  in
+                    c1 = uu____6204))
              in
           if uu____6191
           then
-            let uu____6204 =
+            let uu____6207 =
               FStar_Util.format1
                 "Refusing to translate a string literal that contains a null character: %s"
                 s
                in
-            failwith uu____6204
+            failwith uu____6207
           else ());
          EString s)
     | FStar_Extraction_ML_Syntax.MLC_Char c1 ->
@@ -2610,12 +2612,12 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
         let char_of_int1 = EQualified (["FStar"; "Char"], "char_of_int")  in
         EApp (char_of_int1, [c2])
     | FStar_Extraction_ML_Syntax.MLC_Int
-        (s,FStar_Pervasives_Native.Some uu____6216) ->
+        (s,FStar_Pervasives_Native.Some uu____6219) ->
         failwith
           "impossible: machine integer not desugared to a function call"
-    | FStar_Extraction_ML_Syntax.MLC_Float uu____6231 ->
+    | FStar_Extraction_ML_Syntax.MLC_Float uu____6234 ->
         failwith "todo: translate_expr [MLC_Float]"
-    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6232 ->
+    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6235 ->
         failwith "todo: translate_expr [MLC_Bytes]"
     | FStar_Extraction_ML_Syntax.MLC_Int (s,FStar_Pervasives_Native.None ) ->
         EConstant (CInt, s)
@@ -2627,7 +2629,7 @@ and (mk_op_app :
     fun w  ->
       fun op  ->
         fun args  ->
-          let uu____6252 =
-            let uu____6259 = FStar_List.map (translate_expr env) args  in
-            ((EOp (op, w)), uu____6259)  in
-          EApp uu____6252
+          let uu____6255 =
+            let uu____6262 = FStar_List.map (translate_expr env) args  in
+            ((EOp (op, w)), uu____6262)  in
+          EApp uu____6255
