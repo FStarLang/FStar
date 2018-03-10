@@ -108,10 +108,6 @@ let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
   (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
 
-(* TODO: should extend this to a commutative monoid and
-         sort the list to prove things like a + b = b + a;
-         - even better, the user can provide the ordering *)
-
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
          basically use flatten_correct instead of monoid_reflect
