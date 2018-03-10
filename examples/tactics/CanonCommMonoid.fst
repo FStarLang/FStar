@@ -160,27 +160,30 @@ let rec apply_swaps_correct (#a:Type) (m:cm a) (vars:vmap a)
   | s::ss' -> apply_swap_correct m vars xs s;
               apply_swaps_correct m vars (apply_swap xs s) ss'
 
-let rec bubble_sort_with_aux (#a:Type) (f:(a -> a -> Tot int)) (xs:list a) :
+let rec bubble_sort_with_aux1 (#a:Type) (f:(a -> a -> Tot int)) (xs:list a) :
     Pure (list a) (requires True)
                   (ensures (fun zs -> length xs == length zs))
                   (decreases (length xs)) =
   match xs with
   | [] | [_] -> xs
   | x1 :: x2 :: xs' ->
-      if f x1 x2 > 0 then x2 :: bubble_sort_with_aux f (x1::xs')
-                     else x1 :: bubble_sort_with_aux f (x2::xs')
+      if f x1 x2 > 0 then x2 :: bubble_sort_with_aux1 f (x1::xs')
+                     else x1 :: bubble_sort_with_aux1 f (x2::xs')
 
-let rec bubble_sort_with_aux' (#a:Type) (n:nat) (f:(a -> a -> Tot int))
+let rec bubble_sort_with_aux2 (#a:Type) (n:nat) (f:(a -> a -> Tot int))
           (xs:(list a){n <= length xs}) : Tot (list a)
               (decreases (length xs - n <: nat)) =
   if n = length xs then xs
-  else bubble_sort_with_aux' (n+1) f (bubble_sort_with_aux f xs)
+  else bubble_sort_with_aux2 (n+1) f (bubble_sort_with_aux1 f xs)
 
-let bubble_sort_with (#a:Type) = bubble_sort_with_aux' #a 0
+let bubble_sort_with (#a:Type) = bubble_sort_with_aux2 #a 0
 
 let permutation_via_swaps (#a:eqtype) (xs ys:list a) :
   Lemma (requires (forall x. count x xs = count x ys))
-        // better alternative: ys == sort xs
+        // alternative pre-condition: ys == sort xs, wouldn't work for
+        // permutations that are not sorting; but for that the proof
+        // is different anyway (need something fancier than
+        // bubble-sort for that)
         (ensures (exists ss. ys == apply_swaps xs ss)) = admit()
 
 let rec sort_correct (#a:Type) (m:cm a) (vars:vmap a) (xs:list var) :
@@ -293,23 +296,25 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
   | _ -> fail "Goal should be an equality"
 
 let lem0 (a b c d : int) =
-  assert_by_tactic (0 + a + b + c + d == (b + 0) + d + (c + a + 0) + 0)
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid int_plus_cm; trefl())
 
 (* TODO: FStar.OrdMap abstraction was getting in the way of
          computation, find a cleaner way to remove it *)
-(* TODO: Is the vmap really needed though? What's wrong with storing
-         everything in the Var/Atom nodes of the exprs? What's gained
-         with the vmaps? Easier to implement by quote tactic in Coq? *)
 
-(* TODO: Allow the tactic to compute with constants beyond unit *)
+(* TODO: Allow the tactic to compute with constants beyond unit.
+         Would it be enough to move all them to the end of the list by
+         a careful ordering and let the normalizer do its thing? *)
 
 (* TODO: Allow the user control over the sorting ordering by allowing
          him to store extra information in the vmap and using that for
-         the sorting. *)
+         the sorting. This would mean that sorting should have access
+         to the vmap in the first place. *)
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
          basically use flatten_correct instead of monoid_reflect
+         - for this to be efficient need Nik's pointwise' that can
+           stop traversing when finding something interesting
          - even better, the user would have control over the place(s)
            where the canonicalization is done *)
