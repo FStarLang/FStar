@@ -615,10 +615,10 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         -> option<term>
         = fun as_a f res args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
-    let as_primitive_step (l, arity, f) = {
+    let as_primitive_step is_strong (l, arity, f) = {
         name=l;
         arity=arity;
-        strong_reduction_ok=true;
+        strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
         interpretation=f
     } in
@@ -756,7 +756,10 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                                     1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
-             (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+             ]
+    in
+    let weak_ops =
+            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
              ]
     in
     let bounded_arith_ops
@@ -789,7 +792,9 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
        add_sub_mul_v
        @ div_mod_unsigned
     in
-    prim_from_list <| List.map as_primitive_step (basic_ops@bounded_arith_ops)
+    let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
+    let weak_steps   = List.map (as_primitive_step false) weak_ops in
+    prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : BU.psmap<primitive_step> =
     let interp_prop (psc:psc) (args:args) : option<term> =
