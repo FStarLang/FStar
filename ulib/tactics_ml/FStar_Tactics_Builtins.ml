@@ -183,3 +183,6 @@ let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
 
 let __fresh_bv_named (nm : string) (ty : RT.term) : RT.bv __tac = from_tac_2 B.fresh_bv_named nm ty
 let fresh_bv_named : string -> RT.term -> RT.bv __tac = fun nm ty -> __fresh_bv_named nm ty
+
+let __change (ty : typ) : unit __tac = from_tac_1 B.change ty
+let change : typ -> unit __tac = fun ty -> __change ty
