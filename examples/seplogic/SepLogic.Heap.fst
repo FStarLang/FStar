@@ -103,6 +103,8 @@ let points_to_disjoint_memories #a #b r s x y = ()
 
 let sep_disjoint_memories m0 m1 = ()
 
+let points_to_defined #a r x = ()
+
 let sep_defined m0 m1 = ()
 
 let split_heap m0 m1 h = 

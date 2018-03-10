@@ -69,19 +69,24 @@ val sep_join (h0 h1:heap)
           [SMTPat (heap_memory (join h0 h1))]          
 
 val points_to_disjoint_memories (#a:Type0) (#b:Type0) (r:ref a) (s:ref b) (x:a) (y:b)
-  : Lemma (requires (addr_of r =!= addr_of s))
-          (ensures  (disjoint_memories (r |> x) (s |> y)))
+  : Lemma ((addr_of r <> addr_of s) <==> (disjoint_memories (r |> x) (s |> y)))
           [SMTPat (disjoint_memories (r |> x) (s |> y))]
 
 val sep_disjoint_memories (m0 m1:memory)
   : Lemma (disjoint_memories m0 m1 <==> defined (m0 <*> m1))
-          [SMTPat (defined (m0 <*> m1))]
+          [SMTPat (defined (m0 <*> m1));
+           SMTPat (disjoint_memories m0 m1)]
+
+val points_to_defined (#a:Type0) (r:ref a) (x:a)
+  : Lemma (defined (r |> x))
+          [SMTPat (defined (r |> x))]
 
 val sep_defined (m0 m1:memory)
   : Lemma (requires (defined (m0 <*> m1)))
-          (ensures  (defined m0))
+          (ensures  (defined m0 /\ defined m1))
           [SMTPat (defined (m0 <*> m1));
-           SMTPat (defined m0)]
+           SMTPat (defined m0);
+           SMTPat (defined m1)]
 
 val split_heap : (m0:memory) 
               -> (m1:memory)
