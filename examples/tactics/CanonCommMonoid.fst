@@ -85,12 +85,53 @@ let rec flatten_correct_aux (#a:Type) (m:cm a) (vars:vmap a) (xs1 xs2:list var) 
                                              (xsdenote m vars xs2);
                 flatten_correct_aux m vars xs1' xs2)
 
- let rec flatten_correct (#a:Type) (m:cm a) (vars:vmap a) (e:exp) :
+let rec flatten_correct (#a:Type) (m:cm a) (vars:vmap a) (e:exp) :
     Lemma (mdenote m vars e == xsdenote m vars (flatten e)) =
   match e with
   | Unit | Var _ -> ()
   | Mult e1 e2 -> flatten_correct_aux m vars (flatten e1) (flatten e2);
                   flatten_correct m vars e1; flatten_correct m vars e2
+
+// TODO, will rely on sortWith_permutation
+// (ensures (forall x. count x l = count x (sortWith f l)))
+// but need to go from this to a sequence of swaps of adjacent elements
+// (can use bubble sort to show that)
+// then can use commutativity to justify each of these swaps
+
+let sort = List.Tot.sortWith (compare_of_bool (<))
+
+let swap (n:nat) :Type = x:nat{x < n-1}
+
+let rec apply_swap_aux (#a:Type) (n:nat) (xs:list a) (s:swap (length xs + n)) :
+    Pure (list a) (requires True)
+                  (ensures (fun zs -> length zs == length xs)) (decreases xs) =
+  match xs with
+  | [] | [_] -> xs
+  | x1 :: x2 :: xs' -> if n = (s <: nat)
+                       then x2 :: x1 :: xs'
+                       else x1 :: apply_swap_aux (n+1) (x2 :: xs') s
+
+let apply_swap (#a:Type) = apply_swap_aux #a 0
+
+let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs))) :
+    Pure (list a) (requires True)
+                  (ensures (fun zs -> length zs == length xs)) (decreases ss) =
+  match ss with
+  | [] -> xs
+  | s::ss' -> apply_swaps (apply_swap xs s) ss'
+
+let permutation_via_swaps (#a:eqtype) (xs ys:list a) :
+  Lemma (requires (forall x. count x xs = count x ys))
+        (ensures (exists ss. ys == apply_swaps xs ss)) = admit()
+
+// TODO
+
+let rec sort_correct (#a:Type) (m:cm a) (vars:vmap a) (xs:list var) :
+    Lemma (xsdenote m vars xs == xsdenote m vars (sort xs)) =
+  sortWith_permutation (compare_of_bool (<)) xs;
+  permutation_via_swaps xs (sort xs);
+  assert(exists ss. sort xs == apply_swaps xs ss);
+  admit()
 
 let monoid_reflect (#a:Type) (m:cm a) (vars:vmap a) (e1 e2:exp)
     (_ : squash (xsdenote m vars (flatten e1) == xsdenote m vars (flatten e2)))
@@ -146,6 +187,24 @@ let reification (#a:Type) (m:cm a) (ts:list term) : Tac (list exp * vmap a) =
         ([],[],vars) ts
     in (List.rev es,vars)
 
+private val conv : #x:Type0 -> #y:Type0 -> squash (y == x) -> x -> y
+private let conv #x #y eq w = w
+
+let change t1 =
+    focus (fun () ->
+        let g = cur_goal () in
+        let t = mk_app (`conv) [(t1, Q_Implicit); (g,Q_Implicit)] in
+        dump (term_to_string t1);
+        apply t; // <- the problem is actually here
+        dump "1";
+        norm [delta;primops];
+        dump "2";
+        trivial ()
+    )
+
+let change_sq t1 =
+    change (mk_e_app (`squash) [t1])
+
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =
   norm [];
   let g = cur_goal () in
@@ -159,8 +218,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
           dump ("r1=" ^ exp_to_string r1 ^
               "; r2=" ^ exp_to_string r2);
           dump ("vars =" ^ term_to_string (quote vars));
-          dump ("haha =" ^ term_to_string (norm_term
-               [delta;primops]
+          dump ("haha =" ^ term_to_string (norm_term [delta;primops]
             (quote (mdenote m vars r1 == mdenote m vars r2))));
           change_sq (quote (mdenote m vars r1 == mdenote m vars r2));
           apply (`monoid_reflect);
