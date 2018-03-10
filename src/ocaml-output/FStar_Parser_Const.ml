@@ -185,6 +185,8 @@ let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
+let (plugin_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "plugin"] 
 let (dm4f_bind_range_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (gen_reset :
