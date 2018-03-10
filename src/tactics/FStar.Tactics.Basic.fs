@@ -1275,6 +1275,8 @@ let fresh_bv_named (nm : string) (t : typ) : tac<bv> =
 let change (ty : typ) : tac<unit> = wrap_err "change" <|
     mlog (fun () -> BU.print1 "change: ty = %s\n" (Print.term_to_string ty)) (fun _ ->
     bind cur_goal (fun g ->
+    bind (__tc g.context ty) (fun (ty, _, guard) ->
+    bind (must_trivial "change" g.context guard) (fun () ->
     bind (do_unify g.context g.goal_ty ty) (fun bb ->
     if bb
     then replace_cur ({ g with goal_ty = ty })
@@ -1291,7 +1293,7 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
         if b
         then replace_cur ({ g with goal_ty = ty })
         else fail "not convertible")
-    end)))
+    end)))))
 
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
