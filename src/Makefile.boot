@@ -74,13 +74,17 @@ ocaml-output/%.ml:
 # file as the roots, mentioning the the modules that are to be
 # extracted. This emits dependences for each of the ML files we want
 # to produce.
+#
+# We do an indirection via ._depend so we don't write an empty file if
+# the dependency analysis failed.
 
 .depend:
 	$(FSTAR_C) --dep full                 \
 		   fstar/FStar.Main.fs	      \
 		   boot/FStar.Tests.Test.fst  \
 		   $(EXTRACT)		      \
-		   --codegen OCaml > .depend
+		   --codegen OCaml > ._depend
+	mv ._depend .depend
 
 depend: .depend
 

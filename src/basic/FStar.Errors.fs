@@ -218,6 +218,7 @@ type raw_error =
   | Fatal_UnexpectedTerm
   | Fatal_UnexpectedTermInUniverse
   | Fatal_UnexpectedTermType
+  | Fatal_UnexpectedTermVQuote
   | Fatal_UnexpectedUniversePolymorphicReturn
   | Fatal_UnexpectedUniverseVariable
   | Fatal_UnfoldableDeprecated
@@ -521,6 +522,7 @@ let default_flags =
   (Fatal_UnexpectedTerm                              , CFatal);
   (Fatal_UnexpectedTermInUniverse                    , CFatal);
   (Fatal_UnexpectedTermType                          , CFatal);
+  (Fatal_UnexpectedTermVQuote                        , CFatal);
   (Fatal_UnexpectedUniversePolymorphicReturn         , CFatal);
   (Fatal_UnexpectedUniverseVariable                  , CFatal);
   (Fatal_UnfoldableDeprecated                        , CFatal);
