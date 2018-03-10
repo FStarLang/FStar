@@ -47,8 +47,8 @@ let reflection_primops : list<N.primitive_step> =
     let mk1 nm (f : 'a -> 'b)       u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
     let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
     [
-        mk1 "__inspect" inspect E.unembed_term E.embed_term_view;
-        mk1 "__pack"    pack    E.unembed_term_view E.embed_term;
+        mk1 "__inspect_ln" inspect_ln E.unembed_term E.embed_term_view;
+        mk1 "__pack_ln"    pack_ln    E.unembed_term_view E.embed_term;
 
         mk1 "__inspect_fv" inspect_fv E.unembed_fv embed_string_list;
         mk1 "__pack_fv" pack_fv (unembed_list unembed_string) E.embed_fv;

@@ -90,12 +90,12 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_string (s, _) -> C_String s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
-let rec inspect (t:term) : term_view =
+let rec inspect_ln (t:term) : term_view =
     let t = U.unascribe t in
     let t = U.un_uinst t in
     match t.n with
     | Tm_meta (t, _) ->
-        inspect t
+        inspect_ln t
 
     | Tm_name bv ->
         Tv_Var bv
@@ -119,13 +119,13 @@ let rec inspect (t:term) : term_view =
     | Tm_abs ([], _, _) ->
         failwith "inspect: empty arguments on Tm_abs"
 
-    | Tm_abs (bs, t, k) ->
-        let bs, t = SS.open_term bs t in
-        // `let b::bs = bs` gives a coverage warning, avoid it
-        begin match bs with
-        | [] -> failwith "impossible"
-        | b::bs -> Tv_Abs (b, U.abs bs t k)
-        end
+    | Tm_abs (b::bs, t, k) ->
+        let body =
+            match bs with
+            | [] -> t
+            | bs -> S.mk (Tm_abs (bs, t, k)) None t.pos
+        in
+        Tv_Abs (b, body)
 
     | Tm_type _ ->
         Tv_Type ()
@@ -140,13 +140,7 @@ let rec inspect (t:term) : term_view =
         end
 
     | Tm_refine (bv, t) ->
-        let b = S.mk_binder bv in
-        let b', t = SS.open_term [b] t in
-        // `let [b] = b'` gives a coverage warning, avoid it
-        let b = (match b' with
-        | [b'] -> b'
-        | _ -> failwith "impossible") in
-        Tv_Refine (fst b, t)
+        Tv_Refine (bv, t)
 
     | Tm_constant c ->
         Tv_Const (inspect_const c)
@@ -160,27 +154,14 @@ let rec inspect (t:term) : term_view =
         | BU.Inr _ -> Tv_Unknown // no top level lets
         | BU.Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
-            let b = S.mk_binder bv in
-            let bs, t2 = SS.open_term [b] t2 in
-            let b = match bs with
-                    | [b] -> b
-                    | _ -> failwith "impossible: open_term returned different amount of binders"
-            in
-            Tv_Let (false, fst b, lb.lbdef, t2)
+            Tv_Let (false, bv, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> Tv_Unknown // no top level lets
-        | BU.Inl bv ->
-            let lbs, t2 = SS.open_let_rec [lb] t2 in
-            match lbs with
-            | [lb] ->
-                (match lb.lbname with
-                 | BU.Inr _ -> Tv_Unknown
-                 | BU.Inl bv -> Tv_Let (true, bv, lb.lbdef, t2))
-            | _ -> failwith "impossible: open_term returned different amount of binders"
+        | BU.Inr _  -> Tv_Unknown // no top level lets
+        | BU.Inl bv -> Tv_Let (true, bv, lb.lbdef, t2)
         end
 
     | Tm_match (t, brs) ->
@@ -192,7 +173,6 @@ let rec inspect (t:term) : term_view =
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
         in
-        let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, brs)
 
@@ -240,7 +220,7 @@ let pack_const (c:vconst) : sconst =
     | C_String s -> C.Const_string (s, Range.dummyRange)
 
 // TODO: pass in range?
-let pack (tv:term_view) : term =
+let pack_ln (tv:term_view) : term =
     match tv with
     | Tv_Var bv ->
         S.bv_to_name bv
@@ -275,13 +255,11 @@ let pack (tv:term_view) : term =
 
     | Tv_Let (false, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
+        S.mk (Tm_let ((false, [lb]), t2)) None Range.dummyRange
 
     | Tv_Let (true, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
-        let lbs_open, body_open = SS.open_let_rec [lb] t2 in
-        let lbs, body = SS.close_let_rec [lb] body_open in
-        S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
+        S.mk (Tm_let ((true, [lb]), t2)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -294,7 +272,6 @@ let pack (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        let brs = List.map SS.close_branch brs in
         S.mk (Tm_match (t, brs)) None Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->

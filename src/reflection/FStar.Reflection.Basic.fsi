@@ -23,8 +23,8 @@ val pack_fv       : list<string> -> fv
 val inspect_const : sconst -> vconst
 val pack_const    : vconst -> sconst
 
-val inspect       : term -> term_view
-val pack          : term_view -> term
+val inspect_ln    : term -> term_view
+val pack_ln       : term_view -> term
 
 val inspect_comp  : comp -> comp_view
 val pack_comp     : comp_view -> comp
