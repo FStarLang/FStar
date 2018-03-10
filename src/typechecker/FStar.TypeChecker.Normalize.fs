@@ -177,6 +177,7 @@ let psc_subst psc = psc.psc_subst ()
 type primitive_step = {
     name:Ident.lid;
     arity:int;
+    auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
     interpretation:(psc -> args -> option<term>)
@@ -621,6 +622,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let as_primitive_step (l, arity, f) = {
         name=l;
         arity=arity;
+        auto_reflect=None;
         strong_reduction_ok=true;
         requires_binder_substitution=false;
         interpretation=f
@@ -810,6 +812,7 @@ let equality_ops : BU.psmap<primitive_step> =
     let propositional_equality =
         {name = PC.eq2_lid;
          arity = 3;
+         auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
          interpretation = interp_prop}
@@ -817,6 +820,7 @@ let equality_ops : BU.psmap<primitive_step> =
     let hetero_propositional_equality =
         {name = PC.eq3_lid;
          arity = 4;
+         auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
          interpretation = interp_prop}
@@ -2007,6 +2011,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
        // reify (reflect e) ~> e
        // Although shouldn't `e` ALWAYS be marked with a Meta_monadic?
        norm cfg env stack' e
+
+    | Tm_app _ when cfg.steps.primops ->
+      let hd, args = U.head_and_args t in
+      (match (U.un_uinst head).n with
+       | Tm_fvar fv ->
+           begin
+           match find_prim_step cfg fv with
+           | Some ({auto_reflect=Some n})
+             when List.length args = n ->
+             norm cfg env stack' t
+           | _ -> fallback " (3)" ()
+           end
+       | _ -> fallback " (4)" ())
 
     | _ ->
         fallback " (2)" ()
