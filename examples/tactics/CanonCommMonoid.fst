@@ -186,7 +186,13 @@ let permutation_via_swaps (#a:eqtype) (xs ys:list a) :
         // bubble-sort for that)
         (ensures (exists ss. ys == apply_swaps xs ss)) = admit()
 
-let rec sort_correct (#a:Type) (m:cm a) (vars:vmap a) (xs:list var) :
+let permute = list var -> list var
+
+let permute_correct (p:permute) =
+  #a:Type -> m:cm a -> vars:vmap a -> xs:list var ->
+    Lemma (xsdenote m vars xs == xsdenote m vars (p xs))
+
+let rec sort_correct_aux (#a:Type) (m:cm a) (vars:vmap a) (xs:list var) :
     Lemma (xsdenote m vars xs == xsdenote m vars (sort xs)) =
   sortWith_permutation (compare_of_bool (<)) xs;
   permutation_via_swaps xs (sort xs);
@@ -195,12 +201,22 @@ let rec sort_correct (#a:Type) (m:cm a) (vars:vmap a) (xs:list var) :
     (() <: squash (exists ss. sort xs == apply_swaps xs ss))
     (fun ss -> apply_swaps_correct m vars xs ss)
 
-let monoid_reflect (#a:Type) (m:cm a) (vars:vmap a) (e1 e2:exp)
-    (_ : squash (xsdenote m vars (sort (flatten e1)) ==
-                 xsdenote m vars (sort (flatten e2))))
+let sort_correct : permute_correct sort =
+  (fun #a m vars xs -> sort_correct_aux #a m vars xs)
+
+let canon_with (p:permute) (e:exp) = p (flatten e)
+
+let monoid_reflect_with (p:permute) (pc:permute_correct p)
+                        (#a:Type) (m:cm a) (vars:vmap a) (e1 e2:exp)
+    (_ : squash (xsdenote m vars (canon_with p e1) ==
+                 xsdenote m vars (canon_with p e2)))
     : squash (mdenote m vars e1 == mdenote m vars e2) =
   flatten_correct m vars e1; flatten_correct m vars e2;
-  sort_correct m vars (flatten e1); sort_correct m vars (flatten e2)
+  pc m vars (flatten e1); pc m vars (flatten e2)
+
+let monoid_reflect (#a:Type) (m:cm a) (vars:vmap a) (e1 e2:exp) =
+  monoid_reflect_with sort
+    (fun #a m vars xs -> sort_correct #a m vars xs) #a m vars
 
 (* Finds the position of first occurrence of x in xs;
    this could use eqtype and be completely standard if term provided it *)
@@ -269,7 +285,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
                      xsdenote m vars (sort (flatten r2)))))));
           change_sq (quote (mdenote m vars r1 == mdenote m vars r2));
           dump ("after change_sq");
-          apply (`monoid_reflect);
+          apply (quote(monoid_reflect m vars));
           norm [delta_only ["CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
                             "FStar.List.Tot.Base.op_At";
