@@ -386,6 +386,13 @@ let get_guard_policy : tac<guard_policy> =
 let set_guard_policy (pol : guard_policy) : tac<unit> =
     bind get (fun ps -> set ({ ps with guard_policy = pol }))
 
+let with_policy pol (t : tac<'a>) : tac<'a> =
+    bind get_guard_policy (fun old_pol ->
+    bind (set_guard_policy pol) (fun () ->
+    bind t (fun r ->
+    bind (set_guard_policy old_pol) (fun () ->
+    ret r))))
+
 let proc_guard (reason:string) (e : env) (g : guard_t) opts : tac<unit> =
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
@@ -580,17 +587,14 @@ let refine_intro : tac<unit> = wrap_err "refine_intro" <|
         bind dismiss (fun _ ->
         add_goals [g1;g2])))
 
-let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
+let __exact_now set_expected_typ (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
     let env = if set_expected_typ
               then Env.set_expected_typ goal.context goal.goal_ty
               else goal.context
     in
     bind (__tc env t) (fun (t, typ, guard) ->
-    bind (if force_guard
-          then proc_guard "__exact" goal.context guard goal.opts
-          else proc_guard "__exact typing" goal.context guard goal.opts
-          ) (fun _ ->
+    bind (proc_guard "__exact typing" goal.context guard goal.opts) (fun _ ->
     mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
                                                             (tts goal.context goal.goal_ty)) (fun _ ->
     bind (do_unify goal.context typ goal.goal_ty) (fun b -> if b
@@ -601,14 +605,14 @@ let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
                     (tts goal.context goal.goal_ty)
                     (tts goal.context goal.witness))))))
 
-let t_exact set_expected_typ force_guard tm : tac<unit> = wrap_err "exact" <|
+let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    bind (trytac' (__exact_now set_expected_typ force_guard tm)) (function
+    bind (trytac' (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
     | Inl e ->
     bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
                    bind refine_intro (fun _ ->
-                   __exact_now set_expected_typ force_guard tm)))) (function
+                   __exact_now set_expected_typ tm)))) (function
     | Inr r -> ret r
     | Inl _ -> fail e))) // keep original error
 
@@ -646,7 +650,7 @@ exception NoUnif
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
     mlog (fun () -> BU.print1 ">>> Calling __exact(%s)\n" (Print.term_to_string tm)) (fun () ->
-    bind (trytac (t_exact false true tm)) (function
+    bind (trytac (with_policy Force (t_exact false tm))) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments

@@ -165,8 +165,8 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
-assume private val __t_exact : bool -> bool -> term -> __tac unit
-let t_exact hard guard (t:term) : Tac unit = TAC?.reflect (__t_exact hard guard t)
+assume private val __t_exact : bool -> term -> __tac unit
+let t_exact hard (t:term) : Tac unit = TAC?.reflect (__t_exact hard t)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application

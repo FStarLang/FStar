@@ -45,7 +45,7 @@ val intro_rec : tac<(binder * binder)>
 val norm : list<EMB.norm_step> -> tac<unit>
 val norm_term_env : env -> list<EMB.norm_step> -> term -> tac<term>
 val refine_intro : tac<unit>
-val t_exact : bool -> bool -> term -> tac<unit>
+val t_exact : bool -> term -> tac<unit>
 val apply : bool -> term -> tac<unit>
 val apply_lemma : term -> tac<unit>
 val rewrite : binder -> tac<unit>
