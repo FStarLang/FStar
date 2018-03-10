@@ -58,6 +58,9 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 let __fail (msg : string) : 'a __tac = from_tac_1 B.fail msg
 let fail: string -> 'a __tac = fun msg -> __fail msg
 
+let __top_env: RT.env __tac = from_tac_0 B.top_env
+let top_env: unit -> RT.env __tac = fun () -> __top_env
+
 let __cur_env: RT.env __tac = from_tac_0 B.cur_env
 let cur_env: unit -> RT.env __tac = fun () -> __cur_env
 
@@ -100,11 +103,17 @@ let norm_binder_type : norm_step list -> RT.binder -> unit __tac = fun s b -> __
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
 
+let __intro_rec: (RT.binder * RT.binder) __tac = from_tac_0 B.intro_rec
+let intro_rec: unit -> (RT.binder * RT.binder) __tac = fun () -> __intro_rec
+
 let __rename_to (b: RT.binder) (nm : string) : unit __tac = from_tac_2 B.rename_to b nm
 let rename_to: RT.binder -> string -> unit __tac = fun b s -> __rename_to b s
 
 let __revert: unit __tac = from_tac_0 B.revert
 let revert: unit -> unit __tac = fun () -> __revert
+
+let __binder_retype (b: RT.binder) : unit __tac = from_tac_1 B.binder_retype b
+let binder_retype: RT.binder -> unit __tac = fun b -> __binder_retype b
 
 let __clear_top: unit __tac = from_tac_0 B.clear_top
 let clear_top: unit -> unit __tac = fun () -> __clear_top
@@ -157,6 +166,9 @@ let pointwise': (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise TopD
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later
 
+let __dup: unit __tac = from_tac_0 B.dup
+let dup: unit -> unit __tac = fun () -> __dup
+
 let __flip: unit __tac = from_tac_0 B.flip
 let flip: unit -> unit __tac = fun () -> __flip
 
@@ -180,6 +192,9 @@ let uvar_env : RT.env -> RT.term option -> RT.term __tac = fun e o -> __uvar_env
 
 let __unify (t1 : RT.term) (t2 : RT.term) : bool __tac = from_tac_2 B.unify t1 t2
 let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
+
+let __launch_process (prog : string) (args : string) (input : string) : string __tac = from_tac_3 B.launch_process prog args input
+let launch_process : string -> string -> string -> string __tac = fun prog args input -> __launch_process prog args input
 
 let __fresh_bv_named (nm : string) (ty : RT.term) : RT.bv __tac = from_tac_2 B.fresh_bv_named nm ty
 let fresh_bv_named : string -> RT.term -> RT.bv __tac = fun nm ty -> __fresh_bv_named nm ty
