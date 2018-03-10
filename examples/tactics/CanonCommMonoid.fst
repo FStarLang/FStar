@@ -3,6 +3,7 @@ module CanonCommMonoid
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
+open FStar.Classical
 
 (* An expression canonizer for commutative monoids
    Inspired by:
@@ -98,7 +99,7 @@ let rec flatten_correct (#a:Type) (m:cm a) (vars:vmap a) (e:exp) :
 // (can use bubble sort to show that)
 // then can use commutativity to justify each of these swaps
 
-let sort = List.Tot.sortWith (compare_of_bool (<))
+let sort = List.Tot.sortWith #nat (compare_of_bool (<))
 
 let swap (n:nat) :Type = x:nat{x < n-1}
 
@@ -113,6 +114,28 @@ let rec apply_swap_aux (#a:Type) (n:nat) (xs:list a) (s:swap (length xs + n)) :
 
 let apply_swap (#a:Type) = apply_swap_aux #a 0
 
+let rec apply_swap_aux_correct (#a:Type) (n:nat) (m:cm a) (vars:vmap a)
+                           (xs:list var) (s:swap (length xs + n)):
+    Lemma (requires True)
+          (ensures (xsdenote m vars xs == xsdenote m vars (apply_swap_aux n xs s)))
+          (decreases xs) =
+  match xs with
+  | [] | [_] -> ()
+  | x1 :: x2 :: xs' ->
+      if n = (s <: nat)
+      then (// x1 + (x2 + xs') =a (x1 + x2) + xs'
+            //                 =c (x2 + x1) + xs' = a x2 + (x1 + xs')
+            CM?.associativity m (vars x1) (vars x2) (xsdenote m vars xs');
+            CM?.associativity m (vars x2) (vars x1) (xsdenote m vars xs');
+            CM?.commutativity m (vars x1) (vars x2))
+      else apply_swap_aux_correct (n+1) m vars (x2 :: xs') s
+
+let apply_swap_correct (#a:Type) (m:cm a) (vars:vmap a)
+                           (xs:list var) (s:swap (length xs)):
+    Lemma (requires True)
+          (ensures (xsdenote m vars xs == xsdenote m vars (apply_swap xs s)))
+          (decreases xs) = apply_swap_aux_correct 0 m vars xs s
+
 let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs))) :
     Pure (list a) (requires True)
                   (ensures (fun zs -> length zs == length xs)) (decreases ss) =
@@ -120,23 +143,53 @@ let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs))) :
   | [] -> xs
   | s::ss' -> apply_swaps (apply_swap xs s) ss'
 
+let rec apply_swaps_correct (#a:Type) (m:cm a) (vars:vmap a)
+                            (xs:list var) (ss:list (swap (length xs))):
+    Lemma (requires True)
+          (ensures (xsdenote m vars xs == xsdenote m vars (apply_swaps xs ss)))
+          (decreases ss) =
+  match ss with
+  | [] -> ()
+  | s::ss' -> apply_swap_correct m vars xs s;
+              apply_swaps_correct m vars (apply_swap xs s) ss'
+
+let rec bubble_sort_with_aux (#a:Type) (f:(a -> a -> Tot int)) (xs:list a) :
+    Pure (list a) (requires True)
+                  (ensures (fun zs -> length xs == length zs))
+                  (decreases (length xs)) =
+  match xs with
+  | [] | [_] -> xs
+  | x1 :: x2 :: xs' ->
+      if f x1 x2 > 0 then x2 :: bubble_sort_with_aux f (x1::xs')
+      else x1 :: bubble_sort_with_aux f (x2::xs')
+
+let rec bubble_sort_with_aux' (#a:Type) (n:nat) (f:(a -> a -> Tot int))
+          (xs:(list a){n <= length xs}) : Tot (list a)
+              (decreases (length xs - n <: nat)) =
+  if n = length xs then xs
+  else bubble_sort_with_aux' (n+1) f (bubble_sort_with_aux f xs)
+
+let bubble_sort_with (#a:Type) = bubble_sort_with_aux' #a 0
+
 let permutation_via_swaps (#a:eqtype) (xs ys:list a) :
   Lemma (requires (forall x. count x xs = count x ys))
         (ensures (exists ss. ys == apply_swaps xs ss)) = admit()
-
-// TODO
 
 let rec sort_correct (#a:Type) (m:cm a) (vars:vmap a) (xs:list var) :
     Lemma (xsdenote m vars xs == xsdenote m vars (sort xs)) =
   sortWith_permutation (compare_of_bool (<)) xs;
   permutation_via_swaps xs (sort xs);
   assert(exists ss. sort xs == apply_swaps xs ss);
-  admit()
+  exists_elim (xsdenote m vars xs == xsdenote m vars (sort xs))
+    (() <: squash (exists ss. sort xs == apply_swaps xs ss))
+    (fun ss -> apply_swaps_correct m vars xs ss)
 
 let monoid_reflect (#a:Type) (m:cm a) (vars:vmap a) (e1 e2:exp)
-    (_ : squash (xsdenote m vars (flatten e1) == xsdenote m vars (flatten e2)))
+    (_ : squash (xsdenote m vars (sort (flatten e1)) ==
+                 xsdenote m vars (sort (flatten e2))))
     : squash (mdenote m vars e1 == mdenote m vars e2) =
-  flatten_correct m vars e1; flatten_correct m vars e2
+  flatten_correct m vars e1; flatten_correct m vars e2;
+  sort_correct m vars (flatten e1); sort_correct m vars (flatten e2)
 
 (* Finds the position of first occurrence of x in xs;
    this could use eqtype and be completely standard if term provided it *)
@@ -171,7 +224,7 @@ let rec reification_aux (#a:Type) (ts:list term) (vars:vmap a)
     then (Unit, ts, vars)
     else fvar t ts vars
 
-// TODO: could guarantee same-length lists 
+// TODO: could guarantee same-length lists
 let reification (#a:Type) (m:cm a) (ts:list term) : Tac (list exp * vmap a) =
     let mult = norm_term [delta] (quote (CM?.mult m)) in
     let unit = norm_term [delta] (quote (CM?.unit m)) in
@@ -231,9 +284,8 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
   | _ -> fail "Goal should be an equality"
 
 let lem0 (a b c d : int) =
-  assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
+  assert_by_tactic (0 + a + b + c + d == (b + 0) + d + (c + a + 0) + 0)
   (fun _ -> canon_monoid int_plus_cm; trefl())
-
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
