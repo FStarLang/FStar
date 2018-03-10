@@ -122,8 +122,8 @@ let smaller tv t =
 val smaller_comp : comp_view -> comp -> Type0
 let smaller_comp cv c =
     match cv with
-    | C_Total t ->
-        t << c
+    | C_Total t md ->
+        t << c /\ (match md with | Some d -> d << c | None -> True)
     | C_Lemma pre post ->
         pre << c /\ post << c
     | C_Unknown ->
