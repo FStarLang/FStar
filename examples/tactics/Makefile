@@ -5,6 +5,7 @@ include ../Makefile.include
 
 all:	Apply.uver		\
 	Canon.uver		\
+	CanonMonoid.uver	\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -13,12 +14,15 @@ all:	Apply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
+	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
+	VQuote.uver		\
 	Rename.uver		\
 	Imp.uver		\
+	Inlining.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	DependentSynth.uver	\
@@ -42,6 +46,7 @@ all:	Apply.uver		\
 	Sequences.uver		\
 	Caller.uver		\
 	Retype.uver		\
+	Pose.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\

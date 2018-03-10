@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "9812755ac4ce1bb3eec0bc28af0c0c87"
+      "e709261090ce9743e93b6f57283fddbd"
     ],
     [
       "Ex06e.mem",
@@ -36,7 +36,44 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7054f31bf18c04546f132b270fc84ff9"
+      "1af6981d9dc33d37e915afe3015b6b34"
+    ],
+    [
+      "Ex06e.sorted",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
+      ],
+      0,
+      "8e051ce59ce642e68bf16936f1da5f04"
+    ],
+    [
+      "Ex06e.mem",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "int_inversion", "projection_inverse_Prims.Cons_tl",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "9511a8c2d856e89208ff70c5ff341984"
     ]
   ]
 ]

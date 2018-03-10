@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "63823b97fcc5edbe116251c853d0e3ca"
+      "6d73abd211bc6cf98610e3e3a5e2d4e9"
     ],
     [
       "Ex02a.canRead",
@@ -17,7 +17,25 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "640b04d0599197f12a1baefa46892b75"
+      "35aa846a4b2552e47da2f91457c59f62"
+    ],
+    [
+      "Ex02a.canWrite",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2b3c47f0550f78e43bc6ea02690f9c50"
+    ],
+    [
+      "Ex02a.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "9d9d229406e799cbc99eed856f458d82"
     ]
   ]
 ]

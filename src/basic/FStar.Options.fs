@@ -120,6 +120,7 @@ let defaults =
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
       ("debug_level"                  , List []);
+      ("defensive"                    , String "no");
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
@@ -202,8 +203,7 @@ let defaults =
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false);
-      ("check_interface"              , Bool false)]
+      ("use_extracted_interfaces"     , Bool false);]
 
 let init () =
    let o = peek () in
@@ -234,6 +234,7 @@ let get_codegen                 ()      = lookup_opt "codegen"                  
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
@@ -315,7 +316,6 @@ let get_no_positivity           ()      = lookup_opt "__no_positivity"          
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
-let get_check_interface         ()      = lookup_opt "check_interface"          as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -521,6 +521,15 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "debug_level",
         Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
         "Control the verbosity of debugging info");
+
+       (noshort,
+        "defensive",
+        EnumStr ["no"; "warn"; "fail"],
+        "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
+         if 'no', no checks are performed\n\t\t\
+         if 'warn', checks are performed and raise a warning when they fail\n\t\t\
+         if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
+         (default 'no')");
 
        ( noshort,
         "dep",
@@ -958,11 +967,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Const (mk_bool true),
         "Extract interfaces from the dependencies and use them for verification");
 
-       ( noshort,
-        "check_interface",
-        Const (mk_bool true),
-        "Verify the extracted interface of the module. This flag automatically enables --use_extracted_interfaces also.");
-
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),
@@ -980,6 +984,7 @@ let settable = function
     | "admit_except"
     | "debug"
     | "debug_level"
+    | "defensive"
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
@@ -1206,6 +1211,8 @@ let codegen                      () =
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
 let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
+let defensive                    () = get_defensive () <> "no"
+let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
@@ -1294,7 +1301,6 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
-let check_interface              () = get_check_interface             ()
 
 let should_extract m =
     let m = String.lowercase m in

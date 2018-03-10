@@ -107,12 +107,14 @@ let (push_with_kind :
                 (uu___56_233.FStar_TypeChecker_Env.check_type_of);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___56_233.FStar_TypeChecker_Env.use_bv_sorts);
-              FStar_TypeChecker_Env.qname_and_index =
-                (uu___56_233.FStar_TypeChecker_Env.qname_and_index);
+              FStar_TypeChecker_Env.qtbl_name_and_index =
+                (uu___56_233.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.proof_ns =
                 (uu___56_233.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth =
                 (uu___56_233.FStar_TypeChecker_Env.synth);
+              FStar_TypeChecker_Env.splice =
+                (uu___56_233.FStar_TypeChecker_Env.splice);
               FStar_TypeChecker_Env.is_native_tactic =
                 (uu___56_233.FStar_TypeChecker_Env.is_native_tactic);
               FStar_TypeChecker_Env.identifier_info =
@@ -679,7 +681,7 @@ let rec (go :
                              then lid
                              else
                                (let uu____2515 =
-                                  FStar_ToSyntax_Env.resolve_to_fully_qualified_name
+                                  FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                                     env.FStar_TypeChecker_Env.dsenv lid
                                    in
                                 match uu____2515 with
@@ -709,7 +711,7 @@ let rec (go :
                                  in
                               let uu____2654 =
                                 let uu____2657 =
-                                  FStar_ToSyntax_Env.try_lookup_doc
+                                  FStar_Syntax_DsEnv.try_lookup_doc
                                     env.FStar_TypeChecker_Env.dsenv lid
                                    in
                                 FStar_All.pipe_right uu____2657
@@ -788,7 +790,7 @@ let rec (go :
                           | uu____3150::[] -> true
                           | uu____3151 -> false  in
                         let uu____3154 =
-                          FStar_ToSyntax_Env.shorten_module_path
+                          FStar_Syntax_DsEnv.shorten_module_path
                             env.FStar_TypeChecker_Env.dsenv prefix1
                             naked_match
                            in
@@ -816,7 +818,7 @@ let rec (go :
                   let matches =
                     let case_a_find_transitive_includes orig_ns m id1 =
                       let exported_names =
-                        FStar_ToSyntax_Env.transitive_exported_ids
+                        FStar_Syntax_DsEnv.transitive_exported_ids
                           env.FStar_TypeChecker_Env.dsenv m
                          in
                       let matched_length =
@@ -838,7 +840,7 @@ let rec (go :
                                     (FStar_Ident.id_of_text n1)
                                    in
                                 let uu____3329 =
-                                  FStar_ToSyntax_Env.resolve_to_fully_qualified_name
+                                  FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                                     env.FStar_TypeChecker_Env.dsenv lid
                                    in
                                 FStar_Option.map
@@ -868,7 +870,7 @@ let rec (go :
                                   let uu____3478 =
                                     let uu____3481 =
                                       FStar_Ident.lid_of_ids id1  in
-                                    FStar_ToSyntax_Env.resolve_to_fully_qualified_name
+                                    FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                                       env.FStar_TypeChecker_Env.dsenv
                                       uu____3481
                                      in
@@ -893,7 +895,7 @@ let rec (go :
                                   FStar_Range.dummyRange
                                  in
                               let uu____3534 =
-                                FStar_ToSyntax_Env.resolve_module_name
+                                FStar_Syntax_DsEnv.resolve_module_name
                                   env.FStar_TypeChecker_Env.dsenv l true
                                  in
                               (match uu____3534 with
@@ -1026,7 +1028,7 @@ let (interactive_mode : Prims.string -> Prims.unit) =
                 let uu____3998 =
                   let uu____3999 = FStar_Options.file_list ()  in
                   FStar_List.hd uu____3999  in
-                FStar_SMTEncoding_Solver.with_hints_db uu____3998 false
+                FStar_SMTEncoding_Solver.with_hints_db uu____3998
                   (fun uu____4003  ->
                      go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                        filename stack FStar_Pervasives_Native.None env3 ts)

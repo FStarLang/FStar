@@ -159,6 +159,8 @@ let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases" 
 let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"] 
+let (decls_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Data"; "decls"] 
 let (range_lid : FStar_Ident.lident) = pconst "range" 
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of" 
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled" 
@@ -183,8 +185,8 @@ let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
-let (plugin_attr : FStar_Ident.lident) =
-  p2l ["FStar"; "Pervasives"; "plugin"] 
+let (dm4f_bind_range_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (gen_reset :
   (Prims.unit -> Prims.int,Prims.unit -> Prims.unit)
     FStar_Pervasives_Native.tuple2)
@@ -317,7 +319,8 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s  -> fstar_tactics_lid' [s] 
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"] 
 let (u_tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "__tac"] 
-let (tac_effect_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 
+let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 
+let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"] 
 let (by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "__by_tactic"] 
 let (synth_lid : FStar_Ident.lid) =
@@ -326,17 +329,13 @@ let (assert_by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "assert_by_tactic"] 
 let (reify_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "reify_tactic"] 
-let (quote_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "quote"]
-    FStar_Range.dummyRange
-  
-let (fstar_refl_embed_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "__embed"]
-    FStar_Range.dummyRange
-  
 let (fstar_syntax_syntax_term : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term" 
-let (fstar_reflection_types_binder_lid : FStar_Ident.lident) =
+let (binder_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
+    FStar_Range.dummyRange
+  
+let (bv_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "bv"]
     FStar_Range.dummyRange
   

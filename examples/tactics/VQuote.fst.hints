@@ -1,0 +1,27 @@
+[
+  "¶]]²å–³¿½J‚ˆ\u0015æ´¾",
+  [
+    [
+      "VQuote.myrec",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
+      0,
+      "89a8cffa4a0ac44a90ae750a3f84b65a"
+    ],
+    [
+      "VQuote.myrec",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
+      0,
+      "4c12c8009a389786c47ef153b58846d7"
+    ]
+  ]
+]

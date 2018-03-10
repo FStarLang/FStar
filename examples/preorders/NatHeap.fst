@@ -15,7 +15,7 @@ abstract type heap = h:(nat * (nat -> Tot (option (dtuple2 Type0 (fun a -> a))))
 
 (* Consistency of heaps. aka, no strong updates *)
 
-let consistent (h0:heap) (h1:heap) : GTot Type0 =
+abstract let consistent (h0:heap) (h1:heap) : GTot Type0 =
   forall n x y . (snd h0 n == Some x /\ snd h1 n == Some y)  ==> dfst x == dfst y
 
 
@@ -40,7 +40,7 @@ abstract let contains (#a:Type) (h:heap) (r:ref a) : GTot Type0 =
 
 (* Select. *)
 
-val sel : #a:Type -> 
+abstract val sel : #a:Type -> 
           h:heap ->
 	  r:ref a{contains h r} -> 
           Tot a
@@ -51,7 +51,7 @@ let sel #a h r =
 
 (* Generating a fresh reference for the given heap. *)
 
-val alloc_ref : h0:heap ->
+abstract val alloc_ref : h0:heap ->
                 a:Type -> 
 		x:a -> 
 		Tot (rh1:(ref a * heap)
@@ -71,7 +71,7 @@ let alloc_ref h0 a x =
 
 (* Update. *)
 
-val upd : #a:Type -> 
+abstract val upd : #a:Type -> 
           h0:heap -> 
           r:ref a{contains h0 r} -> 
           x:a -> 
@@ -91,7 +91,7 @@ let upd #a h0 r x =
 
 (* Empty. *)
 
-val emp : heap
+abstract val emp : heap
 let emp = 
   Mktuple2 #nat #(nat -> Tot (option (dtuple2 Type0 (fun a -> a)))) 0 (fun (r:nat) -> None)
 
@@ -121,7 +121,7 @@ let max n m =
   if n > m then n else m
   
 
-val concat : h0:heap -> h1:heap{consistent h0 h1} -> Tot heap
+abstract val concat : h0:heap -> h1:heap{consistent h0 h1} -> Tot heap
 let concat h0 h1 = 
   (max (fst h0) (fst h1) , (fun r -> match snd h0 r with
                                      | None -> snd h1 r

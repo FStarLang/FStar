@@ -297,7 +297,7 @@ let (prefix_one_decl :
   
 let (initialize_interface :
   FStar_Ident.lident ->
-    FStar_Parser_AST.decl Prims.list -> Prims.unit FStar_ToSyntax_Env.withenv)
+    FStar_Parser_AST.decl Prims.list -> Prims.unit FStar_Syntax_DsEnv.withenv)
   =
   fun mname  ->
     fun l  ->
@@ -307,7 +307,7 @@ let (initialize_interface :
           if uu____942
           then ml_mode_check_initial_interface l
           else check_initial_interface l  in
-        let uu____946 = FStar_ToSyntax_Env.iface_decls env mname  in
+        let uu____946 = FStar_Syntax_DsEnv.iface_decls env mname  in
         match uu____946 with
         | FStar_Pervasives_Native.Some uu____955 ->
             let uu____960 =
@@ -321,18 +321,18 @@ let (initialize_interface :
               (FStar_Ident.range_of_lid mname)
         | FStar_Pervasives_Native.None  ->
             let uu____973 =
-              FStar_ToSyntax_Env.set_iface_decls env mname decls  in
+              FStar_Syntax_DsEnv.set_iface_decls env mname decls  in
             ((), uu____973)
   
 let (prefix_with_interface_decls :
   FStar_Parser_AST.decl ->
-    FStar_Parser_AST.decl Prims.list FStar_ToSyntax_Env.withenv)
+    FStar_Parser_AST.decl Prims.list FStar_Syntax_DsEnv.withenv)
   =
   fun impl  ->
     fun env  ->
       let uu____990 =
-        let uu____995 = FStar_ToSyntax_Env.current_module env  in
-        FStar_ToSyntax_Env.iface_decls env uu____995  in
+        let uu____995 = FStar_Syntax_DsEnv.current_module env  in
+        FStar_Syntax_DsEnv.iface_decls env uu____995  in
       match uu____990 with
       | FStar_Pervasives_Native.None  -> ([impl], env)
       | FStar_Pervasives_Native.Some iface1 ->
@@ -340,13 +340,13 @@ let (prefix_with_interface_decls :
           (match uu____1011 with
            | (iface2,impl1) ->
                let env1 =
-                 let uu____1037 = FStar_ToSyntax_Env.current_module env  in
-                 FStar_ToSyntax_Env.set_iface_decls env uu____1037 iface2  in
+                 let uu____1037 = FStar_Syntax_DsEnv.current_module env  in
+                 FStar_Syntax_DsEnv.set_iface_decls env uu____1037 iface2  in
                (impl1, env1))
   
 let (interleave_module :
   FStar_Parser_AST.modul ->
-    Prims.bool -> FStar_Parser_AST.modul FStar_ToSyntax_Env.withenv)
+    Prims.bool -> FStar_Parser_AST.modul FStar_Syntax_DsEnv.withenv)
   =
   fun a  ->
     fun expect_complete_modul  ->
@@ -354,7 +354,7 @@ let (interleave_module :
         match a with
         | FStar_Parser_AST.Interface uu____1059 -> (a, env)
         | FStar_Parser_AST.Module (l,impls) ->
-            let uu____1074 = FStar_ToSyntax_Env.iface_decls env l  in
+            let uu____1074 = FStar_Syntax_DsEnv.iface_decls env l  in
             (match uu____1074 with
              | FStar_Pervasives_Native.None  -> (a, env)
              | FStar_Pervasives_Native.Some iface1 ->
@@ -399,7 +399,7 @@ let (interleave_module :
                            let impls2 = FStar_List.append impls1 iface_lets
                               in
                            let env1 =
-                             FStar_ToSyntax_Env.set_iface_decls env l
+                             FStar_Syntax_DsEnv.set_iface_decls env l
                                remaining_iface_vals
                               in
                            let a1 = FStar_Parser_AST.Module (l, impls2)  in

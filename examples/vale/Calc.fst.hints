@@ -1,5 +1,5 @@
 [
-  "\u001eü’{√‘(‰µ4Ωùa7AÖ",
+  "üª¿\u000e>\bRz&f]ù≤ÁÂÙ",
   [
     [
       "Calc.op_Amp_Equals",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "dc45762185238736e3f537f57d19af5f"
+      "18109825aa32f6a8e5ed5e3dfaccf70b"
     ],
     [
       "Calc.op_Amp_Bar",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "7a8ad090bd87b3b96c107be80aa80492"
+      "eed9516896cdf29ffd045026fc64a6f3"
     ],
     [
       "Calc.op_Amp_Bar_Bar",
@@ -26,16 +26,40 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.pure_pre", "equation_Prims.squash",
-        "function_token_typing_Prims.unit",
-        "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Calc_Tm_refine_fff0b0f9a07ef127f1cdddcb92e23352",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_Calc.rw_and_try", "typing_Prims.squash", "unit_typing"
+        "refinement_interpretation_Calc_Tm_refine_dc17ebc0d19f2ddfb34dc43280c185f3"
       ],
       0,
-      "5effae11d052ba301c7f4b7e6e79ddf5"
+      "8d4c889a543495078eb5b6a806a70870"
+    ],
+    [
+      "Calc.op_Amp_Equals",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "b15f309926082e15ec3dac866c7b9130"
+    ],
+    [
+      "Calc.op_Amp_Bar",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "fdc58cf989d770db88dfe08b2863bcac"
+    ],
+    [
+      "Calc.op_Amp_Bar_Bar",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Calc_Tm_refine_6b71a0cb184756f4fc73fdb9a051dd06"
+      ],
+      0,
+      "b0bf754834b68ea10fd33f9bb1f0b711"
     ]
   ]
 ]

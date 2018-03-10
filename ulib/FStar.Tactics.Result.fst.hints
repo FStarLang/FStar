@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e47e542315f0095c0df310a196a39674"
+      "940e4eb741316d6cfd360c8852d6c804"
     ],
     [
       "FStar.Tactics.Result.__proj__Success__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_FStar.Tactics.Result_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
       ],
       0,
-      "4e9f120c1b846ed1329b19fc110e31a3"
+      "ac370ded46c913266655fb544af80ebb"
     ],
     [
       "FStar.Tactics.Result.uu___is_Failed",
@@ -31,7 +31,7 @@
       1,
       [ "@query" ],
       0,
-      "e7e1bb15c5f982d6ed4bfde21625dfa9"
+      "d3453b97b174dfe8cf0fe0038b97b02f"
     ],
     [
       "FStar.Tactics.Result.__proj__Failed__item___0",
@@ -45,7 +45,53 @@
         "refinement_interpretation_FStar.Tactics.Result_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
       ],
       0,
-      "326f2f486db83941507fb182878fb740"
+      "4ea70d7518de99a5fb0cb6e2c79cc9e7"
+    ],
+    [
+      "FStar.Tactics.Result.uu___is_Success",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "20896e38aa4118d190b0d27b59ef8005"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Success__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Result_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
+      ],
+      0,
+      "15761c25c06b0eda4c8c40316bf18c08"
+    ],
+    [
+      "FStar.Tactics.Result.uu___is_Failed",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c797444216359cd0f450977a61d0c97d"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Failed__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Result_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
+      ],
+      0,
+      "2960acf0025a4a06126d2ebbee0c365d"
     ]
   ]
 ]

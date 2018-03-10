@@ -20,7 +20,7 @@ abstract type mref (a:Type) (r:preorder_t a) = nat
 
 (* Containment predicate on heaps. *)
 
-let contains (#a:Type) (#r:preorder_t a) (h:heap) (m:mref a r) : GTot Type0 =
+abstract let contains (#a:Type) (#r:preorder_t a) (h:heap) (m:mref a r) : GTot Type0 =
   exists (v:heap_cell).
     snd h m == Some v /\
     dfst v == a /\
@@ -29,7 +29,7 @@ let contains (#a:Type) (#r:preorder_t a) (h:heap) (m:mref a r) : GTot Type0 =
 
 (* Select. *)
 
-val sel : #a:Type ->
+abstract val sel : #a:Type ->
           #r:preorder a ->
           h:heap ->
 	  m:mref a r{contains h m} ->
@@ -41,7 +41,7 @@ let sel #a #b h m =
 
 (* Generating a fresh reference for the given heap. *)
 
-val alloc_ref : h0:heap ->
+abstract val alloc_ref : h0:heap ->
 		a:Type ->
 		r:preorder a ->
 	        x:a ->
@@ -63,7 +63,7 @@ let alloc_ref h a r x =
 
 (* Update. *)
 
-val upd : #a:Type ->
+abstract val upd : #a:Type ->
 	  #r:preorder a ->
           h0:heap ->
           m:mref a r{contains h0 m} ->
@@ -86,5 +86,5 @@ let upd #a #r h0 m x =
 
 (* Empty. *)
 
-val emp : heap
+abstract val emp : heap
 let emp = 0, (fun (r:nat) -> None)

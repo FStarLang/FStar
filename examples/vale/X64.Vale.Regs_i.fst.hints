@@ -15,7 +15,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "530430d5a7b4d2138d5e0487a798bb27"
+      "20753eb0db33993de5b83c44e5a58d39"
     ],
     [
       "X64.Vale.Regs_i.lemma_equal_elim",
@@ -36,7 +36,7 @@
         "kinding_X64.Machine_s.reg@tok", "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "515402d98dbbfa1986da626be4fc8436"
+      "a537465c1df6fa2cc6e7d2094ff11797"
     ]
   ]
 ]

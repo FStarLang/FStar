@@ -11,7 +11,7 @@
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
       ],
       0,
-      "f5fdc2d9f445ff5e20272d60fc639786"
+      "28ff032043c7c8ff766ba33ddd3408dd"
     ],
     [
       "FStar.SquashEffect.return_squash",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "24f8df36fc028292994644cc4fd1576a"
+      "c0da84e78db9f125dd9a0f4e9384646f"
     ],
     [
       "FStar.SquashEffect.bind_squash",
@@ -29,7 +29,34 @@
       1,
       [ "@query" ],
       0,
-      "b48f1ee6acbd08d2d44b61612a02e877"
+      "9427066ae2a53ec821d59245903f099f"
+    ],
+    [
+      "FStar.SquashEffect.resquash'",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b02f1399fbdcc0d5bd9f9c3fdcc36544"
+    ],
+    [
+      "FStar.SquashEffect.return_squash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9fd35d362b8d57f7ff81d9c7151bf8b9"
+    ],
+    [
+      "FStar.SquashEffect.bind_squash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6e2f7db97e2b894b073df6c5dddfdc1a"
     ]
   ]
 ]

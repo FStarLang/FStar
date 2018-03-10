@@ -82,9 +82,10 @@ type term' =
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
-  | Assign    of ident * term
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
+  | Quote     of term * bool (* boolean marks whether this is an open quotation, i.e., one that gets substituted inside *)
+  | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
 and term = {tm:term'; range:range; level:level}
 
@@ -195,6 +196,7 @@ type decl' =
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of ident * term
+  | Splice of term
 
 and decl = {
   d:decl';
@@ -660,6 +662,7 @@ let decl_to_string (d:decl) = match d.d with
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | Splice t -> "splice (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

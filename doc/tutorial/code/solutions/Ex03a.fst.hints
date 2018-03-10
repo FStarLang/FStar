@@ -15,7 +15,23 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0b8e0f3c65149897173df69f882d522f"
+      "790f2535132c6e3c7aa6d1c8db9b79af"
+    ],
+    [
+      "Ex03a.factorial",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_a4317bec5ec2b70b9849bc5175725e7b_0", "int_inversion",
+        "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b6636eec7cafa5202f6bc5da23e2d111"
     ]
   ]
 ]

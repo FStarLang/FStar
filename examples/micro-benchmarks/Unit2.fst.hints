@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a87ca3b8a08fb0374d7f8255f8043a5d"
+      "45f1caf7d82744477e1383111eac5f7a"
     ],
     [
       "Unit2.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "0919577c10d912a7c94a6018a7e10e6a"
+      "43638aaac208f6027c31ea2eedf458d7"
     ],
     [
       "Unit2.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Prims.nat" ],
       0,
-      "764afae71e012db4cbe5cc067469cf04"
+      "e66e1685285918fb49c46ee9afc5407d"
     ],
     [
       "Unit2.test5",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
       0,
-      "20f29b300be184334eeb0f1a38d85d98"
+      "304445540b4f39ebb973051d7818be55"
     ],
     [
       "Unit2.test6",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
       0,
-      "97d849ea1496133b21795e83ee81b01e"
+      "05ca6232f001a670b52d5901d96bff2b"
     ],
     [
       "Unit2.t",
@@ -55,7 +55,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "8e699451d6b1042f3b03fd6e188a269f"
+      "72ff2c90afb4a6c7c161e2ad483a3f42"
     ],
     [
       "Unit2.uu___is_Int",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "01e477619a23b64f9c9c4bd5ecd0af23"
+      "39ffd8908b4c3f046e4a0896be81084b"
     ],
     [
       "Unit2.__proj__Int__item__i",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Unit2_Tm_refine_a80b1732c37b674c773643729bebf97c"
       ],
       0,
-      "243653afd9bfe758d4ed91f0efe7c772"
+      "5f7ae7a45e00f921bb475029f5b7b67d"
     ],
     [
       "Unit2.uu___is_Bool",
@@ -86,7 +86,7 @@
       1,
       [ "@query" ],
       0,
-      "6cd81e8ccc721b0dc3b9f331f2d0b0e9"
+      "549ec8996940411502b9397673599b51"
     ],
     [
       "Unit2.__proj__Bool__item__b",
@@ -99,7 +99,7 @@
         "refinement_interpretation_Unit2_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
       ],
       0,
-      "39740b37d4c8d262b02def5e031acb81"
+      "ae8c7963256f9e870bcd94f3abcd98df"
     ],
     [
       "Unit2.f",
@@ -107,18 +107,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "bool_typing", "constructor_distinct_Prims.bool",
-        "constructor_distinct_Prims.int", "constructor_distinct_Unit2.Int",
+        "@MaxIFuel_assumption", "@query", "bool_typing",
         "data_elim_Unit2.Bool", "data_elim_Unit2.Int",
         "disc_equation_Unit2.Bool", "disc_equation_Unit2.Int",
-        "fuel_guarded_inversion_Unit2.t", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Negation",
-        "projection_inverse_Unit2.Bool_b", "projection_inverse_Unit2.Int_i"
+        "fuel_guarded_inversion_Unit2.t", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
       ],
       0,
-      "424c434fe9263d07c603dfce2f5440f4"
+      "321ccbfe56491556bfad7313e696159a"
     ],
     [
       "Unit2.f2",
@@ -127,7 +123,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "96fb4ffc53f87e1ff11351d978f358a2"
+      "fbba2f306402b035c2587782fedfb2e6"
     ],
     [
       "Unit2.test",
@@ -140,7 +136,144 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a9c1cf48db87b4cc5e6c78181d3aa7f3"
+      "a08b0b904789c32be720d89500b2f453"
+    ],
+    [
+      "Unit2.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "57c6be3636c9e155969a0d5438d9952c"
+    ],
+    [
+      "Unit2.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5e590667f69f61c1d0dc866c144a313d"
+    ],
+    [
+      "Unit2.test3",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.nat" ],
+      0,
+      "ec1894cb2d9e877ddc74f0ea4ecd72ca"
+    ],
+    [
+      "Unit2.test5",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
+      0,
+      "f7d1348df6fc86b6a3c84e295552fdad"
+    ],
+    [
+      "Unit2.test6",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
+      0,
+      "072b0ac410bf89d8a71dec3e33ad0ebb"
+    ],
+    [
+      "Unit2.t",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
+      0,
+      "3f51977ad90330ca024918ab4e569459"
+    ],
+    [
+      "Unit2.uu___is_Int",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3eba6dba19b26cf3b31e0927f3ec1c67"
+    ],
+    [
+      "Unit2.__proj__Int__item__i",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Unit2.Int",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Unit2_Tm_refine_a80b1732c37b674c773643729bebf97c"
+      ],
+      0,
+      "09c5087bc2e095952ad32f76e1ae39ae"
+    ],
+    [
+      "Unit2.uu___is_Bool",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f54c7181776d40008486ce3a164e981f"
+    ],
+    [
+      "Unit2.__proj__Bool__item__b",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Unit2.Bool",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Unit2_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
+      ],
+      0,
+      "27957f90152b759a8c99d70f1185830e"
+    ],
+    [
+      "Unit2.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "data_elim_Unit2.Bool", "data_elim_Unit2.Int",
+        "disc_equation_Unit2.Bool", "disc_equation_Unit2.Int",
+        "fuel_guarded_inversion_Unit2.t", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
+      ],
+      0,
+      "90834a40b1dae9a999f5a239abfdd850"
+    ],
+    [
+      "Unit2.f2",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "eb8e0f07149d0335129b43bec54c7637"
+    ],
+    [
+      "Unit2.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f99daa0a2285b4cc3e384369398d6654"
     ]
   ]
 ]

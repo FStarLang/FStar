@@ -66,10 +66,11 @@ open FStar_String
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
-%token MINUS COLON_EQUALS
+%token MINUS COLON_EQUALS QUOTE
 %token BACKTICK UNIV_HASH
+%token PERC_BACKTICK
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
@@ -91,7 +92,7 @@ open FStar_String
 %left     OPINFIX0d
 %left     PIPE_RIGHT
 %right    OPINFIX1
-%left     OPINFIX2 MINUS
+%left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
 %left     BACKTICK
 %right    OPINFIX4
@@ -107,21 +108,9 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) main_opt=mainDecl? EOF
+  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) EOF
       {
-        let decls = match main_opt with
-           | None -> decls
-           | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) decls
-      }
-
-(* TODO : let's try to remove that *)
-mainDecl:
-  | SEMICOLON_SEMICOLON doc=FSDOC? t=term
-      { let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+        as_frag is_light (rhs parseState 1) decls
       }
 
 
@@ -184,6 +173,8 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
+  | SPLICE t=term
+      { Splice t }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
@@ -374,7 +365,7 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | LPAREN pat=tuplePattern COLON t=typ phi_opt=refineOpt RPAREN
+  | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
         let pos = rhs2 parseState 1 6 in
@@ -412,7 +403,7 @@ fieldPattern:
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
@@ -430,7 +421,7 @@ binder:
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
@@ -561,8 +552,6 @@ noSeqTerm:
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
-  | id=lident LARROW e=noSeqTerm
-      { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
 
 typ:
   | t=simpleTerm  { t }
@@ -638,6 +627,21 @@ tmArrow(Tm):
      }
   | e=Tm { e }
 
+simpleArrow:
+  | dom=simpleArrowDomain RARROW tgt=simpleArrow
+     {
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     }
+  | e=tmEqNoRefinement { e }
+
+simpleArrowDomain:
+  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
+
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
@@ -662,28 +666,32 @@ tmTuple:
       }
 
 
-tmEq:
-  | e1=tmEq EQUALS e2=tmEq
+tmEqWith(X):
+  | e1=tmEqWith(X) EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
-  | e1=tmEq COLON_EQUALS e2=tmEq
+  | e1=tmEqWith(X) COLON_EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq PIPE_RIGHT e2=tmEq
+  | e1=tmEqWith(X) PIPE_RIGHT e2=tmEqWith(X)
       { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=operatorInfix0ad12 e2=tmEq
+  | e1=tmEqWith(X) op=operatorInfix0ad12 e2=tmEqWith(X)
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq MINUS e2=tmEq
+  | e1=tmEqWith(X) MINUS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | MINUS e=tmEq
+  | MINUS e=tmEqWith(X)
       { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
-  | e=tmNoEq
+  | QUOTE e=tmEqWith(X)
+      { mk_term (Quote (e, true)) (rhs2 parseState 1 3) Un }
+  | BACKTICK e=tmEqWith(X)
+      { mk_term (Quote (e, false)) (rhs2 parseState 1 3) Un }
+  | e=tmNoEqWith(X)
       { e }
 
-tmNoEq:
-  | e1=tmNoEq COLON_COLON e2=tmNoEq
+tmNoEqWith(X):
+  | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rhs parseState 2) e1 e2 }
-  | e1=tmNoEq AMP e2=tmNoEq
+  | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
@@ -695,12 +703,29 @@ tmNoEq:
             | _ -> [dom], tail in
         mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
-  | e1=tmNoEq op=OPINFIX3 e2=tmNoEq
+  | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmNoEq BACKTICK id=qlident BACKTICK e2=tmNoEq
+  | e1=tmNoEqWith(X) BACKTICK id=qlident BACKTICK e2=tmNoEqWith(X)
       { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
-  | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
+  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | LBRACE e=recordExp RBRACE { e }
+  | PERC_BACKTICK e=atomicTerm
+      { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
+  | op=TILDE e=atomicTerm
+      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
+  | e=X { e }
+
+tmEqNoRefinement:
+  | e=tmEqWith(appTerm) { e }
+
+tmEq:
+  | e=tmEqWith(tmRefinement)  { e }
+
+tmNoEq:
+  | e=tmNoEqWith(tmRefinement) { e }
+
+tmRefinement:
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -708,10 +733,7 @@ tmNoEq:
           | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
         in mk_term t (rhs2 parseState 1 4) Type_level
       }
-  | LBRACE e=recordExp RBRACE { e }
-  | op=TILDE e=atomicTerm
-      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
-  | e=appTerm { e }
+  | e=appTerm  { e }
 
 refineOpt:
   | phi_opt=option(LBRACE phi=formula RBRACE {phi}) {phi_opt}
@@ -801,6 +823,13 @@ projectionLHS:
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
+        (* Note: we have to keep the parentheses here. Consider t * u * v. This
+         * is parsed as Op2( *, Op2( *, t, u), v). The desugaring phase then looks
+         * up * and figures out that it hasn't been overridden, meaning that
+         * it's a tuple type, and proceeds to flatten out the whole tuple. Now
+         * consider (t * u) * v. We keep the Paren node, which prevents the
+         * flattening from happening, hence ensuring the proper type is
+         * generated. *)
         let e1 = match sort_opt with
           | None -> e
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level

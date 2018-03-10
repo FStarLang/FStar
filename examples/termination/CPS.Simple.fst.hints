@@ -13,7 +13,21 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6890048c3eac04c77c663cbb42f245f7"
+      "48b66b2a62bff94437e0b844c1384d7f"
+    ],
+    [
+      "CPS.Simple.add_cps",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "b68e6695938bbcf1bcd3d5acc45fcdfe"
     ]
   ]
 ]

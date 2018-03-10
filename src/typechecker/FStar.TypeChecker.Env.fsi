@@ -102,13 +102,14 @@ type env = {
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
+  qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env;        (* The desugaring environment from the front-end *)
+  dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps          (* The result of the dependency analysis *)
 }
 and solver_t = {
@@ -150,6 +151,8 @@ val string_of_delta_level : delta_level -> string
 val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val dep_graph: env -> FStar.Parser.Dep.deps
+
+val dsenv : env -> FStar.Syntax.DsEnv.env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
@@ -233,7 +236,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames   : env -> FStar.Util.fifo_set<univ_name>
+val univnames    : env -> FStar.Util.set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
@@ -273,3 +276,5 @@ val string_of_proof_ns : env -> string
 val unbound_vars    : env -> term -> BU.set<bv>
 val closed          : env -> term -> bool
 val closed'         : term -> bool
+
+val mk_copy: env -> env

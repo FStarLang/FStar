@@ -8,12 +8,12 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.nat",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.nat",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e41b37aea3c5d6e18be61370fbe42da0"
+      "a94a93732018c0ce0b55ba7bd5ba79d4"
     ],
     [
       "Bug254.bar",
@@ -22,13 +22,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.nat",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.nat",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Bug254_Tm_refine_7e815a1593c688052ab1b25a0d825aa9"
       ],
       0,
-      "11824023045a0a06b1e2ad7491057170"
+      "b71e0190928f29aa2932fefa07fa4a4b"
     ]
   ]
 ]

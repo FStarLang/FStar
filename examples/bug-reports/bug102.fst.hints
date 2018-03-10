@@ -7,14 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug102.hst", "proj_equation_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_a", "projection_inverse_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_post",
-        "projection_inverse_Bug102.Hst_pre"
+        "@query", "proj_equation_Bug102.Hst_h",
+        "projection_inverse_Bug102.Hst_h"
       ],
       0,
-      "4ddb87f959f2e250c1e9d6b4cdf11c6c"
+      "21be223ce5ea7107a743488a8251d9e1"
     ],
     [
       "Bug102.__proj__Hst__item__post",
@@ -22,14 +19,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug102.hst", "proj_equation_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_a", "projection_inverse_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_post",
-        "projection_inverse_Bug102.Hst_pre"
+        "@query", "proj_equation_Bug102.Hst_h",
+        "projection_inverse_Bug102.Hst_h"
       ],
       0,
-      "d828fde367afe9ae62ac1d86a3cb6317"
+      "ac0d0e906c83eef2fdb5a82cd9d83929"
     ],
     [
       "Bug102.__proj__Hst__item__e",
@@ -47,7 +41,7 @@
         "token_correspondence_Bug102.__proj__Hst__item__pre"
       ],
       0,
-      "f216232f73ca3057f1f3cf51b64cd51b"
+      "77e0d9e2a4d6359999e01e587c214532"
     ],
     [
       "Bug102.__proj__Hst__item___5",
@@ -65,7 +59,7 @@
         "token_correspondence_Bug102.__proj__Hst__item__post"
       ],
       0,
-      "c3f3b5e49887ba60aa05a8082cac158a"
+      "21379ce2ceb182c95972d9879a8a9c41"
     ]
   ]
 ]

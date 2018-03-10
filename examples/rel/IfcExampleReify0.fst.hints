@@ -11,7 +11,7 @@
         "unit_typing"
       ],
       0,
-      "cf5f59d97376e46e8b63557ccdfa590a"
+      "64a6f6b9979ff920108f159af5c1ef2c"
     ],
     [
       "IfcExampleReify0.ifc_b",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0fa7c588269d412fb599cb5b90e417ed"
+      "e21e2cd86225414c53712e46c02d65ec"
     ],
     [
       "IfcExampleReify0.ifc_b",
@@ -33,7 +33,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "d7b05458fb618bccf26e932066e0c8be"
+      "533efe92b304b1293ee9796202deff19"
     ],
     [
       "IfcExampleReify0.ifc_c",
@@ -50,7 +50,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "d471567652d99bd7646c6119011c9ea8"
+      "ec50af1d7ecef7b5e0405760ea2cb508"
     ],
     [
       "IfcExampleReify0.ni_ifc_c1",
@@ -59,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "562b0ddd88f7dd9210fcd8b078750ffb"
+      "e3f1a36a107e42ee0e00b178dbf9d0d9"
     ],
     [
       "IfcExampleReify0.ni_ifc_c2",
@@ -68,7 +68,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "559b92f8d03ac133e552887e9e15e7dc"
+      "1b09b575be768a7115b1b5b488a7da92"
     ],
     [
       "IfcExampleReify0.ni_ifc_c2",
@@ -77,7 +77,7 @@
       1,
       [ "@query" ],
       0,
-      "bed1940443c88e31de2fd6ff3baba572"
+      "4c251f9eead17421db795c801ccbeb66"
     ],
     [
       "IfcExampleReify0.ni_ifc_c3",
@@ -86,7 +86,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7ed0040977c1396d3214aded6aec6e35"
+      "72c0e817be33a4bec77d8f9d34f4f84d"
     ],
     [
       "IfcExampleReify0.ni_ifc_c3",
@@ -95,7 +95,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fb182ea70b71fa7d39b79342e71e03f8"
+      "f12aae2d59b22920f3159c81f263cca8"
     ],
     [
       "IfcExampleReify0.ni_ifc_c3",
@@ -133,7 +133,7 @@
         "unit_typing"
       ],
       0,
-      "f64a5a4939ee6ebc839c2909b7e97266"
+      "e2bcdd63133d1fb9ba98f314e0b608f0"
     ],
     [
       "IfcExampleReify0.ni_ifc_c4",
@@ -142,7 +142,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "625125186ca031738114f1e6500fe6c6"
+      "f5f595f639c092398e4f468512ce470b"
     ],
     [
       "IfcExampleReify0.ni_ifc_c4",
@@ -174,7 +174,85 @@
         "unit_typing"
       ],
       0,
-      "d197fb3c626300d6218909f4434bf40c"
+      "96a0463dd3856b55eaf9fe8bc4464a65"
+    ],
+    [
+      "IfcExampleReify0.ifc_a",
+      2,
+      2,
+      1,
+      [
+        "@query", "int_typing", "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
+        "unit_typing"
+      ],
+      0,
+      "c983a90ac5afd43c87ad397ec52bb72b"
+    ],
+    [
+      "IfcExampleReify0.ifc_b",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.IntStoreFixed.sel", "int_typing",
+        "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
+      ],
+      0,
+      "5ade4e562d472dec596bbef98a57a7cc"
+    ],
+    [
+      "IfcExampleReify0.ifc_b",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "4e68cbaadb5bceb0e3de7bf282e07103"
+    ],
+    [
+      "IfcExampleReify0.ifc_c",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "function_token_typing_Prims.unit", "int_typing",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
+      ],
+      0,
+      "0a6123fed96d47aee5f2cc61c9b9418a"
+    ],
+    [
+      "IfcExampleReify0.ni_ifc_c2",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "be3adecec1ff8d654ad5604bb087f83e"
+    ],
+    [
+      "IfcExampleReify0.ni_ifc_c3",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "1d4c4948ed5c205c97db54b11d1212d2"
+    ],
+    [
+      "IfcExampleReify0.ni_ifc_c4",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "ce9bec86837c6de99107b10d6f23a047"
     ]
   ]
 ]

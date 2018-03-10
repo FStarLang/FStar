@@ -8,4 +8,4 @@ let lemma_example1 (a:int) (b:int{b <> a})
   = ()
 
 let example1 () : Lemma (ensures False) =
-  assert_by_tactic (5 <> 5) (apply_lemma (quote lemma_example1))
+  assert_by_tactic (5 <> 5) (fun () -> apply_lemma (quote lemma_example1))

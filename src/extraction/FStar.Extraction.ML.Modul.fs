@@ -57,16 +57,6 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
-let is_tactic_decl (tac_lid: lident) (h: term) (current_module:mlpath) =
-  match h.n with
-  | Tm_uinst (h', _) ->
-    (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
-          (* TODO change this test *)
-          not (BU.starts_with (string_of_mlpath current_module) "FStar.Tactics")
-      | _ -> false)
-  | _ -> false
-
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
@@ -312,7 +302,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
             let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
-            let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn) in
+            let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, a.action_defn.pos) in
             let lbs = (false, [lb]) in
             let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
@@ -342,6 +332,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let g, actions = BU.fold_map extract_action g ed.actions in
 
           g, [return_decl;bind_decl]@actions
+
+        | Sig_splice _ ->
+          failwith "impossible: trying to extract splice"
 
         | Sig_new_effect _ ->
           g, []
@@ -452,7 +445,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                       lbtyp=t;
                                                       lbeff=PC.effect_ML_lid;
                                                       lbdef=imp;
-                                                      lbattrs=[]}]), []) } in
+                                                      lbattrs=[];
+                                                      lbpos=imp.pos;
+                                                     }]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm

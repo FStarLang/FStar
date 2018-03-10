@@ -19,7 +19,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "8a4507fa530c57e0b4d1f372461fad82"
+      "29be85a6aac048849f17e8baca975d80"
     ],
     [
       "FStar.MRef.witness_token",
@@ -31,7 +31,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "8e55f053b8e5605d43739733ecc7988c"
+      "150a2b79a3209fa43ca96cbab6b7c99e"
     ],
     [
       "FStar.MRef.witness_token",
@@ -54,7 +54,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "f04becaedd2cbf5cd7a2c537cefd72d4"
+      "cec6db320ea3d2f6599c79e48044bf5a"
     ],
     [
       "FStar.MRef.recall_token",
@@ -66,7 +66,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "e55bbf70b867f57ac75799959bf84c95"
+      "7a42920ccd6c810422fbdeb08b1c7402"
     ],
     [
       "FStar.MRef.recall_token",
@@ -87,7 +87,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "1db420b6731041447d5f65c266a5835b"
+      "c5067d4e4582fc3772c8be8954d3a7c2"
     ],
     [
       "FStar.MRef.lemma_functoriality",
@@ -108,7 +108,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "89f553e2d7a5b8d74856db42e2c5a0bc"
+      "e55957c5d7557c1d3cbee52105c6f37f"
     ],
     [
       "FStar.MRef.recall",
@@ -122,7 +122,7 @@
         "unit_typing"
       ],
       0,
-      "a7b3593e13aee41fbc04efdc7a202cb8"
+      "7e5ed2011a011929c15e48882a42bf48"
     ],
     [
       "FStar.MRef.witness",
@@ -136,7 +136,22 @@
         "unit_typing"
       ],
       0,
-      "a1bd2fdc06071cdc042c6544ba4b6845"
+      "4ddd734ac445ed217d1cd1b65d303ed5"
+    ],
+    [
+      "FStar.MRef.lemma_functoriality",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.spred",
+        "equation_FStar.MRef.stable",
+        "refinement_interpretation_FStar.MRef_Tm_refine_622e5d71d43c090771b195939447feeb",
+        "token_correspondence_FStar.MRef.stable",
+        "token_correspondence_FStar.Preorder.stable"
+      ],
+      0,
+      "cb83b8a93d05a91222540b5b6da8ec52"
     ]
   ]
 ]

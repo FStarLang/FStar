@@ -1,150 +1,156 @@
 module FStar.Tactics.Derived
 
 open FStar.Reflection
+open FStar.Reflection.Formula
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+
+val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
+let rec map f x = match x with
+  | [] -> []
+  | a::tl -> f a::map f tl
+
+// TODO: maybe we can increase a counter on each call
+let fresh_bv t = fresh_bv_named "x" t
+
+let fresh_binder_named nm t =
+    mk_binder (fresh_bv_named nm t)
+
+let fresh_binder t =
+    fresh_binder_named "x" t
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
-let exact (t : tactic term) : tactic unit =
+let exact (t : term) : Tac unit =
     t_exact false true t
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
-let exact_guard (t : tactic term) : tactic unit =
+let exact_guard (t : term) : Tac unit =
     t_exact false false t
 
 let fresh_uvar o =
-    e <-- cur_env;
+    let e = cur_env () in
     uvar_env e o
 
-let quote_lid (ns:name) : tactic term =
-    let t = pack (Tv_FVar (pack_fv ns)) in
-    return t
-
-let norm_term (s : list norm_step) (t : term) : tactic term =
-    e <-- cur_env;
+let norm_term (s : list norm_step) (t : term) : Tac term =
+    let e = cur_env () in
     norm_term_env e s t
 
-(* Monadic helpers, could be made generic for do notation? *)
+let idtac () : Tac unit = ()
 
-val liftM1' : ('a -> tactic 'b) -> (tactic 'a -> tactic 'b)
-let liftM1' f ma = a <-- ma;
-                   f a
-
-val liftM1 : ('a -> 'b) -> (tactic 'a -> tactic 'b)
-let liftM1 f = liftM1' (fun x -> return (f x))
-
-val liftM2' : ('a -> 'b -> tactic 'c) -> (tactic 'a -> tactic 'b -> tactic 'c)
-let liftM2' f ma mb = a <-- ma;
-                      b <-- mb;
-                      f a b
-
-val liftM2 : ('a -> 'b -> 'c) -> (tactic 'a -> tactic 'b -> tactic 'c)
-let liftM2 f = liftM2' (fun x y -> return (f x y))
-
-val mapM : ('a -> tactic 'b) -> list 'a -> tactic (list 'b)
-let rec mapM f l = match l with
-               | [] -> return []
-               | x::xs -> (y <-- f x;
-                           ys <-- mapM f xs;
-                           return (y::ys))
-
-let idtac : tactic unit = return ()
-
-let guard (b : bool) : tactic unit =
+let guard (b : bool) : Tac unit =
     if b
-    then return ()
+    then ()
     else fail "guard failed"
 
-let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
-    r <-- trytac t1;
-    (match r with
-    | Some x -> return x
-    | None -> t2)
+let or_else (#a:Type) (t1 : unit -> Tac a) (t2 : unit -> Tac a) : Tac a =
+    match trytac t1 with
+    | Some x -> x
+    | None -> t2 ()
 
-let rec repeat (#a:Type) (t : tactic a) () : Tac (list a) =
-    (r <-- trytac t;
-    match r with
-    | None -> return []
-    | Some x -> (xs <-- repeat t;
-                 return (x::xs))) ()
+let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
+    match trytac t with
+    | None -> []
+    | Some x -> let xs = repeat t in x::xs
 
-let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
-    x <-- t;
-    xs <-- repeat t;
-    return (x::xs)
+let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
+    let x = t () in
+    x :: repeat t
 
-let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
-    (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
+let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
+    fun () -> let _ = tau () in ()
+
+// TODO: do we want some value of this?
+let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
+    let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
 private
-let admit1' : tactic unit =
-    g <-- cur_goal;
-    gg <-- unquote #Type g;
-    exact (quote #gg (magic ()))
+let admit1' () : Tac unit =
+    exact (`(magic ()))
 
-let admit1 : tactic unit =
-    print "Warning: Admitting goal";;
-    admit1'
+let admit1 () : Tac unit =
+    print "Warning: Admitting goal";
+    admit1' ()
 
-let admit_all : tactic unit =
-    print "Warning: Admitting all goals";;
-    repeat admit1';;
-    return ()
+let admit_all () : Tac unit =
+    print "Warning: Admitting all goals";
+    let _ = repeat admit1' in
+    ()
 
-let guards_to_smt : tactic unit =
-    repeat (b <-- is_guard;
-            if b
-            then smt
-            else fail "");;
-    return ()
+let skip_guard () : Tac unit =
+    if is_guard ()
+    then smt ()
+    else fail ""
 
-let simpl : tactic unit = norm [simplify; primops]
-let whnf  : tactic unit = norm [weak; hnf; primops]
+let guards_to_smt () : Tac unit =
+    let _ = repeat skip_guard in
+    ()
 
-let intros : tactic (list binder) = repeat intro
+let simpl   () : Tac unit = norm [simplify; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops]
+let compute () : Tac unit = norm [primops; iota; delta; zeta]
+
+let intros () : Tac (list binder) = repeat intro
 
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
-let tcut (t:term) : tactic binder =
-    qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];
-    let tt = pack (Tv_App qq (t, Q_Explicit)) in
-    apply (return tt);;
-    intro
+let tcut (t:term) : Tac binder =
+    let tt = pack (Tv_App (`__cut) (t, Q_Explicit)) in
+    apply tt;
+    intro ()
 
-let rec revert_all (bs:binders) : tactic unit =
+let pose (t:term) : Tac binder =
+    apply (`__cut);
+    flip ();
+    exact t;
+    let _ = trytac flip in // maybe we have less than 2 goals now
+    intro ()
+
+let intro_as (s:string) : Tac binder =
+    let b = intro () in
+    rename_to b s;
+    b
+
+let pose_as (s:string) (t:term) : Tac binder =
+    let b = pose t in
+    rename_to b s;
+    b
+
+let rec revert_all (bs:binders) : Tac unit =
     match bs with
-    | [] -> return ()
-    | _::tl -> revert;;
+    | [] -> ()
+    | _::tl -> revert ();
                revert_all tl
 
-let assumption : tactic unit =
-    e <-- cur_env;
-    let rec aux (bs : binders) =
-        match bs with
-        | [] -> fail "no assumption matches goal"
-        | b::bs ->
-            let t = pack (Tv_Var b) in
-            or_else (exact (return t)) (aux bs)
-    in
-    aux (binders_of_env e)
+// Cannot define this inside `assumption` due to #1091
+private
+let rec __assumption_aux (bs : binders) : Tac unit =
+    match bs with
+    | [] ->
+        fail "no assumption matches goal"
+    | b::bs ->
+        let t = pack (Tv_Var (bv_of_binder b)) in
+        or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
 
-let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
+let assumption () : Tac unit =
+    __assumption_aux (binders_of_env (cur_env ()))
+
+let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
     match term_as_formula t with
     | Implies lhs rhs ->
         let lhs = term_as_formula' lhs in
         begin match lhs with
-        | Comp (Eq _) _ _ -> return (Some (lhs, rhs))
-        | _ -> return None
+        | Comp (Eq _) _ _ -> Some (lhs, rhs)
+        | _ -> None
         end
-    | _ -> return None
+    | _ -> None
 
-let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
+let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
     match bs with
-    | [] -> return ()
+    | [] -> ()
     | x_t::bs ->
         begin match term_as_formula (type_of_binder x_t) with
         | Comp (Eq _) y _ ->
@@ -155,52 +161,46 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
             try_rewrite_equality x bs
         end
 
-let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
+let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
-    | [] ->
-        return ()
-    | x_t::bs ->
-        begin (match term_as_formula (type_of_binder x_t) with
+    | [] -> ()
+    | x_t::bs -> begin
+        begin match term_as_formula (type_of_binder x_t) with
         | Comp (Eq _) lhs _ ->
             begin match inspect lhs with
             | Tv_Var _ -> rewrite x_t
-            | _ -> idtac
+            | _ -> ()
             end
-        | _ -> idtac);;
+        | _ -> () end;
         rewrite_all_context_equalities bs
-        end
+    end
 
-let rewrite_eqs_from_context : tactic unit =
-    e <-- cur_env;
-    rewrite_all_context_equalities (binders_of_env e)
+let rewrite_eqs_from_context () : Tac unit =
+    rewrite_all_context_equalities (binders_of_env (cur_env ()))
 
-let rewrite_equality (x:tactic term) : tactic unit =
-    e <-- cur_env;
-    t <-- x;
-    try_rewrite_equality t (binders_of_env e)
+let rewrite_equality (t:term) : Tac unit =
+    try_rewrite_equality t (binders_of_env (cur_env ()))
 
-let unfold_point (t:term) : tactic unit =
-    e <-- cur_env;
-    g <-- cur_goal;
-    let f = term_as_formula g in
-    match f with
+let unfold_point (t:term) : Tac unit =
+    let g : term = cur_goal () in
+    match term_as_formula g with
     | Comp (Eq _) l r ->
         if term_eq l t
-        then (norm [delta];; trefl)
-        else trefl
+        then (norm [delta]; trefl ())
+        else trefl ()
     | _ ->
         fail "impossible"
 
-let unfold_def (t:term) : tactic unit =
-    pointwise (unfold_point t)
+let unfold_def (t:term) : Tac unit =
+    pointwise (fun () -> unfold_point t)
 
-let grewrite' (t1 t2 eq : term) : tactic unit =
-    g <-- cur_goal;
+let grewrite' (t1 t2 eq : term) : Tac unit =
+    let g = cur_goal () in
     match term_as_formula g with
     | Comp (Eq _) l _ ->
         if term_eq l t1
-        then exact (return eq)
-        else trefl
+        then exact eq
+        else trefl ()
     | _ ->
         fail "impossible"
 
@@ -212,26 +212,24 @@ let mk_sq_eq (t1 t2 : term) : term =
     let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
     mk_squash (mk_e_app eq [t1; t2])
 
-let grewrite (t1 t2 : term) : tactic unit =
-    e <-- tcut (mk_sq_eq t1 t2);
-    pointwise (grewrite' t1 t2 (pack (Tv_Var e)))
+let grewrite (t1 t2 : term) : Tac unit =
+    let e = tcut (mk_sq_eq t1 t2) in
+    pointwise (fun () -> grewrite' t1 t2 (pack (Tv_Var (bv_of_binder e))))
 
-let focus (f : tactic 'a) : tactic 'a =
-    res <-- divide 1 f idtac;
-    return (fst res)
+let focus (f : unit -> Tac 'a) : Tac 'a =
+    let res, _ = divide 1 f idtac in
+    res
 
-let rec iseq (ts : list (tactic unit)) : tactic unit =
+let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
-    | t::ts ->
-        divide 1 t (iseq ts);;
-        return ()
-    | [] -> return ()
+    | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
+    | []    -> ()
 
 private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
 private let __witness #a x #p _ = ()
 
-let witness (t : tactic term) : tactic unit =
-    apply_raw (quote __witness);;
+let witness (t : term) : Tac unit =
+    apply_raw (`__witness);
     exact t
 
 private val push1 : (#p:Type) -> (#q:Type) ->
@@ -244,54 +242,71 @@ private let push1 #p #q f u = ()
  * Some easier applying, which should prevent frustation
  * (or cause more when it doesn't do what you wanted to)
  *)
-val apply_squash_or_lem : d:nat -> term -> Tot (tactic unit) (decreases d)
+val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
     // This terminates because of the fuel, but we could just expand into Tac and diverge
     if d <= 0 then fail "mapply: out of fuel" else begin
-    g <-- cur_goal;
-    ty <-- tc t;
+    let g = cur_goal () in
+    let ty = tc t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
     | C_Lemma pre post ->
        begin
        (* What I would really like to do here is unify `mk_squash post` and the goal,
         * but it didn't work on a first try, so just doing this for now *)
-       r <-- trytac (apply_lemma (return t));
-       match r with
-       | Some _ -> return () // Success
+       match trytac (fun () -> apply_lemma t) with
+       | Some _ -> () // Success
        | None ->
-           post <-- norm_term [] post;
+           let post = norm_term [] post in
            (* Is the lemma an implication? We can try to intro *)
            match term_as_formula' post with
            | Implies p q ->
-               apply (quote push1);;
+               apply (`push1);
                apply_squash_or_lem (d-1) t
 
            | _ ->
                fail "mapply: can't apply (1)"
        end
-    | C_Total rt ->
+    | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
-       | Some _ -> apply (return t)
+       | Some _ -> apply t
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
-           apply (quote FStar.Squash.return_squash);;
-           apply (return t)
+           apply (`FStar.Squash.return_squash);
+           apply t
        end
     | _ -> fail "mapply: can't apply (2)"
     end
 
 (* `m` is for `magic` *)
-let mapply (t : tactic term) : tactic unit =
-    tt <-- t;
-    apply_squash_or_lem 10 tt
+let mapply (t : term) : Tac unit =
+    apply_squash_or_lem 10 t
 
 private
-let dump_admit a : tactic unit =
-  clear_top;; // gets rid of the unit binder
-  admit1
+let dump_admit () : Tac unit =
+  clear_top (); // gets rid of the unit binder
+  admit1 ()
 
 assume val admit_goal : #a:Type -> unit ->
-    Pure a (requires (by_tactic (dump_admit a) a))
+    Pure a (requires (by_tactic dump_admit a))
            (ensures (fun _ -> False))
+
+let change_with t1 t2 =
+    focus (fun () ->
+        grewrite t1 t2;
+        iseq [idtac; trivial]
+    )
+
+private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
+private let conv #x #y eq w = w
+
+let change t1 =
+    focus (fun () ->
+        let t = mk_app (`conv) [(t1, Q_Implicit)] in
+        apply t;
+        trivial ()
+    )
+
+let change_sq t1 =
+    change (mk_e_app (`squash) [t1])

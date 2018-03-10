@@ -62,7 +62,10 @@ val addns : string -> tac<unit>
 val set_options : string -> tac<unit>
 val launch_process : string -> string -> string -> tac<string>
 
+val fresh_bv_named : string -> typ -> tac<bv>
+
 val pointwise : direction -> tac<unit> -> tac<unit>
+val topdown_rewrite: (term -> tac<(bool * FStar.BigInt.t)>) -> tac<unit> -> tac<unit>
 val trefl : tac<unit>
 
 val dup : tac<unit>

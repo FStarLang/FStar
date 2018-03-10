@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f959aead1f5cda7120d5a8c0c306de21"
+      "1a928f5469584c8af2ce3f92b8abdefd"
     ],
     [
       "Eta_expand.uu___is_B",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "901ab668cddf125441484ae995e8271d"
+      "d95246b268ed592663394a8589633e7c"
     ],
     [
       "Eta_expand.dec",
@@ -25,13 +25,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_Eta_expand.A",
-        "constructor_distinct_Eta_expand.B", "disc_equation_Eta_expand.A",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eta_expand.A",
         "disc_equation_Eta_expand.B", "fuel_guarded_inversion_Eta_expand.t"
       ],
       0,
-      "98901b6db3364bcdbab9e6b8cc071f8b"
+      "6ef80d962b742c3f825727074c736d11"
     ],
     [
       "Eta_expand.choose",
@@ -42,11 +40,12 @@
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_Eta_expand.A",
         "constructor_distinct_Eta_expand.B", "disc_equation_Eta_expand.A",
-        "disc_equation_Eta_expand.B", "equality_tok_Eta_expand.A@tok",
-        "equation_Eta_expand.dec", "fuel_guarded_inversion_Eta_expand.t"
+        "disc_equation_Eta_expand.B", "equation_Eta_expand.dec",
+        "fuel_guarded_inversion_Eta_expand.t",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5dec5e82d0e30d1198871bb56edf15db"
+      "d84ff00d2c37f8efa970e9d1c56cb393"
     ],
     [
       "Eta_expand.uu___15",
@@ -60,7 +59,7 @@
         "token_correspondence_Eta_expand.fun_a"
       ],
       0,
-      "f03b4c35886a0c95aec5679f83236638"
+      "546e384e11f83db997b73d66d6bd0444"
     ]
   ]
 ]

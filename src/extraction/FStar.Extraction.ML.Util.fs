@@ -32,7 +32,7 @@ module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const
 module Range = FStar.Range
 module S = FStar.Syntax.Syntax
-
+module N = FStar.TypeChecker.Normalize
 let codegen_fsharp () = Options.codegen () = Some Options.FSharp
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
@@ -365,8 +365,10 @@ let rec uncurry_mlty_fun t =
    to FStar.Tactics.Native.register_tactic *)
 module RD = FStar.Reflection.Data
 
+exception NoTacticEmbedding of string
+
 let not_implemented_warning r t msg =
-    Errors.log_issue r (Errors.Warning_CallNotImplementedAsWarning, BU.format2 ". Tactic %s will not run natively because %s.\n" t msg)
+    Errors.log_issue r (Errors.Warning_CallNotImplementedAsWarning, BU.format2 "Tactic %s will not run natively because %s.\n" t msg)
 
 type emb_decl =
     | Embed
@@ -383,7 +385,6 @@ type variance =
   | Contravariant
   | Invariant
 
-module N = FStar.TypeChecker.Normalize
 let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
     let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] tcenv t in
     let w = with_ty MLTY_Top in
@@ -595,65 +596,3 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           aux (mk_embedding env b.sort::accum_embeddings) env bs
     in
     aux [] tvar_context bs
-
-//
-//(*
-//  Given:
-//      fv: a source top-level lident at type fv_t
-//      whose name as a string is ml_fv
-//
-//  builds the ML term:
-//      fun psc args ->
-//        mk_tactic_interpretation_N
-//                true //to insert a TAC?.reflect
-//                (from_tactic_N tac_lid)
-//                (unembed_b1 ... unembed_bN)
-//                (embed_t)
-//                (t:FStar.Syntax.Syntax.typ)
-//                args
-//
-// *)
-//let interpret_plugin_as_term_fun tcenv (fv:lident) (fv_t:typ) (ml_fv:mlexpr') =
-//    let w = with_ty MLTY_Top in
-//    let mk_lam nm e =
-//        MLE_Fun ([(nm, MLTY_Top)], w e)
-//    in
-//    try
-//        let bs, c = U.arrow_formals_comp fv_t in
-//        let arg_types = List.map (fun x -> (fst x).sort) bs in
-//        let arity = List.length bs in
-//        let result_typ = U.comp_result c in
-//        if U.is_pure_comp c
-//        then begin
-//            let embed_fun_N = with_ty MLTY_Top <| mk_basic_embedding Embed ("arrow_" ^ string_of_int arity) in
-//            let un_embeddings = List.map (fun x -> w (must_mk_embedding_path tcenv Unembed x)) arg_types in
-//            let embed_res = must_mk_embedding_path tcenv Embed result_typ in
-//            let args = un_embeddings @ [w embed_res; lid_to_top_name fv] in
-//            Some (mk_lam "_" <| MLE_App(embed_fun_N, args),
-//                  arity,
-//                  true)
-//        end
-//        else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
-//                                 PC.tac_effect_lid
-//        then begin
-//            let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
-//            let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name fv]) in
-//            let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
-//            let psc = str_to_name "psc" in
-//            let args =
-//                [MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
-//                 tac_fun] @
-//                (List.map (mk_tac_embedding_path tcenv Unembed) arg_types) @
-//                [mk_tac_embedding_path tcenv Embed result_typ;
-//                 mk_tac_param_type tcenv result_typ;
-//                 tac_lid_app;
-//                 psc;
-//                 str_to_name "args"] in
-//            Some (mk_lam "psc" <| (mk_lam "args" <| MLE_App (h, List.map w args)),
-//                  arity,
-//                  false)
-//          end
-//          else raise_err (Fatal_CallNotImplemented, ("Plugins not defined for type " ^ Print.term_to_string fv_t))
-//    with Errors.Error(Fatal_CallNotImplemented, msg, _)->
-//        not_implemented_warning fv_t.pos (string_of_lid fv) msg;
-//        None

@@ -52,7 +52,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
        * guard_t        (* constraints on implicit variables *)
  = match s.sigel with
    | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data) -> //the only valid qual is Private
-         assert (uvs = []);
+         //assert (uvs = []); AR: not necessarily true in two phase
  (*open*)let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
          let k = N.unfold_whnf env k in
@@ -69,8 +69,8 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          let fv_tc = S.lid_as_fv tc Delta_constant None in
-         Env.push_let_binding env (Inr fv_tc) ([], t_tc),
-         { s with sigel = Sig_inductive_typ(tc, [], tps, k, mutuals, data) },
+         Env.push_let_binding env (Inr fv_tc) (uvs, t_tc),
+         { s with sigel = Sig_inductive_typ(tc, uvs, tps, k, mutuals, data) },
          u,
          guard
 
@@ -130,6 +130,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
          end;
          let head, _ = U.head_and_args result in
          let _ = match (SS.compress head).n with
+            | Tm_uinst ( { n = Tm_fvar fv }, _)  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
             | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
@@ -786,6 +787,39 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
   then raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) (Env.get_range env);
   let env0 = env in
+
+  //AR: adding this code for the second phase
+  //    univs need not be empty, so open all along
+  let univs =
+    if List.length tys = 0 then []
+    else
+      match (List.hd tys).sigel with
+      | Sig_inductive_typ (_, uvs, _, _, _, _) -> uvs
+      | _ -> failwith "Impossible, can't happen!"
+  in
+
+  let tys, datas =
+    if List.length univs = 0 then tys, datas
+    else
+      let subst, univs = SS.univ_var_opening univs in
+      let tys = List.map (fun se ->
+        let sigel = match se.sigel with
+          | Sig_inductive_typ (lid, _, bs, t, l1, l2) ->
+            Sig_inductive_typ (lid, univs, SS.subst_binders subst bs, SS.subst (SS.shift_subst (List.length bs) subst) t, l1, l2)
+          | _ -> failwith "Impossible, can't happen"
+        in
+        { se with sigel = sigel }) tys
+      in
+      let datas = List.map (fun se ->
+        let sigel = match se.sigel with
+          | Sig_datacon (lid, _, t, lid_t, x, l) ->
+            Sig_datacon (lid, univs, SS.subst subst t, lid_t, x, l)
+          | _ -> failwith "Impossible, can't happen"
+        in
+        { se with sigel = sigel }) datas
+      in
+      tys, datas
+  in
 
   (* Check each tycon *)
   let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  ->

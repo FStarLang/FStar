@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "efad49d7d533a66d58acd059c027b4d3"
+      "f26be085c59eb939e302fb65aa97904a"
     ],
     [
       "Bug405.g",
@@ -18,12 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Bug405_Tm_refine_09f9639b0c7f89229aa439805b8ba40b",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "d5d8a876cfd69c5c9ebf5ae1dd02a05a"
+      "efeda8260de6cc06168228461b6dd784"
     ],
     [
       "Bug405.v",
@@ -32,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "01d27c93cf03a05ca0ed1ffc2fec097c"
+      "f1b404fc789c2edc1745efb93359d4c2"
     ]
   ]
 ]

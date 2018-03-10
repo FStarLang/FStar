@@ -27,6 +27,7 @@ open FStar.Syntax.Util
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
+
 module U = FStar.Util
 module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
@@ -219,6 +220,7 @@ let quals_to_string' quals =
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
+
 let paren s = "(" ^ s ^ ")"
 
 (* This function prints the type it gets as argument verbatim.
@@ -248,6 +250,7 @@ let rec tag_of_term (t:term) = match t.n with
     end
   | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
+  | Tm_lazy _ -> "Tm_lazy"
 
 and term_to_string x =
   if not (Options.ugly()) then
@@ -261,6 +264,9 @@ and term_to_string x =
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
 
+      // TODO: add an option to mark where this happens
+      | Tm_lazy i -> term_to_string (must !lazy_chooser i.kind i) // can't call into Syntax.Util here..
+
       | Tm_meta(t, Meta_pattern ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
@@ -268,8 +274,6 @@ and term_to_string x =
       | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
 
       | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
-
-      | Tm_meta(t, Meta_alien(_, s, _)) -> U.format1 "(Meta_alien \"%s\")" s
 
       | Tm_meta(t, Meta_labeled(l,r,b)) ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
@@ -279,6 +283,9 @@ and term_to_string x =
 
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
+
+      | Tm_meta(t, Meta_quoted(s, qi)) ->
+        U.format2 "(Meta_quoted \"%s\" {qopen=%s})" (term_to_string s) (string_of_bool qi.qopen)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
@@ -321,12 +328,13 @@ and term_to_string x =
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
         else term_to_string t
-      | _ -> tag_of_term x
+
+      | Tm_unknown -> "_"
   end
 
 and pat_to_string x =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_pat x in
+    let e = Resugar.resugar_pat x (new_bv_set ()) in
     let d = ToDocument.pat_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else match x.v with
@@ -422,6 +430,11 @@ and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
 
+and comp_to_string' env c =
+  let e = Resugar.resugar_comp' env c in
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string (float_of_string "1.0") 100 d
+
 and comp_to_string c =
   if not (Options.ugly()) then
     let e = Resugar.resugar_comp c in
@@ -506,18 +519,24 @@ and metadata_to_string = function
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
 
-    | Meta_alien (_, s, t) ->
-        U.format2 "{Meta_alien (%s, %s)}" s (term_to_string t)
+    | Meta_quoted (qt, qi) ->
+        "`(" ^ term_to_string qt ^ ")"
 
-let binder_to_json b =
+let term_to_string' env x =
+  if Options.ugly ()
+  then term_to_string x
+  else let e = Resugar.resugar_term' env x in
+       let d = ToDocument.term_to_document e in
+       Pp.pretty_string (float_of_string "1.0") 100 d
 
+let binder_to_json env b =
     let (a, imp) = b in
     let n = if is_null_binder b then JsonNull else JsonStr (imp_to_string (nm_to_string a) imp) in
-    let t = JsonStr (term_to_string a.sort) in
+    let t = JsonStr (term_to_string' env a.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
-let binders_to_json bs =
-    JsonList (List.map binder_to_json bs)
+let binders_to_json env bs =
+    JsonList (List.map (binder_to_json env) bs)
 
 
 //let subst_to_string subst =
@@ -618,18 +637,18 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
       | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
       | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
-        U.format4 "%stype %s %s : %s"
-                 (quals_to_string' x.sigquals)
-                 lid.str
-                 (binders_to_string " " tps)
-                 (term_to_string k)
+        let quals_str = quals_to_string' x.sigquals in
+        let binders_str = binders_to_string " " tps in
+        let term_str = term_to_string k in
+        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str lid.str (univ_names_to_string univs) binders_str term_str
+        else U.format4 "%stype %s %s : %s" quals_str lid.str binders_str term_str
       | Sig_datacon(lid, univs, t, _, _, _) ->
         if (Options.print_universes())
         then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
              U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
         else U.format2 "datacon %s : %s" lid.str (term_to_string t)
       | Sig_declare_typ(lid, univs, t) ->
-        let univs, t = Subst.open_univ_vars univs t in
+        //let univs, t = Subst.open_univ_vars univs t in
         U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
             (if (Options.print_universes())
              then U.format1 "<%s>" (univ_names_to_string univs)
@@ -663,6 +682,8 @@ let rec sigelt_to_string (x: sigelt) =
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+      | Sig_splice t ->
+        U.format1 "splice (%s)" (term_to_string t)
       in
       match x.sigattrs with
       | [] -> basic
@@ -729,3 +750,5 @@ let set_to_string f s =
             U.string_builder_append strb "}" ;
             (* U.string_builder_append strb (list_to_string f (raw_list s)) ; *)
             U.string_of_string_builder strb
+
+let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)

@@ -148,5 +148,6 @@ let (ml_path_of_lid : lident -> Prims.string) =
       FStar_List.append uu____372 [text_of_id lid.ident]  in
     FStar_All.pipe_left (FStar_String.concat "_") uu____369
   
+let (string_of_ident : ident -> Prims.string) = fun id1  -> id1.idText 
 let (string_of_lid : lident -> Prims.string) =
-  fun lid  -> let uu____380 = path_of_lid lid  in text_of_path uu____380 
+  fun lid  -> let uu____383 = path_of_lid lid  in text_of_path uu____383 

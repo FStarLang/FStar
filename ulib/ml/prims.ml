@@ -1,19 +1,19 @@
 (** The [int] type and the various default operators. *)
-type int      = Big_int_Z.big_int
+type int      = Z.t
 type nonzero  = int
-let ( + )     = Big_int_Z.add_big_int
-let ( - )     = Big_int_Z.sub_big_int
-let ( * )     = Big_int_Z.mult_big_int
-let ( / )     = Big_int_Z.div_big_int
-let ( <= )    = Big_int_Z.le_big_int
-let ( >= )    = Big_int_Z.ge_big_int
-let ( < )     = Big_int_Z.lt_big_int
-let ( > )     = Big_int_Z.gt_big_int
-let ( mod )   = Big_int_Z.mod_big_int
-let ( ~- )    = Big_int_Z.minus_big_int
-let abs       = Big_int_Z.abs_big_int
-let parse_int = Big_int_Z.big_int_of_string
-let to_string = Big_int_Z.string_of_big_int
+let ( + )     = Z.add
+let ( - )     = Z.sub
+let ( * )     = Z.mul
+let ( / )     = Z.ediv
+let ( <= )    = Z.leq
+let ( >= )    = Z.geq
+let ( < )     = Z.lt
+let ( > )     = Z.gt
+let ( mod )   = Z.erem
+let ( ~- )    = Z.neg
+let abs       = Z.abs
+let parse_int = Z.of_string
+let to_string = Z.to_string
 
 (** Some misc. types defined in Prims *)
 type nonrec unit = unit

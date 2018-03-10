@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "6bdf3c0aa729fc69b6d3aec6147415b7"
+      "70d3ac8eb34a83cb51065d31e8e10742"
     ],
     [
       "Ex12a1.Cap.issue",
@@ -40,7 +40,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "e3b71d6d649f2e0cec2a18d2335cd23a"
+      "930087de425b32033e657c03c7656dcd"
     ],
     [
       "Ex12a1.Cap.redeem",
@@ -54,7 +54,16 @@
         "string_inversion"
       ],
       0,
-      "eb390fb91c3aaab65e28b60f0a9202a5"
+      "a9ab450291058d80c260576c4c63c29f"
+    ],
+    [
+      "Ex12a1.Cap.capRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "16015ab52f5c5d1d25d84813e66a6347"
     ]
   ]
 ]

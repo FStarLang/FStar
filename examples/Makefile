@@ -19,7 +19,6 @@ dm4free \
 incl \
 struct \
 micro-benchmarks \
-bytes \
 tactics \
 pattern-matching \
 kv_parsing \
@@ -28,7 +27,8 @@ vale \
 seplogic \
 hello \
 native_tactics \
-extraction
+extraction \
+demos
 
 # low-level \  ... NS: removing from CI for this branch
 

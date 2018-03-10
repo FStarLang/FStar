@@ -11,7 +11,6 @@ module BU = FStar_Util
    tactic effect.  We need them here to break a circular dependency between the
    compiler and ulib (cf. tactics meeting of 2017-08-03). *)
 type 'a __tac = FStar_Tactics_Types.proofstate -> 'a __result
-type 'a tactic = Prims.unit -> 'a __tac
 
 let r = dummyRange
 
@@ -51,25 +50,20 @@ let register_tactic (s: string) (arity: Prims.int) (t: itac)=
 
 let interpret_tactic (ps: proofstate) (t: proofstate -> 'a __result) = t ps
 
-let from_tactic_0 (t: 'b tactic): ('b tac) =
+let from_tactic_0 (t: 'b __tac): ('b tac) =
     (fun (ps: proofstate) ->
-        BU.print_string "In compiled code\n";
-        let m = t () in
-        interpret_tactic ps m) |> mk_tac
+        BU.print_string "In compiled code (0)\n";
+        interpret_tactic ps t) |> mk_tac
 
-let from_tactic_1 (t: 'a -> 'b tactic): ('a -> 'b tac) =
+let from_tactic_1 (t: 'a -> 'b __tac): ('a -> 'b tac) =
     fun (x: 'a) ->
         (fun (ps: proofstate) ->
-            BU.print_string "In compiled code\n";
-            let m = t x in
-            let (m2: proofstate -> 'b __result) = m () in
-            interpret_tactic ps m2) |> mk_tac
+            BU.print_string "In compiled code (1)\n";
+            interpret_tactic ps (t x)) |> mk_tac
 
-let from_tactic_2 (t: 'a -> 'b -> 'c tactic): ('a -> 'b -> 'c tac) =
+let from_tactic_2 (t: 'a -> 'b -> 'c __tac): ('a -> 'b -> 'c tac) =
     fun (x: 'a) ->
         fun (y: 'b) ->
             (fun (ps: proofstate) ->
-                BU.print_string "In compiled code\n";
-                let m = t x y in
-                let (m2: proofstate -> 'c __result) = m () in
-                interpret_tactic ps m2) |> mk_tac
+                BU.print_string "In compiled code (2)\n";
+                interpret_tactic ps (t x y)) |> mk_tac

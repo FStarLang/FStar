@@ -28,7 +28,4 @@ old:
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps
 
-%.uver: %.fst
-	$(FSTAR) $^
-
 include $(FSTAR_HOME)/ulib/ml/Makefile.include

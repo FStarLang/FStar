@@ -288,3 +288,6 @@ let inline_let : unit = ()
 
 irreducible
 let plugin : unit = ()
+
+let dm4f_bind_range : unit = ()
+

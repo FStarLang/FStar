@@ -11,7 +11,7 @@
         "refinement_interpretation_Bug590_Tm_refine_de9aeb070296eed20d879692d0254af0"
       ],
       0,
-      "c043f6fb05be6caff3fac54a67beb7ba"
+      "b27490e5ddc5ae34e134f00e80866b38"
     ],
     [
       "Bug590.coerce",
@@ -26,12 +26,11 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Bug590_Tm_refine_89abfbf1dd7254ec2f6bfc654aa43591",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "580230aa68e0eeb6ab9002cb0886cf61"
+      "c86f2443692bc2cbfad9101421620fcb"
     ],
     [
       "Bug590.blah2",
@@ -40,14 +39,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "constructor_distinct_Prims.Cons",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_a",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "630fd78d06dbaca664a466ed00f8c781"
+      "f2a92d770b129c1c0610aa415deaf069"
     ],
     [
       "Bug590.flatten_lemma",
@@ -58,8 +55,8 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug590.coerce.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.flatten.fuel_instrumented",
-        "@query", "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "disc_equation_Prims.Cons", "fuel_guarded_inversion_Prims.list",
+        "@query", "disc_equation_Prims.Cons",
+        "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Bug590_Tm_refine_a18ab84bb2945892b0a6776b4135d511",
         "refinement_interpretation_Bug590_Tm_refine_e12869c17cd8d9b449828a1133d89973",
@@ -68,7 +65,7 @@
         "typing_Bug590.coerce", "typing_FStar.List.Tot.Base.flatten"
       ],
       0,
-      "55b74b1addcd28c990ade8af6d653d0e"
+      "f7e75e554ca17a241498f720fde4c12b"
     ]
   ]
 ]

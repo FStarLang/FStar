@@ -211,6 +211,7 @@ let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
@@ -240,6 +241,7 @@ let steps_unfoldattr = pconst "delta_attr"
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
+let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -333,12 +335,14 @@ let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
-let tac_effect_lid = fstar_tactics_lid' ["Effect"; "TAC"]
+
+let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
+let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant
+
 let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
-let quote_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
-let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
-let fstar_reflection_types_binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange
+let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange
+let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange

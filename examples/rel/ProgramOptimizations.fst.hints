@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b07938572393a31ddf3f479eb07493af"
+      "ef6fc60436381bfb7506b58245432a9d"
     ],
     [
       "ProgramOptimizations.uu___is_Sub",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "273c0d9e7bdbf997e900dbd84af733c6"
+      "5d272d2de93d0e18ee2d0c36ab4c1265"
     ],
     [
       "ProgramOptimizations.i_exp",
@@ -26,13 +26,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "assumption_ProgramOptimizations.i_op_haseq",
+        "assumption_ProgramOptimizations.i_op__uu___haseq",
         "equation_Prims.eqtype",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4b41e1f20db2bbc3d0e1204d0ec8b8b3"
+      "72727cc8309209e27683c4c6e3b11eac"
     ],
     [
       "ProgramOptimizations.uu___is_Const",
@@ -41,7 +41,7 @@
       1,
       [ "@query" ],
       0,
-      "4829ec6372a4b930c24159cf2aa6261f"
+      "8d0eb2afd9551e77dc8ab17ff568c8ab"
     ],
     [
       "ProgramOptimizations.__proj__Const__item___0",
@@ -55,7 +55,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_2fcef4c7d94b8a858b8533b4392720e2"
       ],
       0,
-      "8787c4cb2b609242c23c63b9a2c2016c"
+      "9242e9e4724ac158ec57f347bc74031d"
     ],
     [
       "ProgramOptimizations.uu___is_Var",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "edeb4af3621377c2695b6152a358e8df"
+      "bdbbeec94ca87c32957988d804e41a82"
     ],
     [
       "ProgramOptimizations.__proj__Var__item___0",
@@ -78,7 +78,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_070fdf407f5c8dff9a7cfa1b6bdb70b2"
       ],
       0,
-      "f758572e647d40dba59ad6b33a8f975f"
+      "f89596c4bcc69f78c5849f4f653d7b73"
     ],
     [
       "ProgramOptimizations.uu___is_IOp",
@@ -87,7 +87,7 @@
       1,
       [ "@query" ],
       0,
-      "3a114517460c51dab2a268b2e98c0db5"
+      "2592cb8aa1addea7f30172647abb9787"
     ],
     [
       "ProgramOptimizations.__proj__IOp__item___0",
@@ -101,7 +101,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_60265d5d95f52c83223c5542d14d69ad"
       ],
       0,
-      "1e9af81e70fda9b0c8f065e27432855c"
+      "a940b3c4761c0786d9f462aff573fa93"
     ],
     [
       "ProgramOptimizations.__proj__IOp__item___1",
@@ -115,7 +115,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_60265d5d95f52c83223c5542d14d69ad"
       ],
       0,
-      "1af1c1d7dfa39f78bd2115dfbdd5ffda"
+      "6041bfdf6be3cc650d286f6f0a9e6539"
     ],
     [
       "ProgramOptimizations.__proj__IOp__item___2",
@@ -129,7 +129,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_60265d5d95f52c83223c5542d14d69ad"
       ],
       0,
-      "4c937535c35649ef3ad54b20aa09d35e"
+      "9eb2bf920eb87488ad07edd25dfea09d"
     ],
     [
       "ProgramOptimizations.uu___is_UMinus",
@@ -138,7 +138,7 @@
       1,
       [ "@query" ],
       0,
-      "f81322a3146a8e4f52a28198af4852c0"
+      "73c37740556aee1ea676a904d7e562da"
     ],
     [
       "ProgramOptimizations.__proj__UMinus__item___0",
@@ -152,7 +152,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_442de479845adbb7045f5e74cb6e91c7"
       ],
       0,
-      "e56bb350989c0557f356647d9adbc10e"
+      "a70fb6e68ff196f350ba38adcb35fcb0"
     ],
     [
       "ProgramOptimizations.uu___is_Lt",
@@ -161,7 +161,7 @@
       1,
       [ "@query" ],
       0,
-      "1ddd88e4aa4e1dff29070abb84978b6c"
+      "72ebb93b009c8cb602cb80a572e6d06a"
     ],
     [
       "ProgramOptimizations.uu___is_Gt",
@@ -170,7 +170,7 @@
       1,
       [ "@query" ],
       0,
-      "6d165b31dbd168a3e7ba9abe1ccab942"
+      "9e1e65c11d3cf0b1d0c2e5d5c8e031e1"
     ],
     [
       "ProgramOptimizations.uu___is_Eq",
@@ -179,7 +179,7 @@
       1,
       [ "@query" ],
       0,
-      "ac7e7f7980f95ce9da025d988042b16a"
+      "ac3da16af7457b179c82b825977f3491"
     ],
     [
       "ProgramOptimizations.uu___is_And",
@@ -188,7 +188,7 @@
       1,
       [ "@query" ],
       0,
-      "14e726a0ddd8c3177a3cf6cbd5030360"
+      "ef4bdc36a508c13e7934fe97639c6950"
     ],
     [
       "ProgramOptimizations.uu___is_Or",
@@ -197,7 +197,7 @@
       1,
       [ "@query" ],
       0,
-      "ca3b8715d25643823f898462aa410147"
+      "55eb0daa4eef9277a4e6def745f98523"
     ],
     [
       "ProgramOptimizations.b_exp",
@@ -205,12 +205,12 @@
       2,
       1,
       [
-        "@query", "assumption_ProgramOptimizations.b_op_haseq",
-        "assumption_ProgramOptimizations.i_exp_haseq",
-        "assumption_ProgramOptimizations.r_op_haseq"
+        "@query", "assumption_ProgramOptimizations.b_op__uu___haseq",
+        "assumption_ProgramOptimizations.i_exp__uu___haseq",
+        "assumption_ProgramOptimizations.r_op__uu___haseq"
       ],
       0,
-      "5a690a1a8012d0bde7fdafe82ecb68f4"
+      "e91135d89969b26ea9226c4aade46e6e"
     ],
     [
       "ProgramOptimizations.uu___is_CTrue",
@@ -219,7 +219,7 @@
       1,
       [ "@query" ],
       0,
-      "5b164bc9ea44c16c4b19ebb640a2e5e7"
+      "68dbbfc0d6ef10221a35838af129a373"
     ],
     [
       "ProgramOptimizations.uu___is_CFalse",
@@ -228,7 +228,7 @@
       1,
       [ "@query" ],
       0,
-      "cdbdbd829eecafabff5c6a10e8703a5d"
+      "605d4a97ea91ee59cf31755025500faa"
     ],
     [
       "ProgramOptimizations.uu___is_ROp",
@@ -237,7 +237,7 @@
       1,
       [ "@query" ],
       0,
-      "0c4c550bab85af4087e81fd6af2a3d1e"
+      "0a472ddc34da8c3af0eb3e13794d882a"
     ],
     [
       "ProgramOptimizations.__proj__ROp__item___0",
@@ -251,7 +251,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4a5ef12b44ef9a7535345360695fbca3"
       ],
       0,
-      "b5a7adf8b5ea30a060020467d434f021"
+      "3cfb8d6c964a8be45060f04c48b37f61"
     ],
     [
       "ProgramOptimizations.__proj__ROp__item___1",
@@ -265,7 +265,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4a5ef12b44ef9a7535345360695fbca3"
       ],
       0,
-      "66479c107d47827c25546723c48bd18b"
+      "96c315b05b288201aab5188fa786b283"
     ],
     [
       "ProgramOptimizations.__proj__ROp__item___2",
@@ -279,7 +279,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4a5ef12b44ef9a7535345360695fbca3"
       ],
       0,
-      "45a5040456da9d5afefb9c768e393953"
+      "940ad3e067f0b9fc9c1e244651513839"
     ],
     [
       "ProgramOptimizations.uu___is_BOp",
@@ -288,7 +288,7 @@
       1,
       [ "@query" ],
       0,
-      "9e8d291d42a9501319be02d7790191db"
+      "952f46ee034353b72e2242fd150622da"
     ],
     [
       "ProgramOptimizations.__proj__BOp__item___0",
@@ -302,7 +302,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_9a6ad1dc93a230235fe0787ef9e71d3c"
       ],
       0,
-      "216ed3f73bd97af3b652b04f830ad93f"
+      "fb20a6c675408b5694c60bd10cab2636"
     ],
     [
       "ProgramOptimizations.__proj__BOp__item___1",
@@ -316,7 +316,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_9a6ad1dc93a230235fe0787ef9e71d3c"
       ],
       0,
-      "b8880af0560ceba698414f17950ef4ab"
+      "e63fa07c8e1157a7ccfc71c3bf71924f"
     ],
     [
       "ProgramOptimizations.__proj__BOp__item___2",
@@ -330,7 +330,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_9a6ad1dc93a230235fe0787ef9e71d3c"
       ],
       0,
-      "8eccf9402e9210abfb7ad890f4f8f7bc"
+      "02d50602ba5d5babd9b4c1da6b2219fd"
     ],
     [
       "ProgramOptimizations.uu___is_Not",
@@ -339,7 +339,7 @@
       1,
       [ "@query" ],
       0,
-      "736f275d9b669bebea9ab6125ff381f1"
+      "ffc1875d48f33a685ec935c1ca99dd91"
     ],
     [
       "ProgramOptimizations.__proj__Not__item___0",
@@ -353,7 +353,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_12b6cb78b0bb34a6f9e6cec940ff4c4b"
       ],
       0,
-      "519d1a94771355e8d2dec2e0360b71f0"
+      "d360fb1ee1115a9cad07c52972bbbb27"
     ],
     [
       "ProgramOptimizations.com",
@@ -362,14 +362,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_ProgramOptimizations.b_exp_haseq",
-        "assumption_ProgramOptimizations.i_exp_haseq",
+        "assumption_ProgramOptimizations.b_exp__uu___haseq",
+        "assumption_ProgramOptimizations.i_exp__uu___haseq",
         "equation_Prims.eqtype", "equation_ProgramOptimizations.var",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7c1e611c1c9741cf6c6ac03bc5dfc025"
+      "ea128f2a48627bc13834d2f1950c94a7"
     ],
     [
       "ProgramOptimizations.uu___is_Skip",
@@ -378,7 +378,7 @@
       1,
       [ "@query" ],
       0,
-      "426ceea9a15a863c97f8635d74da9533"
+      "608966314019249883ebda2420ee0629"
     ],
     [
       "ProgramOptimizations.uu___is_Assign",
@@ -387,7 +387,7 @@
       1,
       [ "@query" ],
       0,
-      "b53af0df594c1e6a945da568dc2dadde"
+      "3cf8b6640a9251a9a02ccaea704a92f6"
     ],
     [
       "ProgramOptimizations.__proj__Assign__item___0",
@@ -401,7 +401,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_c0d40d9e73009748e017cb692fa26ea2"
       ],
       0,
-      "d1f7d2b2981d5f372a693c78897ce4e8"
+      "7c943bbb93646ce8a473b0431ca4b1a6"
     ],
     [
       "ProgramOptimizations.__proj__Assign__item___1",
@@ -415,7 +415,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_c0d40d9e73009748e017cb692fa26ea2"
       ],
       0,
-      "5b59a54f593f7890e9e2a31aa6a74581"
+      "19529dbb28df4c1b674f1df3bc088efa"
     ],
     [
       "ProgramOptimizations.uu___is_Seq",
@@ -424,7 +424,7 @@
       1,
       [ "@query" ],
       0,
-      "5c30d3407a94d6dc90f8eac6f47aa651"
+      "c28bff22ec2a538a5458368278ba1589"
     ],
     [
       "ProgramOptimizations.__proj__Seq__item___0",
@@ -438,7 +438,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4b4fcb1be48e91dd2f57609170464f5b"
       ],
       0,
-      "498130c6f43f039f968a5b52e9e2745c"
+      "7fae1d056a181f561a168c40d2514224"
     ],
     [
       "ProgramOptimizations.__proj__Seq__item___1",
@@ -452,7 +452,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4b4fcb1be48e91dd2f57609170464f5b"
       ],
       0,
-      "2714d9235d6cb6b360e1793b2ac7fdf6"
+      "b67295b061af20baff2fb79543a0925f"
     ],
     [
       "ProgramOptimizations.uu___is_If",
@@ -461,7 +461,7 @@
       1,
       [ "@query" ],
       0,
-      "8edfa31a0e95232fcb27beafefef8731"
+      "ba2395e49c6d6fd3894bb2580e072193"
     ],
     [
       "ProgramOptimizations.__proj__If__item___0",
@@ -475,7 +475,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4daabbe5c401b179ea3d747bf659cdaa"
       ],
       0,
-      "5cec3d632b9164c35e862557400f9455"
+      "92ff344e46414b6fe9682e9bef8967ce"
     ],
     [
       "ProgramOptimizations.__proj__If__item___1",
@@ -489,7 +489,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4daabbe5c401b179ea3d747bf659cdaa"
       ],
       0,
-      "1d806c3f1d2929960aff90ee9823ba3d"
+      "c2c9e7b109f868d15bbf203e69a055e7"
     ],
     [
       "ProgramOptimizations.__proj__If__item___2",
@@ -503,7 +503,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_4daabbe5c401b179ea3d747bf659cdaa"
       ],
       0,
-      "863f1297cf044c216664e01c9e355b68"
+      "3c76beee579e8918b8a2c216482e08cc"
     ],
     [
       "ProgramOptimizations.i_exp_denotation",
@@ -536,7 +536,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "44df4fc26dab19d502a57ee833b97ac0"
+      "f233f4b0455cc71d8901bd9c35cdfab6"
     ],
     [
       "ProgramOptimizations.b_exp_denotation",
@@ -549,7 +549,6 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Prims.HasEq_int",
         "binder_x_bd01081bbed424400b976af90f0b241d_0", "bool_typing",
-        "constructor_distinct_ProgramOptimizations.CFalse",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "disc_equation_ProgramOptimizations.And",
@@ -562,7 +561,6 @@
         "disc_equation_ProgramOptimizations.Not",
         "disc_equation_ProgramOptimizations.Or",
         "disc_equation_ProgramOptimizations.ROp",
-        "equality_tok_ProgramOptimizations.CFalse@tok",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
@@ -572,14 +570,12 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_Prims.bool",
-        "projection_inverse_ProgramOptimizations.Not__0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_ProgramOptimizations.BOp",
-        "subterm_ordering_ProgramOptimizations.Not",
-        "typing_ProgramOptimizations.uu___is_CTrue"
+        "subterm_ordering_ProgramOptimizations.Not"
       ],
       0,
-      "ba41baa72689ee76f1152a1e38ce4d3d"
+      "34eb150ab1279ec110d2b5270252cb79"
     ],
     [
       "ProgramOptimizations.com_denotation",
@@ -591,8 +587,6 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_ab9d74bcd696e9ebfbef75cd7baa5766_0",
-        "constructor_distinct_ProgramOptimizations.Seq",
-        "constructor_distinct_ProgramOptimizations.Skip",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "disc_equation_ProgramOptimizations.Assign",
@@ -606,10 +600,6 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_Prims.unit", "int_inversion", "int_typing",
-        "projection_inverse_ProgramOptimizations.If__1",
-        "projection_inverse_ProgramOptimizations.If__2",
-        "projection_inverse_ProgramOptimizations.Seq__0",
-        "projection_inverse_ProgramOptimizations.Seq__1",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_ProgramOptimizations.If",
         "subterm_ordering_ProgramOptimizations.Seq",
@@ -617,7 +607,7 @@
         "unit_typing"
       ],
       0,
-      "465121c5c4af6f126fb14f80822db64f"
+      "f553667d679f02923868d6f6f0861771"
     ],
     [
       "ProgramOptimizations.g_exp",
@@ -626,13 +616,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "assumption_ProgramOptimizations.i_op_haseq",
+        "assumption_ProgramOptimizations.i_op__uu___haseq",
         "equation_Prims.eqtype",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0d874361f65731d1d073f9fa8c044fae"
+      "342be910813c7fd1a9abe883fe0bd6b5"
     ],
     [
       "ProgramOptimizations.uu___is_GConst",
@@ -641,7 +631,7 @@
       1,
       [ "@query" ],
       0,
-      "ace01bca7603a94a98ace79945af3d2b"
+      "bab6be999a22ddd641b7792d46b98779"
     ],
     [
       "ProgramOptimizations.__proj__GConst__item___0",
@@ -655,7 +645,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_763b2f3802e5c78ed32f1a103955a718"
       ],
       0,
-      "b316602c0a1afcaaca937995ada1f74e"
+      "d5cd14b3f630ca2568f374e42d956618"
     ],
     [
       "ProgramOptimizations.uu___is_Left",
@@ -664,7 +654,7 @@
       1,
       [ "@query" ],
       0,
-      "90a667f1a07b6c3102faafa327dd4a69"
+      "0c4fb10a7470238f892937de544d321d"
     ],
     [
       "ProgramOptimizations.__proj__Left__item___0",
@@ -678,7 +668,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_f8c0148749c4b3167a4d9b51186c1c41"
       ],
       0,
-      "187c06a30d0c800f19d9987da1d59fba"
+      "c2fcd389078016004877179b99d14cb3"
     ],
     [
       "ProgramOptimizations.uu___is_Right",
@@ -687,7 +677,7 @@
       1,
       [ "@query" ],
       0,
-      "6d7053bd2ab87e0b69e329324197f221"
+      "e30bbed1632153392077b2c60ec167bd"
     ],
     [
       "ProgramOptimizations.__proj__Right__item___0",
@@ -701,7 +691,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_620381ea672ccfd3b418034bc8698907"
       ],
       0,
-      "5bc8891ae940f0b2ec59f4833f9ce032"
+      "5cf4cb20cc2a0c1e860b20b35935d95e"
     ],
     [
       "ProgramOptimizations.uu___is_GIOp",
@@ -710,7 +700,7 @@
       1,
       [ "@query" ],
       0,
-      "4bcdadd73b9beae81db1361ff2c9cf16"
+      "c7d8af1cd9baa6145ddf5479f63b1c79"
     ],
     [
       "ProgramOptimizations.__proj__GIOp__item___0",
@@ -724,7 +714,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_e8390095c46ad4b4504e93fcb97945ad"
       ],
       0,
-      "540574169c67dbf7b98659e61241b380"
+      "b6445ad6730e25fbae83f62c8922e667"
     ],
     [
       "ProgramOptimizations.__proj__GIOp__item___1",
@@ -738,7 +728,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_e8390095c46ad4b4504e93fcb97945ad"
       ],
       0,
-      "0ad89e9c042900f533c0d24898f9f5f2"
+      "4de3ef348e729b879ab93e929499989e"
     ],
     [
       "ProgramOptimizations.__proj__GIOp__item___2",
@@ -752,7 +742,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_e8390095c46ad4b4504e93fcb97945ad"
       ],
       0,
-      "858b8803a3c6a1606ea92539a909df44"
+      "7b83ca7f4581a64b7b0f222c24d2323d"
     ],
     [
       "ProgramOptimizations.rel_exp",
@@ -760,12 +750,12 @@
       2,
       1,
       [
-        "@query", "assumption_ProgramOptimizations.b_op_haseq",
-        "assumption_ProgramOptimizations.g_exp_haseq",
-        "assumption_ProgramOptimizations.r_op_haseq"
+        "@query", "assumption_ProgramOptimizations.b_op__uu___haseq",
+        "assumption_ProgramOptimizations.g_exp__uu___haseq",
+        "assumption_ProgramOptimizations.r_op__uu___haseq"
       ],
       0,
-      "621edad49f07c7d0ba5c669e44529f45"
+      "d947a4cbce1e0110654057e6a64f9803"
     ],
     [
       "ProgramOptimizations.uu___is_RTrue",
@@ -774,7 +764,7 @@
       1,
       [ "@query" ],
       0,
-      "6cfa129067e93314ece60acc1adfc995"
+      "7c52beda67cc62fd7df56618775c35dc"
     ],
     [
       "ProgramOptimizations.uu___is_RFalse",
@@ -783,7 +773,7 @@
       1,
       [ "@query" ],
       0,
-      "08cd47106e50e16e449b1d08111c1fdf"
+      "2d4515702e40bb3c93c4f453449f94dc"
     ],
     [
       "ProgramOptimizations.uu___is_RROp",
@@ -792,7 +782,7 @@
       1,
       [ "@query" ],
       0,
-      "acff715dfc665afaf1f892c22ebab32c"
+      "654834c4c57767eced6b7fb7d0105603"
     ],
     [
       "ProgramOptimizations.__proj__RROp__item___0",
@@ -806,7 +796,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_d829131e15517bf17222eb552e4b583d"
       ],
       0,
-      "5c6c92dd440a5101c1a5f80430aa56ca"
+      "9117d2d2045fc486c14f2cbfaff20caa"
     ],
     [
       "ProgramOptimizations.__proj__RROp__item___1",
@@ -820,7 +810,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_d829131e15517bf17222eb552e4b583d"
       ],
       0,
-      "891fed38e6d9c904783baccd0be85add"
+      "642ce749e91cc93316bad1e8be3c8b60"
     ],
     [
       "ProgramOptimizations.__proj__RROp__item___2",
@@ -834,7 +824,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_d829131e15517bf17222eb552e4b583d"
       ],
       0,
-      "dc967b54f7c1f95b4d26b7678a9cc3d1"
+      "bf2dea833608d78d342bf910e461d459"
     ],
     [
       "ProgramOptimizations.uu___is_RBOp",
@@ -843,7 +833,7 @@
       1,
       [ "@query" ],
       0,
-      "243b474ba5b6e180f8de38054e15b5e6"
+      "d07807b0149a73dc24890d9e18f46b54"
     ],
     [
       "ProgramOptimizations.__proj__RBOp__item___0",
@@ -857,7 +847,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_0a3a4050a2d640427d05fa88e3d033cf"
       ],
       0,
-      "da1f3e2ca5a760baa6db80b8c23f45fb"
+      "28210ddecbbbf8a06bf9caef67b183e7"
     ],
     [
       "ProgramOptimizations.__proj__RBOp__item___1",
@@ -871,7 +861,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_0a3a4050a2d640427d05fa88e3d033cf"
       ],
       0,
-      "d5d1ae38eab8dac4983a731c4e2871d6"
+      "236551d22adfd2e6477f3e264e0f3365"
     ],
     [
       "ProgramOptimizations.__proj__RBOp__item___2",
@@ -885,7 +875,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_0a3a4050a2d640427d05fa88e3d033cf"
       ],
       0,
-      "de47840b2d9e2f7ebaa60bb6b68c9d70"
+      "2e252d6bfb374a2025359ffdf070acba"
     ],
     [
       "ProgramOptimizations.uu___is_RNot",
@@ -894,7 +884,7 @@
       1,
       [ "@query" ],
       0,
-      "d2b04682243d08b1e3ec2d268b8fb016"
+      "581c46fa8a5e048e979512e28eeb1701"
     ],
     [
       "ProgramOptimizations.__proj__RNot__item___0",
@@ -908,7 +898,7 @@
         "refinement_interpretation_ProgramOptimizations_Tm_refine_18c04c0e3da4d915a0f616009fbb557d"
       ],
       0,
-      "c0f6e4d8591467c0ea349d4a2e2d85ae"
+      "29b24389c0645f5daf307e21180bb98e"
     ],
     [
       "ProgramOptimizations.g_exp_denotation",
@@ -918,24 +908,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_c14267ad413b75d3b154fc9b84d61d47_0",
-        "constructor_distinct_ProgramOptimizations.Sub",
         "disc_equation_ProgramOptimizations.Add",
         "disc_equation_ProgramOptimizations.GConst",
         "disc_equation_ProgramOptimizations.GIOp",
         "disc_equation_ProgramOptimizations.Left",
         "disc_equation_ProgramOptimizations.Right",
         "disc_equation_ProgramOptimizations.Sub",
-        "equality_tok_ProgramOptimizations.Add@tok",
-        "equality_tok_ProgramOptimizations.Sub@tok",
         "fuel_guarded_inversion_ProgramOptimizations.g_exp",
         "fuel_guarded_inversion_ProgramOptimizations.i_op",
-        "projection_inverse_ProgramOptimizations.GIOp__0",
-        "projection_inverse_ProgramOptimizations.GIOp__1",
-        "projection_inverse_ProgramOptimizations.GIOp__2",
         "subterm_ordering_ProgramOptimizations.GIOp"
       ],
       0,
-      "6242e3bbcad968d349a86b944e081b28"
+      "2011e299700ec7e1053145a1242d62b7"
     ],
     [
       "ProgramOptimizations.rel_exp_denotation",
@@ -945,7 +929,6 @@
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_79e826c48a872559bd2152b28dce49e3_0",
-        "constructor_distinct_ProgramOptimizations.RBOp",
         "disc_equation_ProgramOptimizations.And",
         "disc_equation_ProgramOptimizations.Eq",
         "disc_equation_ProgramOptimizations.Gt",
@@ -956,21 +939,14 @@
         "disc_equation_ProgramOptimizations.RNot",
         "disc_equation_ProgramOptimizations.RROp",
         "disc_equation_ProgramOptimizations.RTrue",
-        "equality_tok_ProgramOptimizations.Eq@tok",
-        "equality_tok_ProgramOptimizations.Gt@tok",
-        "equality_tok_ProgramOptimizations.Lt@tok",
         "fuel_guarded_inversion_ProgramOptimizations.b_op",
         "fuel_guarded_inversion_ProgramOptimizations.r_op",
         "fuel_guarded_inversion_ProgramOptimizations.rel_exp",
-        "projection_inverse_ProgramOptimizations.RBOp__0",
-        "projection_inverse_ProgramOptimizations.RBOp__1",
-        "projection_inverse_ProgramOptimizations.RBOp__2",
-        "projection_inverse_ProgramOptimizations.RROp__0",
         "subterm_ordering_ProgramOptimizations.RBOp",
         "subterm_ordering_ProgramOptimizations.RNot"
       ],
       0,
-      "1544992a6a3c2eb2c0746195f579491a"
+      "22d085cfa4b8d73486f3bcccc9c6a29f"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization1",
@@ -984,7 +960,6 @@
         "@fuel_correspondence_ProgramOptimizations.i_exp_denotation.fuel_instrumented",
         "@fuel_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@fuel_irrelevance_ProgramOptimizations.com_denotation.fuel_instrumented",
-        "@fuel_irrelevance_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_token_correspondence",
@@ -994,8 +969,7 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "ProgramOptimizations_interpretation_Tm_arrow_f58818474c87002ab483c19ebabdeb7d",
         "ProgramOptimizations_pretyping_ab9d74bcd696e9ebfbef75cd7baa5766",
-        "ProgramOptimizations_pretyping_ef8fa22f5d385ef466af4bf5a3b3ecca",
-        "assumption_ProgramOptimizations.Distinct_vars", "bool_inversion",
+        "assumption_ProgramOptimizations.Distinct_vars",
         "constructor_distinct_ProgramOptimizations.Add",
         "constructor_distinct_ProgramOptimizations.And",
         "constructor_distinct_ProgramOptimizations.Assign",
@@ -1009,9 +983,7 @@
         "constructor_distinct_ProgramOptimizations.Seq",
         "constructor_distinct_ProgramOptimizations.Var",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_ProgramOptimizations.Assign",
         "data_elim_ProgramOptimizations.Seq",
-        "data_typing_intro_ProgramOptimizations.Right@tok",
         "equality_tok_ProgramOptimizations.Add@tok",
         "equality_tok_ProgramOptimizations.And@tok",
         "equality_tok_ProgramOptimizations.Eq@tok",
@@ -1034,8 +1006,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_ProgramOptimizations.com11",
-        "function_token_typing_ProgramOptimizations.com12",
-        "function_token_typing_ProgramOptimizations.rel11",
         "function_token_typing_ProgramOptimizations.x",
         "function_token_typing_ProgramOptimizations.y",
         "function_token_typing_ProgramOptimizations.z", "int_typing",
@@ -1077,15 +1047,12 @@
         "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "refinement_interpretation_ProgramOptimizations_Tm_refine_76ac8db1c368266523b62b6f9e660a24",
         "token_correspondence_ProgramOptimizations.com_denotation.fuel_instrumented",
-        "true_interp", "typing_FStar.DM4F.Heap.IntStoreFixed.index",
+        "true_interp", "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
         "typing_ProgramOptimizations.com_denotation",
-        "typing_ProgramOptimizations.g_exp_denotation",
-        "typing_ProgramOptimizations.i_exp_denotation",
-        "typing_ProgramOptimizations.rel_exp_denotation",
         "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "ae8039a2e1732fb3113b498cc9ae2c66"
+      "0d529529df5a064a8b83b9554261cf9e"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization2",
@@ -1099,7 +1066,6 @@
         "@fuel_correspondence_ProgramOptimizations.g_exp_denotation.fuel_instrumented",
         "@fuel_correspondence_ProgramOptimizations.i_exp_denotation.fuel_instrumented",
         "@fuel_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
-        "@fuel_irrelevance_ProgramOptimizations.com_denotation.fuel_instrumented",
         "@fuel_irrelevance_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
@@ -1112,8 +1078,7 @@
         "ProgramOptimizations_interpretation_Tm_arrow_f58818474c87002ab483c19ebabdeb7d",
         "ProgramOptimizations_pretyping_79e826c48a872559bd2152b28dce49e3",
         "ProgramOptimizations_pretyping_bd01081bbed424400b976af90f0b241d",
-        "bool_inversion", "bool_typing",
-        "constructor_distinct_ProgramOptimizations.And",
+        "bool_inversion", "constructor_distinct_ProgramOptimizations.And",
         "constructor_distinct_ProgramOptimizations.Assign",
         "constructor_distinct_ProgramOptimizations.Const",
         "constructor_distinct_ProgramOptimizations.GConst",
@@ -1156,7 +1121,6 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_ProgramOptimizations.com21",
         "function_token_typing_ProgramOptimizations.rel21",
-        "function_token_typing_ProgramOptimizations.rel22",
         "function_token_typing_ProgramOptimizations.x",
         "function_token_typing_ProgramOptimizations.y", "int_typing",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
@@ -1198,14 +1162,13 @@
         "projection_inverse_ProgramOptimizations.Right__0",
         "projection_inverse_ProgramOptimizations.Var__0",
         "refinement_interpretation_ProgramOptimizations_Tm_refine_76ac8db1c368266523b62b6f9e660a24",
-        "token_correspondence_ProgramOptimizations.com_denotation.fuel_instrumented",
         "token_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "true_interp", "typing_FStar.DM4F.Heap.IntStoreFixed.index",
         "typing_ProgramOptimizations.b_exp_denotation",
         "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "e35765a61f95a7f74c112efacb36b2cb"
+      "f2504de767ad4d98c0ac1ea9aec856ab"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization3",
@@ -1220,7 +1183,6 @@
         "@fuel_correspondence_ProgramOptimizations.i_exp_denotation.fuel_instrumented",
         "@fuel_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@fuel_irrelevance_ProgramOptimizations.com_denotation.fuel_instrumented",
-        "@fuel_irrelevance_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_token_correspondence",
@@ -1230,9 +1192,8 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "ProgramOptimizations_interpretation_Tm_arrow_f58818474c87002ab483c19ebabdeb7d",
-        "ProgramOptimizations_pretyping_79e826c48a872559bd2152b28dce49e3",
         "ProgramOptimizations_pretyping_bd01081bbed424400b976af90f0b241d",
-        "bool_inversion", "constructor_distinct_ProgramOptimizations.And",
+        "constructor_distinct_ProgramOptimizations.And",
         "constructor_distinct_ProgramOptimizations.Assign",
         "constructor_distinct_ProgramOptimizations.Const",
         "constructor_distinct_ProgramOptimizations.Eq",
@@ -1244,13 +1205,11 @@
         "constructor_distinct_ProgramOptimizations.RROp",
         "constructor_distinct_ProgramOptimizations.RTrue",
         "constructor_distinct_ProgramOptimizations.Right",
-        "constructor_distinct_ProgramOptimizations.Seq",
         "constructor_distinct_ProgramOptimizations.Var",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_ProgramOptimizations.If",
-        "data_elim_ProgramOptimizations.RBOp",
         "data_typing_intro_ProgramOptimizations.CFalse@tok",
-        "data_typing_intro_ProgramOptimizations.RFalse@tok",
+        "data_typing_intro_ProgramOptimizations.Right@tok",
         "equality_tok_ProgramOptimizations.And@tok",
         "equality_tok_ProgramOptimizations.Eq@tok",
         "equality_tok_ProgramOptimizations.RTrue@tok",
@@ -1262,6 +1221,7 @@
         "equation_Prims.as_requires", "equation_Prims.l_True",
         "equation_ProgramOptimizations.com31",
         "equation_ProgramOptimizations.com32",
+        "equation_ProgramOptimizations.rel31",
         "equation_ProgramOptimizations.rel32",
         "equation_with_fuel_ProgramOptimizations.b_exp_denotation.fuel_instrumented",
         "equation_with_fuel_ProgramOptimizations.com_denotation.fuel_instrumented",
@@ -1272,7 +1232,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_ProgramOptimizations.com31",
-        "function_token_typing_ProgramOptimizations.rel32",
         "function_token_typing_ProgramOptimizations.y", "int_typing",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_7c14753a5b99774e3e0081a9f2de5e5d",
@@ -1311,15 +1270,15 @@
         "projection_inverse_ProgramOptimizations.Right__0",
         "projection_inverse_ProgramOptimizations.Var__0",
         "refinement_interpretation_ProgramOptimizations_Tm_refine_76ac8db1c368266523b62b6f9e660a24",
-        "token_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "true_interp", "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
         "typing_ProgramOptimizations.b_exp_denotation",
         "typing_ProgramOptimizations.com_denotation",
+        "typing_ProgramOptimizations.g_exp_denotation",
         "typing_ProgramOptimizations.rel_exp_denotation",
         "typing_tok_ProgramOptimizations.RTrue@tok", "unit_typing"
       ],
       0,
-      "1bd59aa5683c1cfb51962cae4ac53f4a"
+      "e3a81dc1918fa23489a8f090b9be8880"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization4",
@@ -1332,6 +1291,7 @@
         "@fuel_correspondence_ProgramOptimizations.g_exp_denotation.fuel_instrumented",
         "@fuel_correspondence_ProgramOptimizations.i_exp_denotation.fuel_instrumented",
         "@fuel_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
+        "@fuel_irrelevance_ProgramOptimizations.com_denotation.fuel_instrumented",
         "@fuel_irrelevance_ProgramOptimizations.i_exp_denotation.fuel_instrumented",
         "@fuel_irrelevance_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@query",
@@ -1341,7 +1301,9 @@
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "ProgramOptimizations_interpretation_Tm_arrow_f58818474c87002ab483c19ebabdeb7d",
         "ProgramOptimizations_pretyping_79e826c48a872559bd2152b28dce49e3",
+        "ProgramOptimizations_pretyping_ab9d74bcd696e9ebfbef75cd7baa5766",
         "assumption_ProgramOptimizations.Distinct_vars", "bool_inversion",
         "constructor_distinct_ProgramOptimizations.Add",
         "constructor_distinct_ProgramOptimizations.And",
@@ -1356,11 +1318,15 @@
         "constructor_distinct_ProgramOptimizations.Sub",
         "constructor_distinct_ProgramOptimizations.UMinus",
         "constructor_distinct_ProgramOptimizations.Var",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_ProgramOptimizations.RBOp",
+        "data_elim_ProgramOptimizations.Seq",
         "data_typing_intro_ProgramOptimizations.RFalse@tok",
+        "data_typing_intro_ProgramOptimizations.Right@tok",
         "equality_tok_ProgramOptimizations.Add@tok",
         "equality_tok_ProgramOptimizations.And@tok",
         "equality_tok_ProgramOptimizations.Eq@tok",
+        "equality_tok_ProgramOptimizations.Skip@tok",
         "equality_tok_ProgramOptimizations.Sub@tok",
         "equation_FStar.DM4F.Heap.IntStoreFixed.index",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
@@ -1368,6 +1334,7 @@
         "equation_FStar.DM4F.Heap.IntStoreFixed.upd",
         "equation_FStar.DM4F.IntStoreFixed.read",
         "equation_FStar.DM4F.IntStoreFixed.write",
+        "equation_Prims.as_requires", "equation_Prims.l_True",
         "equation_ProgramOptimizations.com41",
         "equation_ProgramOptimizations.com42",
         "equation_ProgramOptimizations.rel11",
@@ -1377,7 +1344,11 @@
         "equation_with_fuel_ProgramOptimizations.g_exp_denotation.fuel_instrumented",
         "equation_with_fuel_ProgramOptimizations.i_exp_denotation.fuel_instrumented",
         "equation_with_fuel_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
+        "forall-interp",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "function_token_typing_ProgramOptimizations.com41",
+        "function_token_typing_ProgramOptimizations.com42",
         "function_token_typing_ProgramOptimizations.rel11",
         "function_token_typing_ProgramOptimizations.rel12",
         "function_token_typing_ProgramOptimizations.rel4",
@@ -1391,6 +1362,8 @@
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_b86d1955c0c72a74391d47e1fb4ee8dc",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_be1f098a73b727536eabaf253dd83852",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_d118813f5b63d6276a92d2454f10fa10",
+        "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
+        "interpretation_ProgramOptimizations_Tm_abs_2d36476b33e7ff312c89da423364675a",
         "interpretation_ProgramOptimizations_Tm_abs_43e36b88ddd099c63b8603486f6fd04e",
         "interpretation_ProgramOptimizations_Tm_abs_688f434eb87b65abfd4fc14921eb7477",
         "interpretation_ProgramOptimizations_Tm_abs_8b24abe3be8462340ec3356baea75573",
@@ -1422,14 +1395,19 @@
         "projection_inverse_ProgramOptimizations.UMinus__0",
         "projection_inverse_ProgramOptimizations.Var__0",
         "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_76ac8db1c368266523b62b6f9e660a24",
+        "token_correspondence_ProgramOptimizations.com_denotation.fuel_instrumented",
         "token_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
-        "typing_FStar.DM4F.Heap.IntStoreFixed.index",
+        "true_interp", "typing_FStar.DM4F.Heap.IntStoreFixed.index",
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
-        "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
+        "typing_ProgramOptimizations.com_denotation",
+        "typing_ProgramOptimizations.g_exp_denotation",
+        "typing_ProgramOptimizations.rel_exp_denotation",
+        "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "ad1d00c31cc3a42ba9f84501bbf6c881"
+      "21e86ad17944efe23eac68f3062b0ad4"
     ],
     [
       "ProgramOptimizations.lemma_r_cbl",
@@ -1443,12 +1421,19 @@
         "@fuel_correspondence_ProgramOptimizations.rel_exp_denotation.fuel_instrumented",
         "@fuel_irrelevance_ProgramOptimizations.com_denotation.fuel_instrumented",
         "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "ProgramOptimizations_interpretation_Tm_arrow_f58818474c87002ab483c19ebabdeb7d",
         "bool_inversion", "constructor_distinct_ProgramOptimizations.CTrue",
         "constructor_distinct_ProgramOptimizations.If",
         "equality_tok_ProgramOptimizations.CTrue@tok",
+        "equation_Prims.as_requires", "equation_Prims.l_True",
         "equation_ProgramOptimizations.rhl",
         "equation_with_fuel_ProgramOptimizations.b_exp_denotation.fuel_instrumented",
         "equation_with_fuel_ProgramOptimizations.com_denotation.fuel_instrumented",
+        "forall-interp",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
+        "interpretation_ProgramOptimizations_Tm_abs_2d36476b33e7ff312c89da423364675a",
         "interpretation_ProgramOptimizations_Tm_abs_48cdf7238eeada831305d511a7af061c",
         "interpretation_ProgramOptimizations_Tm_abs_89cf49708de8c5eccda32d187dcb2e2a",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -1456,10 +1441,959 @@
         "projection_inverse_ProgramOptimizations.If__0",
         "projection_inverse_ProgramOptimizations.If__1",
         "projection_inverse_ProgramOptimizations.If__2",
-        "typing_ProgramOptimizations.rel_exp_denotation"
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_76ac8db1c368266523b62b6f9e660a24",
+        "true_interp", "typing_ProgramOptimizations.com_denotation",
+        "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "ab4e106adeef44af566764f712096549"
+      "ee22b3946876e6672373a242e17e0ee3"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Add",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aee16e6895e01d72a396883fc08340a1"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Sub",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "37ef96e2d65b5424ec937dddf2134347"
+    ],
+    [
+      "ProgramOptimizations.i_exp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "assumption_ProgramOptimizations.i_op__uu___haseq",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "f6dfa002195321cca90f52d6df17fff0"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Const",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b362249e56158be8619f42ef95fb6f22"
+    ],
+    [
+      "ProgramOptimizations.__proj__Const__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_2fcef4c7d94b8a858b8533b4392720e2"
+      ],
+      0,
+      "ccf8d47c96bbb186e253c8e7d2568c0f"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Var",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bf9bcc6d26f95d8beb2f455347125701"
+    ],
+    [
+      "ProgramOptimizations.__proj__Var__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Var",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_070fdf407f5c8dff9a7cfa1b6bdb70b2"
+      ],
+      0,
+      "509bced6a52b196265106d5e7c60e826"
+    ],
+    [
+      "ProgramOptimizations.uu___is_IOp",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "25de7a71bce02f81f1cf573da4c31b2d"
+    ],
+    [
+      "ProgramOptimizations.__proj__IOp__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.IOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_60265d5d95f52c83223c5542d14d69ad"
+      ],
+      0,
+      "a09eb63bd9073d1b5f2c8d46080c4b04"
+    ],
+    [
+      "ProgramOptimizations.__proj__IOp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.IOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_60265d5d95f52c83223c5542d14d69ad"
+      ],
+      0,
+      "d0c735e7e1451f9713c651f3c8c8c04e"
+    ],
+    [
+      "ProgramOptimizations.__proj__IOp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.IOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_60265d5d95f52c83223c5542d14d69ad"
+      ],
+      0,
+      "bb2f20a2c2585983b324f2bcfe756a67"
+    ],
+    [
+      "ProgramOptimizations.uu___is_UMinus",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "38ebfcc3c1169a636cea729327da9208"
+    ],
+    [
+      "ProgramOptimizations.__proj__UMinus__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.UMinus",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_442de479845adbb7045f5e74cb6e91c7"
+      ],
+      0,
+      "5258090c55cbf41f7d734ad5c1e06149"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Lt",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "905da12c3d4f125405c6d2e78c041b67"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Gt",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a274ed69962bd34088f9e6a6f838f05f"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Eq",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c882b69ac465ed64351f3e526168e33a"
+    ],
+    [
+      "ProgramOptimizations.uu___is_And",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e63ea1d12d0223bb661f6a5b97d612e3"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Or",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e1ce4bf205cfbf7b31d6c628a12522c0"
+    ],
+    [
+      "ProgramOptimizations.b_exp",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_ProgramOptimizations.b_op__uu___haseq",
+        "assumption_ProgramOptimizations.i_exp__uu___haseq",
+        "assumption_ProgramOptimizations.r_op__uu___haseq"
+      ],
+      0,
+      "cb9610393dcc954f704d44e35c9846ad"
+    ],
+    [
+      "ProgramOptimizations.uu___is_CTrue",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "095fa8001426540db7a8caaab4b4fb6d"
+    ],
+    [
+      "ProgramOptimizations.uu___is_CFalse",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "01f2b7640d4654de3c6e10c490e20b16"
+    ],
+    [
+      "ProgramOptimizations.uu___is_ROp",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1823f2bbaa119a4429f70656602c89bb"
+    ],
+    [
+      "ProgramOptimizations.__proj__ROp__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.ROp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4a5ef12b44ef9a7535345360695fbca3"
+      ],
+      0,
+      "516619a03bb3d2220a05831ae5cdf372"
+    ],
+    [
+      "ProgramOptimizations.__proj__ROp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.ROp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4a5ef12b44ef9a7535345360695fbca3"
+      ],
+      0,
+      "50e997cc0769fbd14d276a219ae70415"
+    ],
+    [
+      "ProgramOptimizations.__proj__ROp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.ROp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4a5ef12b44ef9a7535345360695fbca3"
+      ],
+      0,
+      "ad07dd415a621fb48dfbaf20a6b429f2"
+    ],
+    [
+      "ProgramOptimizations.uu___is_BOp",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d3b642eedbe0b436e88eb26d564634f0"
+    ],
+    [
+      "ProgramOptimizations.__proj__BOp__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.BOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_9a6ad1dc93a230235fe0787ef9e71d3c"
+      ],
+      0,
+      "c6d5ff8b7e7ade01452bc5bba21d63c4"
+    ],
+    [
+      "ProgramOptimizations.__proj__BOp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.BOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_9a6ad1dc93a230235fe0787ef9e71d3c"
+      ],
+      0,
+      "bb303ff9efe00f3c0d7fe95edda780f5"
+    ],
+    [
+      "ProgramOptimizations.__proj__BOp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.BOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_9a6ad1dc93a230235fe0787ef9e71d3c"
+      ],
+      0,
+      "00a033724bb42b06ec80dc1b5721142f"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Not",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6a656e64fc53b8a21fb18d9319e7570c"
+    ],
+    [
+      "ProgramOptimizations.__proj__Not__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Not",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_12b6cb78b0bb34a6f9e6cec940ff4c4b"
+      ],
+      0,
+      "3a9ae29e664bf8b4e209c0e324000d15"
+    ],
+    [
+      "ProgramOptimizations.com",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_ProgramOptimizations.b_exp__uu___haseq",
+        "assumption_ProgramOptimizations.i_exp__uu___haseq",
+        "equation_Prims.eqtype", "equation_ProgramOptimizations.var",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a3a3be80beb5b6700aa121c607568cf4"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Skip",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "57fc07003c58fd39560c9dbc6a0227ca"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Assign",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bb9332efdfade6f940104b23e75a83a0"
+    ],
+    [
+      "ProgramOptimizations.__proj__Assign__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Assign",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_c0d40d9e73009748e017cb692fa26ea2"
+      ],
+      0,
+      "b522c967aef2c585234265fc012965d7"
+    ],
+    [
+      "ProgramOptimizations.__proj__Assign__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Assign",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_c0d40d9e73009748e017cb692fa26ea2"
+      ],
+      0,
+      "49e92fff5c8005e50f388b3ebcf6edca"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Seq",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "93ada222a3fc0fded0616d947a80bd0e"
+    ],
+    [
+      "ProgramOptimizations.__proj__Seq__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Seq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4b4fcb1be48e91dd2f57609170464f5b"
+      ],
+      0,
+      "011cd59d821d82c6e2a73f3fb51eac2c"
+    ],
+    [
+      "ProgramOptimizations.__proj__Seq__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Seq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4b4fcb1be48e91dd2f57609170464f5b"
+      ],
+      0,
+      "78fb78cc7ae6bc71875c2f3d66b5e7d0"
+    ],
+    [
+      "ProgramOptimizations.uu___is_If",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "45de7375ed0103ea7d9688bb8e9452f3"
+    ],
+    [
+      "ProgramOptimizations.__proj__If__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.If",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4daabbe5c401b179ea3d747bf659cdaa"
+      ],
+      0,
+      "aa6f7a9c09956d1f45a724984ba3cf0f"
+    ],
+    [
+      "ProgramOptimizations.__proj__If__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.If",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4daabbe5c401b179ea3d747bf659cdaa"
+      ],
+      0,
+      "921e6c410472a27c5b4998a9f9690218"
+    ],
+    [
+      "ProgramOptimizations.__proj__If__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.If",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_4daabbe5c401b179ea3d747bf659cdaa"
+      ],
+      0,
+      "86a64ab1cc927997e6424c9ba079ccb2"
+    ],
+    [
+      "ProgramOptimizations.i_exp_denotation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_ef8fa22f5d385ef466af4bf5a3b3ecca_0",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "disc_equation_ProgramOptimizations.Add",
+        "disc_equation_ProgramOptimizations.Const",
+        "disc_equation_ProgramOptimizations.IOp",
+        "disc_equation_ProgramOptimizations.Sub",
+        "disc_equation_ProgramOptimizations.UMinus",
+        "disc_equation_ProgramOptimizations.Var",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_ProgramOptimizations.i_exp",
+        "fuel_guarded_inversion_ProgramOptimizations.i_op",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "subterm_ordering_ProgramOptimizations.IOp",
+        "subterm_ordering_ProgramOptimizations.UMinus",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.index"
+      ],
+      0,
+      "ae5e76b815e98280f57290060a16496b"
+    ],
+    [
+      "ProgramOptimizations.b_exp_denotation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Prims.HasEq_int",
+        "binder_x_bd01081bbed424400b976af90f0b241d_0", "bool_typing",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "disc_equation_ProgramOptimizations.And",
+        "disc_equation_ProgramOptimizations.BOp",
+        "disc_equation_ProgramOptimizations.CFalse",
+        "disc_equation_ProgramOptimizations.CTrue",
+        "disc_equation_ProgramOptimizations.Eq",
+        "disc_equation_ProgramOptimizations.Gt",
+        "disc_equation_ProgramOptimizations.Lt",
+        "disc_equation_ProgramOptimizations.Not",
+        "disc_equation_ProgramOptimizations.Or",
+        "disc_equation_ProgramOptimizations.ROp",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_ProgramOptimizations.b_exp",
+        "fuel_guarded_inversion_ProgramOptimizations.b_op",
+        "fuel_guarded_inversion_ProgramOptimizations.r_op",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "function_token_typing_Prims.bool",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "subterm_ordering_ProgramOptimizations.BOp",
+        "subterm_ordering_ProgramOptimizations.Not"
+      ],
+      0,
+      "47d1711aa8941407c0b65134e06f3baa"
+    ],
+    [
+      "ProgramOptimizations.com_denotation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_ab9d74bcd696e9ebfbef75cd7baa5766_0",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "disc_equation_ProgramOptimizations.Assign",
+        "disc_equation_ProgramOptimizations.If",
+        "disc_equation_ProgramOptimizations.Seq",
+        "disc_equation_ProgramOptimizations.Skip",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_Prims.eqtype", "equation_ProgramOptimizations.var",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_ProgramOptimizations.com",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "function_token_typing_Prims.unit", "int_inversion", "int_typing",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "subterm_ordering_ProgramOptimizations.If",
+        "subterm_ordering_ProgramOptimizations.Seq",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "4219b6c9377e006a63f525a7c21c3b7f"
+    ],
+    [
+      "ProgramOptimizations.g_exp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "assumption_ProgramOptimizations.i_op__uu___haseq",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "70794df105fa7ecfe2052994d35bb8f6"
+    ],
+    [
+      "ProgramOptimizations.uu___is_GConst",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "48823b586a49cbee20c3ca50a5ab90f6"
+    ],
+    [
+      "ProgramOptimizations.__proj__GConst__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.GConst",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_763b2f3802e5c78ed32f1a103955a718"
+      ],
+      0,
+      "339b896d24bd7dcaa5f0f7f2196a5fe1"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Left",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b8a6b09c5413bee05c63ab7b687f9535"
+    ],
+    [
+      "ProgramOptimizations.__proj__Left__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Left",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_f8c0148749c4b3167a4d9b51186c1c41"
+      ],
+      0,
+      "71089776e120f82807020141d069cc53"
+    ],
+    [
+      "ProgramOptimizations.uu___is_Right",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "01940df8bd4bab60cf633fba2200c98e"
+    ],
+    [
+      "ProgramOptimizations.__proj__Right__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.Right",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_620381ea672ccfd3b418034bc8698907"
+      ],
+      0,
+      "c13acaa62ed64130b56f39c05c62be2f"
+    ],
+    [
+      "ProgramOptimizations.uu___is_GIOp",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "53318b6fb767ff2cb6317d0b21494d3c"
+    ],
+    [
+      "ProgramOptimizations.__proj__GIOp__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.GIOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_e8390095c46ad4b4504e93fcb97945ad"
+      ],
+      0,
+      "58188c92cfd9bb012e697a1ce45ecb2c"
+    ],
+    [
+      "ProgramOptimizations.__proj__GIOp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.GIOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_e8390095c46ad4b4504e93fcb97945ad"
+      ],
+      0,
+      "2fe62889169fb79cc9e2c439cfab4d5f"
+    ],
+    [
+      "ProgramOptimizations.__proj__GIOp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.GIOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_e8390095c46ad4b4504e93fcb97945ad"
+      ],
+      0,
+      "a9582f62c7f87fed62c5dfc955ac6e1c"
+    ],
+    [
+      "ProgramOptimizations.rel_exp",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_ProgramOptimizations.b_op__uu___haseq",
+        "assumption_ProgramOptimizations.g_exp__uu___haseq",
+        "assumption_ProgramOptimizations.r_op__uu___haseq"
+      ],
+      0,
+      "d2f6dd7842090e770bcc90dd4af16127"
+    ],
+    [
+      "ProgramOptimizations.uu___is_RTrue",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "888d1b39dd6259db9814a8785df44228"
+    ],
+    [
+      "ProgramOptimizations.uu___is_RFalse",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "67a0db30f8700b68d35035be89888ac2"
+    ],
+    [
+      "ProgramOptimizations.uu___is_RROp",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4be4860e95375a6c7c26961a8d20563d"
+    ],
+    [
+      "ProgramOptimizations.__proj__RROp__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RROp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_d829131e15517bf17222eb552e4b583d"
+      ],
+      0,
+      "4c78156b709917066c9c5d6ef39d19f5"
+    ],
+    [
+      "ProgramOptimizations.__proj__RROp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RROp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_d829131e15517bf17222eb552e4b583d"
+      ],
+      0,
+      "f19794e37445e8bba1b3a4e1f18b5b81"
+    ],
+    [
+      "ProgramOptimizations.__proj__RROp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RROp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_d829131e15517bf17222eb552e4b583d"
+      ],
+      0,
+      "32d2e9e0651d08b531cddddbd0b2efc1"
+    ],
+    [
+      "ProgramOptimizations.uu___is_RBOp",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ce1bcd8b1eb3342c299d86fcc0f49559"
+    ],
+    [
+      "ProgramOptimizations.__proj__RBOp__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RBOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_0a3a4050a2d640427d05fa88e3d033cf"
+      ],
+      0,
+      "867b0d7cd7d6ccd8ac9ff68e0ef2efca"
+    ],
+    [
+      "ProgramOptimizations.__proj__RBOp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RBOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_0a3a4050a2d640427d05fa88e3d033cf"
+      ],
+      0,
+      "607375cda14befc7f65f53fb9baea7cd"
+    ],
+    [
+      "ProgramOptimizations.__proj__RBOp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RBOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_0a3a4050a2d640427d05fa88e3d033cf"
+      ],
+      0,
+      "b3b18caf1d7703a8ca1b97eb4574e5f5"
+    ],
+    [
+      "ProgramOptimizations.uu___is_RNot",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b9203a632e615ec1d2189d3430e011b6"
+    ],
+    [
+      "ProgramOptimizations.__proj__RNot__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProgramOptimizations.RNot",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProgramOptimizations_Tm_refine_18c04c0e3da4d915a0f616009fbb557d"
+      ],
+      0,
+      "2ad6af2b448fb82c68f616e9d47b6e9d"
+    ],
+    [
+      "ProgramOptimizations.g_exp_denotation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_c14267ad413b75d3b154fc9b84d61d47_0",
+        "disc_equation_ProgramOptimizations.Add",
+        "disc_equation_ProgramOptimizations.GConst",
+        "disc_equation_ProgramOptimizations.GIOp",
+        "disc_equation_ProgramOptimizations.Left",
+        "disc_equation_ProgramOptimizations.Right",
+        "disc_equation_ProgramOptimizations.Sub",
+        "fuel_guarded_inversion_ProgramOptimizations.g_exp",
+        "fuel_guarded_inversion_ProgramOptimizations.i_op",
+        "subterm_ordering_ProgramOptimizations.GIOp"
+      ],
+      0,
+      "1dc5f5136262f3365d4c9ecb1f9fe21c"
+    ],
+    [
+      "ProgramOptimizations.rel_exp_denotation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_79e826c48a872559bd2152b28dce49e3_0",
+        "disc_equation_ProgramOptimizations.And",
+        "disc_equation_ProgramOptimizations.Eq",
+        "disc_equation_ProgramOptimizations.Gt",
+        "disc_equation_ProgramOptimizations.Lt",
+        "disc_equation_ProgramOptimizations.Or",
+        "disc_equation_ProgramOptimizations.RBOp",
+        "disc_equation_ProgramOptimizations.RFalse",
+        "disc_equation_ProgramOptimizations.RNot",
+        "disc_equation_ProgramOptimizations.RROp",
+        "disc_equation_ProgramOptimizations.RTrue",
+        "fuel_guarded_inversion_ProgramOptimizations.b_op",
+        "fuel_guarded_inversion_ProgramOptimizations.r_op",
+        "fuel_guarded_inversion_ProgramOptimizations.rel_exp",
+        "subterm_ordering_ProgramOptimizations.RBOp",
+        "subterm_ordering_ProgramOptimizations.RNot"
+      ],
+      0,
+      "1cd112ea84377e280de1626bdbb417dd"
     ]
   ]
 ]

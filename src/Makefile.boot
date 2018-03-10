@@ -21,8 +21,10 @@ INCLUDE_PATHS = \
 	typechecker \
 	tests
 
-FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules --eager_inference --lax --MLish --no_location_info \
-		   --odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))
+FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules	        	\
+        --eager_inference --lax --MLish --no_location_info              \
+	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))   \
+        --warn_error -271-240
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -72,13 +74,17 @@ ocaml-output/%.ml:
 # file as the roots, mentioning the the modules that are to be
 # extracted. This emits dependences for each of the ML files we want
 # to produce.
+#
+# We do an indirection via ._depend so we don't write an empty file if
+# the dependency analysis failed.
 
 .depend:
 	$(FSTAR_C) --dep full                 \
 		   fstar/FStar.Main.fs	      \
 		   boot/FStar.Tests.Test.fst  \
 		   $(EXTRACT)		      \
-		   --codegen OCaml > .depend
+		   --codegen OCaml > ._depend
+	mv ._depend .depend
 
 depend: .depend
 

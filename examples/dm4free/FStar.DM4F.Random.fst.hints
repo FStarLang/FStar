@@ -15,7 +15,23 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "52d09b751d18a89d16411c4388f4c83b"
+      "78af03fbe11e49d8f9678f46dd0e29b7"
+    ],
+    [
+      "FStar.DM4F.Random.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "b10c8658a4ed1645a77983ae7b35514b"
     ]
   ]
 ]
