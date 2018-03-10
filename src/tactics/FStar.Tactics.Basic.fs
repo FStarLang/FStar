@@ -201,6 +201,14 @@ let trytac (t : tac<'a>) : tac<option<'a>> =
     | Inr v -> ret (Some v)
     | Inl _ -> ret None)
 
+let trytac_exn (t : tac<'a>) : tac<option<'a>> =
+    mk_tac (fun ps ->
+    try run (trytac t) ps
+    with | Errors.Err (_, msg)
+         | Errors.Error (_, msg, _) ->
+           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
+           Success (None, ps))
+
 // This is relying on the fact that errors are strings
 let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
     mk_tac (fun ps ->
@@ -652,7 +660,7 @@ exception NoUnif
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
     mlog (fun () -> BU.print1 ">>> Calling __exact(%s)\n" (Print.term_to_string tm)) (fun () ->
-    bind (trytac (with_policy Force (t_exact false tm))) (function
+    bind (trytac_exn (with_policy Force (t_exact false tm))) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
