@@ -8,6 +8,9 @@ module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
 module EMB = FStar_Syntax_Embeddings
 
+(* GM: most indirections here are super annoying, and seem to
+ * be unneeded. Can we take them out? *)
+
 let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a __result =
   B.run t ps
 
@@ -126,8 +129,8 @@ let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_t
 let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac =
     fun f -> fun g -> __seq (f ()) (g ())
 
-let __t_exact b1 b2 (t: RT.term): unit __tac = from_tac_3 B.t_exact b1 b2 t
-let t_exact: bool -> bool -> RT.term -> unit __tac = __t_exact
+let __t_exact b1 (t: RT.term): unit __tac = from_tac_2 B.t_exact b1 t
+let t_exact: bool -> RT.term -> unit __tac = __t_exact
 
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term -> unit __tac = __apply
@@ -184,5 +187,11 @@ let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
 let __fresh_bv_named (nm : string) (ty : RT.term) : RT.bv __tac = from_tac_2 B.fresh_bv_named nm ty
 let fresh_bv_named : string -> RT.term -> RT.bv __tac = fun nm ty -> __fresh_bv_named nm ty
 
-let __change (ty : typ) : unit __tac = from_tac_1 B.change ty
-let change : typ -> unit __tac = fun ty -> __change ty
+let __change (ty : RT.typ) : unit __tac = from_tac_1 B.change ty
+let change : RT.typ -> unit __tac = fun ty -> __change ty
+
+let __get_guard_policy : guard_policy __tac = from_tac_0 B.get_guard_policy
+let get_guard_policy : unit -> guard_policy __tac = fun () -> __get_guard_policy
+
+let __set_guard_policy : guard_policy -> unit __tac = from_tac_1 B.set_guard_policy
+let set_guard_policy : guard_policy -> unit __tac = __set_guard_policy
