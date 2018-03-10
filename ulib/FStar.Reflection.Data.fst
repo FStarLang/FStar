@@ -53,7 +53,7 @@ type term_view =
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> decr:option<term> -> comp_view
+  | C_Total     : ret:typ -> decr:(option term) -> comp_view
   | C_Lemma     : term -> term -> comp_view // pre & post
   | C_Unknown   : comp_view
 
