@@ -1,4 +1,4 @@
-module Embeddings
+module Embeddings.Test
 
 (* Tests for generating bindings to native tactics with correct calls to the
    embedding and unembedding functions for the types supported in tactic compilaton.
