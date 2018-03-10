@@ -16,31 +16,39 @@ private let equal_heaps_extensional (h0 h1:heap)
   : Lemma (requires True) (ensures (equal_heaps h0 h1 <==> h0 == h1))
   = ()
   
-let memory = nat -> Tot (option (a:Type0 & a))
+let memory = option (nat -> Tot (option (a:Type0 & a)))
 
 private let equal_memories (m0 m1:memory) =
-  let _ = () in
-  FStar.FunctionalExtensionality.feq m0 m1
+  match (m0, m1) with
+  | (Some f0, Some f1) -> FStar.FunctionalExtensionality.feq f0 f1
+  | (Some _, None)     -> False
+  | (None, Some _)     -> False
+  | (None, None)       -> True
 
 private let equal_memories_extensional (m0 m1:memory)
   : Lemma (requires True) (ensures (equal_memories m0 m1 <==> m0 == m1))
   = ()
 
-let emp = fun _ -> None
+let defined m = Some? m
+
+let emp = Some (fun _ -> None)
+
+let emp_defined () = ()
 
 let ref a = nat
 
 let addr_of #a n = n
 
-let heap_memory h = h.memory
+let heap_memory h = Some h.memory
 
 let disjoint_heaps h0 h1 =
   let _ = () in
   (forall r . ~(Some?(h0.memory r) && Some?(h1.memory r)))
 
 let disjoint_memories m0 m1 =
-  let _ = () in
-  (forall r . ~(Some?(m0 r) && Some?(m1 r)))
+  match (m0, m1) with
+  | (Some f0, Some f1) -> forall r . ~(Some?(f0 r) && Some?(f1 r))
+  | _ -> False
 
 let disjoint_heaps_comm h0 h1 = ()
 
@@ -62,23 +70,47 @@ let join h0 h1 =
 let join_comm h0 h1 = assert (equal_heaps (join h0 h1) (join h1 h0))
 
 let ( |> ) #a r x = 
-  fun r' -> if r = r' then Some (| a , x |)
-                      else None
+  let f : nat -> Tot (option (a:Type0 & a)) = 
+    (fun r' -> if r = r' then Some (| a , x |)
+                         else None) in
+  Some f
 
 let ( <*> ) m0 m1 = 
-  fun r -> match (m0 r, m1 r) with
-           | (Some v1, None) -> Some v1
-           | (None, Some v2) -> Some v2
-           | (None, None)    -> None
+  if (FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint_memories m0 m1)) 
+  then (match (m0, m1) with
+        | (Some f0, Some f1) -> 
+            let f = (fun r -> match (f0 r, f1 r) with
+                              | (Some v1, None) -> Some v1
+                              | (None, Some v2) -> Some v2
+                              | (None, None)    -> None) in
+            Some f)
+  else None
+
+let sep_emp m = 
+  assert (equal_memories (m <*> emp) m)
+
+let sep_comm m0 m1 = 
+  assert (equal_memories (m0 <*> m1) (m1 <*> m0))
+
+let sep_assoc m0 m1 m2 =
+  assert (equal_memories (m0 <*> (m1 <*> m2)) ((m0 <*> m1) <*> m2))
 
 let sep_join h0 h1 = 
   assert (equal_memories (heap_memory (join h0 h1)) 
                          ((heap_memory h0) <*> (heap_memory h1)))
 
+let points_to_disjoint_memories #a #b r s x y = ()
+
+let sep_disjoint_memories m0 m1 = ()
+
+let sep_defined m0 m1 = ()
+
 let split_heap m0 m1 h = 
-  let h0 = { next_addr = h.next_addr; memory = m0 } in
-  let h1 = { next_addr = h.next_addr; memory = m1 } in
-  (h0,h1)
+  match (m0, m1) with 
+  | (Some f0, Some f1) -> 
+      let h0 = { next_addr = h.next_addr; memory = f0 } in
+      let h1 = { next_addr = h.next_addr; memory = f1 } in
+      (h0,h1)
 
 let split_heap_disjoint m0 m1 h = ()
 
@@ -88,15 +120,14 @@ let split_heap_join m0 m1 h =
 
 let split_heap_memories m0 m1 h = ()
 
-let points_to_addr_of_disjoint #a #b r s x y = ()
-
 let hcontains #a h r = 
   let _ = () in 
   exists x . h.memory r == Some (| a , x |)
 
 let mcontains #a m r = 
-  let _ = () in 
-  exists x . m r == Some (| a , x |)
+  match m with
+  | Some f -> exists x . f r == Some (| a , x |)
+  | None   -> False
 
 let hcontains_mcontains #a r h = ()
 
@@ -121,7 +152,9 @@ let hfresh #a r h =
   h.memory r == None
 
 let mfresh #a r m = 
-  m r == None
+  match m with
+  | Some f -> f r == None
+  | None   -> False
 
 let hfres_mfresh #a r h = ()
 

@@ -25,7 +25,7 @@ let return (#a:Type) (x:a)
 
 (* frame wp by partitioning a heap whose memory is m into h0 and h1, and then prove post on the resulting heap and h1 *)
 let frame_wp0 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0 m1:memory) =
-  disjoint_memories m0 m1 /\ m == (m0 <*> m1) /\ wp (post m1) m0
+  defined m /\ m == (m0 <*> m1) /\ wp (post m1) m0
 
 let frame_wp1 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0:memory) =
   exists (m1:memory). frame_wp0 wp post m m0 m1
@@ -59,8 +59,6 @@ let frame #a #wp f =
       assert (frame_wp1 wp (frame_post post) (heap_memory h) m0);
       bind_exists #(result a post) #memory #(frame_wp0 wp (frame_post post) (heap_memory h) m0) s' (fun m1 _ -> 
         assert (frame_wp0 wp (frame_post post) (heap_memory h) m0 m1);
-        assert (disjoint_memories m0 m1);
-        assert (heap_memory h == (m0 <*> m1));
         let (h0,h1) = split_heap m0 m1 h in
         let sqres : squash (result a (frame_post post (heap_memory h1))) = f (frame_post post (heap_memory h1)) h0 in 
         S.bind_squash #(result a (frame_post post (heap_memory h1)))
