@@ -218,7 +218,7 @@ let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
-let do_unify (env : env) (t1 : term) (t2 : term) : bool =
+let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     let debug_on () =
         let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
         ()
@@ -235,13 +235,21 @@ let do_unify (env : env) (t1 : term) (t2 : term) : bool =
                             (Print.term_to_string t2) in
     try
             let res = Rel.teq_nosmt env t1 t2 in
-            debug_off(); res
-    with | _ -> debug_off(); false
+            debug_off();
+            ret res
+    with | Errors.Err (_, msg) -> begin
+            debug_off();
+            mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
+            ret false)
+            end
+         | Errors.Error (_, msg, r) -> begin
+            debug_off();
+            mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
+                                msg (Range.string_of_range r)) (fun _ ->
+            ret false)
+            end
 
-//    try Rel.teq_nosmt env t1 t2
-//    with | _ -> false
-
-let trysolve (goal : goal) (solution : term) : bool =
+let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
 
 let dismiss : tac<unit> =
@@ -249,12 +257,13 @@ let dismiss : tac<unit> =
     set ({p with goals=List.tl p.goals}))
 
 let solve (goal : goal) (solution : term) : tac<unit> =
-    if trysolve goal solution
+    bind (trysolve goal solution) (fun b ->
+    if b
     then dismiss
     else fail (BU.format3 "%s does not solve %s : %s"
               (tts goal.context solution)
               (tts goal.context goal.witness)
-              (tts goal.context goal.goal_ty))
+              (tts goal.context goal.goal_ty)))
 
 let dismiss_all : tac<unit> =
     bind get (fun p ->
@@ -472,13 +481,14 @@ let intro : tac<binder> = wrap_err "intro" <|
         else let env' = Env.push_binders goal.context [b] in
              let typ' = comp_to_typ c in
              bind (new_uvar "intro" env' typ') (fun u ->
-             if trysolve goal (U.abs [b] u None)
+             bind (trysolve goal (U.abs [b] u None)) (fun bb ->
+             if bb
              then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' typ';
                                                  witness = bnorm env' u})) (fun _ ->
                   ret b)
              else fail "unification failed"
-             )
+             ))
     | None ->
         fail1 "goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
     )
@@ -500,14 +510,14 @@ let intro_rec : tac<(binder * binder)> =
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) None goal.witness.pos in
-             let res = trysolve goal tm in
-             if res
+             bind (trysolve goal tm) (fun bb ->
+             if bb
              then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' (comp_to_typ c);
                                                  witness = bnorm env' u})) (fun _ ->
                   ret (S.mk_binder bv, b))
              else fail "intro_rec: unification failed"
-             )
+             ))
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
     )
@@ -560,13 +570,13 @@ let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
           ) (fun _ ->
     mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
                                                             (tts goal.context goal.goal_ty)) (fun _ ->
-    if do_unify goal.context typ goal.goal_ty
+    bind (do_unify goal.context typ goal.goal_ty) (fun b -> if b
     then solve goal t
     else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
                     (tts goal.context t)
                     (tts goal.context typ)
                     (tts goal.context goal.goal_ty)
-                    (tts goal.context goal.witness)))))
+                    (tts goal.context goal.witness))))))
 
 let t_exact set_expected_typ force_guard tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
@@ -703,7 +713,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     in
     // Lemma post is thunked, and is specialized to U_zero
     let post = U.mk_app post [S.as_arg U.exp_unit] in
-    if not (do_unify goal.context (U.mk_squash U_zero post) goal.goal_ty)
+    bind (do_unify goal.context (U.mk_squash U_zero post) goal.goal_ty) (fun b ->
+    if not b
     then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (tts goal.context tm)
                             (tts goal.context (U.mk_squash U_zero post))
@@ -765,7 +776,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
               then add_irrelevant_goal "apply_lemma precondition" goal.context pre goal.opts
               else ret ()) (fun _ ->
         bind (add_smt_goals smt_goals) (fun _ ->
-        add_goals sub_goals))))))))))
+        add_goals sub_goals))))))
+    )))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
@@ -910,9 +922,10 @@ let rec clear (b : binder) : tac<unit> =
         else bind (check bvs) (fun () ->
         let env' = push_bvs e' bvs in
         bind (new_uvar "clear.witness" env' goal.goal_ty) (fun ut ->
-        if do_unify goal.context goal.witness ut
+        bind (do_unify goal.context goal.witness ut) (fun b ->
+        if b
         then replace_cur ({ goal with context = env'; witness = ut })
-        else fail "Cannot clear; binder appears in witness"))))
+        else fail "Cannot clear; binder appears in witness")))))
 
 let clear_top : tac<unit> =
     bind cur_goal (fun goal ->
@@ -1137,9 +1150,10 @@ let trefl : tac<unit> =
         let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
-            if not (do_unify g.context l r)
+            bind (do_unify g.context l r) (fun b ->
+            if not b
             then fail2 "trefl: not a trivial equality (%s vs %s)" (tts g.context l) (tts g.context r)
-            else solve g U.exp_unit
+            else solve g U.exp_unit)
         | hd, _ ->
             fail1 "trefl: not an equality (%s)" (tts g.context t)
         end
@@ -1240,8 +1254,7 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
-    ret (do_unify ps.main_context t1 t2)
-    )
+    do_unify ps.main_context t1 t2)
 
 let launch_process (prog : string) (args : string) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
@@ -1262,7 +1275,8 @@ let fresh_bv_named (nm : string) (t : typ) : tac<bv> =
 let change (ty : typ) : tac<unit> = wrap_err "change" <|
     mlog (fun () -> BU.print1 "change: ty = %s\n" (Print.term_to_string ty)) (fun _ ->
     bind cur_goal (fun g ->
-    if do_unify g.context g.goal_ty ty
+    bind (do_unify g.context g.goal_ty ty) (fun bb ->
+    if bb
     then replace_cur ({ g with goal_ty = ty })
     else begin
         (* Give it a second try, fully normalize the term the user gave
@@ -1273,10 +1287,11 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
              N.AllowUnboundUniverses;
              N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
         let nty = normalize steps g.context ty in
-        if do_unify g.context g.goal_ty nty
+        bind (do_unify g.context g.goal_ty nty) (fun b ->
+        if b
         then replace_cur ({ g with goal_ty = ty })
-        else fail "not convertible"
-    end))
+        else fail "not convertible")
+    end)))
 
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
