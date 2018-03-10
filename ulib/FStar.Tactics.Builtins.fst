@@ -165,6 +165,8 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
+(** boolean is whether to set the expected type internally.
+ * Just use `exact` from FStar.Tactics.Derived if you don't know what that means. *)
 assume private val __t_exact : bool -> term -> __tac unit
 let t_exact hard (t:term) : Tac unit = TAC?.reflect (__t_exact hard t)
 
