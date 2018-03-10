@@ -553,13 +553,18 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
     mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
+    (* We need a set of options, but there might be no goals, so do this *)
+    let opts = match ps.goals with
+               | g::_ -> g.opts
+               | _ -> FStar.Options.peek ()
+    in
     mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
     bind (__tc e t) (fun (t, _, guard) ->
-    Rel.force_trivial_guard e guard;
+    bind (proc_guard "norm_term_env" e guard opts) (fun () ->
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    ))))
+    )))))
 
 let refine_intro : tac<unit> = wrap_err "refine_intro" <|
     bind cur_goal (fun g ->
@@ -1251,8 +1256,8 @@ let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     bind cur_goal (fun goal ->
     let env = Env.set_expected_typ goal.context ty in
     bind (__tc env tm) (fun (tm, typ, guard) ->
-    Rel.force_trivial_guard env guard;
-    ret tm))
+    bind (proc_guard "unquote" env guard goal.opts) (fun () ->
+    ret tm)))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     // If no type was given, add an uvar for it too!
