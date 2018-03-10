@@ -661,6 +661,7 @@ let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context tm) (fun (tm, typ, guard) ->
     // Focus helps keep the goal order
+    let typ = bnorm goal.context typ in
     try_unif (focus (bind (__apply uopt tm typ) (fun _ -> add_goal_from_guard "apply guard" goal.context guard goal.opts)))
              (fail3 "Cannot instantiate %s (of type %s) to match goal (%s)"
                             (tts goal.context tm)
