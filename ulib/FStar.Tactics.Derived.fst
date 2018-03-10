@@ -36,7 +36,7 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
 let exact (t : term) : Tac unit =
-    with_policy Force (fun () -> t_exact false t)
+    with_policy SMT (fun () -> t_exact false t)
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
