@@ -18,5 +18,11 @@ val unembed_result : term -> unembedder<'a> -> option<FStar.Util.either<('a * pr
 val embed_direction   : embedder<direction>
 val unembed_direction : unembedder<direction>
 
+val embed_guard_policy   : embedder<guard_policy>
+val unembed_guard_policy : unembedder<guard_policy>
+
+val t_proofstate : term
+val t_guard_policy : term
+
 val fstar_tactics_lid' : list<string> -> FStar.Ident.lid
 val pair_typ : typ -> typ -> typ

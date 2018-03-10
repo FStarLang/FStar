@@ -322,3 +322,9 @@ let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
  * to the current type. *)
 assume val __change : typ -> __tac unit
 let change (t : typ) : Tac unit = TAC?.reflect (__change t)
+
+assume val __get_guard_policy : __tac guard_policy
+let get_guard_policy () : Tac guard_policy = TAC?.reflect (__get_guard_policy)
+
+assume val __set_guard_policy : guard_policy -> __tac unit
+let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_policy p)
