@@ -175,7 +175,7 @@ let mlog f (cont : unit -> tac<'a>) : tac<'a> =
 let fail (msg:string) =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps ("TACTING FAILING: " ^ msg);
+        then dump_proofstate ps ("TACTIC FAILING: " ^ msg);
         Failed (msg, ps)
     )
 
@@ -366,17 +366,17 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
            fail2 "Cannot type %s in context (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", "))
 
-let must_trivial (e : env) (g : guard_t) : tac<unit> =
+let must_trivial (s:string) (e : env) (g : guard_t) : tac<unit> =
     try if not (Rel.is_trivial <| Rel.discharge_guard_no_smt e g)
-        then fail "got non-trivial guard"
+        then fail1 "got non-trivial guard (%s)" s
         else ret ()
     with
-    | _ -> fail "got non-trivial guard"
+    | _ -> fail1 "got non-trivial guard (%s)" s
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
-    bind (must_trivial goal.context guard) (fun _ ->
+    bind (must_trivial "tc" goal.context guard) (fun _ ->
     ret typ
     )))
 
@@ -555,7 +555,7 @@ let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
     in
     bind (__tc env t) (fun (t, typ, guard) ->
     bind (if force_guard
-          then must_trivial goal.context guard
+          then must_trivial "__exact" goal.context guard
           else add_goal_from_guard "__exact typing" goal.context guard goal.opts
           ) (fun _ ->
     mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
@@ -1233,7 +1233,7 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
-    bind (must_trivial goal.context guard) (fun _ ->
+    bind (must_trivial "unshelve" goal.context guard) (fun _ ->
     add_goals [{ goal with witness  = bnorm goal.context t;
                            goal_ty  = bnorm goal.context typ;
                            is_guard = false; }])))
