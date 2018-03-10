@@ -690,8 +690,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         EMB.embed_string rng (if b then "true" else "false")
     in
-    let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
-    let mk_range (_:psc) args : option<term> =
+    let mk_range (psc:psc) args : option<term> =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
         match arg_as_string fn,
@@ -703,7 +702,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
           let r = FStar.Range.mk_range fn
                               (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                               (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-          Some (term_of_range r)
+          Some (EMB.embed_range psc.psc_range r)
         | _ -> None
         end
       | _ -> None
@@ -722,9 +721,14 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let idstep psc args : option<term> =
+    (* Really an identity, but only when the thing is an embedded range *)
+    let prims_to_fstar_range_step psc args : option<term> =
         match args with
-        | [(a1, _)] -> Some a1
+        | [(a1, _)] ->
+            begin match EMB.unembed_range_safe a1 with
+            | Some r -> Some (EMB.embed_range psc.psc_range r)
+            | None -> None
+            end
         | _ -> failwith "Unexpected number of arguments"
     in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
@@ -759,7 +763,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              ]
     in
     let weak_ops =
-            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, prims_to_fstar_range_step);
              ]
     in
     let bounded_arith_ops
