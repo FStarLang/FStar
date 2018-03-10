@@ -20,6 +20,10 @@ val addr_of : #a:Type0 -> ref a -> GTot nat
 
 val heap_memory : heap -> GTot memory
 
+val heap_memory_defined (h:heap)
+  : Lemma (defined (heap_memory h))
+          [SMTPat (defined (heap_memory h))]
+
 let hpred = heap -> Type0
 let mpred = memory -> Type0
 

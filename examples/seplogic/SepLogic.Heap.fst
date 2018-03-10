@@ -41,6 +41,8 @@ let addr_of #a n = n
 
 let heap_memory h = Some h.memory
 
+let heap_memory_defined h = ()
+
 let disjoint_heaps h0 h1 =
   let _ = () in
   (forall r . ~(Some?(h0.memory r) && Some?(h1.memory r)))
