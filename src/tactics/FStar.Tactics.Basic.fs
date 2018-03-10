@@ -377,10 +377,13 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
 
 let must_trivial (s:string) (e : env) (g : guard_t) : tac<unit> =
     try if not (Rel.is_trivial <| Rel.discharge_guard_no_smt e g)
-        then fail1 "got non-trivial guard (%s)" s
+        then
+            mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
+            fail1 "got non-trivial guard (%s)" s)
         else ret ()
     with
-    | _ -> fail1 "got non-trivial guard (%s)" s
+    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
+           fail1 "got non-trivial guard (%s)" s)
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind cur_goal (fun goal ->
