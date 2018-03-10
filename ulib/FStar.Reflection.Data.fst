@@ -36,24 +36,24 @@ type bv_view = {
 
 noeq
 type term_view =
-  | Tv_Var    : bv -> term_view
-  | Tv_BVar   : bv -> term_view
-  | Tv_FVar   : fv -> term_view
-  | Tv_App    : term -> argv -> term_view
-  | Tv_Abs    : binder -> term -> term_view
-  | Tv_Arrow  : binder -> comp -> term_view
+  | Tv_Var    : v:bv -> term_view
+  | Tv_BVar   : v:bv -> term_view
+  | Tv_FVar   : v:fv -> term_view
+  | Tv_App    : hd:term -> a:argv -> term_view
+  | Tv_Abs    : bv:binder -> body:term -> term_view
+  | Tv_Arrow  : bv:binder -> c:comp -> term_view
   | Tv_Type   : unit -> term_view
-  | Tv_Refine : bv -> term -> term_view
+  | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> typ -> term_view
-  | Tv_Let    : bool -> bv -> term -> term -> term_view
-  | Tv_Match  : term -> list branch -> term_view
+  | Tv_Let    : recf:bool -> bv:bv -> def:term -> body:term -> term_view
+  | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_Unknown : term_view // Baked in "None"
 
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : typ -> comp_view
+  | C_Total     : ret:typ -> decr:option<term> -> comp_view
   | C_Lemma     : term -> term -> comp_view // pre & post
   | C_Unknown   : comp_view
 

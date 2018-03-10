@@ -53,7 +53,7 @@ type bv_view = {
 }
 
 type comp_view =
-    | C_Total of typ
+    | C_Total of typ * option<term> //optional decreases clause
     | C_Lemma of term * term
     | C_Unknown
 

@@ -193,7 +193,7 @@ let rec inspect (t:term) : term_view =
 
 let inspect_comp (c : comp) : comp_view =
     match c.n with
-    | Total (t, _) -> C_Total t
+    | Total (t, _) -> C_Total (t, None)
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
@@ -202,7 +202,13 @@ let inspect_comp (c : comp) : comp_view =
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
         else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
-            C_Total ct.result_typ
+            let maybe_dec = List.find (function DECREASES _ -> true | _ -> false) ct.flags in
+            let md = match maybe_dec with
+                     | None -> None
+                     | Some (DECREASES t) -> Some t
+                     | _ -> failwith "impossible"
+            in
+            C_Total (ct.result_typ, md)
         else
             C_Unknown
       end
@@ -210,7 +216,7 @@ let inspect_comp (c : comp) : comp_view =
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total t -> mk_Total t
+    | C_Total (t, _) -> mk_Total t
     | _ -> failwith "sorry, can embed comp_views other than C_Total for now"
 
 let pack_const (c:vconst) : sconst =
