@@ -13,6 +13,7 @@ all:	Apply.uver		\
 	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
+	VC.uver			\
 	Tutorial.uver		\
 	Splice.uver		\
 	Syntax.uver		\
