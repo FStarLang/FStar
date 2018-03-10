@@ -979,7 +979,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                                     (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
           focus (
                 bind tau (fun _ ->
-                // Try to get rid of all the unification lambdas
+                // Try to get rid  of all the unification lambdas
                 let ut = N.reduce_uvar_solutions env ut in
                 log ps (fun () ->
                     BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
@@ -993,6 +993,124 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
        | Inl "SKIP" -> ret t
        | Inl e -> fail e
        | Inr x -> ret x)
+
+(*
+ * Allows for replacement of individual subterms in the goal, asking the user to provide
+ * a proof of the equality. Users are presented with goals of the form `t == ?u` for `t`
+ * subterms of the current goal and `?u` a fresh unification variable. The users then
+ * calls apply_lemma to fully instantiate `u` and provide a proof of the equality.
+ * If all that is successful, the term is rewritten.
+ *)
+type ctrl = FStar.BigInt.t
+let keepGoing : ctrl = FStar.BigInt.zero
+let proceedToNextSubtree = FStar.BigInt.one
+let globalStop = FStar.BigInt.succ_big_int FStar.BigInt.one
+type rewrite_result = bool
+let skipThisTerm = false
+let rewroteThisTerm = true
+
+type ctrl_tac<'a> = tac<('a * ctrl)>
+let rec ctrl_tac_fold
+        (f : env -> term -> ctrl_tac<term>)
+        (env:env)
+        (ctrl:ctrl)
+        (t : term) : ctrl_tac<term> =
+    let keep_going c =
+        if c = proceedToNextSubtree then keepGoing
+        else c
+    in
+    let maybe_continue ctrl t k =
+        if ctrl = globalStop then ret (t, globalStop)
+        else if ctrl = proceedToNextSubtree then ret (t, keepGoing)
+        else k t
+    in
+    maybe_continue ctrl (SS.compress t) (fun t ->
+    bind (f env ({ t with n = t.n }))   (fun (t, ctrl) ->
+    maybe_continue ctrl t (fun t ->
+    match (SS.compress t).n with
+    | Tm_app (hd, args) ->
+        bind (ctrl_tac_fold f env ctrl hd) (fun (hd, ctrl) ->
+        let ctrl = keep_going ctrl in
+        bind (ctrl_tac_fold_args f env ctrl args) (fun (args, ctrl) ->
+        ret ({t with n=Tm_app (hd, args)}, ctrl)))
+    | Tm_abs (bs, t, k) ->
+        let bs, t' = SS.open_term bs t in
+        bind (ctrl_tac_fold f (Env.push_binders env bs) ctrl t') (fun (t'', ctrl) ->
+        ret ({t with n=Tm_abs (SS.close_binders bs, SS.close bs t'', k)}, ctrl))
+    | Tm_arrow (bs, k) ->
+        ret (t, ctrl) //TODO
+    | _ ->
+        ret (t, ctrl))))
+
+and ctrl_tac_fold_args
+        (f : env -> term -> ctrl_tac<term>)
+        (env:env)
+        (ctrl:ctrl)
+        (ts : list<arg>) : ctrl_tac<(list<arg>)> =
+    match ts with
+    | [] -> ret ([], ctrl)
+    | (t, q)::ts ->
+      bind (ctrl_tac_fold f env ctrl t) (fun (t, ctrl) ->
+      bind (ctrl_tac_fold_args f env ctrl ts) (fun (ts, ctrl) ->
+      ret ((t,q)::ts, ctrl)))
+
+let rewrite_rec (ps : proofstate)
+                (ctrl:term -> ctrl_tac<rewrite_result>)
+                (rewriter: tac<unit>)
+                opts
+                (env : Env.env)
+                (t : term) : ctrl_tac<term> =
+    let t = SS.compress t in
+    bind (bind (add_irrelevant_goal "dummy"
+                    env
+                    U.t_true
+                    opts) (fun _ ->
+          bind (ctrl t) (fun res ->
+          bind trivial (fun _ ->
+          ret res)))) (fun (should_rewrite, ctrl) ->
+    if not should_rewrite
+    then ret (t, ctrl)
+    else let t, lcomp, g = TcTerm.tc_term env t in //re-typechecking the goal is expensive
+         if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
+           ret (t, globalStop) // Don't do anything for possibly impure terms
+         else
+           let typ = lcomp.res_typ in
+           bind (new_uvar "pointwise_rec" env typ) (fun ut ->
+           log ps (fun () ->
+              BU.print2 "Pointwise_rec: making equality\n\t%s ==\n\t%s\n"
+                (Print.term_to_string t) (Print.term_to_string ut));
+           bind (add_irrelevant_goal
+                             "rewrite_rec equation"
+                             env
+                             (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)
+                             opts) (fun _ ->
+           focus
+            (bind rewriter (fun _ ->
+             // Try to get rid of all the unification lambdas
+             let ut = N.reduce_uvar_solutions env ut in
+             log ps (fun () ->
+                BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                            (Print.term_to_string t)
+                            (Print.term_to_string ut));
+             ret (ut, ctrl))))))
+
+let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
+                    (rewriter:tac<unit>) : tac<unit> =
+    bind get (fun ps ->
+    let g, gs = match ps.goals with
+                | g::gs -> g, gs
+                | [] -> failwith "Pointwise: no goals"
+    in
+    let gt = g.goal_ty in
+    log ps (fun () ->
+        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
+    bind dismiss_all (fun _ ->
+    bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) g.context keepGoing gt) (fun (gt', _) ->
+    log ps (fun () ->
+        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
+    bind (push_goals gs) (fun _ ->
+    add_goals [{g with goal_ty = gt'}]))))
+
 
 let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->
