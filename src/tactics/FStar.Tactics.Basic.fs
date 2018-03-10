@@ -370,10 +370,12 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     try ret (ps.main_context.type_of e t)
-    with ex ->
-           //printfn "%A\n" ex;
-           fail2 "Cannot type %s in context (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", "))
+    with | Errors.Err (_, msg)
+         | Errors.Error (_, msg, _) -> begin
+           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  msg
+           end)
 
 let istrivial (e:env) (t:term) : bool =
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
