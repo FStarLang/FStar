@@ -10,3 +10,9 @@ val set_proofstate_range : proofstate -> FStar.Range.range -> proofstate
 type direction =
     | TopDown
     | BottomUp
+
+type guard_policy =
+    | SMT
+    | Goal
+    | Force
+    | Drop // unsound! careful!

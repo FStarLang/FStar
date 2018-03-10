@@ -242,7 +242,7 @@ let (inspect_comp :
               FStar_Parser_Const.effect_Tot_lid
           then
             (let maybe_dec =
-               FStar_List.find
+               FStar_List.tryFind
                  (fun uu___55_770  ->
                     match uu___55_770 with
                     | FStar_Syntax_Syntax.DECREASES uu____771 -> true
