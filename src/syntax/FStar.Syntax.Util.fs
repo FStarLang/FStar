@@ -1510,89 +1510,167 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
-// indices.
-// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure that's ok.
-let rec term_eq t1 t2 =
-  let canon_app t =
-    match t.n with
-    | Tm_app _ -> let (hd, args) = head_and_args' t in
-                  { t with n = Tm_app (hd, args) }
-    | _ -> t
-  in
+// indices. We also ignore some parts of the syntax such universes and most annotations.
+
+// Setting this ref to `true` causes messages to appear when
+// some discrepancy was found. This is useful when trying to debug
+// why term_eq is returning `false`. This reference is `one shot`,
+// it will disable itself when term_eq returns, but in that single run
+// it will provide a (backwards) trace of where the discrepancy apperared.
+//
+// Use at your own peril, and please keep it if there's no good
+// reason against it, so I don't have to go crazy again.
+let debug_term_eq = U.mk_ref false
+
+let check msg cond =
+  if cond
+  then true
+  else (if !debug_term_eq then U.print1 ">>> term_eq failing: %s\n" msg; false)
+
+let fail msg = check msg false
+
+let rec term_eq_dbg (dbg : bool) t1 t2 =
   let t1 = canon_app (unmeta_safe t1) in
   let t2 = canon_app (unmeta_safe t2) in
-  match (compress t1).n, (compress t2).n with
+  match (compress (un_uinst t1)).n, (compress (un_uinst t2)).n with
+  | Tm_uinst _, _
+  | _, Tm_uinst _
+        (* -> eqlist eq_univs us1 us2 && term_eq_dbg dbg t1 t2 *)
+  | Tm_delayed _, _
+  | _, Tm_delayed _
+  | Tm_ascribed _, _
+  | _, Tm_ascribed _ ->
+    failwith "term_eq: impossible, should have been removed"
 
-  | Tm_bvar x, Tm_bvar y -> x.index = y.index
-  | Tm_name x, Tm_name y -> bv_eq x y
-  | Tm_fvar x, Tm_fvar y -> fv_eq x y
-  | Tm_uinst (t1, us1), Tm_uinst (t2, us2) ->
-        eqlist eq_univs us1 us2 && term_eq t1 t2
-  | Tm_constant c1, Tm_constant c2 -> eq_const c1 c2
-  | Tm_type x, Tm_type y -> x = y
-  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
-  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> eqlist binder_eq b1 b2 && comp_eq c1 c2
-  | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
+  | Tm_bvar x      , Tm_bvar y      -> check "bvar"  (x.index = y.index)
+  | Tm_name x      , Tm_name y      -> check "name"  (x.index = y.index)
+  | Tm_fvar x      , Tm_fvar y      -> check "fvar"  (fv_eq x y)
+  | Tm_constant c1 , Tm_constant c2 -> check "const" (eq_const c1 c2)
+  | Tm_type _, Tm_type _ -> true // x = y
 
-  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2
+  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) ->
+    (check "abs binders"  (eqlist (binder_eq_dbg dbg) b1 b2)) &&
+    (check "abs bodies"   (term_eq_dbg dbg t1 t2))
+    //&& eqopt (eqsum lcomp_eq_dbg dbg residual_eq) k1 k2
 
-  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 && eqlist branch_eq bs1 bs2
+  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) ->
+    (check "arrow binders" (eqlist (binder_eq_dbg dbg) b1 b2)) &&
+    (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
 
-  | Tm_ascribed (t1, _, _), _ -> term_eq t1 t2
-  | _, Tm_ascribed (t2, _, _) -> term_eq t1 t2
+  | Tm_refine (b1,t1), Tm_refine (b2,t2) ->
+    (check "refine bv"      (b1.index = b2.index)) &&
+    (check "refine formula" (term_eq_dbg dbg t1 t2))
+
+  | Tm_app (f1, a1), Tm_app (f2, a2) ->
+    (check "app head"  (term_eq_dbg dbg f1 f2)) &&
+    (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
+
+  | Tm_match (t1,bs1), Tm_match (t2,bs2) ->
+    (check "match head"     (term_eq_dbg dbg t1 t2)) &&
+    (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
+
+  | Tm_lazy _, _ -> check "lazy_l" (term_eq_dbg dbg (unlazy t1) t2)
+  | _, Tm_lazy _ -> check "lazy_r" (term_eq_dbg dbg t1 (unlazy t2))
 
   | Tm_let ((b1, lbs1), t1), Tm_let ((b2, lbs2), t2) ->
-    b1 = b2 && eqlist letbinding_eq lbs1 lbs2 && term_eq t1 t2
+    (check "let flag"  (b1 = b2)) &&
+    (check "let lbs"   (eqlist (letbinding_eq_dbg dbg) lbs1 lbs2)) &&
+    (check "let body"  (term_eq_dbg dbg t1 t2))
 
-  | Tm_uvar (u1, _), Tm_uvar (u2, _) -> u1 = u2
-
-  | Tm_delayed _, _
-  | _, Tm_delayed _ ->
-    failwith "impossible: term_eq did not compress properly"
+  | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
+    (* These must have alreade been resolved, so we check that
+     * they are indeed the same uvar *)
+    check "uvar" (u1 = u2)
 
   | Tm_meta (t1, m1), Tm_meta (t2, m2) ->
     begin match m1, m2 with
     | Meta_monadic (n1, ty1), Meta_monadic (n2, ty2) ->
-        lid_equals n1 n2 && term_eq ty1 ty2
+        (check "meta_monadic lid"   (lid_equals n1 n2)) &&
+        (check "meta_monadic type"  (term_eq_dbg dbg ty1 ty2))
+
     | Meta_monadic_lift (s1, t1, ty1), Meta_monadic_lift (s2, t2, ty2) ->
-        lid_equals s1 s2 && lid_equals t1 t2 && term_eq ty1 ty2
-    | _ -> false
+        (check "meta_monadic_lift src"   (lid_equals s1 s2)) &&
+        (check "meta_monadic_lift tgt"   (lid_equals t1 t2)) &&
+        (check "meta_monadic_lift type"  (term_eq_dbg dbg ty1 ty2))
+
+    | Meta_quoted (qt1, qi1), Meta_quoted (qt2, qi2) ->
+        (check "meta_quoted dyn"  (qi1 = qi2)) &&
+        (check "meta_quoted payload"  (term_eq_dbg dbg qt1 qt2))
+
+    | _ -> fail "metas"
     end
 
-  | Tm_unknown, Tm_unknown -> false // ?
+  // ?
+  | Tm_unknown, _
+  | _, Tm_unknown -> fail "unk"
 
-  | _, _ -> false
-and arg_eq a1 a2 = eqprod term_eq (fun q1 q2 -> q1 = q2) a1 a2
-and binder_eq b1 b2 = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2) b1 b2
-and lcomp_eq (c1:lcomp) (c2:lcomp) = false// TODO
-and residual_eq (r1:residual_comp) (r2:residual_comp) = false// TODO
-and comp_eq c1 c2 = match c1.n, c2.n with
-  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO what are the u's for? isn't the universe on t?
-  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2
-  | Comp c1, Comp c2 -> c1.comp_univs = c2.comp_univs &&
-                        c1.effect_name = c2.effect_name &&
-                        term_eq c1.result_typ c2.result_typ &&
-                        eqlist arg_eq c1.effect_args c2.effect_args &&
-                        eq_flags c1.flags c2.flags
-  | _, _ -> false
-  and eq_flags f1 f2 = true // TODO? Or just ignore?
-and branch_eq (p1,w1,t1) (p2,w2,t2) =
-    if eq_pat p1 p2
-    then begin
-        term_eq t1 t2 && (match w1, w2 with
-                          | Some x, Some y -> term_eq x y
-                          | None, None -> true
-                          | _ -> false)
-    end
-    else false
+  | Tm_bvar _, _
+  | Tm_name _, _
+  | Tm_fvar _, _
+  | Tm_constant _, _
+  | Tm_type _, _
+  | Tm_abs _, _
+  | Tm_arrow _, _
+  | Tm_refine _, _
+  | Tm_app _, _
+  | Tm_match _, _
+  | Tm_let _, _
+  | Tm_uvar _, _
+  | Tm_meta _, _
+  | _, Tm_bvar _
+  | _, Tm_name _
+  | _, Tm_fvar _
+  | _, Tm_constant _
+  | _, Tm_type _
+  | _, Tm_abs _
+  | _, Tm_arrow _
+  | _, Tm_refine _
+  | _, Tm_app _
+  | _, Tm_match _
+  | _, Tm_let _
+  | _, Tm_uvar _
+  | _, Tm_meta _     -> fail "bottom"
 
-and letbinding_eq lb1 lb2 =
+and arg_eq_dbg (dbg : bool) a1 a2 =
+    eqprod (fun t1 t2 -> check "arg tm" (term_eq_dbg dbg t1 t2))
+           (fun q1 q2 -> check "arg qual"  (q1 = q2))
+           a1 a2
+and binder_eq_dbg (dbg : bool) b1 b2 =
+    eqprod (fun b1 b2 -> check "binder sort"  (term_eq_dbg dbg b1.sort b2.sort))
+           (fun q1 q2 -> check "binder qual"  (q1 = q2))
+           b1 b2
+and lcomp_eq_dbg (c1:lcomp) (c2:lcomp) = fail "lcomp" // TODO
+and residual_eq_dbg (r1:residual_comp) (r2:residual_comp) = fail "residual"
+and comp_eq_dbg (dbg : bool) c1 c2 =
+    let c1 = comp_to_comp_typ_nouniv c1 in
+    let c2 = comp_to_comp_typ_nouniv c2 in
+    (check "comp eff"  (lid_equals c1.effect_name c2.effect_name)) &&
+    //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
+    (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
+    (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
+    true //eq_flags c1.flags c2.flags
+and eq_flags_dbg (dbg : bool) (f1 : cflags) (f2 : cflags) = true // TODO? Or just ignore?
+and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
+    (check "branch pat"  (eq_pat p1 p2)) &&
+    (check "branch body"  (term_eq_dbg dbg t1 t2))
+    && (check "branch when" (
+        match w1, w2 with
+        | Some x, Some y -> term_eq_dbg dbg x y
+        | None, None -> true
+        | _ -> false))
+
+and letbinding_eq_dbg (dbg : bool) (lb1 : letbinding) lb2 =
     // bvars have no meaning here, so we just check they have the same name
-       eqsum (fun bv1 bv2 -> bv1.ppname = bv2.ppname) fv_eq lb1.lbname lb2.lbname
-    && lb1.lbunivs = lb2.lbunivs
-    && term_eq lb1.lbtyp lb2.lbtyp
-    && term_eq lb1.lbdef lb2.lbdef
+    (check "lb bv"   (eqsum (fun bv1 bv2 -> true) fv_eq lb1.lbname lb2.lbname)) &&
+    (* (check "lb univs"  (lb1.lbunivs = lb2.lbunivs)) *)
+    (check "lb typ"  (term_eq_dbg dbg lb1.lbtyp lb2.lbtyp)) &&
+    (check "lb def"  (term_eq_dbg dbg lb1.lbdef lb2.lbdef))
     // Ignoring eff and attrs..
+
+let term_eq t1 t2 =
+    let r = term_eq_dbg !debug_term_eq t1 t2 in
+    debug_term_eq := false;
+    r
 
 let rec bottom_fold (f : term -> term) (t : term) : term =
     let ff = bottom_fold f in
