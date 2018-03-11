@@ -1283,22 +1283,28 @@ let solve_universe_eq orig wl u1 u2 =
     else really_solve_universe_eq orig wl u1 u2
 
 
+(* This balances two lists.  Given (xs, f) (ys, g), it will
+ * take a maximal same-length prefix from each list, getting
+ *   (xs1, xs2) and (ys1, ys2)  /  where length xs1 == length xs2 (and ys1 = [] \/ ys2 = [])
+ * and then return
+ *   (xs1, f xs2), (xy2, g ys2)
+ *
+ * We could find their minimum length, split, and apply, but this is faster.
+ *)
 let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
                       (bc2: (list<'a> * (list<'a> -> 'b)))
     : (list<'a> * 'b) * (list<'a> * 'b) =
     let (bs1, mk_cod1) = bc1 in
     let (bs2, mk_cod2) = bc2 in
-    let curry n bs (mk_cod:(list<'a> -> 'b)) =
-        let bs, rest = BU.first_N n bs in
-        (bs, mk_cod rest)
+    let rec aux (bs1 : list<'a>) (bs2 : list<'a>) : (list<'a> * 'b) * (list<'a> * 'b) =
+        match bs1, bs2 with
+        | x::xs, y::ys ->
+            let ((xs, xr), (ys, yr)) = aux xs ys in
+            ((x::xs, xr), (y::ys, yr))
+        | xs, ys -> // at least one empty
+            (([], mk_cod1 xs), ([], mk_cod2 ys))
     in
-    let l1 = List.length bs1 in
-    let l2 = List.length bs2 in
-    if l1 = l2
-    then (bs1, mk_cod1 []), (bs2, mk_cod2 [])
-    else if l1 > l2
-    then curry l2 bs1 mk_cod1, (bs2, mk_cod2 [])
-    else (bs1, mk_cod1 []), curry l1 bs2 mk_cod2
+    aux bs1 bs2
 
 
 (******************************************************************************************************)
@@ -2530,8 +2536,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
-              // GM: shouldn't we fail immediately if `eq_tm`
-              // returns `NotEqual`?
+              // GM: shouldn't we fail immediately if `eq_tm` returns `NotEqual`?
               // GM: No. We could be in a contradictory environment.
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
