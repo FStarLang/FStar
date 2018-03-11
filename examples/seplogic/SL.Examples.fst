@@ -15,30 +15,24 @@ let lemma_rw_bind (phi:memory -> memory -> memory -> memory -> int -> Type0) (r:
 	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (exists x. h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))  
   = ()
 
-let lemma_procedure_rw (pre:memory -> Type0)
-                       (phi:memory -> memory -> memory -> memory -> Type0)
-		       (h h':memory)
-  :Lemma (requires (defined (h <*> h') /\ pre h /\ phi h h' h h'))
-         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
-	                     (pre h0  /\ h0 == h /\ phi h h' h0 h1)))
-  = ()
-
-let lemma_procedure_bind (pre:memory -> Type0)
-                         (phi:memory -> memory -> memory -> memory -> memory -> memory -> Type0)
-                         (h h':memory)
-  :Lemma (requires (defined (h <*> h') /\ pre h /\ phi h h' (h <*> h') emp h h'))
-         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
-	                     (exists h3 h4. defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (pre h3 /\ h3 == h /\ phi h h' h0 h1 h3 h4))))
-  = ()
-
 let lemma_pure (h h':memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (defined (h <*> h') /\ phi h h' emp (h <*> h')))
          (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h0 h1))
   = ()
 
+let lemma_procedure_rw (phi:memory -> memory -> memory -> memory -> Type0)
+		       (h h':memory)
+  :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
+	                     (h0 == h /\ phi h h' h0 h1)))
+  = ()
 
-
-#set-options "--print_full_names"
+let lemma_procedure_bind (phi:memory -> memory -> memory -> memory -> memory -> memory -> Type0)
+                         (h h':memory)
+  :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h') emp h h'))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
+	                     (exists h3 h4. defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (h3 == h /\ phi h h' h0 h1 h3 h4))))
+  = ()
 
 let lemma_rewrite_sep_comm (h1 h2:memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists h3 h4. defined (h3 <*> h4) /\ (h1 <*> h2) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
@@ -89,29 +83,29 @@ let prelude () :Tac unit =
   implies_intro_with_and_elim ();
   ignore (repeat (fun _ -> let h = implies_intro () in
                         or_else (fun _ -> rewrite h) idtac))  //introduce the conjuncts into the context, but rewrite in the goal before doing that, specifically we want the initial heap expression to be inlined in the goal
-  
+
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false"
+
 let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
   (r := 2;
    !s)
   
-  <: STATE int (fun p h -> addr_of r <> addr_of s /\ h == ((r |> n) <*> (s |> m)) /\ p m ((r |> 2) <*> (s |> m)))
+  <: STATE int (fun p h -> h == ((r |> n) <*> (s |> m)) /\ (addr_of r <> addr_of s /\ p m ((r |> 2) <*> (s |> m))))
 
   by (fun () ->
       prelude ();
       apply_lemma (`lemma_rw_rw);
       split (); smt (); split (); smt ();  //farm the definedness goals to smt
       apply_lemma (`lemma_rewrite_sep_comm);
-      apply_lemma (`lemma_rw_rw);
-      dump "A")
+      apply_lemma (`lemma_rw_rw))
 
-#set-options "--use_two_phase_tc false"  //getting some assertion failures in 2-phases
 let swap (r1 r2:ref int) (m n:int)
   = (let x = !r1 in
      let y = !r2 in
      r1 := y;
      r2 := x)
 
-     <: STATE unit (fun post h -> addr_of r1 <> addr_of r2 /\ h == ((r1 |> m) <*> (r2 |> n)) /\ post () ((r1 |> n) <*> (r2 |> m)))
+     <: STATE unit (fun post h -> h == ((r1 |> m) <*> (r2 |> n)) /\ (addr_of r1 <> addr_of r2 /\ post () ((r1 |> n) <*> (r2 |> m))))
 
      by (fun () -> prelude ();
                 apply_lemma (`lemma_rw_rw);
@@ -125,7 +119,7 @@ let swap (r1 r2:ref int) (m n:int)
 	        apply_lemma (`lemma_rewrite_sep_comm);
                 apply_lemma (`lemma_rw_rw))
 
-let distinct_refs3 (#a:Type) (#b:Type) (#c:Type) (r1:ref a) (r2:ref b) (r3:ref c)
+unfold let distinct_refs3 (#a:Type) (#b:Type) (#c:Type) (r1:ref a) (r2:ref b) (r3:ref c)
   = addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r3 <> addr_of r1
 
 let rotate (r1 r2 r3:ref int) (l m n:int) =
@@ -134,17 +128,19 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
    let x = !r1 in
    x)
    
-  <: STATE int (fun post h -> distinct_refs3 r1 r2 r3 /\ h == ((r1 |> l) <*> ((r2 |> m) <*> (r3 |> n))) /\
-                          post n ((r1 |> n) <*> ((r2 |> l) <*> (r3 |> m))))
+  <: STATE int (fun post h -> h == ((r1 |> l) <*> ((r2 |> m) <*> (r3 |> n))) /\
+                         (distinct_refs3 r1 r2 r3 /\ post n ((r1 |> n) <*> ((r2 |> l) <*> (r3 |> m)))))
 
   by (fun () -> prelude ();
              apply_lemma (`lemma_rewrite_sep_comm);
 	     apply_lemma (`lemma_procedure_rw);
 	     split (); smt ();
 	     split (); smt ();
+	     split (); smt ();
 	     apply_lemma (`lemma_rewrite_sep_comm);
 	     apply_lemma (`lemma_rewrite_sep_assoc3);
 	     apply_lemma (`lemma_procedure_bind);
+	     split (); smt ();
 	     split (); smt ();
 	     split (); smt ();
 	     apply_lemma (`lemma_rewrite_sep_assoc4);
