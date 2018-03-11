@@ -1,4 +1,4 @@
-module Plugin.Tactic
+module SimpleTactic
 open FStar.Tactics
 
 [@ plugin]

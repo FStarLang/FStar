@@ -1,4 +1,4 @@
-module Plugin.Simple
+module Simple
 [@ plugin]
 let id (x:int{x >= 0}) =
   let rec countdown (y:nat) =

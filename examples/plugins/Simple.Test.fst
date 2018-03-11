@@ -1,5 +1,5 @@
-module Plugin.Simple.Test
-open Plugin.Simple
+module Simple.Test
+open Simple
 type t = | This | That
 let test0 = assert_norm (id 1000000 = 1000000)
 let test1 = assert_norm (poly_id 1000000 This = This)

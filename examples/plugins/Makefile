@@ -1,6 +1,7 @@
-FSTAR?=fstar $(OTHERFLAGS) --cache_checked_modules
+FSTAR_HOME=../..
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS) --cache_checked_modules
 
-ALL=Plugin.Simple Plugin.Tactic
+ALL=Simple SimpleTactic
 
 all: $(addsuffix .test, $(ALL))
 
@@ -9,13 +10,8 @@ all: $(addsuffix .test, $(ALL))
 
 include .depend
 
-%.test: taclib %.fst.checked
-	$(FSTAR) $*.fst --codegen Plugin --extract $*
+%.test: taclib %.ml
 	$(FSTAR) $*.Test.fst --load $*
-
-test: taclib Plugin.Simple.fst.checked
-	$(FSTAR) Plugin.Simple.fst --codegen Plugin --extract Plugin.Simple
-	$(FSTAR) Plugin.Simple.Test.fst --load Plugin.Simple
 
 %.fst.checked:
 	$(FSTAR) $<
@@ -24,6 +20,9 @@ test: taclib Plugin.Simple.fst.checked
 %.fsti.checked:
 	$(FSTAR) $<
 	touch -ac $@
+
+%.ml: %.fst.checked
+	$(FSTAR) $*.fst --codegen Plugin --extract $*
 
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
