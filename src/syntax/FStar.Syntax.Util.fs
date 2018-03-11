@@ -553,6 +553,13 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
+    | Tm_match (t1, bs1), Tm_match (t2, bs2) ->
+        if List.length bs1 = List.length bs2
+        then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
+                             (List.zip bs1 bs2)
+                             (eq_tm t1 t2)
+        else Unknown
+
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
 
@@ -566,6 +573,24 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       eq_tm t1 t2
 
     | _ -> Unknown
+
+and branch_matches b1 b2 =
+    let related_by f o1 o2 =
+        match o1, o2 with
+        | None, None -> true
+        | Some x, Some y -> f x y
+        | _, _ -> false
+    in
+    let (p1, w1, t1) = b1 in
+    let (p2, w2, t2) = b2 in
+    if eq_pat p1 p2
+    then begin
+         // We check the `when` branches too, even if unsupported for now
+         if eq_tm t1 t2 = Equal && related_by (fun t1 t2 -> eq_tm t1 t2 = Equal) w1 w2
+         then Equal
+         else Unknown
+         end
+    else Unknown
 
 and eq_args (a1:args) (a2:args) : eq_result =
     match a1, a2 with
