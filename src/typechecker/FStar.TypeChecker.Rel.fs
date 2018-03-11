@@ -756,6 +756,18 @@ type match_result =
   | HeadMatch
   | FullMatch
 
+let string_of_option f = function
+  | None -> "None"
+  | Some x -> "Some " ^ f x
+
+let string_of_match_result = function
+    | MisMatch (d1, d2) ->
+        "MisMatch "
+        ^ string_of_option Print.delta_depth_to_string d1
+        ^ string_of_option Print.delta_depth_to_string d2
+    | HeadMatch -> "HeadMatch"
+    | FullMatch -> "FullMatch"
+
 let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
@@ -904,7 +916,13 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
             | MisMatch _ -> fail r
 
             | _ -> success n_delta r t1 t2 in
-    aux true 0 t1 t2
+    let r = aux true 0 t1 t2 in
+    if Env.debug env <| Options.Other "RelDelta" then
+        BU.print3 "head_matches (%s, %s) = %s\n"
+            (Print.term_to_string t1)
+            (Print.term_to_string t2)
+            (string_of_match_result (fst r));
+    r
 
 type tc =
  | T of term * (binders -> Range.range -> term)
@@ -2261,7 +2279,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     if BU.physical_equality t1 t2 then solve env (solve_prob orig None [] wl) else
     let _ =
         if debug env (Options.Other "RelCheck")
-        then BU.print1 "Attempting %s\n" (string_of_int problem.pid) in
+        then BU.print3 "Attempting %s (%s - %s)\n" (string_of_int problem.pid)
+                            (Print.tag_of_term t1)
+                            (Print.tag_of_term t2)
+                            in
     let r = Env.get_range env in
     let not_quote t =
         match (SS.compress t).n with
@@ -2496,6 +2517,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_app _ ->
          let head1 = U.head_and_args t1 |> fst in
          let head2 = U.head_and_args t2 |> fst in
+         let _ =
+             if debug env (Options.Other "RelCheck")
+             then BU.print3 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" (string_of_int problem.pid)
+                                 (Print.term_to_string head1)
+                                 (Print.term_to_string head2)
+         in
          if (Env.is_interpreted env head1
              || Env.is_interpreted env head2)   //we have something like (+ x1 x2) =?= (- y1 y2)
          && wl.smt_ok

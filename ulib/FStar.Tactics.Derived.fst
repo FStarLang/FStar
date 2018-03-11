@@ -2,6 +2,7 @@ module FStar.Tactics.Derived
 
 open FStar.Reflection
 open FStar.Reflection.Formula
+open FStar.Tactics.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
@@ -19,16 +20,23 @@ let fresh_binder_named nm t =
 let fresh_binder t =
     fresh_binder_named "x" t
 
+let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
+    let old_pol = get_guard_policy () in
+    set_guard_policy pol;
+    let r = f () in
+    set_guard_policy old_pol;
+    r
+
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
 let exact (t : term) : Tac unit =
-    t_exact false true t
+    with_policy Force (fun () -> t_exact false t)
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
-    t_exact false false t
+    with_policy Goal (fun () -> t_exact false t)
 
 let fresh_uvar o =
     let e = cur_env () in
@@ -300,13 +308,6 @@ let change_with t1 t2 =
 
 private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
 private let conv #x #y eq w = w
-
-let change t1 =
-    focus (fun () ->
-        let t = mk_app (`conv) [(t1, Q_Implicit)] in
-        apply t;
-        trivial ()
-    )
 
 let change_sq t1 =
     change (mk_e_app (`squash) [t1])

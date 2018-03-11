@@ -203,7 +203,7 @@ let inspect_comp (c : comp) : comp_view =
             | _ ->
                 failwith "inspect_comp: Lemma does not have enough arguments?"
         else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
-            let maybe_dec = List.find (function DECREASES _ -> true | _ -> false) ct.flags in
+            let maybe_dec = List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags in
             let md = match maybe_dec with
                      | None -> None
                      | Some (DECREASES t) -> Some t

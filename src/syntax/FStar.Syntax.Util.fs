@@ -510,7 +510,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
-    match t1.n, t2.n with
+    match (compress t1).n, (compress t2).n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->

@@ -619,11 +619,11 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         -> option<term>
         = fun as_a f res args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
-    let as_primitive_step (l, arity, f) = {
+    let as_primitive_step is_strong (l, arity, f) = {
         name=l;
         arity=arity;
         auto_reflect=None;
-        strong_reduction_ok=true;
+        strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
         interpretation=f
     } in
@@ -695,8 +695,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         EMB.embed_string rng (if b then "true" else "false")
     in
-    let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
-    let mk_range (_:psc) args : option<term> =
+    let mk_range (psc:psc) args : option<term> =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
         match arg_as_string fn,
@@ -708,7 +707,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
           let r = FStar.Range.mk_range fn
                               (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                               (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-          Some (term_of_range r)
+          Some (EMB.embed_range psc.psc_range r)
         | _ -> None
         end
       | _ -> None
@@ -727,9 +726,14 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let idstep psc args : option<term> =
+    (* Really an identity, but only when the thing is an embedded range *)
+    let prims_to_fstar_range_step psc args : option<term> =
         match args with
-        | [(a1, _)] -> Some a1
+        | [(a1, _)] ->
+            begin match EMB.unembed_range_safe a1 with
+            | Some r -> Some (EMB.embed_range psc.psc_range r)
+            | None -> None
+            end
         | _ -> failwith "Unexpected number of arguments"
     in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
@@ -761,7 +765,10 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                                     1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
-             (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+             ]
+    in
+    let weak_ops =
+            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, prims_to_fstar_range_step);
              ]
     in
     let bounded_arith_ops
@@ -794,7 +801,9 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
        add_sub_mul_v
        @ div_mod_unsigned
     in
-    prim_from_list <| List.map as_primitive_step (basic_ops@bounded_arith_ops)
+    let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
+    let weak_steps   = List.map (as_primitive_step false) weak_ops in
+    prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : BU.psmap<primitive_step> =
     let interp_prop (psc:psc) (args:args) : option<term> =
@@ -1592,7 +1601,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                 | UnivArgs(us', _)::stack ->
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
                   norm cfg env stack t
-                | _ when cfg.steps.erase_universes ->
+                | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
                   norm cfg env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t

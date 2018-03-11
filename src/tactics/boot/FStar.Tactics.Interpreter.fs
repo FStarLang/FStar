@@ -311,7 +311,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__rewrite"       rewrite RE.unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac0 "__refine_intro"  refine_intro embed_unit t_unit;
-      mktac3 "__t_exact"       t_exact unembed_bool unembed_bool RE.unembed_term embed_unit t_unit;
+      mktac2 "__t_exact"       t_exact unembed_bool RE.unembed_term embed_unit t_unit;
       mktac1 "__apply"         (apply  true) RE.unembed_term embed_unit t_unit;
       mktac1 "__apply_raw"     (apply false) RE.unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma RE.unembed_term embed_unit t_unit;
@@ -359,6 +359,10 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
 
       mktac2 "__fresh_bv_named"  fresh_bv_named unembed_string RE.unembed_term RE.embed_bv S.t_bv;
+      mktac1 "__change"          change RE.unembed_term embed_unit t_unit;
+
+      mktac0 "__get_guard_policy" get_guard_policy E.embed_guard_policy E.t_guard_policy;
+      mktac1 "__set_guard_policy" set_guard_policy E.unembed_guard_policy embed_unit t_unit;
 
       decr_depth_step;
       incr_depth_step;
