@@ -217,20 +217,20 @@ let comp_flags c = match c.n with
     | GTotal _ -> [SOMETRIVIAL]
     | Comp ct -> ct.flags
 
+(* Duplicate of the function below not failing when universe is not provided *)
+let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
+    match c.n with
+        | Comp c -> c
+        | Total (t, u_opt)
+        | GTotal(t, u_opt) ->
+            {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
+             effect_name=comp_effect_name c;
+             result_typ=t;
+             effect_args=[];
+             flags=comp_flags c}
+
 let comp_set_flags (c:comp) f =
-    (* Duplicate of the function below not failing when universe is not provided *)
-    let comp_to_comp_typ (c:comp) : comp_typ =
-        match c.n with
-            | Comp c -> c
-            | Total (t, u_opt)
-            | GTotal(t, u_opt) ->
-                {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
-                 effect_name=comp_effect_name c;
-                 result_typ=t;
-                 effect_args=[];
-                 flags=comp_flags c}
-    in
-    {c with n=Comp ({comp_to_comp_typ c with flags=f})}
+    {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
 let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
     let comp_typ_set_flags (c:comp) =
@@ -437,6 +437,10 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
       } in
     mk (Tm_lazy i) None rng
 
+let canon_app t =
+    let hd, args = head_and_args' (unascribe t) in
+    mk_Tm_app hd args None t.pos
+
 (* ---------------------------------------------------------------------- *)
 (* <eq_tm> Syntactic equality of zero-order terms                         *)
 (* ---------------------------------------------------------------------- *)
@@ -467,10 +471,6 @@ let injectives =
      "FStar.UInt64.__uint_to_t"]
 
 let rec eq_tm (t1:term) (t2:term) : eq_result =
-    let canon_app t =
-        let hd, args = head_and_args' (unascribe t) in
-        mk_Tm_app hd args None t.pos
-    in
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
     let equal_if = function
