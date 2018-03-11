@@ -1352,31 +1352,33 @@ let (interpret_plugin_as_term_fun :
                                   FStar_All.pipe_left (mk_lam "psc")
                                     uu____3003
                                    in
-                                (uu____3002, arity, false)  in
+                                (uu____3002, (arity + (Prims.parse_int "1")),
+                                  false)
+                                 in
                               FStar_Pervasives_Native.Some uu____2995
                             else
-                              (let uu____3018 =
-                                 let uu____3019 =
-                                   let uu____3020 =
+                              (let uu____3020 =
+                                 let uu____3021 =
+                                   let uu____3022 =
                                      FStar_Syntax_Print.term_to_string t1  in
                                    Prims.strcat
                                      "Plugins not defined for type "
-                                     uu____3020
+                                     uu____3022
                                     in
-                                 NoTacticEmbedding uu____3019  in
-                               FStar_Exn.raise uu____3018))
-                     | (b,uu____3030)::bs3 ->
-                         let uu____3042 =
-                           let uu____3045 =
+                                 NoTacticEmbedding uu____3021  in
+                               FStar_Exn.raise uu____3020))
+                     | (b,uu____3032)::bs3 ->
+                         let uu____3044 =
+                           let uu____3047 =
                              mk_embedding env b.FStar_Syntax_Syntax.sort  in
-                           uu____3045 :: accum_embeddings  in
-                         aux uu____3042 env bs3
+                           uu____3047 :: accum_embeddings  in
+                         aux uu____3044 env bs3
                       in
                    (try aux [] tvar_context bs1
                     with
                     | NoTacticEmbedding msg ->
-                        ((let uu____3078 = FStar_Ident.string_of_lid fv  in
+                        ((let uu____3080 = FStar_Ident.string_of_lid fv  in
                           not_implemented_warning t1.FStar_Syntax_Syntax.pos
-                            uu____3078 msg);
+                            uu____3080 msg);
                          FStar_Pervasives_Native.None)))
   
