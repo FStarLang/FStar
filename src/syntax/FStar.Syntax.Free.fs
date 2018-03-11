@@ -50,7 +50,7 @@ let singleton_uv x   = {fst no_free_vars with free_uvars=[x]}, snd no_free_vars
 let singleton_univ x = {fst no_free_vars with free_univs=[x]}, snd no_free_vars
 let singleton_univ_name x = {fst no_free_vars with free_univ_names=[x]}, snd no_free_vars
 
-let union f1 f2 = {
+let union (f1 : free_vars_and_fvars) (f2 : free_vars_and_fvars) = {
     free_names=(fst f1).free_names @ (fst f2).free_names;
     free_uvars=(fst f1).free_uvars @ (fst f2).free_uvars;
     free_univs=(fst f1).free_univs @ (fst f2).free_univs;
@@ -76,7 +76,7 @@ let rec free_univs u = match Subst.compress_univ u with
 //on the other hand, for earlier interface use_cache is true
 //this flag is propagated, and is used in the function should_invalidate_cache below
 let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
-    let aux_binders bs from_body =
+    let aux_binders (bs : binders) (from_body : free_vars_and_fvars) =
         let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) no_free_vars in
         union from_binders from_body
     in
@@ -144,14 +144,28 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
           union n (union (free_names_and_uvars lb.lbtyp use_cache) (free_names_and_uvars lb.lbdef use_cache)))
           (free_names_and_uvars t use_cache)
 
-      | Tm_meta(t, Meta_pattern args) ->
-        List.fold_right (fun a acc -> free_names_and_uvars_args a acc use_cache) args (free_names_and_uvars t use_cache)
+      | Tm_meta(t, m) ->
+        let u1 = free_names_and_uvars t use_cache in
+        begin match m with
+        | Meta_pattern args ->
+            List.fold_right (fun a acc -> free_names_and_uvars_args a acc use_cache) args u1
 
-      | Tm_meta(t, Meta_monadic(_, t')) ->
-        union (free_names_and_uvars t use_cache) (free_names_and_uvars t' use_cache)
+        | Meta_monadic(_, t') ->
+          union u1 (free_names_and_uvars t' use_cache)
 
-      | Tm_meta(t, _) ->
-        free_names_and_uvars t use_cache
+        | Meta_monadic_lift(_, _, t') ->
+          union u1 (free_names_and_uvars t' use_cache)
+
+        | Meta_quoted (qt, qi) ->
+            if qi.qopen
+            then union u1 (free_names_and_uvars qt use_cache)
+            else u1
+
+        | Meta_labeled _
+        | Meta_desugared _
+        | Meta_named _ -> u1
+        end
+
 
 and free_names_and_uvars t use_cache =
   let t = Subst.compress t in
