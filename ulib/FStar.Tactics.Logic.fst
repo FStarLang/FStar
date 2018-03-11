@@ -31,6 +31,12 @@ let forall_intro () : Tac binder =
     | Forall _ _ -> begin apply_lemma (`fa_intro_lem); intro () end
     | _          -> fail "not a forall"
 
+let forall_intro_as (s:string) : Tac binder =
+    let g = cur_goal () in
+    match term_as_formula g with
+    | Forall _ _ -> begin apply_lemma (`fa_intro_lem); intro_as s end
+    | _          -> fail "not a forall"
+
 let forall_intros () : Tac binders = repeat1 forall_intro
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
