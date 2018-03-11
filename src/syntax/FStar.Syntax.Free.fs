@@ -210,6 +210,7 @@ let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
 let new_universe_uvar_set () : set<universe_uvar> =
     Util.new_set compare_universe_uvar
 
+let empty = Util.new_set Syntax.order_bv
 let names t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_names Syntax.order_bv
 let uvars t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uvars compare_uv
 let univs t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univs compare_universe_uvar

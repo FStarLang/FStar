@@ -65,29 +65,29 @@ let abstract_guard_n bs g =
 let abstract_guard b g =
     abstract_guard_n [b] g
 
-let def_check_closed_in rng msg e t =
+let def_check_vars_in_set rng msg vset t =
     if Options.defensive () then begin
-        let s = unbound_vars e t in
-        if not (BU.set_is_empty s)
+        let s = Free.names t in
+        if not (BU.set_is_empty <| BU.set_difference s vset)
         then Errors.log_issue rng
                     (Errors.Warning_Defensive,
                      BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
                                       msg
                                       (Print.term_to_string t)
-                                      (BU.set_elements s |> Print.bvs_to_string ", "))
+                                      (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
     end
 
 let def_check_closed rng msg t =
-    if Options.defensive () then begin
-        let s = Free.names t in
-        if not (BU.set_is_empty s)
-        then Errors.log_issue rng
-                    (Errors.Warning_Defensive,
-                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
-                                      msg
-                                      (Print.term_to_string t)
-                                      (BU.set_elements s |> Print.bvs_to_string ", "))
-    end
+    if not (Options.defensive ()) then () else
+    def_check_vars_in_set rng msg Free.empty t
+
+let def_check_closed_in rng msg l t =
+    if not (Options.defensive ()) then () else
+    def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
+
+let def_check_closed_in_env rng msg e t =
+    if not (Options.defensive ()) then () else
+    def_check_closed_in rng msg (Env.bound_vars e) t
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
@@ -319,18 +319,43 @@ let p_guard = function
    | TProb p -> p.logical_guard
    | CProb p -> p.logical_guard
 
+let def_scope_wf msg rng r =
+    if not (Options.defensive ()) then () else
+    let rec aux prev next =
+        match next with
+        | [] -> ()
+        | (bv, _)::bs ->
+          begin
+            def_check_closed_in rng msg prev bv.sort;
+            aux (prev @ [bv]) bs
+          end
+    in aux [] r
+
 let p_scope prob =
    let r = match prob with
    | TProb p -> p.scope
    | CProb p -> p.scope
    in
-   begin match r with
-   | [] -> r
-   | (bv, _)::_ ->
-       // A simple sanity check, the head of the environment must have a closed type.
-       def_check_closed (p_loc prob) "p_scope" bv.sort;
-       r
-   end
+   def_scope_wf "p_scope" (p_loc prob) r;
+   r
+
+let def_check_scoped msg prob phi =
+    if not (Options.defensive ()) then () else
+    def_check_closed_in (p_loc prob) msg (List.map fst <| p_scope prob) phi
+
+let def_check_prob msg prob =
+    if not (Options.defensive ()) then () else
+    def_scope_wf (msg ^ ".scope") (p_loc prob) (p_scope prob);
+    def_check_scoped (msg ^ ".guard")      prob (fst <| p_guard prob);
+    def_check_scoped (msg ^ ".guard_type") prob (snd <| p_guard prob);
+    match prob with
+    | TProb p ->
+        begin
+        def_check_scoped (msg ^ ".lhs")        prob p.lhs;
+        def_check_scoped (msg ^ ".rhs")        prob p.rhs
+        end
+    | _ -> (); //TODO
+    ()
 
 let p_invert = function
    | TProb p -> TProb <| invert p
@@ -565,6 +590,7 @@ let u_abs (k : typ) (ys : binders) (t : term) : term =
          U.abs ys t (Some (U.residual_comp_of_comp c))
 
 let solve_prob' resolve_ok prob logical_guard uvis wl =
+    def_check_prob "solve_prob'" prob;
     let phi = match logical_guard with
       | None -> U.t_true
       | Some phi -> phi in
@@ -591,6 +617,8 @@ let extend_solution pid sol wl =
     {wl with ctr=wl.ctr+1}
 
 let solve_prob prob logical_guard uvis wl =
+    def_check_prob "solve_prob.prob" prob;
+    BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
     let conj_guard t g = match t, g with
         | _, Trivial -> t
         | None, NonTrivial f -> Some f
@@ -1661,9 +1689,11 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
       solve env (attempt sub_probs wl)
 
 and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
+    def_check_prob "solve_t" (TProb problem);
     solve_t' env (compress_tprob wl problem) wl
 
 and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
+    def_check_prob "solve_t'.1" (TProb problem);
     let giveup_or_defer orig msg = giveup_or_defer env orig wl msg in
 
     (* <rigid_rigid_delta>: are t1 and t2, with head symbols head1 and head2, compatible after some delta steps? *)
@@ -2279,6 +2309,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     (* </flex-flex> *)
 
     let orig = TProb problem in
+    def_check_prob "solve_t'.2" orig;
     if BU.physical_equality problem.lhs problem.rhs then solve env (solve_prob orig None [] wl) else
     let t1 = problem.lhs in
     let t2 = problem.rhs in
@@ -2955,7 +2986,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
-      def_check_closed_in (Env.get_range env) "discharge_guard'" env vc;
+      def_check_closed_in_env (Env.get_range env) "discharge_guard'" env vc;
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
