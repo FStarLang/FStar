@@ -64,6 +64,7 @@ let (reflection_primops :
     {
       FStar_TypeChecker_Normalize.name = l;
       FStar_TypeChecker_Normalize.arity = arity;
+      FStar_TypeChecker_Normalize.auto_reflect = FStar_Pervasives_Native.None;
       FStar_TypeChecker_Normalize.strong_reduction_ok = false;
       FStar_TypeChecker_Normalize.requires_binder_substitution = false;
       FStar_TypeChecker_Normalize.interpretation =
@@ -93,7 +94,7 @@ let (reflection_primops :
       let uu____396 =
         mk11 () () "__inspect_fv"
           (fun a417  -> (Obj.magic FStar_Reflection_Basic.inspect_fv) a417)
-          (Obj.magic FStar_Reflection_Embeddings.unembed_fvar)
+          (Obj.magic FStar_Reflection_Embeddings.unembed_fv)
           (Obj.magic FStar_Syntax_Embeddings.embed_string_list)
          in
       let uu____397 =
@@ -105,7 +106,7 @@ let (reflection_primops :
           mk11 () () "__pack_fv"
             (fun a418  -> (Obj.magic FStar_Reflection_Basic.pack_fv) a418)
             (Obj.magic uu____401)
-            (Obj.magic FStar_Reflection_Embeddings.embed_fvar)
+            (Obj.magic FStar_Reflection_Embeddings.embed_fv)
            in
         let uu____410 =
           let uu____413 =

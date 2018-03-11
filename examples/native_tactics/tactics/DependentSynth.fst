@@ -9,6 +9,7 @@ let mk_if (test e_true e_false: term) : Tot term =
   let m = pack (Tv_Match test [ br_true; br_false ] ) in
   m
 
+[@plugin]
 let t () : Tac unit =
   let b = `bool in
   let test' = fresh_bv b in

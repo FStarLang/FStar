@@ -2,6 +2,7 @@ module Unify
 
 open FStar.Tactics
 
+[@plugin]
 let tau =
   fun () ->
         let l = fresh_uvar None in // None: we don't provide a type

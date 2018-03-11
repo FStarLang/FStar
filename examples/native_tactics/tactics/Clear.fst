@@ -18,6 +18,7 @@ let l1 (x : bool) (y : int) (z : unit) =
                 exact (`p)
              )
 
+[@plugin]
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
     let bs = binders_of_env e in

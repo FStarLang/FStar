@@ -431,9 +431,11 @@ and args_to_string args =
     args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string' env c =
-  let e = Resugar.resugar_comp' env c in
-  let d = ToDocument.term_to_document e in
-  Pp.pretty_string (float_of_string "1.0") 100 d
+  if Options.ugly ()
+  then comp_to_string c
+  else let e = Resugar.resugar_comp' env c in
+       let d = ToDocument.term_to_document e in
+       Pp.pretty_string (float_of_string "1.0") 100 d
 
 and comp_to_string c =
   if not (Options.ugly()) then

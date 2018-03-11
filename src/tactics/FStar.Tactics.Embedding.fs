@@ -48,9 +48,20 @@ let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
 let fstar_tactics_topdown = lid_as_data_tm fstar_tactics_topdown_lid
 let fstar_tactics_bottomup = lid_as_data_tm fstar_tactics_bottomup_lid
 
+let fstar_tactics_SMT_lid   = fstar_tactics_lid' ["Types"; "SMT"]
+let fstar_tactics_Goal_lid  = fstar_tactics_lid' ["Types"; "Goal"]
+let fstar_tactics_Drop_lid  = fstar_tactics_lid' ["Types"; "Drop"]
+let fstar_tactics_Force_lid = fstar_tactics_lid' ["Types"; "Force"]
+
+let fstar_tactics_SMT   = lid_as_data_tm fstar_tactics_SMT_lid
+let fstar_tactics_Goal  = lid_as_data_tm fstar_tactics_Goal_lid
+let fstar_tactics_Drop  = lid_as_data_tm fstar_tactics_Drop_lid
+let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
+
 let mktuple2_tm = lid_as_data_tm (PC.lid_Mktuple2)
 
 let t_proofstate = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 
 let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;U_zero])
                                       [S.as_arg t;
@@ -124,4 +135,21 @@ let unembed_direction (t : term) : option<direction> =
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
+        None
+
+let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
+    match p with
+    | SMT   -> fstar_tactics_SMT
+    | Goal  -> fstar_tactics_Goal
+    | Force -> fstar_tactics_Force
+    | Drop  -> fstar_tactics_Drop
+
+let unembed_guard_policy (t : term) : option<guard_policy> =
+    match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Force_lid -> Some Force
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Drop_lid  -> Some Drop
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded guard_policy: %s" (Print.term_to_string t)));
         None

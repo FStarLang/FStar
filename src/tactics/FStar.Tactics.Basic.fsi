@@ -19,6 +19,9 @@ val set : proofstate -> tac<unit>
 val get : tac<proofstate>
 val bind : tac<'a> -> ('a -> tac<'b>) -> tac<'b>
 
+val get_guard_policy : tac<guard_policy>
+val set_guard_policy : guard_policy -> tac<unit>
+
 // Not very uniform....
 val log : proofstate -> (unit -> unit) -> unit
 val tacprint  : string -> unit
@@ -42,7 +45,7 @@ val intro_rec : tac<(binder * binder)>
 val norm : list<EMB.norm_step> -> tac<unit>
 val norm_term_env : env -> list<EMB.norm_step> -> term -> tac<term>
 val refine_intro : tac<unit>
-val t_exact : bool -> bool -> term -> tac<unit>
+val t_exact : bool -> term -> tac<unit>
 val apply : bool -> term -> tac<unit>
 val apply_lemma : term -> tac<unit>
 val rewrite : binder -> tac<unit>
@@ -65,6 +68,7 @@ val launch_process : string -> string -> string -> tac<string>
 val fresh_bv_named : string -> typ -> tac<bv>
 
 val pointwise : direction -> tac<unit> -> tac<unit>
+val topdown_rewrite: (term -> tac<(bool * FStar.BigInt.t)>) -> tac<unit> -> tac<unit>
 val trefl : tac<unit>
 
 val dup : tac<unit>
@@ -84,6 +88,7 @@ val uvar_env : env -> option<typ> -> tac<term>
 val unshelve : term -> tac<unit>
 
 val unify : term -> term -> tac<bool>
+val change : typ -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
 val proofstate_of_goal_ty : env -> typ -> proofstate * term (* Returns proofstate and uvar for main witness *)

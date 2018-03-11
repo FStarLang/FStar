@@ -559,7 +559,7 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"]
+   "vfs-add"; "tactic-ranges"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol

@@ -85,6 +85,7 @@ type term' =
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
   | Quote     of term * bool (* boolean marks whether this is an open quotation, i.e., one that gets substituted inside *)
+  | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
 and term = {tm:term'; range:range; level:level}
 

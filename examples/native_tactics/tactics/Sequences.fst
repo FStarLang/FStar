@@ -4,7 +4,7 @@ open FStar.Tactics
 open FStar.Reflection
 open FStar.Seq
 
-let is_seq_t t : Tac bool = 
+let is_seq_t t : Tac bool =
     let hd, args = collect_app t in
     let tseq = `seq in
     print ("This is the quoted term: " ^ (term_to_string tseq));
@@ -13,7 +13,7 @@ let is_seq_t t : Tac bool =
 
 let clear_hypothesis (b:binder) : Tac unit = ()
 
-let retain_only (nss:list string) : Tac unit = 
+let retain_only (nss:list string) : Tac unit =
   prune ""; //removes every top-level assertion which "" as a prefix; so prune everything
   addns "Prims" ; //keep prims always
   let _ig = map addns nss in //add back only things in nss
@@ -21,9 +21,9 @@ let retain_only (nss:list string) : Tac unit =
 
 let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
     ()
-  
+
 let prune_for_seq () : Tac unit =
-  let e = cur_env () in 
+  let e = cur_env () in
   let bs = binders_of_env e in
   //prune the local environment
   let _ = map (fun b ->
@@ -35,7 +35,7 @@ let prune_for_seq () : Tac unit =
     | _ -> ()) bs
   in
   retain_only ["FStar.Seq"]
-  
+
 let try_unref_eq () : Tac unit =
   let g = cur_goal () in //this is just the goal type
   let f = term_as_formula g in
@@ -50,15 +50,15 @@ let try_unref_eq () : Tac unit =
     end
   | _ -> fail "done"
 
-val sequence_pruning : unit -> Tac unit
-let sequence_pruning () =
+[@plugin]
+let sequence_pruning () : Tac unit =
   norm [] ; //normalize the current goal
   // GM: if `seq a` is refined, applying lemma_eq_elim misbehaves and spins off a different goal, work around it by removing refinements here
   let _ = repeat try_unref_eq in
   let g = cur_goal () in
   let f = term_as_formula g in
   print ("This is the formula: " ^ (formula_to_string f));
-  match f with 
+  match f with
   | Comp (Eq (Some t)) l r ->
     //could use inspect t, but in this case ...
     if is_seq_t t
@@ -71,15 +71,15 @@ let sequence_pruning () =
 (* tseqthe quoted term    print ("This is the quoted term: " ^ (term_to_string tseq));     *)
 
 (* This is a way to match more explicitly on an fvar
-    match inspect hd with 
-    | Tv_FVar fv -> 
-      if inspect_fv fv = ["FStar"; "Seq"; "Base"; "seq"] //may be nicer to write it as "FStar.Seq.seq"; both as a string and also to 
+    match inspect hd with
+    | Tv_FVar fv ->
+      if inspect_fv fv = ["FStar"; "Seq"; "Base"; "seq"] //may be nicer to write it as "FStar.Seq.seq"; both as a string and also to
       then apply_lemma (quote lemma_eq_elim) //ok, we have a sequence equality; we're going to try to process it
       else fail "Not a sequence" //don't know about this goal, leave it untouched
     | _ -> fail "Not a sequence"
     end
 *)
-    
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}
 
 
 (*  separate subgoal *)
- 
+
 (*   run idtac [ (G, (slice s from to == slice l from to)] where G =  a s x from to l y. y==17 ==> y == snoc s x *)
 
 (*   -->* [ (G, (slice s from to == slice l from to)] *)

@@ -13,12 +13,15 @@ all:	Apply.uver		\
 	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
+	VC.uver			\
+	Change.uver		\
 	Tutorial.uver		\
 	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
+	VQuote.uver		\
 	Rename.uver		\
 	Imp.uver		\
 	Inlining.uver		\

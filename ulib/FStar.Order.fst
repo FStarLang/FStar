@@ -46,3 +46,11 @@ let rec compare_list f l1 l2 =
     | [], _ -> Lt
     | _, [] -> Gt
     | x::xs, y::ys -> lex (f x y) (fun () -> compare_list f xs ys)
+
+val compare_option : ('a -> 'a -> order) -> option 'a -> option 'a -> order
+let compare_option f x y =
+    match x, y with
+    | None   , None   -> Eq
+    | None   , Some _ -> Lt
+    | Some _ , None   -> Gt
+    | Some x , Some y -> f x y

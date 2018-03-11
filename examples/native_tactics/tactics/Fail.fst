@@ -13,6 +13,7 @@ assume val g : squash q -> squash r
 
 assume val vq : squash q
 
+[@plugin]
 let tau () : Tac unit =
     let _ = trytac #unit (fun () -> apply (`f); fail "oops wrong way") in
     apply (`g);

@@ -165,6 +165,7 @@ let arith_to_bv_tac () : Tac unit =
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
+[@plugin]
 let bv_tac ()  =
   mapply (`eq_to_bv);
   mapply (`trans);

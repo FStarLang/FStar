@@ -80,7 +80,7 @@ let rec (term_eq' :
                   | ((a,imp),(b,imp')) -> (term_eq' a b) && (imp = imp')) xs
              ys)
          in
-      let comp_eq1 c d =
+      let comp_eq c d =
         match ((c.FStar_Syntax_Syntax.n), (d.FStar_Syntax_Syntax.n)) with
         | (FStar_Syntax_Syntax.Total (t,uu____206),FStar_Syntax_Syntax.Total
            (s,uu____208)) -> term_eq' t s
@@ -160,7 +160,7 @@ let rec (term_eq' :
                     in
                  term_eq' t11 t22)
       | (FStar_Syntax_Syntax.Tm_arrow (xs,c),FStar_Syntax_Syntax.Tm_arrow
-         (ys,d)) -> (binders_eq xs ys) && (comp_eq1 c d)
+         (ys,d)) -> (binders_eq xs ys) && (comp_eq c d)
       | (FStar_Syntax_Syntax.Tm_refine (x1,t),FStar_Syntax_Syntax.Tm_refine
          (y1,u)) ->
           (term_eq' x1.FStar_Syntax_Syntax.sort y1.FStar_Syntax_Syntax.sort)

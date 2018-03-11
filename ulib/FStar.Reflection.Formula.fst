@@ -97,7 +97,7 @@ let term_as_formula' (t:term) : Tac formula =
     | Tv_Arrow b c ->
         let bv, _ = inspect_binder b in
         begin match inspect_comp c with
-        | C_Total t ->
+        | C_Total t _ ->
             if is_free bv t
             then Forall bv t
             else Implies (type_of_bv bv) t

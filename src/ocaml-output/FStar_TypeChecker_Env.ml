@@ -3197,7 +3197,7 @@ let (lookup_projector :
   fun env  ->
     fun lid  ->
       fun i  ->
-        let fail uu____11370 =
+        let fail1 uu____11370 =
           let uu____11371 =
             let uu____11372 = FStar_Util.string_of_int i  in
             let uu____11373 = FStar_Syntax_Print.lid_to_string lid  in
@@ -3217,7 +3217,7 @@ let (lookup_projector :
                  if
                    (i < (Prims.parse_int "0")) ||
                      (i >= (FStar_List.length binders))
-                 then fail ()
+                 then fail1 ()
                  else
                    (let b = FStar_List.nth binders i  in
                     let uu____11417 =
@@ -3226,7 +3226,7 @@ let (lookup_projector :
                        in
                     FStar_All.pipe_right uu____11417
                       FStar_Pervasives_Native.fst)
-             | uu____11426 -> fail ())
+             | uu____11426 -> fail1 ())
   
 let (is_projector : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->

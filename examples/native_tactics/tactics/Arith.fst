@@ -11,6 +11,7 @@ let lem0 (x:int) =
         (fun () ->prune ""; addns "Prims")
 
 // Can't locally define tactics
+[@plugin]
 let tau1 () : Tac unit =
     prune "";
     FStar.Tactics.split ();

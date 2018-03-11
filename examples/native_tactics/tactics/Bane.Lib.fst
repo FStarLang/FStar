@@ -2,6 +2,7 @@ module Bane.Lib
 open FStar.Tactics
 (* To understand the naming convention on this file, please refer to
  * https://www.youtube.com/watch?v=w9wi0cPrU4U *)
+[@plugin]
 val big_phi : int -> Tac unit
 let rec big_phi (n : int) =
     if n = 0
@@ -14,6 +15,7 @@ let rec big_phi (n : int) =
 
 let for_you12 : Type0 = synth_by_tactic (fun () -> big_phi 12)
 
+[@plugin]
 let rec repeat_or_fail (t : unit -> Tac unit) : Tac unit =
      match trytac t with
      | None -> fail "Cannot apply t any more"

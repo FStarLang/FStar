@@ -61,7 +61,7 @@ let mk_e_app (t : term) (args : list term) : Tot term =
 
 let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decreases c) =
     begin match inspect_comp c with
-    | C_Total t ->
+    | C_Total t _ ->
         begin match inspect t with
         | Tv_Arrow b c ->
             let t = type_of_binder b in
@@ -74,7 +74,7 @@ let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decre
 
 val collect_arr : typ -> list typ * comp
 let collect_arr t =
-    let (ts, c) = collect_arr' [] (pack_comp (C_Total t)) in
+    let (ts, c) = collect_arr' [] (pack_comp (C_Total t None)) in
     (List.Tot.rev ts, c)
 
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
@@ -178,11 +178,17 @@ and compare_comp (c1 c2 : comp) : order =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
-    | C_Total t1, C_Total t2 -> compare_term t1 t2
+    | C_Total t1 md1, C_Total t2 md2 -> lex (compare_term t1 t2)
+                                        (fun () -> match md1, md2 with
+                                                   | None, None -> Eq
+                                                   | None, Some _ -> Lt
+                                                   | Some _, None -> Gt
+                                                   | Some x, Some y -> compare_term x y)
+
     | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
 
     | C_Unknown, C_Unknown -> Eq
-    | C_Total _,   _  -> Lt | _, C_Total _   -> Gt
+    | C_Total _ _, _  -> Lt | _, C_Total _ _ -> Gt
     | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
     | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
 

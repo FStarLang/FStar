@@ -33,8 +33,8 @@ val unembed_term        : unembedder<term>
 val embed_term_view     : embedder<term_view>
 val unembed_term_view   : unembedder<term_view>
 
-val embed_fvar          : embedder<fv>
-val unembed_fvar        : unembedder<fv>
+val embed_fv            : embedder<fv>
+val unembed_fv          : unembedder<fv>
 
 val embed_comp          : embedder<comp>
 val unembed_comp        : unembedder<comp>

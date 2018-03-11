@@ -4,6 +4,7 @@ open FStar.Tactics
 
 (* Testing that intro works on implicits seamlessly *)
 
+[@plugin]
 let tau () : Tac unit =
     let b = intro () in
     exact (pack (Tv_Var (bv_of_binder b)))

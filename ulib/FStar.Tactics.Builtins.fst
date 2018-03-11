@@ -165,8 +165,10 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
-assume private val __t_exact : bool -> bool -> term -> __tac unit
-let t_exact hard guard (t:term) : Tac unit = TAC?.reflect (__t_exact hard guard t)
+(** boolean is whether to set the expected type internally.
+ * Just use `exact` from FStar.Tactics.Derived if you don't know what that means. *)
+assume private val __t_exact : bool -> term -> __tac unit
+let t_exact hard (t:term) : Tac unit = TAC?.reflect (__t_exact hard t)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application
@@ -217,6 +219,34 @@ unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
 let pointwise  (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise BottomUp (reify (tau ())))
 let pointwise' (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise TopDown  (reify (tau ())))
+
+assume private val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __tac unit
+
+(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
+    of the goal on which [fst (ctrl t)] returns true.
+
+    On each such sub-term, [rw] is presented with an equality of goal
+    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
+    the engine will rewrite [t] for [?u] in the original goal
+    type.
+    
+    The goal formula is traversed top-down and the traversal can be
+    controlled by [snd (ctrl t)]:
+    
+    When [snd (ctrl t) = 0], the traversal continues down through the
+    position in the goal term.
+    
+    When [snd (ctrl t) = 1], the traversal continues to the next
+    sub-tree of the goal.
+
+    When [snd (ctrl t) = 2], no more rewrites are performed in the
+    goal.
+*)
+let topdown_rewrite
+       (ctrl : term -> Tac (bool * int))
+       (rw:unit -> Tac unit)
+    : Tac unit
+    = TAC?.reflect (__topdown_rewrite (fun x -> reify (ctrl x)) (reify (rw ())))
 
 assume private val __later : __tac unit
 (** Push the current goal to the back. *)
@@ -289,3 +319,14 @@ for pretty-printing, since there is a fresh unaccessible integer within
 the bv too. *)
 assume val __fresh_bv_named : string -> typ -> __tac bv
 let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
+
+(** Change the goal to another type, given that it is convertible
+ * to the current type. *)
+assume val __change : typ -> __tac unit
+let change (t : typ) : Tac unit = TAC?.reflect (__change t)
+
+assume val __get_guard_policy : __tac guard_policy
+let get_guard_policy () : Tac guard_policy = TAC?.reflect (__get_guard_policy)
+
+assume val __set_guard_policy : guard_policy -> __tac unit
+let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_policy p)

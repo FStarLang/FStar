@@ -2,6 +2,7 @@ module Bug1270
 
 open FStar.Tactics
 
+[@plugin]
 let mytac =
     (fun () ->
         (fun () ->

@@ -1,5 +1,5 @@
 [
-  "tÞ\u0014l&Œ·Ùž'q’Â%—R",
+  "°I£¤ûÞ8ÙÎ\u0013wºË»#q",
   [
     [
       "FStar.Tactics.Types.uu___is_TopDown",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e6479c16acecb4cce4ec962f597af670"
+      "09d39fa65ef1a9ac2b4ceb8f17c7f284"
     ],
     [
       "FStar.Tactics.Types.uu___is_BottomUp",
@@ -17,7 +17,43 @@
       1,
       [ "@query" ],
       0,
-      "d46ad27a0a0b530b438007bdee0c3b42"
+      "aa3d1bd3344e35b1f6f82c15662a1c45"
+    ],
+    [
+      "FStar.Tactics.Types.uu___is_SMT",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3fdf09c01fa0777644478bccebadc85a"
+    ],
+    [
+      "FStar.Tactics.Types.uu___is_Goal",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "113629fc0f1d66a5247bc36bb6fb4c71"
+    ],
+    [
+      "FStar.Tactics.Types.uu___is_Force",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "edb663ff3cd4cd9e6b14f343fcd3312f"
+    ],
+    [
+      "FStar.Tactics.Types.uu___is_Drop",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7f0d895d4357b74816baf7438c30a699"
     ]
   ]
 ]

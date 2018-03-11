@@ -10,13 +10,15 @@ assume val xi : Type
 
 assume val p : squash xi
 
+let tau =
+  fun () ->
+    let h0 = implies_intro () in
+    let h1 = implies_intro () in
+    dump "Test";
+    exact (`p)
+
 let l1 (x : bool) (y : int) (z : unit) =
-    assert_by_tactic (phi ==> (psi ==> xi))
-            (fun () ->
-                let h0 = implies_intro () in
-                let h1 = implies_intro () in
-                dump "Test";
-                exact (`p))
+    assert_by_tactic (phi ==> (psi ==> xi)) tau
 
 // this error should show pretty binders too
 (* let _ = *)

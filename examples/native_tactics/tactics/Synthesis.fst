@@ -6,6 +6,7 @@ let a : unit = synth_by_tactic (fun () -> exact (`()))
 
 let _ = assert (a == ())
 
+[@plugin]
 let rec fib (n : int) : Tac unit =
     if n < 2
     then
@@ -19,6 +20,7 @@ let rec fib (n : int) : Tac unit =
 let f8 : int = synth_by_tactic (fun () -> fib 8)
 let _ = assert (f8 == 34) // equal after normalization
 
+[@plugin]
 let rec fib_norm (n : int) : Tac unit =
     if n < 2
     then
@@ -51,6 +53,7 @@ let _ = assert (iszero 0 = 1)
 let _ = assert (iszero 1 = 0)
 let _ = assert (iszero 2 = 0)
 
+[@plugin]
 let mk_let () : Tac unit =
    match (inspect (`( let f x = if x<=1 then 1 else x - 1 in f 5 ))) with
    | Tv_Let r b t1 t2 ->
@@ -61,6 +64,7 @@ let mk_let () : Tac unit =
 let f2 : int = synth_by_tactic mk_let
 let _ = assert (f2 == 4)
 
+[@plugin]
 let mk_let_rec () : Tac unit =
    match (inspect (`( let rec fr x = if x <= 1 then 1 else fr (x-1) in fr 5 ))) with
    | Tv_Let r b t1 t2 ->
