@@ -218,7 +218,7 @@ let (check_no_escape :
                      if Prims.op_Negation try_norm
                      then aux true t1
                      else
-                       (let fail uu____125 =
+                       (let fail1 uu____125 =
                           let msg =
                             match head_opt with
                             | FStar_Pervasives_Native.None  ->
@@ -257,7 +257,7 @@ let (check_no_escape :
                         | FStar_Pervasives_Native.Some g ->
                             (FStar_TypeChecker_Rel.force_trivial_guard env g;
                              s)
-                        | uu____148 -> fail ()))
+                        | uu____148 -> fail1 ()))
              in
           aux false kt
   
@@ -3560,7 +3560,7 @@ and (tc_abs :
     fun top  ->
       fun bs  ->
         fun body  ->
-          let fail a msg t =
+          let fail1 a msg t =
             let uu____7631 =
               FStar_TypeChecker_Err.expected_a_term_of_type_t_got_a_function
                 env msg t top
@@ -6084,7 +6084,7 @@ and (tc_eqn :
                                                             in
                                                          [uu____13905]
                                                    else []  in
-                                                 let fail uu____13910 =
+                                                 let fail1 uu____13910 =
                                                    let uu____13911 =
                                                      let uu____13912 =
                                                        FStar_Range.string_of_range
@@ -6114,7 +6114,7 @@ and (tc_eqn :
                                                    | FStar_Syntax_Syntax.Tm_uinst
                                                        (t1,uu____13925) ->
                                                        head_constructor t1
-                                                   | uu____13930 -> fail ()
+                                                   | uu____13930 -> fail1 ()
                                                     in
                                                  let pat_exp2 =
                                                    let uu____13932 =

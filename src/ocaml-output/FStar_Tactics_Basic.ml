@@ -2891,7 +2891,7 @@ let rec (clear : FStar_Syntax_Syntax.binder -> Prims.unit tac) =
               | FStar_Pervasives_Native.None  ->
                   fail "Cannot clear; binder not in environment"
               | FStar_Pervasives_Native.Some (e',bvs) ->
-                  let rec check bvs1 =
+                  let rec check1 bvs1 =
                     match bvs1 with
                     | [] -> ret ()
                     | bv'::bvs2 ->
@@ -2907,14 +2907,14 @@ let rec (clear : FStar_Syntax_Syntax.binder -> Prims.unit tac) =
                               uu____5238
                              in
                           fail uu____5237
-                        else check bvs2
+                        else check1 bvs2
                      in
                   let uu____5240 =
                     free_in bv goal.FStar_Tactics_Types.goal_ty  in
                   if uu____5240
                   then fail "Cannot clear; binder present in goal"
                   else
-                    (let uu____5244 = check bvs  in
+                    (let uu____5244 = check1 bvs  in
                      bind uu____5244
                        (fun uu____5250  ->
                           let env' = push_bvs e' bvs  in

@@ -56,7 +56,7 @@ let (primitive_projector_by_pos :
   fun env  ->
     fun lid  ->
       fun i  ->
-        let fail uu____158 =
+        let fail1 uu____158 =
           let uu____159 =
             FStar_Util.format2
               "Projector %s on data constructor %s not found"
@@ -77,12 +77,12 @@ let (primitive_projector_by_pos :
                       if
                         (i < (Prims.parse_int "0")) ||
                           (i >= (FStar_List.length binders))
-                      then fail ()
+                      then fail1 ()
                       else
                         (let b = FStar_List.nth binders i  in
                          mk_term_projector_name lid
                            (FStar_Pervasives_Native.fst b)))
-             | uu____210 -> fail ())
+             | uu____210 -> fail1 ())
   
 let (mk_term_projector_name_by_pos :
   FStar_Ident.lident -> Prims.int -> Prims.string) =
