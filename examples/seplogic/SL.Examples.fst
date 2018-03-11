@@ -95,6 +95,11 @@ let lemma_procedure_bind (phi:memory -> memory -> memory -> memory -> memory -> 
 	                     (exists h3 h4. defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (h3 == h /\ phi h h' h0 h1 h3 h4))))
   = ()
 
+let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0) (h h':memory)
+  :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ (h0 == h /\ phi h h' h0 h1)))
+  = ()
+
 (*** command specific lemmas end ***)
 
 (*** following are heap algebra lemmas, should be replaced with canonizer? ***)
@@ -166,6 +171,7 @@ private let process_command () :Tac unit
 		  `lemma_procedure_rw;
 		  `lemma_singleton_heap_procedure_bind;
 		  `lemma_procedure_bind;
+		  `lemma_procedure;
 		  `lemma_pure_right]
 
 (*
@@ -253,23 +259,20 @@ let incr (r:ref int) (n:int)
  *)
 let incr2 (r:ref int) (n:int)
   = (let n = incr r n in
-     let n = incr r n in
-     n)
+     incr r n)
 
     <: STATE int (fun post h -> h == (r |> n) /\ post (n + 2) (r |> n + 2))
 
     by (fun () -> prelude ();
                process_command ();
 	       get_to_the_next_frame ();
-	       process_command ();
-	       get_to_the_next_frame ();
-               process_command ())
+	       process_command ())
 
 unfold let distinct_refs3 (#a:Type) (#b:Type) (#c:Type) (r1:ref a) (r2:ref b) (r3:ref c)
   = addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r3 <> addr_of r1
 
 (*
- * 3 command + one at the end
+ * 3 commands + one at the end
  *)
 let rotate (r1 r2 r3:ref int) (l m n:int) =
   (swap r2 r3 m n;
