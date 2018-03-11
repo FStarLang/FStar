@@ -187,17 +187,21 @@ let permute_via_swaps_correct
     (p:permute) (pvs:permute_via_swaps p) : permute_correct p = 
   permute_via_swaps_correct_aux p pvs
 
+// TODO In the general case, an arbitrary permutation can be done via
+// swaps. To show this we could for instance, write the permutation as
+// a sequence of transpositions and then each transposition as a
+// series of swaps.
+
 (***** Sorting is a correct permutation
        (since it can be done by swaps) *)
+
+let sort = List.Tot.sortWith #nat (compare_of_bool (<))
 
 // TODO: Show that sorting is a correct way to permute things;
 // from sortWith_permutation we get
 // (ensures (forall x. count x l = count x (sortWith f l)))
 // but need instead a sequence of swaps of adjacent elements
-// (can probably use bubble sort to show that)
-// and can use commutativity to justify each of these swaps
-
-let sort = List.Tot.sortWith #nat (compare_of_bool (<))
+// - can probably use bubble sort to show this special case
 
 let rec bubble_sort_with_aux1 (#a:Type) (f:(a -> a -> Tot int)) (xs:list a) :
     Pure (list a) (requires True)
@@ -248,7 +252,7 @@ let monoid_reflect (#a #b:Type) (m:cm a) (vm:vmap a b) (e1 e2:exp) =
     (fun #a #b m vm xs -> sort_correct #a #b m vm xs) #a m vm
 
 (* Finds the position of first occurrence of x in xs;
-   this could use eqtype and be completely standard if term provided it *)
+   this could use eqtype and be completely standard if term was eqtype *)
 let rec where_aux (n:nat) (x:term) (xs:list term) : Tot (option nat)
                                                         (decreases xs) =
   match xs with
@@ -297,9 +301,9 @@ let reification_with (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:lis
       ([],[], const (CM?.unit m) def) ts
   in (List.rev es,vm)
 
-let reification = reification_with unit (fun _ -> ()) ()
-
-let canon_monoid (#a:Type) (m:cm a) : Tac unit =
+let canon_monoid_with
+    (b:Type) (f:term->Tac b) (def:b) (#a:Type) (p:permute) (pc:permute_correct p)
+    (m:cm a) : Tac unit =
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
@@ -307,7 +311,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
       if term_eq t (quote a) then
-        match reification m [t1;t2] with
+        match reification_with b f def m [t1;t2] with
         | [r1;r2], vm ->
           dump ("r1=" ^ exp_to_string r1 ^
               "; r2=" ^ exp_to_string r2);
@@ -320,10 +324,8 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           dump ("after change_sq");
           // TODO: big unifier problem; can't make any of the below work
-          // apply (`monoid_reflect);
-          // apply (quote(monoid_reflect m vm));
-          // mdenote m vm e == xsdenote m vm (canon_with p e)
-          // grewrite (`canon_with_correct);
+          // apply (`monoid_reflect_with p pc);
+          apply (quote(monoid_reflect_with p pc m vm));
           norm [delta_only ["CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
                             "FStar.List.Tot.Base.op_At";
@@ -332,9 +334,22 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
-let lem0 (a b c d : int) =
+let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
+  sort (fun #a #b m vm xs -> sort_correct #a #b m vm xs)
+
+(***** Examples *)
+
+// let lem0 (a b c d : int) =
+//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+//   (fun _ -> canon_monoid int_plus_cm; trefl())
+
+// remember if something is a constant or not
+let is_const t = Tv_Const? (inspect t)
+let canon_monoid_const = canon_monoid_with bool is_const false
+
+let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; trefl())
+  (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
 (* TODO: Allow the tactic to compute with constants beyond unit.
          Would it be enough to move all them to the end of the list by
