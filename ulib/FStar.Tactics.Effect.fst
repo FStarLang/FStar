@@ -91,6 +91,6 @@ let assert_by_tactic (p:Type) (t:unit -> Tac unit)
 val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm needs these two names to be here, but we should remove it eventually
+// TcTerm needs these two names typecheck tactics against
 private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
-let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
+private let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
