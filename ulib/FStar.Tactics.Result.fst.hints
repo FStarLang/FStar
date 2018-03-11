@@ -1,5 +1,5 @@
 [
-  "窽�s*󺹮贔\t辉苇",
+  "\u0005茐#\\\u001c\u001dW釥G裶�",
   [
     [
       "FStar.Tactics.Result.uu___is_Success",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "940e4eb741316d6cfd360c8852d6c804"
+      "44372b7f6f5962862278ed0dc2672c8c"
     ],
     [
       "FStar.Tactics.Result.__proj__Success__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_FStar.Tactics.Result_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
       ],
       0,
-      "ac370ded46c913266655fb544af80ebb"
+      "5de14cc6b1d8ee3824dcd1dbfb664dce"
     ],
     [
       "FStar.Tactics.Result.uu___is_Failed",
@@ -31,7 +31,7 @@
       1,
       [ "@query" ],
       0,
-      "d3453b97b174dfe8cf0fe0038b97b02f"
+      "67c471c20cd5cba4c3df2ed7b0fd6721"
     ],
     [
       "FStar.Tactics.Result.__proj__Failed__item___0",
@@ -45,7 +45,22 @@
         "refinement_interpretation_FStar.Tactics.Result_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
       ],
       0,
-      "4ea70d7518de99a5fb0cb6e2c79cc9e7"
+      "451cce0a6183f6c79d8d9d4f415ad5e2"
+    ],
+    [
+      "FStar.Tactics.Result.result_split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "79dd477b9891767ffb8ee972d2b854ad"
     ],
     [
       "FStar.Tactics.Result.uu___is_Success",
@@ -54,7 +69,7 @@
       1,
       [ "@query" ],
       0,
-      "20896e38aa4118d190b0d27b59ef8005"
+      "536e2fc3aca07a1f3e6df84355f26b1e"
     ],
     [
       "FStar.Tactics.Result.__proj__Success__item___0",
@@ -68,7 +83,7 @@
         "refinement_interpretation_FStar.Tactics.Result_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
       ],
       0,
-      "15761c25c06b0eda4c8c40316bf18c08"
+      "d5885f78de5bb480010b5d9224110c4c"
     ],
     [
       "FStar.Tactics.Result.uu___is_Failed",
@@ -77,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "c797444216359cd0f450977a61d0c97d"
+      "544043a134d693fee95518308eca2772"
     ],
     [
       "FStar.Tactics.Result.__proj__Failed__item___0",
@@ -91,7 +106,7 @@
         "refinement_interpretation_FStar.Tactics.Result_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
       ],
       0,
-      "2960acf0025a4a06126d2ebbee0c365d"
+      "bf1ddbcec6b0fe622d63f53419509617"
     ]
   ]
 ]
