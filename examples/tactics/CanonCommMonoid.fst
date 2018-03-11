@@ -339,8 +339,7 @@ let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> set_guard_policy Drop;
-            canon_monoid int_plus_cm;
+  (fun _ -> canon_monoid int_plus_cm;
             compute ();
             trefl())
 
