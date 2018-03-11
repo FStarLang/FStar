@@ -2189,6 +2189,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "max_fuel" -> true
     | "max_ifuel" -> true
     | "min_fuel" -> true
+    | "__no_positivity" -> true
     | "ugly" -> true
     | "print_bound_var_types" -> true
     | "print_effect_args" -> true
@@ -2211,6 +2212,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "tactic_raw_binders" -> true
     | "tactic_trace" -> true
     | "tactic_trace_d" -> true
+    | "__temp_fast_implicits" -> true
     | "__temp_no_proj" -> true
     | "reuse_hint_for" -> true
     | "warn_error" -> true

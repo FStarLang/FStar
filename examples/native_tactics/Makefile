@@ -1,31 +1,23 @@
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS) --cache_checked_modules
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+#--cache_checked_modules
 
-ALL=Print Split BV UnitTests Canon
+ALL=Print Split BV UnitTests Canon Simple SimpleTactic Evens
 
-all: $(addsuffix .Test.fst.checked, $(ALL))
+all: $(addsuffix .test, $(ALL))
 
-.depend:
-	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
+# .depend:
+# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
 
-include .depend
+# include .depend
 
-%.test: %.Test.fst.checked
-
-%.Test.fst.checked: $(FSTARTACLIB) %.ml
+%.test: %.Test.fst %.ml
 	$(FSTAR) $*.Test.fst --load $*
-	touch -ac $@
+	touch $@
 
-%.fst.checked:
-	$(FSTAR) $<
-	touch -ac $@
-
-%.fsti.checked:
-	$(FSTAR) $<
-	touch -ac $@
-
-%.ml: %.fst.checked
+%.ml: %.fst
 	$(FSTAR) $*.fst --codegen Plugin --extract $*
+	touch $@
 
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
