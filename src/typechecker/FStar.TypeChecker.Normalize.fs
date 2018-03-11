@@ -941,7 +941,7 @@ let reduce_equality cfg tm =
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
-let maybe_simplify_aux cfg env stack tm =
+let rec maybe_simplify_aux cfg env stack tm =
     let tm = reduce_primops cfg env stack tm in
     if not <| cfg.steps.simplify then tm
     else
@@ -952,6 +952,64 @@ let maybe_simplify_aux cfg env stack tm =
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_meta ({n = Tm_fvar fv}, _)
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
+        | _ -> None
+    in
+    let rec args_are_binders args bs =
+        match args, bs with
+        | (t, _)::args, (bv, _)::bs ->
+            begin match (SS.compress t).n with
+            | Tm_name bv' -> S.bv_eq bv bv' && args_are_binders args bs
+            | _ -> false
+            end
+        | [], [] -> true
+        | _, _ -> false
+    in
+    let is_applied (bs:binders) (t : term) : option<bv> =
+        (* BU.print2 "GG is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        let hd, args = U.head_and_args' t in
+        match (SS.compress hd).n with
+        | Tm_name bv when args_are_binders args bs ->
+            (* BU.print3 "GG got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n" *)
+            (*             (Print.term_to_string t) *)
+            (*             (Print.bv_to_string bv) *)
+            (*             (Print.term_to_string hd); *)
+            Some bv
+        | _ -> None
+    in
+    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
+        (* BU.print2 "GG is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        match is_squash t with
+        | Some (_, t') -> is_applied bs t'
+        | _ -> begin match is_auto_squash t with
+               | Some (_, t') -> is_applied bs t'
+               | _ -> is_applied bs t
+               end
+    in
+    // A very F*-specific optimization:
+    //  1)                        (p ==> E[p])     ~>     E[True]
+    //  2)  (forall j1 j2 ... jn. p j1 j2 ... jn) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
+    let is_quantified_true (phi : term) : option<term> =
+        match U.destruct_typ_as_formula phi with
+        | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
+            begin match U.destruct_typ_as_formula p with
+            // Case 1)
+            | None -> begin match (SS.compress p).n with
+                      | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_true)] q)
+                      | _ -> None
+                      end
+
+            // Case 2)
+            | Some (QAll (bs, pats, phi)) ->
+                begin match is_applied_maybe_squashed bs phi with
+                | Some bv ->
+                    let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
+                    Some (SS.subst [NT (bv, ftrue)] q)
+                | None ->
+                    None
+                end
+
+            | _ -> None
+            end
         | _ -> None
     in
     let maybe_auto_squash t =
@@ -976,7 +1034,13 @@ let maybe_simplify_aux cfg env stack tm =
         S.mk_Tm_app head args None t.pos
     in
     let simplify arg = (simp_t (fst arg), arg) in
-    match tm.n with
+    let tm = match is_quantified_true tm with
+             | Some tm ->
+                (* We need to recurse! *)
+                maybe_simplify_aux cfg env stack tm
+             | None -> tm
+    in
+    match (SS.compress tm).n with
     | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
     | Tm_app({n=Tm_fvar fv}, args) ->
       if S.fv_eq_lid fv PC.and_lid
