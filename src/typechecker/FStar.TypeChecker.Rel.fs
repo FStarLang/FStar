@@ -762,9 +762,9 @@ let string_of_option f = function
 
 let string_of_match_result = function
     | MisMatch (d1, d2) ->
-        "MisMatch "
-        ^ string_of_option Print.delta_depth_to_string d1
-        ^ string_of_option Print.delta_depth_to_string d2
+        "MisMatch ("
+        ^ string_of_option Print.delta_depth_to_string d1 ^ ") ("
+        ^ string_of_option Print.delta_depth_to_string d2 ^ ")"
     | HeadMatch -> "HeadMatch"
     | FullMatch -> "FullMatch"
 
