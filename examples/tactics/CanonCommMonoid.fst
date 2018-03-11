@@ -44,7 +44,7 @@ let int_plus_cm : cm int =
 
 (***** Expression syntax *)
 
-let var = nat
+let var : eqtype = nat
 
 type exp : Type =
   | Unit : exp
@@ -60,10 +60,13 @@ let rec exp_to_string (e:exp) : string =
 
 (***** Expression denotation *)
 
+// Use a map that stores for each variable
+// (1) its denotation that should be treated abstractly (type a) and
+// (2) user-specified extra information depending on its term (type b)
 let vmap (a b:Type) = var -> (a*b)
 let const (#a #b:Type) (xa:a) (xb:b) (x:var) = (xa,xb)
 let select (#a #b:Type) (x:var) (vm:vmap a b) : Tot a = fst (vm x)
-let select_aux (#a #b:Type) (x:var) (vm:vmap a b) : Tot b = snd (vm x)
+let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b = snd (vm x)
 let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) (x':var) :
   Tot (a*b) = if x' = x then (xa,xb) else vm x'
 
@@ -108,12 +111,12 @@ let rec flatten_correct (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) :
 (***** Permuting the lists of variables
        by swapping adjacent elements *)
 
-let permute = list var -> list var
+let permute (b:Type) = #a:Type -> vmap a b -> list var -> list var
 
 // high-level correctness criterion for permutations
-let permute_correct (p:permute) =
-  #a:Type -> #b:Type -> m:cm a -> vm:vmap a b -> xs:list var ->
-    Lemma (xsdenote m vm xs == xsdenote m vm (p xs))
+let permute_correct (#b:Type) (p:permute b) =
+  #a:Type -> m:cm a -> vm:vmap a b -> xs:list var ->
+    Lemma (xsdenote m vm xs == xsdenote m vm (p vm xs))
 
 // sufficient condition:
 // permutation has to be expressible as swaps of adjacent list elements
@@ -171,31 +174,37 @@ let rec apply_swaps_correct (#a #b:Type) (m:cm a) (vm:vmap a b)
   | s::ss' -> apply_swap_correct m vm xs s;
               apply_swaps_correct m vm (apply_swap xs s) ss'
 
-let permute_via_swaps (p:permute) =
-  xs:list var -> Lemma (exists ss. p xs == apply_swaps xs ss)
+let permute_via_swaps (#b:Type) (p:permute b) =
+  (#a:Type) -> (vm:vmap a b) -> xs:list var ->
+    Lemma (exists ss. p vm xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
-  (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) :
-    Lemma (xsdenote m vm xs == xsdenote m vm (p xs)) =
-  pvs xs;
-  assert(exists ss. p xs == apply_swaps xs ss);
-  exists_elim (xsdenote m vm xs == xsdenote m vm (p xs))
-    (() <: squash (exists ss. p xs == apply_swaps xs ss))
+let rec permute_via_swaps_correct_aux
+  (#b:Type) (p:permute b) (pvs:permute_via_swaps p)
+  (#a:Type) (m:cm a) (vm:vmap a b)  (xs:list var) :
+    Lemma (xsdenote m vm xs == xsdenote m vm (p vm xs)) =
+  pvs vm xs;
+  assert(exists ss. p vm xs == apply_swaps xs ss);
+  exists_elim (xsdenote m vm xs == xsdenote m vm (p vm xs))
+    (() <: squash (exists ss. p vm xs == apply_swaps xs ss))
     (fun ss -> apply_swaps_correct m vm xs ss)
 
 let permute_via_swaps_correct
-    (p:permute) (pvs:permute_via_swaps p) : permute_correct p = 
-  permute_via_swaps_correct_aux p pvs
+  (#b:Type) (p:permute b) (pvs:permute_via_swaps p) : permute_correct p =
+     permute_via_swaps_correct_aux p pvs
 
 // TODO In the general case, an arbitrary permutation can be done via
 // swaps. To show this we could for instance, write the permutation as
 // a sequence of transpositions and then each transposition as a
 // series of swaps.
 
-(***** Sorting is a correct permutation
+(***** Sorting variables is a correct permutation
        (since it can be done by swaps) *)
 
-let sort = List.Tot.sortWith #nat (compare_of_bool (<))
+// sorting associates no extra information with the variables and only
+// looks at the actual identifiers
+
+let sort : permute unit =
+  (fun #a vm -> List.Tot.sortWith #nat (compare_of_bool (<)))
 
 // TODO: Show that sorting is a correct way to permute things;
 // from sortWith_permutation we get
@@ -221,14 +230,14 @@ let rec bubble_sort_with_aux2 (#a:Type) (n:nat) (f:(a -> a -> Tot int))
 
 let bubble_sort_with (#a:Type) = bubble_sort_with_aux2 #a 0
 
-let sort_via_swaps (xs:list var) :
-  Lemma (exists ss. sort xs == apply_swaps xs ss) = admit() // TODO
+let sort_via_swaps (#a:Type) (vm : vmap a unit)  (xs:list var) :
+  Lemma (exists ss. sort vm xs == apply_swaps xs ss) = admit() // TODO
 
-let rec sort_correct_aux (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) :
-    Lemma (xsdenote m vm xs == xsdenote m vm (sort xs)) =
-  permute_via_swaps_correct sort sort_via_swaps m vm xs
+let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
+    Lemma (xsdenote m vm xs == xsdenote m vm (sort vm xs)) =
+  permute_via_swaps_correct #unit sort sort_via_swaps m vm xs
 
-let sort_correct : permute_correct sort =
+let sort_correct : permute_correct #unit sort =
   (fun #a #b m vm xs -> sort_correct_aux #a #b m vm xs)
 
 (***** Canonicalization tactics *)
@@ -236,7 +245,7 @@ let sort_correct : permute_correct sort =
 let canon_with (p:permute) (e:exp) = p (flatten e)
 
 let canon_with_correct (p:permute) (pc:permute_correct p)
-                       (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : 
+                       (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) :
     Lemma (mdenote m vm e == xsdenote m vm (canon_with p e)) =
   flatten_correct m vm e; pc m vm (flatten e)
 
@@ -316,13 +325,12 @@ let canon_monoid_with
           dump ("r1=" ^ exp_to_string r1 ^
               "; r2=" ^ exp_to_string r2);
           dump ("vm =" ^ term_to_string (quote vm));
+          change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           dump ("before =" ^ term_to_string (norm_term [delta;primops]
             (quote (mdenote m vm r1 == mdenote m vm r2))));
-          dump ("after =" ^ term_to_string (norm_term [delta;primops]
-            (quote ((xsdenote m vm (sort (flatten r1)) ==
-                     xsdenote m vm (sort (flatten r2)))))));
-          change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
-          dump ("after change_sq");
+          dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
+            (quote (xsdenote m vm (canon_with p r1) ==
+                    xsdenote m vm (canon_with p r2)))));
           apply (`monoid_reflect);
           norm [delta_only ["CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
@@ -344,8 +352,19 @@ let lem0 (a b c d : int) =
             trefl())
 
 // remember if something is a constant or not
-let is_const t = Tv_Const? (inspect t)
-let canon_monoid_const = canon_monoid_with bool is_const false
+let is_const (t:term) : bool = Tv_Const? (inspect t)
+
+// sort things and put the constants last
+let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+  match select_extra x vm, select_extra y vm with
+  | false, false | true, true -> 0
+  | false, true -> 1
+  | true, false -> -1
+
+let const_last (#a:Type) (vm:vmap a bool) (xs:list var) : list var =
+  List.Tot.sortWith #nat (const_compare vm) xs
+
+let canon_monoid_const = canon_monoid_with bool is_const false const_last
 
 // let lem1 (a b c d : int) =
 //   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
