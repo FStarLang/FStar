@@ -1282,12 +1282,20 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     ret t))
 
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
-    bind cur_goal (fun goal ->
-    bind (__tc goal.context t) (fun (t, typ, guard) ->
-    bind (proc_guard "unshelve" goal.context guard goal.opts) (fun _ ->
-    add_goals [{ goal with witness  = bnorm goal.context t;
-                           goal_ty  = bnorm goal.context typ;
-                           is_guard = false; }])))
+    bind get (fun ps ->
+    let env = ps.main_context in
+    (* We need a set of options, but there might be no goals, so do this *)
+    let opts = match ps.goals with
+               | g::_ -> g.opts
+               | _ -> FStar.Options.peek ()
+    in
+    bind (__tc env t) (fun (t, typ, guard) ->
+    bind (proc_guard "unshelve" env guard opts) (fun _ ->
+    add_goals [{ witness  = bnorm env t;
+                 goal_ty  = bnorm env typ;
+                 is_guard = false;
+                 context  = env;
+                 opts     = opts; }])))
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
