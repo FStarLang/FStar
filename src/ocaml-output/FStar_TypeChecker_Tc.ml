@@ -284,7 +284,7 @@ let (monad_signature :
   fun env  ->
     fun m  ->
       fun s  ->
-        let fail uu____283 =
+        let fail1 uu____283 =
           let uu____284 =
             FStar_TypeChecker_Err.unexpected_signature_for_monad env m s  in
           FStar_Errors.raise_error uu____284 (FStar_Ident.range_of_lid m)  in
@@ -295,8 +295,8 @@ let (monad_signature :
             (match bs1 with
              | (a,uu____328)::(wp,uu____330)::[] ->
                  (a, (wp.FStar_Syntax_Syntax.sort))
-             | uu____345 -> fail ())
-        | uu____346 -> fail ()
+             | uu____345 -> fail1 ())
+        | uu____346 -> fail1 ()
   
 let (tc_eff_decl :
   FStar_TypeChecker_Env.env_t ->
@@ -499,7 +499,7 @@ let (tc_eff_decl :
                             in
                          let wp_with_fresh_result_type env1 mname signature1
                            =
-                           let fail t =
+                           let fail1 t =
                              let uu____590 =
                                FStar_TypeChecker_Err.unexpected_signature_for_monad
                                  env1 mname t
@@ -518,8 +518,8 @@ let (tc_eff_decl :
                                (match bs1 with
                                 | (a,uu____637)::(wp,uu____639)::[] ->
                                     (a, (wp.FStar_Syntax_Syntax.sort))
-                                | uu____654 -> fail signature1)
-                           | uu____655 -> fail signature1  in
+                                | uu____654 -> fail1 signature1)
+                           | uu____655 -> fail1 signature1  in
                          let uu____656 =
                            wp_with_fresh_result_type env
                              ed2.FStar_Syntax_Syntax.mname
@@ -2670,7 +2670,8 @@ let (cps_and_elaborate :
                                                           with
                                                           | (bs1,body2,what')
                                                               ->
-                                                              let fail a415 =
+                                                              let fail1 a415
+                                                                =
                                                                 (Obj.magic
                                                                    (fun
                                                                     uu____2868
@@ -2706,7 +2707,7 @@ let (cps_and_elaborate :
                                                                 with
                                                                 | FStar_Pervasives_Native.None
                                                                      ->
-                                                                    fail ()
+                                                                    fail1 ()
                                                                 | FStar_Pervasives_Native.Some
                                                                     rc ->
                                                                     (
@@ -2715,7 +2716,7 @@ let (cps_and_elaborate :
                                                                     (FStar_Syntax_Util.is_pure_effect
                                                                     rc.FStar_Syntax_Syntax.residual_effect)
                                                                     then
-                                                                    fail ()
+                                                                    fail1 ()
                                                                     else ();
                                                                     (
                                                                     let uu____2876
@@ -2741,7 +2742,7 @@ let (cps_and_elaborate :
                                                                     | 
                                                                     FStar_Pervasives_Native.None
                                                                      ->
-                                                                    fail ())
+                                                                    fail1 ())
                                                                      in
                                                                     FStar_All.pipe_right
                                                                     uu____2876
