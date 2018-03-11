@@ -170,15 +170,6 @@ let new_uvar r binders k =
 (* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)
 
-let mk_eq2 env t1 t2 =
-    (* NS: Rather than introducing a new variable, it would be much preferable
-            to simply compute the type of t1 here.
-            Sadly, it seems to be way too expensive to call env.type_of here.
-    *)
-    let t_type, u = U.type_u () in
-    let tt, _ = new_uvar t1.pos (Env.all_binders env) t_type in
-    U.mk_eq2 u tt t1 t2
-
 (* Instantiation of unification variables *)
 type uvi =
     | TERM of (uvar * typ)    * term
@@ -356,6 +347,15 @@ let def_check_prob msg prob =
         end
     | _ -> (); //TODO
     ()
+
+let mk_eq2 prob t1 t2 =
+    (* NS: Rather than introducing a new variable, it would be much preferable
+            to simply compute the type of t1 here.
+            Sadly, it seems to be way too expensive to call env.type_of here.
+    *)
+    let t_type, u = U.type_u () in
+    let tt, _ = new_uvar t1.pos (p_scope prob) t_type in
+    U.mk_eq2 u tt t1 t2
 
 let p_invert = function
    | TProb p -> TProb <| invert p
@@ -1722,7 +1722,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard =
                         if problem.relation = EQ
-                        then mk_eq2 env t1 t2
+                        then mk_eq2 orig t1 t2
                         else let has_type_guard t1 t2 =
                                 match problem.element with
                                     | Some t -> U.mk_has_type t1 t t2
@@ -2571,7 +2571,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               // GM: No. We could be in a contradictory environment.
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
-                               else Some <| mk_eq2 env t1 t2 in
+                               else Some <| mk_eq2 orig t1 t2 in
                    solve env (solve_prob orig guard [] wl)
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
