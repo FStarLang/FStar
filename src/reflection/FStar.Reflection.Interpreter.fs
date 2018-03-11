@@ -37,6 +37,7 @@ let reflection_primops : list<N.primitive_step> =
         {
             N.name = l;
             N.arity = arity;
+            N.auto_reflect = None;
             N.strong_reduction_ok = false;
             N.requires_binder_substitution = false;
             N.interpretation = (fun ctxt args -> fn (N.psc_range ctxt) args)

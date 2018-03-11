@@ -56,7 +56,7 @@ let fsharpkeywords = [
   "override"; "private"; "public"; "rec"; "return"; "return!";
   "select"; "static"; "struct"; "then"; "to"; "true"; "try";
   "type"; "upcast"; "use"; "use!"; "val"; "void"; "when";
-  "while"; "with"; "yield"; "yield!"; 
+  "while"; "with"; "yield"; "yield!";
   // --mlcompatibility keywords
   "asr"; "land"; "lor";
   "lsl"; "lsr"; "lxor"; "mod"; "sig";
@@ -69,8 +69,8 @@ let fsharpkeywords = [
 ]
 
 let is_reserved k =
-  let reserved_keywords () = 
-      if Options.codegen_fsharp()
+  let reserved_keywords () =
+      if Options.codegen() = Some Options.FSharp
       then fsharpkeywords
       else ocamlkeywords
   in
@@ -252,8 +252,8 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_ns = if Options.codegen_fsharp() 
-                 then "FSharp.Compatibility.OCaml.Obj" 
+    let obj_ns = if Options.codegen() = Some Options.FSharp
+                 then "FSharp.Compatibility.OCaml.Obj"
                  else "Obj" in
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc

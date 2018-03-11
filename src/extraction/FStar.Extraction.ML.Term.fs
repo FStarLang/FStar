@@ -394,7 +394,7 @@ let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
 
 let maybe_eta_expand expect e =
     if Options.ml_no_eta_expand_coertions () ||
-        Options.codegen () = Some "Kremlin" // we need to stay first order for Kremlin
+        Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
     then e
     else eta_expand expect e
 
@@ -635,7 +635,7 @@ let rec extract_one_pat (imp : bool)
     in
     match p.v with
     | Pat_constant (Const_int (c, swopt))
-      when Options.codegen() <> Some "Kremlin" ->
+      when Options.codegen() <> Some Options.Kremlin ->
       //Kremlin supports native integer constants in patterns
       //Don't convert them into `when` clauses
         let mlc, ml_ty =
@@ -961,7 +961,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //   then evaluation order must be enforced to be L-to-R (by hoisting)
                         let evaluation_order_guaranteed =
                           List.length mlargs_f = 1 ||
-                          Options.codegen_fsharp () ||
+                          Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
 			                    S.fv_eq_lid fv PC.op_And ||

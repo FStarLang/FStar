@@ -42,7 +42,7 @@ let complement #a s    = fun x -> not (s x)
 
 (* a property about sets *)
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
-  intersect s1 s2 == empty
+  equal (intersect s1 s2) empty
 
 
 (* ops *)

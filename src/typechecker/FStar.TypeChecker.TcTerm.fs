@@ -1646,15 +1646,24 @@ and tc_eqn scrutinee env branch
                            exp.pos
     in
     let norm_exp = N.normalize [N.Beta] env1 exp in
+    let uvs_to_string uvs =
+        BU.set_elements uvs |>
+        List.map (fun (u, _) -> Print.uvar_to_string u) |>
+        String.concat ", "
+    in
     let uvs1 = Free.uvars norm_exp in
     let uvs2 = Free.uvars expected_pat_t in
+    if Env.debug env (Options.Other "Free") then begin
+        BU.print2 ">> free_1(%s) = %s\n" (Print.term_to_string norm_exp) (uvs_to_string uvs1);
+        BU.print2 ">> free_2(%s) = %s\n" (Print.term_to_string expected_pat_t) (uvs_to_string uvs2)
+    end;
     if not <| BU.set_is_subset_of uvs1 uvs2
-    then (let unresolved = BU.set_difference uvs1 uvs2 |> BU.set_elements in
+    then (let unresolved = BU.set_difference uvs1 uvs2 in
             raise_error (Errors.Fatal_UnresolvedPatternVar, (BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
                                         Variables {%s} were unresolved; please bind them explicitly"
                                 (N.term_to_string env norm_exp)
                                 (N.term_to_string env expected_pat_t)
-                                (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", "))) p.p);
+                                (uvs_to_string unresolved))) p.p);
 
     if Env.debug env Options.High
     then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);

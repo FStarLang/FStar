@@ -62,11 +62,13 @@ val psc_subst : psc -> subst_t
 type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
+    auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
     interpretation:(psc -> args -> option<term>)
 }
 
+val register_plugin: primitive_step -> unit
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
