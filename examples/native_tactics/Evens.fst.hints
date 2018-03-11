@@ -1,0 +1,137 @@
+[
+  "µá¨Yï[‡PjòØ\u0016>]EÔ",
+  [
+    [
+      "Evens.unary_nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "884136ec67b8e9e70ff5d0dc9cea79f1"
+    ],
+    [
+      "Evens.uu___is_U0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e3fa81c171064825f9c36ec180f01969"
+    ],
+    [
+      "Evens.uu___is_US",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f2b1d0db3a303f9dc553dca83b1ce259"
+    ],
+    [
+      "Evens.__proj__US__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.US",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Evens_Tm_refine_7094be438dbc16658c0caec70fa7452e"
+      ],
+      0,
+      "dfdb040d6de380edc85b3dbebc61a1f2"
+    ],
+    [
+      "Evens.even",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
+      0,
+      "5527c7cc8b6cea11066d942b7fe76ed5"
+    ],
+    [
+      "Evens.uu___is_Even0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bf7f51a83efce5a893f67764d1456cfd"
+    ],
+    [
+      "Evens.uu___is_Even_SSn",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7bfe836bc75d4a85f97b535ab82cd54f"
+    ],
+    [
+      "Evens.__proj__Even_SSn__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Evens_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
+      ],
+      0,
+      "818097770a702888bdf17c5407f5f6a8"
+    ],
+    [
+      "Evens.__proj__Even_SSn__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
+        "proj_equation_Evens.Even_SSn_n",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Evens.Even_SSn_n",
+        "refinement_interpretation_Evens_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
+      ],
+      0,
+      "62c3ddb146d64d900016d790ca9647b4"
+    ],
+    [
+      "Evens.nat2unary",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "97acbcb8059106df400dc4eae29a6cc8"
+    ],
+    [
+      "Evens.even0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equality_tok_Evens.Even0@tok",
+        "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
+      ],
+      0,
+      "422b1d9de1f7909011eadc8952bbb676"
+    ],
+    [
+      "Evens.evenSSn",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aaedd950274ec5e64db1b93a7c7a0054"
+    ]
+  ]
+]

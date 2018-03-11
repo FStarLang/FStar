@@ -165,8 +165,10 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
-assume private val __t_exact : bool -> bool -> term -> __tac unit
-let t_exact hard guard (t:term) : Tac unit = TAC?.reflect (__t_exact hard guard t)
+(** boolean is whether to set the expected type internally.
+ * Just use `exact` from FStar.Tactics.Derived if you don't know what that means. *)
+assume private val __t_exact : bool -> term -> __tac unit
+let t_exact hard (t:term) : Tac unit = TAC?.reflect (__t_exact hard t)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application
@@ -317,3 +319,14 @@ for pretty-printing, since there is a fresh unaccessible integer within
 the bv too. *)
 assume val __fresh_bv_named : string -> typ -> __tac bv
 let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
+
+(** Change the goal to another type, given that it is convertible
+ * to the current type. *)
+assume val __change : typ -> __tac unit
+let change (t : typ) : Tac unit = TAC?.reflect (__change t)
+
+assume val __get_guard_policy : __tac guard_policy
+let get_guard_policy () : Tac guard_policy = TAC?.reflect (__get_guard_policy)
+
+assume val __set_guard_policy : guard_policy -> __tac unit
+let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_policy p)

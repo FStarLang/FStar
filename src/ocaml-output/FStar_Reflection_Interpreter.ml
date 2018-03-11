@@ -64,6 +64,7 @@ let (reflection_primops :
     {
       FStar_TypeChecker_Normalize.name = l;
       FStar_TypeChecker_Normalize.arity = arity;
+      FStar_TypeChecker_Normalize.auto_reflect = FStar_Pervasives_Native.None;
       FStar_TypeChecker_Normalize.strong_reduction_ok = false;
       FStar_TypeChecker_Normalize.requires_binder_substitution = false;
       FStar_TypeChecker_Normalize.interpretation =

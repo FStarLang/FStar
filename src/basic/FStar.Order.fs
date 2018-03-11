@@ -35,7 +35,7 @@ let rec compare_list (f : 'a -> 'a -> order) (l1 : list<'a>) (l2 : list<'a>) : o
     | _, [] -> Gt
     | x::xs, y::ys -> lex (f x y) (fun () -> compare_list f xs ys)
 
-let compare_option (f : 'a -> 'a -> order) (x : option 'a) (y : option 'a) : order =
+let compare_option (f : 'a -> 'a -> order) (x : option<'a>) (y : option<'a>) : order =
     match x, y with
     | None   , None   -> Eq
     | None   , Some _ -> Lt

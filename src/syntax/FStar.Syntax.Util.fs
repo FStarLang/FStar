@@ -510,7 +510,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
-    match t1.n, t2.n with
+    match (compress t1).n, (compress t2).n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->
@@ -1603,6 +1603,9 @@ let is_fvar lid t =
 
 let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
+
+let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
+     FStar.Util.for_some (is_fvar attr) attrs
 
 ///////////////////////////////////////////
 // Setting pragmas
