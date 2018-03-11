@@ -17,6 +17,8 @@ def cleanup_json(js):
     if isinstance(js, dict):
         if "fname" in js:
             js["fname"] = os.path.basename(js["fname"].replace('\\', '/'))
+        if "location" in js:
+            js["location"] = "<location removed>"
         for v in js.itervalues():
             cleanup_json(v)
     elif isinstance(js, list):
