@@ -1,8 +1,51 @@
 module SL.Effect
 
-open SepLogic.Heap
+(*** begin heap interface ***)
 
-unfold let memory = m:memory{defined m}
+(*
+ * this is all the heap interface we need so far
+ *)
+assume val memory: Type u#1
+assume val defined: memory -> Type0
+assume val emp: memory
+assume val ref (a:Type0): Type0
+
+(* operations on memories and refs *)
+assume val addr_of: #a:Type0 -> ref a -> Tot nat
+assume val ( |> ): #a:Type0 -> r:ref a -> x:a -> Tot memory
+assume val ( <*> ): m0:memory -> m1:memory -> Tot memory
+
+(* lemmas *)
+assume val lemma_join_is_commutative (m0 m1:memory)
+  :Lemma (requires True) (ensures ((m0 <*> m1) == (m1 <*> m0)))
+         [SMTPat (m0 <*> m1)]
+assume val lemma_join_is_associative (m0 m1 m2:memory)
+  :Lemma (requires True) (ensures ((m0 <*> (m1 <*> m2)) == ((m0 <*> m1) <*> m2)))
+         [SMTPatOr [[SMTPat ((m0 <*> (m1 <*> m2)))];
+	            [SMTPat ((m0 <*> m1) <*> m2)]]]
+assume val lemma_emp_is_join_unit (m:memory)
+  :Lemma (requires True) (ensures ((m <*> emp) == m))
+         [SMTPat (m <*> emp)]
+
+(* definedness *)
+assume val addrs_in (m:memory) :Set.set nat
+
+assume val lemma_addrs_in_emp (u:unit) :Lemma (Set.equal (addrs_in emp) (Set.empty))
+assume val lemma_addrs_in_points_to (#a:Type) (r:ref a) (x:a)
+  :Lemma (requires True) (ensures (Set.equal (addrs_in (r |> x)) (Set.singleton (addr_of r))))
+         [SMTPat (addrs_in (r |> x))]
+assume val lemma_addrs_in_join (m0 m1:memory)
+  :Lemma (requires True) (ensures (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
+         [SMTPat (addrs_in (m0 <*> m1))]
+assume val lemma_definedness_of_join (m0 m1:memory)
+  :Lemma (requires (Set.disjoint (addrs_in m0) (addrs_in m1)))
+         (ensures  (defined (m0 <*> m1)))
+	 [SMTPat (defined (m0 <*> m1))]
+assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
+
+(*** end heap interface ***)
+
+//unfold let memory = m:memory{defined m}
 
 let pre = memory -> Type0
 let post (a:Type) = a -> memory -> Type0
@@ -12,7 +55,7 @@ unfold let return_wp (a:Type) (x:a) :st_wp a =
   fun post m0 -> m0 == emp /\ post x m0
 
 unfold let frame_wp (#a:Type) (wp:st_wp a) (post:memory -> post a) (m:memory) =
-  exists (m0 m1:memory). defined m /\ m == (m0 <*> m1) /\ wp (post m1) m0
+  exists (m0 m1:memory). defined (m0 <*> m1) /\ m == (m0 <*> m1) /\ wp (post m1) m0
 
 unfold let frame_post (#a:Type) (p:post a) (m0:memory) :post a =
   fun x m1 -> defined (m1 <*> m0) /\ p x (m1 <*> m0)  //m1 is the frame
@@ -62,7 +105,7 @@ new_effect {
      ; trivial      = st_trivial
 }
 
-unfold let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = emp_defined(); wp (fun a -> p a emp)
+unfold let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = wp (fun a -> p a emp)
 sub_effect DIV ~> STATE = lift_div_st
 
 assume
@@ -72,40 +115,3 @@ val ( ! ) (#a:Type) (r:ref a)
 assume
 val ( := ) (#a:Type) (r:ref a) (v:a)
   :STATE unit (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post () (r |> v))
-
-
-
-
-// open SL.Tactics
-// open FStar.Tactics.Builtins
-// open FStar.Tactics.Logic
-
-// #set-options "--print_full_names"
-// //sequential composition
-// let swap (r:ref int) (s:ref int) =
-//   (let x = !r in
-//    let y = !s in
-//    r := y;
-//    s := x)
-//   <: STATE unit (fun post h0 -> exists x y. h0 == join_tot (points_to r x) (points_to s y)
-//                                   /\ post () (join_tot (points_to r y) (points_to s x)))
-//   by (fun () -> dump "A"; 
-//              let post = FStar.Tactics.forall_intro () in
-//              let h0 = FStar.Tactics.forall_intro () in             
-//              let pre = implies_intro () in
-//              dump "B"; 
-//              FStar.Tactics.Derived.admit1(); //NS: not sure how the existing SL.Tactics.solve is supposed to tackle this
-//              qed())
-
-// //branching
-// let conditional_swap (r:ref int) (s:ref int) =
-//   let x = !r in
-//   if x = 0 then
-//    let y = !s in
-//    r := y
-
-// //recursion
-// let rec decr_n (n:nat) (r:ref int) : STATE unit (fun post h -> False) = 
-//   if n <> 0 then ()
-//   else (r := !r - 1; decr_n (n - 1) r)
-
