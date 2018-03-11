@@ -308,8 +308,8 @@ let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid int_plus_cm; trefl())
 
-(* TODO: FStar.OrdMap abstraction was getting in the way of
-         computation, find a cleaner way to remove it *)
+(* TODO: FStar.OrdMap not efficient and abstraction getting in the way
+         of computation, probably get rid of it *)
 
 (* TODO: Allow the tactic to compute with constants beyond unit.
          Would it be enough to move all them to the end of the list by
