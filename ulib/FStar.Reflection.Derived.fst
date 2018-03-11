@@ -59,22 +59,27 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decreases c) =
+let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ ->
         begin match inspect t with
         | Tv_Arrow b c ->
-            let t = type_of_binder b in
-            collect_arr' (t::typs) c
+            collect_arr' (b::bs) c
         | _ ->
-            (typs, c)
+            (bs, c)
         end
-    | _ -> (typs, c)
+    | _ -> (bs, c)
     end
+
+val collect_arr_bs : typ -> list binder * comp
+let collect_arr_bs t =
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    (List.Tot.rev bs, c)
 
 val collect_arr : typ -> list typ * comp
 let collect_arr t =
-    let (ts, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let ts = List.Tot.map type_of_binder bs in
     (List.Tot.rev ts, c)
 
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
