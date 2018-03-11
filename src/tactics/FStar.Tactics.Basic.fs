@@ -584,12 +584,11 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
                | _ -> FStar.Options.peek ()
     in
     mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
-    bind (__tc e t) (fun (t, _, guard) ->
-    bind (proc_guard "norm_term_env" e guard opts) (fun () ->
+    bind (__tc e t) (fun (t, _, _) ->
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    )))))
+    ))))
 
 let refine_intro : tac<unit> = wrap_err "refine_intro" <|
     bind cur_goal (fun g ->
