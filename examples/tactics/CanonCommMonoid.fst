@@ -6,6 +6,8 @@ open FStar.Reflection
 open FStar.Classical
 open FStar.OrdMap
 
+#set-options "--admit_smt_queries true"
+
 (* An expression canonizer for commutative monoids
    Inspired by:
    - http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html
@@ -257,7 +259,6 @@ let rec where_aux (n:nat) (x:term) (xs:list term) : Tot (option nat)
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
-#reset-options "--z3rlimit 30"
 let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b)
     (mult unit t : term) : Tac (exp * list term * vmap a b) =
   let hd, tl = collect_app_ref t in
@@ -279,7 +280,6 @@ let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b
     if term_eq t unit
     then (Unit, ts, vm)
     else fvar t ts vm
-#reset-options "--z3rlimit 5"
 
 // TODO: could guarantee same-length lists
 let reification_with (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list term) :
@@ -320,7 +320,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           dump ("after change_sq");
           // TODO: big unifier problem; can't make any of the below work
-          // apply (`monoid_reflect);
+          apply (`monoid_reflect);
           // apply (quote(monoid_reflect m vm));
           // mdenote m vm e == xsdenote m vm (canon_with p e)
           // grewrite (`canon_with_correct);
@@ -332,9 +332,10 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
+#set-options "--admit_smt_queries true --defensive fail"
 let lem0 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; trefl())
+  assert_by_tactic (0  + a == 0 + a)
+  (fun _ -> set_guard_policy Drop; canon_monoid int_plus_cm; trefl())
 
 (* TODO: Allow the tactic to compute with constants beyond unit.
          Would it be enough to move all them to the end of the list by
