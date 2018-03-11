@@ -425,7 +425,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           (RD.fstar_refl_types_lid "fv", [], fstar_syn_syn_prefix "t_fv", R);
           (RD.fstar_refl_types_lid "binder", [], fstar_syn_syn_prefix "t_binder", R);
           (RD.fstar_refl_syntax_lid "binders", [], fstar_refl_data_prefix "t_binders", R);
-          (PC.norm_step_lid "norm_step", [], fstar_syn_syn_prefix "t_norm_step", S);
+          (PC.norm_step_lid, [], fstar_syn_syn_prefix "t_norm_step", S);
           (PC.list_lid,   [Covariant], fstar_syn_syn_prefix "t_list_of", S); //one covariant argument
           (PC.option_lid, [Covariant], fstar_syn_syn_prefix "t_option_of", S);
           // (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_tc_common_prefix "t_tuple2_of", S) //two covariant arguments
