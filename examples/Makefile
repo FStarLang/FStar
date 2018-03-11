@@ -27,6 +27,7 @@ vale \
 seplogic \
 hello \
 native_tactics \
+plugins \
 extraction \
 demos
 
