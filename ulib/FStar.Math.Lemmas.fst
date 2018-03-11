@@ -484,6 +484,7 @@ val division_multiplication_lemma: a:nat -> b:pos -> c:pos ->
 let division_multiplication_lemma a b c =
   if a / b <= c - 1 then begin
     small_division_lemma_1 (a / b) c;
+    assert (a < b * c);
     small_division_lemma_1 a (b * c)
   end else begin
     division_propriety (a / b) c;
