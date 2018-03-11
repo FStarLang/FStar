@@ -4,12 +4,13 @@ open SL.Effect
 
 open FStar.Tactics
 
-let lemma_rw_rw (phi:memory -> memory -> int -> Type0) (r:ref int) (x:int) (h:memory)
+let lemma_rw_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
   :Lemma (requires (defined ((r |> x) <*> h) /\ phi (r |> x) h x))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ ((r |> x) <*> h) == (h0 <*> h1) /\ (exists x. h0 == (r |> x) /\ phi h0 h1 x)))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
+	                              ((r |> x) <*> h) == (h0 <*> h1) /\ (exists x. h0 == (r |> x) /\ phi h0 h1 x)))
   = ()
 
-let lemma_rw_bind (phi:memory -> memory -> memory -> memory -> int -> Type0) (r:ref int) (x:int) (h:memory)
+let lemma_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
   :Lemma (requires (defined (((r |> x) <*> h) <*> emp) /\ phi ((r |> x) <*> h) emp (r |> x) h x))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ ((r |> x) <*> h) == (h0 <*> h1) /\
 	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (exists x. h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))  
