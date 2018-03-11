@@ -304,6 +304,11 @@ let is_ghost_effect l =
     || lid_equals PC.effect_GHOST_lid l
     || lid_equals PC.effect_Ghost_lid l
 
+let is_div_effect l =
+     lid_equals l PC.effect_DIV_lid
+     || lid_equals l PC.effect_Div_lid
+     || lid_equals l PC.effect_Dv_lid
+
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
 let is_pure_lcomp lc =
