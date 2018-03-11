@@ -247,7 +247,7 @@ let monoid_reflect_with (p:permute) (pc:permute_correct p)
 
 let monoid_reflect (#a #b:Type) (m:cm a) (vm:vmap a b) (e1 e2:exp) =
   monoid_reflect_with sort
-    (fun #a #b m vm xs -> sort_correct #a #b m vm xs) #a m vm
+    (fun #a #b m vm xs -> sort_correct #a #b m vm xs) #a m vm e1 e2
 
 (* Finds the position of first occurrence of x in xs;
    this could use eqtype and be completely standard if term provided it *)
