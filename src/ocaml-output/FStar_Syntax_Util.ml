@@ -3699,13 +3699,17 @@ let (is_fvar : FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool)
   
 let (is_synth_by_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t  -> is_fvar FStar_Parser_Const.synth_lid t 
+let (has_attribute :
+  FStar_Syntax_Syntax.attribute Prims.list ->
+    FStar_Ident.lident -> Prims.bool)
+  = fun attrs  -> fun attr  -> FStar_Util.for_some (is_fvar attr) attrs 
 let (process_pragma :
   FStar_Syntax_Syntax.pragma -> FStar_Range.range -> Prims.unit) =
   fun p  ->
     fun r  ->
       let set_options1 t s =
-        let uu____10743 = FStar_Options.set_options t s  in
-        match uu____10743 with
+        let uu____10753 = FStar_Options.set_options t s  in
+        match uu____10753 with
         | FStar_Getopt.Success  -> ()
         | FStar_Getopt.Help  ->
             FStar_Errors.raise_error
@@ -3724,9 +3728,9 @@ let (process_pragma :
           else ()
       | FStar_Syntax_Syntax.SetOptions o -> set_options1 FStar_Options.Set o
       | FStar_Syntax_Syntax.ResetOptions sopt ->
-          ((let uu____10751 = FStar_Options.restore_cmd_line_options false
+          ((let uu____10761 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____10751 FStar_Pervasives.ignore);
+            FStar_All.pipe_right uu____10761 FStar_Pervasives.ignore);
            (match sopt with
             | FStar_Pervasives_Native.None  -> ()
             | FStar_Pervasives_Native.Some s ->
