@@ -3447,7 +3447,7 @@ and (desugar_comp :
   fun r  ->
     fun env  ->
       fun t  ->
-        let fail a err = FStar_Errors.raise_error err r  in
+        let fail1 a err = FStar_Errors.raise_error err r  in
         let is_requires uu____9098 =
           match uu____9098 with
           | (t1,uu____9104) ->
@@ -3752,7 +3752,7 @@ and (desugar_comp :
                        (FStar_Errors.Fatal_NotEnoughArgsToEffect,
                          uu____10210)
                         in
-                     fail () uu____10205)
+                     fail1 () uu____10205)
                 else Obj.repr ());
              (let is_universe uu____10220 =
                 match uu____10220 with

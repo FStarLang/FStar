@@ -3863,7 +3863,7 @@ let (gen :
                   in
                let lecs2 = lec_hd :: lecs1  in
                let gen_types uvs1 =
-                 let fail k =
+                 let fail1 k =
                    let uu____9466 = lec_hd  in
                    match uu____9466 with
                    | (lbname,e,c) ->
@@ -3935,9 +3935,9 @@ let (gen :
                                                Prims.op_Negation uu____9596
                                                 in
                                              if uu____9595
-                                             then fail kres
+                                             then fail1 kres
                                              else ()
-                                         | uu____9598 -> fail kres);
+                                         | uu____9598 -> fail1 kres);
                                         (let a =
                                            let uu____9600 =
                                              let uu____9603 =
@@ -4172,7 +4172,7 @@ let (check_and_ascribe :
         fun t2  ->
           let env1 =
             FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos  in
-          let check env2 t11 t21 =
+          let check1 env2 t11 t21 =
             if env2.FStar_TypeChecker_Env.use_eq
             then FStar_TypeChecker_Rel.try_teq true env2 t11 t21
             else
@@ -4291,7 +4291,7 @@ let (check_and_ascribe :
               FStar_TypeChecker_Env.dep_graph =
                 (uu___124_10596.FStar_TypeChecker_Env.dep_graph)
             }  in
-          let uu____10598 = check env2 t1 t2  in
+          let uu____10598 = check1 env2 t1 t2  in
           match uu____10598 with
           | FStar_Pervasives_Native.None  ->
               let uu____10605 =

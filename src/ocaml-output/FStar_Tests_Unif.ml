@@ -66,7 +66,7 @@ let (unify :
     fun x1  ->
       fun y1  ->
         fun g'  ->
-          fun check  ->
+          fun check1  ->
             (let uu____72 = FStar_Util.string_of_int i  in
              FStar_Util.print1 "%s ..." uu____72);
             (let uu____74 = FStar_Main.process_args ()  in
@@ -84,7 +84,7 @@ let (unify :
                   in
                FStar_All.pipe_right uu____97 uu____99  in
              guard_eq i g.FStar_TypeChecker_Env.guard_f g';
-             check ();
+             check1 ();
              FStar_Options.init ())
   
 let (should_fail :
