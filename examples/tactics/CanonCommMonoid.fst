@@ -334,8 +334,11 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
 
 #set-options "--admit_smt_queries true --defensive fail"
 let lem0 (a b c d : int) =
-  assert_by_tactic (0  + a == 0 + a)
-  (fun _ -> set_guard_policy Drop; canon_monoid int_plus_cm; trefl())
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> set_guard_policy Drop;
+            canon_monoid int_plus_cm;
+            compute ();
+            trefl())
 
 (* TODO: Allow the tactic to compute with constants beyond unit.
          Would it be enough to move all them to the end of the list by
