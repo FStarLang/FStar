@@ -4,10 +4,22 @@ open SL.Effect
 
 open FStar.Tactics
 
+let lemma_singleton_heap_rw_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a)
+  :Lemma (requires (phi (r |> x) emp x))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
+	                              (r |> x) == (h0 <*> h1) /\ (exists x. h0 == (r |> x) /\ phi h0 h1 x)))
+  = ()
+
 let lemma_rw_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
   :Lemma (requires (defined ((r |> x) <*> h) /\ phi (r |> x) h x))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
 	                              ((r |> x) <*> h) == (h0 <*> h1) /\ (exists x. h0 == (r |> x) /\ phi h0 h1 x)))
+  = ()
+
+let lemma_singleton_heap_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0) (r:ref a) (x:a)
+  :Lemma (requires (phi (r |> x) emp (r |> x) emp x))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (r |> x) == (h0 <*> h1) /\
+	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (exists x. h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))  
   = ()
 
 let lemma_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
@@ -16,9 +28,21 @@ let lemma_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> T
 	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (exists x. h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))  
   = ()
 
-let lemma_pure (h h':memory) (phi:memory -> memory -> memory -> memory -> Type0)
-  :Lemma (requires (defined (h <*> h') /\ phi h h' emp (h <*> h')))
-         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h0 h1))
+let lemma_pure_right (h h':memory) (phi:memory -> memory -> memory -> Type0)
+  :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h')))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h1))
+  = assert ((h <*> h') == ((h <*> h') <*> emp))
+
+let lemma_emp (phi:memory -> memory -> Type0)
+  :Lemma (requires (phi emp emp))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ emp == (h0 <*> h1) /\ phi h0 h1))
+  = ()
+
+let lemma_singleton_heap_procedure_rw (#a:Type0) (phi:memory -> memory -> a -> Type0)
+		                 (r:ref a) (x:a)
+  :Lemma (requires (phi (r |> x) emp x))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (r |> x) == (h0 <*> h1) /\
+	                     (h0 == (r |> x) /\ phi h0 h1 x)))
   = ()
 
 let lemma_procedure_rw (phi:memory -> memory -> memory -> memory -> Type0)
@@ -26,6 +50,14 @@ let lemma_procedure_rw (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
          (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
 	                     (h0 == h /\ phi h h' h0 h1)))
+  = ()
+
+let lemma_singleton_heap_procedure_bind
+  (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0)
+  (r:ref a) (x:a)
+  :Lemma (requires (phi (r |> x) emp (r |> x) emp x))
+         (ensures  (exists h0 h1. defined (h0 <*> h1) /\ (r |> x) == (h0 <*> h1) /\
+	                     (exists h3 h4. defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))
   = ()
 
 let lemma_procedure_bind (phi:memory -> memory -> memory -> memory -> memory -> memory -> Type0)
@@ -85,7 +117,7 @@ let prelude () :Tac unit =
   ignore (repeat (fun _ -> let h = implies_intro () in
                         or_else (fun _ -> rewrite h) idtac))  //introduce the conjuncts into the context, but rewrite in the goal before doing that, specifically we want the initial heap expression to be inlined in the goal
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false"
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --print_full_names"
 
 let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
   (r := 2;
@@ -148,4 +180,39 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     apply_lemma (`lemma_rw_bind);
 	     split (); smt ();
 	     split (); smt ();
-	     apply_lemma (`lemma_pure))
+	     apply_lemma (`lemma_pure_right))
+
+private val split_lem : (#a:Type) -> (#b:Type) ->
+                        squash a -> squash b -> Lemma (a /\ b)
+let split_lem #a #b sa sb = ()
+
+let incr (r:ref int) (n:int)
+  = (let y = !r in
+     let z = y + 1 in
+     r := z;
+     !r)
+
+     <: STATE int (fun post h -> h == (r |> n) /\ post (n + 1) (r |> n + 1))
+
+     by (fun () -> prelude ();
+                apply_lemma (`lemma_singleton_heap_rw_rw);
+		apply_lemma (`split_lem); smt ();  //split () fails at this point
+		apply_lemma (`lemma_rw_bind);
+		split (); smt ();
+		split (); smt ();
+		apply_lemma (`lemma_rw_rw))
+
+let incr2 (r:ref int) (n:int)
+  = (let n = incr r n in
+     let n = incr r n in
+     n)
+
+    <: STATE int (fun post h -> h == (r |> n) /\ post (n + 2) (r |> n + 2))
+
+    by (fun () -> prelude ();
+               apply_lemma (`lemma_singleton_heap_procedure_rw);
+	       apply_lemma (`split_lem); smt ();  //split () fails at this point
+	       apply_lemma (`lemma_procedure_bind);
+	       split (); smt ();
+	       split (); smt ();
+               apply_lemma (`lemma_pure_right))
