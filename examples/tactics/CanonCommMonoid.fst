@@ -45,17 +45,12 @@ let int_plus_cm : cm int =
 (** *** Expression syntax *)
 
 let var = nat
-let var_ord : cmp var = (<=)
-let vmap (a b:Type) = ordmap var (a*b) var_ord
-let empty a b = empty #var #(a*b) #var_ord
-let select_aux (#a #b:Type) (x:var) (vm:vmap a b) : Tot (option b) =
-  match select x vm with
-  | Some (_,aux) -> Some aux
-  | None -> None
-let select (#a #b:Type) (m:cm a) (x:var) (vm:vmap a b) : Tot a =
-  match select x vm with
-  | Some (v,_) -> v
-  | None -> CM?.unit m // using monoid unit as a default for variables
+let vmap (a b:Type) = var -> (a*b)
+let const (#a #b:Type) (xa:a) (xb:b) (x:var) = (xa,xb)
+let select (#a #b:Type) (x:var) (vm:vmap a b) : Tot a = fst (vm x)
+let select_aux (#a #b:Type) (x:var) (vm:vmap a b) : Tot b = snd (vm x)
+let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) (x':var) :
+  Tot (a*b) = if x' = x then (xa,xb) else vm x'
 
 type exp : Type =
   | Unit : exp
@@ -72,14 +67,14 @@ let rec exp_to_string (e:exp) : string =
 let rec mdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : a =
   match e with
   | Unit -> CM?.unit m
-  | Var x -> select m x vm
+  | Var x -> select x vm
   | Mult e1 e2 -> CM?.mult m (mdenote m vm e1) (mdenote m vm e2)
 
 let rec xsdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) : a =
   match xs with
   | [] -> CM?.unit m
-  | [x] -> select m x vm
-  | x::xs' -> CM?.mult m (select m x vm) (xsdenote m vm xs')
+  | [x] -> select x vm
+  | x::xs' -> CM?.mult m (select x vm) (xsdenote m vm xs')
 
 let rec flatten (e:exp) : list var =
   match e with
@@ -93,8 +88,8 @@ let rec flatten_correct_aux (#a #b:Type) (m:cm a) (vm:vmap a b)
                                                    (xsdenote m vm xs2)) =
   match xs1 with
   | [] -> CM?.left_unitality m (xsdenote m vm xs2)
-  | [x] -> if (Nil? xs2) then CM?.right_unitality m (select m x vm)
-  | x::xs1' -> (CM?.associativity m (select m x vm)
+  | [x] -> if (Nil? xs2) then CM?.right_unitality m (select x vm)
+  | x::xs1' -> (CM?.associativity m (select x vm)
                       (xsdenote m vm xs1') (xsdenote m vm xs2);
                 flatten_correct_aux m vm xs1' xs2)
 
@@ -140,9 +135,9 @@ let rec apply_swap_aux_correct (#a #b:Type) (n:nat) (m:cm a) (vm:vmap a b)
       then (// x1 + (x2 + xs') =a (x1 + x2) + xs'
             //                 =c (x2 + x1) + xs' = a x2 + (x1 + xs')
            let a = CM?.associativity m in
-           a (select m x1 vm) (select m x2 vm) (xsdenote m vm xs');
-           a (select m x2 vm) (select m x1 vm) (xsdenote m vm xs');
-           CM?.commutativity m (select m x1 vm) (select m x2 vm))
+           a (select x1 vm) (select x2 vm) (xsdenote m vm xs');
+           a (select x2 vm) (select x1 vm) (xsdenote m vm xs');
+           CM?.commutativity m (select x1 vm) (select x2 vm))
       else apply_swap_aux_correct (n+1) m vm (x2 :: xs') s
 
 let apply_swap_correct (#a #b:Type) (m:cm a) (vm:vmap a b)
@@ -236,14 +231,14 @@ let where = where_aux 0
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b)
     (mult unit t : term) : Tac (exp * list term * vmap a b) =
-  admit();
+  admit(); // TODO: unclear what causes this
   let hd, tl = collect_app_ref t in
   let tl = list_unref tl in
   let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp * list term * vmap a b) =
     match where t ts with
     | Some v -> (Var v, ts, vm)
     | None -> let vfresh = length ts in let z = unquote t in
-              (Var vfresh, ts @ [t], update vfresh (z, f t) vm)
+              (Var vfresh, ts @ [t], update vfresh z (f t) vm)
   in
   match inspect hd, tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
@@ -258,7 +253,7 @@ let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b
     else fvar t ts vm
 
 // TODO: could guarantee same-length lists
-let reification_with (b:Type) (f:term->Tac b) (#a:Type) (m:cm a) (ts:list term) :
+let reification_with (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list term) :
     Tac (list exp * vmap a b) =
   let mult = norm_term [delta] (quote (CM?.mult m)) in
   let unit = norm_term [delta] (quote (CM?.unit m)) in
@@ -270,10 +265,10 @@ let reification_with (b:Type) (f:term->Tac b) (#a:Type) (m:cm a) (ts:list term) 
     Tactics.Derived.fold_left
       (fun (es,vs,vm) t ->
         let (e,vs,vm) = reification_aux vs vm f mult unit t in (e::es,vs,vm))
-      ([],[], empty a b) ts
+      ([],[], const (CM?.unit m) def) ts
   in (List.rev es,vm)
 
-let reification = reification_with unit (fun _ -> ())
+let reification = reification_with unit (fun _ -> ()) ()
 
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =
   norm [];
@@ -285,16 +280,16 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       if term_eq t (quote a) then
         match reification m [t1;t2] with
         | [r1;r2], vm ->
-          // dump ("r1=" ^ exp_to_string r1 ^
-          //     "; r2=" ^ exp_to_string r2);
-          // dump ("vm =" ^ term_to_string (quote vm));
-          // dump ("before =" ^ term_to_string (norm_term [delta;primops]
-          //   (quote (mdenote m vm r1 == mdenote m vm r2))));
-          // dump ("after =" ^ term_to_string (norm_term [delta;primops]
-          //   (quote ((xsdenote m vm (sort (flatten r1)) ==
-          //            xsdenote m vm (sort (flatten r2)))))));
+          dump ("r1=" ^ exp_to_string r1 ^
+              "; r2=" ^ exp_to_string r2);
+          dump ("vm =" ^ term_to_string (quote vm));
+          dump ("before =" ^ term_to_string (norm_term [delta;primops]
+            (quote (mdenote m vm r1 == mdenote m vm r2))));
+          dump ("after =" ^ term_to_string (norm_term [delta;primops]
+            (quote ((xsdenote m vm (sort (flatten r1)) ==
+                     xsdenote m vm (sort (flatten r2)))))));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
-          // dump ("after change_sq");
+          dump ("after change_sq");
           apply (quote(monoid_reflect m vm));
           norm [delta_only ["CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
