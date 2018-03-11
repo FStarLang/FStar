@@ -226,7 +226,7 @@ let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
-let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
+let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     let debug_on () =
         let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
         ()
@@ -256,6 +256,14 @@ let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
             end
+
+let do_unify env t1 t2 : tac<bool> =
+    bind (__do_unify env t1 t2) (fun b ->
+    if not b
+    then let t1 = N.normalize [] env t1 in
+         let t2 = N.normalize [] env t2 in
+         __do_unify env t1 t2
+    else ret b)
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
