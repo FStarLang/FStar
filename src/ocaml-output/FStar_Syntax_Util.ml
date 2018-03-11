@@ -2029,14 +2029,20 @@ let (tiff : FStar_Syntax_Syntax.term) =
   
 let (t_bool : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.bool_lid 
-let (t_false : FStar_Syntax_Syntax.term) =
-  fvar_const FStar_Parser_Const.false_lid 
-let (t_true : FStar_Syntax_Syntax.term) =
-  fvar_const FStar_Parser_Const.true_lid 
 let (b2t_v : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.b2t_lid 
 let (t_not : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.not_lid 
+let (t_false : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar FStar_Parser_Const.false_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
+  
+let (t_true : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
+  
 let (tac_opaque_attr : FStar_Syntax_Syntax.term) = exp_string "tac_opaque" 
 let (dm4f_bind_range_attr : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.dm4f_bind_range_attr 
