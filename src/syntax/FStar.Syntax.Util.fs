@@ -1004,10 +1004,11 @@ let tor     = fvar_const PC.or_lid
 let timp    = fvar PC.imp_lid (Delta_defined_at_level 1) None
 let tiff    = fvar PC.iff_lid (Delta_defined_at_level 2) None
 let t_bool  = fvar_const PC.bool_lid
-let t_false = fvar_const PC.false_lid
-let t_true  = fvar_const PC.true_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
+// These are `True` and `False`, not the booleans
+let t_false = fvar PC.false_lid (Delta_defined_at_level 1) None
+let t_true  = fvar PC.true_lid  (Delta_defined_at_level 1) None
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 
