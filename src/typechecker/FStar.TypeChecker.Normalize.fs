@@ -2014,7 +2014,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
     | Tm_app _ when cfg.steps.primops ->
       let hd, args = U.head_and_args t in
-      (match (U.un_uinst head).n with
+      (match (U.un_uinst hd).n with
        | Tm_fvar fv ->
            begin
            match find_prim_step cfg fv with

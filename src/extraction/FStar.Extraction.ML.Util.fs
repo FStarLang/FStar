@@ -587,7 +587,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
                  psc;
                  args] in
             Some (mk_lam "psc" <| (mk_lam "args" (w <| MLE_App (h, args))),
-                  arity,
+                  arity + 1,
                   false)
           end
           else raise (NoTacticEmbedding("Plugins not defined for type " ^ Print.term_to_string t))

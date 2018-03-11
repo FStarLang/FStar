@@ -166,8 +166,8 @@ let mk_tactic_interpretation_5 (reflect:bool)
 
 let step_from_native_step (s: native_primitive_step): N.primitive_step =
     { N.name=s.name;
-      N.arity=s.arity + 1;
-      N.auto_reflect=Some s.arity;
+      N.arity=s.arity;
+      N.auto_reflect=Some (s.arity - 1);
       N.strong_reduction_ok=s.strong_reduction_ok;
       N.requires_binder_substitution = false; // GM: really?
       N.interpretation=(fun psc args -> s.tactic psc args) }

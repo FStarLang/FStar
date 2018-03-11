@@ -32,6 +32,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) =
     let step =
            { N.name=FStar_Ident.lid_of_str s;
              N.arity=arity;
+             N.auto_reflect=None;
              N.strong_reduction_ok=false;
              N.requires_binder_substitution = false;
              N.interpretation=t}
