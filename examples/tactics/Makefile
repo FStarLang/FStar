@@ -15,6 +15,7 @@ all:	Apply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	VC.uver			\
+	Div.uver		\
 	Change.uver		\
 	Tutorial.uver		\
 	Splice.uver		\

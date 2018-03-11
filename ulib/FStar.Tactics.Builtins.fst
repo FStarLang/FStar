@@ -43,8 +43,11 @@ or fails if it is untypeable. *)
 let tc (t : term) = TAC?.reflect (__tc t)
 
 assume private val __unshelve : term -> __tac unit
-(** [tc] returns the type of a term in the current environment,
-or fails if it is untypeable. *)
+(** [unshelve] creates a goal from a term for its given type.
+It can be used when the system decided not to present a goal, but
+you want one anyway. For example, if you request a uvar through
+[uvar_env] or [fresh_uvar], you might want to instantiate it
+explicitly. *)
 let unshelve (t : term) = TAC?.reflect (__unshelve t)
 
 assume private val __unquote : #a:Type -> term -> __tac a

@@ -226,7 +226,7 @@ let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
-let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
+let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     let debug_on () =
         let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
         ()
@@ -256,6 +256,14 @@ let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
             end
+
+let do_unify env t1 t2 : tac<bool> =
+    bind (__do_unify env t1 t2) (fun b ->
+    if not b
+    then let t1 = N.normalize [] env t1 in
+         let t2 = N.normalize [] env t2 in
+         __do_unify env t1 t2
+    else ret b)
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
@@ -1282,12 +1290,20 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     ret t))
 
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
-    bind cur_goal (fun goal ->
-    bind (__tc goal.context t) (fun (t, typ, guard) ->
-    bind (proc_guard "unshelve" goal.context guard goal.opts) (fun _ ->
-    add_goals [{ goal with witness  = bnorm goal.context t;
-                           goal_ty  = bnorm goal.context typ;
-                           is_guard = false; }])))
+    bind get (fun ps ->
+    let env = ps.main_context in
+    (* We need a set of options, but there might be no goals, so do this *)
+    let opts = match ps.goals with
+               | g::_ -> g.opts
+               | _ -> FStar.Options.peek ()
+    in
+    bind (__tc env t) (fun (t, typ, guard) ->
+    bind (proc_guard "unshelve" env guard opts) (fun _ ->
+    add_goals [{ witness  = bnorm env t;
+                 goal_ty  = bnorm env typ;
+                 is_guard = false;
+                 context  = env;
+                 opts     = opts; }])))
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->

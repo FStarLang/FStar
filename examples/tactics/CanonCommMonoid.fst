@@ -249,7 +249,7 @@ let monoid_reflect_with (p:permute) (pc:permute_correct p)
 
 let monoid_reflect (#a #b:Type) (m:cm a) (vm:vmap a b) (e1 e2:exp) =
   monoid_reflect_with sort
-    (fun #a #b m vm xs -> sort_correct #a #b m vm xs) #a m vm
+    (fun #a #b m vm xs -> sort_correct #a #b m vm xs) #a m vm e1 e2
 
 (* Finds the position of first occurrence of x in xs;
    this could use eqtype and be completely standard if term was eqtype *)
@@ -323,9 +323,7 @@ let canon_monoid_with
                      xsdenote m vm (sort (flatten r2)))))));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           dump ("after change_sq");
-          // TODO: big unifier problem; can't make any of the below work
-          // apply (`monoid_reflect_with p pc);
-          apply (quote(monoid_reflect_with p pc m vm));
+          apply (`monoid_reflect);
           norm [delta_only ["CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
                             "FStar.List.Tot.Base.op_At";
@@ -339,17 +337,20 @@ let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
 
 (***** Examples *)
 
-// let lem0 (a b c d : int) =
-//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-//   (fun _ -> canon_monoid int_plus_cm; trefl())
+let lem0 (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> set_guard_policy Drop;
+            canon_monoid int_plus_cm;
+            compute ();
+            trefl())
 
 // remember if something is a constant or not
 let is_const t = Tv_Const? (inspect t)
 let canon_monoid_const = canon_monoid_with bool is_const false
 
-let lem1 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_const int_plus_cm; trefl())
+// let lem1 (a b c d : int) =
+//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+//   (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
 (* TODO: Allow the tactic to compute with constants beyond unit.
          Would it be enough to move all them to the end of the list by
