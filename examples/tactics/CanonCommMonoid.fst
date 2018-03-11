@@ -235,30 +235,31 @@ let sort_via_swaps (#a:Type) (vm : vmap a unit)  (xs:list var) :
 
 let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort vm xs)) =
-  permute_via_swaps_correct #unit sort sort_via_swaps m vm xs
+  permute_via_swaps_correct #unit
+    (fun #a vm -> sort vm) (fun #a vm -> sort_via_swaps vm) m vm xs
 
-let sort_correct : permute_correct #unit sort =
-  (fun #a #b m vm xs -> sort_correct_aux #a #b m vm xs)
+let sort_correct : permute_correct #unit (fun #a vm -> sort vm) =
+  (fun #a m vm xs -> sort_correct_aux #a m vm xs)
 
 (***** Canonicalization tactics *)
 
-let canon_with (p:permute) (e:exp) = p (flatten e)
+let canon_with (#a #b:Type) (vm:vmap a b) (p:permute b) (e:exp) = p vm (flatten e)
 
-let canon_with_correct (p:permute) (pc:permute_correct p)
-                       (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) :
-    Lemma (mdenote m vm e == xsdenote m vm (canon_with p e)) =
+let canon_with_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
+                       (m:cm a) (vm:vmap a b) (e:exp) :
+    Lemma (mdenote m vm e == xsdenote m vm (canon_with vm p e)) =
   flatten_correct m vm e; pc m vm (flatten e)
 
-let monoid_reflect_with (p:permute) (pc:permute_correct p)
-                        (#a #b:Type) (m:cm a) (vm:vmap a b) (e1 e2:exp)
-    (_ : squash (xsdenote m vm (canon_with p e1) ==
-                 xsdenote m vm (canon_with p e2)))
+let monoid_reflect_with (#a #b:Type) (p:permute b) (pc:permute_correct p)
+                        (m:cm a) (vm:vmap a b) (e1 e2:exp)
+    (_ : squash (xsdenote m vm (canon_with vm p e1) ==
+                 xsdenote m vm (canon_with vm p e2)))
     : squash (mdenote m vm e1 == mdenote m vm e2) =
   canon_with_correct p pc m vm e1; canon_with_correct p pc m vm e2
 
-let monoid_reflect (#a #b:Type) (m:cm a) (vm:vmap a b) (e1 e2:exp) =
-  monoid_reflect_with sort
-    (fun #a #b m vm xs -> sort_correct #a #b m vm xs) #a m vm e1 e2
+let monoid_reflect (#a:Type) (m:cm a) (vm:vmap a unit) (e1 e2:exp) =
+  monoid_reflect_with #a #unit (fun #a vm -> sort vm)
+    (fun #a m vm xs -> sort_correct #a m vm xs) m vm e1 e2
 
 (* Finds the position of first occurrence of x in xs;
    this could use eqtype and be completely standard if term was eqtype *)
@@ -311,7 +312,7 @@ let reification_with (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:lis
   in (List.rev es,vm)
 
 let canon_monoid_with
-    (b:Type) (f:term->Tac b) (def:b) (#a:Type) (p:permute) (pc:permute_correct p)
+    (b:Type) (f:term->Tac b) (def:b) (#a:Type) (p:permute b) (pc:permute_correct p)
     (m:cm a) : Tac unit =
   norm [];
   let g = cur_goal () in
@@ -329,27 +330,36 @@ let canon_monoid_with
           dump ("before =" ^ term_to_string (norm_term [delta;primops]
             (quote (mdenote m vm r1 == mdenote m vm r2))));
           dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-            (quote (xsdenote m vm (canon_with p r1) ==
-                    xsdenote m vm (canon_with p r2)))));
+            (quote (xsdenote m vm (canon_with vm p r1) ==
+                    xsdenote m vm (canon_with vm p r2)))));
           apply (`monoid_reflect);
-          norm [delta_only ["CanonCommMonoid.xsdenote";
+          norm [delta_only ["CanonCommMonoid.canon_with";
+                            "CanonCommMonoid.sort";
+                            "CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
+                            "CanonCommMonoid.select";
+                            "FStar.Pervasives.Native.fst";
+                            "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+                            "FStar.List.Tot.Base.sortWith";
+                            "FStar.List.Tot.Base.partition";
+                            "FStar.List.Tot.Base.bool_of_compare";
+                            "FStar.List.Tot.Base.compare_of_bool";
                             "FStar.List.Tot.Base.op_At";
-                            "FStar.List.Tot.Base.append"]]; dump "done"
+                            "FStar.List.Tot.Base.append"];
+                primops]; // TODO: restrict this to less than only
+          dump "done"
         | _ -> fail "Unexpected"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
 let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
-  sort (fun #a #b m vm xs -> sort_correct #a #b m vm xs)
+  (fun #a vm -> sort vm) (fun #a m vm xs -> sort_correct #a m vm xs)
 
 (***** Examples *)
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm;
-            compute ();
-            trefl())
+  (fun _ -> canon_monoid int_plus_cm; trefl())
 
 // remember if something is a constant or not
 let is_const (t:term) : bool = Tv_Const? (inspect t)
@@ -364,11 +374,12 @@ let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let const_last (#a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (const_compare vm) xs
 
-let canon_monoid_const = canon_monoid_with bool is_const false const_last
+let canon_monoid_const = canon_monoid_with bool is_const false
+      (fun #a vm -> const_last vm) (fun #a m vm xs -> admit())
 
-// let lem1 (a b c d : int) =
-//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-//   (fun _ -> canon_monoid_const int_plus_cm; trefl())
+let lem1 (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
 (* TODO: Allow the tactic to compute with constants beyond unit.
          Would it be enough to move all them to the end of the list by
