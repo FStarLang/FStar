@@ -41,7 +41,6 @@ let do_while_body_decreases
   | (Left x', _) -> decreases x' << decreases x
   | _ -> True
 
-unfold
 let do_while_body_res_t
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
@@ -50,13 +49,19 @@ let do_while_body_res_t
 : Tot Type
 = (y: m (c_or tin tout) { do_while_body_post tin tout f x y /\ do_while_body_decreases tin tout decreases x y } )
 
-let do_while_body_t
+let do_while_body_t'
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
   (decreases: (tin -> GTot lex_t))
 : Tot Type
 = (x: tin) ->
-  GTot (do_while_body_res_t tin tout f decreases x)
+  Tot (do_while_body_res_t tin tout f decreases x)
+
+let do_while_body_t
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+: Tot Type
+= (decreases: (tin -> GTot lex_t) & do_while_body_t' tin tout f decreases)
 
 let lift_c_or
   (tin tout: Type)
@@ -138,6 +143,7 @@ let rec example' (x: nat) : Tot (m unit) =
   else example' (x / 256)
 
 let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
+  admit ();
     let q = quote x in
     match T.inspect q with
     | T.Tv_FVar v ->
@@ -161,10 +167,31 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                     let tin = T.type_of_binder tin' in
                     let body' = mk_do_while_body tin tout body v in
                     T.print (T.term_to_string body');
-                    // let y = T.fresh_binder (T.mk_app (quote do_while_body_res_t) [
-                    // ])
-                    // in
-                    T.exact_guard (T.pack (T.Tv_Abs x body'))
+                    let decr_body = match decr with
+                    | Some d -> d
+                    | _ -> T.mk_app (quote LexCons) [
+                        tin, T.Q_Implicit;
+                        T.pack (T.Tv_Var (T.bv_of_binder x)), T.Q_Explicit;
+                        quote LexTop, T.Q_Explicit;
+                      ]
+                    in
+                    let decr = T.pack (T.Tv_Abs x decr_body) in
+                    let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total (quote lex_t) None))) in
+                    let decr_binder = T.fresh_binder decr_ty in
+                    let res =
+                      T.mk_app (quote Prims.Mkdtuple2) [
+                        decr_ty, T.Q_Implicit;
+                        T.pack (T.Tv_Abs decr_binder (T.mk_app (quote do_while_body_t') [
+                          tin, T.Q_Explicit;
+                          tout, T.Q_Explicit;
+                          q, T.Q_Explicit;
+                          T.pack (T.Tv_Var (T.bv_of_binder decr_binder)), T.Q_Explicit;
+                        ])), T.Q_Implicit;
+                        decr, T.Q_Explicit;
+                        T.pack (T.Tv_Abs x body'), T.Q_Explicit;
+                      ]
+                    in
+                    T.exact_guard res
                   | _ -> T.fail "KO 1"
                   end
                 else
@@ -191,12 +218,5 @@ private let seq_append_empty_r
   [SMTPat (Seq.append s Seq.createEmpty)]
 = Seq.append_empty_r s
 
-let example'_body // : do_while_body_t nat unit example' (fun (x: nat) -> x) =
-: (x: nat) -> Tot (m (c_or nat unit)) =
+let example'_body : do_while_body_t nat unit example' =
   T.synth_by_tactic (fun () -> mk_do_while_body_tac example' )
-
-let example'_body_prf (x: nat) : Tot unit =
-  let y = example'_body x in
-  let f = example' in
-  assert (do_while_body_post nat unit example' x (example'_body x));
-  assert (do_while_body_decreases nat unit (fun x -> LexCons x LexTop) x (example'_body x))
