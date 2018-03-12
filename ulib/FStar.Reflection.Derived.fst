@@ -117,7 +117,7 @@ let compare_binder (b1 b2 : binder) : order =
     let bv1, _ = inspect_binder b1 in
     let bv2, _ = inspect_binder b2 in
     compare_bv bv1 bv2
-
+  
 let rec compare_term (s t : term) : order =
     match inspect s, inspect t with
     | Tv_Var sv, Tv_Var tv ->
@@ -158,6 +158,24 @@ let rec compare_term (s t : term) : order =
     | Tv_Match _ _, Tv_Match _ _ ->
         Eq // TODO
 
+    | Tv_AscribedT e1 t1 tac1, Tv_AscribedT e2 t2 tac2 ->
+        lex (compare_term e1 e2) (fun () ->
+        lex (compare_term t1 t2) (fun () ->
+        match tac1, tac2 with
+        | None, None -> Eq
+        | None, _  -> Lt
+        | _, None -> Gt
+        | Some e1, Some e2 -> compare_term e1 e2))
+
+    | Tv_AscribedC e1 c1 tac1, Tv_AscribedC e2 c2 tac2 ->
+        lex (compare_term e1 e2) (fun () ->
+        lex (compare_comp c1 c2) (fun () ->
+        match tac1, tac2 with
+        | None, None -> Eq
+        | None, _  -> Lt
+        | _, None -> Gt
+        | Some e1, Some e2 -> compare_term e1 e2))
+
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
@@ -173,6 +191,8 @@ let rec compare_term (s t : term) : order =
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
     | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
+    | Tv_AscribedT _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _  -> Gt
+    | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt    
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
 and compare_argv (a1 a2 : argv) : order =
     let a1, q1 = a1 in
@@ -242,7 +262,9 @@ let rec head (t : term) : term =
     | Tv_Let _ _ t _
     | Tv_Abs _ t
     | Tv_Refine _ t
-    | Tv_App t _ -> head t
+    | Tv_App t _
+    | Tv_AscribedT t _ _ 
+    | Tv_AscribedC t _ _ -> head t
 
     | Tv_Unknown
     | Tv_Uvar _ _
