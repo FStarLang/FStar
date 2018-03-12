@@ -56,6 +56,7 @@ all:	Apply.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
 	StringPrinter.uver      \
+	StringPrinterRec.uver	\
 	neg
 	# launch			\
 
