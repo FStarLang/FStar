@@ -47,6 +47,8 @@ let rec blah (t : term) : Tac term =
              | Tv_Uvar u t -> Tv_Uvar u t
              | Tv_Let r b t1 t2 -> Tv_Let r b t1 t2
              | Tv_Match t brs -> Tv_Match t brs
+             | Tv_AscribedT e t tac -> Tv_AscribedT e t tac
+             | Tv_AscribedC e c tac -> Tv_AscribedC e c tac
              | Tv_Unknown -> Tv_Unknown
     in pack tv
 

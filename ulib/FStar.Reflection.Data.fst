@@ -114,6 +114,12 @@ let smaller tv t =
     | Tv_Match t1 brs ->
         t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)
 
+    | Tv_AscribedT e ty tac ->
+      e << t /\ ty << t /\ tac << t
+
+    | Tv_AscribedT e c tac ->
+      e << t /\ c << t /\ tac << t
+
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown
