@@ -234,3 +234,24 @@ let mktuple_n (ts : list term) : term =
 let mkpair (t1 t2 : term) : term =
     mktuple_n [t1;t2]
 
+let rec head (t : term) : term =
+    match inspect t with
+    | Tv_Match t _
+    | Tv_Let _ _ t _
+    | Tv_Abs _ t
+    | Tv_Refine _ t
+    | Tv_App t _ -> head t
+
+    | Tv_Unknown
+    | Tv_Uvar _ _
+    | Tv_Const _
+    | Tv_Type _
+    | Tv_Var _
+    | Tv_BVar _
+    | Tv_FVar _
+    | Tv_Arrow _ _ -> t
+
+let nameof (t : term) : string =
+    match inspect t with
+    | Tv_FVar fv -> String.concat "." (inspect_fv fv)
+    | _ -> "?"
