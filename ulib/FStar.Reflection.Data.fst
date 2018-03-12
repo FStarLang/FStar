@@ -117,7 +117,7 @@ let smaller tv t =
     | Tv_AscribedT e ty tac ->
       e << t /\ ty << t /\ tac << t
 
-    | Tv_AscribedT e c tac ->
+    | Tv_AscribedC e c tac ->
       e << t /\ c << t /\ tac << t
 
     | Tv_Type _
