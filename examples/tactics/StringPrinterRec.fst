@@ -22,8 +22,7 @@ let _ = T.assert_by_tactic True (fun () ->
 
 let do_while_body_post
   (tin tout: Type)
-  (measure: (tin -> GTot nat))
-  (f: ((x: tin) -> Tot (m tout) (decreases (measure x))))
+  (f: ((x: tin) -> Tot (m tout)))
   (x: tin)
   (y: m (c_or tin tout))
 : GTot Type0
@@ -34,21 +33,30 @@ let do_while_body_post
 
 let do_while_body_decreases
   (tin tout: Type)
-  (measure: (tin -> GTot nat))
+  (decreases: (tin -> GTot nat))
   (x: tin)
   (y: m (c_or tin tout))
 : GTot Type0
 = match y () with
-  | (Left x', _) -> measure x < measure x'
+  | (Left x', _) -> decreases x' < decreases x
   | _ -> True
+
+unfold
+let do_while_body_res_t
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+  (decreases: (tin -> GTot nat))
+  (x: tin)
+: Tot Type
+= (y: m (c_or tin tout) { do_while_body_post tin tout f x y /\ do_while_body_decreases tin tout decreases x y } )
 
 let do_while_body_t
   (tin tout: Type)
-  (measure: (tin -> GTot nat))
-  (f: ((x: tin) -> Tot (m tout) (decreases (measure x))))
+  (f: ((x: tin) -> Tot (m tout)))
+  (decreases: (tin -> GTot nat))
 : Tot Type
 = (x: tin) ->
-  GTot (y: m (c_or tin tout) { do_while_body_post tin tout measure f x y /\ do_while_body_decreases tin tout measure x y } )
+  GTot (do_while_body_res_t tin tout f decreases x)
 
 let lift_c_or
   (tin tout: Type)
@@ -129,8 +137,8 @@ let rec example' (x: nat) : Tot (m unit) =
   then ret ()
   else example' (x / 256)
 
-let _ = T.assert_by_tactic True (fun () ->
-    let q = quote example' in
+let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
+    let q = quote x in
     match T.inspect q with
     | T.Tv_FVar v ->
       let env = T.cur_env () in
@@ -152,7 +160,9 @@ let _ = T.assert_by_tactic True (fun () ->
                   | T.Tv_Abs x body ->
                     let tin = T.type_of_binder tin' in
                     let body' = mk_do_while_body tin tout body v in
-                    T.print (T.term_to_string body')
+                    T.print (T.term_to_string body');
+//                    let y = T.fresh_binder (T.mk_app (quote (do_while_body_res_t
+                    T.exact_guard (T.pack (T.Tv_Abs x body'))
                   | _ -> T.fail "KO 1"
                   end
                 else
@@ -168,4 +178,23 @@ let _ = T.assert_by_tactic True (fun () ->
       | _ -> T.fail "KO 7"
       end
     | _ -> T.fail "KO 8"
-  )
+
+#set-options "--print_implicits --print_bound_var_types --z3rlimit 64 --max_fuel 8 --max_ifuel 8"
+
+(* This pattern is necessary to prove do_while_body_post *)
+private let seq_append_empty_r
+  (s: Seq.seq FStar.UInt8.t)
+: Lemma
+  (ensures (Seq.append s Seq.createEmpty == s))
+  [SMTPat (Seq.append s Seq.createEmpty)]
+= Seq.append_empty_r s
+
+let example'_body // : do_while_body_t nat unit example' (fun (x: nat) -> x) =
+: (x: nat) -> Tot (m (c_or nat unit)) =
+  T.synth_by_tactic (fun () -> mk_do_while_body_tac example' )
+
+let example'_body_prf (x: nat) : Tot unit =
+  let y = example'_body x in
+  let f = example' in
+  assert (do_while_body_post nat unit example' x (example'_body x));
+  assert (do_while_body_decreases nat unit (fun x -> x) x (example'_body x))
