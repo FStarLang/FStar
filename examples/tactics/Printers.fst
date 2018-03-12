@@ -100,12 +100,14 @@ let printer_fun () : Tac unit =
         exact tm
     | _ -> fail "type not found?"
 
+noeq
 type t1 =
     | A : int -> string -> t1
     | B : t1 -> int -> t1
     | C : t1
     | D : string -> t1
     | E : t1 -> t1
+    | F : (unit -> t1) -> t1
 
 let t1_print : t1 -> string = synth_by_tactic printer_fun
 
@@ -114,3 +116,4 @@ let _ = assert_norm (t1_print (B (D "thing") 42) = "(Printers.B (Printers.D \"th
 let _ = assert_norm (t1_print C = "Printers.C")
 let _ = assert_norm (t1_print (D "test") = "(Printers.D \"test\")")
 let _ = assert_norm (t1_print (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
+let _ = assert_norm (t1_print (F (fun _ -> C)) = "(Printers.F ?)")
