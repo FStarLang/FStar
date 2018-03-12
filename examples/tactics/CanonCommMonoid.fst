@@ -343,8 +343,9 @@ let canon_monoid_with
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
           apply (quote (monoid_reflect #a #b p pc));
+          // dump ("after apply");
           unfold_def (quote p);
-          dump ("after unfold");
+          // dump ("after unfold");
           norm [delta_only [// term_to_string (quote p);
                             "CanonCommMonoid.canon";
                             "CanonCommMonoid.xsdenote";
@@ -363,8 +364,8 @@ let canon_monoid_with
                             "FStar.List.Tot.Base.compare_of_bool";
                             "CanonCommMonoid.const_compare";
                             "CanonCommMonoid.special_compare";
-             ]; primops]; // TODO: restrict primops to "less than" only
-          dump "done"
+             ]; primops] // TODO: restrict primops to "less than" only
+          // ; dump "done"
         | _ -> fail "Unexpected"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
@@ -438,13 +439,14 @@ let lem2 (a b c d : int) =
 *)
 
 let sep_logic
-// TODO: this generality makes type checking explode after change:
-//       user tactic failed: change: Cannot type squash (mdenote m ...
-// (a:Type) (m:cm a) (x y z1 z2 z3 : a) =
-//   let op_Star = CM?.mult m in
+// TODO: this generality makes unfold_def fail with:
+//       (Error) Variable "mult#1139342" not found
+//       - Guido thinks this is related to
+//         https://github.com/FStarLang/FStar/issues/1392
+// (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
 // so working around it for now
 (x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
-  let h0 = z1 * 1 * (x * z2 * y * 1) * z3 in
+  let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
   let h1 = x * y in
   assert_by_tactic (exists h1'. h1 * h1' == h0)
   (fun _ -> apply_lemma (`exists_intro);
