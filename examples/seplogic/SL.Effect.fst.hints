@@ -1,5 +1,5 @@
 [
-  "6\u0010¯¢[J+µšO…•\u0007_lë",
+  "¢#'Vœ\\ò|`ìf'o8Õr",
   [
     [
       "SL.Effect.addrs_in",
@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "008d1a546c039ce653bbd81387934dda"
+      "d9517e1396da1162359e4554f0f0b5ef"
     ],
     [
       "SL.Effect.lemma_addrs_in_emp",
@@ -23,7 +23,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9884bcb653903c79f1f81b8edb12e556"
+      "e29c5884cdeeb7128a61615c5b218f2e"
     ],
     [
       "SL.Effect.lemma_addrs_in_emp",
@@ -35,7 +35,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7d4f51eab2d815a63acefc9d53ee022f"
+      "fdcd65498b709b935da7498ce9fb37be"
     ],
     [
       "SL.Effect.Addrs_in_emp_axiom",
@@ -47,7 +47,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "944cd3d289d74a0c28dfc77e8ed3a3bc"
+      "19460dc81ea4299d82e13bdf3506c32e"
     ],
     [
       "SL.Effect.Addrs_in_emp_axiom",
@@ -59,7 +59,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4ebe4c356f82d1d724e84e26f6434b9b"
+      "92890fb82eadd45c4a1db439f71d9616"
     ],
     [
       "SL.Effect.lemma_addrs_in_points_to",
@@ -71,7 +71,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "098619b454ebace97f8ebcd652994560"
+      "06d0605179ea91009950c30f32e64271"
     ],
     [
       "SL.Effect.lemma_addrs_in_points_to",
@@ -83,7 +83,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a7693001e799d9cb21f811bfb5a3728d"
+      "613229683037c8fe1dc1bbd2fd2f3afa"
     ],
     [
       "SL.Effect.lemma_addrs_in_points_to",
@@ -95,7 +95,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1fce22f7d3a82b79f5e440cc5f86d996"
+      "785b69bf1f60069c4d8080803b4ffdd4"
     ],
     [
       "SL.Effect.lemma_addrs_in_join",
@@ -107,7 +107,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "33c616ed94b2a48876ccc6c5aef943b6"
+      "f5771ff2bcf6d02d0f04bd32f761386c"
     ],
     [
       "SL.Effect.lemma_addrs_in_join",
@@ -119,7 +119,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d8f2a6c3e91ec17a4227e7d78cff6808"
+      "3aa029b0b39ceca106b73e7f064069f7"
     ],
     [
       "SL.Effect.lemma_addrs_in_join",
@@ -131,10 +131,10 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "eba986d66b9357f1cc53fdecc2871f62"
+      "7591d37f047053367cd7cb731cbb1159"
     ],
     [
-      "SL.Effect.lemma_defined_subset",
+      "SL.Effect.lemma_defined_join",
       1,
       2,
       1,
@@ -143,7 +143,16 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c8fdcd149efa1a590ea670c6fe60e7c0"
+      "672d01c82b287f6047d86745774e97fe"
+    ],
+    [
+      "SL.Effect.lemma_bad_disjoint_without_pat_on_a_quantifier",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Set.disjoint_not_in_both" ],
+      0,
+      "564094d5b914fced6385b23bf84cc0be"
     ],
     [
       "SL.Effect.addrs_in",
@@ -155,7 +164,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "42063eab97928cf61113e62b6433f700"
+      "e3210e5f08d6f609702ec74f3c809e43"
     ],
     [
       "SL.Effect.lemma_addrs_in_emp",
@@ -167,7 +176,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7dd1555d2b74a4248e5001e0ae82e7d5"
+      "f2a5ea3d3de4ab52e77560d133cc34ae"
     ],
     [
       "SL.Effect.Addrs_in_emp_axiom",
@@ -179,7 +188,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "66761b8aed1be6c5ab32f9d376c40310"
+      "87845c4d6612bf51627fd78b14d0e6a9"
     ],
     [
       "SL.Effect.lemma_addrs_in_points_to",
@@ -191,7 +200,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6e3c271b7cae86e5a7c7697294d78e7a"
+      "e4e899ef3af1ac4eaae73332013458bb"
     ],
     [
       "SL.Effect.lemma_addrs_in_join",
@@ -203,10 +212,10 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "71cf6d34dfc6534201e375be0c2f25d2"
+      "303175ac93b61b86bf485f2847947766"
     ],
     [
-      "SL.Effect.lemma_defined_subset",
+      "SL.Effect.lemma_defined_join",
       2,
       2,
       1,
@@ -215,7 +224,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "76066bbd6cc3adfc4ea989d80546b42e"
+      "a5a0c67b2d160713afede048d3df649b"
     ]
   ]
 ]
