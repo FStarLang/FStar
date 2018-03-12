@@ -88,12 +88,36 @@ let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 
-let fstar_refl_inspect_lid = fstar_refl_basic_lid "inspect"
-let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_lid    = fstar_refl_basic_lid "pack"
-let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_fv_lid = fstar_refl_basic_lid "pack_fv"
-let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
+(* TODO: summarize this crap *)
+let fstar_refl_inspect_lid        = fstar_refl_basic_lid "inspect"
+let fstar_refl_inspect            = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
+let fstar_refl_pack_lid           = fstar_refl_basic_lid "pack"
+let fstar_refl_pack               = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
+
+let fstar_refl_pack_fv_lid        = fstar_refl_basic_lid "pack_fv"
+let fstar_refl_pack_fv            = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
+let fstar_refl_inspect_fv_lid     = fstar_refl_basic_lid "inspect_fv"
+let fstar_refl_inspect_fv         = fvar fstar_refl_inspect_fv_lid (Delta_defined_at_level 1) None
+
+let fstar_refl_pack_bv_lid        = fstar_refl_basic_lid "pack_bv"
+let fstar_refl_pack_bv            = fvar fstar_refl_pack_bv_lid (Delta_defined_at_level 1) None
+let fstar_refl_inspect_bv_lid     = fstar_refl_basic_lid "inspect_bv"
+let fstar_refl_inspect_bv         = fvar fstar_refl_inspect_bv_lid (Delta_defined_at_level 1) None
+
+let fstar_refl_pack_binder_lid    = fstar_refl_basic_lid "pack_binder"
+let fstar_refl_pack_binder        = fvar fstar_refl_pack_binder_lid (Delta_defined_at_level 1) None
+let fstar_refl_inspect_binder_lid = fstar_refl_basic_lid "inspect_binder"
+let fstar_refl_inspect_binder     = fvar fstar_refl_inspect_binder_lid (Delta_defined_at_level 1) None
+
+let fstar_refl_pack_comp_lid      = fstar_refl_basic_lid "pack_comp"
+let fstar_refl_pack_comp          = fvar fstar_refl_pack_comp_lid (Delta_defined_at_level 1) None
+let fstar_refl_inspect_comp_lid   = fstar_refl_basic_lid "inspect_comp"
+let fstar_refl_inspect_comp       = fvar fstar_refl_inspect_comp_lid (Delta_defined_at_level 1) None
+
+let fstar_refl_pack_sigelt_lid    = fstar_refl_basic_lid "pack_sigelt"
+let fstar_refl_pack_sigelt        = fvar fstar_refl_pack_sigelt_lid (Delta_defined_at_level 1) None
+let fstar_refl_inspect_sigelt_lid = fstar_refl_basic_lid "inspect_sigelt"
+let fstar_refl_inspect_sigelt     = fvar fstar_refl_inspect_sigelt_lid (Delta_defined_at_level 1) None
 
 (* assumed types *)
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
