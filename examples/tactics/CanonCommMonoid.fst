@@ -111,6 +111,10 @@ let rec flatten_correct (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) :
 (***** Permuting the lists of variables
        by swapping adjacent elements *)
 
+(* The user has control over the permutation. He can store extra
+   information in the vmap and use that for choosing the
+   permutation. This means that permute has access to the vmap. *)
+
 let permute (b:Type) = #a:Type -> vmap a b -> list var -> list var
 
 // high-level correctness criterion for permutations
@@ -200,8 +204,8 @@ let permute_via_swaps_correct
 (***** Sorting variables is a correct permutation
        (since it can be done by swaps) *)
 
-// sorting associates no extra information with the variables and only
-// looks at the actual identifiers
+// Here we sort without associating any extra information with the
+// variables and only look at the actual identifiers
 
 let sort : permute unit =
   (fun #a vm -> List.Tot.sortWith #nat (compare_of_bool (<)))
@@ -243,23 +247,19 @@ let sort_correct : permute_correct #unit (fun #a vm -> sort vm) =
 
 (***** Canonicalization tactics *)
 
-let canon_with (#a #b:Type) (vm:vmap a b) (p:permute b) (e:exp) = p vm (flatten e)
+let canon (#a #b:Type) (vm:vmap a b) (p:permute b) (e:exp) = p vm (flatten e)
 
-let canon_with_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
+let canon_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
                        (m:cm a) (vm:vmap a b) (e:exp) :
-    Lemma (mdenote m vm e == xsdenote m vm (canon_with vm p e)) =
+    Lemma (mdenote m vm e == xsdenote m vm (canon vm p e)) =
   flatten_correct m vm e; pc m vm (flatten e)
 
-let monoid_reflect_with (#a #b:Type) (p:permute b) (pc:permute_correct p)
-                        (m:cm a) (vm:vmap a b) (e1 e2:exp)
-    (_ : squash (xsdenote m vm (canon_with vm p e1) ==
-                 xsdenote m vm (canon_with vm p e2)))
+let monoid_reflect (#a #b:Type) (p:permute b) (pc:permute_correct p)
+                   (m:cm a) (vm:vmap a b) (e1 e2:exp)
+    (_ : squash (xsdenote m vm (canon vm p e1) ==
+                 xsdenote m vm (canon vm p e2)))
     : squash (mdenote m vm e1 == mdenote m vm e2) =
-  canon_with_correct p pc m vm e1; canon_with_correct p pc m vm e2
-
-let monoid_reflect (#a:Type) (m:cm a) (vm:vmap a unit) (e1 e2:exp) =
-  monoid_reflect_with #a #unit (fun #a vm -> sort vm)
-    (fun #a m vm xs -> sort_correct #a m vm xs) m vm e1 e2
+  canon_correct p pc m vm e1; canon_correct p pc m vm e2
 
 (* Finds the position of first occurrence of x in xs;
    this could use eqtype and be completely standard if term was eqtype *)
@@ -296,7 +296,7 @@ let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b
 #reset-options "--z3rlimit 5"
 
 // TODO: could guarantee same-length lists
-let reification_with (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list term) :
+let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list term) :
     Tac (list exp * vmap a b) =
   let mult = norm_term [delta] (quote (CM?.mult m)) in
   let unit = norm_term [delta] (quote (CM?.unit m)) in
@@ -318,10 +318,10 @@ let canon_monoid_with
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) t1 t2 ->
-      // dump ("t1 =" ^ term_to_string t1 ^
-      //     "; t2 =" ^ term_to_string t2);
+      dump ("t1 =" ^ term_to_string t1 ^
+          "; t2 =" ^ term_to_string t2);
       if term_eq t (quote a) then
-        match reification_with b f def m [t1;t2] with
+        match reification b f def m [t1;t2] with
         | [r1;r2], vm ->
           dump ("r1=" ^ exp_to_string r1 ^
               "; r2=" ^ exp_to_string r2);
@@ -330,10 +330,10 @@ let canon_monoid_with
           dump ("before =" ^ term_to_string (norm_term [delta;primops]
             (quote (mdenote m vm r1 == mdenote m vm r2))));
           dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-            (quote (xsdenote m vm (canon_with vm p r1) ==
-                    xsdenote m vm (canon_with vm p r2)))));
-          apply (`monoid_reflect);
-          norm [delta_only ["CanonCommMonoid.canon_with";
+            (quote (xsdenote m vm (canon vm p r1) ==
+                    xsdenote m vm (canon vm p r2)))));
+          apply (quote (monoid_reflect #a #b p pc));
+          norm [delta_only ["CanonCommMonoid.canon";
                             "CanonCommMonoid.sort";
                             "CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
@@ -353,13 +353,17 @@ let canon_monoid_with
   | _ -> fail "Goal should be an equality"
 
 let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
-  (fun #a vm -> sort vm) (fun #a m vm xs -> sort_correct #a m vm xs)
+  (fun #a vm -> sort vm) (fun #a -> sort_correct #a)
 
 (***** Examples *)
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid int_plus_cm; trefl())
+
+(* Trying to enable computation with constants beyond unit.
+   It might be enough to move all them to the end of the list by
+   a careful ordering and let the normalizer do its thing: *)
 
 // remember if something is a constant or not
 let is_const (t:term) : bool = Tv_Const? (inspect t)
@@ -380,15 +384,6 @@ let canon_monoid_const = canon_monoid_with bool is_const false
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid_const int_plus_cm; trefl())
-
-(* TODO: Allow the tactic to compute with constants beyond unit.
-         Would it be enough to move all them to the end of the list by
-         a careful ordering and let the normalizer do its thing? *)
-
-(* TODO: Allow the user control over the sorting ordering by allowing
-         him to store extra information in the vmap and using that for
-         the sorting. This would mean that sorting should have access
-         to the vmap in the first place. *)
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
