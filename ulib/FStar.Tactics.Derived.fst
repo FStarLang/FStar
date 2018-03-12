@@ -265,7 +265,7 @@ private let push1 #p #q f u = ()
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
-    // This terminates because of the fuel, but we could just expand into Tac and diverge
+    // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
     let g = cur_goal () in
     let ty = tc t in
@@ -291,7 +291,7 @@ let rec apply_squash_or_lem d t =
     | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
-       | Some _ -> apply t
+       | Some _ -> apply_lemma t
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
            apply (`FStar.Squash.return_squash);
