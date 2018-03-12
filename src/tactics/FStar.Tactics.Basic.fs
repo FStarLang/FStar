@@ -996,19 +996,69 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
     bind (if d = TopDown
           then f env ({ t with n = tn })
           else ret t) (fun t ->
+    let ff = tac_fold_env d f env in
     let tn = match (SS.compress t).n with
              | Tm_app (hd, args) ->
-                  let ff = tac_fold_env d f env in
                   bind (ff hd) (fun hd ->
                   let fa (a,q) = bind (ff a) (fun a -> (ret (a,q))) in
                   bind (mapM fa args) (fun args ->
                   ret (Tm_app (hd, args))))
+
              | Tm_abs (bs, t, k) ->
                  let bs, t' = SS.open_term bs t in
                  bind (tac_fold_env d f (Env.push_binders env bs) t') (fun t'' ->
                  ret (Tm_abs (SS.close_binders bs, SS.close bs t'', k)))
-             | Tm_arrow (bs, k) -> ret tn //TODO
-             | _ -> ret tn in
+
+             | Tm_arrow (bs, k) -> ret tn //TODO: do we care?
+
+             | Tm_match (hd, brs) ->
+                 bind (ff hd) (fun hd ->
+                 let ffb br =
+                    let (pat, w, e) = SS.open_branch br in
+                    bind (ff e) (fun e ->
+                    let br = SS.close_branch (pat, w, e) in
+                    ret br)
+                 in
+                 bind (mapM ffb brs) (fun brs ->
+                 ret (Tm_match (hd, brs))))
+
+             | Tm_let ((false, [{ lbname = Inl bv; lbdef = def }]), e) ->
+                (* ugh *)
+                let lb = match (SS.compress t).n with
+                         | Tm_let ((false, [lb]), _) -> lb
+                         | _ -> failwith "impossible"
+                in
+                let fflb lb =
+                    bind (ff lb.lbdef) (fun def ->
+                    ret ({lb with lbdef = def }))
+                in
+                bind (fflb lb) (fun lb ->
+                let bs, e = SS.open_term [S.mk_binder bv] e in
+                bind (ff e) (fun e ->
+                let e = SS.close bs e in
+                ret (Tm_let ((false, [lb]), e))))
+
+
+             | Tm_let ((true, lbs), e) ->
+                let fflb lb =
+                    bind (ff lb.lbdef) (fun def ->
+                    ret ({lb with lbdef = def }))
+                in
+                let lbs, e = SS.open_let_rec lbs e in
+                bind (mapM fflb lbs) (fun lbs ->
+                bind (ff e) (fun e ->
+                let lbs, e = SS.close_let_rec lbs e in
+                ret (Tm_let ((true, lbs), e))))
+
+             | Tm_ascribed (t, asc, eff) ->
+                bind (ff t) (fun t -> ret (Tm_ascribed (t, asc, eff)))
+
+             | Tm_meta (t, m) ->
+                bind (ff t) (fun t -> ret (Tm_meta (t, m)))
+
+             | _ ->
+                ret tn
+    in
     bind tn (fun tn ->
     let t' = { t with n = tn } in
     if d = BottomUp
