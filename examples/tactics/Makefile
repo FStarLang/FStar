@@ -7,7 +7,6 @@ all:	Apply.uver		\
 	ApplyLemma.uver		\
 	Canon.uver		\
 	CanonMonoid.uver	\
-	CanonCommMonoid.uver	\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -16,7 +15,6 @@ all:	Apply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	VC.uver			\
-	TermEq.uver		\
 	Div.uver		\
 	Change.uver		\
 	Tutorial.uver		\
