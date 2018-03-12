@@ -1,5 +1,5 @@
 [
-  "Ï};ñ\u0011ãÌ∏LVg¶\u0016vJÑ",
+  "-_í˝,Çp\u001cêÅ+-«æâ_",
   [
     [
       "SL.Effect.addrs_in",
@@ -38,90 +38,6 @@
       "fdcd65498b709b935da7498ce9fb37be"
     ],
     [
-      "SL.Effect.lemma_addrs_in_points_to",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "c74df70ad4286821a501b1379c672768"
-    ],
-    [
-      "SL.Effect.lemma_addrs_in_points_to",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "1486975c5f5837b729e77e44debf13d2"
-    ],
-    [
-      "SL.Effect.lemma_addrs_in_points_to",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "c20bb4d916a7b57d075a90a5da65d0da"
-    ],
-    [
-      "SL.Effect.lemma_addrs_in_join",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "27fd410ae820b65a4bed2ab5f74f863c"
-    ],
-    [
-      "SL.Effect.lemma_addrs_in_join",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "7e788bd637df7aa02ca854e10228b863"
-    ],
-    [
-      "SL.Effect.lemma_addrs_in_join",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "85b097c68802a97031128926f2fbf327"
-    ],
-    [
-      "SL.Effect.lemma_definedness_of_join",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "a92370e4a64cc8ad416022511affbed2"
-    ],
-    [
       "SL.Effect.Addrs_in_emp_axiom",
       1,
       2,
@@ -131,7 +47,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2d20715864daa6ebb5ef2e4ffa5f9ca7"
+      "19460dc81ea4299d82e13bdf3506c32e"
     ],
     [
       "SL.Effect.Addrs_in_emp_axiom",
@@ -143,16 +59,91 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "06f48371c0de3eba58498f550cebdcaf"
+      "92890fb82eadd45c4a1db439f71d9616"
     ],
     [
-      "SL.Effect.lemma_bad_disjoint_without_pat_on_a_quantifier",
+      "SL.Effect.lemma_addrs_in_points_to",
       1,
       2,
       1,
-      [ "@query", "lemma_FStar.Set.disjoint_not_in_both" ],
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0,
-      "65e2977d9352c61ed04e69b8e4f45f33"
+      "06d0605179ea91009950c30f32e64271"
+    ],
+    [
+      "SL.Effect.lemma_addrs_in_points_to",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "613229683037c8fe1dc1bbd2fd2f3afa"
+    ],
+    [
+      "SL.Effect.lemma_addrs_in_points_to",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "785b69bf1f60069c4d8080803b4ffdd4"
+    ],
+    [
+      "SL.Effect.lemma_addrs_in_join",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "04dcdb27d90eea2f8d6d386e9fdc11a1"
+    ],
+    [
+      "SL.Effect.lemma_addrs_in_join",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "5687767e6b32bc0e0fafc152e9b270a7"
+    ],
+    [
+      "SL.Effect.lemma_addrs_in_join",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "7591d37f047053367cd7cb731cbb1159"
+    ],
+    [
+      "SL.Effect.lemma_defined_subset",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "41a88aa394c3077aaf1a6d61c041339f"
     ],
     [
       "SL.Effect.addrs_in",
@@ -164,7 +155,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e3210e5f08d6f609702ec74f3c809e43"
+      "53ecb210f838ffa5011999931a9c1378"
     ],
     [
       "SL.Effect.lemma_addrs_in_emp",
@@ -176,7 +167,19 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f2a5ea3d3de4ab52e77560d133cc34ae"
+      "025249b35d1029999afe8ead40c63dac"
+    ],
+    [
+      "SL.Effect.Addrs_in_emp_axiom",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "c902a125e4a44afc8d4b0d3a3bee7f70"
     ],
     [
       "SL.Effect.lemma_addrs_in_points_to",
@@ -203,7 +206,7 @@
       "5c543f7bbca96f4f6daa815012315a48"
     ],
     [
-      "SL.Effect.lemma_definedness_of_join",
+      "SL.Effect.lemma_defined_subset",
       2,
       2,
       1,
@@ -212,19 +215,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f37023b758498f3bb4ef4923bb6218b0"
-    ],
-    [
-      "SL.Effect.Addrs_in_emp_axiom",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "7f0d59cfd140f8f1d34870e2996306b5"
+      "ab34f2cf7d8c6e15626d2bdc15329cb1"
     ]
   ]
 ]
