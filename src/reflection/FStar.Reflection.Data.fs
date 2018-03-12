@@ -45,6 +45,8 @@ type term_view =
     | Tv_Uvar   of Z.t * typ
     | Tv_Let    of bool * bv * term * term
     | Tv_Match  of term * list<branch>
+    | Tv_AscribedT of term * term * option<term>
+    | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
 
 type bv_view = {
@@ -100,6 +102,7 @@ let fstar_refl_fv        = mk_refl_types_lid_as_term "fv"
 let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
 let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
+let fstar_refl_term      = mk_refl_types_lid_as_term "term"
 
 (* auxiliary types *)
 let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
@@ -143,6 +146,8 @@ let ref_Tv_Const   = fstar_refl_data_const "Tv_Const"
 let ref_Tv_Uvar    = fstar_refl_data_const "Tv_Uvar"
 let ref_Tv_Let     = fstar_refl_data_const "Tv_Let"
 let ref_Tv_Match   = fstar_refl_data_const "Tv_Match"
+let ref_Tv_AscT    = fstar_refl_data_const "Tv_AscribedT"
+let ref_Tv_AscC    = fstar_refl_data_const "Tv_AscribedC"
 let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
 
 (* comp_view *)

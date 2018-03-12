@@ -286,6 +286,12 @@ let pack (tv:term_view) : term =
         let brs = List.map SS.close_branch brs in
         S.mk (Tm_match (t, brs)) None Range.dummyRange
 
+    | Tv_AscribedT(e, t, tacopt) ->
+        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+
+    | Tv_AscribedC(e, c, tacopt) ->
+        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
+
     | Tv_Unknown ->
         failwith "pack: unexpected term view"
 

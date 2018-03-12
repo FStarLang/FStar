@@ -49,7 +49,9 @@ type term_view =
   | Tv_Uvar   : int -> typ -> term_view
   | Tv_Let    : recf:bool -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
-  | Tv_Unknown : term_view // Baked in "None"
+  | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
+  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
+  | Tv_Unknown  : term_view // Baked in "None"
 
 // Very basic for now
 noeq
