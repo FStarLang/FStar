@@ -516,31 +516,32 @@ let unembed_binder_view = unembed_pair unembed_bv unembed_aqualv
 
 let unfold_lazy_bv  (i : lazyinfo) : term =
     let bv : bv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_bv [S.as_arg (embed_bv_view i.rng (inspect_bv bv))]
+    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed_bv_view i.rng (inspect_bv bv))]
                 None i.rng
 
 (* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
     let binder : binder = undyn i.blob in
     let bv, aq = inspect_binder binder in
-    S.mk_Tm_app fstar_refl_pack_binder [S.as_arg (embed_bv i.rng bv);
+    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed_bv i.rng bv);
                                         S.as_arg (embed_aqualv i.rng aq)]
                 None i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
     let fv : fv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_fv [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
+    S.mk_Tm_app fstar_refl_pack_fv.t [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
                 None i.rng
 
 let unfold_lazy_comp (i : lazyinfo) : term =
     let comp : comp = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_comp [S.as_arg (embed_comp_view i.rng (inspect_comp comp))]
+    S.mk_Tm_app fstar_refl_pack_comp.t [S.as_arg (embed_comp_view i.rng (inspect_comp comp))]
                 None i.rng
 
 let unfold_lazy_env (i : lazyinfo) : term =
+    (* Not needed, metaprograms never see concrete environments. *)
     U.exp_unit
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =
     let sigelt : sigelt = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_sigelt [S.as_arg (embed_sigelt_view i.rng (inspect_sigelt sigelt))]
+    S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed_sigelt_view i.rng (inspect_sigelt sigelt))]
                 None i.rng
