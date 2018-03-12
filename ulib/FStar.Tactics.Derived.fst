@@ -22,8 +22,6 @@ let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
-
-
 // TODO: maybe we can increase a counter on each call
 let fresh_bv t = fresh_bv_named "x" t
 

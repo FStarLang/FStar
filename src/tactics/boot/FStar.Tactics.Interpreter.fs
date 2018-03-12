@@ -343,6 +343,8 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__dup"           dup embed_unit t_unit;
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
+      mktac0 "__dismiss"       dismiss embed_unit t_unit;
+
       mktac1 "__cases"         cases RE.unembed_term (embed_pair
                                                       RE.embed_term S.t_term
                                                       RE.embed_term S.t_term)
