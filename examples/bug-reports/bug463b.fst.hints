@@ -124,15 +124,6 @@
       2,
       2,
       1,
-      [ "@query" ],
-      0,
-      "3d427f71e0f4e570a4d44619471c71a9"
-    ],
-    [
-      "Bug463b.lemma_move_refinement_length",
-      3,
-      2,
-      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -154,7 +145,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "77b96522d274a73b8b9e8b6af73662ae"
+      "5610515ff476b561a534dc6ec3419393"
     ]
   ]
 ]

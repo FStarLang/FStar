@@ -14,7 +14,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "ff3082b2c420e250c2a60d52a8609ba1"
+      "c7b82738ae325fefd1d57e9134b7783b"
     ],
     [
       "Bug1299.should_fail",
@@ -41,7 +41,7 @@
         "unit_typing"
       ],
       0,
-      "eb8963a3c122f58866469fb211221b0a"
+      "0eb95704088709ca7d5198e42592e618"
     ],
     [
       "Bug1299.id",
@@ -56,7 +56,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "58ab6515823797a70719e1c7a392e433"
+      "35dcab591ecbc76ef783cd6b44b4e2b0"
     ],
     [
       "Bug1299.should_fail",
@@ -83,7 +83,7 @@
         "unit_typing"
       ],
       0,
-      "f852295a8651cc3adb759e6de9d8495d"
+      "30cc66b6aa108915e7ab64785373b3da"
     ]
   ]
 ]
