@@ -1,5 +1,5 @@
 [
-  "h\u001bL\rXJ#–ﬂX≈⁄Ñ«ı'",
+  "\u0011\u0001k\u0018ß@çK÷˜Xó ÿ\u0010û",
   [
     [
       "FStar.Set.mem_singleton",
@@ -174,14 +174,15 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "eq2-interp",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "equation_FStar.Set.disjoint", "equation_FStar.Set.mem",
-        "equation_FStar.Set.set", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_intersect", "primitive_Prims.op_AmpAmp",
-        "typing_FStar.Set.mem", "unit_typing"
+        "typing_FStar.Set.empty", "typing_FStar.Set.intersect",
+        "typing_FStar.Set.mem"
       ],
       0,
-      "655f065b01dba0a3b61a1378c8a1330f"
+      "8296965873a5ae69e50f6a6222325b68"
     ],
     [
       "FStar.Set.as_set'",

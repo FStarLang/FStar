@@ -3124,7 +3124,7 @@
         "lemma_FStar.Buffer.lemma_modifies_2_comm"
       ],
       0,
-      "8f6f62cf8a86337d0decac64ab5dcd4a"
+      "e13f4c9506ee88f41e6afb506f1409c4"
     ],
     [
       "FStar.Buffer.lemma_modifies_1_1_prime",
@@ -3433,7 +3433,7 @@
         "unit_typing"
       ],
       0,
-      "b02a6593273f821fa32e9474b3693481"
+      "fa7b67b6fe1c927554a0bcfb244b5586"
     ],
     [
       "FStar.Buffer.lemma_modifies_0_unalloc",
@@ -6891,7 +6891,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "d6b386e1e9449d52a53322776974c543"
+      "c7607f11ee68cd1263ff78fee5443460"
     ],
     [
       "FStar.Buffer.modifies_popped_3_2",

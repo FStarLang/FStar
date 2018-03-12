@@ -198,7 +198,7 @@
         "typing_Slice.as_seq", "unit_typing"
       ],
       0,
-      "f3e9060971a4ee5ebea8b756f2f0bfd1"
+      "d55ae0a5244cba1c4e6eeba10396b7b4"
     ],
     [
       "Slice.u32_add_overflows",
@@ -520,7 +520,7 @@
         "typing_Slice.truncated_slice", "typing_Slice.u32_max"
       ],
       0,
-      "9281893c94380d69b7756510543e1f45"
+      "82e6d6ee7f8c4b9ac1f63eb5341907a4"
     ],
     [
       "Slice.modifies_prefix_times",
@@ -644,7 +644,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.advance_slice"
       ],
       0,
-      "d87956f5e021f79e47092700b60f4be6"
+      "e16b97a296a38cd4875749cf998bd3be"
     ],
     [
       "Slice.same_ref",
