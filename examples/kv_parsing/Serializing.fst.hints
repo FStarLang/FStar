@@ -451,7 +451,7 @@
         "typing_Slice.buffer_split_at", "typing_Slice.u32_add_overflows"
       ],
       0,
-      "b80b5656922d568c94f9bbf1e9a37300"
+      "2b3f31526e9418b1d3a4358296f4e2e1"
     ],
     [
       "Serializing.ser_copy",
@@ -1056,7 +1056,7 @@
         "typing_Slice.buffer_split_at", "typing_Slice.u32_add_overflows"
       ],
       0,
-      "938f4ae69ccfee5b81fc89f9a734050d"
+      "8a1689c018f14175a326447675f03697"
     ],
     [
       "Serializing.ser_append",

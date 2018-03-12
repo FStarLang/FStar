@@ -195,7 +195,9 @@ let effect_Lemma_lid = pconst "Lemma"
 let effect_GTot_lid  = pconst "GTot"
 let effect_GHOST_lid = pconst "GHOST"
 let effect_Ghost_lid = pconst "Ghost"
-let effect_DIV_lid   = pconst "DIV"
+let effect_DIV_lid   = psconst "DIV"
+let effect_Div_lid   = psconst "Div"
+let effect_Dv_lid    = psconst "Dv"
 
 (* The "All" monad and its associated symbols *)
 let all_lid          = p2l ["FStar"; "All"]

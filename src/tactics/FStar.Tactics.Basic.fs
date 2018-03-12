@@ -81,11 +81,6 @@ let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
 let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
-(* TODO: If I define this as *)
-(*     (U.comp_to_comp_typ c).result_typ *)
-(*     then I get  *)
-(*     Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error. *)
-(*     Assertion failed: Computation type without universe *)
 let comp_to_typ (c:comp) : typ =
     match c.n with
     | Total (t, _)
@@ -226,7 +221,7 @@ let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
-let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
+let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     let debug_on () =
         let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
         ()
@@ -256,6 +251,14 @@ let do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
             end
+
+let do_unify env t1 t2 : tac<bool> =
+    bind (__do_unify env t1 t2) (fun b ->
+    if not b
+    then let t1 = N.normalize [] env t1 in
+         let t2 = N.normalize [] env t2 in
+         __do_unify env t1 t2
+    else ret b)
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
@@ -576,12 +579,11 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
                | _ -> FStar.Options.peek ()
     in
     mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
-    bind (__tc e t) (fun (t, _, guard) ->
-    bind (proc_guard "norm_term_env" e guard opts) (fun () ->
+    bind (__tc e t) (fun (t, _, _) ->
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    )))))
+    ))))
 
 let refine_intro : tac<unit> = wrap_err "refine_intro" <|
     bind cur_goal (fun g ->
@@ -716,6 +718,22 @@ let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
                             (tts goal.context goal.goal_ty))
     )))
 
+// returns pre and post
+let lemma_or_sq (c : comp) : option<(term * term)> =
+    let ct = U.comp_to_comp_typ_nouniv c in
+    if lid_equals ct.effect_name PC.effect_Lemma_lid then
+        let pre, post = match ct.effect_args with
+                        | pre::post::_ -> fst pre, fst post
+                        | _ -> failwith "apply_lemma: impossible: not a lemma"
+        in
+        // Lemma post is thunked, and is specialized to U_zero
+        let post = U.mk_app post [S.as_arg U.exp_unit] in
+        Some (pre, post)
+    else if U.is_pure_effect ct.effect_name then
+        map_opt (U.un_squash ct.result_typ) (fun post -> (U.t_true, post))
+    else
+        None
+
 let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
@@ -725,7 +743,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind cur_goal (fun goal ->
     bind (__tc goal.context tm) (fun (tm, t, guard) ->
     let bs, comp = U.arrow_formals_comp t in
-    if not (U.is_lemma_comp comp) then fail "not a lemma" else
+    match lemma_or_sq comp with
+    | None -> fail "not a lemma or squashed function"
+    | Some (pre, post) ->
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
@@ -743,13 +763,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
        bs
     in
     let uvs = List.rev uvs in
-    let comp = SS.subst_comp subst comp in
-    let pre, post = match (U.comp_to_comp_typ comp).effect_args with
-                    | pre::post::_ -> fst pre, fst post
-                    | _ -> failwith "apply_lemma: impossible: not a lemma"
-    in
-    // Lemma post is thunked, and is specialized to U_zero
-    let post = U.mk_app post [S.as_arg U.exp_unit] in
+    let pre  = SS.subst subst pre in
+    let post = SS.subst subst post in
     bind (do_unify goal.context (U.mk_squash U_zero post) goal.goal_ty) (fun b ->
     if not b
     then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
@@ -989,19 +1004,69 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
     bind (if d = TopDown
           then f env ({ t with n = tn })
           else ret t) (fun t ->
+    let ff = tac_fold_env d f env in
     let tn = match (SS.compress t).n with
              | Tm_app (hd, args) ->
-                  let ff = tac_fold_env d f env in
                   bind (ff hd) (fun hd ->
                   let fa (a,q) = bind (ff a) (fun a -> (ret (a,q))) in
                   bind (mapM fa args) (fun args ->
                   ret (Tm_app (hd, args))))
+
              | Tm_abs (bs, t, k) ->
                  let bs, t' = SS.open_term bs t in
                  bind (tac_fold_env d f (Env.push_binders env bs) t') (fun t'' ->
                  ret (Tm_abs (SS.close_binders bs, SS.close bs t'', k)))
-             | Tm_arrow (bs, k) -> ret tn //TODO
-             | _ -> ret tn in
+
+             | Tm_arrow (bs, k) -> ret tn //TODO: do we care?
+
+             | Tm_match (hd, brs) ->
+                 bind (ff hd) (fun hd ->
+                 let ffb br =
+                    let (pat, w, e) = SS.open_branch br in
+                    bind (ff e) (fun e ->
+                    let br = SS.close_branch (pat, w, e) in
+                    ret br)
+                 in
+                 bind (mapM ffb brs) (fun brs ->
+                 ret (Tm_match (hd, brs))))
+
+             | Tm_let ((false, [{ lbname = Inl bv; lbdef = def }]), e) ->
+                (* ugh *)
+                let lb = match (SS.compress t).n with
+                         | Tm_let ((false, [lb]), _) -> lb
+                         | _ -> failwith "impossible"
+                in
+                let fflb lb =
+                    bind (ff lb.lbdef) (fun def ->
+                    ret ({lb with lbdef = def }))
+                in
+                bind (fflb lb) (fun lb ->
+                let bs, e = SS.open_term [S.mk_binder bv] e in
+                bind (ff e) (fun e ->
+                let e = SS.close bs e in
+                ret (Tm_let ((false, [lb]), e))))
+
+
+             | Tm_let ((true, lbs), e) ->
+                let fflb lb =
+                    bind (ff lb.lbdef) (fun def ->
+                    ret ({lb with lbdef = def }))
+                in
+                let lbs, e = SS.open_let_rec lbs e in
+                bind (mapM fflb lbs) (fun lbs ->
+                bind (ff e) (fun e ->
+                let lbs, e = SS.close_let_rec lbs e in
+                ret (Tm_let ((true, lbs), e))))
+
+             | Tm_ascribed (t, asc, eff) ->
+                bind (ff t) (fun t -> ret (Tm_ascribed (t, asc, eff)))
+
+             | Tm_meta (t, m) ->
+                bind (ff t) (fun t -> ret (Tm_meta (t, m)))
+
+             | _ ->
+                ret tn
+    in
     bind tn (fun tn ->
     let t' = { t with n = tn } in
     if d = BottomUp
@@ -1282,12 +1347,20 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     ret t))
 
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
-    bind cur_goal (fun goal ->
-    bind (__tc goal.context t) (fun (t, typ, guard) ->
-    bind (proc_guard "unshelve" goal.context guard goal.opts) (fun _ ->
-    add_goals [{ goal with witness  = bnorm goal.context t;
-                           goal_ty  = bnorm goal.context typ;
-                           is_guard = false; }])))
+    bind get (fun ps ->
+    let env = ps.main_context in
+    (* We need a set of options, but there might be no goals, so do this *)
+    let opts = match ps.goals with
+               | g::_ -> g.opts
+               | _ -> FStar.Options.peek ()
+    in
+    bind (__tc env t) (fun (t, typ, guard) ->
+    bind (proc_guard "unshelve" env guard opts) (fun _ ->
+    add_goals [{ witness  = bnorm env t;
+                 goal_ty  = bnorm env typ;
+                 is_guard = false;
+                 context  = env;
+                 opts     = opts; }])))
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
