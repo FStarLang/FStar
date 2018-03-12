@@ -5,8 +5,10 @@ module SL.Effect
 (*
  * this is all the heap interface we need so far
  *)
-assume val memory: Type u#1
-assume val defined: memory -> Type0
+assume val memory0: Type u#1
+assume val defined: memory0 -> Type0
+type memory = m:memory0{defined m}
+
 assume val emp: memory
 assume val ref (a:Type0): Type0
 
@@ -55,8 +57,6 @@ assume val lemma_defined_subset (m0 m1:memory)
 	 [SMTPat (defined m0); SMTPat (defined m1)]
 
 (*** end heap interface ***)
-
-//unfold let memory = m:memory{defined m}
 
 let pre = memory -> Type0
 let post (a:Type) = a -> memory -> Type0
