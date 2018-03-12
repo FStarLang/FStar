@@ -27,7 +27,7 @@ val disjoint_memories : memory -> memory -> Type0
 
 val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
 
-val ( |> ) : #a:Type0 -> r:ref a -> x:a -> GTot memory
+val ( |> ) : #a:Type0 -> r:ref a -> x:a -> Tot memory
 val ( <*> ) : m0:memory -> m1:memory -> GTot memory
 
 val split_heap : (m0:memory) 
@@ -105,6 +105,10 @@ val lemma_points_to_defined (#a:Type0) (r:ref a) (x:a)
 val lemma_sep_defined (m0 m1:memory)
   : Lemma (defined (m0 <*> m1) <==> (defined m0 /\ defined m1 /\ Set.disjoint (addrs_in m0) (addrs_in m1)))
  	  [SMTPat (defined (m0 <*> m1))]
+
+val lemma_heap_memory_defined (h:heap)
+  : Lemma (defined (heap_memory h))
+          [SMTPat (defined (heap_memory h))]
 
 (* split_heap *)
 

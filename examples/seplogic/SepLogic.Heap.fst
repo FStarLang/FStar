@@ -167,10 +167,12 @@ let lemma_sep_assoc m0 m1 m2 =
 let lemma_sep_join (h0 h1:heap) = 
   assert (equal_memories (heap_memory (join h0 h1)) 
                          ((heap_memory h0) <*> (heap_memory h1)))
-                           
+
 let lemma_points_to_defined #a r x = ()
 
 let lemma_sep_defined m0 m1 = ()
+
+let lemma_heap_memory_defined h = ()
 
 let lemma_split_heap_disjoint m0 m1 h = ()
 

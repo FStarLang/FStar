@@ -1,6 +1,6 @@
 module SL.Examples
 
-open SepLogic.Heap
+//open SepLogic.Heap
 open SL.Effect
 
 open FStar.Tactics
@@ -162,7 +162,7 @@ let prelude () :Tac unit =
 private let rec apply_lemmas (l:list term) :Tac unit
   = match l with
     | []    -> fail "no command lemma matched the goal"
-    | hd::tl -> or_else (fun () -> print "or"; apply_lemma hd) (fun () -> print "else"; apply_lemmas tl)
+    | hd::tl -> or_else (fun () -> apply_lemma hd) (fun () -> apply_lemmas tl)
 
 private let process_command () :Tac unit
   = apply_lemmas [`lemma_singleton_heap_rw_rw;
@@ -297,4 +297,5 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     apply_lemma (`lemma_rewrite_sep_assoc4);
 	     process_command ();
 	     get_to_the_next_frame ();
-	     process_command ())
+	     process_command ();
+             pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_emp_is_join_unit')) trefl))

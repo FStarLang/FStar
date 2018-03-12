@@ -30,6 +30,9 @@ assume val lemma_join_is_associative (m0 m1 m2:memory)
 assume val lemma_emp_is_join_unit (m:memory)
   :Lemma (requires True) (ensures ((m <*> emp) == m))
          [SMTPat (m <*> emp)]
+assume val lemma_emp_is_join_unit' (m:memory)
+  :Lemma (requires True) (ensures ((emp <*> m) == m))
+         [SMTPat (emp <*> m)]
 
 (* addrs_in *)
 assume val addrs_in (m:memory) :Set.set nat
@@ -62,6 +65,7 @@ assume val lemma_defined_join (m0 m1:memory)
 
 
 (*** end heap interface ***)
+
 
 let pre = memory -> Type0
 let post (a:Type) = a -> memory -> Type0
