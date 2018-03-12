@@ -6590,7 +6590,9 @@ and (reify_lift :
                  let uu____18887 = FStar_Syntax_Print.term_to_string e  in
                  FStar_Util.print3 "Reifying lift %s -> %s: %s\n" uu____18885
                    uu____18886 uu____18887);
-            if FStar_Syntax_Util.is_pure_effect msrc
+            if
+              (FStar_Syntax_Util.is_pure_effect msrc) ||
+                (FStar_Syntax_Util.is_div_effect msrc)
             then
               (let ed =
                  let uu____18889 =

@@ -8,6 +8,8 @@ assume new type fv
 assume new type comp
 assume new type sigelt
 
+assume HasEqTerm : hasEq term
+
 type name : eqtype = list string
 type typ     = term
 type binders = list binder

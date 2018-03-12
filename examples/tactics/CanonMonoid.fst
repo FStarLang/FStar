@@ -84,27 +84,6 @@ let reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
         "; me   = " ^ term_to_string me);
     reification_aux mult unit me
 
-private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
-private let conv #x #y eq w = w
-
-let change t1 =
-    focus (fun () ->
-        let t = mk_app (`conv) [(t1, Q_Implicit)] in
-        apply t;
-        norm [delta;primops;zeta];
-        trefl ()
-    )
-
-let change_sq t1 =
-    change (mk_e_app (`squash) [t1])
-
-let g f = assert_by_tactic (f (3 + 5) > 0)
-             (fun () -> change_sq (quote (f 8 > 0)); admit1())
-
-assume val f:int->int
-let _ = assert_by_tactic (f (3 + 5) > 0)
-             (fun () -> change_sq (`(f 8 > 0)); admit1())
-
 let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
   norm [];
   let g = cur_goal () in
@@ -128,10 +107,6 @@ let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
   (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
-
-(* TODO: should extend this to a commutative monoid and
-         sort the list to prove things like a + b = b + a;
-         - even better, the user can provide the ordering *)
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;

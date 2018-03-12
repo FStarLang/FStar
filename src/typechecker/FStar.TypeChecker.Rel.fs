@@ -864,36 +864,22 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_match (t1, bs1), Tm_match (t2, bs2) ->
-        if List.length bs1 = List.length bs2
-        then List.fold_right (fun (b1, b2) a -> and_match a (fun () -> branch_matches env b1 b2))
-                             (List.zip bs1 bs2)
-                             (head_matches env t1 t2) |> head_match
-        else MisMatch (None, None)
+    | Tm_match _, Tm_match _ ->
+    begin
+      (* This flags causes a bunch of messages to be printed when `term_eq` fails,
+       * useful to find the actual discrepancy. *)
+      if debug env (Options.Other "RelDelta") then
+          U.debug_term_eq := true;
+      if U.term_eq t1 t2
+      then FullMatch
+      else MisMatch (None, None)
+    end
 
     | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
     | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
     | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
-
-and branch_matches env (b1 : branch) (b2 : branch) : match_result =
-    let related_by f o1 o2 =
-        match o1, o2 with
-        | None, None -> true
-        | Some x, Some y -> f x y
-        | _, _ -> false
-    in
-    let (p1, w1, t1) = b1 in
-    let (p2, w2, t2) = b2 in
-    if eq_pat p1 p2
-    then begin
-         // We check the `when` branches too, even if unsupported for now
-         if U.eq_tm t1 t2 = U.Equal && related_by (fun t1 t2 -> U.eq_tm t1 t2 = U.Equal) w1 w2
-         then FullMatch
-         else MisMatch (None, None)
-         end
-    else MisMatch (None, None)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
