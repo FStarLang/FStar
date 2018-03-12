@@ -1,5 +1,6 @@
 module SL.Examples
 
+open SepLogic.Heap
 open SL.Effect
 
 open FStar.Tactics
@@ -52,7 +53,7 @@ let lemma_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> T
 let lemma_pure_right (h h':memory) (phi:memory -> memory -> memory -> Type0)
   :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h')))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h1))
-  = assert ((h <*> h') == ((h <*> h') <*> emp))
+  = lemma_join_is_commutative (h <*> h') emp
 
 (*
  * procedure call followed by a read/write command with singleton heap
@@ -104,6 +105,11 @@ let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0) (h h':me
 
 (*** following are heap algebra lemmas, should be replaced with canonizer? ***)
 
+let lemma_rewrite_sep_comm_return (h1 h2:memory) (phi:memory -> Type0)
+  : Lemma (requires (defined h1 /\ defined h1 /\ phi h1 /\ h1 == h2))
+          (ensures  (defined h2 /\ defined h2 /\ phi h2))
+  = lemma_join_is_commutative h1 h2
+
 let lemma_rewrite_sep_comm (h1 h2:memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h1 <*> h2) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
          (ensures  (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h2 <*> h1) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
@@ -114,14 +120,15 @@ let lemma_rewrite_sep_assoc1 (h1 h2 h3:memory) (phi:memory -> memory -> memory -
 	                     phi h1 h2 h3 h4 h5))
          (ensures  (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h1 <*> (h2 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
-  = ()
+  = lemma_join_is_commutative h1 h2
 
 let lemma_rewrite_sep_assoc2 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h3 <*> (h1 <*> h2)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
          (ensures  (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h1 <*> (h2 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
-  = ()
+  = lemma_join_is_commutative h3 h1;
+    lemma_join_is_commutative h3 h2
 
 let lemma_rewrite_sep_assoc3 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ ((h1 <*> h2) <*> h3) == (h4 <*> h5) /\
@@ -160,7 +167,7 @@ let prelude () :Tac unit =
 private let rec apply_lemmas (l:list term) :Tac unit
   = match l with
     | []    -> fail "no command lemma matched the goal"
-    | hd::tl -> or_else (fun () -> apply_lemma hd) (fun () -> apply_lemmas tl)
+    | hd::tl -> or_else (fun () -> print "or"; apply_lemma hd) (fun () -> print "else"; apply_lemmas tl)
 
 private let process_command () :Tac unit
   = apply_lemmas [`lemma_singleton_heap_rw_rw;

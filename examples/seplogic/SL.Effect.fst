@@ -1,5 +1,8 @@
 module SL.Effect
 
+//open SepLogic.Heap
+
+
 (*** begin heap interface ***)
 
 (*
@@ -19,7 +22,7 @@ assume val ( <*> ): m0:memory -> m1:memory -> Tot memory
 (* lemmas *)
 assume val lemma_join_is_commutative (m0 m1:memory)
   :Lemma (requires True) (ensures ((m0 <*> m1) == (m1 <*> m0)))
-         [SMTPat (m0 <*> m1)]
+//         [SMTPat (m0 <*> m1); SMTPat (m1 <*> m0)]
 assume val lemma_join_is_associative (m0 m1 m2:memory)
   :Lemma (requires True) (ensures ((m0 <*> (m1 <*> m2)) == ((m0 <*> m1) <*> m2)))
          [SMTPatOr [[SMTPat ((m0 <*> (m1 <*> m2)))];
@@ -52,10 +55,11 @@ assume val lemma_defined_join (m0 m1:memory)
          (ensures  (defined (m0 <*> m1) <==> (defined m0 /\ defined m1 /\ Set.disjoint (addrs_in m0) (addrs_in m1))))
 	 [SMTPat (defined (m0 <*> m1))]
 
-let lemma_bad_disjoint_without_pat_on_a_quantifier (a:eqtype) (s1 s2:Set.set a)
+(*let lemma_bad_disjoint_without_pat_on_a_quantifier (a:eqtype) (s1 s2:Set.set a)
   :Lemma (requires (Set.disjoint s1 s2)) (ensures (forall x. Set.mem x s1 ==> ~ (Set.mem x s2)))
          [SMTPat (Set.disjoint s1 s2)]
-  = ()
+  = ()*)
+
 
 (*** end heap interface ***)
 
