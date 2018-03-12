@@ -38,10 +38,15 @@ assume val lemma_addrs_in_join (m0 m1:memory)
   :Lemma (requires True) (ensures (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
          [SMTPat (addrs_in (m0 <*> m1))]
 assume val lemma_definedness_of_join (m0 m1:memory)
-  :Lemma (requires (Set.disjoint (addrs_in m0) (addrs_in m1)))
-         (ensures  (defined (m0 <*> m1)))
+  :Lemma (requires True)
+         (ensures  (defined (m0 <*> m1) <==> Set.disjoint (addrs_in m0) (addrs_in m1)))
 	 [SMTPat (defined (m0 <*> m1))]
 assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
+
+let lemma_bad_disjoint_without_pat_on_a_quantifier (a:eqtype) (s1 s2:Set.set a)
+  :Lemma (requires (Set.disjoint s1 s2)) (ensures (forall x. Set.mem x s1 ==> ~ (Set.mem x s2)))
+         [SMTPat (Set.disjoint s1 s2)]
+  = ()
 
 (*** end heap interface ***)
 
