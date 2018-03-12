@@ -397,9 +397,36 @@ let lem1 (a b c d : int) =
 (* TODO Trying to only bring some constants to the front,
         as Nik said would be useful for separation logic *)
 
-// remember if something is a constant or not
-// let is_special (ts:list term) (t:term) : Tac bool = t `mem` ts
+// Annoying: need to redefine mem
 
+val term_mem: term -> list term -> Tot bool
+let rec term_mem x = function
+  | [] -> false
+  | hd::tl -> if term_eq hd x then true else term_mem x tl
+
+// remember if something is a constant or not
+let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
+
+// put the special things sorted before the non-special ones,
+// but don't change anything else
+let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+  match select_extra x vm, select_extra y vm with
+  | false, false -> 0
+  | true, true -> compare_of_bool (<) x y
+  | false, true -> -1
+  | true, false -> 1
+
+let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
+  List.Tot.sortWith #nat (special_compare vm) xs
+
+let canon_monoid_special (ts:list term) =
+  canon_monoid_with bool (is_special ts) false special_first
+                    (fun #a m vm xs -> admit())
+
+let lem2 (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> canon_monoid_special [quote a;quote b] int_plus_cm; compute();
+            dump "this won't work, admitting"; admit1())
 
 (* Old discussion discuss with Nik and Guido about spurious SMT obligations:
 Nik:
