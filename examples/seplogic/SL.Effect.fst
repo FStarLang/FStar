@@ -27,26 +27,32 @@ assume val lemma_emp_is_join_unit (m:memory)
   :Lemma (requires True) (ensures ((m <*> emp) == m))
          [SMTPat (m <*> emp)]
 
-(* definedness *)
+(* notion of addrs_in *)
 assume val addrs_in (m:memory) :Set.set nat
 
 assume val lemma_addrs_in_emp (u:unit) :Lemma (Set.equal (addrs_in emp) (Set.empty))
+assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
 assume val lemma_addrs_in_points_to (#a:Type) (r:ref a) (x:a)
   :Lemma (requires True) (ensures (Set.equal (addrs_in (r |> x)) (Set.singleton (addr_of r))))
          [SMTPat (addrs_in (r |> x))]
 assume val lemma_addrs_in_join (m0 m1:memory)
   :Lemma (requires True) (ensures (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
          [SMTPat (addrs_in (m0 <*> m1))]
-assume val lemma_definedness_of_join (m0 m1:memory)
-  :Lemma (requires True)
-         (ensures  (defined (m0 <*> m1) <==> Set.disjoint (addrs_in m0) (addrs_in m1)))
-	 [SMTPat (defined (m0 <*> m1))]
-assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
 
-let lemma_bad_disjoint_without_pat_on_a_quantifier (a:eqtype) (s1 s2:Set.set a)
-  :Lemma (requires (Set.disjoint s1 s2)) (ensures (forall x. Set.mem x s1 ==> ~ (Set.mem x s2)))
-         [SMTPat (Set.disjoint s1 s2)]
-  = ()
+(* definedness *)
+assume val lemma_defined_emp (u:unit) :Lemma (defined emp)
+assume Emp_defined_axiom :defined emp
+assume val lemma_pointed_to_defined (#a:Type) (r:ref a) (x:a)
+  :Lemma (requires True)
+         (ensures  (defined (r |> x)))
+	 [SMTPat (defined (r |> x))]
+//most of the proofs we have definedness of initial heap, and we are trying to prove definedness of subheaps
+//so i am thinking this should suffice
+//in general this is a terrible pattern, as it fires quadratically
+assume val lemma_defined_subset (m0 m1:memory)
+  :Lemma (requires (defined m0 /\ Set.subset (addrs_in m1) (addrs_in m0)))
+         (ensures  (defined m1))
+	 [SMTPat (defined m0); SMTPat (defined m1)]
 
 (*** end heap interface ***)
 
