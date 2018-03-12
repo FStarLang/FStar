@@ -310,8 +310,8 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list ter
   in (List.rev es,vm)
 
 let canon_monoid_with
-    (b:Type) (f:term->Tac b) (def:b) (#a:Type) (p:permute b) (pc:permute_correct p)
-    (m:cm a) : Tac unit =
+    (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
+    (#a:Type) (m:cm a) : Tac unit =
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
@@ -373,8 +373,7 @@ let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
 // sort things and put the constants last
 let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
   match select_extra x vm, select_extra y vm with
-  | false, false -> compare_of_bool (<) x y
-  | true, true -> 0
+  | false, false | true, true -> compare_of_bool (<) x y
   | false, true -> 1
   | true, false -> -1
 
@@ -387,6 +386,55 @@ let canon_monoid_const = canon_monoid_with bool is_const false
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid_const int_plus_cm; compute(); trefl())
+
+(* Trying to only bring some constants to the front,
+   as Nik said would be useful for separation logic *)
+
+// remember if something is a constant or not
+let is_special (ts:list term) (t:term) : Tac bool = t `mem` ts
+
+// sort things and put the constants last
+let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+  match select_extra x vm, select_extra y vm with
+  | false, false | true, true -> compare_of_bool (<) x y
+  | false, true -> 1
+  | true, false -> -1
+
+let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
+  List.Tot.sortWith #nat (const_compare vm) xs
+
+let canon_monoid_const = canon_monoid_with bool is_const false
+  const_last (fun #a m vm xs -> admit())
+
+let lem1 (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> canon_monoid_const int_plus_cm; compute(); trefl())
+
+(* TODO: discuss with Nik and Guido about spurious SMT obligations:
+Nik:
+- it's easy to get rid of some of the hasEq goals by just saying `let
+  var :eqtype = nat`
+- but, we still have some extra SMT goals
+- and this is because reification computes a vmap literal vm, which
+  computes all the way to a lambda term
+  `(fun x -> if x = a then (a, ()) else ... )`
+- and we have to prove that this thing is actually a vmap
+- i wonder if there's some way for reification to compute this without
+  fully normalizing it down to a lambda term, i.e., can we leave it as
+  an `update (const_map ...) x a (a, ())` etc.
+- if so, then proving it is a vmap will be trivial and will not incur
+  additional SMT goals
+- this reminds me a little of many prior conversations, including our
+  conversation at the pub yesterday, Catalin. i.e., we want to treat
+  `update` etc. abstractly in some places, but in other places, we
+  want to compute fully with it (edited)
+- I think we should be able to do that with our tactics
+- e.g., something like `let r = set_norm_flags "don't unfold update,
+  const"; let r = reification m [t1;t2] in reset_norm_flags; r in ...`
+- for some as yet unavailable `set_norm_flags` tactic
+- anyway, it's a detail, but one that I suspect we'll have to solve
+  well especially as we build large vmap literals
+*)
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
