@@ -70,8 +70,6 @@ let ret_left
 : Tot (m (c_or tin tout))
 = ret (Left x)
 
-#set-options "--z3rlimit 32"
-
 let rec mk_do_while_body
   (tin tout: T.term)
   (t: T.term)
@@ -129,13 +127,22 @@ let rec mk_do_while_body
     T.pack (T.Tv_Match cond [T.Pat_Constant T.C_True, tt'; pat, tf'])
   | _ -> T.fail "mk_do_while_body: unsupported"
 
-// let unfold_rec_fv (t: T.fv) : T.Tac T.term =
-
 let rec example' (x: nat) : Tot (m unit) =
   _ <-- print_char 25uy ;
   if x < 256
   then ret ()
   else example' (x / 256)
+
+let do_while_body_res_intro
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+  (decreases: (tin -> GTot lex_t))
+  (x: tin)
+  (y: m (c_or (tin_decr tin decreases x) tout))
+: Pure (do_while_body_res_t tin tout f decreases x)
+  (requires (do_while_body_post tin tout decreases f x y))
+  (ensures (fun y' -> y' == y))
+= y
 
 let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
   admit ();
@@ -176,14 +183,23 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                     let decr = T.pack (T.Tv_Abs tin' decr_body) in
                     let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total (quote lex_t) None))) in
                     let decr_binder = T.fresh_binder decr_ty in
+                    let x_tm = T.pack (T.Tv_Var (T.bv_of_binder x)) in
                     let tin_decr = T.mk_app (quote tin_decr) [
                       tin, T.Q_Explicit;
                       decr, T.Q_Explicit;
-                      T.pack (T.Tv_Var (T.bv_of_binder x)), T.Q_Explicit;
+                      x_tm, T.Q_Explicit;
                     ]
                     in
-                    let body' = mk_do_while_body tin_decr tout body v in
-                    T.print (T.term_to_string body');
+                    let body_pre_coerce = mk_do_while_body tin_decr tout body v in
+                    let body' = T.mk_app (quote do_while_body_res_intro) [
+                      tin, T.Q_Explicit;
+                      tout, T.Q_Explicit;
+                      q, T.Q_Explicit;
+                      decr, T.Q_Explicit;
+                      x_tm, T.Q_Explicit;
+                      body_pre_coerce, T.Q_Explicit;
+                    ]
+                    in
                     let res =
                       T.mk_app (quote Prims.Mkdtuple2) [
                         decr_ty, T.Q_Implicit;
@@ -197,6 +213,7 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                         T.pack (T.Tv_Abs x body'), T.Q_Explicit;
                       ]
                     in
+                    T.print (T.term_to_string res);
                     T.exact_guard res
                   | _ -> T.fail "KO 1"
                   end
@@ -213,8 +230,6 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
       | _ -> T.fail "KO 7"
       end
     | _ -> T.fail "KO 8"
-
-#set-options "--print_implicits --print_bound_var_types --z3rlimit 64 --max_fuel 8 --max_ifuel 8"
 
 (* This pattern is necessary to prove do_while_body_post *)
 private let seq_append_empty_r
