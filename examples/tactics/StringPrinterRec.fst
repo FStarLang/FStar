@@ -165,14 +165,19 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                     let body' = mk_do_while_body tin tout body v in
                     T.print (T.term_to_string body');
                     let decr_body = match decr with
-                    | Some d -> d
+                    | Some d ->
+                      T.mk_app (quote LexCons) [
+                        T.fresh_uvar None, T.Q_Implicit;
+                        d, T.Q_Explicit;
+                        quote LexTop, T.Q_Explicit;
+                      ]
                     | _ -> T.mk_app (quote LexCons) [
                         tin, T.Q_Implicit;
-                        T.pack (T.Tv_Var (T.bv_of_binder x)), T.Q_Explicit;
+                        T.pack (T.Tv_Var (T.bv_of_binder tin')), T.Q_Explicit;
                         quote LexTop, T.Q_Explicit;
                       ]
                     in
-                    let decr = T.pack (T.Tv_Abs x decr_body) in
+                    let decr = T.pack (T.Tv_Abs tin' decr_body) in
                     let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total (quote lex_t) None))) in
                     let decr_binder = T.fresh_binder decr_ty in
                     let res =
@@ -275,3 +280,6 @@ let rewrite_do_while
   (x: tin)
 : Tot (y: m tout { y () == f x () } )
 = bind (ret (do_while_correct tin tout f body x)) (fun _ -> do_while tin tout (dfst body) (dsnd body) x)
+
+let example_body : do_while_body_t U32.t unit example =
+  T.synth_by_tactic (fun () -> mk_do_while_body_tac example )
