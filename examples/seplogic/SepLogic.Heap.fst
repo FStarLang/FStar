@@ -27,12 +27,12 @@ private noeq type memory_rec = {
   contents : nat -> Tot (option (a:Type0 & a))
 }
 
-let raw_memory = m:(option memory_rec)
+let memory = m:(option memory_rec)
   {forall m' . m == Some m' ==> 
                ((forall r . FStar.Set.mem r m'.domain   ==> Some? (m'.contents r)) /\ 
                 (forall r . FStar.Set.mem r (FStar.Set.complement m'.domain) ==> None? (m'.contents r)))}
 
-private let equal_memories (m0 m1:raw_memory) =
+private let equal_memories (m0 m1:memory) =
   match (m0, m1) with
   | (Some m0', Some m1') -> FStar.Set.equal m0'.domain m1'.domain /\ 
                             FStar.FunctionalExtensionality.feq m0'.contents m1'.contents
@@ -40,7 +40,7 @@ private let equal_memories (m0 m1:raw_memory) =
   | (None, Some _)     -> False
   | (None, None)       -> True
 
-private let lemma_memory_ext (m0 m1:raw_memory)
+private let lemma_memory_ext (m0 m1:memory)
   : Lemma (equal_memories m0 m1 <==> m0 == m1)
   = ()
 
@@ -64,7 +64,7 @@ let disjoint_heaps (h0 h1:heap) =
   let _ = () in
   FStar.Set.disjoint h0.hdomain h1.hdomain
 
-let disjoint_memories (m0 m1:raw_memory) =
+let disjoint_memories (m0 m1:memory) =
   match (m0, m1) with
   | (Some m0', Some m1') -> FStar.Set.disjoint m0'.domain m1'.domain
   | _ -> False
@@ -164,9 +164,9 @@ let lemma_sep_comm m0 m1 =
 let lemma_sep_assoc m0 m1 m2 =
   assert (equal_memories (m0 <*> (m1 <*> m2)) ((m0 <*> m1) <*> m2))
 
-let lemma_sep_join (h0 h1:heap)
-  = assert (equal_memories (heap_memory (join h0 h1)) 
-                           ((heap_memory h0) <*> (heap_memory h1)))
+let lemma_sep_join (h0 h1:heap) = 
+  assert (equal_memories (heap_memory (join h0 h1)) 
+                         ((heap_memory h0) <*> (heap_memory h1)))
                            
 let lemma_points_to_defined #a r x = ()
 
