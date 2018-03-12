@@ -71,6 +71,8 @@ let reflection_primops : list<N.primitive_step> =
 
         mk2 "__is_free" is_free E.unembed_bv E.unembed_term embed_bool;
 
+        mk2 "__term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
+
         mk1 "__term_to_string" term_to_string E.unembed_term embed_string;
         mk1 "__binders_of_env" binders_of_env E.unembed_env E.embed_binders;
         mk2 "__lookup_typ" lookup_typ E.unembed_env unembed_string_list (embed_option E.embed_sigelt fstar_refl_sigelt);

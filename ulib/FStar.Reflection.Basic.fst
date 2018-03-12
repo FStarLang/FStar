@@ -57,6 +57,9 @@ let binders_of_env (e:env) : binders = __binders_of_env e
 assume private val __is_free : bv -> term -> bool
 let is_free (bv:bv) (t:term) : bool = __is_free bv t
 
+assume private val __term_eq : term -> term -> bool
+let term_eq t1 t2 : bool = __term_eq t1 t2
+
 (* Should be TAC, printing might depend on gensym *)
 assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t
