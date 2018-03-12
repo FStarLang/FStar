@@ -1,9 +1,6 @@
 module StringPrinterRec
 include StringPrinter
 
-(* NOTE: This file requires KreMLin. DO NOT include it in F* CI *)
-
-module Loops = C.Loops
 module T = FStar.Tactics
 
 module Ca = FStar.Int.Cast
@@ -220,3 +217,61 @@ private let seq_append_empty_r
 
 let example'_body : do_while_body_t nat unit example' =
   T.synth_by_tactic (fun () -> mk_do_while_body_tac example' )
+
+let coerce_decreases
+  (tin tout: Type)
+  (decrease: (tin -> GTot lex_t))
+  (body: ((x: tin) -> Tot (y: m (c_or tin tout) { do_while_body_decreases tin tout decrease x y } )))
+  (x: tin)
+: Tot (m (c_or (x' : tin {decrease x' << decrease x } ) tout))
+= fun () ->
+  match body x () with
+  | (Left x', log) -> (Left x', log)
+  | (Right y, log) -> (Right y, log)
+
+let rec do_while
+  (tin tout: Type)
+  (decrease: (tin -> GTot lex_t))
+  (body: ((x: tin) -> Tot (y: m (c_or tin tout) { do_while_body_decreases tin tout decrease x y } )))
+  (x: tin)
+: Tot (m tout)
+  (decreases (decrease x))
+= bind (coerce_decreases tin tout decrease body x) (fun (y' : c_or (x' : tin { decrease x' << decrease x } ) tout) -> match y' with
+  | Left x' -> do_while tin tout decrease body x'
+  | Right y' -> ret y'
+  )
+
+let rec do_while_correct
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+  (body: do_while_body_t tin tout f)
+  (x: tin)
+: Lemma
+  (requires True)
+  (ensures (
+    let (| decrease, body |) = body in
+    do_while tin tout decrease body x () == f x ()
+  ))
+  (decreases (let (| decrease, _ |) = body in decrease x ))
+= let body_ = body in
+  let (| decrease, body |) = body in
+  let g : m (c_or tin tout) = body x in
+  match g () with
+  | (Left x', log) -> do_while_correct tin tout f body_ x'
+  | (Right y, log) -> ()
+
+(* This pattern is necessary to prove rewrite_do_while below *)
+private let seq_append_empty_l
+  (s: Seq.seq FStar.UInt8.t)
+: Lemma
+  (ensures (Seq.append Seq.createEmpty s == s))
+  [SMTPat (Seq.append Seq.createEmpty s)]
+= Seq.append_empty_l s
+
+let rewrite_do_while
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+  (body: do_while_body_t tin tout f)
+  (x: tin)
+: Tot (y: m tout { y () == f x () } )
+= bind (ret (do_while_correct tin tout f body x)) (fun _ -> do_while tin tout (dfst body) (dsnd body) x)
