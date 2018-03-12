@@ -115,12 +115,12 @@ let rec flatten_correct (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) :
    information in the vmap and use that for choosing the
    permutation. This means that permute has access to the vmap. *)
 
-let permute (b:Type) = #a:Type -> vmap a b -> list var -> list var
+let permute (b:Type) = a:Type -> vmap a b -> list var -> list var
 
 // high-level correctness criterion for permutations
 let permute_correct (#b:Type) (p:permute b) =
   #a:Type -> m:cm a -> vm:vmap a b -> xs:list var ->
-    Lemma (xsdenote m vm xs == xsdenote m vm (p vm xs))
+    Lemma (xsdenote m vm xs == xsdenote m vm (p a vm xs))
 
 // sufficient condition:
 // permutation has to be expressible as swaps of adjacent list elements
@@ -180,16 +180,16 @@ let rec apply_swaps_correct (#a #b:Type) (m:cm a) (vm:vmap a b)
 
 let permute_via_swaps (#b:Type) (p:permute b) =
   (#a:Type) -> (vm:vmap a b) -> xs:list var ->
-    Lemma (exists ss. p vm xs == apply_swaps xs ss)
+    Lemma (exists ss. p a vm xs == apply_swaps xs ss)
 
 let rec permute_via_swaps_correct_aux
   (#b:Type) (p:permute b) (pvs:permute_via_swaps p)
   (#a:Type) (m:cm a) (vm:vmap a b)  (xs:list var) :
-    Lemma (xsdenote m vm xs == xsdenote m vm (p vm xs)) =
+    Lemma (xsdenote m vm xs == xsdenote m vm (p a vm xs)) =
   pvs vm xs;
-  assert(exists ss. p vm xs == apply_swaps xs ss);
-  exists_elim (xsdenote m vm xs == xsdenote m vm (p vm xs))
-    (() <: squash (exists ss. p vm xs == apply_swaps xs ss))
+  assert(exists ss. p a vm xs == apply_swaps xs ss);
+  exists_elim (xsdenote m vm xs == xsdenote m vm (p a vm xs))
+    (() <: squash (exists ss. p a vm xs == apply_swaps xs ss))
     (fun ss -> apply_swaps_correct m vm xs ss)
 
 let permute_via_swaps_correct
@@ -208,7 +208,7 @@ let permute_via_swaps_correct
 // variables and only look at the actual identifiers
 
 let sort : permute unit =
-  (fun #a vm -> List.Tot.sortWith #nat (compare_of_bool (<)))
+  (fun a vm -> List.Tot.sortWith #nat (compare_of_bool (<)))
 
 // TODO: Show that sorting is a correct way to permute things;
 // from sortWith_permutation we get
@@ -235,19 +235,17 @@ let rec bubble_sort_with_aux2 (#a:Type) (n:nat) (f:(a -> a -> Tot int))
 let bubble_sort_with (#a:Type) = bubble_sort_with_aux2 #a 0
 
 let sort_via_swaps (#a:Type) (vm : vmap a unit)  (xs:list var) :
-  Lemma (exists ss. sort vm xs == apply_swaps xs ss) = admit() // TODO
+  Lemma (exists ss. sort a vm xs == apply_swaps xs ss) = admit() // TODO
 
 let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
-    Lemma (xsdenote m vm xs == xsdenote m vm (sort vm xs)) =
-  permute_via_swaps_correct #unit
-    (fun #a vm -> sort vm) (fun #a vm -> sort_via_swaps vm) m vm xs
+    Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
+  permute_via_swaps_correct #unit sort (fun #a vm -> sort_via_swaps vm) m vm xs
 
-let sort_correct : permute_correct #unit (fun #a vm -> sort vm) =
-  (fun #a m vm xs -> sort_correct_aux #a m vm xs)
+let sort_correct : permute_correct #unit sort = (fun #a -> sort_correct_aux #a)
 
 (***** Canonicalization tactics *)
 
-let canon (#a #b:Type) (vm:vmap a b) (p:permute b) (e:exp) = p vm (flatten e)
+let canon (#a #b:Type) (vm:vmap a b) (p:permute b) (e:exp) = p a vm (flatten e)
 
 let canon_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
                        (m:cm a) (vm:vmap a b) (e:exp) :
@@ -318,42 +316,46 @@ let canon_monoid_with
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) t1 t2 ->
-      dump ("t1 =" ^ term_to_string t1 ^
-          "; t2 =" ^ term_to_string t2);
+      // dump ("t1 =" ^ term_to_string t1 ^
+      //     "; t2 =" ^ term_to_string t2);
       if term_eq t (quote a) then
         match reification b f def m [t1;t2] with
         | [r1;r2], vm ->
-          dump ("r1=" ^ exp_to_string r1 ^
-              "; r2=" ^ exp_to_string r2);
-          dump ("vm =" ^ term_to_string (quote vm));
+          // dump ("r1=" ^ exp_to_string r1 ^
+          //     "; r2=" ^ exp_to_string r2);
+          // dump ("vm =" ^ term_to_string (quote vm));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
-          dump ("before =" ^ term_to_string (norm_term [delta;primops]
-            (quote (mdenote m vm r1 == mdenote m vm r2))));
-          dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-            (quote (xsdenote m vm (canon vm p r1) ==
-                    xsdenote m vm (canon vm p r2)))));
+          // dump ("before =" ^ term_to_string (norm_term [delta;primops]
+          //   (quote (mdenote m vm r1 == mdenote m vm r2))));
+          // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
+          //   (quote (xsdenote m vm (canon vm p r1) ==
+          //           xsdenote m vm (canon vm p r2)))));
           apply (quote (monoid_reflect #a #b p pc));
-          norm [delta_only ["CanonCommMonoid.canon";
-                            "CanonCommMonoid.sort";
+          dump (term_to_string (quote p));
+          unfold_def (quote p);
+          dump ("after unfold");
+          norm [delta_only [// term_to_string (quote p);
+                            "CanonCommMonoid.canon";
                             "CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
                             "CanonCommMonoid.select";
                             "FStar.Pervasives.Native.fst";
                             "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+                            (* the rest are brittle, know thy instances *)
                             "FStar.List.Tot.Base.sortWith";
                             "FStar.List.Tot.Base.partition";
                             "FStar.List.Tot.Base.bool_of_compare";
                             "FStar.List.Tot.Base.compare_of_bool";
                             "FStar.List.Tot.Base.op_At";
                             "FStar.List.Tot.Base.append"];
-                primops]; // TODO: restrict this to less than only
+                primops]; // TODO: restrict this to "less than" only
           dump "done"
         | _ -> fail "Unexpected"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
 let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
-  (fun #a vm -> sort vm) (fun #a -> sort_correct #a)
+                                     sort (fun #a -> sort_correct #a)
 
 (***** Examples *)
 
@@ -366,24 +368,25 @@ let lem0 (a b c d : int) =
    a careful ordering and let the normalizer do its thing: *)
 
 // remember if something is a constant or not
-let is_const (t:term) : bool = Tv_Const? (inspect t)
+let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
 
 // sort things and put the constants last
 let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
   match select_extra x vm, select_extra y vm with
-  | false, false | true, true -> 0
+  | false, false -> compare_of_bool (<) x y
+  | true, true -> 0
   | false, true -> 1
   | true, false -> -1
 
-let const_last (#a:Type) (vm:vmap a bool) (xs:list var) : list var =
+let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (const_compare vm) xs
 
 let canon_monoid_const = canon_monoid_with bool is_const false
-      (fun #a vm -> const_last vm) (fun #a m vm xs -> admit())
+  const_last (fun #a m vm xs -> admit())
 
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_const int_plus_cm; trefl())
+  (fun _ -> canon_monoid_const int_plus_cm; compute(); trefl())
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
