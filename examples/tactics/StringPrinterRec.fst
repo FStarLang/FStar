@@ -143,7 +143,7 @@ let _ = T.assert_by_tactic True (fun () ->
           | T.Tv_Arrow tin' tout' ->
             begin match T.inspect_comp tout' with
             | T.C_Unknown -> T.fail "UNKNOWN"
-            | T.C_Total tout_ ->
+            | T.C_Total tout_ decr ->
               begin match T.inspect tout_ with
               | T.Tv_App m_tm (tout, T.Q_Explicit) ->
                 if tm_eq_fvar m_tm (quote m)
