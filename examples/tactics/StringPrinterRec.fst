@@ -17,26 +17,24 @@ let _ = T.assert_by_tactic True (fun () ->
   T.print (T.term_to_string q)
 )
 
+let tin_decr
+  (tin: Type)
+  (decreases: (tin -> GTot lex_t))
+  (x: tin)
+: Tot Type
+= (x' : tin { decreases x' << decreases x } )
+
 let do_while_body_post
   (tin tout: Type)
+  (decreases: (tin -> GTot lex_t))
   (f: ((x: tin) -> Tot (m tout)))
   (x: tin)
-  (y: m (c_or tin tout))
+  (y: m (c_or (tin_decr tin decreases x) tout))
 : GTot Type0
-= f x () == bind y (fun y' -> begin match y' with
+= f x () == bind y (fun (y' : c_or (tin_decr tin decreases x) tout) -> begin match y' with
   | Left x' -> f x'
   | Right y' -> ret y'
   end) ()
-
-let do_while_body_decreases
-  (tin tout: Type)
-  (decreases: (tin -> GTot lex_t))
-  (x: tin)
-  (y: m (c_or tin tout))
-: GTot Type0
-= match y () with
-  | (Left x', _) -> decreases x' << decreases x
-  | _ -> True
 
 let do_while_body_res_t
   (tin tout: Type)
@@ -44,7 +42,7 @@ let do_while_body_res_t
   (decreases: (tin -> GTot lex_t))
   (x: tin)
 : Tot Type
-= (y: m (c_or tin tout) { do_while_body_post tin tout f x y /\ do_while_body_decreases tin tout decreases x y } )
+= (y: m (c_or (tin_decr tin decreases x) tout) { do_while_body_post tin tout decreases f x y } )
 
 let do_while_body_t'
   (tin tout: Type)
@@ -162,8 +160,6 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                   begin match T.inspect tm with
                   | T.Tv_Abs x body ->
                     let tin = T.type_of_binder tin' in
-                    let body' = mk_do_while_body tin tout body v in
-                    T.print (T.term_to_string body');
                     let decr_body = match decr with
                     | Some d ->
                       T.mk_app (quote LexCons) [
@@ -180,6 +176,14 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                     let decr = T.pack (T.Tv_Abs tin' decr_body) in
                     let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total (quote lex_t) None))) in
                     let decr_binder = T.fresh_binder decr_ty in
+                    let tin_decr = T.mk_app (quote tin_decr) [
+                      tin, T.Q_Explicit;
+                      decr, T.Q_Explicit;
+                      T.pack (T.Tv_Var (T.bv_of_binder x)), T.Q_Explicit;
+                    ]
+                    in
+                    let body' = mk_do_while_body tin_decr tout body v in
+                    T.print (T.term_to_string body');
                     let res =
                       T.mk_app (quote Prims.Mkdtuple2) [
                         decr_ty, T.Q_Implicit;
@@ -223,25 +227,14 @@ private let seq_append_empty_r
 let example'_body : do_while_body_t nat unit example' =
   T.synth_by_tactic (fun () -> mk_do_while_body_tac example' )
 
-let coerce_decreases
-  (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or tin tout) { do_while_body_decreases tin tout decrease x y } )))
-  (x: tin)
-: Tot (m (c_or (x' : tin {decrease x' << decrease x } ) tout))
-= fun () ->
-  match body x () with
-  | (Left x', log) -> (Left x', log)
-  | (Right y, log) -> (Right y, log)
-
 let rec do_while
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or tin tout) { do_while_body_decreases tin tout decrease x y } )))
+  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
   (x: tin)
 : Tot (m tout)
   (decreases (decrease x))
-= bind (coerce_decreases tin tout decrease body x) (fun (y' : c_or (x' : tin { decrease x' << decrease x } ) tout) -> match y' with
+= bind (body x) (fun (y' : c_or (tin_decr tin decrease x) tout) -> match y' with
   | Left x' -> do_while tin tout decrease body x'
   | Right y' -> ret y'
   )
@@ -260,7 +253,7 @@ let rec do_while_correct
   (decreases (let (| decrease, _ |) = body in decrease x ))
 = let body_ = body in
   let (| decrease, body |) = body in
-  let g : m (c_or tin tout) = body x in
+  let g : m (c_or (tin_decr tin decrease x) tout) = body x in
   match g () with
   | (Left x', log) -> do_while_correct tin tout f body_ x'
   | (Right y, log) -> ()
