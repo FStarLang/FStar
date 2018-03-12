@@ -267,12 +267,14 @@ let monoid_reflect (#a #b:Type) (p:permute b) (pc:permute_correct p)
   canon_correct p pc m vm e1; canon_correct p pc m vm e2
 
 (* Finds the position of first occurrence of x in xs;
-   this could use eqtype and be completely standard if term was eqtype *)
-let rec where_aux (n:nat) (x:term) (xs:list term) : Tot (option nat)
-                                                        (decreases xs) =
+   TODO: move this to the standard library, just where?  Is there any
+         way I can add a new list function to the libraries without
+         giving separate realizations in OCaml and F*? *)
+let rec where_aux (#a:eqtype) (n:nat) (x:a) (xs:list a) :
+    Tot (option nat) (decreases xs) =
   match xs with
   | [] -> None
-  | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
+  | x'::xs' -> if x = x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
@@ -338,7 +340,6 @@ let canon_monoid_with
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
           apply (quote (monoid_reflect #a #b p pc));
-          dump (term_to_string (quote p));
           unfold_def (quote p);
           dump ("after unfold");
           norm [delta_only [// term_to_string (quote p);
@@ -346,16 +347,20 @@ let canon_monoid_with
                             "CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
                             "CanonCommMonoid.select";
+                            "CanonCommMonoid.select_extra";
+                            "FStar.List.Tot.Base.assoc";
                             "FStar.Pervasives.Native.fst";
                             "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                            (* the rest are brittle, know thy instances *)
+                            "FStar.List.Tot.Base.op_At";
+                            "FStar.List.Tot.Base.append";
+            (* TODO: the rest is a super brittle stop-gap, know thy instances *)
                             "FStar.List.Tot.Base.sortWith";
                             "FStar.List.Tot.Base.partition";
                             "FStar.List.Tot.Base.bool_of_compare";
                             "FStar.List.Tot.Base.compare_of_bool";
-                            "FStar.List.Tot.Base.op_At";
-                            "FStar.List.Tot.Base.append"];
-                primops]; // TODO: restrict this to "less than" only
+                            "CanonCommMonoid.const_compare";
+                            "CanonCommMonoid.special_compare";
+             ]; primops]; // TODO: restrict primops to "less than" only
           dump "done"
         | _ -> fail "Unexpected"
       else fail "Goal should be an equality at the right monoid type"
@@ -368,7 +373,7 @@ let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; compute(); trefl())
+  (fun _ -> canon_monoid int_plus_cm; trefl())
 
 (* Trying to enable computation with constants beyond unit.
    It might be enough to move all them to the end of the list by
@@ -392,20 +397,13 @@ let canon_monoid_const = canon_monoid_with bool is_const false
 
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_const int_plus_cm; compute(); trefl())
+  (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
-(* TODO Trying to only bring some constants to the front,
-        as Nik said would be useful for separation logic *)
-
-// Annoying: need to redefine mem
-
-val term_mem: term -> list term -> Tot bool
-let rec term_mem x = function
-  | [] -> false
-  | hd::tl -> if term_eq hd x then true else term_mem x tl
+(* Trying to only bring some constants to the front,
+   as Nik said would be useful for separation logic *)
 
 // remember if something is a constant or not
-let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
+let is_special (ts:list term) (t:term) : Tac bool = t `mem` ts
 
 // put the special things sorted before the non-special ones,
 // but don't change anything else
@@ -425,8 +423,25 @@ let canon_monoid_special (ts:list term) =
 
 let lem2 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_special [quote a;quote b] int_plus_cm; compute();
+  (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
             dump "this won't work, admitting"; admit1())
+
+(* TODO: Need better control of reduction:
+         - unfold_def still not good enough, see stopgap above
+*)
+
+(* TODO: would be nice to just find all terms of monoid type in the
+         goal and replace them with their canonicalization;
+         basically use flatten_correct instead of monoid_reflect
+         - for this to be efficient need Nik's pointwise' that can
+           stop traversing when finding something interesting
+         - even better, the user would have control over the place(s)
+           where the canonicalization is done *)
+
+(* TODO (open ended) Do the things used for reflective tactics really
+                     need to be this pure? Can we prove correctness of
+                     denotations intrinsically / by monadic
+                     reification for an effectful denotation? *)
 
 (* Old discussion discuss with Nik and Guido about spurious SMT obligations:
 Nik:
@@ -453,16 +468,3 @@ Nik:
 - anyway, it's a detail, but one that I suspect we'll have to solve
   well especially as we build large vmap literals
 *)
-
-(* TODO: would be nice to just find all terms of monoid type in the
-         goal and replace them with their canonicalization;
-         basically use flatten_correct instead of monoid_reflect
-         - for this to be efficient need Nik's pointwise' that can
-           stop traversing when finding something interesting
-         - even better, the user would have control over the place(s)
-           where the canonicalization is done *)
-
-(* TODO (open ended) Do the things used for reflective tactics really
-                     need to be this pure? Can we prove correctness of
-                     denotations intrinsically / by monadic
-                     reification for an effectful denotation? *)
