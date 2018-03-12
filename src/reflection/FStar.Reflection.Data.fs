@@ -88,7 +88,6 @@ let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 
-(* TODO: summarize this crap *)
 let mk_inspect_pack_pair s =
     let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
     let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
