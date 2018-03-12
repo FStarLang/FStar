@@ -199,7 +199,7 @@ let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
   (r := 2;
    !s)
   
-  <: STATE int (fun p h -> h == ((r |> n) <*> (s |> m)) /\ p m ((r |> 2) <*> (s |> m)))
+  <: STATE int (fun p h -> h == ((r |> n) <*> (s |> m)) /\ (defined h /\ p m ((r |> 2) <*> (s |> m))))
 
   by (fun () ->
       prelude ();
@@ -217,7 +217,7 @@ let swap (r1 r2:ref int) (m n:int)
      r1 := y;
      r2 := x)
 
-     <: STATE unit (fun post h -> h == ((r1 |> m) <*> (r2 |> n)) /\ post () ((r1 |> n) <*> (r2 |> m)))
+     <: STATE unit (fun post h -> h == ((r1 |> m) <*> (r2 |> n)) /\ (defined h /\ post () ((r1 |> n) <*> (r2 |> m))))
 
      by (fun () -> prelude ();
                 process_command ();
@@ -240,7 +240,7 @@ let incr (r:ref int) (n:int)
      r := z;
      !r)
 
-     <: STATE int (fun post h -> h == (r |> n) /\ post (n + 1) (r |> n + 1))
+     <: STATE int (fun post h -> h == (r |> n) /\ (defined h /\ post (n + 1) (r |> n + 1)))
 
      by (fun () -> prelude ();
                 process_command ();
@@ -261,7 +261,7 @@ let incr2 (r:ref int) (n:int)
   = (let n = incr r n in
      incr r n)
 
-    <: STATE int (fun post h -> h == (r |> n) /\ post (n + 2) (r |> n + 2))
+    <: STATE int (fun post h -> h == (r |> n) /\ (defined h /\ post (n + 2) (r |> n + 2)))
 
     by (fun () -> prelude ();
                process_command ();
@@ -271,6 +271,7 @@ let incr2 (r:ref int) (n:int)
 (*
  * 3 commands + one at the end
  *)
+#set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 let rotate (r1 r2 r3:ref int) (l m n:int) =
   (swap r2 r3 m n;
    swap r1 r2 l n;
@@ -278,7 +279,7 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
    x)
    
   <: STATE int (fun post h -> h == ((r1 |> l) <*> ((r2 |> m) <*> (r3 |> n))) /\
-                         post n ((r1 |> n) <*> ((r2 |> l) <*> (r3 |> m))))
+                         (defined h /\ post n ((r1 |> n) <*> ((r2 |> l) <*> (r3 |> m)))))
 
   by (fun () -> prelude ();
              apply_lemma (`lemma_rewrite_sep_comm);
@@ -292,17 +293,3 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     process_command ();
 	     get_to_the_next_frame ();
 	     process_command ())
-
-noeq type list =
-  | Nil : list
-  | Cons: r:ref int -> list
-
-let test (l:list{Cons? l})
-  = (let x = Cons?.r l in
-     !x)
-
-    <: STATE int (fun p h -> h == (Cons?.r l |> 2) /\ p 2 h)
-
-    by (fun () -> prelude ();
-               dump "A")
-    
