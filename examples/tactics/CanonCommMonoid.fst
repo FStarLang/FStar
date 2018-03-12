@@ -435,8 +435,7 @@ let lem2 (a b c d : int) =
 (* Trying to do something separation logic like. Want to
    prove a goal of the form: given some concrete h0 and h1
    exists h1', h1 * h1' == h0. -- can use apply exists_intro to get an uvar
-   Do this for an arbitrary commutative monoid.
-*)
+   Do this for an arbitrary commutative monoid. *)
 
 let sep_logic
 // TODO: this generality makes unfold_def fail with:
@@ -460,6 +459,9 @@ let sep_logic
 
 (* TODO: Need better control of reduction:
          - unfold_def still not good enough, see stopgap above *)
+
+(* TODO: need a version of canon that works on assumption(s)
+         (canon_in / canon_all) *)
 
 (* TODO: Wondering whether we should support arbitrary re-association?
          Could be useful for separation logic, but we might also just
