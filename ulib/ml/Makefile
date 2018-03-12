@@ -1,5 +1,5 @@
 all:
-	$(MAKE) -C .. install-fstarlib
+	$(MAKE) -C .. install-fstarlib install-fstar-tactics
 
 clean:
 	$(MAKE) -C .. clean
