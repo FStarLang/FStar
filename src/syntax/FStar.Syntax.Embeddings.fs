@@ -21,6 +21,9 @@ open FStar.Char
 type embedder<'a>   = range -> 'a -> term
 type unembedder<'a> = term -> option<'a>
 
+let embed_any : embedder<term> = fun r t -> t
+let unembed_any: unembedder<term> = fun t -> Some t
+
 // embed: turning a value into a term (compiler internals -> userland)
 // unembed: interpreting a term as a value, which might fail (userland -> compiler internals)
 
@@ -161,19 +164,25 @@ let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t0:term) : option<opti
 let unembed_option      ua t = __unembed_option true  ua t
 let unembed_option_safe ua t = __unembed_option false ua t
 
-let rec embed_list (embed_a:embedder<'a>) (typ:term) (rng:range) (l:list<'a>) : term =
-    match l with
-    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.nil_lid) [U_zero])
-                        [S.iarg typ]
-                        None
-                        rng
-    | hd::tl ->
-            S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.cons_lid) [U_zero])
-                        [S.iarg typ;
+let embed_list (embed_a:embedder<'a>) (typ:term) (rng:range) (l:list<'a>) : term =
+    let t = S.iarg typ in
+    let nil =
+        S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.nil_lid) [U_zero])
+                            [t]
+                            None
+                            rng
+    in
+    let cons =
+        S.mk_Tm_uinst (S.tdataconstr PC.cons_lid) [U_zero]
+    in
+    FStar.List.fold_right (fun hd tail ->
+            S.mk_Tm_app cons
+                        [t;
                          S.as_arg (embed_a rng hd);
-                         S.as_arg (embed_list embed_a typ rng tl)]
+                         S.as_arg tail]
                         None
-                        rng
+                        rng)
+         l nil
 
 let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t0:term) : option<list<'a>> =
     let t = U.unmeta_safe t0 in
@@ -194,6 +203,37 @@ let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t0:term) : option<l
 
 let unembed_list      ua t = __unembed_list true  ua t
 let unembed_list_safe ua t = __unembed_list false ua t
+
+let embed_arrow_1 (ua:unembedder<'a>) (eb:embedder<'b>) (f:'a -> 'b) (args:args) : option<term> =
+    match args with
+    | [(x, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      Some (eb FStar.Range.dummyRange (f (BU.must (ua x)))))
+    | _ ->
+      None
+
+let embed_arrow_2 (ua:unembedder<'a>) (ub:unembedder<'b>) (ed:embedder<'d>)
+                  (f:'a -> 'b -> 'd)
+                  (args:args) =
+    match args with
+    | [(x, _); (y, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      BU.bind_opt (ub y) (fun b ->
+      Some (ed FStar.Range.dummyRange (f a b))))
+    | _ ->
+      None
+
+let embed_arrow_3 (ua:unembedder<'a>) (ub:unembedder<'b>) (uc:unembedder<'c>) (ed:embedder<'d>)
+                  (f:'a -> 'b -> 'c -> 'd)
+                  (args:args) =
+    match args with
+    | [(x, _); (y, _); (z, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      BU.bind_opt (ub y) (fun b ->
+      BU.bind_opt (uc z) (fun c ->
+      Some (ed FStar.Range.dummyRange (f a b c)))))
+    | _ ->
+      None
 
 // Commonly called
 let embed_string_list rng ss   = embed_list embed_string S.t_string rng ss

@@ -6,6 +6,8 @@ open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order
 
+let term_eq (t1 t2 : term) : bool = t1 = t2
+
 let name_of_bv (bv : bv) : string =
     (inspect_bv bv).bv_ppname
 
@@ -59,22 +61,27 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decreases c) =
+let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
-    | C_Total t ->
+    | C_Total t _ ->
         begin match inspect t with
         | Tv_Arrow b c ->
-            let t = type_of_binder b in
-            collect_arr' (t::typs) c
+            collect_arr' (b::bs) c
         | _ ->
-            (typs, c)
+            (bs, c)
         end
-    | _ -> (typs, c)
+    | _ -> (bs, c)
     end
+
+val collect_arr_bs : typ -> list binder * comp
+let collect_arr_bs t =
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    (List.Tot.rev bs, c)
 
 val collect_arr : typ -> list typ * comp
 let collect_arr t =
-    let (ts, c) = collect_arr' [] (pack_comp (C_Total t)) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let ts = List.Tot.map type_of_binder bs in
     (List.Tot.rev ts, c)
 
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
@@ -178,11 +185,17 @@ and compare_comp (c1 c2 : comp) : order =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
-    | C_Total t1, C_Total t2 -> compare_term t1 t2
+    | C_Total t1 md1, C_Total t2 md2 -> lex (compare_term t1 t2)
+                                        (fun () -> match md1, md2 with
+                                                   | None, None -> Eq
+                                                   | None, Some _ -> Lt
+                                                   | Some _, None -> Gt
+                                                   | Some x, Some y -> compare_term x y)
+
     | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
 
     | C_Unknown, C_Unknown -> Eq
-    | C_Total _,   _  -> Lt | _, C_Total _   -> Gt
+    | C_Total _ _, _  -> Lt | _, C_Total _ _ -> Gt
     | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
     | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
 
@@ -223,3 +236,24 @@ let mktuple_n (ts : list term) : term =
 let mkpair (t1 t2 : term) : term =
     mktuple_n [t1;t2]
 
+let rec head (t : term) : term =
+    match inspect t with
+    | Tv_Match t _
+    | Tv_Let _ _ t _
+    | Tv_Abs _ t
+    | Tv_Refine _ t
+    | Tv_App t _ -> head t
+
+    | Tv_Unknown
+    | Tv_Uvar _ _
+    | Tv_Const _
+    | Tv_Type _
+    | Tv_Var _
+    | Tv_BVar _
+    | Tv_FVar _
+    | Tv_Arrow _ _ -> t
+
+let nameof (t : term) : string =
+    match inspect t with
+    | Tv_FVar fv -> String.concat "." (inspect_fv fv)
+    | _ -> "?"

@@ -37,6 +37,7 @@ let reflection_primops : list<N.primitive_step> =
         {
             N.name = l;
             N.arity = arity;
+            N.auto_reflect = None;
             N.strong_reduction_ok = false;
             N.requires_binder_substitution = false;
             N.interpretation = (fun ctxt args -> fn (N.psc_range ctxt) args)
@@ -69,8 +70,6 @@ let reflection_primops : list<N.primitive_step> =
         mk2 "__compare_bv" compare_bv E.unembed_bv E.unembed_bv E.embed_order;
 
         mk2 "__is_free" is_free E.unembed_bv E.unembed_term embed_bool;
-
-        mk2 "__term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
 
         mk1 "__term_to_string" term_to_string E.unembed_term embed_string;
         mk1 "__binders_of_env" binders_of_env E.unembed_env E.embed_binders;

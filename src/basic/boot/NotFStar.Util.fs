@@ -800,6 +800,9 @@ let file_exists f =
 let basename f =
   System.IO.Path.GetFileName f
 
+let dirname f =
+  System.IO.Path.GetDirectoryName f
+
 let print_endline x =
   print_endline x
 

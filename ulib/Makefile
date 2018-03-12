@@ -41,7 +41,7 @@ fstartaclib.mgen: fstarlib.mgen
 	rm -f .depend.extract
 	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
-	CODEGEN=tactics \
+	CODEGEN=Plugin \
 	EXTRACT_MODULES='$(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_DEFAULT_ARGS)' \
 	$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
@@ -123,3 +123,14 @@ clean:
 	rm -f $(TACLIB_DIR)/*.cm[aiox]
 	rm -f $(TACLIB_DIR)/*.cmx[as]
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
+
+clean_ocaml:
+	rm -f *.mgen
+	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
+	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
+	rm -f $(FSTARLIB_DIR)/*.cmx[as]
+	rm -f $(TACLIB_DIR)/*.cm[aiox]
+	rm -f $(TACLIB_DIR)/*.cmx[as]
+	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
+
+rebuild: clean_ocaml install-fstarlib install-fstar-tactics

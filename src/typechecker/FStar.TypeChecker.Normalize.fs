@@ -177,6 +177,7 @@ let psc_subst psc = psc.psc_subst ()
 type primitive_step = {
     name:Ident.lid;
     arity:int;
+    auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
     interpretation:(psc -> args -> option<term>)
@@ -219,6 +220,9 @@ let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psm
 
 let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
     add_steps (BU.psmap_empty ()) l
+
+let find_prim_step cfg fv =
+    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
 
 type branches = list<(pat * option<term> * term)>
 
@@ -615,10 +619,11 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         -> option<term>
         = fun as_a f res args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
-    let as_primitive_step (l, arity, f) = {
+    let as_primitive_step is_strong (l, arity, f) = {
         name=l;
         arity=arity;
-        strong_reduction_ok=true;
+        auto_reflect=None;
+        strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
         interpretation=f
     } in
@@ -690,8 +695,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         EMB.embed_string rng (if b then "true" else "false")
     in
-    let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
-    let mk_range (_:psc) args : option<term> =
+    let mk_range (psc:psc) args : option<term> =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
         match arg_as_string fn,
@@ -703,7 +707,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
           let r = FStar.Range.mk_range fn
                               (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                               (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-          Some (term_of_range r)
+          Some (EMB.embed_range psc.psc_range r)
         | _ -> None
         end
       | _ -> None
@@ -722,9 +726,14 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let idstep psc args : option<term> =
+    (* Really an identity, but only when the thing is an embedded range *)
+    let prims_to_fstar_range_step psc args : option<term> =
         match args with
-        | [(a1, _)] -> Some a1
+        | [(a1, _)] ->
+            begin match EMB.unembed_range_safe a1 with
+            | Some r -> Some (EMB.embed_range psc.psc_range r)
+            | None -> None
+            end
         | _ -> failwith "Unexpected number of arguments"
     in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
@@ -756,7 +765,10 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                                     1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
-             (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+             ]
+    in
+    let weak_ops =
+            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, prims_to_fstar_range_step);
              ]
     in
     let bounded_arith_ops
@@ -789,7 +801,9 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
        add_sub_mul_v
        @ div_mod_unsigned
     in
-    prim_from_list <| List.map as_primitive_step (basic_ops@bounded_arith_ops)
+    let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
+    let weak_steps   = List.map (as_primitive_step false) weak_ops in
+    prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : BU.psmap<primitive_step> =
     let interp_prop (psc:psc) (args:args) : option<term> =
@@ -807,6 +821,7 @@ let equality_ops : BU.psmap<primitive_step> =
     let propositional_equality =
         {name = PC.eq2_lid;
          arity = 3;
+         auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
          interpretation = interp_prop}
@@ -814,6 +829,7 @@ let equality_ops : BU.psmap<primitive_step> =
     let hetero_propositional_equality =
         {name = PC.eq3_lid;
          arity = 4;
+         auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
          interpretation = interp_prop}
@@ -861,7 +877,7 @@ let reduce_primops cfg env stack tm =
          let head, args = U.head_and_args tm in
          match (U.un_uinst head).n with
          | Tm_fvar fv -> begin
-           match BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v) with
+           match find_prim_step cfg fv with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
              if List.length args < prim_step.arity
              then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
@@ -1228,7 +1244,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  else rebuild cfg env stack t
             else // not an action, common case
                  let should_delta =
-                     cfg.delta_level |> BU.for_some (function
+                     Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
+                     && cfg.delta_level |> BU.for_some (function
                          | Env.UnfoldTac
                          | NoDelta -> false
                          | Env.Inlining
@@ -1418,10 +1435,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps.no_delta_steps) //we're allowed to do some delta steps, and ..
             && ((cfg.steps.pure_subterms_within_computations &&
-                 BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs) //1. we're extracting, and it's marked @inline_let
+                 U.has_attribute lb.lbattrs PC.inline_let_attr)        //1. we're extracting, and it's marked @inline_let
              || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
-                                        || BU.for_some (U.is_fvar PC.inline_let_attr) lb.lbattrs)) //it's marked @inline_let
-             || (U.is_ghost_effect n &&                              //Or, 3. it's ghost and we're not extracting
+                                        || U.has_attribute lb.lbattrs PC.inline_let_attr)) //it's marked @inline_let
+             || (U.is_ghost_effect n &&                                //Or, 3. it's ghost and we're not extracting
                     not (cfg.steps.pure_subterms_within_computations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
@@ -1584,7 +1601,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                 | UnivArgs(us', _)::stack ->
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
                   norm cfg env stack t
-                | _ when cfg.steps.erase_universes ->
+                | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
                   norm cfg env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
@@ -1706,7 +1723,8 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
               in
               let maybe_range_arg =
                 if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                then [as_arg (EMB.embed_range lb.lbpos lb.lbpos)]
+                then [as_arg (EMB.embed_range lb.lbpos lb.lbpos);
+                      as_arg (EMB.embed_range body.pos body.pos)]
                 else []
               in
               let reified = S.mk (Tm_app(bind_inst, [
@@ -1821,7 +1839,7 @@ and reify_lift cfg e msrc mtgt t : term =
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
-  if U.is_pure_effect msrc
+  if U.is_pure_effect msrc || U.is_div_effect msrc
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
     let _, return_repr = ed.return_repr in
@@ -2003,6 +2021,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
        // Although shouldn't `e` ALWAYS be marked with a Meta_monadic?
        norm cfg env stack' e
 
+    | Tm_app _ when cfg.steps.primops ->
+      let hd, args = U.head_and_args t in
+      (match (U.un_uinst hd).n with
+       | Tm_fvar fv ->
+           begin
+           match find_prim_step cfg fv with
+           | Some ({auto_reflect=Some n})
+             when List.length args = n ->
+             norm cfg env stack' t
+           | _ -> fallback " (3)" ()
+           end
+       | _ -> fallback " (4)" ())
+
     | _ ->
         fallback " (2)" ()
     end
@@ -2150,6 +2181,17 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     then matches scrutinee branches
     else norm_and_rebuild_match ()
 
+let plugins =
+    let plugins = BU.mk_ref [] in
+    let register (p:primitive_step) =
+        plugins := p :: !plugins
+    in
+    let retrieve () = !plugins
+    in
+    register, retrieve
+let register_plugin p = fst plugins p
+let retrieve_plugins () = snd plugins ()
+
 let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
@@ -2168,7 +2210,7 @@ let config' psteps s e =
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
      delta_level=d;
-     primitive_steps= add_steps built_in_primitive_steps psteps;
+     primitive_steps= add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
      strong=false;
      memoize_lazy=true;
      normalize_pure_lets=

@@ -3,8 +3,6 @@ module FStar.Tactics.Effect
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
-#set-options "--admit_smt_queries true"
-
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
@@ -15,13 +13,14 @@ val __ret : a:Type -> x:a -> __tac a
 let __ret a x = fun (s:proofstate) -> Success(x, s)
 
 (* monadic bind *)
-let __bind (a:Type) (b:Type) (rng:range) (t1:__tac a) (t2:a -> __tac b) : __tac b =
+let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __tac b =
     fun ps ->
-        let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range rng) in
+        let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
         let ps = incr_depth ps in
         let r = t1 ps in
         match r with
         | Success(a, ps')  ->
+            let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
             // Force evaluation of __tracepoint q
             begin match tracepoint ps' with
             | () -> t2 a (decr_depth ps')
@@ -37,7 +36,10 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"
  * optimization, which causes VCs (for well-formedness of tactics) to blow up.
  *
- * Work around that by overriding `bind_wp` for the effect with an efficient one.
+ * Plus, we don't need to model the ranges and depths: they make no difference since the
+ * proofstate type is abstract and the SMT never sees a concrete one.
+ *
+ * So, override `bind_wp` for the effect with an efficient one.
  *)
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
@@ -89,6 +91,6 @@ let assert_by_tactic (p:Type) (t:unit -> Tac unit)
 val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm needs these two names to be here, but we should remove it eventually
+// TcTerm needs these two names typecheck tactics against
 private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
-let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
+private let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())

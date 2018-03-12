@@ -35,7 +35,8 @@ open FStar.Tactics.Native
 
 let tacdbg = BU.mk_ref false
 
-let mk_tactic_interpretation_0 (t:tac<'r>) (embed_r:embedder<'r>) (t_r:typ)
+let mk_tactic_interpretation_0 (reflect:bool)
+                               (t:tac<'r>) (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
  (*  We have: t () embedded_state
      The idea is to:
@@ -51,12 +52,13 @@ let mk_tactic_interpretation_0 (t:tac<'r>) (embed_r:embedder<'r>) (t_r:typ)
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let res = run t ps in
-    Some (E.embed_result embed_r t_r (N.psc_range psc) res))
+    let res = E.embed_result embed_r t_r (N.psc_range psc) (run t ps) in
+    Some res)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
 
-let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
+let mk_tactic_interpretation_1 (reflect:bool)
+                               (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
   match args with
@@ -73,7 +75,9 @@ let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_1_env (t:N.psc -> 'a -> tac<'r>) (unembed_a:unembedder<'a>)
+let mk_tactic_interpretation_1_env
+                               (reflect:bool)
+                               (t:N.psc -> 'a -> tac<'r>) (unembed_a:unembedder<'a>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
   match args with
@@ -90,7 +94,8 @@ let mk_tactic_interpretation_1_env (t:N.psc -> 'a -> tac<'r>) (unembed_a:unembed
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
+let mk_tactic_interpretation_2 (reflect:bool)
+                               (t:'a -> 'b -> tac<'r>)
                                (unembed_a:unembedder<'a>) (unembed_b:unembedder<'b>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
@@ -109,7 +114,8 @@ let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
+let mk_tactic_interpretation_3 (reflect:bool)
+                               (t:'a -> 'b -> 'c -> tac<'r>)
                                (unembed_a:unembedder<'a>)
                                (unembed_b:unembedder<'b>)
                                (unembed_c:unembedder<'c>)
@@ -131,7 +137,8 @@ let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
+let mk_tactic_interpretation_5 (reflect:bool)
+                               (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
                                (unembed_a:unembedder<'a>)
                                (unembed_b:unembedder<'b>)
                                (unembed_c:unembedder<'c>)
@@ -160,6 +167,7 @@ let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
 let step_from_native_step (s: native_primitive_step): N.primitive_step =
     { N.name=s.name;
       N.arity=s.arity;
+      N.auto_reflect=Some (s.arity - 1);
       N.strong_reduction_ok=s.strong_reduction_ok;
       N.requires_binder_substitution = false; // GM: really?
       N.interpretation=(fun psc args -> s.tactic psc args) }
@@ -169,6 +177,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
       N.name=nm;
       N.arity=arity;
+      N.auto_reflect=None;
       N.strong_reduction_ok=false;
       N.requires_binder_substitution = true;
       N.interpretation=(fun psc args -> interpretation nm psc args);
@@ -177,28 +186,28 @@ let rec primitive_steps () : list<N.primitive_step> =
     let native_tactics_steps = List.map step_from_native_step native_tactics in
     let mktac0 (name : string) (f : tac<'r>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
-        mk name 1 (mk_tactic_interpretation_0 f e_r tr)
+        mk name 1 (mk_tactic_interpretation_0 false f e_r tr)
     in
     let mktac1 (name : string) (f : 'a -> tac<'r>)
                (u_a : unembedder<'a>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
-        mk name 2 (mk_tactic_interpretation_1 f u_a e_r tr)
+        mk name 2 (mk_tactic_interpretation_1 false f u_a e_r tr)
     in
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'r>)
                (u_a : unembedder<'a>) (u_b : unembedder<'b>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
-        mk name 3 (mk_tactic_interpretation_2 f u_a u_b e_r tr)
+        mk name 3 (mk_tactic_interpretation_2 false f u_a u_b e_r tr)
     in
     let mktac3 (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
                (u_a : unembedder<'a>) (u_b : unembedder<'b>) (u_c : unembedder<'c>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
-        mk name 4 (mk_tactic_interpretation_3 f u_a u_b u_c e_r tr)
+        mk name 4 (mk_tactic_interpretation_3 false f u_a u_b u_c e_r tr)
     in
     let mktac5 (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
                (u_a : unembedder<'a>) (u_b : unembedder<'b>) (u_c : unembedder<'c>)
                (u_d : unembedder<'d>) (u_e : unembedder<'e>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
-        mk name 6 (mk_tactic_interpretation_5 f u_a u_b u_c u_d u_e e_r tr)
+        mk name 6 (mk_tactic_interpretation_5 false f u_a u_b u_c u_d u_e e_r tr)
     in
     let decr_depth_interp psc (args : args) =
         match args with
@@ -212,6 +221,7 @@ let rec primitive_steps () : list<N.primitive_step> =
     let decr_depth_step : N.primitive_step =
         {N.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
          N.arity = 1;
+         N.auto_reflect=None;
          N.strong_reduction_ok = false;
          N.requires_binder_substitution = false;
          N.interpretation = decr_depth_interp
@@ -228,6 +238,7 @@ let rec primitive_steps () : list<N.primitive_step> =
     let incr_depth_step : N.primitive_step =
         {N.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
          N.arity = 1;
+         N.auto_reflect=None;
          N.strong_reduction_ok = false;
          N.requires_binder_substitution = false;
          N.interpretation = incr_depth_interp
@@ -255,6 +266,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
         {N.name = nm;
          N.arity = 2;
+         N.auto_reflect=None;
          N.strong_reduction_ok = false;
          N.requires_binder_substitution = false;
          N.interpretation = set_proofstate_range_interp
@@ -264,6 +276,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
         {N.name = nm;
          N.arity = 1;
+         N.auto_reflect=None;
          N.strong_reduction_ok = false;
          N.requires_binder_substitution = true;
          N.interpretation = tracepoint_interp
@@ -298,7 +311,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__rewrite"       rewrite RE.unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac0 "__refine_intro"  refine_intro embed_unit t_unit;
-      mktac3 "__t_exact"       t_exact unembed_bool unembed_bool RE.unembed_term embed_unit t_unit;
+      mktac2 "__t_exact"       t_exact unembed_bool RE.unembed_term embed_unit t_unit;
       mktac1 "__apply"         (apply  true) RE.unembed_term embed_unit t_unit;
       mktac1 "__apply_raw"     (apply false) RE.unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma RE.unembed_term embed_unit t_unit;
@@ -320,6 +333,11 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac2 "__pointwise"     pointwise E.unembed_direction (unembed_tactic_0' unembed_unit) embed_unit t_unit;
+      mktac2 "__topdown_rewrite" topdown_rewrite
+                                 (unembed_tactic_1 RE.embed_term (unembed_pair unembed_bool unembed_int))
+                                 (unembed_tactic_0' unembed_unit)
+                                 embed_unit t_unit;
+
       mktac0 "__trefl"         trefl embed_unit t_unit;
       mktac0 "__later"         later embed_unit t_unit;
       mktac0 "__dup"           dup embed_unit t_unit;
@@ -341,6 +359,10 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
 
       mktac2 "__fresh_bv_named"  fresh_bv_named unembed_string RE.unembed_term RE.embed_bv S.t_bv;
+      mktac1 "__change"          change RE.unembed_term embed_unit t_unit;
+
+      mktac0 "__get_guard_policy" get_guard_policy E.embed_guard_policy E.t_guard_policy;
+      mktac1 "__set_guard_policy" set_guard_policy E.unembed_guard_policy embed_unit t_unit;
 
       decr_depth_step;
       incr_depth_step;
@@ -349,6 +371,14 @@ let rec primitive_steps () : list<N.primitive_step> =
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
+
+//IN F*: and unembed_tactic_1 (#a:Type) (#b:Type) (arg:embedder a) (res:unembedder b) (f:term) : option (a -> tac b) =
+and unembed_tactic_1<'a,'b> (arg:embedder<'a>) (res:unembedder<'b>) (f:term) : option<('a -> tac<'b>)> = //JUST FSHARP
+    Some (fun x ->
+      let rng = FStar.Range.dummyRange  in
+      let x_tm = arg rng x in
+      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      unembed_tactic_0 res app)
 
 //IN F*: and unembed_tactic_0 (#b:Type) (unembed_b:unembedder b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<'b> = //JUST FSHARP

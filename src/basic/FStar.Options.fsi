@@ -98,7 +98,9 @@ val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
-val codegen                     : unit    -> option<string>
+type codegen_t =
+    | OCaml | FSharp | Kremlin | Plugin
+val codegen                     : unit    -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
@@ -119,7 +121,6 @@ val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
-val gen_native_tactics          : unit    -> option<string>
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file                   : unit    -> option<string>
@@ -204,8 +205,6 @@ val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val use_extracted_interfaces    : unit    -> bool
-
-val codegen_fsharp              : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

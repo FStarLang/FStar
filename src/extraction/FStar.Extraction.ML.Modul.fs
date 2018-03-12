@@ -224,6 +224,37 @@ let extract_bundle env se =
 
         | _ -> failwith "Unexpected signature element"
 
+(* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
+   is extracted along with an invocation to FStar.Tactics.Native.register_tactic,
+   which installs the compiled term as a primitive step in the normalizer
+ *)
+let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
+    let w = with_ty MLTY_Top in
+    if Options.codegen() <> Some Options.Plugin
+    || not (U.has_attribute se.sigattrs PC.plugin_attr)
+    then []
+    else match se.sigel with
+         | Sig_let(lbs, lids) ->
+           let mk_registration lb : list<mlmodule1> =
+              let fv = (right lb.lbname).fv_name.v in
+              let fv_t = lb.lbtyp in
+              let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv)) in
+              match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t ml_name_str with
+              | Some (interp, arity, plugin) ->
+                  let register =
+                    if plugin
+                    then "FStar_Tactics_Native.register_plugin"
+                    else "FStar_Tactics_Native.register_tactic"
+                  in
+                  let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
+                  let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
+                  let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity; interp]) in
+                  [MLM_Top app]
+              | None -> []
+           in
+           List.collect mk_registration (snd lbs)
+        | _ -> []
+
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
@@ -334,88 +365,69 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
-          let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
+          let ml_let, _, _ =
+            Term.term_as_mlexpr
+                    g
+                    (mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng)
+          in
+          begin
+          match ml_let.expr with
+          | MLE_Let((flavor, bindings), _) ->
 
-          (* When extracting with the "tactics" option, if the top-level let is a user-defined tactic, automatically add
-             the matching invocation to FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked. *)
-          let tactic_registration_decl =
-            let mk_registration tac_lid assm_lid t bs =
-              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
-              let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
-              let tac_arity = List.length bs in
-              let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-              match mk_interpretation_fun g.tcenv tac_lid lid_arg t bs with
-              | Some tac_interpretation ->
-                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
-                  [MLM_Top app]
-              | None -> [] in
+            (* Treatment of qualifiers: we synthesize the metadata that goes
+                * onto each let-binding as follows:
+                * - F* keywords (qualifiers, such as "inline_for_extraction" or
+                *   "private") are in [quals] and are distributed on each
+                *   let-binding in the mutually recursive block of bindings
+                * - F* attributes (custom arbitrary terms, such as "[@ GcType
+                *   ]"), are attached to the block of mutually recursive
+                *   definitions, we don't have syntax YET for attaching these
+                *   to individual definitions
+                * - some extra information is looked up here and added as a
+                *   bonus; in particular, the MustDisappear attribute (that
+                *   StackInline bestows upon an individual let-binding) is
+                *   specific to each let-binding! *)
+            let flags = List.choose (function
+                | Assumption -> Some Assumed
+                | S.Private -> Some Private
+                | S.NoExtract -> Some NoExtract
+                | _ -> None
+            ) quals in
+            let flags' = extract_metadata attrs in
 
-            if Options.codegen() = Some "tactics" then
-              (match (snd lbs) with
-               | [hd] ->
-                  let bs, comp = U.arrow_formals_comp hd.lbtyp in
-                  let t = U.comp_result comp in
-                  let eff = Env.norm_eff_name g.tcenv (U.comp_effect_name comp) in
-                  if lid_equals PC.effect_TAC_lid (U.comp_effect_name comp)
-                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics")
-                     && not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Reflection")
-                  then begin
-                      let tac_lid = (right hd.lbname).fv_name.v in
-                      let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                      mk_registration tac_lid assm_lid t bs
-                  end else []
-               | _ -> []
-              ) else [] in
+            let g, ml_lbs' =
+                List.fold_left2
+                    (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
+                        // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                        let lb_lid = (right lbname).fv_name.v in
+                        let flags'' =
+                            match (SS.compress t).n with
+                            | Tm_arrow (_, { n = Comp { effect_name = e }})
+                                when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                                [ StackInline ]
+                            | _ ->
+                                []
+                        in
+                        let meta = flags @ flags' @ flags'' in
+                        let ml_lb = { ml_lb with mllb_meta = meta } in
+                        let g, ml_lb =
+                            if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                            then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
+                                let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                                env, {ml_lb with mllb_name=snd mname }
+                            else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                        g, ml_lb::ml_lbs)
+                (g, [])
+                bindings
+                (snd lbs) in
+            g,
+            [MLM_Loc (Util.mlloc_of_range se.sigrng);
+             MLM_Let (flavor, List.rev ml_lbs')]
+            @ maybe_register_plugin g se
 
-            let ml_let, _, _ = Term.term_as_mlexpr g elet in
-            begin match ml_let.expr with
-              | MLE_Let((flavor, bindings), _) ->
-
-                (* Treatment of qualifiers: we synthesize the metadata that goes
-                 * onto each let-binding as follows:
-                 * - F* keywords (qualifiers, such as "inline_for_extraction" or
-                 *   "private") are in [quals] and are distributed on each
-                 *   let-binding in the mutually recursive block of bindings
-                 * - F* attributes (custom arbitrary terms, such as "[@ GcType
-                 *   ]"), are attached to the block of mutually recursive
-                 *   definitions, we don't have syntax YET for attaching these
-                 *   to individual definitions
-                 * - some extra information is looked up here and added as a
-                 *   bonus; in particular, the MustDisappear attribute (that
-                 *   StackInline bestows upon an individual let-binding) is
-                 *   specific to each let-binding! *)
-                let flags = List.choose (function
-                  | Assumption -> Some Assumed
-                  | S.Private -> Some Private
-                  | S.NoExtract -> Some NoExtract
-                  | _ -> None
-                ) quals in
-                let flags' = extract_metadata attrs in
-
-                let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
-                // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                    let lb_lid = (right lbname).fv_name.v in
-                    let flags'' = match (SS.compress t).n with
-                      | Tm_arrow (_, { n = Comp { effect_name = e }}) when
-                        string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
-                          [ StackInline ]
-                      | _ ->
-                          []
-                    in
-                    let meta = flags @ flags' @ flags'' in
-                    let ml_lb = { ml_lb with mllb_meta = meta } in
-                    let g, ml_lb =
-                      if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                      then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                           let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                           env, {ml_lb with mllb_name=snd mname }
-                      else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
-                   g, ml_lb::ml_lbs)
-                (g, []) bindings (snd lbs) in
-                g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, List.rev ml_lbs')] @ tactic_registration_decl
-              | _ ->
-                failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
-            end
+        | _ ->
+          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
+        end
 
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
@@ -463,31 +475,20 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
        | Sig_pragma (p) ->
-         let codegen_opt = Options.codegen () in
          U.process_pragma p se.sigrng;
-         (match codegen_opt with
-          | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
-          | _ -> ());
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
 let extract' (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
-  let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
-  (* since command line options are reset, need to set OCaml extraction for when
-     extraction is driven from the F* compiler itself; currently this is only the case for
-     automatic tactic compilation *)
-  let _ = match codegen_opt with
-    | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
-    | _ -> () in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
-  let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
+  let is_kremlin = Options.codegen () = Some Options.Kremlin in
   if m.name.str <> "Prims"
   && (is_kremlin || not m.is_interface)
   && Options.should_extract m.name.str then begin

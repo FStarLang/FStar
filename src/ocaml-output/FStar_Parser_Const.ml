@@ -145,7 +145,9 @@ let (effect_Lemma_lid : FStar_Ident.lident) = pconst "Lemma"
 let (effect_GTot_lid : FStar_Ident.lident) = pconst "GTot" 
 let (effect_GHOST_lid : FStar_Ident.lident) = pconst "GHOST" 
 let (effect_Ghost_lid : FStar_Ident.lident) = pconst "Ghost" 
-let (effect_DIV_lid : FStar_Ident.lident) = pconst "DIV" 
+let (effect_DIV_lid : FStar_Ident.lident) = psconst "DIV" 
+let (effect_Div_lid : FStar_Ident.lident) = psconst "Div" 
+let (effect_Dv_lid : FStar_Ident.lident) = psconst "Dv" 
 let (all_lid : FStar_Ident.lident) = p2l ["FStar"; "All"] 
 let (effect_ALL_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "ALL"] 
 let (effect_ML_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "ML"] 
@@ -185,6 +187,8 @@ let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
+let (plugin_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "plugin"] 
 let (dm4f_bind_range_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (gen_reset :
