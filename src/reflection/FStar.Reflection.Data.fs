@@ -22,6 +22,7 @@ type pattern =
     | Pat_Cons     of fv * list<pattern>
     | Pat_Var      of bv
     | Pat_Wild     of bv
+    | Pat_Dot_Term of bv * term
 
 type branch = pattern * term
 
@@ -127,6 +128,7 @@ let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
 let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
 let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
 let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
+let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
 
 (* term_view *)
 let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"

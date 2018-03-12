@@ -84,6 +84,11 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_bv rng bv)] None rng
     | Pat_Wild bv ->
         S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_bv rng bv)] None rng
+    | Pat_Dot_Term (bv, t) ->
+        S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed_bv rng bv);
+                                        S.as_arg (embed_term rng t)]
+                    None rng
+
 
 let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
 let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
@@ -312,6 +317,11 @@ let rec unembed_pattern (t : term) : option<pattern> =
     | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
         BU.bind_opt (unembed_bv bv) (fun bv ->
         Some <| Pat_Wild bv)
+
+    | Tm_fvar fv, [(bv, _); (t, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        BU.bind_opt (unembed_term t) (fun t ->
+        Some <| Pat_Dot_Term (bv, t)))
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
