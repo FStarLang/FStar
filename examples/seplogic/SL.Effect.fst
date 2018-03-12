@@ -38,7 +38,7 @@ assume val lemma_addrs_in_points_to (#a:Type) (r:ref a) (x:a)
   :Lemma (requires True) (ensures (Set.equal (addrs_in (r |> x)) (Set.singleton (addr_of r))))
          [SMTPat (addrs_in (r |> x))]
 assume val lemma_addrs_in_join (m0 m1:memory)
-  :Lemma (requires True) (ensures (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
+  :Lemma (requires (defined (m0 <*> m1))) (ensures (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
          [SMTPat (addrs_in (m0 <*> m1))]
 
 (* definedness *)

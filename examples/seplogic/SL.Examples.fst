@@ -292,3 +292,17 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     process_command ();
 	     get_to_the_next_frame ();
 	     process_command ())
+
+noeq type list =
+  | Nil : list
+  | Cons: r:ref int -> list
+
+let test (l:list{Cons? l})
+  = (let x = Cons?.r l in
+     !x)
+
+    <: STATE int (fun p h -> h == (Cons?.r l |> 2) /\ p 2 h)
+
+    by (fun () -> prelude ();
+               dump "A")
+    
