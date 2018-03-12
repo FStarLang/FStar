@@ -63,12 +63,19 @@ let rec exp_to_string (e:exp) : string =
 // Use a map that stores for each variable
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
-let vmap (a b:Type) = var -> (a*b)
-let const (#a #b:Type) (xa:a) (xb:b) (x:var) = (xa,xb)
-let select (#a #b:Type) (x:var) (vm:vmap a b) : Tot a = fst (vm x)
-let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b = snd (vm x)
-let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) (x':var) :
-  Tot (a*b) = if x' = x then (xa,xb) else vm x'
+
+let vmap (a b:Type) = list (var * (a*b)) * (a * b)
+let const (#a #b:Type) (xa:a) (xb:b) : vmap a b = [], (xa,xb)
+let select (#a #b:Type) (x:var) (vm:vmap a b) : Tot a =
+  match assoc #var #(a * b) x (fst vm) with
+  | Some (a, _) -> a
+  | _ -> fst (snd vm)
+let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b =
+  match assoc #var #(a * b) x (fst vm) with
+  | Some (_, b) -> b
+  | _ -> snd (snd vm)
+let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) : vmap a b =
+  (x, (xa, xb))::fst vm, snd vm
 
 let rec mdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : a =
   match e with
@@ -361,7 +368,7 @@ let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; trefl())
+  (fun _ -> canon_monoid int_plus_cm; compute(); trefl())
 
 (* Trying to enable computation with constants beyond unit.
    It might be enough to move all them to the end of the list by
@@ -387,30 +394,14 @@ let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid_const int_plus_cm; compute(); trefl())
 
-(* Trying to only bring some constants to the front,
-   as Nik said would be useful for separation logic *)
+(* TODO Trying to only bring some constants to the front,
+        as Nik said would be useful for separation logic *)
 
 // remember if something is a constant or not
-let is_special (ts:list term) (t:term) : Tac bool = t `mem` ts
+// let is_special (ts:list term) (t:term) : Tac bool = t `mem` ts
 
-// sort things and put the constants last
-let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
-  match select_extra x vm, select_extra y vm with
-  | false, false | true, true -> compare_of_bool (<) x y
-  | false, true -> 1
-  | true, false -> -1
 
-let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-  List.Tot.sortWith #nat (const_compare vm) xs
-
-let canon_monoid_const = canon_monoid_with bool is_const false
-  const_last (fun #a m vm xs -> admit())
-
-let lem1 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_const int_plus_cm; compute(); trefl())
-
-(* TODO: discuss with Nik and Guido about spurious SMT obligations:
+(* Old discussion discuss with Nik and Guido about spurious SMT obligations:
 Nik:
 - it's easy to get rid of some of the hasEq goals by just saying `let
   var :eqtype = nat`
