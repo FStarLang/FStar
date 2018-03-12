@@ -42,6 +42,9 @@ type cm (a:Type) =
 let int_plus_cm : cm int =
   CM 0 (+) (fun x -> ()) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
 
+let int_multiply_cm : cm int =
+  CM 1 op_Multiply (fun x -> ()) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
+
 (***** Expression syntax *)
 
 let var : eqtype = nat
@@ -394,6 +397,8 @@ let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
 
 let canon_monoid_const = canon_monoid_with bool is_const false
   const_last (fun #a m vm xs -> admit())
+(* TODO Try to reduce the number of admits by further generalizing
+        the sort stuff at the top (from `unit` to `a`). *)
 
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
@@ -426,9 +431,37 @@ let lem2 (a b c d : int) =
   (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
             dump "this won't work, admitting"; admit1())
 
-(* TODO: Need better control of reduction:
-         - unfold_def still not good enough, see stopgap above
+(* Trying to do something separation logic like. Want to
+   prove a goal of the form: given some concrete h0 and h1
+   exists h1', h1 * h1' == h0. -- can use apply exists_intro to get an uvar
+   Do this for an arbitrary commutative monoid.
 *)
+
+let sep_logic
+// TODO: this generality makes type checking explode after change:
+//       user tactic failed: change: Cannot type squash (mdenote m ...
+// (a:Type) (m:cm a) (x y z1 z2 z3 : a) =
+//   let op_Star = CM?.mult m in
+// so working around it for now
+(x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
+  let h0 = z1 * 1 * (x * z2 * y * 1) * z3 in
+  let h1 = x * y in
+  assert_by_tactic (exists h1'. h1 * h1' == h0)
+  (fun _ -> apply_lemma (`exists_intro);
+            flip();
+            canon_monoid m;
+            trefl();
+            // this one blows up big time (takes up all RAM)
+            // exact (cur_witness())
+            dismiss()
+  )
+
+(* TODO: Need better control of reduction:
+         - unfold_def still not good enough, see stopgap above *)
+
+(* TODO: Wondering whether we should support arbitrary re-association?
+         Could be useful for separation logic, but we might also just
+         work around it. *)
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
