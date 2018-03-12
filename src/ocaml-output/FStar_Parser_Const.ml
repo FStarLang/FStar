@@ -349,4 +349,7 @@ let (fv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "fv"]
     FStar_Range.dummyRange
   
-let (norm_step_lid : FStar_Ident.lident) = pconst "norm_step" 
+let (norm_step_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Syntax"; "Embeddings"; "norm_step"]
+    FStar_Range.dummyRange
+  

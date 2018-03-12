@@ -9,7 +9,7 @@ FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
 .PHONY: %.test fstartaclib
 
-MODULES= Apply Arith Bane.Test CanonDeep Clear Cut DependentSynth Fail Imp Logic Nest Pruning Rename Retype Sequences Simplifier Tutorial Unify
+MODULES=Apply Arith Bane.Test CanonDeep Clear Cut DependentSynth Fail Imp Logic Nest Pruning Rename Retype Sequences Simplifier Tutorial Unify
 MODULES_BROKEN=Bug1270 CanonMonoid Printers Synthesis Trace
 
 

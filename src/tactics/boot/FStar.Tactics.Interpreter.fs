@@ -457,7 +457,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run tau ps) in
     if !tacdbg then
-        BU.print1 "Tactic ran in %s milliseconds\n" (string_of_int ms);
+        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
     match res with
     | Success (_, ps) ->
         if !tacdbg then
