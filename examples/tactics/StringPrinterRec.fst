@@ -33,19 +33,19 @@ let do_while_body_post
 
 let do_while_body_decreases
   (tin tout: Type)
-  (decreases: (tin -> GTot nat))
+  (decreases: (tin -> GTot lex_t))
   (x: tin)
   (y: m (c_or tin tout))
 : GTot Type0
 = match y () with
-  | (Left x', _) -> decreases x' < decreases x
+  | (Left x', _) -> decreases x' << decreases x
   | _ -> True
 
 unfold
 let do_while_body_res_t
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
-  (decreases: (tin -> GTot nat))
+  (decreases: (tin -> GTot lex_t))
   (x: tin)
 : Tot Type
 = (y: m (c_or tin tout) { do_while_body_post tin tout f x y /\ do_while_body_decreases tin tout decreases x y } )
@@ -53,7 +53,7 @@ let do_while_body_res_t
 let do_while_body_t
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
-  (decreases: (tin -> GTot nat))
+  (decreases: (tin -> GTot lex_t))
 : Tot Type
 = (x: tin) ->
   GTot (do_while_body_res_t tin tout f decreases x)
@@ -161,7 +161,9 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                     let tin = T.type_of_binder tin' in
                     let body' = mk_do_while_body tin tout body v in
                     T.print (T.term_to_string body');
-//                    let y = T.fresh_binder (T.mk_app (quote (do_while_body_res_t
+                    // let y = T.fresh_binder (T.mk_app (quote do_while_body_res_t) [
+                    // ])
+                    // in
                     T.exact_guard (T.pack (T.Tv_Abs x body'))
                   | _ -> T.fail "KO 1"
                   end
@@ -197,4 +199,4 @@ let example'_body_prf (x: nat) : Tot unit =
   let y = example'_body x in
   let f = example' in
   assert (do_while_body_post nat unit example' x (example'_body x));
-  assert (do_while_body_decreases nat unit (fun x -> x) x (example'_body x))
+  assert (do_while_body_decreases nat unit (fun x -> LexCons x LexTop) x (example'_body x))
