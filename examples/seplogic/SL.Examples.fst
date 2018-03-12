@@ -105,11 +105,6 @@ let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0) (h h':me
 
 (*** following are heap algebra lemmas, should be replaced with canonizer? ***)
 
-let lemma_rewrite_sep_comm_return (h1 h2:memory) (phi:memory -> Type0)
-  : Lemma (requires (defined h1 /\ defined h1 /\ phi h1 /\ h1 == h2))
-          (ensures  (defined h2 /\ defined h2 /\ phi h2))
-  = lemma_join_is_commutative h1 h2
-
 let lemma_rewrite_sep_comm (h1 h2:memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h1 <*> h2) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
          (ensures  (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h2 <*> h1) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
@@ -213,7 +208,8 @@ let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
       process_command ();
       get_to_the_next_frame ();
       apply_lemma (`lemma_rewrite_sep_comm);
-      process_command ())
+      process_command ();
+      pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_join_is_commutative)) trefl))
 
 (*
  * four commands
@@ -236,7 +232,9 @@ let swap (r1 r2:ref int) (m n:int)
 	        process_command ();
 	        get_to_the_next_frame ();
 	        apply_lemma (`lemma_rewrite_sep_comm);
-                process_command ())
+                process_command ();
+                pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_emp_is_join_unit)) trefl);
+                pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_join_is_commutative)) trefl))
 
 (*
  * three commands, the inline pure expressions don't count
