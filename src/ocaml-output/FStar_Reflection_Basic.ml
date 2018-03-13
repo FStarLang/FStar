@@ -222,6 +222,7 @@ let rec (inspect :
                    let uu____694 = inspect_pat pat  in (uu____694, t4)) brs1
            in
         FStar_Reflection_Data.Tv_Match (t3, brs2)
+    | FStar_Syntax_Syntax.Tm_unknown  -> FStar_Reflection_Data.Tv_Unknown
     | uu____707 ->
         ((let uu____709 =
             let uu____714 =
@@ -411,7 +412,8 @@ let (pack : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
              (e, ((FStar_Util.Inr c), tacopt), FStar_Pervasives_Native.None))
           FStar_Pervasives_Native.None FStar_Range.dummyRange
     | FStar_Reflection_Data.Tv_Unknown  ->
-        failwith "pack: unexpected term view"
+        FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
+          FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (compare_bv :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order) =
