@@ -50,7 +50,7 @@ let embed_aqualv (rng:Range.range) (q : aqualv) : term =
 
 let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 
-let embed_fvar (rng:Range.range) (fv:fv) : term =
+let embed_fv (rng:Range.range) (fv:fv) : term =
     U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
 
 let embed_comp (rng:Range.range) (c:comp) : term =
@@ -79,11 +79,16 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
     | Pat_Constant c ->
         S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed_const rng c)] None rng
     | Pat_Cons (fv, ps) ->
-        S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
+        S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fv rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
     | Pat_Var bv ->
         S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_bv rng bv)] None rng
     | Pat_Wild bv ->
         S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_bv rng bv)] None rng
+    | Pat_Dot_Term (bv, t) ->
+        S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed_bv rng bv);
+                                        S.as_arg (embed_term rng t)]
+                    None rng
+
 
 let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
 let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
@@ -91,7 +96,7 @@ let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl
 let embed_term_view (rng:Range.range) (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
-        S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fvar rng fv)]
+        S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fv rng fv)]
                     None rng
 
     | Tv_BVar fv ->
@@ -141,6 +146,20 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
         S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed_term rng t); S.as_arg (embed_list embed_branch fstar_refl_branch rng brs)]
                     None rng
 
+    | Tv_AscribedT (e, t, tacopt) ->
+        S.mk_Tm_app ref_Tv_AscT.t
+                    [S.as_arg (embed_term rng e);
+                     S.as_arg (embed_term rng t);
+                     S.as_arg (embed_option embed_term fstar_refl_term rng tacopt)]
+                    None rng
+
+    | Tv_AscribedC (e, c, tacopt) ->
+        S.mk_Tm_app ref_Tv_AscC.t
+                    [S.as_arg (embed_term rng e);
+                     S.as_arg (embed_comp rng c);
+                     S.as_arg (embed_option embed_term fstar_refl_term rng tacopt)]
+                    None rng
+
     | Tv_Unknown ->
         { ref_Tv_Unknown.t with pos = rng }
 
@@ -181,7 +200,7 @@ let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     | Sg_Let (r, fv, ty, t) ->
         S.mk_Tm_app ref_Sg_Let.t
                     [S.as_arg (embed_bool rng r);
-                        S.as_arg (embed_fvar rng fv);
+                        S.as_arg (embed_fv rng fv);
                         S.as_arg (embed_term rng ty);
                         S.as_arg (embed_term rng t)]
                     None rng
@@ -243,7 +262,7 @@ let unembed_aqualv (t : term) : option<aqualv> =
 
 let unembed_binders t = unembed_list unembed_binder t
 
-let unembed_fvar (t:term) : option<fv> =
+let unembed_fv (t:term) : option<fv> =
     match (SS.compress t).n with
     | Tm_lazy i when i.kind = Lazy_fvar ->
         Some (undyn i.blob)
@@ -301,7 +320,7 @@ let rec unembed_pattern (t : term) : option<pattern> =
         Some <| Pat_Constant c)
 
     | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
-        BU.bind_opt (unembed_fvar f) (fun f ->
+        BU.bind_opt (unembed_fv f) (fun f ->
         BU.bind_opt (unembed_list unembed_pattern ps) (fun ps ->
         Some <| Pat_Cons (f, ps)))
 
@@ -313,6 +332,11 @@ let rec unembed_pattern (t : term) : option<pattern> =
         BU.bind_opt (unembed_bv bv) (fun bv ->
         Some <| Pat_Wild bv)
 
+    | Tm_fvar fv, [(bv, _); (t, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        BU.bind_opt (unembed_term t) (fun t ->
+        Some <| Pat_Dot_Term (bv, t)))
+
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
         None
@@ -321,7 +345,6 @@ let unembed_branch = unembed_pair unembed_pattern unembed_term
 let unembed_argv = unembed_pair unembed_term unembed_aqualv
 
 let unembed_term_view (t:term) : option<term_view> =
-    let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var.lid ->
@@ -333,7 +356,7 @@ let unembed_term_view (t:term) : option<term_view> =
         Some <| Tv_BVar b)
 
     | Tm_fvar fv, [(f, _)] when S.fv_eq_lid fv ref_Tv_FVar.lid ->
-        BU.bind_opt (unembed_fvar f) (fun f ->
+        BU.bind_opt (unembed_fv f) (fun f ->
         Some <| Tv_FVar f)
 
     | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App.lid ->
@@ -380,6 +403,18 @@ let unembed_term_view (t:term) : option<term_view> =
         BU.bind_opt (unembed_term t) (fun t ->
         BU.bind_opt (unembed_list unembed_branch brs) (fun brs ->
         Some <| Tv_Match (t, brs)))
+
+    | Tm_fvar fv, [(e, _); (t, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
+        BU.bind_opt (unembed_term e) (fun e ->
+        BU.bind_opt (unembed_term t) (fun t ->
+        BU.bind_opt (unembed_option unembed_term tacopt) (fun tacopt ->
+        Some <| Tv_AscribedT (e, t, tacopt))))
+
+    | Tm_fvar fv, [(e, _); (c, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscC.lid ->
+        BU.bind_opt (unembed_term e) (fun e ->
+        BU.bind_opt (unembed_comp c) (fun c ->
+        BU.bind_opt (unembed_option unembed_term tacopt) (fun tacopt ->
+        Some <| Tv_AscribedC (e, c, tacopt))))
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
         Some <| Tv_Unknown
@@ -455,7 +490,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 
     | Tm_fvar fv, [(r, _); (fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
         BU.bind_opt (unembed_bool r) (fun r ->
-        BU.bind_opt (unembed_fvar fvar) (fun fvar ->
+        BU.bind_opt (unembed_fv fvar) (fun fvar ->
         BU.bind_opt (unembed_term ty) (fun ty ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Sg_Let (r, fvar, ty, t)))))
@@ -471,26 +506,42 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 (* ------------------------------------- UNFOLDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
+let embed_binder_view   = embed_pair embed_bv fstar_refl_bv_view embed_aqualv fstar_refl_aqualv
+let unembed_binder_view = unembed_pair unembed_bv unembed_aqualv
+
+
 (* Note that most of these are never needed during normalization, since
  * the types are abstract.
  *)
 
 let unfold_lazy_bv  (i : lazyinfo) : term =
-    U.exp_unit
+    let bv : bv = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed_bv_view i.rng (inspect_bv bv))]
+                None i.rng
 
+(* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
-    U.exp_unit
+    let binder : binder = undyn i.blob in
+    let bv, aq = inspect_binder binder in
+    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed_bv i.rng bv);
+                                        S.as_arg (embed_aqualv i.rng aq)]
+                None i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
     let fv : fv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_fv [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
+    S.mk_Tm_app fstar_refl_pack_fv.t [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
                 None i.rng
 
 let unfold_lazy_comp (i : lazyinfo) : term =
-    U.exp_unit
+    let comp : comp = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_comp.t [S.as_arg (embed_comp_view i.rng (inspect_comp comp))]
+                None i.rng
 
 let unfold_lazy_env (i : lazyinfo) : term =
+    (* Not needed, metaprograms never see concrete environments. *)
     U.exp_unit
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =
-    U.exp_unit
+    let sigelt : sigelt = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed_sigelt_view i.rng (inspect_sigelt sigelt))]
+                None i.rng

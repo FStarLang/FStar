@@ -343,6 +343,8 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__dup"           dup embed_unit t_unit;
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
+      mktac0 "__dismiss"       dismiss embed_unit t_unit;
+
       mktac1 "__cases"         cases RE.unembed_term (embed_pair
                                                       RE.embed_term S.t_term
                                                       RE.embed_term S.t_term)
@@ -452,12 +454,14 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let tau = unembed_tactic_0 unembed_unit tactic in
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
+    (* TODO: We do not faithfully expose universes to metaprograms *)
+    let env = { env with Env.lax_universes = true } in
     let ps, w = proofstate_of_goal_ty env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run tau ps) in
     if !tacdbg then
-        BU.print1 "Tactic ran in %s milliseconds\n" (string_of_int ms);
+        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
     match res with
     | Success (_, ps) ->
         if !tacdbg then

@@ -18,6 +18,7 @@ type pattern =
     | Pat_Cons     : fv -> list pattern -> pattern  // A fully applied constructor
     | Pat_Var      : bv -> pattern                  // Pattern bound variable
     | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
+    | Pat_Dot_Term : bv -> term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
 
 type branch = pattern * term  // | pattern -> term
 
@@ -48,7 +49,9 @@ type term_view =
   | Tv_Uvar   : int -> typ -> term_view
   | Tv_Let    : recf:bool -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
-  | Tv_Unknown : term_view // Baked in "None"
+  | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
+  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
+  | Tv_Unknown  : term_view // Baked in "None"
 
 // Very basic for now
 noeq
@@ -110,6 +113,12 @@ let smaller tv t =
 
     | Tv_Match t1 brs ->
         t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)
+
+    | Tv_AscribedT e ty tac ->
+      e << t /\ ty << t /\ tac << t
+
+    | Tv_AscribedC e c tac ->
+      e << t /\ c << t /\ tac << t
 
     | Tv_Type _
     | Tv_Const _

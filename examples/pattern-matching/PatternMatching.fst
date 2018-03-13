@@ -238,6 +238,8 @@ let term_head t : string =
   | Tv_Uvar i t -> "Tv_Uvar"
   | Tv_Let r b t1 t2 -> "Tv_Let"
   | Tv_Match t branches -> "Tv_Match"
+  | Tv_AscribedT _ _ _ -> "Tv_AscribedT"
+  | Tv_AscribedC _ _ _ -> "Tv_AscribedC"
   | Tv_Unknown -> "Tv_Unknown"
 
 let string_of_match_exception = function

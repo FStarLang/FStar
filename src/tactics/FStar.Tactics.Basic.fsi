@@ -71,10 +71,11 @@ val pointwise : direction -> tac<unit> -> tac<unit>
 val topdown_rewrite: (term -> tac<(bool * FStar.BigInt.t)>) -> tac<unit> -> tac<unit>
 val trefl : tac<unit>
 
-val dup : tac<unit>
-val flip : tac<unit>
-val later : tac<unit>
-val qed : tac<unit>
+val dup     : tac<unit>
+val flip    : tac<unit>
+val later   : tac<unit>
+val dismiss : tac<unit>
+val qed     : tac<unit>
 
 val cases : term -> tac<(term * term)>
 

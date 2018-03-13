@@ -4,6 +4,7 @@ include ../Makefile.include
 .PHONY: neg
 
 all:	Apply.uver		\
+	ApplyLemma.uver		\
 	Canon.uver		\
 	CanonMonoid.uver	\
 	CanonCommMonoid.uver	\
@@ -15,7 +16,6 @@ all:	Apply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	VC.uver			\
-	TermEq.uver		\
 	Div.uver		\
 	Change.uver		\
 	Tutorial.uver		\

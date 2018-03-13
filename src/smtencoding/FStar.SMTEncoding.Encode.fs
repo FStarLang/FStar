@@ -764,7 +764,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
         let tv = RE.embed_term_view t.pos (R.inspect qt) in
-        let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
+        let t = U.mk_app RD.fstar_refl_pack.RD.t [S.as_arg tv] in
         encode_term t env
 
       | Tm_meta(t, _) ->

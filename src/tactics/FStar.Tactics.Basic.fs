@@ -81,11 +81,6 @@ let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
 let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
-(* TODO: If I define this as *)
-(*     (U.comp_to_comp_typ c).result_typ *)
-(*     then I get  *)
-(*     Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error. *)
-(*     Assertion failed: Computation type without universe *)
 let comp_to_typ (c:comp) : typ =
     match c.n with
     | Total (t, _)
@@ -723,6 +718,22 @@ let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
                             (tts goal.context goal.goal_ty))
     )))
 
+// returns pre and post
+let lemma_or_sq (c : comp) : option<(term * term)> =
+    let ct = U.comp_to_comp_typ_nouniv c in
+    if lid_equals ct.effect_name PC.effect_Lemma_lid then
+        let pre, post = match ct.effect_args with
+                        | pre::post::_ -> fst pre, fst post
+                        | _ -> failwith "apply_lemma: impossible: not a lemma"
+        in
+        // Lemma post is thunked, and is specialized to U_zero
+        let post = U.mk_app post [S.as_arg U.exp_unit] in
+        Some (pre, post)
+    else if U.is_pure_effect ct.effect_name then
+        map_opt (U.un_squash ct.result_typ) (fun post -> (U.t_true, post))
+    else
+        None
+
 let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
@@ -732,7 +743,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind cur_goal (fun goal ->
     bind (__tc goal.context tm) (fun (tm, t, guard) ->
     let bs, comp = U.arrow_formals_comp t in
-    if not (U.is_lemma_comp comp) then fail "not a lemma" else
+    match lemma_or_sq comp with
+    | None -> fail "not a lemma or squashed function"
+    | Some (pre, post) ->
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
@@ -750,13 +763,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
        bs
     in
     let uvs = List.rev uvs in
-    let comp = SS.subst_comp subst comp in
-    let pre, post = match (U.comp_to_comp_typ comp).effect_args with
-                    | pre::post::_ -> fst pre, fst post
-                    | _ -> failwith "apply_lemma: impossible: not a lemma"
-    in
-    // Lemma post is thunked, and is specialized to U_zero
-    let post = U.mk_app post [S.as_arg U.exp_unit] in
+    let pre  = SS.subst subst pre in
+    let post = SS.subst subst post in
     bind (do_unify goal.context (U.mk_squash U_zero post) goal.goal_ty) (fun b ->
     if not b
     then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"

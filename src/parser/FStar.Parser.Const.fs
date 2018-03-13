@@ -347,4 +347,7 @@ let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
 let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange
+let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FStar.Range.dummyRange
 let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange
+let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Range.dummyRange
+let norm_step_lid = lid_of_path (["FStar"; "Syntax"; "Embeddings"; "norm_step"]) FStar.Range.dummyRange

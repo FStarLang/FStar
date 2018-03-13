@@ -333,3 +333,6 @@ let get_guard_policy () : Tac guard_policy = TAC?.reflect (__get_guard_policy)
 
 assume val __set_guard_policy : guard_policy -> __tac unit
 let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_policy p)
+
+assume val __dismiss : __tac unit
+let dismiss () : Tac unit = TAC?.reflect __dismiss
