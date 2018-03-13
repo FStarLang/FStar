@@ -385,12 +385,12 @@ let compile_bind
       let (v_, _) = T.inspect_binder v in
       let v' = T.pack (T.Tv_Var v_) in
       let t2' = T.mk_app t2 [
-	v', T.Q_Explicit;
+       v', T.Q_Explicit;
       ]
       in
       let y_ = compile t2' y' in
       let res = T.mk_app bind_sz_tm [
-	(t1, T.Q_Implicit);
+       (t1, T.Q_Implicit);
         (t2, T.Q_Implicit);
         (x, T.Q_Implicit);
         (x_, T.Q_Explicit);
@@ -426,12 +426,12 @@ let compile_fvar
   (ty: T.term)
   (t: T.term)
 : T.Tac T.term
-= admit ();
-  T.print "compile_fvar";
+= T.print "compile_fvar";
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
-  match ins with
-  | T.Tv_FVar v ->
+  let test = T.Tv_FVar? ins in
+  tassert test;
+  let (T.Tv_FVar v) = ins in
     let v' = unfold_fv v in
     let t' = T.mk_app v' (neutralize_argv t ar) in
     // unfolding might have introduced a redex,
@@ -448,7 +448,6 @@ let compile_fvar
     ]
     in
     res
-  | _ -> T.fail "Not a FVar"
 
 let compile_ifthenelse
   (ifthenelse_sz_tm: T.term)
