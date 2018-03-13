@@ -8,6 +8,9 @@
 
 module PatternMatching
 
+// JP: this file does not seem to type-check without this option.
+#set-options "--use_two_phase_tc true"
+
 /// Contents
 /// ========
 ///
@@ -167,9 +170,14 @@ let and_elim' (h: binder) : Tac unit =
   and_elim (pack (Tv_Var (bv_of_binder h)));
   clear h
 
+(** Use a hypothesis at type a to satisfy a goal at type squash a *)
 let exact_hyp (a: Type0) (h: binder) : Tac unit =
   let hd = quote (FStar.Squash.return_squash #a) in
   exact (mk_app hd [((pack (Tv_Var (bv_of_binder h))), Q_Explicit)])
+
+(** Use a hypothesis h (of type a) to satisfy a goal at type a *)
+let exact_hyp' (h: binder): Tac unit =
+  exact (pack (Tv_Var (bv_of_binder h)))
 
 let print_binder (b: binder) : Tac unit =
   print (term_to_string (type_of_binder b))
@@ -852,7 +860,7 @@ let _ =
 let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
   assert_by_tactic ((a ==> d) ==> (b ==> d) ==> (c ==> d) ==> a ==> d)
     (fun () -> repeat' implies_intro';
-               gpm #unit (fun (a b: Type0) (h: hyp (a ==> b)) ->
+               gpm (fun (a b: Type0) (h: hyp (a ==> b)) ->
                            print (binder_to_string h);
                            fail "fail here" <: Tac unit);
                done ())
