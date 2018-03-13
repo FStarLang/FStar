@@ -9,15 +9,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "a5012477892e32312eb7f37821bf531d"
-    ],
-    [
-      "Bug128.subst",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "81d42b0721e148dd42892760c38c6c28"
     ]
   ]
 ]

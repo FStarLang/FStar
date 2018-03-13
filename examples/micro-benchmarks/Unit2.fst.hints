@@ -58,15 +58,6 @@
       "b7ce4424f2cf1a04ab3c152ff02ed482"
     ],
     [
-      "Unit2.uu___is_Int",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4661e44dcb4f230c63594727c72b0b3e"
-    ],
-    [
       "Unit2.__proj__Int__item__i",
       1,
       2,
@@ -77,16 +68,7 @@
         "refinement_interpretation_Unit2_Tm_refine_a80b1732c37b674c773643729bebf97c"
       ],
       0,
-      "792b53961a284d28b09dd6dc6efd8592"
-    ],
-    [
-      "Unit2.uu___is_Bool",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1599ee5a4ea4e5e721f6a0a9e447a41d"
+      "537b4d16e5fef7f16f3cd9cd46b9c049"
     ],
     [
       "Unit2.__proj__Bool__item__b",
@@ -99,7 +81,7 @@
         "refinement_interpretation_Unit2_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
       ],
       0,
-      "aaec7c9369e35150ddcd9a87e0b6e016"
+      "aa6342f3d179530316f005a7fddeae93"
     ],
     [
       "Unit2.f",
@@ -114,7 +96,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
       ],
       0,
-      "2652ff608800e0b2efb57b7c2e6f6c4a"
+      "e5251e2e5a23cb1a5d3c7b5cbe5b3fe8"
     ],
     [
       "Unit2.f2",
@@ -123,7 +105,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5cebeaf39dd37b041ad4b505a7d38922"
+      "870bef46d53fc833e3687d5344f83ce3"
     ],
     [
       "Unit2.test",
@@ -136,7 +118,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ae8f52884e75b11b067e0e94a6215a7f"
+      "eb3f79d77066d6178b3a1d5c73c2b2d7"
     ],
     [
       "Unit2.test1",
@@ -145,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "ae4f96d757a7ebfd24f0ff632a23bf16"
+      "9233623dde29bf68e738c7b711d844e1"
     ],
     [
       "Unit2.test2",
@@ -154,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "3390de6376af5eed2f57d81e01aa7317"
+      "1dcebe60eaca6a4b0ae82a9035fd5775"
     ],
     [
       "Unit2.test3",
@@ -163,7 +145,7 @@
       1,
       [ "@query", "equation_Prims.nat" ],
       0,
-      "e750c23a98779d4b56f6c64264a0c5fe"
+      "3eb7352edb2fd6ee2af517702a401ee5"
     ],
     [
       "Unit2.test5",
@@ -172,7 +154,7 @@
       1,
       [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
       0,
-      "52b4df05f6f42ce16e3d98b6bb94e699"
+      "3d9836f785cbdb1345841fb716e4c270"
     ],
     [
       "Unit2.test6",
@@ -181,7 +163,7 @@
       1,
       [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
       0,
-      "841a0962e941a5629b71ce2c527d5cb3"
+      "cfeb42297ddcff17bb2c4759e23dfe2c"
     ],
     [
       "Unit2.t",
@@ -192,16 +174,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "0dcd34191331729cc8b8b42984d011bf"
-    ],
-    [
-      "Unit2.uu___is_Int",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3bcccd0a1a29235c86148052dd48a34d"
+      "db9a3740ca4a89b3e519ba47d9c440d5"
     ],
     [
       "Unit2.__proj__Int__item__i",
@@ -214,16 +187,7 @@
         "refinement_interpretation_Unit2_Tm_refine_a80b1732c37b674c773643729bebf97c"
       ],
       0,
-      "0c560b8fad0a4380d107bb0459900496"
-    ],
-    [
-      "Unit2.uu___is_Bool",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8fe03a7b249f96024d6720a86008b456"
+      "b5506601dc3a85d86c0399409fc9be35"
     ],
     [
       "Unit2.__proj__Bool__item__b",
@@ -236,7 +200,7 @@
         "refinement_interpretation_Unit2_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
       ],
       0,
-      "24ece3ce4b0802c4d540570480c782fa"
+      "5cab4f083c09ae4ee51d79aba915b6a9"
     ],
     [
       "Unit2.f",
@@ -251,7 +215,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
       ],
       0,
-      "778303a4fd686a04997f0498ef2510e5"
+      "53cd77b9415ec790680b76c3a25eb1f1"
     ],
     [
       "Unit2.f2",
@@ -260,7 +224,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "04aed1735ce462c1d69d53fffe0a58af"
+      "d1bbff4ba54b496cc8aeed4627c1cd66"
     ],
     [
       "Unit2.test",
@@ -273,7 +237,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d778d4ccd1e18169aaf2552325e330cc"
+      "4ed2f6b193bd10295c450924cb8a0f2b"
     ]
   ]
 ]

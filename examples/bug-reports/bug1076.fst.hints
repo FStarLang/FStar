@@ -2,24 +2,6 @@
   "ÔÕçX∑ûx˙Qê≤›€Ec#",
   [
     [
-      "Bug1076.uu___is_Const0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6888429d05e1c4ae21ab9555094a1a05"
-    ],
-    [
-      "Bug1076.uu___is_Const1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f96f6704dc4bd802a2ca0437e66b1b7a"
-    ],
-    [
       "Bug1076.__proj__Const1__item___0",
       1,
       2,
@@ -30,7 +12,7 @@
         "refinement_interpretation_Bug1076_Tm_refine_5cdcca8bdc4b0558b575402415d68f74"
       ],
       0,
-      "3531b9de849d73a546bc1d0b2a66fda2"
+      "46a86463999cf7466eca9d9620210c07"
     ]
   ]
 ]
