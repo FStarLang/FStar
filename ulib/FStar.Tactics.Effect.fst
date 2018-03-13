@@ -47,7 +47,7 @@ unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps
                      | Failed msg q -> post (Failed msg q))
 
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
-    fun ps post -> forall post'. (forall (r:__result a).{:pattern (guard_free (post' r))} post r <==> post' r) ==> wp ps post'
+    fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
 
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
