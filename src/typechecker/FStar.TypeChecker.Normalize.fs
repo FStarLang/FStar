@@ -1012,6 +1012,23 @@ let rec maybe_simplify_aux cfg env stack tm =
             end
         | _ -> None
     in
+    let is_const_match (phi : term) : option<bool> =
+        match (SS.compress phi).n with
+        (* Trying to be efficient, but just checking if they all agree *)
+        (* Note, if we wanted to do this for any term instead of just True/False
+         * we need to open the terms *)
+        | Tm_match (_, br::brs) ->
+            let (_, _, e) = br in
+            let r = begin match simp_t e with
+            | None -> None
+            | Some b -> if List.for_all (fun (_, _, e') -> simp_t e' = Some b) brs
+                        then Some b
+                        else None
+            end
+            in
+            r
+        | _ -> None
+    in
     let maybe_auto_squash t =
         if U.is_sub_singleton t
         then t
@@ -1159,6 +1176,12 @@ let rec maybe_simplify_aux cfg env stack tm =
         begin match simp_t t with
         | Some true -> bv.sort
         | Some false -> tm
+        | None -> tm
+        end
+    | Tm_match _ ->
+        begin match is_const_match tm with
+        | Some true -> w U.t_true
+        | Some false -> w U.t_false
         | None -> tm
         end
     | _ -> tm
@@ -2008,7 +2031,6 @@ and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp
           let flags = filter_out_lcomp_cflags rc.residual_flags in
           Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
        | _ -> lopt
-
 
 and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on *)
