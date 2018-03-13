@@ -937,263 +937,6 @@ let reduce_equality cfg tm =
     reduce_primops ({cfg with steps = { default_steps with primops = true };
                               primitive_steps=equality_ops}) tm
 
-(*******************************************************************)
-(* Simplification steps are not part of definitional equality      *)
-(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
-(*******************************************************************)
-let rec maybe_simplify_aux cfg env stack tm =
-    let tm = reduce_primops cfg env stack tm in
-    if not <| cfg.steps.simplify then tm
-    else
-    let w t = {t with pos=tm.pos} in
-    let simp_t t =
-        match t.n with
-        | Tm_meta ({n = Tm_fvar fv}, _) // catch annotated subformulae too
-        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
-        | Tm_meta ({n = Tm_fvar fv}, _)
-        | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
-        | _ -> None
-    in
-    let rec args_are_binders args bs =
-        match args, bs with
-        | (t, _)::args, (bv, _)::bs ->
-            begin match (SS.compress t).n with
-            | Tm_name bv' -> S.bv_eq bv bv' && args_are_binders args bs
-            | _ -> false
-            end
-        | [], [] -> true
-        | _, _ -> false
-    in
-    let is_applied (bs:binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
-        let hd, args = U.head_and_args' t in
-        match (SS.compress hd).n with
-        | Tm_name bv when args_are_binders args bs ->
-            (* BU.print3 "GG got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n" *)
-            (*             (Print.term_to_string t) *)
-            (*             (Print.bv_to_string bv) *)
-            (*             (Print.term_to_string hd); *)
-            Some bv
-        | _ -> None
-    in
-    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
-        match is_squash t with
-        | Some (_, t') -> is_applied bs t'
-        | _ -> begin match is_auto_squash t with
-               | Some (_, t') -> is_applied bs t'
-               | _ -> is_applied bs t
-               end
-    in
-    // A very F*-specific optimization:
-    //  1)                        (p ==> E[p])     ~>     E[True]
-    //  2)  (forall j1 j2 ... jn. p j1 j2 ... jn) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
-    let is_quantified_true (phi : term) : option<term> =
-        match U.destruct_typ_as_formula phi with
-        | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
-            begin match U.destruct_typ_as_formula p with
-            // Case 1)
-            | None -> begin match (SS.compress p).n with
-                      | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_true)] q)
-                      | _ -> None
-                      end
-
-            // Case 2)
-            | Some (QAll (bs, pats, phi)) ->
-                begin match is_applied_maybe_squashed bs phi with
-                | Some bv ->
-                    let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
-                    Some (SS.subst [NT (bv, ftrue)] q)
-                | None ->
-                    None
-                end
-
-            | _ -> None
-            end
-        | _ -> None
-    in
-    let is_const_match (phi : term) : option<bool> =
-        match (SS.compress phi).n with
-        (* Trying to be efficient, but just checking if they all agree *)
-        (* Note, if we wanted to do this for any term instead of just True/False
-         * we need to open the terms *)
-        | Tm_match (_, br::brs) ->
-            let (_, _, e) = br in
-            let r = begin match simp_t e with
-            | None -> None
-            | Some b -> if List.for_all (fun (_, _, e') -> simp_t e' = Some b) brs
-                        then Some b
-                        else None
-            end
-            in
-            r
-        | _ -> None
-    in
-    let maybe_auto_squash t =
-        if U.is_sub_singleton t
-        then t
-        else U.mk_auto_squash U_zero t
-    in
-    let squashed_head_un_auto_squash_args t =
-        //The head of t is already a squashed operator, e.g. /\ etc.
-        //no point also squashing its arguments if they're already in U_zero
-        let maybe_un_auto_squash_arg (t,q) =
-            match U.is_auto_squash t with
-            | Some (U_zero, t) ->
-             //if we're squashing from U_zero to U_zero
-             // then just remove it
-              t, q
-            | _ ->
-              t,q
-        in
-        let head, args = U.head_and_args t in
-        let args = List.map maybe_un_auto_squash_arg args in
-        S.mk_Tm_app head args None t.pos
-    in
-    let rec clearly_inhabited (ty : typ) : bool =
-        match (U.unmeta ty).n with
-        | Tm_uinst (t, _) -> clearly_inhabited t
-        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
-        | Tm_fvar fv ->
-            let l = S.lid_of_fv fv in
-               (Ident.lid_equals l PC.int_lid)
-            || (Ident.lid_equals l PC.bool_lid)
-            || (Ident.lid_equals l PC.string_lid)
-            || (Ident.lid_equals l PC.exn_lid)
-        | _ -> false
-    in
-    let simplify arg = (simp_t (fst arg), arg) in
-    let tm = match is_quantified_true tm with
-             | Some tm ->
-                (* We need to recurse! *)
-                maybe_simplify_aux cfg env stack tm
-             | None -> tm
-    in
-    match (SS.compress tm).n with
-    | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
-    | Tm_app({n=Tm_fvar fv}, args) ->
-      if S.fv_eq_lid fv PC.and_lid
-      then match args |> List.map simplify with
-           | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
-           | [(Some false, _); _]
-           | [_; (Some false, _)] -> w U.t_false
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.or_lid
-      then match args |> List.map simplify with
-           | [(Some true, _); _]
-           | [_; (Some true, _)] -> w U.t_true
-           | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.imp_lid
-      then match args |> List.map simplify with
-           | [_; (Some true, _)]
-           | [(Some false, _); _] -> w U.t_true
-           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
-           | [(_, (p, _)); (_, (q, _))] ->
-             if U.term_eq p q
-             then w U.t_true
-             else squashed_head_un_auto_squash_args tm
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.iff_lid
-      then match args |> List.map simplify with
-           | [(Some true, _)  ; (Some true, _)]
-           | [(Some false, _) ; (Some false, _)] -> w U.t_true
-           | [(Some true, _)  ; (Some false, _)]
-           | [(Some false, _) ; (Some true, _)]  -> w U.t_false
-           | [(_, (arg, _))   ; (Some true, _)]
-           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
-           | [(_, (p, _)); (_, (q, _))] ->
-             if U.term_eq p q
-             then w U.t_true
-             else squashed_head_un_auto_squash_args tm
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.not_lid
-      then match args |> List.map simplify with
-           | [(Some true, _)] ->  w U.t_false
-           | [(Some false, _)] -> w U.t_true
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.forall_lid
-      then match args with
-           (* Simplify ∀x. True to True *)
-           | [(t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
-                     (match simp_t body with
-                     | Some true -> w U.t_true
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
-                     (match simp_t body with
-                     | Some true -> w U.t_true
-                     | Some false when clearly_inhabited ty -> w U.t_false
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           | _ -> tm
-      else if S.fv_eq_lid fv PC.exists_lid
-      then match args with
-           (* Simplify ∃x. False to False *)
-           | [(t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
-                     (match simp_t body with
-                     | Some false -> w U.t_false
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
-                     (match simp_t body with
-                     | Some false -> w U.t_false
-                     | Some true when clearly_inhabited ty -> w U.t_true
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           | _ -> tm
-      else if S.fv_eq_lid fv PC.b2t_lid
-      then match args with
-           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
-           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
-           | _ -> tm //its arg is a bool, can't unsquash
-      else begin
-           match U.is_auto_squash tm with
-           | Some (U_zero, t)
-             when U.is_sub_singleton t ->
-             //remove redundant auto_squashes
-             t
-           | _ ->
-             reduce_equality cfg env stack tm
-      end
-    | Tm_refine (bv, t) ->
-        begin match simp_t t with
-        | Some true -> bv.sort
-        | Some false -> tm
-        | None -> tm
-        end
-    | Tm_match _ ->
-        begin match is_const_match tm with
-        | Some true -> w U.t_true
-        | Some false -> w U.t_false
-        | None -> tm
-        end
-    | _ -> tm
-
-let maybe_simplify cfg env stack tm =
-    let tm' = maybe_simplify_aux cfg env stack tm in
-    if cfg.debug.b380
-    then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
-                   (if cfg.steps.simplify then "" else "NOT ")
-                   (Print.term_to_string tm) (Print.term_to_string tm');
-    tm'
-
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
@@ -2031,6 +1774,263 @@ and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp
           let flags = filter_out_lcomp_cflags rc.residual_flags in
           Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
        | _ -> lopt
+
+and maybe_simplify cfg env stack tm =
+    let tm' = maybe_simplify_aux cfg env stack tm in
+    if cfg.debug.b380
+    then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
+                   (if cfg.steps.simplify then "" else "NOT ")
+                   (Print.term_to_string tm) (Print.term_to_string tm');
+    tm'
+
+(*******************************************************************)
+(* Simplification steps are not part of definitional equality      *)
+(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(*******************************************************************)
+and maybe_simplify_aux cfg env stack tm =
+    let tm = reduce_primops cfg env stack tm in
+    if not <| cfg.steps.simplify then tm
+    else
+    let w t = {t with pos=tm.pos} in
+    let simp_t t =
+        match t.n with
+        | Tm_meta ({n = Tm_fvar fv}, _) // catch annotated subformulae too
+        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
+        | Tm_meta ({n = Tm_fvar fv}, _)
+        | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
+        | _ -> None
+    in
+    let rec args_are_binders args bs =
+        match args, bs with
+        | (t, _)::args, (bv, _)::bs ->
+            begin match (SS.compress t).n with
+            | Tm_name bv' -> S.bv_eq bv bv' && args_are_binders args bs
+            | _ -> false
+            end
+        | [], [] -> true
+        | _, _ -> false
+    in
+    let is_applied (bs:binders) (t : term) : option<bv> =
+        (* BU.print2 "GG is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        let hd, args = U.head_and_args' t in
+        match (SS.compress hd).n with
+        | Tm_name bv when args_are_binders args bs ->
+            (* BU.print3 "GG got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n" *)
+            (*             (Print.term_to_string t) *)
+            (*             (Print.bv_to_string bv) *)
+            (*             (Print.term_to_string hd); *)
+            Some bv
+        | _ -> None
+    in
+    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
+        (* BU.print2 "GG is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        match is_squash t with
+        | Some (_, t') -> is_applied bs t'
+        | _ -> begin match is_auto_squash t with
+               | Some (_, t') -> is_applied bs t'
+               | _ -> is_applied bs t
+               end
+    in
+    // A very F*-specific optimization:
+    //  1)                        (p ==> E[p])     ~>     E[True]
+    //  2)  (forall j1 j2 ... jn. p j1 j2 ... jn) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
+    let is_quantified_true (phi : term) : option<term> =
+        match U.destruct_typ_as_formula phi with
+        | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
+            begin match U.destruct_typ_as_formula p with
+            // Case 1)
+            | None -> begin match (SS.compress p).n with
+                      | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_true)] q)
+                      | _ -> None
+                      end
+
+            // Case 2)
+            | Some (QAll (bs, pats, phi)) ->
+                begin match is_applied_maybe_squashed bs phi with
+                | Some bv ->
+                    let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
+                    Some (SS.subst [NT (bv, ftrue)] q)
+                | None ->
+                    None
+                end
+
+            | _ -> None
+            end
+        | _ -> None
+    in
+    let is_const_match (phi : term) : option<bool> =
+        match (SS.compress phi).n with
+        (* Trying to be efficient, but just checking if they all agree *)
+        (* Note, if we wanted to do this for any term instead of just True/False
+         * we need to open the terms *)
+        | Tm_match (_, br::brs) ->
+            let (_, _, e) = br in
+            let r = begin match simp_t e with
+            | None -> None
+            | Some b -> if List.for_all (fun (_, _, e') -> simp_t e' = Some b) brs
+                        then Some b
+                        else None
+            end
+            in
+            r
+        | _ -> None
+    in
+    let maybe_auto_squash t =
+        if U.is_sub_singleton t
+        then t
+        else U.mk_auto_squash U_zero t
+    in
+    let squashed_head_un_auto_squash_args t =
+        //The head of t is already a squashed operator, e.g. /\ etc.
+        //no point also squashing its arguments if they're already in U_zero
+        let maybe_un_auto_squash_arg (t,q) =
+            match U.is_auto_squash t with
+            | Some (U_zero, t) ->
+             //if we're squashing from U_zero to U_zero
+             // then just remove it
+              t, q
+            | _ ->
+              t,q
+        in
+        let head, args = U.head_and_args t in
+        let args = List.map maybe_un_auto_squash_arg args in
+        S.mk_Tm_app head args None t.pos
+    in
+    let rec clearly_inhabited (ty : typ) : bool =
+        match (U.unmeta ty).n with
+        | Tm_uinst (t, _) -> clearly_inhabited t
+        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
+        | Tm_fvar fv ->
+            let l = S.lid_of_fv fv in
+               (Ident.lid_equals l PC.int_lid)
+            || (Ident.lid_equals l PC.bool_lid)
+            || (Ident.lid_equals l PC.string_lid)
+            || (Ident.lid_equals l PC.exn_lid)
+        | _ -> false
+    in
+    let simplify arg = (simp_t (fst arg), arg) in
+    match is_quantified_true tm with
+    (* We need to recurse, and maybe reduce further! *)
+    | Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
+    (* Otherwise try to simplify this point *)
+    | None ->
+    match (SS.compress tm).n with
+    | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
+    | Tm_app({n=Tm_fvar fv}, args) ->
+      if S.fv_eq_lid fv PC.and_lid
+      then match args |> List.map simplify with
+           | [(Some true, _); (_, (arg, _))]
+           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
+           | [(Some false, _); _]
+           | [_; (Some false, _)] -> w U.t_false
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.or_lid
+      then match args |> List.map simplify with
+           | [(Some true, _); _]
+           | [_; (Some true, _)] -> w U.t_true
+           | [(Some false, _); (_, (arg, _))]
+           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.imp_lid
+      then match args |> List.map simplify with
+           | [_; (Some true, _)]
+           | [(Some false, _); _] -> w U.t_true
+           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
+           | [(_, (p, _)); (_, (q, _))] ->
+             if U.term_eq p q
+             then w U.t_true
+             else squashed_head_un_auto_squash_args tm
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.iff_lid
+      then match args |> List.map simplify with
+           | [(Some true, _)  ; (Some true, _)]
+           | [(Some false, _) ; (Some false, _)] -> w U.t_true
+           | [(Some true, _)  ; (Some false, _)]
+           | [(Some false, _) ; (Some true, _)]  -> w U.t_false
+           | [(_, (arg, _))   ; (Some true, _)]
+           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+           | [(_, (p, _)); (_, (q, _))] ->
+             if U.term_eq p q
+             then w U.t_true
+             else squashed_head_un_auto_squash_args tm
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.not_lid
+      then match args |> List.map simplify with
+           | [(Some true, _)] ->  w U.t_false
+           | [(Some false, _)] -> w U.t_true
+           | _ -> squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.forall_lid
+      then match args with
+           (* Simplify ∀x. True to True *)
+           | [(t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some true -> w U.t_true
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
+           | [(ty, Some (Implicit _)); (t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some true -> w U.t_true
+                     | Some false when clearly_inhabited ty -> w U.t_false
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           | _ -> tm
+      else if S.fv_eq_lid fv PC.exists_lid
+      then match args with
+           (* Simplify ∃x. False to False *)
+           | [(t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some false -> w U.t_false
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
+           | [(ty, Some (Implicit _)); (t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some false -> w U.t_false
+                     | Some true when clearly_inhabited ty -> w U.t_true
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           | _ -> tm
+      else if S.fv_eq_lid fv PC.b2t_lid
+      then match args with
+           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
+           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
+           | _ -> tm //its arg is a bool, can't unsquash
+      else begin
+           match U.is_auto_squash tm with
+           | Some (U_zero, t)
+             when U.is_sub_singleton t ->
+             //remove redundant auto_squashes
+             t
+           | _ ->
+             reduce_equality cfg env stack tm
+      end
+    | Tm_refine (bv, t) ->
+        begin match simp_t t with
+        | Some true -> bv.sort
+        | Some false -> tm
+        | None -> tm
+        end
+    | Tm_match _ ->
+        begin match is_const_match tm with
+        | Some true -> w U.t_true
+        | Some false -> w U.t_false
+        | None -> tm
+        end
+    | _ -> tm
+
 
 and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on *)
