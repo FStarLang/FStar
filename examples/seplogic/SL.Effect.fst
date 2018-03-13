@@ -1,6 +1,6 @@
 module SL.Effect
 
-//open SepLogic.Heap
+open SepLogic.Heap
 
 
 (*** begin heap interface ***)
@@ -22,7 +22,8 @@ assume val ( <*> ): m0:memory -> m1:memory -> Tot memory
 (* lemmas *)
 assume val lemma_join_is_commutative (m0 m1:memory)
   :Lemma (requires True) (ensures ((m0 <*> m1) == (m1 <*> m0)))
-//         [SMTPat (m0 <*> m1); SMTPat (m1 <*> m0)]
+         [SMTPat (m0 <*> m1); 
+          SMTPat (m1 <*> m0)]
 assume val lemma_join_is_associative (m0 m1 m2:memory)
   :Lemma (requires True) (ensures ((m0 <*> (m1 <*> m2)) == ((m0 <*> m1) <*> m2)))
          [SMTPatOr [[SMTPat ((m0 <*> (m1 <*> m2)))];

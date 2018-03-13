@@ -208,8 +208,7 @@ let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
       process_command ();
       get_to_the_next_frame ();
       apply_lemma (`lemma_rewrite_sep_comm);
-      process_command ();
-      pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_join_is_commutative)) trefl))
+      process_command ())
 
 (*
  * four commands
@@ -232,9 +231,7 @@ let swap (r1 r2:ref int) (m n:int)
 	        process_command ();
 	        get_to_the_next_frame ();
 	        apply_lemma (`lemma_rewrite_sep_comm);
-                process_command ();
-                pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_emp_is_join_unit)) trefl);
-                pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_join_is_commutative)) trefl))
+                process_command ())
 
 (*
  * three commands, the inline pure expressions don't count
@@ -297,5 +294,4 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     apply_lemma (`lemma_rewrite_sep_assoc4);
 	     process_command ();
 	     get_to_the_next_frame ();
-	     process_command ();
-             pointwise (fun () -> or_else (fun () -> apply_lemma (`lemma_emp_is_join_unit')) trefl))
+	     process_command ())

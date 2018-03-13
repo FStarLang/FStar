@@ -2,6 +2,8 @@ module Shallow
 
 open SepLogic.Heap
 
+module S = FStar.Squash
+
 unfold let memory = m:memory{defined m}
 
 (* postcondition, a predicate on the return value and the output heap *)
@@ -23,7 +25,7 @@ let st (a:Type) (wp:st_wp a) =
 (* return *)
 let return (#a:Type) (x:a)
   : st a (fun post m0 -> m0 == emp /\ post (x, m0))
-  = fun post h0 -> FStar.Squash.return_squash (x, h0)
+  = fun post h0 -> S.return_squash (x, h0)
 
 (* frame wp by partitioning a heap whose memory is m into h0 and h1, and then prove post on the resulting heap and h1 *)
 let frame_wp0 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0 m1:memory) =
@@ -38,8 +40,6 @@ let frame_wp (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m:me
 (* the idea is to call frame_wp with (frame_post p)? yes, see frame below *)
 let frame_post (#a:Type) (p:post a) (m0:memory) ((x, m1):(a * memory)) = 
   defined (m0 <*> m1) /\ p (x, m0 <*> m1)
-
-module S = FStar.Squash
 
 let bind_exists
   (#a:Type)
@@ -63,7 +63,6 @@ let frame #a #wp f =
       bind_exists #(result a post) #memory #(frame_wp0 wp (frame_post post) (heap_memory h) m0) s' (fun m1 _ -> 
         assert (frame_wp0 wp (frame_post post) (heap_memory h) m0 m1);
         let (h0,h1) = split_heap m0 m1 h in
-        assert (disjoint_heaps h0 h1);
         let sqres : squash (result a (frame_post post (heap_memory h1))) = f (frame_post post (heap_memory h1)) h0 in 
         S.bind_squash #(result a (frame_post post (heap_memory h1)))
                       #(result a post)

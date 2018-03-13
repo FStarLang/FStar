@@ -67,6 +67,8 @@ val lemma_sep_unit (m:memory)
 
 val lemma_sep_comm (m0 m1:memory)
   : Lemma ((m0 <*> m1) == (m1 <*> m0))
+          [SMTPat (m0 <*> m1);         //Temporary SMTPat until the canonizer is ready
+           SMTPat (m1 <*> m0)]
           
 val lemma_sep_assoc (m0 m1 m2:memory)
   : Lemma ((m0 <*> (m1 <*> m2)) == ((m0 <*> m1) <*> m2))
