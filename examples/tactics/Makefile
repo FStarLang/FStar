@@ -1,7 +1,7 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-.PHONY: neg
+.PHONY: neg stringprintertest
 
 all:	Apply.uver		\
 	ApplyLemma.uver		\
@@ -57,6 +57,7 @@ all:	Apply.uver		\
 	MetaCoq.uver		\
 	StringPrinter.uver      \
 	StringPrinterRec.uver	\
+	stringprintertest \
 	neg
 	# launch			\
 
@@ -65,3 +66,11 @@ launch: Launch.fst
 
 neg:
 	$(MAKE) -C neg
+
+ifdef KREMLIN_HOME
+stringprintertest: OTHERFLAGS+=--include $(KREMLIN_HOME)/kremlib
+stringprintertest: StringPrinterTest.uver
+	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle StringPrinter -drop 'FStar.Tactics.*' -drop 'FStar.Reflection.*' StringPrinterTest.fst -skip-linking
+else
+stringprintertest:
+endif
