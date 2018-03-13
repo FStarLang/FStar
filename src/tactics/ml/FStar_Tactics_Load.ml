@@ -51,7 +51,7 @@ let compile_modules dir ms =
    let compile m =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
-     let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
+     let args = ["ocamlopt"; "-shared"; "-g"] (* FIXME shell injection *)
                 @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
