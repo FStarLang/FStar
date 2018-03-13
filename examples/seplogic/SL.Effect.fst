@@ -136,3 +136,7 @@ val ( ! ) (#a:Type) (r:ref a)
 assume
 val ( := ) (#a:Type) (r:ref a) (v:a)
   :STATE unit (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post () (r |> v))
+
+assume
+val alloc (#a:Type) (v:a)
+  :STATE (ref a) (fun post m0 -> m0 == emp /\ (forall r m1 . m1 == (r |> v) ==> post r m1))
