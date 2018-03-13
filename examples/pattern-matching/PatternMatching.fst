@@ -772,7 +772,7 @@ let match_abspat #b #a (abspat: a)
   let goal = cur_goal () in
   let hypotheses = binders_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
-  admit(); //NS: imprecision in the encoding of the impure result function type
+  admit();  //NS: imprecision in the encoding of the impure result function type
   solve_mp #matching_solution problem hypotheses goal (k continuation)
 
 (** Inspect the matching problem produced by parsing an abspat. **)
