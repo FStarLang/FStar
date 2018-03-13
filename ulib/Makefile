@@ -23,7 +23,7 @@ FSTAR_TAC_LIB_DROPPED_FST=$(FSTAR_TAC_LIB_MODULES:.fst=)
 FSTAR_TAC_LIB_DROPPED_EXTENSIONS=$(FSTAR_TAC_LIB_DROPPED_FST:.fsti=)
 FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPPED_EXTENSIONS)))
 
-fstarlib.mgen: *.fst *.fsti
+fstarlib.mgen: *.fst *.fsti ../src/ocaml-output/FStar_Pervasives.ml
 	mkdir -p ml/extracted
 	rm -f .depend.extract
 	FSTAR_FILES='$(FSTARLIB_MODULES)' \
@@ -112,17 +112,10 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	mkdir -p $(TACLIB_DIR)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
 
-clean:
+clean: clean_ocaml
 	rm -f .depend .depend.extract
-	rm -f *.mgen
 	rm -f *.checked *.source *.checked.lax
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
-	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
-	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
-	rm -f $(FSTARLIB_DIR)/*.cmx[as]
-	rm -f $(TACLIB_DIR)/*.cm[aiox]
-	rm -f $(TACLIB_DIR)/*.cmx[as]
-	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 clean_ocaml:
 	rm -f *.mgen

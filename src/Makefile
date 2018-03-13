@@ -157,7 +157,6 @@ ulib-extra:
 
 fstarlib:
 	+$(MAKE) -C ../ulib/ml
-	+$(MAKE) -C ../ulib install-fstar-tactics
 
 ulib:
 	+$(MAKE) -C ../ulib
