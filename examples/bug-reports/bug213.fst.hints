@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ce8fd178be19dd4befd2d5862cff460e"
+      "4716587f65a84da9943248ffcef51af0"
     ],
     [
       "Bug213.__proj__ExIntro__item__p",
@@ -16,14 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug213.cexists",
-        "proj_equation_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_p"
+        "@query", "proj_equation_Bug213.ExIntro_a",
+        "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "05954cd8cd776d230aa78d0eb5acc27b"
+      "7b5734df1a1bbb819a323b91007a2179"
     ],
     [
       "Bug213.__proj__ExIntro__item__x",
@@ -35,7 +32,7 @@
         "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "429c69e3d6af0b795e089e75f4e6f866"
+      "898c79ee19e01f4e984a5ee67b446c60"
     ],
     [
       "Bug213.__proj__ExIntro__item___3",
@@ -50,20 +47,16 @@
         "token_correspondence_Bug213.__proj__ExIntro__item__p"
       ],
       0,
-      "98dfd29fb3628d15718a6c080a4fcb3a"
+      "0557f47e8c9d641fcb95d6d072c74924"
     ],
     [
       "Bug213.foo",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "data_typing_intro_Bug213.IP@tok",
-        "fuel_guarded_inversion_Bug213.cexists",
-        "projection_inverse_Bug213.ExIntro_a"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro" ],
       0,
-      "1d8be471810ecefa35f913523b47c5d1"
+      "2f7b758b18a69c13dc7362af653b5f09"
     ]
   ]
 ]

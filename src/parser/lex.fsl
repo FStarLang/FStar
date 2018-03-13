@@ -230,6 +230,12 @@ let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let tvar_alt = constructor_start_char+
 
 rule token args = parse
+ | "%splice"
+     { SPLICE }
+ | "%`"
+     { PERC_BACKTICK }
+ | "quote"
+     { QUOTE }
  | ident
      { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
  | '`'

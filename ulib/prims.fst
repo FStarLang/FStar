@@ -155,9 +155,6 @@ assume new type range : Type0
 assume new type string : Type0
 assume HasEq_string: hasEq string
 
-irreducible let labeled (r:range) (msg:string) (b:Type) = b
-
-
 (* PURE effect *)
 let pure_pre = Type0
 let pure_post' (a:Type) (pre:Type) = (_:a{pre}) -> GTot Type0 // c.f. #57
@@ -260,7 +257,7 @@ type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-abstract type pattern = unit
+abstract type pattern :Type0 = unit
 // SMTPat and SMTPatOr desugar to these two
 irreducible let smt_pat (#a:Type) (x:a) : pattern = ()
 irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
@@ -327,18 +324,12 @@ type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
 
-(*    For the moment we require not just that the divisor is non-zero, *)
-(*    but also that the dividend is natural. This works around a *)
-(*    mismatch between the semantics of integer division in SMT-LIB and *)
-(*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
-(*    math Euclidian division), while for F#/OCaml ints the modulus has *)
-(*    the same sign as the dividend.                                    *)
-
-(*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
-(*    in OCaml. Although in F# they are still compiled to platform-specific *)
-(*    finite integers---this should eventually change to .NET BigInteger *)
+(*    Arbitrary precision ints are compiled to zarith (big_ints)       *)
+(*    in OCaml and to .NET BigInteger in F#. Both these operations are *)
+(*    Euclidean and are mapped to the corresponding theory symbols in  *)
+(*    the SMT encoding *)
 assume val op_Modulus            : int -> nonzero -> Tot int
-assume val op_Division           : nat -> nonzero -> Tot int
+assume val op_Division           : int -> nonzero -> Tot int
 
 let rec pow2 (x:nat) : Tot pos =
   match x with
@@ -358,7 +349,7 @@ assume val string_of_int: int -> Tot string
 (* Marking terms for normalization *)
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:Type0) = a
+abstract let normalize (a:Type0) :Type0 = a
 
 abstract
 noeq type norm_step =
@@ -386,8 +377,10 @@ abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
-val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
+
+irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
 
 (*
  * Pure and ghost inner let bindings are now always inlined during the wp computation, if:

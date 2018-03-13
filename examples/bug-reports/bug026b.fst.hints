@@ -8,19 +8,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f31e466f109dd2b8f2ce102971cd1b7f"
+      "71552ff9f21b153fe9dc644b4332dd70"
     ],
     [
       "Bug026b.bar",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug026b_Tm_refine_908043d23d9b610a14feef808af9da3d"
-      ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "0ca7f97b62a8f1fb423c0e288993ef68"
+      "e241197d8fb82bd92024baad5929e256"
     ]
   ]
 ]

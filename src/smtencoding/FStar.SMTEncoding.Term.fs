@@ -82,7 +82,7 @@ type op =
   | BvUext of Prims.int
   | NatToBv of Prims.int // need to explicitly define the size of the bitvector
   | BvToNat
-  | ITE 
+  | ITE
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
 
 type qop =
@@ -261,9 +261,9 @@ let boxStringFun     = mkBoxFunctions "BoxString"
 let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
 
 // Assume the Box/Unbox functions to be injective
-let isInjective s = 
+let isInjective s =
     if (FStar.String.length s >= 3) then
-        String.substring s 0 3 = "Box" && 
+        String.substring s 0 3 = "Box" &&
         not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
     else false
 
@@ -756,12 +756,12 @@ and mkPrelude z3options =
    basic ^ bcons ^ lex_ordering
 
 
-(* Generate boxing/unboxing functions for bitvectors of various sizes. *) 
-(* For ids, to avoid dealing with generation of fresh ids, 
-   I am computing them based on the size in this not very robust way. 
+(* Generate boxing/unboxing functions for bitvectors of various sizes. *)
+(* For ids, to avoid dealing with generation of fresh ids,
+   I am computing them based on the size in this not very robust way.
    z3options are only used by the prelude so passing the empty string should be ok. *)
-let mkBvConstructor (sz : int) = 
-    (fst (boxBitVecFun sz), 
+let mkBvConstructor (sz : int) =
+    (fst (boxBitVecFun sz),
         [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
     |> constructor_to_decl
 
@@ -787,9 +787,9 @@ let boxBool t     = maybe_elim_box (fst boxBoolFun) (snd boxBoolFun) t
 let unboxBool t   = maybe_elim_box (snd boxBoolFun) (fst boxBoolFun) t
 let boxString t   = maybe_elim_box (fst boxStringFun) (snd boxStringFun) t
 let unboxString t = maybe_elim_box (snd boxStringFun) (fst boxStringFun) t
-let boxBitVec (sz:int) t = 
+let boxBitVec (sz:int) t =
     elim_box true (fst (boxBitVecFun sz)) (snd (boxBitVecFun sz)) t
-let unboxBitVec (sz:int) t = 
+let unboxBitVec (sz:int) t =
     elim_box true (snd (boxBitVecFun sz)) (fst (boxBitVecFun sz)) t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
@@ -801,7 +801,7 @@ let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
-  | BitVec_sort sz -> unboxBitVec sz t  
+  | BitVec_sort sz -> unboxBitVec sz t
   | _ -> raise Impos
 
 
@@ -823,7 +823,7 @@ and print_smt_term_list_list (l:list<list<term>>) :string =
 let getBoxedInteger (t:term) =
   match t.tm with
   | App(Var s, [t2]) when s = fst boxIntFun ->
-    begin 
+    begin
     match t2.tm with
     | Integer n -> Some (int_of_string n)
     | _ -> None
@@ -842,13 +842,13 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
-    | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _]) 
+    | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
             when (FStar.Util.is_some (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
-    | _ -> 
+    | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng

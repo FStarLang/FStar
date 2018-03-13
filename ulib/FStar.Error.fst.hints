@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "86b3faed89bc94f63e8600e5728df8ac"
+      "5fd6a5192aca66d8dd034b39908914fb"
     ],
     [
       "FStar.Error.uu___is_Error",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2bb6905230b53f0474923e58917c0cbf"
+      "f97e5f7909a35ad370ef7f42cc7dcb68"
     ],
     [
       "FStar.Error.__proj__Error__item___0",
@@ -30,7 +30,7 @@
         "refinement_interpretation_FStar.Error_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
       ],
       0,
-      "83b58ae0505d836c464e6eaa563a96c0"
+      "056aa487825813024d58fbc4fef4897d"
     ],
     [
       "FStar.Error.uu___is_Correct",
@@ -39,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "1c693fabb485054648fa7981eefa6b04"
+      "ae80a6f3377d70e8d31dfff3d8146bfa"
     ],
     [
       "FStar.Error.__proj__Correct__item___0",
@@ -53,7 +53,7 @@
         "refinement_interpretation_FStar.Error_Tm_refine_9570651724fccc40ed9243df14ac4feb"
       ],
       0,
-      "567bec77a95495916ea259b6e2e40cd9"
+      "5ad2b031ca75d13576a8b6552189c6a8"
     ],
     [
       "FStar.Error.invertOptResult",
@@ -68,7 +68,61 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "980b48ce428bb9912f0b35aed93b2278"
+      "da59d78611049ca6f906fbc039db4691"
+    ],
+    [
+      "FStar.Error.optResult",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5d692a8e63a949be7473ba58878353a8"
+    ],
+    [
+      "FStar.Error.uu___is_Error",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ed3369ed6e4ba63012427c3ba4e0457b"
+    ],
+    [
+      "FStar.Error.__proj__Error__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Error.Error",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Error_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
+      ],
+      0,
+      "e072e0e4330ae3468cd750ddf0bca087"
+    ],
+    [
+      "FStar.Error.uu___is_Correct",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5aa4ec7ca282bbd4fe35925d3307c2e8"
+    ],
+    [
+      "FStar.Error.__proj__Correct__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Error.Correct",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Error_Tm_refine_9570651724fccc40ed9243df14ac4feb"
+      ],
+      0,
+      "1cb59829a936681edeea55b70191ae6e"
     ]
   ]
 ]

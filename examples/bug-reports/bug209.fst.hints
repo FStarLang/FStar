@@ -6,30 +6,18 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
-      ],
+      [ "@query" ],
       0,
-      "284e17262c6ac6c533a996e1a0750b82"
+      "2a804af209b1f51d25d8d9d835ddf9c1"
     ],
     [
       "Bug209.foo2",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
-      ],
+      [ "@query" ],
       0,
-      "f54b4a8541853c4298db81d2f2243000"
+      "8ca656470475e4d762b944ad999a72a9"
     ]
   ]
 ]

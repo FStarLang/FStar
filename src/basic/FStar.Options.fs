@@ -120,6 +120,7 @@ let defaults =
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
       ("debug_level"                  , List []);
+      ("defensive"                    , String "no");
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
@@ -134,7 +135,6 @@ let defaults =
       ("fs_typ_app"                   , Bool false);
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
-      ("gen_native_tactics"           , Unset);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
       ("hint_file"                    , Unset);
@@ -202,7 +202,8 @@ let defaults =
       ("use_two_phase_tc"             , Bool false);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
-      ("warn_error"                   , String "")]
+      ("warn_error"                   , String "");
+      ("use_extracted_interfaces"     , Bool false);]
 
 let init () =
    let o = peek () in
@@ -233,6 +234,7 @@ let get_codegen                 ()      = lookup_opt "codegen"                  
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
@@ -245,7 +247,6 @@ let get_extract_module          ()      = lookup_opt "extract_module"           
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
-let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -314,6 +315,7 @@ let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
+let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -502,8 +504,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "tactics"],
-        "Generate code for execution");
+        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
+        "Generate code for further compilation to executable code, or build a compiler plugin");
 
       ( noshort,
         "codegen-lib",
@@ -519,6 +521,15 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "debug_level",
         Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
         "Control the verbosity of debugging info");
+
+       (noshort,
+        "defensive",
+        EnumStr ["no"; "warn"; "fail"],
+        "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
+         if 'no', no checks are performed\n\t\t\
+         if 'warn', checks are performed and raise a warning when they fail\n\t\t\
+         if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
+         (default 'no')");
 
        ( noshort,
         "dep",
@@ -587,11 +598,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "fstar_home",
         PathStr "dir",
         "Set the FSTAR_HOME variable to <dir>");
-
-       ( noshort,
-         "gen_native_tactics",
-         PathStr "[path]",
-        "Compile all user tactics used in the module in <path>");
 
        ( noshort,
         "hide_uvar_nums",
@@ -956,6 +962,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [+r] enables range [r]\n\t\t\
          - [@r] makes range [r] fatal.");
 
+        ( noshort,
+        "use_extracted_interfaces",
+        Const (mk_bool true),
+        "Extract interfaces from the dependencies and use them for verification");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),
@@ -973,6 +984,7 @@ let settable = function
     | "admit_except"
     | "debug"
     | "debug_level"
+    | "defensive"
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
@@ -988,6 +1000,7 @@ let settable = function
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
+    | "__no_positivity"
     | "ugly"
     | "print_bound_var_types"
     | "print_effect_args"
@@ -1010,6 +1023,7 @@ let settable = function
     | "tactic_raw_binders"
     | "tactic_trace"
     | "tactic_trace_d"
+    | "__temp_fast_implicits"
     | "__temp_no_proj"
     | "reuse_hint_for"
     | "warn_error"
@@ -1186,10 +1200,21 @@ let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
-let codegen                      () = get_codegen                     ()
+type codegen_t = | OCaml | FSharp | Kremlin | Plugin
+let codegen                      () =
+    Util.map_opt
+           (get_codegen())
+           (function
+            | "OCaml" -> OCaml
+            | "FSharp" -> FSharp
+            | "Kremlin" -> Kremlin
+            | "Plugin" -> Plugin
+            | _ -> failwith "Impossible")
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
 let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
+let defensive                    () = get_defensive () <> "no"
+let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
@@ -1198,7 +1223,6 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
-let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
@@ -1278,6 +1302,7 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
+let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 
 let should_extract m =
     let m = String.lowercase m in
@@ -1315,6 +1340,3 @@ let should_extract m =
         (match get_extract_namespace (), get_extract_module() with
         | [], [] -> true //neither is set
         | _ -> should_extract_namespace m || should_extract_module m)
-
-let codegen_fsharp () =
-    codegen() = Some "FSharp"

@@ -3,6 +3,8 @@ module Tutorial
 open FStar.Tactics
 open FStar.List
 
+(* TODO: explanations needs to be updated for direct-style *)
+
 (*
 This file presents a walkthrough of the tactics engine in its current
 (July 23rd) state. It is mostly aimed at users and power users, leaving
@@ -63,7 +65,7 @@ standard output.
 
 val ex2 : unit -> Lemma True
 let ex2 () =
-    assert_by_tactic True (dump "Example 2")
+    assert_by_tactic True (fun () -> dump "Example 2")
 
 (* Gives:
 
@@ -100,10 +102,10 @@ and solve one of its subformulas.
 
 *)
 
-let tau3 : tactic unit =
-  Tactics.split;;
-  smt;;
-  trivial
+let tau3 () : Tac unit =
+  Tactics.split ();
+  smt ();
+  trivial ()
 
 let ex3 (x : nat) =
   assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3) tau3
@@ -155,11 +157,11 @@ following way:
 
 *)
 
-let is_conj : tactic bool =
-  g <-- cur_goal;
+let is_conj () : Tac bool =
+  let g = cur_goal () in
   match term_as_formula g with
-  | And _ _ -> return true
-  | _ -> return false
+  | And _ _ -> true
+  | _       -> false
 
 (*
 Now, we want a tactic that will call `split` when our goal is a
@@ -169,12 +171,17 @@ succession to each of the open goals.
 
 *)
 
-let rec split_all : tactic unit = fun () -> (
-  b <-- is_conj;
-  if b
-  then (Tactics.split;; iseq [split_all; split_all])
-  else (trytac trivial;; return ())
-  ) ()
+let rec split_all () : Tac unit =
+  if is_conj ()
+  then
+    begin
+    Tactics.split ();
+    iseq [split_all; split_all]
+    end
+  else
+    let _ = trytac trivial in
+    ()
+
 
 (*
 > The thunking is due to the fact that a `tactic unit` definition must

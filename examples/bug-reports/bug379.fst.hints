@@ -8,16 +8,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1815796a463dff0d0ac0c0dae0a076de"
+      "bc9656a1a14fa115dd68823bbb573fc4"
     ],
     [
       "Bug379.test3",
@@ -30,7 +28,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1b4148b2cf4540d080322b036719926b"
+      "9dd9a55eaf9c8e60abe7c10c045cd18c"
     ]
   ]
 ]

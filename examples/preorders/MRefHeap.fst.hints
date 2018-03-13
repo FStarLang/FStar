@@ -1,18 +1,14 @@
 [
-  "E\u0004ÎäÍ\u0012\u0011)≠4äy\u001c'√K",
+  "ù2W◊¥5àÁ]î™T3¸Má",
   [
     [
       "MRefHeap.contains",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.dfst",
-        "equation_FStar.Preorder.preorder", "equation_MRefHeap.preorder_t",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
+      [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "52f0d9e5326cd21fc7e4988bc7eaa21a"
+      "ba5e4aa381a26486105d073ffae144b8"
     ],
     [
       "MRefHeap.sel",
@@ -33,7 +29,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "c87f0797373268567e6f0ee31a7ba4d9"
+      "3a31be608e4c29ab6d225ca511a097d7"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -45,7 +41,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "577bb8900e5bc1da73b5d99e85edaa36"
+      "0900aa31884fa58630bd18029ebb47f9"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -96,7 +92,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "f72a83e10558fa12ac055aa374a4379c"
+      "fa98a0c90048c305f10feaed0c17287f"
     ],
     [
       "MRefHeap.upd",
@@ -108,7 +104,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "b8bdbc9e8d900fa290ec71b155a6b0ba"
+      "288b5d598e27c82d0a8066b9c7aa7fbf"
     ],
     [
       "MRefHeap.upd",
@@ -123,6 +119,7 @@
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
@@ -155,7 +152,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "9a70f762b1772fbb7915253ef1275874"
+      "31319cf1b4a596c67137ce2f4e1c1f0f"
     ],
     [
       "MRefHeap.emp",
@@ -176,7 +173,31 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "0126e9f3c437d00699b36bae4af6a4a1"
+      "efdfa0586b660f0a25f88494ba584e63"
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
+      ],
+      0,
+      "3d195f57099ed1d86e68d4bce4006068"
+    ],
+    [
+      "MRefHeap.upd",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
+      ],
+      0,
+      "2d2d1928ae31fd1a28627a025fa2cfc1"
     ]
   ]
 ]

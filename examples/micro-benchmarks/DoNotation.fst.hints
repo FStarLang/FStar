@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3ddb9982a0f58a0f7940a043e1ade25e"
+      "5199dd1dd141269081ec354ac2f073b1"
     ],
     [
       "DoNotation.uu___13",
@@ -23,12 +23,28 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit",
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "d3ce2ed7284a18e1689c8eb3a075afab"
+      "5a62d6498ecd11ea6a13f5ab81312d40"
+    ],
+    [
+      "DoNotation.add",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "5560ca71ddfa287d3037cf54aea5351f"
     ]
   ]
 ]

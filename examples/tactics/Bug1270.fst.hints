@@ -1,5 +1,5 @@
 [
-  "2ñ€µ[}†4·ã?Ï ¥\u0001\u0017",
+  "ú\u0019¸ú{Ìü‘Ó{Ò§É\u001fÃS",
   [
     [
       "Bug1270.test",
@@ -28,7 +28,36 @@
         "unit_typing"
       ],
       0,
-      "f29a248588a03bc18dd0c09d5f1a0d52"
+      "e788041d49a6879d4bf25db21b6ff05e"
+    ],
+    [
+      "Bug1270.test",
+      2,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Reflection.Basic.binders_of_env",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_Prims.unit",
+        "typing_FStar.Reflection.Basic.binders_of_env", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "1f8f27c802449afce94c24af5384784e"
     ]
   ]
 ]

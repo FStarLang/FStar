@@ -218,6 +218,7 @@ type raw_error =
   | Fatal_UnexpectedTerm
   | Fatal_UnexpectedTermInUniverse
   | Fatal_UnexpectedTermType
+  | Fatal_UnexpectedTermVQuote
   | Fatal_UnexpectedUniversePolymorphicReturn
   | Fatal_UnexpectedUniverseVariable
   | Fatal_UnfoldableDeprecated
@@ -243,7 +244,7 @@ type raw_error =
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
   | Fatal_WhenClauseNotSupported
-  | Fatal_CallNotImplemented
+  | Unused01
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
   | Warning_CachedFile
@@ -295,6 +296,12 @@ type raw_error =
   | Error_NoLetMutable
   | Error_BadImplicit
   | Warning_DeprecatedDefinition
+  | Fatal_SMTEncodingArityMismatch
+  | Warning_Defensive
+  | Warning_CantInspect
+  | Warning_NilGivenExplicitArgs
+  | Warning_ConsAppliedExplicitArgs
+  | Warning_UnembedBinderKnot
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -515,6 +522,7 @@ let default_flags =
   (Fatal_UnexpectedTerm                              , CFatal);
   (Fatal_UnexpectedTermInUniverse                    , CFatal);
   (Fatal_UnexpectedTermType                          , CFatal);
+  (Fatal_UnexpectedTermVQuote                        , CFatal);
   (Fatal_UnexpectedUniversePolymorphicReturn         , CFatal);
   (Fatal_UnexpectedUniverseVariable                  , CFatal);
   (Fatal_UnfoldableDeprecated                        , CFatal);
@@ -540,7 +548,7 @@ let default_flags =
   (Fatal_WrongResultTypeAfterConstrutor              , CFatal);
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
-  (Fatal_CallNotImplemented                          , CFatal);
+  (Unused01                                          , CFatal);
   (Warning_CallNotImplementedAsWarning               , CWarning);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
@@ -589,8 +597,16 @@ let default_flags =
   (Warning_MissingInterfaceOrImplementation          , CWarning);
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
   (Warning_ModuleOrFileNotFoundWarning               , CWarning);
+  (Error_NoLetMutable                                , CError);
   (Error_BadImplicit                                 , CError);
-  (Warning_DeprecatedDefinition                      , CWarning)]
+  (Warning_DeprecatedDefinition                      , CWarning);
+  (Fatal_SMTEncodingArityMismatch                    , CFatal);
+  (Warning_Defensive                                 , CWarning);
+  (Warning_CantInspect                               , CWarning);
+  (Warning_NilGivenExplicitArgs                      , CWarning);
+  (Warning_ConsAppliedExplicitArgs                   , CWarning);
+  (Warning_UnembedBinderKnot                         , CWarning);
+  ]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -734,9 +750,15 @@ let init_warn_error_flags =
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
 
+let defensive_errno = errno_of_error Warning_Defensive
+let lookup flags errno =
+    if errno = defensive_errno && Options.defensive_fail ()
+    then CError
+    else List.nth flags errno
+
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
-  match List.nth !flags errno with
+  match lookup !flags errno with
   | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->

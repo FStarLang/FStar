@@ -1,5 +1,5 @@
 [
-  "4U–kE\fRˆã(\\¸øl>+",
+  "´Så³&Wc\u001dùí—4‚kEv",
   [
     [
       "NatHeap.sel",
@@ -17,7 +17,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "edae09d83eb0a3611a2f3d9b46bb57f5"
+      "ac42a66abe47864b98ecc2ba3a061e15"
     ],
     [
       "NatHeap.alloc_ref",
@@ -29,13 +29,13 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "b6287e6b7cc65ada377a0343905ca404"
+      "6996da1cad0456e9eee3867d886d134f"
     ],
     [
       "NatHeap.alloc_ref",
       2,
       2,
-      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "NatHeap_interpretation_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
@@ -45,17 +45,17 @@
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_FStar.Pervasives.Native.Some",
-        "disc_equation_FStar.Pervasives.Native.None",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.contains",
         "equation_NatHeap.heap", "equation_NatHeap.ref",
         "equation_NatHeap.sel", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_NatHeap.heap",
+        "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion", "int_typing",
+        "int_inversion",
         "interpretation_NatHeap_Tm_abs_9523c8ec969b01870dab7becebc25a0b",
+        "kinding_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -63,18 +63,19 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mkdtuple2__2",
         "refinement_interpretation_NatHeap_Tm_refine_27a765ec9f014632e62c46d624b655dd",
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.Pervasives.Native.snd"
+        "token_correspondence_FStar.Pervasives.Native.snd",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
+        "typing_FStar.Pervasives.Native.fst",
+        "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "3ca03b3a277b688516bb81a661cba6d1"
+      "4eca4abc941955f3861f99d49bdf91a1"
     ],
     [
       "NatHeap.upd",
@@ -86,7 +87,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "5ab85ea44743ec8ae9ca5e93bd23b3ba"
+      "ba87bdb876b6821b57829263bac9278f"
     ],
     [
       "NatHeap.upd",
@@ -101,6 +102,7 @@
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.contains",
         "equation_NatHeap.heap", "equation_NatHeap.ref",
@@ -126,7 +128,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "39efdfe56bc57cac82b821bd7684bb42"
+      "b981e2b2aa93f573caa402bb597ac26d"
     ],
     [
       "NatHeap.emp",
@@ -147,20 +149,16 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "fe599a539b09a4e6512759cc0333f94a"
+      "cad2aeb489efb850c434d3d42076b5ea"
     ],
     [
       "NatHeap.max",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
+      [ "@query" ],
       0,
-      "a240567faea567bc92bf74d1af1c7943"
+      "eec0491e1bf9242304382d1c9461d77a"
     ],
     [
       "NatHeap.concat",
@@ -169,49 +167,48 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Pervasives.Native_interpretation_Tm_arrow_caf985f824d0c8c31cc1333a92d97b40",
         "NatHeap_interpretation_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
         "bool_typing", "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "constructor_distinct_Tm_unit",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_FStar.Pervasives.Native.None",
-        "data_elim_FStar.Pervasives.Native.Some",
+        "data_elim_Prims.Mkdtuple2",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.heap",
-        "equation_NatHeap.max", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.emp",
+        "equation_NatHeap.heap", "equation_NatHeap.max",
+        "equation_Prims.nat", "equation_Prims.pure_pre",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "function_token_typing_FStar.Pervasives.Native.snd",
-        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
+        "function_token_typing_NatHeap.emp",
+        "function_token_typing_Prims.nat",
+        "function_token_typing_Prims.pure_pre", "int_inversion",
+        "int_typing",
         "interpretation_NatHeap_Tm_abs_5bf241b6996f3e31b7abf98f26abedcc",
-        "interpretation_NatHeap_Tm_abs_e5c1afea98538c1d57da87032a1dee0c",
+        "kinding_Prims.dtuple2@tok",
         "kinding_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
         "lemma_FStar.Pervasives.invertOption",
         "primitive_Prims.op_GreaterThan",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_NatHeap_Tm_refine_27a765ec9f014632e62c46d624b655dd",
         "refinement_interpretation_NatHeap_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Pervasives.Native.snd",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "typing_FStar.Pervasives.Native.fst",
-        "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_NatHeap_Tm_abs_5bf241b6996f3e31b7abf98f26abedcc",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_NatHeap_Tm_abs_e5c1afea98538c1d57da87032a1dee0c"
       ],
       0,
-      "0101f4964861d3d23b3b7726da1d3e7f"
+      "7324139faa82200dac9c5eaf0c3e5725"
     ],
     [
       "NatHeap.consistent_refl",
@@ -223,7 +220,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "c8c0d82eac9bee86ee5cb65c5bde2751"
+      "0108129a2fa42b65fc694719833e00e1"
     ],
     [
       "NatHeap.emp_consistent",
@@ -242,7 +239,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "0b49ab3103cc71092c40ebea8bcf185c"
+      "b153879f49fbbd8e8bbf7e8944977b14"
     ],
     [
       "NatHeap.upd_consistent",
@@ -273,7 +270,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "5b95f86de89a0e42b2b46d172cc5606f"
+      "22a25b40ddac7f671acb95f3d6d99de6"
     ],
     [
       "NatHeap.alloc_ref_consistent",
@@ -306,7 +303,7 @@
         "typing_FStar.Pervasives.Native.fst", "typing_NatHeap.alloc_ref"
       ],
       0,
-      "9a8b960222e1e10052bb127fe7921291"
+      "5ab6d2a6171fe5d0054f8cc6475449cd"
     ],
     [
       "NatHeap.contains_sel",
@@ -326,7 +323,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "ead521802aacb1343e70dc913cbacdaa"
+      "c95d633c7ab618fbdd70fabb68b8b3de"
     ],
     [
       "NatHeap.contains_upd",
@@ -342,7 +339,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "d5ed506d4cad45f59941cfcddb0fc103"
+      "77039691b2031ab8324c105ec5ab1c8b"
     ],
     [
       "NatHeap.contains_emp",
@@ -363,7 +360,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "3e077eae9ccc30ab8db1fcada3aad174"
+      "959a550a2c669d8fe487443f20230bd2"
     ],
     [
       "NatHeap.sel_upd1",
@@ -375,7 +372,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "6bc1e64d6966d9088de55ada48627cf4"
+      "c4a7a3999f4ee324702b6274c4540a63"
     ],
     [
       "NatHeap.sel_upd1",
@@ -389,7 +386,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "c6ba01f9cddb0b25d460978cdaa0f279"
+      "cde3a3c90676d3dcd46e27bb4f5f695b"
     ],
     [
       "NatHeap.sel_upd2",
@@ -401,7 +398,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "57cd70e43fde47486c3b7f453326c6ed"
+      "0d1aea2df0e34d8f05241f4fe402cfc5"
     ],
     [
       "NatHeap.sel_upd2",
@@ -415,7 +412,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "41a60f80c328235bcd78e137713e8d15"
+      "05e0183996d498f348e7d0f44d303b18"
     ],
     [
       "NatHeap.upd_sel",
@@ -427,7 +424,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "02e595411213729aba699d37d3b35119"
+      "54f694bf1ea16ec6e12291af544f0c34"
     ],
     [
       "NatHeap.upd_sel",
@@ -440,20 +437,24 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_FStar.FunctionalExtensionality.Extensionality",
+        "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_FStar.Pervasives.Native.Some",
+        "data_elim_Prims.Mkdtuple2",
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.contains",
         "equation_NatHeap.heap", "equation_NatHeap.ref",
         "equation_NatHeap.sel", "equation_NatHeap.upd", "equation_Prims.nat",
+        "equation_Prims.pure_pre",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
+        "function_token_typing_Prims.nat",
+        "function_token_typing_Prims.pure_pre", "int_inversion",
+        "int_typing",
         "interpretation_NatHeap_Tm_abs_0d9dd5b782e0cebe24a2969f2769dec2",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "primitive_Prims.op_Equality",
+        "kinding_Prims.dtuple2@tok", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
@@ -468,7 +469,7 @@
         "typing_NatHeap_Tm_abs_0d9dd5b782e0cebe24a2969f2769dec2"
       ],
       0,
-      "8519b4f2f74f12ad6496d2ec5049dc75"
+      "ec3fe63cd00ced574124cf3329b50c8d"
     ],
     [
       "NatHeap.contains_concat1",
@@ -477,8 +478,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "NatHeap_interpretation_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_Prims.Mkdtuple2",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -486,13 +490,16 @@
         "equation_FStar.Pervasives.dfst", "equation_NatHeap.concat",
         "equation_NatHeap.consistent", "equation_NatHeap.contains",
         "equation_NatHeap.heap", "equation_NatHeap.ref",
-        "equation_Prims.nat",
+        "equation_Prims.nat", "equation_Prims.pure_pre",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.dtuple2", "int_inversion",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_Prims.pure_pre", "int_inversion",
         "interpretation_NatHeap_Tm_abs_5bf241b6996f3e31b7abf98f26abedcc",
         "interpretation_NatHeap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8",
+        "kinding_Prims.dtuple2@tok", "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -501,11 +508,10 @@
         "refinement_interpretation_NatHeap_Tm_refine_27a765ec9f014632e62c46d624b655dd",
         "refinement_interpretation_NatHeap_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.Pervasives.Native.snd", "unit_inversion",
-        "unit_typing"
+        "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "e9dff11eba469bfb4562f98841e788cd"
+      "081fbce821203a0e90141e0f08f9cd20"
     ],
     [
       "NatHeap.contains_concat2",
@@ -514,19 +520,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "NatHeap_interpretation_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
+        "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
         "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.concat",
         "equation_NatHeap.contains", "equation_NatHeap.heap",
         "equation_NatHeap.ref", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "int_inversion",
         "interpretation_NatHeap_Tm_abs_5bf241b6996f3e31b7abf98f26abedcc",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_NatHeap_Tm_refine_27a765ec9f014632e62c46d624b655dd",
@@ -535,7 +539,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "00ecd882c146bcaeb723ce6cd2cec01a"
+      "d00dbb7c0623d554af78b0adc1a93a01"
     ],
     [
       "NatHeap.sel_concat1",
@@ -547,7 +551,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_241ad8bfe898ca08359d47be04127cb2"
       ],
       0,
-      "8efe590cdfad3c2bf6527a83fc3ea5fb"
+      "43e87879e1ebff9e944aba54d5622321"
     ],
     [
       "NatHeap.sel_concat1",
@@ -556,9 +560,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "NatHeap_interpretation_Tm_arrow_48156516c4d22577bfec44b6aa979ad9",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_Prims.Mkdtuple2",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -567,14 +573,17 @@
         "equation_NatHeap.consistent", "equation_NatHeap.contains",
         "equation_NatHeap.heap", "equation_NatHeap.ref",
         "equation_NatHeap.sel", "equation_Prims.nat",
+        "equation_Prims.pure_pre",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.dtuple2", "int_inversion",
-        "int_typing",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_Prims.pure_pre",
         "interpretation_NatHeap_Tm_abs_5bf241b6996f3e31b7abf98f26abedcc",
         "interpretation_NatHeap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8",
+        "kinding_Prims.dtuple2@tok", "lemma_FStar.Pervasives.invertOption",
         "lemma_NatHeap.contains_concat1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -583,12 +592,11 @@
         "refinement_interpretation_NatHeap_Tm_refine_241ad8bfe898ca08359d47be04127cb2",
         "refinement_interpretation_NatHeap_Tm_refine_27a765ec9f014632e62c46d624b655dd",
         "refinement_interpretation_NatHeap_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.Pervasives.Native.snd", "unit_inversion",
-        "unit_typing"
+        "token_correspondence_FStar.Pervasives.Native.snd",
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "3cd1df018ae4d5ea80f909c2ddeca84f"
+      "f4df19c536fa67c0c3eaa1633dd46222"
     ],
     [
       "NatHeap.sel_concat2",
@@ -600,7 +608,7 @@
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0,
-      "0a792245ad13764d03f1372dd66d94bc"
+      "ce5abf37267dbb3d46ffba76f0c17011"
     ],
     [
       "NatHeap.sel_concat2",
@@ -612,19 +620,14 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.concat",
         "equation_NatHeap.contains", "equation_NatHeap.heap",
-        "equation_NatHeap.max", "equation_NatHeap.ref",
-        "equation_NatHeap.sel", "equation_Prims.nat",
+        "equation_NatHeap.ref", "equation_NatHeap.sel", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "int_inversion", "int_typing",
         "interpretation_NatHeap_Tm_abs_5bf241b6996f3e31b7abf98f26abedcc",
-        "primitive_Prims.op_GreaterThan",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "lemma_NatHeap.contains_concat2",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -633,11 +636,91 @@
         "refinement_interpretation_NatHeap_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.Pervasives.Native.snd",
-        "typing_NatHeap.concat"
+        "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "c60a439a32347eb103c9fd61dbe61342"
+      "afffca2344d81b77f01705462d998883"
+    ],
+    [
+      "NatHeap.alloc_ref",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "78ecc126e2cee2d358bf4a66a037a89c"
+    ],
+    [
+      "NatHeap.upd",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "49b329df9979c7c8287e99d083cd230e"
+    ],
+    [
+      "NatHeap.max",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "67e7b8f6e66c0787e95fb156015085b5"
+    ],
+    [
+      "NatHeap.sel_upd1",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_upd",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "e2f87bff446db91bf1a63599575b0e7a"
+    ],
+    [
+      "NatHeap.sel_upd2",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_upd",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "24053b1967b20cca19f85195b7e725b6"
+    ],
+    [
+      "NatHeap.sel_concat1",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_concat1",
+        "refinement_interpretation_NatHeap_Tm_refine_241ad8bfe898ca08359d47be04127cb2"
+      ],
+      0,
+      "2b1ade9f86258c8ca38a27affe4275bd"
+    ],
+    [
+      "NatHeap.sel_concat2",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_concat2",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "be5a95f8db2df8515297348e8fcedefb"
     ]
   ]
 ]

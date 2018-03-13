@@ -99,7 +99,7 @@ let exists_elim goal #a #p have f =
   bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
 
 let move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
-  ($f:x:a -> Lemma (requires (p x)) (ensures (q x))) (x:a)
+  ($f:(x:a -> Lemma (requires (p x)) (ensures (q x)))) (x:a)
   : Lemma (p x ==> q x) =
       give_proof
         (bind_squash (get_proof (l_or (p x) (~(p x))))

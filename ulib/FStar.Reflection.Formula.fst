@@ -1,10 +1,15 @@
 module FStar.Reflection.Formula
 
-open FStar.Reflection.Types
-open FStar.Reflection.Data
+open FStar.Tactics.Effect
+open FStar.Tactics.Builtins
 open FStar.Reflection.Basic
-open FStar.Reflection.Syntax
-open FStar.Reflection.Syntax.Lemmas
+open FStar.Reflection.Types
+open FStar.Reflection.Derived
+open FStar.Reflection.Const
+open FStar.Reflection.Data
+
+// Cannot open FStar.Tactics.Derived here
+let fresh_bv = fresh_bv_named "x"
 
 noeq type comparison =
   | Eq     of option typ  (* Propositional equality (eq2), maybe annotated *)
@@ -20,54 +25,23 @@ noeq type formula =
   | Not    : term -> formula
   | Implies: term -> term -> formula
   | Iff    : term -> term -> formula
-  | Forall : binder -> term -> formula
-  | Exists : binder -> term -> formula
+  | Forall : bv -> term -> formula
+  | Exists : bv -> term -> formula
   | App    : term -> term -> formula
-  | Name   : binder -> formula
+  | Name   : bv -> formula
   | FV     : fv -> formula
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
-let mk_Forall (typ : term) (pred : term) : formula =
-    let b = fresh_binder typ in
+let mk_Forall (typ : term) (pred : term) : Tac formula =
+    let b = fresh_bv typ in
     Forall b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
-let mk_Exists (typ : term) (pred : term) : formula =
-    let b = fresh_binder typ in
+let mk_Exists (typ : term) (pred : term) : Tac formula =
+    let b = fresh_bv typ in
     Exists b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
-val smaller : formula -> term -> Type0
-let smaller f t =
-    match f with
-    | And l r
-    | Or l r
-    | App l r
-    | Implies l r
-    | Iff l r ->
-        l << t /\ r << t
-
-    | Forall _ p
-    | Exists _ p
-    | Not p ->
-        p << t
-
-    | Comp c l r ->
-        (match c with
-         | Eq (Some typ) | BoolEq (Some typ) -> typ << t
-         | _ -> True)
-        /\ l << t
-        /\ r << t
-
-    | F_Unknown
-    | Name _
-    | FV _
-    | IntLit _
-    | True_
-    | False_ ->
-        True
-
-#reset-options "--z3rlimit 15"
-let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
+let term_as_formula' (t:term) : Tac formula =
     match inspect t with
     | Tv_Var n ->
         Name n
@@ -84,7 +58,6 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
-        collect_app_order h0;
         match inspect h, ts@[t] with
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit); (a3, Q_Explicit)] ->
             let qn = inspect_fv fv in
@@ -108,10 +81,8 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
 
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit)] ->
             let qn = inspect_fv fv in
-                 if qn = forall_qn then (admit(); //TODO: admitting termination check for now
-                                             mk_Forall a1 a2) //a1 is type, a2 predicate
-            else if qn = exists_qn then (admit(); //TODO: admitting termination check for now
-                                             mk_Exists a1 a2) //a1 is type, a2 predicate
+                 if qn = forall_qn then mk_Forall a1 a2
+            else if qn = exists_qn then mk_Exists a1 a2
             else App h0 (fst t)
         | Tv_FVar fv, [(a, Q_Explicit)] ->
             let qn = inspect_fv fv in
@@ -124,11 +95,12 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     // This case is shady, our logical connectives are squashed and we
     // usually don't get arrows. Nevertheless keeping it in case it helps.
     | Tv_Arrow b c ->
+        let bv, _ = inspect_binder b in
         begin match inspect_comp c with
-        | C_Total t ->
-            if is_free b t
-            then Forall b t
-            else Implies (type_of_binder b) t
+        | C_Total t _ ->
+            if is_free bv t
+            then Forall bv t
+            else Implies (type_of_bv bv) t
         | _ -> F_Unknown
         end
 
@@ -163,13 +135,11 @@ let unsquash (t : term) : option term =
     | _ -> None
 
 // Unsquashing
-let rec term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+let rec term_as_formula (t:term) : Tac formula =
     match unsquash t with
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
-
-#reset-options
 
 let formula_as_term_view (f:formula) : Tot term_view =
     let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
@@ -238,7 +208,7 @@ let formula_to_string (f:formula) : string =
     | Forall bs t -> "Forall <bs> (" ^ term_to_string t ^ ")"
     | Exists bs t -> "Exists <bs> (" ^ term_to_string t ^ ")"
     | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
-    | Name b ->  "Name (" ^ inspect_bv b ^ ")"
+    | Name bv ->  "Name (" ^ bv_to_string bv ^ ")"
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
     | IntLit i -> "Int " ^ string_of_int i
     | F_Unknown -> "?"

@@ -1,14 +1,41 @@
 [
-  "À‰\u0010Û≠\u0007E5\u0017.Â‚QÄ≈È",
+  "Ôç\u001fÓ8V\u007fÎÑ0˙\u001aíW!≥",
   [
     [
       "Bug1347B.test",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
       0,
-      "17dcd3fd242812f6c762707c5b57a6d9"
+      "216764305d1b15d4d771145366476716"
+    ],
+    [
+      "Bug1347B.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0,
+      "71ce2c32ac7b9e51e6798f92bf204c56"
     ]
   ]
 ]

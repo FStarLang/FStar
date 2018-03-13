@@ -53,7 +53,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FStar.Reflection.Data.fs" />
+    <Compile Include="FStar.Reflection.Basic.fsi" />
     <Compile Include="FStar.Reflection.Basic.fs" />
+    <Compile Include="FStar.Reflection.Embeddings.fsi" />
+    <Compile Include="FStar.Reflection.Embeddings.fs" />
     <Compile Include="FStar.Reflection.Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>

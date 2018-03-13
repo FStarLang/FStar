@@ -2,13 +2,8 @@ module Canon.Test
 module XX = FStar.Tactics.Canon // load it, to get the symbols for the lemmas
 open FStar.Tactics
 open FStar.Mul
+open FStar.Tactics.Canon
 open Canon
-
-let check_canon =
-    compiled_canon ();;
-    or_else qed
-            (dump "`canon` left the following goals";;
-             fail "")
 
 assume val x : int
 assume val y : int
@@ -19,7 +14,7 @@ let lem0 = assert_by_tactic (x * (y * z) == (x * y) * z) check_canon
 // TODO: for now, canon is not enough as we don't collect factors
 let lem1 =
     assert_by_tactic ((x + y) * (z + z) == 2 * z * (y + x))
-                     (compiled_canon ())
+                     canon
 
 let lem2 (x : int) =
     assert_by_tactic (2 + x + 3 * 8 == x + 26) check_canon

@@ -11,7 +11,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "d63b6fb7a7ff31cc3224d87ca78e41a7"
+      "2d52ace4ecf37148792a6eb37c7326e6"
     ],
     [
       "FStar.TwoLevelHeap.lemma_as_ref_inj",
@@ -25,7 +25,7 @@
         "equation_FStar.TwoLevelHeap.rid", "int_inversion", "unit_typing"
       ],
       0,
-      "2b7254bc95de1ea40ea883f445fda821"
+      "7ce23840f66149109cf5edbf54e6c82c"
     ],
     [
       "FStar.TwoLevelHeap.new_region",
@@ -37,7 +37,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "1dcb32a088ff1fd289fe4e676e000a11"
+      "41fb7abb99d9dcd64b2397101365afaa"
     ],
     [
       "FStar.TwoLevelHeap.new_region",
@@ -49,7 +49,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "dd0baf3f5df592ba57f388e7a9b06881"
+      "3a2ae4f69e3fd61eb4900c135942b08a"
     ],
     [
       "FStar.TwoLevelHeap.sel",
@@ -61,7 +61,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "4f160cb2f0b2dd782a97aee84d6ced99"
+      "227cf7fffdb6874d5352a8e0f59e3d8e"
     ],
     [
       "FStar.TwoLevelHeap.upd",
@@ -73,7 +73,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "17583f91211aa9c47cda28404432503a"
+      "735f87ac8132823320987f2532907121"
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
@@ -85,7 +85,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "69750e88001bc9b565073427c4ef6901"
+      "f2751a14aa73189ce8482afb26ca7565"
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
@@ -97,7 +97,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "296a9e64d617967e8fc9d975dda161bf"
+      "df359fb16bf499ec189f0a0e37ecddb3"
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
@@ -109,7 +109,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "2bf5fbda651e005cb370fe04ee83a763"
+      "6b539ba639ac458d25edc994223cf7f3"
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
@@ -121,7 +121,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "aa3719f6ddd1fbd19ebaafa904b0c12a"
+      "d057109701f564cac103264665b6b297"
     ],
     [
       "FStar.TwoLevelHeap.op_Colon_Equals",
@@ -133,7 +133,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "4447396b068fcec0460de5752b124ac6"
+      "a8d69b089c943416c522d2a1d2f64284"
     ],
     [
       "FStar.TwoLevelHeap.op_Colon_Equals",
@@ -145,7 +145,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "0f2e7365f18851e83975e98c9054b7ef"
+      "02c1d91f667bca83bda39e51b2a8e91c"
     ],
     [
       "FStar.TwoLevelHeap.op_Colon_Equals",
@@ -157,7 +157,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "5f913bceb4b804d7fc4816bc399ca293"
+      "2f45ccb3243e2a9ca5d65aef981cda54"
     ],
     [
       "FStar.TwoLevelHeap.op_Bang",
@@ -169,7 +169,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "9c978ef67fd34284e5f3c16b57a6c37e"
+      "261354e218e8dac1109ec001429ea34c"
     ],
     [
       "FStar.TwoLevelHeap.modifies",
@@ -181,7 +181,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "006d0081f193a6dd7200adb2e8fe028f"
+      "070dfe0c60532a4232767a4d01ca0159"
     ],
     [
       "FStar.TwoLevelHeap.fresh_region",
@@ -193,7 +193,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "ec8c395edfc684f87abe1e17b8df3d07"
+      "07203009358ada2c094b667a9f3f6e0a"
     ],
     [
       "FStar.TwoLevelHeap.contains_ref",
@@ -205,7 +205,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "4924dcb2f376eaa10ec6e53c1ba0a703"
+      "f3f3ee8326b4682d8a9896e6cee8fb48"
     ],
     [
       "FStar.TwoLevelHeap.fresh_rref",
@@ -217,7 +217,163 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "458cb1b876b4fafd93f4f6435ce07659"
+      "d1b6f7300f0d03f858e7e8da33b4942f"
+    ],
+    [
+      "FStar.TwoLevelHeap.t",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "152b7dc10503f328088452092fff9786"
+    ],
+    [
+      "FStar.TwoLevelHeap.new_region",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "b8000d7edb7c6d76d303ff340387f6b9"
+    ],
+    [
+      "FStar.TwoLevelHeap.sel",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "3861ba8aa32f5c9fb9b27f26472a4cef"
+    ],
+    [
+      "FStar.TwoLevelHeap.upd",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "8fce11b795b09c477a440c4f1fa038db"
+    ],
+    [
+      "FStar.TwoLevelHeap.upd",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "ba876a9abf2cb82193c3daf8bf1173bd"
+    ],
+    [
+      "FStar.TwoLevelHeap.ralloc",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "4243d0634a608331589e24b20bb9f5fe"
+    ],
+    [
+      "FStar.TwoLevelHeap.op_Colon_Equals",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "847283c93a8736883dd07ad53f3e18b3"
+    ],
+    [
+      "FStar.TwoLevelHeap.op_Bang",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "65ccad877f272646c264fc1ec1e8b127"
+    ],
+    [
+      "FStar.TwoLevelHeap.modifies",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "0cf2afa01d73596274e241e941b527e8"
+    ],
+    [
+      "FStar.TwoLevelHeap.modifies",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "826c73d1ff6a5db005215b3eb2f8b07b"
+    ],
+    [
+      "FStar.TwoLevelHeap.fresh_region",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "028c4c6a50ca4c2cbe84ab1ee4804ce1"
+    ],
+    [
+      "FStar.TwoLevelHeap.contains_ref",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "36190f09df1a723207d99aac11bd0674"
+    ],
+    [
+      "FStar.TwoLevelHeap.fresh_rref",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "713eb1ce878dad85cce820e95c5c988e"
     ]
   ]
 ]

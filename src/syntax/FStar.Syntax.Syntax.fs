@@ -90,11 +90,31 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
+type quoteinfo     = {
+    qopen : bool;       // True if the quotation is open, and should be substituted
+ }
+
+///[@ PpxDerivingShow ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n times to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+///[@ PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_sigelt
 
 ///[@ PpxDerivingShow ]
 type term' =
@@ -111,10 +131,11 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of uvar * typ                                  (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -124,13 +145,14 @@ and pat' =
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
-and letbinding = {  //let f : forall u1..un. M t = e
+and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
     lbdef  :term;            //e
-    lbattrs:list<attribute>
+    lbattrs:list<attribute>; //attrs
+    lbpos  :range;           //original position of 'e'
 }
 and comp_typ = {
   comp_univs:universes;
@@ -172,9 +194,8 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
+  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -232,7 +253,17 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and lazyinfo = {
+    blob : dyn;
+    kind : lazy_kind;
+    typ : typ;
+    rng : Range.range;
+ }
+
 and attribute = term
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
 
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
@@ -323,7 +354,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {
@@ -369,6 +401,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of term
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -428,11 +461,11 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
-let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
+let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_fifo_set ()
+let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
@@ -467,7 +500,16 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e; lbattrs=[]}
+let mk_lb (x, univs, eff, t, e, pos) = {
+    lbname=x;
+    lbunivs=univs;
+    lbtyp=t;
+    lbeff=eff;
+    lbdef=e;
+    lbattrs=[];
+    lbpos=pos;
+  }
+
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s
@@ -585,14 +627,20 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
-let t_unit   = tconst PC.unit_lid
-let t_bool   = tconst PC.bool_lid
-let t_int    = tconst PC.int_lid
-let t_string = tconst PC.string_lid
-let t_float  = tconst PC.float_lid
-let t_char   = tabbrev PC.char_lid
-let t_range  = tconst PC.range_lid
-let t_term   = tconst PC.term_lid
+let t_unit      = tconst PC.unit_lid
+let t_bool      = tconst PC.bool_lid
+let t_int       = tconst PC.int_lid
+let t_string    = tconst PC.string_lid
+let t_float     = tconst PC.float_lid
+let t_char      = tabbrev PC.char_lid
+let t_range     = tconst PC.range_lid
+let t_term      = tconst PC.term_lid
+let t_decls     = tabbrev PC.decls_lid
+let t_binder    = tconst PC.binder_lid
+let t_binders   = tconst PC.binders_lid
+let t_bv        = tconst PC.bv_lid
+let t_fv        = tconst PC.fv_lid
+let t_norm_step = tconst PC.norm_step_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange

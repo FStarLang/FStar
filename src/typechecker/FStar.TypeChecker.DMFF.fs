@@ -742,6 +742,8 @@ and star_type' env t =
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_unknown is outside of the definition language: %s"
         (Print.term_to_string t)))
 
+  | Tm_lazy i -> star_type' env (U.unfold_lazy i)
+
   | Tm_delayed _ ->
       failwith "impossible"
 
@@ -857,6 +859,9 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_app _ ->
       return_if (infer env e)
 
+  | Tm_lazy i ->
+    check env (U.unfold_lazy i) context_nm
+
   | Tm_let ((false, [ binding ]), e2) ->
       mk_let env binding e2
         // Body of the let is pure: just defer the check to the continuation
@@ -903,6 +908,9 @@ and infer (env: env) (e: term): nm * term * term =
 
   | Tm_name bv ->
       N bv.sort, e, e
+
+  | Tm_lazy i ->
+      infer env (U.unfold_lazy i)
 
   | Tm_abs (binders, body, rc_opt) ->
       let subst_rc_opt subst rc_opt =

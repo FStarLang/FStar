@@ -80,6 +80,7 @@ let is_interface (f: string): bool =
 let is_implementation f =
   not (is_interface f)
 
+
 let list_of_option = function Some x -> [x] | None -> []
 
 let list_of_pair (intf, impl) =
@@ -153,10 +154,10 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     Option.isSome (implementation_of file_system_map key)
 
 let cache_file_name fn =
-    FStar.Options.prepend_cache_dir
-        (if Options.lax()
-         then fn ^ ".checked.lax"
-         else fn ^ ".checked")
+  FStar.Options.prepend_cache_dir
+    (if Options.lax()
+     then fn ^ ".checked.lax"
+     else fn ^ ".checked")
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -170,9 +171,7 @@ let file_of_dep_aux
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
-    let maybe_add_suffix f =
-        if use_checked_file then cache_file_name f else f
-    in
+    let maybe_add_suffix f = if use_checked_file then cache_file_name f else f in
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
@@ -495,6 +494,7 @@ let collect_one
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t
+    | Splice t
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
     | SubEffect { lift_op = LiftForFree t }
@@ -648,11 +648,13 @@ let collect_one
         collect_term t
     | Paren t ->
         collect_term t
-    | Assign (_, t)
     | Requires (t, _)
     | Ensures (t, _)
     | Labeled (t, _, _) ->
         collect_term t
+    | VQuote t ->
+        collect_term t
+    | Quote _ -> ()
     | Attributes cattributes  ->
         List.iter collect_term cattributes
 
@@ -948,6 +950,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                       (cache_file f)
                       norm_f
                       files;
+          
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then (

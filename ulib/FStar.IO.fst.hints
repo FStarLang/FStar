@@ -8,7 +8,16 @@
       1,
       [ "@query" ],
       0,
-      "6e963b3da5f323a527aec41c8171e41d"
+      "0ad4b1d170f846f392da787b6fe02f17"
+    ],
+    [
+      "FStar.IO.uu___is_EOF",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6be2b980a11bce548142d26164e6d4ba"
     ]
   ]
 ]

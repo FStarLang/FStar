@@ -20,6 +20,7 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
+module E = FStar.Errors
 
 let () = FStar.Version.dummy ()
 
@@ -65,49 +66,75 @@ let codegen (umods, env) =
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = match opt with
-      | Some "FSharp" -> ".fs"
-      | Some "OCaml"
-      | Some "tactics" -> ".ml"
-      | Some "Kremlin" -> ".krml"
+      | Some Options.FSharp -> ".fs"
+      | Some Options.OCaml
+      | Some Options.Plugin -> ".ml"
+      | Some Options.Kremlin -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "FSharp" | Some "OCaml" | Some "tactics" ->
+    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
         (* When bootstrapped in F#, this will use the old printer in
            FStar.Extraction.ML.Code for both OCaml and F# extraction.
            When bootstarpped in OCaml, this will use the old printer
            for F# extraction and the new printer for OCaml extraction. *)
         let outdir = Options.output_dir() in
         List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
-    | Some "Kremlin" ->
+    | Some Options.Kremlin ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
         begin match programs with
         | [ name, _ ] ->
-            save_value_to_file (Options.prepend_output_dir (name ^ ".krml")) bin
+            save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
         | _ ->
             save_value_to_file (Options.prepend_output_dir "out.krml") bin
         end
    | _ -> failwith "Unrecognized option"
 
-let gen_native_tactics (umods, env) out_dir =
-    (* Extract module and its dependencies to OCaml *)
-    Options.set_option "codegen" (Options.String "tactics");
-    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
-    let mllibs = List.flatten mllibs in
-    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
+//let gen_plugins (umods, env) =
+//    (* Extract module and its dependencies to OCaml *)
+//    let out_dir = match Options.output_dir() with
+//                  | None -> "."
+//                  | Some d -> d
+//    in
+//    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
+//    let mllibs = List.flatten mllibs in
+//    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
+//
+//    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
+//    let user_plugin_modules =
+//        umods |> List.collect (fun u ->
+//        let mname = FStar.Syntax.Syntax.mod_name u in
+//        if Options.should_extract (Ident.string_of_lid mname)
+//        then [FStar.Extraction.ML.Util.mlpath_of_lid mname |> FStar.Extraction.ML.Util.flatten_mlpath]
+//        else [])
+//    in
+//    Tactics.Load.compile_modules out_dir user_plugin_modules
 
-    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
-    let user_tactics_modules = Universal.user_tactics_modules in
-    Tactics.Load.compile_modules out_dir (!user_tactics_modules)
-
-let init_native_tactics () =
-  Tactics.Load.load_tactics (Options.load ());
-  match Options.use_native_tactics () with
-  | Some dir ->
-      Util.print1 "Using native tactics from %s\n" dir;
-      Tactics.Load.load_tactics_dir dir
-  | None -> ()
+let load_native_tactics () =
+    let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
+    let ml_module_name m =
+        FStar.Extraction.ML.Util.mlpath_of_lid m
+        |> FStar.Extraction.ML.Util.flatten_mlpath
+    in
+    let ml_file m = ml_module_name m ^ ".ml" in
+    let cmxs_file m =
+        let cmxs = ml_module_name m ^ ".cmxs" in
+        match FStar.Options.find_file cmxs with
+        | Some f -> f
+        | None ->
+        match FStar.Options.find_file (ml_file m) with
+        | None ->
+            E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                         Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+        | Some ml ->
+            let dir = Util.dirname ml in
+            FStar.Tactics.Load.compile_modules dir [ml_module_name m];
+            Util.must (FStar.Options.find_file cmxs)
+    in
+    let cmxs_files = modules_to_load |> List.map cmxs_file in
+    List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
+    Tactics.Load.load_tactics cmxs_files
 
 let init_warn_error() =
   Errors.init_warn_error_flags;
@@ -126,12 +153,14 @@ let go _ =
     | Error msg ->
         Util.print_string msg; exit 1
     | Success ->
-        init_native_tactics ();
+        load_native_tactics ();
         init_warn_error();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then let _, deps = Parser.Dep.collect filenames in
              Parser.Dep.print deps
+        else if Options.use_extracted_interfaces () && List.length filenames > 1 then
+          Errors.raise_error (Errors.Error_TooManyFiles, "Only one command line file is allowed if --use_extracted_interfaces is set") Range.dummyRange
         else if Options.interactive () then begin
           match filenames with
           | [] ->
@@ -153,29 +182,31 @@ let go _ =
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
-          (match Options.gen_native_tactics () with
-          | Some dir ->
-             Util.print1 "Generating native tactics in %s\n" dir;
-             Options.set_option "lax" (Options.Bool true)
-          | None -> ());
           let fmods, env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
           report_errors module_names_and_times; //codegen errors
-          (match Options.gen_native_tactics () with
-          | Some dir ->
-              gen_native_tactics (fmods |> List.map fst, env) dir
-          | None -> ());
-          report_errors module_names_and_times; //native tactic errors
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
-          Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
+          Errors.log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
 
+let lazy_chooser k i = match k with
+    | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
+    | FStar.Syntax.Syntax.Lazy_bv         -> FStar.Reflection.Embeddings.unfold_lazy_bv          i
+    | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Embeddings.unfold_lazy_binder      i
+    | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Embeddings.unfold_lazy_fvar        i
+    | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Embeddings.unfold_lazy_comp        i
+    | FStar.Syntax.Syntax.Lazy_env        -> FStar.Reflection.Embeddings.unfold_lazy_env         i
+    | FStar.Syntax.Syntax.Lazy_sigelt     -> FStar.Reflection.Embeddings.unfold_lazy_sigelt      i
+    | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
 
 let main () =
   try
+    FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
+    FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.unembed_binder;
     let _, time = FStar.Util.record_time go in
     if FStar.Options.query_stats()
     then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"

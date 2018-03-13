@@ -12,7 +12,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "53f5b9ee9f15a1912b2f916d9615ccf0"
+      "8afae465b54724d19cfde2d36bb3fbd6"
     ],
     [
       "Ex10b.__proj__Point__item__x",
@@ -31,7 +31,7 @@
         "typing_FStar.Ref.addr_of"
       ],
       0,
-      "f9c215165088f6f6fa8161dd47eee241"
+      "4aa2b903b2701ad47d338aab6320db2f"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -44,7 +44,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "25d58c147bd403da14364c0ca1e0a21e"
+      "4bf9fd2a66ae9a4866855a9444d79c2a"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -68,7 +68,7 @@
         "typing_FStar.Ref.addr_of"
       ],
       0,
-      "3b3b27da0a9483aaa6534eaf354b4d80"
+      "f848eb65937fa13e73c3d42a9bbebef1"
     ],
     [
       "Ex10b.new_point",
@@ -80,16 +80,40 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7b29148f3e454942795bb3be3dd0d3a4"
+      "6cf0a40a26aa278a6868651423f0d693"
     ],
     [
       "Ex10b.new_point",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.fresh",
+        "equation_FStar.Monotonic.Heap.modifies",
+        "equation_FStar.Monotonic.Heap.modifies_t", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
+        "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_unused",
+        "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.TSet.lemma_mem_tset_of_set",
+        "proj_equation_Ex10b.Point_x", "proj_equation_Ex10b.Point_y",
+        "projection_inverse_Ex10b.Point_x",
+        "projection_inverse_Ex10b.Point_y",
+        "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
+        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Ref.addr_of",
+        "typing_FStar.Set.empty"
+      ],
       0,
-      "87ad65eefd9fa1b9e22a35cb951493db"
+      "d93008c9c018f2f3a170ad3399517e2e"
     ],
     [
       "Ex10b.new_point",
@@ -98,7 +122,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "66ca10461745a7fa1fab7b4b4aa900e4"
+      "781ea3602ab14a93357d19350a9db9d1"
     ],
     [
       "Ex10b.new_point",
@@ -126,13 +150,12 @@
         "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Ref.addr_of",
         "typing_FStar.Set.empty"
       ],
       0,
-      "92991b48624708ab814d2fb8b54995f5"
+      "26510e02460db02a614f23e35e9af023"
     ],
     [
       "Ex10b.shift_x",
@@ -141,7 +164,7 @@
       1,
       [ "@query" ],
       0,
-      "27a2609d14b0287c609e390ef2513751"
+      "2d48cbaa1838fc2210d0bb9e32ff9cf1"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -154,56 +177,17 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f47b22ef05f40631a3dec2fdef15dc13"
+      "28e9c035056363956e6cf7a625fabc88"
     ],
     [
       "Ex10b.shift_x_p1",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqEx10b_Tm_refine_62b21a90d530332c8f0058ff9b1dea60",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "3a0b62b7f92235ae9424b2450421480f"
-    ],
-    [
-      "Ex10b.shift_x_p1",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "72871e2f910e570c617709fb5d053ad2"
-    ],
-    [
-      "Ex10b.shift_x_p1",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "2bd4ff791eb164899e37bc4112d19c66"
-    ],
-    [
-      "Ex10b.shift_x_p1",
-      5,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
@@ -229,14 +213,81 @@
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y",
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of",
         "typing_FStar.Ref.only", "typing_FStar.Ref.sel"
       ],
       0,
-      "e3dd8756fba52f43ea71dee332adefdc"
+      "5f7541af28cb7af5462a3b0f717f4814"
+    ],
+    [
+      "Ex10b.shift_x_p1",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "3c96e7e96a04c927467498ba648e6336"
+    ],
+    [
+      "Ex10b.shift_x_p1",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "1c0cc5deb596e03d34ceeab4132184b4"
+    ],
+    [
+      "Ex10b.shift_x_p1",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.HasEq_int", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.modifies",
+        "equation_FStar.Monotonic.Heap.modifies_t",
+        "equation_FStar.Monotonic.Heap.only", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_Ex10b.point",
+        "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
+        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
+        "haseqEx10b_Tm_refine_62b21a90d530332c8f0058ff9b1dea60",
+        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
+        "haseqEx10b_Tm_refine_c4623ed4e655cdebc8c2a6e38108bc12",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "lemma_FStar.Set.mem_singleton",
+        "lemma_FStar.TSet.lemma_mem_tset_of_set",
+        "primitive_Prims.op_Equality", "proj_equation_Ex10b.Point_x",
+        "proj_equation_Ex10b.Point_y", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex10b_Tm_refine_422387c5c28cc022f3672712b6feadbe",
+        "refinement_interpretation_Ex10b_Tm_refine_bbeef04beebab3bf164249828124ae00",
+        "refinement_interpretation_Ex10b_Tm_refine_f3e142df71a242a3e99502b256642b5e",
+        "refinement_interpretation_FStar.Ref_Tm_refine_6dad3394a7b23d86d607c303ffd1e2f7",
+        "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
+        "refinement_interpretation_FStar.Ref_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
+        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y",
+        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of",
+        "typing_FStar.Ref.only", "typing_FStar.Ref.sel"
+      ],
+      0,
+      "0bedc88df262f3c45369b52cc6c1ed37"
     ],
     [
       "Ex10b.test1",
@@ -264,7 +315,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of"
       ],
       0,
-      "94cbaa6d387f71a78bf76bc81a121557"
+      "417a27253cb8128b797feee2faaee5c8"
     ],
     [
       "Ex10b.test2",
@@ -293,7 +344,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of"
       ],
       0,
-      "8303f5521ef0f10e148e4bf3a32bf8ed"
+      "30e46382533b5904e210596b9363d89b"
     ],
     [
       "Ex10b.shift_p1",
@@ -306,56 +357,17 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d5aa1457693ea86aa51cf5978b22c2e9"
+      "cf95ea57b729f86d5373494e60cf8fff"
     ],
     [
       "Ex10b.shift_p1",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqEx10b_Tm_refine_62b21a90d530332c8f0058ff9b1dea60",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "e32b9ea793efaa987d1a9454970fb28d"
-    ],
-    [
-      "Ex10b.shift_p1",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "1e70aee320f903edad4c6fb52dd5b668"
-    ],
-    [
-      "Ex10b.shift_p1",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "0f27c811439679e767c6b95f9499941c"
-    ],
-    [
-      "Ex10b.shift_p1",
-      5,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "bool_inversion",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.equal_dom",
@@ -382,24 +394,106 @@
         "refinement_interpretation_Ex10b_Tm_refine_422387c5c28cc022f3672712b6feadbe",
         "refinement_interpretation_Ex10b_Tm_refine_bbeef04beebab3bf164249828124ae00",
         "refinement_interpretation_Ex10b_Tm_refine_f3e142df71a242a3e99502b256642b5e",
+        "refinement_interpretation_FStar.Ref_Tm_refine_031eb367c8dbcfe8a5ffc7b0a4ad2281",
         "refinement_interpretation_FStar.Ref_Tm_refine_6dad3394a7b23d86d607c303ffd1e2f7",
         "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
         "refinement_interpretation_FStar.Ref_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of",
         "typing_FStar.Monotonic.Heap.only",
         "typing_FStar.Monotonic.Heap.op_Hat_Plus_Hat",
-        "typing_FStar.Ref.addr_of", "typing_FStar.Ref.only",
-        "typing_FStar.Ref.sel", "typing_FStar.Set.mem"
+        "typing_FStar.Ref.addr_of", "typing_FStar.Ref.contains",
+        "typing_FStar.Ref.only", "typing_FStar.Ref.sel",
+        "typing_FStar.Set.mem"
       ],
       0,
-      "15d19fb3f9f0b334ed3ad74f78f05c35"
+      "e91fd5e6be02fb0cf7aba93c4966f155"
+    ],
+    [
+      "Ex10b.shift_p1",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "e0cb3a0da608f5ee4f17c5e9437ff06d"
+    ],
+    [
+      "Ex10b.shift_p1",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "3fd17ce1106cf76aa736fce072f9a3cc"
+    ],
+    [
+      "Ex10b.shift_p1",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.HasEq_int", "bool_inversion",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "equation_FStar.Monotonic.Heap.modifies",
+        "equation_FStar.Monotonic.Heap.modifies_t",
+        "equation_FStar.Monotonic.Heap.only",
+        "equation_FStar.Monotonic.Heap.op_Hat_Plus_Hat",
+        "equation_FStar.Monotonic.Heap.set", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_Ex10b.point",
+        "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
+        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
+        "haseqEx10b_Tm_refine_62b21a90d530332c8f0058ff9b1dea60",
+        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
+        "haseqEx10b_Tm_refine_c4623ed4e655cdebc8c2a6e38108bc12",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "lemma_FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
+        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
+        "lemma_FStar.TSet.lemma_mem_tset_of_set",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "proj_equation_Ex10b.Point_x",
+        "proj_equation_Ex10b.Point_y", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Ex10b_Tm_refine_422387c5c28cc022f3672712b6feadbe",
+        "refinement_interpretation_Ex10b_Tm_refine_bbeef04beebab3bf164249828124ae00",
+        "refinement_interpretation_Ex10b_Tm_refine_f3e142df71a242a3e99502b256642b5e",
+        "refinement_interpretation_FStar.Ref_Tm_refine_031eb367c8dbcfe8a5ffc7b0a4ad2281",
+        "refinement_interpretation_FStar.Ref_Tm_refine_6dad3394a7b23d86d607c303ffd1e2f7",
+        "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
+        "refinement_interpretation_FStar.Ref_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
+        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.addr_of",
+        "typing_FStar.Monotonic.Heap.only",
+        "typing_FStar.Monotonic.Heap.op_Hat_Plus_Hat",
+        "typing_FStar.Ref.addr_of", "typing_FStar.Ref.contains",
+        "typing_FStar.Ref.only", "typing_FStar.Ref.sel",
+        "typing_FStar.Set.mem"
+      ],
+      0,
+      "af7a4c34eed01a41e2607d61827ebdb1"
     ],
     [
       "Ex10b.test",
@@ -427,7 +521,116 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of"
       ],
       0,
-      "60915c6bfb9004ce566e0f3aa213cc68"
+      "dd7682db1a9032427719006ea5d41a71"
+    ],
+    [
+      "Ex10b.point",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_eb48192ac9da37a7c3551a1c91338a9c",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "5100e4fc65a6f6868d617ac7f4281345"
+    ],
+    [
+      "Ex10b.__proj__Point__item__x",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_eb48192ac9da37a7c3551a1c91338a9c",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "a40192f0ac053b7bcea1b8866ca31e9e"
+    ],
+    [
+      "Ex10b.__proj__Point__item__y",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqEx10b_Tm_refine_02317b3e5a32c06e3b137a9aed1fedd4",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "a3cbbd1700470dced8fd882fff1fa561"
+    ],
+    [
+      "Ex10b.__proj__Point__item__y",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "data_elim_Ex10b.Point",
+        "equation_Prims.nat", "fuel_guarded_inversion_Ex10b.point",
+        "function_token_typing_Prims.int",
+        "haseqEx10b_Tm_refine_02317b3e5a32c06e3b137a9aed1fedd4",
+        "haseqEx10b_Tm_refine_eb48192ac9da37a7c3551a1c91338a9c",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "proj_equation_Ex10b.Point_x", "projection_inverse_Ex10b.Point_x",
+        "projection_inverse_Ex10b.Point_y",
+        "refinement_interpretation_Ex10b_Tm_refine_a6b3b93ccac4faacfc19f781025f5715",
+        "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Ref.addr_of"
+      ],
+      0,
+      "3639e7faf0b4a0d2c615b11be5ee9159"
+    ],
+    [
+      "Ex10b.new_point",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "98dbf4407111149ee9983ba56d64d9bd"
+    ],
+    [
+      "Ex10b.shift_x_p1",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Prims.nat", "fuel_guarded_inversion_Ex10b.point",
+        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
+        "haseqEx10b_Tm_refine_62b21a90d530332c8f0058ff9b1dea60",
+        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
+        "haseqEx10b_Tm_refine_c4623ed4e655cdebc8c2a6e38108bc12",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "15ea65e38696ef41e5f1e397eec7cae0"
+    ],
+    [
+      "Ex10b.shift_p1",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Prims.nat", "fuel_guarded_inversion_Ex10b.point",
+        "haseqEx10b_Tm_refine_2f55425cec8006a936f9fef8bfc25373",
+        "haseqEx10b_Tm_refine_62b21a90d530332c8f0058ff9b1dea60",
+        "haseqEx10b_Tm_refine_b74e7510a68dd2957de43bf46195028b",
+        "haseqEx10b_Tm_refine_c4623ed4e655cdebc8c2a6e38108bc12",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "f8e417ecd39d8cd651c8aef5388e4a7d"
     ]
   ]
 ]

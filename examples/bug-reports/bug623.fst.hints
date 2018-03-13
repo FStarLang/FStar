@@ -9,24 +9,19 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_typing_intro_FStar.Pervasives.V@tok",
-        "function_token_typing_Prims.unit",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "unit_inversion", "unit_typing"
+        "function_token_typing_Prims.unit"
       ],
       0,
-      "b4c532b70414dcc20cd929cabb11b744"
+      "f5898659069f8ab2871414f7947c3284"
     ],
     [
       "Bug623.null2",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "8a3641dc0d97ff8abc66c07c99a1b74b"
+      "f58f7b4945a71a0600713e38147feda4"
     ],
     [
       "Bug623.null3",
@@ -35,7 +30,7 @@
       1,
       [ "@query" ],
       0,
-      "9091770dbcbf7f8a0eb26e80b22ca74d"
+      "cb6c01006d1905d1f5a730de3e643339"
     ]
   ]
 ]

@@ -32,7 +32,23 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "473d55fda2069a83328e72b1274b56b1"
+      "5af0581fa5be4a97d78ddacca3b148c8"
+    ],
+    [
+      "Pruning.lemma",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Pruning_Tm_refine_81746e462692213c028719b75d01a164",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "dba49a092ddca337c740d86f6c476082"
     ]
   ]
 ]

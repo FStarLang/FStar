@@ -14,11 +14,28 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.DM4F.ExnSt.exnst", "function_token_typing_Prims.int",
         "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "b8f49905651a76e360c5c230126855d8"
+      "a348aa7e22e71a5f48741699d631617b"
+    ],
+    [
+      "FStar.DM4F.ExnSt.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.ExnSt_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
+        "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
+        "equation_FStar.DM4F.ExnSt.exnst", "function_token_typing_Prims.int",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "459912089a79f8cb3ed5f12961e15963"
     ]
   ]
 ]

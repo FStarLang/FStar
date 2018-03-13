@@ -1,6 +1,7 @@
 module FStar.DependentMap
 
-noeq abstract type t (key: eqtype) (value: (key -> Tot Type)) : Type = {
+noeq abstract type t (key:eqtype) (value: (key -> Type)) =
+{
   mappings: (k: key) -> Tot (value k)
 }
 

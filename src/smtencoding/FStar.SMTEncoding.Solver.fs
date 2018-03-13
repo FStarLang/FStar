@@ -77,7 +77,7 @@ let initialize_hints_db src_filename format_filename : unit =
                 then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
          end
 
-let finalize_hints_db src_filename : unit =
+let finalize_hints_db src_filename :unit =
     begin if Options.record_hints () then
           let hints = Option.get !recorded_hints in
           let hints_db = {
@@ -392,9 +392,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let default_settings, next_hint =
         let qname, index =
-            match env.qname_and_index with
-            | None -> failwith "No query name set!"
-            | Some (q, n) -> Ident.text_of_lid q, n
+            match env.qtbl_name_and_index with
+            | _, None -> failwith "No query name set!"
+            | _, Some (q, n) -> Ident.text_of_lid q, n
         in
         let rlimit =
             Prims.op_Multiply

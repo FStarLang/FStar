@@ -1,0 +1,106 @@
+[
+  "­À·\u001fcaq0À²MñÌ\u000ec­",
+  [
+    [
+      "Div.g0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "equation_FStar.Tactics.Effect.lift_div_tac",
+        "equation_FStar.UInt32.n", "equation_Prims.pure_pre",
+        "forall-interp",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "interpretation_Div_Tm_abs_87d39e3d194ea7f66c277726f6de5dda",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_b1a0f35c872c97dcbf9b0eefaa5f4bb5",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_fc97c322fe13167a373172f89c2c23f0",
+        "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
+      ],
+      0,
+      "57fcb1684d42ebb71d4179c110f6dd5a"
+    ],
+    [ "Div.f", 1, 2, 1, [ "@query" ], 0, "4e3fa966e2f557530215f16361eb0ea4" ],
+    [
+      "Div.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "equation_FStar.Tactics.Effect.lift_div_tac",
+        "equation_FStar.UInt32.n", "equation_Prims.pure_pre",
+        "forall-interp",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "interpretation_Div_Tm_abs_87d39e3d194ea7f66c277726f6de5dda",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_b1a0f35c872c97dcbf9b0eefaa5f4bb5",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_fc97c322fe13167a373172f89c2c23f0",
+        "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
+      ],
+      0,
+      "2468dde7e58fe6b6ca28a06e654ae23a"
+    ],
+    [
+      "Div.g0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "equation_FStar.Tactics.Effect.lift_div_tac",
+        "equation_FStar.UInt32.n", "equation_Prims.pure_pre",
+        "forall-interp",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "interpretation_Div_Tm_abs_87d39e3d194ea7f66c277726f6de5dda",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_b1a0f35c872c97dcbf9b0eefaa5f4bb5",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_fc97c322fe13167a373172f89c2c23f0",
+        "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
+      ],
+      0,
+      "11bdfc94f28de5443082f06a96613a27"
+    ],
+    [
+      "Div.g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "equation_FStar.Tactics.Effect.lift_div_tac",
+        "equation_FStar.UInt32.n", "equation_Prims.pure_pre",
+        "forall-interp",
+        "function_token_typing_FStar.Tactics.Types.proofstate",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "interpretation_Div_Tm_abs_87d39e3d194ea7f66c277726f6de5dda",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_b1a0f35c872c97dcbf9b0eefaa5f4bb5",
+        "interpretation_FStar.Tactics.Effect_Tm_abs_fc97c322fe13167a373172f89c2c23f0",
+        "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
+      ],
+      0,
+      "a085669034a6747d0675c773f0d93135"
+    ]
+  ]
+]

@@ -2,6 +2,8 @@ module CoreCrypto
 
 open FStar.Bytes
 
+assume val now: unit -> EXT UInt32.t
+
 (* ------------ Hashing ------------ *)
 type hash_alg =
   | MD5
@@ -117,6 +119,8 @@ assume val stream_decryptor : stream_cipher -> bytes -> EXT cipher_stream
 assume val stream_process : cipher_stream -> bytes -> EXT bytes
 assume val stream_fini : cipher_stream -> EXT unit
 
+assume val init : unit -> EXT int
+assume val zero : l:nat -> EXT (lbytes l)
 assume val random : l:nat -> EXT (lbytes l)
 
 assume val rsa_gen_key : int -> EXT (k:rsa_key{Some? k.rsa_prv_exp})

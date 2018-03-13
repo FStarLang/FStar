@@ -255,11 +255,7 @@ let pat_as_exp (allow_implicits:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, Rel.conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], Rel.trivial_guard, [])
              in
-             let e = mk (Tm_meta(mk_Tm_app (Syntax.fv_to_tm fv)
-                                           (args |> List.rev) None p.p,
-                                 Meta_desugared Data_app))
-                     None
-                     p.p in
+             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) None p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
               List.rev w |> List.flatten,
@@ -681,9 +677,16 @@ let strengthen_precondition
                   strengthen,
        {g0 with guard_f=Trivial}
 
+let stable_lcomp lc =
+    U.is_tot_or_gtot_lcomp lc
+    || U.is_tac_lcomp lc
+
+let stable_comp c =
+    U.is_tot_or_gtot_comp c
+    || U.is_tac_comp c
 
 let lcomp_has_trivial_postcondition lc =
-    U.is_tot_or_gtot_lcomp lc
+    stable_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
 
@@ -717,11 +720,10 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               if U.is_total_lcomp lc1
               then if U.is_total_lcomp lc2
                    then [TOTAL]
-                   else if U.is_tot_or_gtot_lcomp lc2
+                   else if stable_lcomp lc2
                    then [SOMETRIVIAL]
                    else []
-              else if U.is_tot_or_gtot_lcomp lc1
-                   && U.is_tot_or_gtot_lcomp lc2
+              else if stable_lcomp lc1 && stable_lcomp lc2
               then [SOMETRIVIAL]
               else []
           in
@@ -775,8 +777,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
-            then if U.is_tot_or_gtot_comp c1
-                 && U.is_tot_or_gtot_comp c2
+            then if stable_comp c1
+                 && stable_comp c2
                  then Inl (c2, "Early in prims; we don't have bind yet")
                  else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
@@ -787,6 +789,15 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
+            else if stable_comp c1
+                 && stable_comp c2
+            then let ty = U.comp_result c2 in
+                 Inl (S.mk_Comp ({ comp_univs = [env.universe_of env ty]
+                                 ; effect_name = C.effect_Tac_lid
+                                 ; result_typ = ty
+                                 ; effect_args = []
+                                 ; flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION]
+                                 }), "both Tac")
             else match e1opt, b with
                    | Some e, Some x ->
                      if U.is_total_comp c1
@@ -1358,7 +1369,7 @@ let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
 let gather_free_univnames env t : list<univ_name> =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
-    let univnames = BU.fifo_set_difference tm_univnames ctx_univnames |> BU.fifo_set_elements in
+    let univnames = BU.set_difference tm_univnames ctx_univnames |> BU.set_elements in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
     //     (Print.set_to_string Ident.text_of_id ctx_univnames)
@@ -1381,12 +1392,14 @@ let check_universe_generalization
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
     let univnames = gather_free_univnames env t in
+    if Env.debug env <| Options.Other "Gen"
+    then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
     let univs = Free.univs t in
     if Env.debug env <| Options.Other "Gen"
     then BU.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "After generalization: %s\n"  (Print.term_to_string t);
+    then BU.print2 "After generalization, t: %s and univs: %s\n"  (Print.term_to_string t) (Print.univ_names_to_string gen);
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in
@@ -1399,9 +1412,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let norm c =
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
-         let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.Eager_unfolding; N.NoFullNorm] env c
-                 else Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm] env c in
+         let c = Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.NoDeltaSteps] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
@@ -1616,7 +1627,7 @@ let check_top_level env g lc : (bool * comp) =
   if U.is_total_lcomp lc
   then discharge g, lcomp_comp lc
   else let c = lcomp_comp lc in
-       let steps = [Normalize.Beta] in
+       let steps = [Normalize.Beta; Normalize.NoFullNorm] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env
@@ -1744,14 +1755,10 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
   let lbname: lbname = Inr fv in
-  let lb: letbindings = false, [{
-     lbname = lbname;
-     lbunivs = [];
-     lbtyp = S.tun;
-     lbdef = def;
-     lbeff = C.effect_Tot_lid; //this will be recomputed correctly
-     lbattrs = []
-  }] in
+  let lb: letbindings =
+    // the effect label will be recomputed correctly
+    false, [U.mk_letbinding lbname [] S.tun C.effect_Tot_lid def [] Range.dummyRange]
+  in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
@@ -1784,7 +1791,13 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         match q with
         | Assumption ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x || (env.is_iface && x=Inline_for_extraction))
+          |> List.for_all (fun x -> x=q
+                              || x=Logic
+                              || inferred x
+                              || visibility x
+                              || assumption x
+                              || (env.is_iface && x=Inline_for_extraction)
+                              || x=NoExtract)
 
         | New -> //no definition provided
           quals
@@ -1803,7 +1816,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Noeq
         | Unopteq ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
 
         | TotalEffect ->
           quals
@@ -1816,7 +1829,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Reifiable
         | Reflectable _ ->
           quals
-          |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect)
+          |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect || x=Visible_default)
 
         | Private ->
           true //only about visibility; always legal in combination with others
@@ -1940,8 +1953,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
                 S.Discriminator lid ::
-                (if only_decl then [S.Logic] else []) @
-                (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
+                (if only_decl then [S.Logic; S.Assumption] else []) @
+                //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
                 List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
             in
 
@@ -1985,14 +1998,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
-                let lb = {
-                    lbname=Inr (S.lid_as_fv discriminator_name dd None);
-                    lbunivs=uvs;
-                    lbtyp=lbtyp;
-                    lbeff=C.effect_Tot_lid;
-                    lbdef=SS.close_univ_vars uvs imp;
-                    lbattrs=[]
-                } in
+                let lb = U.mk_letbinding
+                            (Inr (S.lid_as_fv discriminator_name dd None))
+                            uvs
+                            lbtyp
+                            C.effect_Tot_lid
+                            (SS.close_univ_vars uvs imp)
+                            []
+                            Range.dummyRange
+                in
                 let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                              sigquals = quals;
                              sigrng = p;
@@ -2076,7 +2090,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbtyp=lbtyp;
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp;
-                  lbattrs=[]
+                  lbattrs=[];
+                  lbpos=Range.dummyRange;
               } in
               let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                            sigquals = quals;
@@ -2148,3 +2163,72 @@ let mk_data_operations iquals env tcs se =
     mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
 
   | _ -> []
+
+
+(* private *)
+let haseq_suffix = "__uu___haseq"
+
+let is_haseq_lid lid = 
+  let str = lid.str in let len = String.length str in
+  let haseq_suffix_len = String.length haseq_suffix in
+  len > haseq_suffix_len &&
+  String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
+
+let get_haseq_axiom_lid lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ haseq_suffix))])
+
+//get the optimized hasEq axiom for this inductive
+//the caller is supposed to open the universes, and pass along the universe substitution and universe names
+//returns -- lid of the hasEq axiom
+//        -- the hasEq axiom for the inductive
+//        -- opened parameter binders
+//        -- opened index binders
+//        -- conjunction of hasEq of the binders
+let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:univ_names) :(lident * term * binders * binders * term) =
+  let lid, bs, t =
+    match ty.sigel with
+    | Sig_inductive_typ (lid, _, bs, t, _, _) -> lid, bs, t
+    | _                                       -> failwith "Impossible!"
+  in
+
+  //apply usubt to bs
+  let bs = SS.subst_binders usubst bs in
+  //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
+  let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
+  //open t with binders bs
+  let bs, t = SS.open_term bs t in
+  //get the index binders, if any
+  let ibs =
+    match (SS.compress t).n with
+    | Tm_arrow (ibs, _) -> ibs
+    | _                 -> []
+  in
+  //open the ibs binders
+  let ibs = SS.open_binders ibs in
+  //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
+  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+  //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
+  //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
+  //haseq of ind
+  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
+  //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
+  //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
+  let bs' = List.filter (fun b ->
+    Rel.subtype_nosmt en (fst b).sort  (fst (U.type_u ()))
+  ) bs in
+  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
+  //implication
+  let fml = U.mk_imp haseq_bs haseq_ind in
+  //attach pattern -- is this the right place ?
+  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+  //fold right with ibs, close and add a forall b
+  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
+  
+  //fold right with bs, close and add a forall b
+  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
+
+  let axiom_lid = get_haseq_axiom_lid lid in
+  axiom_lid, fml, bs, ibs, haseq_bs

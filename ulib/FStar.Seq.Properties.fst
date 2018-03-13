@@ -231,7 +231,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
 #set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 30"
-val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
+abstract val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
             ((length x = 5)

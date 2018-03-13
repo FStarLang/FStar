@@ -2,7 +2,7 @@
   "º\u001c\u0004Ó\u0002MÞ#\u0015n\rÆÀIü\b",
   [
     [
-      "AllocSTwHeaps.2225",
+      "AllocSTwHeaps.2212",
       1,
       2,
       1,
@@ -12,7 +12,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "666cacec8c1c919067de1f362dc90c2c"
+      "f5bbe0edffec4342b3cd17f4e7e9eb16"
     ],
     [
       "AllocSTwHeaps.ist_witnessed",
@@ -25,7 +25,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "f192315e31c7c61dc39ee2f3f51beaf6"
+      "24a155cbfddeadfb9219190fc9ed6a32"
     ],
     [
       "AllocSTwHeaps.ist_witness",
@@ -38,7 +38,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "d18c7d943935679a462dad066f687031"
+      "587f20a28b566d25c771fe788287647c"
     ],
     [
       "AllocSTwHeaps.ist_recall",
@@ -51,7 +51,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "8544fd53d7eca7c713e67712b17aa270"
+      "92d73e6ccbfacac9d27f3a5fb55ccdd6"
     ],
     [
       "AllocSTwHeaps.contains_lemma",
@@ -70,7 +70,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "1072d0b2fc31be55f4245f3ab9f91178"
+      "bf7a5111efba49dd977a15bac2215f54"
     ],
     [
       "AllocSTwHeaps.ref",
@@ -92,7 +92,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "94aa0eb9c37da1d2cfa1c09bbf255582"
+      "c67afdd64b182de2607652e9ad4dee0d"
     ],
     [
       "AllocSTwHeaps.alloc",
@@ -114,18 +114,17 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_5694aa6cb032c1a787a03895fe77cef3",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_7d1ecf302207478c2c2b5f3c521f42f8",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_a51928430ff7628816c2d836c4b2574e",
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_d599d357eab987554ee4e8a10370739f",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "token_correspondence_AllocSTwHeaps.contains",
         "token_correspondence_AllocSTwHeaps.heap_rel",
-        "typing_AllocSTwHeaps.gen_ref", "typing_AllocSTwHeaps.upd",
-        "typing_FStar.Heap.trivial_preorder",
+        "typing_AllocSTwHeaps.gen_ref", "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.contains",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "32008ee746b68fdf80e955d4efb85c82"
+      "fec101923682633d94619c9961bf1554"
     ],
     [
       "AllocSTwHeaps.read",
@@ -137,7 +136,7 @@
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda"
       ],
       0,
-      "6e15db095bdbbafd6126ba73c7424697"
+      "c56e3e1c619d94312366d765b3cb4672"
     ],
     [
       "AllocSTwHeaps.write",
@@ -155,7 +154,7 @@
         "typing_AllocSTwHeaps.upd", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "296a9a765c9764b28e7fcb92ae30eaff"
+      "89663287eabc9e05193607afc9a80849"
     ],
     [
       "AllocSTwHeaps.precise_write",
@@ -173,7 +172,7 @@
         "typing_AllocSTwHeaps.upd", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "c6043f58df14f2f242457ddb6f372133"
+      "4af408b6bd443a3707ce485ccf64e313"
     ],
     [
       "AllocSTwHeaps.recall",
@@ -198,7 +197,94 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "8a9ce8ba6a5f26bf192580ad6c19bd2d"
+      "19a51479600180ecf06b539dd2e1816b"
+    ],
+    [
+      "AllocSTwHeaps.10407",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocSTwHeaps.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_AllocSTwHeaps.heap_rel"
+      ],
+      0,
+      "bf75ef77a2c039a5512edecbaa11780c"
+    ],
+    [
+      "AllocSTwHeaps.ist_witnessed",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocSTwHeaps.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_AllocSTwHeaps.heap_rel"
+      ],
+      0,
+      "520fdea5b7b6011b4ab761eeaf30db31"
+    ],
+    [
+      "AllocSTwHeaps.ist_witnessed",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_AllocSTwHeaps.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_AllocSTwHeaps.heap_rel"
+      ],
+      0,
+      "6d53d1f96d32dc871240cc651dd539dd"
+    ],
+    [
+      "AllocSTwHeaps.ist_witness",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocSTwHeaps.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_AllocSTwHeaps.heap_rel"
+      ],
+      0,
+      "2f6a363c95f5538622ada98a62d7fef2"
+    ],
+    [
+      "AllocSTwHeaps.ist_recall",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocSTwHeaps.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_AllocSTwHeaps.heap_rel"
+      ],
+      0,
+      "a65734172e22a3a3291ac2e83ef99208"
+    ],
+    [
+      "AllocSTwHeaps.ref",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_AllocSTwHeaps.contains", "equation_AllocSTwHeaps.heap_rel",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.stable", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "lemma_AllocSTwHeaps.contains_lemma",
+        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
+        "token_correspondence_AllocSTwHeaps.contains",
+        "token_correspondence_AllocSTwHeaps.heap_rel",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.contains",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
+      ],
+      0,
+      "7de6b6252668c8e3e95d6ecca36ef23f"
     ]
   ]
 ]

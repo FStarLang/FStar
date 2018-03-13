@@ -24,20 +24,30 @@ unfold let is_below r1 r2          = r2 `is_above` r1
 let is_strictly_below r1 r2 = r1 `is_below` r2 && r1 <> r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1 <> r2
 
-//All regions above a contained region are contained
-abstract let map_invariant (m:hmap) =
+[@"opaque_to_smt"]
+unfold private let map_invariant_predicate (m:hmap) :Type0 =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 
-abstract let downward_closed (h:hmap) =
+//All regions above a contained region are contained
+//AR: logic qualifier here ensures that quantifiers are shallowly encoded
+abstract logic let map_invariant (m:hmap) :Type0 = map_invariant_predicate m
+
+[@"opaque_to_smt"]
+unfold private let downward_closed_predicate (h:hmap) :Type0 =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
             \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-abstract let tip_top (tip:rid) (h:hmap) =
+abstract logic let downward_closed (h:hmap) :Type0 = downward_closed_predicate h
+
+[@"opaque_to_smt"]
+unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
+
+abstract logic let tip_top (tip:rid) (h:hmap) :Type0 = tip_top_predicate tip h
 
 let is_tip (tip:rid) (h:hmap) =
   (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
@@ -50,22 +60,38 @@ let rid_last_component (r:rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
+[@"opaque_to_smt"]
+unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
+  forall (r:rid). h `Map.contains` r ==> rid_last_component r < n
+
 (*
  * AR: all live regions have last component less than the rid_ctr
  *     marking it abstract, else it has a high-chance of firing even with a pattern
  *)
-abstract let rid_ctr_pred (h:hmap) (n:int) =
-  forall (r:rid).{:pattern (h `Map.contains` r)}
-               h `Map.contains` r ==> rid_last_component r < n
+abstract logic let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
   = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
-  
+
 noeq type mem =
   | HS : rid_ctr:int
          -> h:hmap
          -> tip:rid{is_wf_with_ctr_and_tip h rid_ctr tip}
          -> mem
+
+private let lemma_is_wf_ctr_and_tip_intro (h:hmap) (ctr:int) (tip:rid)
+  :Lemma (requires (root `is_in` h /\ (is_stack_region tip \/ tip = root) /\  tip `is_in` h /\
+                    tip_top_predicate tip h /\ map_invariant_predicate h /\
+                    downward_closed_predicate h /\ rid_ctr_pred_predicate h ctr))
+	 (ensures  (is_wf_with_ctr_and_tip h ctr tip))
+  = ()
+
+private let lemma_is_wf_ctr_and_tip_elim (m:mem)
+  :Lemma (requires (is_wf_with_ctr_and_tip m.h m.rid_ctr m.tip))  
+         (ensures  (root `is_in` m.h /\ (is_stack_region m.tip \/ m.tip = root) /\  m.tip `is_in` m.h /\
+	            tip_top_predicate m.tip m.h /\ map_invariant_predicate m.h /\
+                    downward_closed_predicate m.h /\ rid_ctr_pred_predicate m.h m.rid_ctr))
+  = ()
 
 (******* map_invariant related lemmas ******)
 
@@ -98,10 +124,10 @@ let lemma_tip_top (m:mem) (r:sid)
   = ()
 
 (*
- * Pointer uses lemma_tip_top by calling it explicitly with Classical.forall_intro2
- * Classical.forall_intro2 does not work well with SMTPat
- * So adding this smt form of the same lemma
- *)
+//  * Pointer uses lemma_tip_top by calling it explicitly with Classical.forall_intro2
+//  * Classical.forall_intro2 does not work well with SMTPat
+//  * So adding this smt form of the same lemma
+//  *)
 let lemma_tip_top_smt (m:mem) (r:rid)
   :Lemma (requires (is_stack_region r))
          (ensures  (r `is_in` m.h <==> r `is_above` m.tip))
@@ -114,8 +140,8 @@ let lemma_tip_top_smt (m:mem) (r:rid)
 (****** rid_ctr_pred related lemmas ******)
 
 (*
- * Expose the meaning of the predicate itself
- *)
+//  * Expose the meaning of the predicate itself
+//  *)
 let lemma_rid_ctr_pred ()
   :Lemma (forall (m:mem) (r:rid).{:pattern (m.h `Map.contains` r)} m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr)
   = ()
@@ -127,6 +153,7 @@ let empty_mem (m:hmap) =
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
   assume (rid_last_component root == 0);
+  lemma_is_wf_ctr_and_tip_intro h 1 tip;
   HS 1 h tip
 
 let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_color (color r) /\ not (disjoint r m.tip) /\ r<>root /\ is_stack_region m.tip})
@@ -146,11 +173,13 @@ let popped m0 m1 =
 
 let pop (m0:mem{poppable m0}) : Tot mem =
   root_has_color_zero();
+  lemma_is_wf_ctr_and_tip_elim m0;
   let dom = remove_elt (Map.domain m0.h) m0.tip in
   let h0 = m0.h in
   let h1 = Map.restrict dom m0.h in
   let tip0 = m0.tip in
   let tip1 = parent tip0 in
+  lemma_is_wf_ctr_and_tip_intro h1 m0.rid_ctr tip1;
   HS m0.rid_ctr h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
@@ -158,8 +187,8 @@ let pop (m0:mem{poppable m0}) : Tot mem =
 //enabling extraction of mreference to just a reference in ML and pointer in C
 //note that this not enforcing any abstraction
 (*
- * AR: 12/26: Defining it using Heap.mref directly, removing the HyperHeap.mref indirection
- *)
+//  * AR: 12/26: Defining it using Heap.mref directly, removing the HyperHeap.mref indirection
+//  *)
 private
 noeq
 type mreference' (a:Type) (rel:preorder a) =
@@ -216,10 +245,10 @@ let mmmref (a:Type) (rel:preorder a) =
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
 
 (*
- * AR: this used to be (is_eternal_region i \/ i `is_above` m.tip) /\ Map.contains ...
- *     As far as the memory model is concerned, this should just be Map.contains
- *     The fact that an eternal region is always contained (because of monotonicity) should be used in the ST interface
- *)
+//  * AR: this used to be (is_eternal_region i \/ i `is_above` m.tip) /\ Map.contains ...
+//  *     As far as the memory model is concerned, this should just be Map.contains
+//  *     The fact that an eternal region is always contained (because of monotonicity) should be used in the ST interface
+//  *)
 let live_region (m:mem) (i:rid) :Tot bool = Map.contains m.h i
 
 let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) :GTot bool =
@@ -255,37 +284,49 @@ private val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
 (*
- * memory model API
- *)
+//  * memory model API
+//  *)
 let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
   : GTot a
   = Heap.sel (Map.sel m.h (frameOf s)) (as_ref s)
 
 let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (frameOf s)}) (v:a)
   : GTot mem
-  = let i = frameOf s in
-    HS m.rid_ctr (Map.upd m.h i (Heap.upd (Map.sel m.h i) (as_ref s) v)) m.tip
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let i = frameOf s in
+    let h = Map.upd m.h i (Heap.upd (Map.sel m.h i) (as_ref s) v) in
+    lemma_is_wf_ctr_and_tip_intro h m.rid_ctr m.tip;
+    HS m.rid_ctr h m.tip
 
 let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:mem{m.h `Map.contains` id})
   :Tot (p:(mreference a rel * mem){let (r, h) = Heap.alloc rel (Map.sel m.h id) init mm in
                                    as_ref (fst p) == r /\
                                    (snd p).h == Map.upd m.h id h})
-  = let r, h = Heap.alloc rel (Map.sel m.h id) init mm in
-    (mk_mreference id r), (HS m.rid_ctr (Map.upd m.h id h) m.tip)
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let r, h = Heap.alloc rel (Map.sel m.h id) init mm in
+    let h = Map.upd m.h id h in
+    lemma_is_wf_ctr_and_tip_intro h m.rid_ctr m.tip;
+    (mk_mreference id r), (HS m.rid_ctr h m.tip)
 
 let free (#a:Type0) (#rel:preorder a) (r:mreference a rel{is_mm r}) (m:mem{m `contains` r})
   :Tot mem
-  = let i = frameOf r in
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let i = frameOf r in
     let h = Map.sel m.h i in
     let new_h = Heap.free_mm h (as_ref r) in
-    HS m.rid_ctr (Map.upd m.h i new_h) m.tip
+    let new_h = Map.upd m.h i new_h in
+    lemma_is_wf_ctr_and_tip_intro new_h m.rid_ctr m.tip;
+    HS m.rid_ctr new_h m.tip
 
 let upd_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r}) (v:a)
   :Tot mem
-  = let i = frameOf r in
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let i = frameOf r in
     let h = Map.sel m.h i in
     let new_h = Heap.upd_tot h (as_ref r) v in
-    HS m.rid_ctr (Map.upd m.h i new_h) m.tip
+    let new_h = Map.upd m.h i new_h in
+    lemma_is_wf_ctr_and_tip_intro new_h m.rid_ctr m.tip;
+    HS m.rid_ctr new_h m.tip
 
 let sel_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r})
   :Tot a
@@ -297,17 +338,23 @@ let fresh_frame (m0:mem) (m1:mem) =
   m1.h == Map.upd m0.h m1.tip Heap.emp
 
 let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
-  = let new_tip_rid = extend m.tip m.rid_ctr 1 in
-    HS (m.rid_ctr + 1) (Map.upd m.h new_tip_rid Heap.emp) new_tip_rid
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let new_tip_rid = extend m.tip m.rid_ctr 1 in
+    let h = Map.upd m.h new_tip_rid Heap.emp in
+    assert (forall (s:rid). (new_tip_rid `is_above` s /\ s `is_in` h) ==> s = new_tip_rid);
+    lemma_is_wf_ctr_and_tip_intro h (m.rid_ctr + 1) new_tip_rid;
+    HS (m.rid_ctr + 1) h new_tip_rid
 
 let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ m.h `Map.contains` parent})
                        (c:option int{None? c \/ is_eternal_color (Some?.v c)})
   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
-  = let new_rid =
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let new_rid =
       if None? c then extend_monochrome parent m.rid_ctr
       else extend parent m.rid_ctr (Some?.v c)
     in
     let h1 = Map.upd m.h new_rid Heap.emp in
+    lemma_is_wf_ctr_and_tip_intro h1 (m.rid_ctr + 1) m.tip;
     new_rid, HS (m.rid_ctr + 1) h1 m.tip
 
 (****** The following two lemmas are only used in FStar.Pointer.Base, and invoked explicitly ******)
@@ -326,11 +373,11 @@ let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a
     else lemma_sel_same_addr h r2 r1
 
 (*
- * AR: 12/26: modifies clauses
- *            NOTE: the modifies clauses used to have a m0.tip == m1.tip conjunct too
- *                  which seemed a bit misplaced
- *                  removing that conjunct required very few changes (one in HACL), since ST effect gives it already
- *)
+// //  * AR: 12/26: modifies clauses
+// //  *            NOTE: the modifies clauses used to have a m0.tip == m1.tip conjunct too
+// //  *                  which seemed a bit misplaced
+// //  *                  removing that conjunct required very few changes (one in HACL), since ST effect gives it already
+// //  *)
 let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
   modifies_just s m0.h m1.h
 

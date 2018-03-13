@@ -2,15 +2,6 @@
   "Xr\u0005ØQ§ˇùΩ»≈…\u0004\u0019˚°",
   [
     [
-      "Bug077.ok",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4e384fd5ebaaf4bf1ddde4d374a72ab2"
-    ],
-    [
       "Bug077.ok2",
       1,
       2,
@@ -22,16 +13,7 @@
         "refinement_interpretation_Bug077_Tm_refine_89761103e61acc2f14aca90db784842d"
       ],
       0,
-      "61a21e919004eeb8bc715ee7f3dd1329"
-    ],
-    [
-      "Bug077.ok3",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3a7af67d16dda00f59a6718a3e69496a"
+      "c8382065d1af1048f5b3454ae6b892a1"
     ],
     [
       "Bug077.ok4",
@@ -49,7 +31,7 @@
         "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "3e9a44de9e52bbad143da138c6f0f57d"
+      "0738d44e57d2cc39284f40936c9ac480"
     ],
     [
       "Bug077.ok5",
@@ -58,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "95db279650b591764eccd46b88ac9307"
+      "b91dcbf1fa953e87b467b229e5cbe698"
     ],
     [
       "Bug077.ok5",
@@ -78,7 +60,7 @@
         "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "2025eb45b7919d39c6532394b8d6f1c2"
+      "58cd361e010be379163f68b4a8e2cff9"
     ],
     [
       "Bug077.bug",
@@ -96,7 +78,7 @@
         "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "8779d321dc54bb58d6097bbb79c943eb"
+      "c0456dfc6e15d0bea4f222c4007e64c0"
     ]
   ]
 ]

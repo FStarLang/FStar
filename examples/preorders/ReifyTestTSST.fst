@@ -13,15 +13,15 @@ abstract type timestamp = nat
 
 abstract type timestamped_state (state:Type) = timestamp * state
 
-val get_timestamp : #state:Type -> timestamped_state state -> Tot timestamp
+abstract val get_timestamp : #state:Type -> timestamped_state state -> Tot timestamp
 let get_timestamp #state tss = fst tss
 
 
-val get_state : #state:Type -> timestamped_state state -> Tot state
+abstract val get_state : #state:Type -> timestamped_state state -> Tot state
 let get_state #state tss = snd tss
 
 
-val older_than : relation timestamp
+abstract val older_than : relation timestamp
 let older_than ts0 ts1 = ts0 < ts1
 
 
