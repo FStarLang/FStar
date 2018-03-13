@@ -17,10 +17,6 @@ let inspect_comp (c:comp) = __inspect_comp c
 assume val __pack_comp : comp_view -> comp
 let pack_comp (cv:comp_view) = __pack_comp cv
 
-(* They are inverses *)
-assume val pack_inspect_inv : (t:term) -> Lemma (pack (inspect t) == t)
-assume val inspect_pack_inv : (tv:term_view) -> Lemma (inspect (pack tv) == tv)
-
 assume private val __inspect_sigelt : sigelt -> sigelt_view
 let inspect_sigelt (se:sigelt) : sigelt_view = __inspect_sigelt se
 

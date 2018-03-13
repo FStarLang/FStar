@@ -84,6 +84,11 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_bv rng bv)] None rng
     | Pat_Wild bv ->
         S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed_bv rng bv)] None rng
+    | Pat_Dot_Term (bv, t) ->
+        S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed_bv rng bv);
+                                        S.as_arg (embed_term rng t)]
+                    None rng
+
 
 let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
 let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
@@ -139,6 +144,20 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
 
     | Tv_Match (t, brs) ->
         S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed_term rng t); S.as_arg (embed_list embed_branch fstar_refl_branch rng brs)]
+                    None rng
+
+    | Tv_AscribedT (e, t, tacopt) ->
+        S.mk_Tm_app ref_Tv_AscT.t
+                    [S.as_arg (embed_term rng e);
+                     S.as_arg (embed_term rng t);
+                     S.as_arg (embed_option embed_term fstar_refl_term rng tacopt)]
+                    None rng
+
+    | Tv_AscribedC (e, c, tacopt) ->
+        S.mk_Tm_app ref_Tv_AscC.t
+                    [S.as_arg (embed_term rng e);
+                     S.as_arg (embed_comp rng c);
+                     S.as_arg (embed_option embed_term fstar_refl_term rng tacopt)]
                     None rng
 
     | Tv_Unknown ->
@@ -313,6 +332,11 @@ let rec unembed_pattern (t : term) : option<pattern> =
         BU.bind_opt (unembed_bv bv) (fun bv ->
         Some <| Pat_Wild bv)
 
+    | Tm_fvar fv, [(bv, _); (t, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+        BU.bind_opt (unembed_bv bv) (fun bv ->
+        BU.bind_opt (unembed_term t) (fun t ->
+        Some <| Pat_Dot_Term (bv, t)))
+
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
         None
@@ -321,7 +345,6 @@ let unembed_branch = unembed_pair unembed_pattern unembed_term
 let unembed_argv = unembed_pair unembed_term unembed_aqualv
 
 let unembed_term_view (t:term) : option<term_view> =
-    let t = U.unascribe t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var.lid ->
@@ -380,6 +403,18 @@ let unembed_term_view (t:term) : option<term_view> =
         BU.bind_opt (unembed_term t) (fun t ->
         BU.bind_opt (unembed_list unembed_branch brs) (fun brs ->
         Some <| Tv_Match (t, brs)))
+
+    | Tm_fvar fv, [(e, _); (t, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
+        BU.bind_opt (unembed_term e) (fun e ->
+        BU.bind_opt (unembed_term t) (fun t ->
+        BU.bind_opt (unembed_option unembed_term tacopt) (fun tacopt ->
+        Some <| Tv_AscribedT (e, t, tacopt))))
+
+    | Tm_fvar fv, [(e, _); (c, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscC.lid ->
+        BU.bind_opt (unembed_term e) (fun e ->
+        BU.bind_opt (unembed_comp c) (fun c ->
+        BU.bind_opt (unembed_option unembed_term tacopt) (fun tacopt ->
+        Some <| Tv_AscribedC (e, c, tacopt))))
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
         Some <| Tv_Unknown
