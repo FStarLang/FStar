@@ -70,3 +70,5 @@ let mk_let_rec () : Tac unit =
 
 let f3 : int = synth_by_tactic mk_let_rec
 let _ = assert_norm (f3 == 1)
+let ascribe : int = synth_by_tactic (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None)))
+

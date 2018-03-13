@@ -374,6 +374,10 @@ type emb_decl =
     | Embed
     | Unembed
 
+type emb_loc =
+    | S (* FStar.Syntax.Embeddings *)
+    | R (* FStar.Reflection.Embeddings *)
+
 type embedding = {
     embed  :mlexpr;
     unembed:mlexpr;
@@ -393,47 +397,50 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
     let str_to_name s     = lid_to_name (lid_of_str s) in
     let str_to_top_name s = lid_to_top_name (lid_of_str s) in
     let fstar_syn_syn_prefix s = str_to_name ("FStar_Syntax_Syntax." ^ s) in
-    let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s) in
-    let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s) in
     let fstar_refl_data_prefix s = str_to_name ("FStar_Reflection_Data." ^ s) in
-    let fstar_emb_basic_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s) in
-    let mk_basic_embedding (m: emb_decl) (s: string) =
+    let fstar_syn_emb_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s) in
+    let fstar_refl_emb_prefix s = str_to_name ("FStar_Reflection_Embeddings." ^ s) in
+    let mk_basic_embedding (m: emb_decl) (l:emb_loc) (s: string) =
+        let emb_fun = match l with
+            | S -> fstar_syn_emb_prefix
+            | R -> fstar_refl_emb_prefix
+        in
         match m with
-        | Embed -> fstar_emb_basic_prefix ("embed_" ^ s)
-        | Unembed -> fstar_emb_basic_prefix ("unembed_" ^ s) in
+        | Embed -> emb_fun ("embed_" ^ s)
+        | Unembed -> emb_fun ("unembed_" ^ s) in
     let mk_lam nm e =
         w <| MLE_Fun ([(nm, MLTY_Top)], e)
     in
     let id_embedding nm =
-        { embed = mk_basic_embedding Embed "any";
-          unembed = mk_basic_embedding Unembed "any";
+        { embed = mk_basic_embedding Embed S "any";
+          unembed = mk_basic_embedding Unembed S "any";
           type_repr = str_to_name nm }
     in
     let known_type_constructors =
-        [ (PC.int_lid,  [], fstar_syn_syn_prefix "t_int");
-          (PC.bool_lid, [], fstar_syn_syn_prefix "t_bool");
-          (PC.unit_lid, [], fstar_syn_syn_prefix "t_unit");
-          (PC.string_lid, [], fstar_syn_syn_prefix "t_string");
-          (RD.fstar_refl_types_lid "term", [], fstar_refl_data_prefix "t_term");
-          (RD.fstar_refl_types_lid "fv", [], fstar_refl_data_prefix "t_fv");
-          (RD.fstar_refl_types_lid "binder", [], fstar_refl_data_prefix "t_binder");
-          (RD.fstar_refl_syntax_lid "binders", [], fstar_refl_data_prefix "t_binders");
-          (RD.fstar_refl_syntax_lid "norm_step", [], fstar_refl_data_prefix "t_norm_step");
-          (PC.list_lid,   [Covariant], fstar_tc_common_prefix "t_list_of"); //one covariant argument
-          (PC.option_lid, [Covariant], fstar_tc_common_prefix "t_option_of");
-          (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_tc_common_prefix "t_tuple2_of") //two covariant arguments
+        [ (PC.int_lid,  [], fstar_syn_syn_prefix "t_int", S);
+          (PC.bool_lid, [], fstar_syn_syn_prefix "t_bool", S);
+          (PC.unit_lid, [], fstar_syn_syn_prefix "t_unit", S);
+          (PC.string_lid, [], fstar_syn_syn_prefix "t_string", S);
+          (RD.fstar_refl_types_lid "term", [], fstar_syn_syn_prefix "t_term", R);
+          (RD.fstar_refl_types_lid "fv", [], fstar_syn_syn_prefix "t_fv", R);
+          (RD.fstar_refl_types_lid "binder", [], fstar_syn_syn_prefix "t_binder", R);
+          (RD.fstar_refl_syntax_lid "binders", [], fstar_refl_data_prefix "t_binders", R);
+          (PC.norm_step_lid, [], fstar_syn_syn_prefix "t_norm_step", S);
+          (PC.list_lid,   [Covariant], fstar_syn_syn_prefix "t_list_of", S); //one covariant argument
+          (PC.option_lid, [Covariant], fstar_syn_syn_prefix "t_option_of", S);
+          // (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_tc_common_prefix "t_tuple2_of", S) //two covariant arguments
         ]
     in
     let is_known_type_constructor fv n =
         BU.for_some
-            (fun (x, args, _) -> fv_eq_lid fv x && n = List.length args)
+            (fun (x, args, _, _) -> fv_eq_lid fv x && n = List.length args)
             known_type_constructors
     in
     let embed_type_app (fv:S.fv) (arg_embeddings:list<embedding>) =
         let nm = fv.fv_name.v.ident.idText in
-        let _, variances, trepr_head =
+        let _, variances, trepr_head, loc_embedding =
             BU.find_opt
-                (fun (x, _, _) -> fv_eq_lid fv x)
+                (fun (x, _, _, _) -> fv_eq_lid fv x)
                 known_type_constructors
             |> BU.must
         in
@@ -453,7 +460,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
                embedding.unembed]
         in
         let mk embed_or_unembed =
-            let head = mk_basic_embedding embed_or_unembed nm in
+            let head = mk_basic_embedding embed_or_unembed loc_embedding nm in
             match variances with
             | [] -> head
             | _ ->
@@ -489,6 +496,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           match (U.un_uinst head).n with
           | Tm_refine(b, _) ->
             mk_embedding env b.sort
+
 
           | Tm_fvar fv
               when is_known_type_constructor fv n_args ->
@@ -561,7 +569,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           let res_embedding = mk_embedding env result_typ in
           if U.is_pure_comp c
           then begin
-            let embed_fun_N = mk_basic_embedding Embed ("arrow_" ^ string_of_int non_tvar_arity) in
+            let embed_fun_N = mk_basic_embedding Embed S ("arrow_" ^ string_of_int non_tvar_arity) in
             let args = arg_unembeddings @ [res_embedding.embed; lid_to_top_name fv] in
             let fun_embedding = w <| MLE_App(embed_fun_N, args) in
             let tabs = abstract_tvars tvar_names fun_embedding in

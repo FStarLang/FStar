@@ -269,15 +269,13 @@ let monoid_reflect (#a #b:Type) (p:permute b) (pc:permute_correct p)
     : squash (mdenote m vm e1 == mdenote m vm e2) =
   canon_correct p pc m vm e1; canon_correct p pc m vm e2
 
-(* Finds the position of first occurrence of x in xs;
-   TODO: move this to the standard library, just where?  Is there any
-         way I can add a new list function to the libraries without
-         giving separate realizations in OCaml and F*? *)
-let rec where_aux (#a:eqtype) (n:nat) (x:a) (xs:list a) :
+(* Finds the position of first occurrence of x in xs.
+   This is now specialized to terms and their funny term_eq. *)
+let rec where_aux (n:nat) (x:term) (xs:list term) :
     Tot (option nat) (decreases xs) =
   match xs with
   | [] -> None
-  | x'::xs' -> if x = x' then Some n else where_aux (n+1) x xs'
+  | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
@@ -408,8 +406,13 @@ let lem1 (a b c d : int) =
 (* Trying to only bring some constants to the front,
    as Nik said would be useful for separation logic *)
 
+val term_mem: term -> list term -> Tot bool
+let rec term_mem x = function
+  | [] -> false
+  | hd::tl -> if term_eq hd x then true else term_mem x tl
+
 // remember if something is a constant or not
-let is_special (ts:list term) (t:term) : Tac bool = t `mem` ts
+let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
 
 // put the special things sorted before the non-special ones,
 // but don't change anything else
