@@ -24,6 +24,9 @@ val unembed_bv          : unembedder<bv>
 val embed_binder        : embedder<binder>
 val unembed_binder      : unembedder<binder>
 
+val embed_binder_view   : embedder<(bv * aqualv)>
+val unembed_binder_view : unembedder<(bv * aqualv)>
+
 val embed_binders       : embedder<binders>
 val unembed_binders     : unembedder<binders>
 

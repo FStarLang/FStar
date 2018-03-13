@@ -1843,7 +1843,8 @@ and (term_as_mlexpr' :
              let uu____5531 =
                let uu____5540 = FStar_Syntax_Syntax.as_arg tv  in
                [uu____5540]  in
-             FStar_Syntax_Util.mk_app FStar_Reflection_Data.fstar_refl_pack
+             FStar_Syntax_Util.mk_app
+               FStar_Reflection_Data.fstar_refl_pack.FStar_Reflection_Data.t
                uu____5531
               in
            term_as_mlexpr' g t1

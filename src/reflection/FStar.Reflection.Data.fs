@@ -88,12 +88,19 @@ let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 
-let fstar_refl_inspect_lid = fstar_refl_basic_lid "inspect"
-let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_lid    = fstar_refl_basic_lid "pack"
-let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_fv_lid = fstar_refl_basic_lid "pack_fv"
-let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
+let mk_inspect_pack_pair s =
+    let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
+    let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
+    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_defined_at_level 1) None } in
+    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_defined_at_level 1) None } in
+    (inspect, pack)
+
+let fstar_refl_inspect        , fstar_refl_pack        = mk_inspect_pack_pair ""
+let fstar_refl_inspect_fv     , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
+let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
+let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
+let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
+let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
 
 (* assumed types *)
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
@@ -112,8 +119,15 @@ let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
 let fstar_refl_bv_view   = mk_refl_data_lid_as_term "bv_view"
 
-(* bv_view *)
-let ref_Mk_bv = fstar_refl_data_const "Mkbv_view"
+(* bv_view, this is a record constructor *)
+
+let ref_Mk_bv =
+    let lid = fstar_refl_data_lid "Mkbv_view" in
+    let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
+                                Ident.mk_ident ("bv_ppname", Range.dummyRange);
+                                Ident.mk_ident ("bv_index" , Range.dummyRange);
+                                Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    { lid = lid ; t = fvar lid Delta_constant (Some attr) }
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"

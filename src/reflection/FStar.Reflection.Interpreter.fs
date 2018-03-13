@@ -62,8 +62,7 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__inspect_bv" inspect_bv E.unembed_bv   E.embed_bv_view;
         mk1 "__pack_bv"    pack_bv E.unembed_bv_view E.embed_bv;
 
-        mk1 "__inspect_binder" inspect_binder E.unembed_binder
-            (embed_pair E.embed_bv fstar_refl_bv_view E.embed_aqualv fstar_refl_aqualv);
+        mk1 "__inspect_binder" inspect_binder E.unembed_binder E.embed_binder_view;
 
         mk2 "__pack_binder"    pack_binder E.unembed_bv E.unembed_aqualv E.embed_binder;
 

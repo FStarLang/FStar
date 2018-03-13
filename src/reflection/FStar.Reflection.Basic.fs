@@ -58,7 +58,15 @@ let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
 let pack_fv (ns:list<string>) : fv =
-    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) None
+    let lid = PC.p2l ns in
+    let attr =
+        if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
+        if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
+        if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
+        if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
+        None
+    in
+    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) attr
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
@@ -188,6 +196,9 @@ let rec inspect (t:term) : term_view =
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, brs)
 
+    | Tm_unknown ->
+        Tv_Unknown
+
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         Tv_Unknown
@@ -293,7 +304,7 @@ let pack (tv:term_view) : term =
         S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
 
     | Tv_Unknown ->
-        failwith "pack: unexpected term view"
+        S.mk Tm_unknown None Range.dummyRange
 
 let compare_bv (x:bv) (y:bv) : order =
     let n = S.order_bv x y in
