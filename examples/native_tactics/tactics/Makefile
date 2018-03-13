@@ -7,6 +7,7 @@ INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocam
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
+.PRECIOUS: %.ml
 .PHONY: %.test fstartaclib
 
 MODULES=Apply Arith Bane.Test CanonDeep Clear Cut DependentSynth Fail Imp Logic Nest Pruning Rename Retype Sequences Simplifier Tutorial Unify
