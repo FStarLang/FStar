@@ -160,23 +160,17 @@ let (reflection_primops :
                        in
                     let uu____434 =
                       let uu____437 =
-                        let uu____438 =
-                          FStar_Syntax_Embeddings.embed_pair
-                            FStar_Reflection_Embeddings.embed_bv
-                            FStar_Reflection_Data.fstar_refl_bv_view
-                            FStar_Reflection_Embeddings.embed_aqualv
-                            FStar_Reflection_Data.fstar_refl_aqualv
-                           in
                         mk11 () () "__inspect_binder"
                           (fun a425  ->
                              (Obj.magic FStar_Reflection_Basic.inspect_binder)
                                a425)
                           (Obj.magic
                              FStar_Reflection_Embeddings.unembed_binder)
-                          (Obj.magic uu____438)
+                          (Obj.magic
+                             FStar_Reflection_Embeddings.embed_binder_view)
                          in
-                      let uu____451 =
-                        let uu____454 =
+                      let uu____438 =
+                        let uu____441 =
                           mk2 () () () "__pack_binder"
                             (fun a426  ->
                                fun a427  ->
@@ -189,8 +183,8 @@ let (reflection_primops :
                             (Obj.magic
                                FStar_Reflection_Embeddings.embed_binder)
                            in
-                        let uu____455 =
-                          let uu____458 =
+                        let uu____442 =
+                          let uu____445 =
                             mk2 () () () "__compare_bv"
                               (fun a428  ->
                                  fun a429  ->
@@ -204,8 +198,8 @@ let (reflection_primops :
                               (Obj.magic
                                  FStar_Reflection_Embeddings.embed_order)
                              in
-                          let uu____459 =
-                            let uu____462 =
+                          let uu____446 =
+                            let uu____449 =
                               mk2 () () () "__is_free"
                                 (fun a430  ->
                                    fun a431  ->
@@ -218,8 +212,8 @@ let (reflection_primops :
                                    FStar_Reflection_Embeddings.unembed_term)
                                 (Obj.magic FStar_Syntax_Embeddings.embed_bool)
                                in
-                            let uu____463 =
-                              let uu____466 =
+                            let uu____450 =
+                              let uu____453 =
                                 mk2 () () () "__term_eq"
                                   (fun a432  ->
                                      fun a433  ->
@@ -233,8 +227,8 @@ let (reflection_primops :
                                   (Obj.magic
                                      FStar_Syntax_Embeddings.embed_bool)
                                  in
-                              let uu____467 =
-                                let uu____470 =
+                              let uu____454 =
+                                let uu____457 =
                                   mk11 () () "__term_to_string"
                                     (fun a434  ->
                                        (Obj.magic
@@ -245,8 +239,8 @@ let (reflection_primops :
                                     (Obj.magic
                                        FStar_Syntax_Embeddings.embed_string)
                                    in
-                                let uu____471 =
-                                  let uu____474 =
+                                let uu____458 =
+                                  let uu____461 =
                                     mk11 () () "__binders_of_env"
                                       (fun a435  ->
                                          (Obj.magic
@@ -257,9 +251,9 @@ let (reflection_primops :
                                       (Obj.magic
                                          FStar_Reflection_Embeddings.embed_binders)
                                      in
-                                  let uu____475 =
-                                    let uu____478 =
-                                      let uu____479 =
+                                  let uu____462 =
+                                    let uu____465 =
+                                      let uu____466 =
                                         FStar_Syntax_Embeddings.embed_option
                                           FStar_Reflection_Embeddings.embed_sigelt
                                           FStar_Reflection_Data.fstar_refl_sigelt
@@ -274,16 +268,16 @@ let (reflection_primops :
                                            FStar_Reflection_Embeddings.unembed_env)
                                         (Obj.magic
                                            FStar_Syntax_Embeddings.unembed_string_list)
-                                        (Obj.magic uu____479)
+                                        (Obj.magic uu____466)
                                        in
-                                    [uu____478]  in
-                                  uu____474 :: uu____475  in
-                                uu____470 :: uu____471  in
-                              uu____466 :: uu____467  in
-                            uu____462 :: uu____463  in
-                          uu____458 :: uu____459  in
-                        uu____454 :: uu____455  in
-                      uu____437 :: uu____451  in
+                                    [uu____465]  in
+                                  uu____461 :: uu____462  in
+                                uu____457 :: uu____458  in
+                              uu____453 :: uu____454  in
+                            uu____449 :: uu____450  in
+                          uu____445 :: uu____446  in
+                        uu____441 :: uu____442  in
+                      uu____437 :: uu____438  in
                     uu____433 :: uu____434  in
                   uu____429 :: uu____430  in
                 uu____425 :: uu____426  in
