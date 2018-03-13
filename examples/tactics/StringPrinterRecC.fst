@@ -103,3 +103,114 @@ let do_while_sz
   match res with
   | IRight sz y' -> g y' sz ()
   | IOverflow -> g' ()
+
+module T = FStar.Tactics
+
+let do_while_tm () : T.Tac T.term = quote do_while
+
+let compile_do_while
+  (do_while_sz_tm: T.term)
+  (t: T.term)
+  (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+: T.Tac T.term
+= admit ();
+  T.print "compile_do_while";
+  let (f, ar) = app_head_tail t in
+  let test = tm_eq_fvar f (do_while_tm ()) in
+  tassert test;
+  match ar with
+  | [(tin, _); (tout, _); (decrease, _); (body, _); (x, _)] ->
+    let (x', body_) = match T.inspect body with
+      | T.Tv_Abs x' body_ -> (x', body_)
+      | _ ->
+        let x' = T.fresh_binder_named "name4eman" tin in
+        let body_ = T.mk_app body [T.pack (T.Tv_Var (T.bv_of_binder x')), T.Q_Explicit] in
+        (x', body_)
+    in
+    let ty' = T.mk_app (quote c_or) [
+      T.mk_app (quote tin_decr) [
+        tin, T.Q_Explicit;
+        decrease, T.Q_Explicit;
+        T.pack (T.Tv_Var (T.bv_of_binder x')), T.Q_Explicit;
+      ], T.Q_Explicit;
+      tout, T.Q_Explicit;
+    ]
+    in
+    let body_tr = compile ty' body_ in
+    let body' = T.pack (T.Tv_Abs x' body_tr) in
+    let res = T.mk_app (quote do_while_sz) [
+      tin, T.Q_Explicit;
+      tout, T.Q_Explicit;
+      decrease, T.Q_Explicit;
+      body, T.Q_Explicit;
+      body', T.Q_Explicit;
+      x, T.Q_Explicit;
+    ]
+    in
+    res
+  | _ -> tfail "compile_do_while expects 5 arguments"
+
+#reset-options "--z3rlimit 32"
+  
+let rec compile
+  (
+    ret_sz_tm
+    bind_sz_tm
+    print_char_sz_tm
+    coerce_sz_tm
+    ifthenelse_sz_tm
+    do_while_sz_tm
+  : T.term)
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
+  (decreases (LexCons fuel (LexCons t LexTop)))
+= T.print "BEGIN compile";
+  let compile_term_lt (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
+    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm fuel ty' t'
+  in
+  let compile_fuel_lt (ty' : T.term) (t' : T.term) : T.Tac T.term =
+    if fuel = 0
+    then tfail "Fuel exhausted"
+    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm (fuel - 1) ty' t'
+  in
+  let res = first [
+    (fun () -> compile_ret ret_sz_tm t);
+    (fun () -> compile_bind bind_sz_tm ty t compile_term_lt);
+    (fun () -> compile_print_char print_char_sz_tm t);
+    (fun () -> compile_do_while do_while_sz_tm t compile_term_lt);
+    (fun () -> compile_fvar coerce_sz_tm compile_fuel_lt ty t);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t compile_term_lt);
+  ]
+  in
+  T.print ("END compile, result: " ^ T.term_to_string res);
+  res
+
+#reset-options
+
+let mk_sz
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
+= compile
+    (quote ret_sz)
+    (quote bind_sz)
+    (quote print_char_sz)
+    (quote coerce_sz)
+    (quote ifthenelse_sz)
+    (quote do_while_sz)
+    fuel
+    ty
+    t
+
+let test_tac (#ty: Type0) (m: m ty) : T.Tac unit =
+  let open T in
+    let x = quote m in
+    let ty' = quote ty in
+    let t = mk_sz 4 ty' x in
+    exact_guard t
+
+(* This will not work: unfold under lambda
+
+#reset-options "--print_full_names --print_bound_var_types"
+
+let example_sz (x: U32.t) : Tot (m_sz (example x)) =
+  T.synth_by_tactic (fun () -> test_tac (example_do_while x))
