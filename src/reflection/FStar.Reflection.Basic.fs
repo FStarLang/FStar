@@ -58,7 +58,15 @@ let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
 let pack_fv (ns:list<string>) : fv =
-    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) None
+    let lid = PC.p2l ns in
+    let attr =
+        if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
+        if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
+        if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
+        if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
+        None
+    in
+    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) attr
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =

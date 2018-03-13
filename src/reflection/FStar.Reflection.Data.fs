@@ -119,8 +119,15 @@ let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
 let fstar_refl_bv_view   = mk_refl_data_lid_as_term "bv_view"
 
-(* bv_view *)
-let ref_Mk_bv = fstar_refl_data_const "Mkbv_view"
+(* bv_view, this is a record constructor *)
+
+let ref_Mk_bv =
+    let lid = fstar_refl_data_lid "Mkbv_view" in
+    let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
+                                Ident.mk_ident ("bv_ppname", Range.dummyRange);
+                                Ident.mk_ident ("bv_index" , Range.dummyRange);
+                                Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    { lid = lid ; t = fvar lid Delta_constant (Some attr) }
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
