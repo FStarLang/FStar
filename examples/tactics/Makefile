@@ -69,7 +69,7 @@ neg:
 
 ifdef KREMLIN_HOME
 stringprintertest: OTHERFLAGS+=--include $(KREMLIN_HOME)/kremlib
-stringprintertest: StringPrinterTest.uver
+stringprintertest: StringPrinterRecC.uver StringPrinterTest.uver
 	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle StringPrinter -drop 'FStar.Tactics.*' -drop 'FStar.Reflection.*' StringPrinterTest.fst -skip-linking
 else
 stringprintertest:
