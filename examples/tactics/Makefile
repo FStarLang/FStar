@@ -57,6 +57,7 @@ all:	Apply.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
 	Tautology.uver		\
+	Rewrite.Monoid.uver     \
 	neg
 	# launch			\
 

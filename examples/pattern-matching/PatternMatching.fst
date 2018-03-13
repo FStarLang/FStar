@@ -758,7 +758,6 @@ This yields a function taking a matching solution and running the body of the
 continuation with appropriate bindings. **)
 let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
-  admit ();
   let applied = specialize_abspat_continuation continuation in
   unquote #(matching_solution -> Tac a) applied
 
@@ -778,10 +777,10 @@ convenience function to avoid duplicating the problem-parsing code. **)
 let match_abspat #b #a (abspat: a)
                  (k: abspat_continuation -> Tac (matching_solution -> Tac b))
     : Tac b =
-  admit ();
   let goal = cur_goal () in
   let hypotheses = binders_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
+  admit();  //NS: imprecision in the encoding of the impure result function type
   solve_mp #matching_solution problem hypotheses goal (k continuation)
 
 (** Inspect the matching problem produced by parsing an abspat. **)
@@ -790,11 +789,9 @@ let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
 
 (** Inspect the matching solution produced by parsing and solving an abspat. **)
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
-  admit ();
   match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
 
 let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
-  admit ();
   fun (y: b) -> (x, y)
 
 /// Our first convenient entry point!
@@ -812,7 +809,6 @@ let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
 (** Solve a greedy pattern-matching problem and run its continuation.
 This if for pattern-matching problems in the ``Tac`` effect. **)
 let gpm #b #a (abspat: a) () : Tac b =
-  admit ();
   let continuation, solution = match_abspat abspat tpair in
   interp_abspat_continuation b continuation solution
 
@@ -823,7 +819,6 @@ let gpm #b #a (abspat: a) () : Tac b =
 (** Solve a greedy pattern-matching problem and run its continuation.
 This if for pattern-matching problems in the ``Tac`` effect. **)
 let pm #b #a (abspat: a) : Tac b =
-  admit ();
   match_abspat abspat (interp_abspat_continuation b)
 
 /// Examples

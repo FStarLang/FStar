@@ -2,15 +2,6 @@
   "@ÕY\u001bê˙h∑d¶©A≠‡ƒj",
   [
     [
-      "CntProtocol.max",
-      1,
-      0,
-      1,
-      [ "@query" ],
-      0,
-      "755e216f363cf35cbd4841518833c53e"
-    ],
-    [
       "CntProtocol.event",
       1,
       0,
@@ -26,7 +17,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "813cc04056316b4b76451da38e8e0779"
+      "6dc116a0f4c83fafb1dcf6ba8719f0b2"
     ],
     [
       "CntProtocol.client_cnt",
@@ -35,7 +26,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "ea1131f4148acdbbfbbb5f624c576087"
+      "2abdc940e2ad7a84012279442a163837"
     ],
     [
       "CntProtocol.server_cnt",
@@ -44,7 +35,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "7e253dc4b242e9122d1abfec1516bfc1"
+      "bf386bd90a8c52bac8de6845c959e4dc"
     ],
     [
       "CntProtocol.server_max",
@@ -68,7 +59,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "35382cc375d0023902478470501f96a5"
+      "fcf164d30a87ce70d642950a1c7f3c80"
     ],
     [
       "CntProtocol.max_list",
@@ -82,20 +73,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ec9988559b700ca01a475348c48105af"
+      "68859510a3990dfa1ed71ff86933cb9b"
     ],
     [
       "CntProtocol.max_list",
       2,
-      0,
-      1,
-      [ "@query" ],
-      0,
-      "508062c8b6d11ff0f77bb0569f9b66e9"
-    ],
-    [
-      "CntProtocol.max_list",
-      3,
       2,
       2,
       [
@@ -120,7 +102,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ee214cb0766ea58d1e4eea5040ca1b7c"
+      "422fb5bea504b70b26c838b98f457ef7"
     ],
     [
       "CntProtocol.max_lemma",
@@ -129,7 +111,7 @@
       1,
       [ "@query", "assumption_CntProtocol.event__uu___haseq" ],
       0,
-      "dfa61b4669894ed49373740b87258a5f"
+      "c49f2f8b8a6a8236463963b9f72639b9"
     ],
     [
       "CntProtocol.max_lemma",
@@ -138,7 +120,7 @@
       1,
       [ "@query", "assumption_CntProtocol.event__uu___haseq" ],
       0,
-      "dd4d03a136c450f4f6f822b4ac698cd3"
+      "50861b17c6fecb083ae3aaadc749fd10"
     ],
     [
       "CntProtocol.max_lemma",
@@ -181,7 +163,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "643336f103bead414448c8f6b7bfe250"
+      "b31514993aa51c6b93f6ce337f73b554"
     ],
     [
       "CntProtocol.invariant",
@@ -199,7 +181,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f97d0e80fee3824d60eecab37f49503b"
+      "9db6678e35ac98b1b4986a600e58ab92"
     ],
     [
       "CntProtocol.log_and_update",
@@ -208,7 +190,7 @@
       1,
       [ "@query", "assumption_CntProtocol.event__uu___haseq" ],
       0,
-      "b1c9345f9d36752773bf4a83b8f3932f"
+      "0f282abea5c208495fe2f78cb3357a91"
     ],
     [
       "CntProtocol.log_and_update",
@@ -217,7 +199,7 @@
       1,
       [ "@query", "assumption_CntProtocol.event__uu___haseq" ],
       0,
-      "4e9e37fc59eed8d96dcccd1b6b697fff"
+      "cc91753060acf6f9938ac953a014d5ba"
     ],
     [
       "CntProtocol.log_and_update",
@@ -231,7 +213,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "3a06ed1f925998584cef60c90e562040"
+      "6eefaff63a79c020611aed158b03a866"
     ],
     [
       "CntProtocol.log_and_update",
@@ -243,7 +225,7 @@
         "assumption_Prims.list__uu___haseq", "kinding_CntProtocol.event@tok"
       ],
       0,
-      "6aad6bc3a60ee84be2820060eb54ba42"
+      "abd36119c7e7dbe5bbee42baa73647a4"
     ],
     [
       "CntProtocol.log_and_update",
@@ -255,7 +237,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0c52dd5d01e0168afb58460709a34251"
+      "95e23eab9c52b66cbd1bfb8eeba791a5"
     ],
     [
       "CntProtocol.log_and_update",
@@ -267,7 +249,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d87266d73895ac11d7aa32469dffaeea"
+      "dd532fbc57946b8b07c1f4f34883c0fe"
     ],
     [
       "CntProtocol.log_and_update",
@@ -279,7 +261,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5a9ef9b3e3a2b9a135797e4d19bdf2f5"
+      "e2c50e0ed6a04c840528ab7665fd9d16"
     ],
     [
       "CntProtocol.log_and_update",
@@ -291,7 +273,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fa7528e5f16f0962530974fe9b736a01"
+      "72af00e7c1c008673ed2254b8ce88808"
     ],
     [
       "CntProtocol.log_and_update",
@@ -303,7 +285,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0ca767a15625c16c3f21689df7778991"
+      "0c52dd5d01e0168afb58460709a34251"
     ],
     [
       "CntProtocol.log_and_update",
@@ -362,7 +344,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.union"
       ],
       0,
-      "3b1064a7db142d85f5526675a7e28600"
+      "430037fcf0b3cb5fce4fd93253184eda"
     ],
     [
       "CntProtocol.send",
@@ -374,7 +356,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e75cadfc54f478377856710bfb9da973"
+      "a7e671a3924ac7b103b530eeb1272208"
     ],
     [
       "CntProtocol.send",
@@ -386,7 +368,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4132982ca13a2b3c52d429a76b1f4d51"
+      "3a198ba10313b069024c354616f2fc2b"
     ],
     [
       "CntProtocol.send",
@@ -398,7 +380,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ad4c922dc07c0bc24fdf1296927022db"
+      "966d62ab1e3cf424d9b32548e28db644"
     ],
     [
       "CntProtocol.send",
@@ -435,7 +417,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "1c5351a9abbfa44284b43f799830dab5"
+      "dff008d31b998a6e382606c7622ca92d"
     ],
     [
       "CntProtocol.recv",
@@ -447,7 +429,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "41a114cea8818b5588f77f8b5105c881"
+      "8ee032ed6f1ccdf74398dc581472522d"
     ],
     [
       "CntProtocol.recv",
@@ -459,7 +441,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fd62c0c55c14c5b749313661598cf405"
+      "125a0066c446cdd7ffa79d6c41eac9c8"
     ],
     [
       "CntProtocol.recv",
@@ -471,7 +453,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "13f0066969ebc551a7f1c81773c8b5aa"
+      "0c8ee1cf8ba7ffd0eb11e3a1eddaa216"
     ],
     [
       "CntProtocol.recv",
@@ -509,7 +491,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "c10e1be3502399b411e8862d2b8fc948"
+      "49366b1c599a36505be4aaa2ad6c7b26"
     ],
     [
       "CntProtocol.req",
@@ -518,7 +500,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "81f0a622be2032968c562111c7ab6880"
+      "5fd45ef8a2fd131748c0f77b6fd0f8b5"
     ],
     [
       "CntProtocol.k",
@@ -533,7 +515,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "b3aaf8a24fa52e6104dcf689efc40123"
+      "b0fa32918721330513c7e0fc3f61caa8"
     ],
     [
       "CntProtocol.recall_all",
@@ -542,7 +524,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "2e1d4b1730fec920ffb039d997068d41"
+      "224af68e86782c4edd3037dd8cd945ce"
     ],
     [
       "CntProtocol.client",
@@ -564,7 +546,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "435a06fe2ebbe77c821a8cd997040d59"
+      "67eeed4c2f0baa3e682c94138db41d13"
     ],
     [
       "CntProtocol.client",
@@ -647,7 +629,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "34e6945f6395710822114d18a441ce1d"
+      "694144a12648b2aca2cc50b48d35569a"
     ],
     [
       "CntProtocol.server",
@@ -659,7 +641,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c2770e0b04e121ff0f74724df7b16f2c"
+      "675c2eba4f1c3b2e1ad315349cacfd38"
     ],
     [
       "CntProtocol.server",
@@ -671,7 +653,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8a7bac515e3d8ae9f6ddedd03d4e9ad9"
+      "be7973bb57c9fa7bd4ec25c2271fde17"
     ],
     [
       "CntProtocol.server",
@@ -683,7 +665,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "872d6071881b01a989f4fc84e51c7a99"
+      "c2770e0b04e121ff0f74724df7b16f2c"
     ],
     [
       "CntProtocol.server",
@@ -695,7 +677,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c316c2eaeda0a328f1418d2cd797f7b8"
+      "8a7bac515e3d8ae9f6ddedd03d4e9ad9"
     ],
     [
       "CntProtocol.server",
@@ -707,7 +689,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e6d58f0bf2dc2afaaecd0650d257cdce"
+      "872d6071881b01a989f4fc84e51c7a99"
     ],
     [
       "CntProtocol.server",
@@ -719,7 +701,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f06d288a653342133b7843d988bb4167"
+      "c316c2eaeda0a328f1418d2cd797f7b8"
     ],
     [
       "CntProtocol.server",
@@ -731,7 +713,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "3c329a43a27f1718db4cd09e68a607d4"
+      "e6d58f0bf2dc2afaaecd0650d257cdce"
     ],
     [
       "CntProtocol.server",
@@ -814,7 +796,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "9845a78d13dd71c7f13dbea9f6bcbd85"
+      "0d9c0f2ae36399ffefdbd206232e18a2"
     ],
     [
       "CntProtocol.main",
@@ -875,7 +857,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "7204ce9fd64f8de6be462de8232f5ee3"
+      "cc3b91ab0c337f4ae5e82bd9fdde90c0"
     ]
   ]
 ]

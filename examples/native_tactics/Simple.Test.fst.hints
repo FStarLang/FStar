@@ -2,31 +2,13 @@
   "xsÀ\u000bÃ E÷Åez4n†iÅ",
   [
     [
-      "Simple.Test.uu___is_This",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8f4f18ffc511d6e56b47fe938ca502cf"
-    ],
-    [
-      "Simple.Test.uu___is_That",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9c5f1b3917d11bb8cde900cd28302ab3"
-    ],
-    [
       "Simple.Test.test0",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "028735b92eba05edd1bc95fa0310c0cc"
+      "41a95758902c884e2cfd242a34c33f03"
     ],
     [
       "Simple.Test.test0",
@@ -35,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "becb3c0f06d86d6f7c2af48141345efd"
+      "5cd58ae0751981d8984dc01f3870bf58"
     ],
     [
       "Simple.Test.test1",
@@ -44,7 +26,7 @@
       1,
       [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
       0,
-      "2bf09affbf270a3f2604b021ceb54f77"
+      "e5c55a0a05f18f7fca3fcd17e0b710db"
     ],
     [
       "Simple.Test.test1",
@@ -53,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "01179441b67821efce80724d6c45e733"
+      "9f05fa968312bfde66b22e5142c79e07"
     ],
     [
       "Simple.Test.test2",
@@ -65,7 +47,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "902c77916ad794b9bae2c912b89bf3cf"
+      "164fcd0a1a6d5fb23be17a546ee188e6"
     ],
     [
       "Simple.Test.test2",
@@ -74,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "23b3118c582d0134e0e6ee0837de6c1c"
+      "aa417d90121219738e7898b58eed5f56"
     ],
     [
       "Simple.Test.test3",
@@ -86,7 +68,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "7f1c1b5886ccfe9cef65aeb4515605e6"
+      "55ab5ac10d58ad483009f39610e3bd42"
     ],
     [
       "Simple.Test.test3",
@@ -95,7 +77,7 @@
       1,
       [ "@query" ],
       0,
-      "4e4906ab185a7cc57a52642fed93d104"
+      "5ebf71efd71b6ead1be73c827fdb72b5"
     ],
     [
       "Simple.Test.test4",
@@ -104,7 +86,7 @@
       1,
       [ "@query" ],
       0,
-      "d9de5e213ef0e88255c08902763b2586"
+      "117628f0ae06324d374601a768f88229"
     ]
   ]
 ]
