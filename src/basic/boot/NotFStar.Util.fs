@@ -209,7 +209,7 @@ let set_elements ((s1, eq):set<'a>) :list<'a> =
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
                     else aux (hd::out) tl in
-   aux [] s1
+   aux [] s1 
 let set_add a ((s, b):set<'a>) = (s@[a], b)
 let set_remove x ((s1, eq):set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):set<'a>) = List.exists (b a) s
@@ -218,6 +218,11 @@ let set_intersect ((s1, eq):set<'a>) ((s2, _):set<'a>) = List.filter (fun y -> L
 let set_is_subset_of ((s1, eq): set<'a>) ((s2, _):set<'a>) = List.for_all (fun y -> List.exists (eq y) s2) s1
 let set_count ((s1, _):set<'a>) = s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+let set_symmetric_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> =
+    set_union (set_difference (s1, eq) (s2, eq))
+              (set_difference (s2, eq) (s1, eq))
+let set_eq ((s1, eq):set<'a>) ((s2, _):set<'a>) : bool =
+    set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
 
 (* fifo_set is implemented with the same underlying representation as sets         *)
@@ -521,14 +526,6 @@ let try_find f l = List.tryFind f l
 let try_find_index f l = List.tryFindIndex f l
 
 let sort_with f l = List.sortWith f l
-
-let set_eq f l1 l2 =
-  let eq x y = f x y = 0 in
-  let l1 = sort_with f l1 |> remove_dups eq in
-  let l2 = sort_with f l2 |> remove_dups eq in
-  if List.length l1 <> List.length l2
-  then false
-  else List.forall2 eq l1 l2
 
 let bind_opt opt f =
     match opt with
