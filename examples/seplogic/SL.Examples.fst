@@ -11,99 +11,43 @@ open FStar.Tactics
  * these lemmas match on the VCs
  *)
 
-(*
- * a read/write command followed by a read/write command with singleton heap
- *)
-let lemma_singleton_heap_rw_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a)
+
+let lemma_singleton_heap_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a)
   :Lemma (requires (phi (r |> x) emp x))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
 	                              (r |> x) == (h0 <*> h1) /\ (exists x. h0 == (r |> x) /\ phi h0 h1 x)))
   = ()
 
-(*
- * a read/write command followed by a read/write command
- *)
-let lemma_rw_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
+let lemma_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
   :Lemma (requires (defined ((r |> x) <*> h) /\ phi (r |> x) h x))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
 	                              ((r |> x) <*> h) == (h0 <*> h1) /\ (exists x. h0 == (r |> x) /\ phi h0 h1 x)))
   = ()
 
-(*
- * a read/write command followed by a bind with singleton heap
- *)
-let lemma_singleton_heap_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0) (r:ref a) (x:a)
-  :Lemma (requires (phi (r |> x) emp (r |> x) emp x))
+let lemma_bind (phi:memory -> memory -> memory -> memory -> Type0) (h h':memory)
+  :Lemma (requires (exists h3 h4. defined (h3 <*> h4) /\ (h <*> h') == (h3 <*> h4) /\ phi (h <*> h') emp h3 h4))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
+	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ phi h0 h1 h3 h4)))
+  = ()
+
+let lemma_singleton_heap_procedure (#a:Type0) (phi:memory -> memory -> a -> Type0)
+		                   (r:ref a) (x:a)
+  :Lemma (requires (phi (r |> x) emp x))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (r |> x) == (h0 <*> h1) /\
-	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (exists x. h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))  
+	                              (h0 == (r |> x) /\ phi h0 h1 x)))
   = ()
 
-(*
- * a read/write command followed by a bind
- *)
-let lemma_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0) (r:ref a) (x:a) (h:memory)
-  :Lemma (requires (defined (((r |> x) <*> h) <*> emp) /\ phi ((r |> x) <*> h) emp (r |> x) h x))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ ((r |> x) <*> h) == (h0 <*> h1) /\
-	                              (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (exists x. h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))  
+let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0)
+		    (h h':memory)
+  :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
+	                              (h0 == h /\ phi h h' h0 h1)))
   = ()
 
-(*
- * pure expression at the end
- *)
 let lemma_pure_right (h h':memory) (phi:memory -> memory -> memory -> Type0)
   :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h')))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h1))
   = lemma_join_is_commutative (h <*> h') emp
-
-(*
- * procedure call followed by a read/write command with singleton heap
- *)
-let lemma_singleton_heap_procedure_rw (#a:Type0) (phi:memory -> memory -> a -> Type0)
-		                 (r:ref a) (x:a)
-  :Lemma (requires (phi (r |> x) emp x))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (r |> x) == (h0 <*> h1) /\
-	                     (h0 == (r |> x) /\ phi h0 h1 x)))
-  = ()
-
-(*
- * procedure call followed by a read/write command
- *)
-let lemma_procedure_rw (phi:memory -> memory -> memory -> memory -> Type0)
-		       (h h':memory)
-  :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
-	                     (h0 == h /\ phi h h' h0 h1)))
-  = ()
-
-(*
- * procedure call followed by a bind with singleton heap
- *)
-let lemma_singleton_heap_procedure_bind
-  (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> Type0)
-  (r:ref a) (x:a)
-  :Lemma (requires (phi (r |> x) emp (r |> x) emp x))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (r |> x) == (h0 <*> h1) /\
-	                     (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (h3 == (r |> x) /\ phi h0 h1 h3 h4 x))))
-  = ()
-
-(*
- * procedure call followed by a bind
- *)
-let lemma_procedure_bind (phi:memory -> memory -> memory -> memory -> memory -> memory -> Type0)
-                         (h h':memory)
-  :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h') emp h h'))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
-	                     (exists (h3 h4:memory). defined (h3 <*> h4) /\ h0 == (h3 <*> h4) /\ (h3 == h /\ phi h h' h0 h1 h3 h4))))
-  = ()
-
-let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0) (h h':memory)
-  :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ (h0 == h /\ phi h h' h0 h1)))
-  = ()
-
-(*** command specific lemmas end ***)
-
-(*** following are heap algebra lemmas, should be replaced with canonizer? ***)
 
 let lemma_rewrite_sep_comm (h1 h2:memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h1 <*> h2) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
@@ -139,15 +83,19 @@ let lemma_rewrite_sep_assoc4 (h1 h2 h3:memory) (phi:memory -> memory -> memory -
 	                     phi h1 h2 h3 h4 h5))
   = ()
 
-(*** heap algebra lemmas end ***)
+private let rec apply_lemmas (l:list term) :Tac unit
+  = match l with
+    | []    -> fail "no command lemma matched the goal"
+    | hd::tl -> or_else (fun () -> apply_lemma hd) (fun () -> apply_lemmas tl)
 
+private let process_command () :Tac unit
+  = apply_lemmas [`lemma_singleton_heap_rw;
+                  `lemma_rw;
+		  `lemma_bind;
+		  `lemma_singleton_heap_procedure;
+		  `lemma_procedure;
+		  `lemma_pure_right]
 
-(*** examples begin ***)
-
-(*
- * preprocess the VC by moving foralls and implies into the context
- * when we move implies, we break the conjuncts, and inline initial heap in the VC
- *)
 let prelude () :Tac unit =
   let _ = forall_intros () in  //forall (p:post) (h:heap)
   let aux () =
@@ -159,26 +107,6 @@ let prelude () :Tac unit =
   ignore (repeat (fun _ -> let h = implies_intro () in
                         or_else (fun _ -> rewrite h) idtac))  //introduce the conjuncts into the context, but rewrite in the goal before doing that, specifically we want the initial heap expression to be inlined in the goal
 
-private let rec apply_lemmas (l:list term) :Tac unit
-  = match l with
-    | []    -> fail "no command lemma matched the goal"
-    | hd::tl -> or_else (fun () -> apply_lemma hd) (fun () -> apply_lemmas tl)
-
-private let process_command () :Tac unit
-  = apply_lemmas [`lemma_singleton_heap_rw_rw;
-                  `lemma_rw_rw;
-		  `lemma_singleton_heap_rw_bind;
-		  `lemma_rw_bind;
-		  `lemma_singleton_heap_procedure_rw;
-		  `lemma_procedure_rw;
-		  `lemma_singleton_heap_procedure_bind;
-		  `lemma_procedure_bind;
-		  `lemma_procedure;
-		  `lemma_pure_right]
-
-(*
- * TODO: use it from Derived
- *)
 private val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> Lemma (a /\ b)
 let split_lem #a #b sa sb = ()
@@ -187,12 +115,6 @@ private let get_to_the_next_frame () :Tac unit =
   ignore (repeat (fun () -> apply_lemma (`split_lem); smt ()))
 
 #reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --print_full_names"
-
-
-(*
- * main idea for the examples:
- *   call process_command for each command, currently the ordering of the heap is manual
- *)
 
 (*
  * two commands
@@ -223,15 +145,17 @@ let swap (r1 r2:ref int) (m n:int)
 
      by (fun () -> prelude ();
                 process_command ();
+		get_to_the_next_frame ();
+		process_command ();
+	        apply_lemma (`lemma_rewrite_sep_comm);
+		process_command ();
+	        get_to_the_next_frame ();
+		process_command ();
+	        apply_lemma (`lemma_rewrite_sep_comm);
+		process_command ();
 	        get_to_the_next_frame ();
 	        apply_lemma (`lemma_rewrite_sep_comm);
-	        process_command ();
-	        get_to_the_next_frame ();
-	        apply_lemma (`lemma_rewrite_sep_comm);
-	        process_command ();
-	        get_to_the_next_frame ();
-	        apply_lemma (`lemma_rewrite_sep_comm);
-                process_command ())
+		process_command ())
 
 (*
  * three commands, the inline pure expressions don't count
@@ -249,15 +173,12 @@ let incr (r:ref int) (n:int)
 		get_to_the_next_frame ();
 		process_command ();
 		get_to_the_next_frame ();
+		process_command ();
+		get_to_the_next_frame ();
 		process_command ())
 
 (*
- * checking procedure calls below
- * for the procedures, we assume their heap footprints as part of their spec,
- *   e.g. in incr and swap above (and it should be the first thing in the spec)
- *)
-(*
- * 2 commands + one at the end
+ * 2 commands
  *)
 let incr2 (r:ref int) (n:int)
   = (let n = incr r n in
@@ -270,10 +191,6 @@ let incr2 (r:ref int) (n:int)
 	       get_to_the_next_frame ();
 	       process_command ())
 
-(*
- * 3 commands + one at the end
- *)
-#set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 let rotate (r1 r2 r3:ref int) (l m n:int) =
   (swap r2 r3 m n;
    swap r1 r2 l n;
@@ -285,160 +202,187 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 
   by (fun () -> prelude ();
              apply_lemma (`lemma_rewrite_sep_comm);
-	     process_command ();
+             process_command ();
 	     get_to_the_next_frame ();
+	     process_command ();
 	     apply_lemma (`lemma_rewrite_sep_comm);
 	     apply_lemma (`lemma_rewrite_sep_assoc3);
 	     process_command ();
 	     get_to_the_next_frame ();
 	     apply_lemma (`lemma_rewrite_sep_assoc4);
 	     process_command ();
+	     process_command ();
 	     get_to_the_next_frame ();
 	     process_command ())
 
-#reset-options "--print_full_names"
+let lemma_pattern_inline (psi1 psi2:Type) (h h':memory) (phi1 phi2: memory -> memory -> Type)
+  :Lemma (requires ((psi1 ==> (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi1 h0 h1)) /\
+                    (psi2 ==> (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi2 h0 h1))))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
+	                              ((psi1 ==> phi1 h0 h1) /\
+				       (psi2 ==> phi2 h0 h1))))
+  = admit ()
 
-noeq type listptr' =
-  | Null :listptr'
-  | Cell :head:int -> tail:listptr -> listptr'
+let cond (r1 r2:ref int) (n:int) (b:bool)
+  = (let x = !r1 in
+     if b then
+       r1 := x + 1
+     else
+       r2 := x + 2)
 
-and listptr = ref listptr'
+    <: STATE unit (fun p h -> h == ((r1 |> n) <*> (r2 |> n)) /\ (defined h /\ (b ==> p () ((r1 |> n + 1) <*> (r2 |> n)))))
 
-assume Ref_points_to_axiom: forall (a:Type) (r:ref a) (x:a) (m:memory). m == (r |> x) ==> x << r
-
-let rec valid (p:listptr) (repr:list int) (h:memory) :Type0 =
-  match repr with
-  | []    -> h == (p |> Null)
-  | hd::tl -> exists (tail:listptr) (h1:memory). defined ((p |> Cell hd tail) <*> h1) /\ h == ((p |> Cell hd tail) <*> h1) /\ valid tail tl h1
-
-private let __exists_elim_as_forall
-  (#a:Type) (#b:Type) (#p: a -> b -> Type) (#phi:Type)
-  (_:(exists x y. p x y)) (_:(squash (forall (x:a) (y:b). p x y ==> phi)))
-  :Lemma phi
-  = ()
-
-private let __elim_and (h:binder) :Tac unit
-  = and_elim (pack (Tv_Var (bv_of_binder h)));
-    clear h
-
-private let __elim_exists (h:binder) :Tac unit
-  = let t = `__exists_elim_as_forall in
-    apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
-    clear h;
-    ignore (forall_intros ())
-
-private let __implies_intros_with_processing_exists_and_and () :Tac unit
-  = or_else (fun _ -> let h = implies_intro () in
-                    or_else (fun _ -> __elim_and h)
-		            (fun _ -> or_else (fun _ -> __elim_exists h)
-			                   (fun _ -> or_else (fun _ -> rewrite h) idtac)))
-            (fun _ -> fail "done")
-
-let test0 (l:listptr)
-  = (let Cell hd _ = !l in
-     hd)
-
-    <: STATE int (fun p h -> valid l [2; 3] h /\ (defined h /\ p 2 h))
-
-    by (fun () ->
-        let _ = forall_intros () in
-	norm [delta_only ["SL.Examples.valid"]];
-	ignore (repeat __implies_intros_with_processing_exists_and_and);
-	process_command ();
-	get_to_the_next_frame ();
-	process_command ();
-	dump "A")
-
-let lemma_pattern_match_rw (#a:Type) (#b:Type) (#c:Type)
-                           (phi:memory -> memory -> a -> b -> c -> Type)
-			   (psi:b -> c -> Type)
-			   (r:ref a) (x:a) (h:memory)
-  :Lemma (requires (defined ((r |> x) <*> h) /\ (forall (y:b) (z:c). psi y z ==> phi (r |> x) h x y z)))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
-	                              ((r |> x) <*> h) == (h0 <*> h1) /\ 
-				       (forall (y:b) (z:c).
-				          psi y z ==> 
-				          (exists x. h0 == (r |> x) /\ phi h0 h1 x y z))))
-  = ()
-
-let lemma_pattern_match_bind_rw (#a:Type) (#b:Type) (#c:Type)
-                           (phi:memory -> memory -> a -> b -> c -> Type)
-			   (psi:b -> c -> Type)
-			   (r:ref a) (x:a) (h:memory)
-  :Lemma (requires (defined ((r |> x) <*> h) /\ (forall (y:b) (z:c). psi y z ==> phi (r |> x) h x y z)))
-         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
-	                              ((r |> x) <*> h) == (h0 <*> h1) /\ 
-				       (forall (y:b) (z:c).
-				          psi y z ==> 
-				          (exists x. h0 == (r |> x) /\ phi h0 h1 x y z))))
-
-let test1 (l:listptr)
-  = (let lv = !l in
-     match lv with
-     | Cell hd tail ->
-       let _ = !tail in
-       let hd = hd + 1 in
-       let c = Cell hd tail in
-       l := c
-     | _ -> ())
-
-    <: STATE unit (fun p h -> valid l [2; 3] h /\ (defined h /\ (forall h1. valid l [3; 3] h1 ==> p () h1)))
-
-    by (fun () ->
-        let _ = forall_intros () in
-	norm [delta_only ["SL.Examples.valid"]];
-	ignore (repeat __implies_intros_with_processing_exists_and_and);
-	apply_lemma (`lemma_rw_rw);
-	get_to_the_next_frame ();
-	norm [delta_only ["SL.Examples.uu___is_Cell";
-	                  "SL.Examples.uu___is_Null";
-			  "SL.Examples.__proj__Cell__item__head";
-			  "SL.Examples.__proj__Cell__item__head"]];
-	norm [Prims.simplify];
-	dump "A")
+    by (fun () -> prelude ();
+               apply_lemma (`lemma_rw);
+	       get_to_the_next_frame ();
+               dump "A")
 
 
+// #set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 
-	// let h = implies_intro () in
-	// __elim_and h;
-	// let h = implies_intro () in
-	// __elim_exists h;
-	// let h = implies_intro () in
-	// __elim_and h;
-	// let h = implies_intro () in
-	// __elim_and h;
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-	// let h = implies_intro () in
-	// __elim_exists h;
-	// let h = implies_intro () in
-	// __elim_and h;
-	// let h = implies_intro () in
-	// __elim_and h;
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-	// let h = implies_intro () in
-	// __elim_and h;
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// #reset-options "--print_full_names"
 
-// let foo (p:int -> int -> Type) (q:int -> int -> int -> int -> Type) (r:Type)
-//   = assert_by_tactic ((exists x1 x2. (p x1 x2 /\ (exists x3 x4. q x1 x2 x3 x4))) ==> r)
-//     (fun () -> 
-//      let h  = implies_intro () in
-//      let ae = `__exists_elim_as_forall in
-//      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
-//      clear h;
-//      let _ = forall_intros () in
-//      let h = implies_intro () in
-//      and_elim (pack (Tv_Var (bv_of_binder h)));
-//      clear h;
-//      let _ = implies_intro () in
-//      let h  = implies_intro () in
-//      let ae = `__exists_elim_as_forall in
-//      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
-//      clear h;
-//      let _ = forall_intros () in
-//      let h = implies_intro () in
-//      dump "A")
+// noeq type listptr' =
+//   | Null :listptr'
+//   | Cell :head:int -> tail:listptr -> listptr'
+
+// and listptr = ref listptr'
+
+// assume Ref_points_to_axiom: forall (a:Type) (r:ref a) (x:a) (m:memory). m == (r |> x) ==> x << r
+
+// let rec valid (p:listptr) (repr:list int) (h:memory) :Type0 =
+//   match repr with
+//   | []    -> h == (p |> Null)
+//   | hd::tl -> exists (tail:listptr) (h1:memory). defined ((p |> Cell hd tail) <*> h1) /\ h == ((p |> Cell hd tail) <*> h1) /\ valid tail tl h1
+
+// private let __exists_elim_as_forall
+//   (#a:Type) (#b:Type) (#p: a -> b -> Type) (#phi:Type)
+//   (_:(exists x y. p x y)) (_:(squash (forall (x:a) (y:b). p x y ==> phi)))
+//   :Lemma phi
+//   = ()
+
+// private let __elim_and (h:binder) :Tac unit
+//   = and_elim (pack (Tv_Var (bv_of_binder h)));
+//     clear h
+
+// private let __elim_exists (h:binder) :Tac unit
+//   = let t = `__exists_elim_as_forall in
+//     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
+//     clear h;
+//     ignore (forall_intros ())
+
+// private let __implies_intros_with_processing_exists_and_and () :Tac unit
+//   = or_else (fun _ -> let h = implies_intro () in
+//                     or_else (fun _ -> __elim_and h)
+// 		            (fun _ -> or_else (fun _ -> __elim_exists h)
+// 			                   (fun _ -> or_else (fun _ -> rewrite h) idtac)))
+//             (fun _ -> fail "done")
+
+// let test0 (l:listptr)
+//   = (let Cell hd _ = !l in
+//      hd)
+
+//     <: STATE int (fun p h -> valid l [2; 3] h /\ (defined h /\ p 2 h))
+
+//     by (fun () ->
+//         let _ = forall_intros () in
+// 	norm [delta_only ["SL.Examples.valid"]];
+// 	ignore (repeat __implies_intros_with_processing_exists_and_and);
+// 	process_command ();
+// 	get_to_the_next_frame ();
+// 	process_command ();
+// 	dump "A")
+
+// let lemma_pattern_match_rw (#a:Type) (#b:Type) (#c:Type)
+//                            (phi:memory -> memory -> a -> b -> c -> Type)
+// 			   (psi:b -> c -> Type)
+// 			   (r:ref a) (x:a) (h:memory)
+//   :Lemma (requires (defined ((r |> x) <*> h) /\ (forall (y:b) (z:c). psi y z ==> phi (r |> x) h x y z)))
+//          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
+// 	                              ((r |> x) <*> h) == (h0 <*> h1) /\ 
+// 				       (forall (y:b) (z:c).
+// 				          psi y z ==> 
+// 				          (exists x. h0 == (r |> x) /\ phi h0 h1 x y z))))
+//   = ()
+
+// let lemma_pattern_match_bind_rw (#a:Type) (#b:Type) (#c:Type)
+//                            (phi:memory -> memory -> a -> b -> c -> Type)
+// 			   (psi:b -> c -> Type)
+// 			   (r:ref a) (x:a) (h:memory)
+//   :Lemma (requires (defined ((r |> x) <*> h) /\ (forall (y:b) (z:c). psi y z ==> phi (r |> x) h x y z)))
+//          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
+// 	                              ((r |> x) <*> h) == (h0 <*> h1) /\ 
+// 				       (forall (y:b) (z:c).
+// 				          psi y z ==> 
+// 				          (exists x. h0 == (r |> x) /\ phi h0 h1 x y z))))
+
+// let test1 (l:listptr)
+//   = (let lv = !l in
+//      match lv with
+//      | Cell hd tail ->
+//        let _ = !tail in
+//        let hd = hd + 1 in
+//        let c = Cell hd tail in
+//        l := c
+//      | _ -> ())
+
+//     <: STATE unit (fun p h -> valid l [2; 3] h /\ (defined h /\ (forall h1. valid l [3; 3] h1 ==> p () h1)))
+
+//     by (fun () ->
+//         let _ = forall_intros () in
+// 	norm [delta_only ["SL.Examples.valid"]];
+// 	ignore (repeat __implies_intros_with_processing_exists_and_and);
+// 	apply_lemma (`lemma_rw_rw);
+// 	get_to_the_next_frame ();
+// 	norm [delta_only ["SL.Examples.uu___is_Cell";
+// 	                  "SL.Examples.uu___is_Null";
+// 			  "SL.Examples.__proj__Cell__item__head";
+// 			  "SL.Examples.__proj__Cell__item__head"]];
+// 	norm [Prims.simplify];
+// 	dump "A")
+
+
+
+// 	// let h = implies_intro () in
+// 	// __elim_and h;
+// 	// let h = implies_intro () in
+// 	// __elim_exists h;
+// 	// let h = implies_intro () in
+// 	// __elim_and h;
+// 	// let h = implies_intro () in
+// 	// __elim_and h;
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// 	// let h = implies_intro () in
+// 	// __elim_exists h;
+// 	// let h = implies_intro () in
+// 	// __elim_and h;
+// 	// let h = implies_intro () in
+// 	// __elim_and h;
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// 	// let h = implies_intro () in
+// 	// __elim_and h;
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+
+// // let foo (p:int -> int -> Type) (q:int -> int -> int -> int -> Type) (r:Type)
+// //   = assert_by_tactic ((exists x1 x2. (p x1 x2 /\ (exists x3 x4. q x1 x2 x3 x4))) ==> r)
+// //     (fun () -> 
+// //      let h  = implies_intro () in
+// //      let ae = `__exists_elim_as_forall in
+// //      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
+// //      clear h;
+// //      let _ = forall_intros () in
+// //      let h = implies_intro () in
+// //      and_elim (pack (Tv_Var (bv_of_binder h)));
+// //      clear h;
+// //      let _ = implies_intro () in
+// //      let h  = implies_intro () in
+// //      let ae = `__exists_elim_as_forall in
+// //      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
+// //      clear h;
+// //      let _ = forall_intros () in
+// //      let h = implies_intro () in
+// //      dump "A")
