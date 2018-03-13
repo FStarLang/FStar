@@ -1033,6 +1033,18 @@ let rec maybe_simplify_aux cfg env stack tm =
         let args = List.map maybe_un_auto_squash_arg args in
         S.mk_Tm_app head args None t.pos
     in
+    let rec clearly_inhabited (ty : typ) : bool =
+        match (U.unmeta ty).n with
+        | Tm_uinst (t, _) -> clearly_inhabited t
+        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
+        | Tm_fvar fv ->
+            let l = S.lid_of_fv fv in
+               (Ident.lid_equals l PC.int_lid)
+            || (Ident.lid_equals l PC.bool_lid)
+            || (Ident.lid_equals l PC.string_lid)
+            || (Ident.lid_equals l PC.exn_lid)
+        | _ -> false
+    in
     let simplify arg = (simp_t (fst arg), arg) in
     let tm = match is_quantified_true tm with
              | Some tm ->
@@ -1087,8 +1099,8 @@ let rec maybe_simplify_aux cfg env stack tm =
            | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.forall_lid
       then match args with
-           | [(t, _)]
-           | [(_, Some (Implicit _)); (t, _)] ->
+           (* Simplify ∀x. True to True *)
+           | [(t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
@@ -1096,15 +1108,35 @@ let rec maybe_simplify_aux cfg env stack tm =
                      | _ -> tm)
                    | _ -> tm
              end
+           (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
+           | [(ty, Some (Implicit _)); (t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some true -> w U.t_true
+                     | Some false when clearly_inhabited ty -> w U.t_false
+                     | _ -> tm)
+                   | _ -> tm
+             end
            | _ -> tm
       else if S.fv_eq_lid fv PC.exists_lid
       then match args with
-           | [(t, _)]
-           | [(_, Some (Implicit _)); (t, _)] ->
+           (* Simplify ∃x. False to False *)
+           | [(t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
                      | Some false -> w U.t_false
+                     | _ -> tm)
+                   | _ -> tm
+             end
+           (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
+           | [(ty, Some (Implicit _)); (t, _)] ->
+             begin match (SS.compress t).n with
+                   | Tm_abs([_], body, _) ->
+                     (match simp_t body with
+                     | Some false -> w U.t_false
+                     | Some true when clearly_inhabited ty -> w U.t_true
                      | _ -> tm)
                    | _ -> tm
              end
