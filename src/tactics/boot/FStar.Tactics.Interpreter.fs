@@ -262,6 +262,15 @@ let rec primitive_steps () : list<N.primitive_step> =
             Some (E.embed_proofstate (N.psc_range psc) ps')))
         | _ -> failwith "Unexpected application of set_proofstate_range"
     in
+    let push_binder_interp psc (args:args) =
+        match args with
+        | [(env_t, _); (b, _)] ->
+            bind_opt (RE.unembed_env env_t) (fun env ->
+            bind_opt (RE.unembed_binder b) (fun b ->
+            let env = Env.push_binders env [b] in
+            Some (RE.embed_env env_t.pos env)))
+        | _ -> failwith "Unexpected application of push_binder"
+    in
     let set_proofstate_range_step : N.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
         {N.name = nm;
@@ -280,6 +289,16 @@ let rec primitive_steps () : list<N.primitive_step> =
          N.strong_reduction_ok = false;
          N.requires_binder_substitution = true;
          N.interpretation = tracepoint_interp
+        }
+    in
+    let push_binder_step : N.primitive_step =
+       let nm = E.fstar_tactics_lid' ["Builtins";"push_binder"] in
+        {N.name = nm;
+         N.arity = 2;
+         N.auto_reflect=None;
+         N.strong_reduction_ok = false;
+         N.requires_binder_substitution = true;
+         N.interpretation = push_binder_interp
         }
     in
     // When we want an identity embedding/unembedding, we use put/get
@@ -370,6 +389,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       incr_depth_step;
       tracepoint_step;
       set_proofstate_range_step;
+      push_binder_step
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
