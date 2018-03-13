@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c687e6deef04978e80f6a29d3ea76e0d"
+      "723dce3bfdb170847a541d7f863f3198"
     ],
     [
       "Tutorial.is_conj",
@@ -39,7 +39,7 @@
         "typing_FStar.Reflection.Formula.uu___is_And"
       ],
       0,
-      "96de3157b2a135aedbadca607594a059"
+      "d6672385857462f0b831bd16a55fbff1"
     ],
     [
       "Tutorial.split_all",
@@ -63,7 +63,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "8e25db78f6e730fbe80ac2bcfaa1ced2"
+      "6e26307bfa682dbf3c2705358fcb46da"
     ],
     [
       "Tutorial.ex3'",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6a6f91b5b2edae56bff2c29410a44ddf"
+      "2fb990094d2cd9bc9532451c03921efd"
     ],
     [
       "Tutorial.ex4",
@@ -89,7 +89,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8bcac67a7261b67aa2445de8116a339e"
+      "f06ae50e80318f661efae520f39cffa3"
     ],
     [
       "Tutorial.ex4",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cafc53b1daca08da5fd4471cbfa80ece"
+      "81a38a493ddc2a68bb5c92a1e7de2903"
     ],
     [
       "Tutorial.is_conj",
@@ -131,7 +131,7 @@
         "projection_inverse_FStar.Reflection.Formula.And__1"
       ],
       0,
-      "5384aebd4b859f4ea04ef4ce963b6d8b"
+      "9d2d6887d4614524912fe6c9f88f62d6"
     ],
     [
       "Tutorial.split_all",
@@ -155,7 +155,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "11ab52d00b1296d700e2989f4861c97a"
+      "91bb6d4cce679b8dba18a06e0ea10b6a"
     ]
   ]
 ]
