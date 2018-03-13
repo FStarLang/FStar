@@ -1492,7 +1492,9 @@ let (gen_wps_for_free :
                         FStar_Syntax_Syntax.bind_repr =
                           (uu___77_2737.FStar_Syntax_Syntax.bind_repr);
                         FStar_Syntax_Syntax.actions =
-                          (uu___77_2737.FStar_Syntax_Syntax.actions)
+                          (uu___77_2737.FStar_Syntax_Syntax.actions);
+                        FStar_Syntax_Syntax.eff_attrs =
+                          (uu___77_2737.FStar_Syntax_Syntax.eff_attrs)
                       }  in
                     (uu____2685, uu____2736)))))
   
@@ -3250,7 +3252,9 @@ and (mk_let :
                            FStar_Syntax_Syntax.lbdef =
                              (uu___92_8862.FStar_Syntax_Syntax.lbdef);
                            FStar_Syntax_Syntax.lbattrs =
-                             (uu___92_8862.FStar_Syntax_Syntax.lbattrs)
+                             (uu___92_8862.FStar_Syntax_Syntax.lbattrs);
+                           FStar_Syntax_Syntax.lbpos =
+                             (uu___92_8862.FStar_Syntax_Syntax.lbpos)
                          }
                        else binding  in
                      let env1 =
@@ -3291,7 +3295,9 @@ and (mk_let :
                               FStar_Syntax_Syntax.lbdef =
                                 (uu___95_8890.FStar_Syntax_Syntax.lbdef);
                               FStar_Syntax_Syntax.lbattrs =
-                                (uu___95_8890.FStar_Syntax_Syntax.lbattrs)
+                                (uu___95_8890.FStar_Syntax_Syntax.lbattrs);
+                              FStar_Syntax_Syntax.lbpos =
+                                (uu___95_8890.FStar_Syntax_Syntax.lbpos)
                             }  in
                           let uu____8894 =
                             let uu____8897 =
@@ -3312,7 +3318,9 @@ and (mk_let :
                                          (uu___96_8921.FStar_Syntax_Syntax.lbeff);
                                        FStar_Syntax_Syntax.lbdef = s_e1;
                                        FStar_Syntax_Syntax.lbattrs =
-                                         (uu___96_8921.FStar_Syntax_Syntax.lbattrs)
+                                         (uu___96_8921.FStar_Syntax_Syntax.lbattrs);
+                                       FStar_Syntax_Syntax.lbpos =
+                                         (uu___96_8921.FStar_Syntax_Syntax.lbpos)
                                      })]), uu____8911)
                                  in
                               FStar_Syntax_Syntax.Tm_let uu____8898  in
@@ -3336,7 +3344,9 @@ and (mk_let :
                                          (uu___97_8949.FStar_Syntax_Syntax.lbeff);
                                        FStar_Syntax_Syntax.lbdef = u_e1;
                                        FStar_Syntax_Syntax.lbattrs =
-                                         (uu___97_8949.FStar_Syntax_Syntax.lbattrs)
+                                         (uu___97_8949.FStar_Syntax_Syntax.lbattrs);
+                                       FStar_Syntax_Syntax.lbpos =
+                                         (uu___97_8949.FStar_Syntax_Syntax.lbpos)
                                      })]), uu____8939)
                                  in
                               FStar_Syntax_Syntax.Tm_let uu____8926  in
@@ -3356,7 +3366,9 @@ and (mk_let :
                          FStar_Syntax_Syntax.lbdef =
                            (uu___98_8958.FStar_Syntax_Syntax.lbdef);
                          FStar_Syntax_Syntax.lbattrs =
-                           (uu___98_8958.FStar_Syntax_Syntax.lbattrs)
+                           (uu___98_8958.FStar_Syntax_Syntax.lbattrs);
+                         FStar_Syntax_Syntax.lbpos =
+                           (uu___98_8958.FStar_Syntax_Syntax.lbpos)
                        }  in
                      let env1 =
                        let uu___99_8960 = env  in
@@ -3447,7 +3459,9 @@ and (mk_let :
                                          (uu___101_9108.FStar_Syntax_Syntax.lbeff);
                                        FStar_Syntax_Syntax.lbdef = u_e1;
                                        FStar_Syntax_Syntax.lbattrs =
-                                         (uu___101_9108.FStar_Syntax_Syntax.lbattrs)
+                                         (uu___101_9108.FStar_Syntax_Syntax.lbattrs);
+                                       FStar_Syntax_Syntax.lbpos =
+                                         (uu___101_9108.FStar_Syntax_Syntax.lbpos)
                                      })]), uu____9098)
                                  in
                               FStar_Syntax_Syntax.Tm_let uu____9085  in

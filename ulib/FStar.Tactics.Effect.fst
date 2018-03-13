@@ -13,15 +13,19 @@ val __ret : a:Type -> x:a -> __tac a
 let __ret a x = fun (s:proofstate) -> Success(x, s)
 
 (* monadic bind *)
-let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
-    fun p -> let r = t1 (incr_depth p) in
-             match r with
-             | Success(a, q)  ->
-                 // Force evaluation of __tracepoint q
-                 begin match tracepoint q with
-                 | () -> t2 a (decr_depth q)
-                 end
-             | Failed(msg, q) -> Failed(msg, q)
+let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __tac b =
+    fun ps ->
+        let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
+        let ps = incr_depth ps in
+        let r = t1 ps in
+        match r with
+        | Success(a, ps')  ->
+            let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
+            // Force evaluation of __tracepoint q
+            begin match tracepoint ps' with
+            | () -> t2 a (decr_depth ps')
+            end
+        | Failed(msg, ps') -> Failed(msg, ps')
 
 (* Actions *)
 let __get () : __tac proofstate = fun s0 -> Success(s0, s0)
@@ -32,7 +36,10 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"
  * optimization, which causes VCs (for well-formedness of tactics) to blow up.
  *
- * Work around that by overriding `bind_wp` for the effect with an efficient one.
+ * Plus, we don't need to model the ranges and depths: they make no difference since the
+ * proofstate type is abstract and the SMT never sees a concrete one.
+ *
+ * So, override `bind_wp` for the effect with an efficient one.
  *)
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
@@ -46,6 +53,7 @@ unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a
     g_compact b (g_bind a b wp f)
 
 (* total  *) //disable the termination check, although it remains reifiable
+[@ dm4f_bind_range ]
 reifiable reflectable new_effect {
   TAC : a:Type -> Effect
   with repr     = __tac
@@ -60,14 +68,6 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
     fun ps p -> wp (fun x -> p (Success(x, ps)))
 
 sub_effect DIV ~> TAC = lift_div_tac
-
-(* Why the "CPS"-like definition? So we don't call bind which would
- * introduce an extra tracepoint. *)
-let set_rng (rng:range) (tau : unit -> Tac 'a) : Tac 'a =
-    TAC?.reflect (fun ps ->
-        let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range rng) in
-        reify (tau ()) ps
-    )
 
 abstract
 let __by_tactic (t:__tac 'a) (p:Type) : Type = p
@@ -91,6 +91,6 @@ let assert_by_tactic (p:Type) (t:unit -> Tac unit)
 val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm needs these two names to be here, but we should remove it eventually
+// TcTerm needs these two names typecheck tactics against
 private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
-let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())
+private let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())

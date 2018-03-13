@@ -1755,14 +1755,10 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
   let lbname: lbname = Inr fv in
-  let lb: letbindings = false, [{
-     lbname = lbname;
-     lbunivs = [];
-     lbtyp = S.tun;
-     lbdef = def;
-     lbeff = C.effect_Tot_lid; //this will be recomputed correctly
-     lbattrs = []
-  }] in
+  let lb: letbindings =
+    // the effect label will be recomputed correctly
+    false, [U.mk_letbinding lbname [] S.tun C.effect_Tot_lid def [] Range.dummyRange]
+  in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
@@ -1795,7 +1791,13 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         match q with
         | Assumption ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x || (env.is_iface && x=Inline_for_extraction))
+          |> List.for_all (fun x -> x=q
+                              || x=Logic
+                              || inferred x
+                              || visibility x
+                              || assumption x
+                              || (env.is_iface && x=Inline_for_extraction)
+                              || x=NoExtract)
 
         | New -> //no definition provided
           quals
@@ -1996,14 +1998,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
-                let lb = {
-                    lbname=Inr (S.lid_as_fv discriminator_name dd None);
-                    lbunivs=uvs;
-                    lbtyp=lbtyp;
-                    lbeff=C.effect_Tot_lid;
-                    lbdef=SS.close_univ_vars uvs imp;
-                    lbattrs=[]
-                } in
+                let lb = U.mk_letbinding
+                            (Inr (S.lid_as_fv discriminator_name dd None))
+                            uvs
+                            lbtyp
+                            C.effect_Tot_lid
+                            (SS.close_univ_vars uvs imp)
+                            []
+                            Range.dummyRange
+                in
                 let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                              sigquals = quals;
                              sigrng = p;
@@ -2087,7 +2090,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbtyp=lbtyp;
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp;
-                  lbattrs=[]
+                  lbattrs=[];
+                  lbpos=Range.dummyRange;
               } in
               let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                            sigquals = quals;

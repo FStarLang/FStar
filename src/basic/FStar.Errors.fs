@@ -218,6 +218,7 @@ type raw_error =
   | Fatal_UnexpectedTerm
   | Fatal_UnexpectedTermInUniverse
   | Fatal_UnexpectedTermType
+  | Fatal_UnexpectedTermVQuote
   | Fatal_UnexpectedUniversePolymorphicReturn
   | Fatal_UnexpectedUniverseVariable
   | Fatal_UnfoldableDeprecated
@@ -243,7 +244,7 @@ type raw_error =
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
   | Fatal_WhenClauseNotSupported
-  | Fatal_CallNotImplemented
+  | Unused01
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
   | Warning_CachedFile
@@ -300,6 +301,7 @@ type raw_error =
   | Warning_CantInspect
   | Warning_NilGivenExplicitArgs
   | Warning_ConsAppliedExplicitArgs
+  | Warning_UnembedBinderKnot
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -520,6 +522,7 @@ let default_flags =
   (Fatal_UnexpectedTerm                              , CFatal);
   (Fatal_UnexpectedTermInUniverse                    , CFatal);
   (Fatal_UnexpectedTermType                          , CFatal);
+  (Fatal_UnexpectedTermVQuote                        , CFatal);
   (Fatal_UnexpectedUniversePolymorphicReturn         , CFatal);
   (Fatal_UnexpectedUniverseVariable                  , CFatal);
   (Fatal_UnfoldableDeprecated                        , CFatal);
@@ -545,7 +548,7 @@ let default_flags =
   (Fatal_WrongResultTypeAfterConstrutor              , CFatal);
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
-  (Fatal_CallNotImplemented                          , CFatal);
+  (Unused01                                          , CFatal);
   (Warning_CallNotImplementedAsWarning               , CWarning);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
@@ -602,6 +605,7 @@ let default_flags =
   (Warning_CantInspect                               , CWarning);
   (Warning_NilGivenExplicitArgs                      , CWarning);
   (Warning_ConsAppliedExplicitArgs                   , CWarning);
+  (Warning_UnembedBinderKnot                         , CWarning);
   ]
 
 exception Err of raw_error* string

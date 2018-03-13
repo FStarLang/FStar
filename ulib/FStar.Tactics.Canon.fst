@@ -78,19 +78,11 @@ let step_lemma (lem : term) : Tac unit =
 
 val canon_point : expr -> Tac expr
 let rec canon_point e =
-    // Need this stupid indirection or I get:
-    //
-    // ulib/FStar.Tactics.Canon.fst(105,8-107,28): (Error 54)
-    // FStar.Tactics.Effect.Tac FStar.Reflection.Arith.expr
-    // is not a subtype of the expected type
-    // Prims.Tot ((*?u2035*) _ e uu___4175)
-    //
-    // This didn't happen before adding the `e` argument
     let skip () : Tac expr = 
         trefl (); e
     in
     match e with
-    // Fold constants
+    // Evaluate constants
     | Plus (Lit a) (Lit b) ->
         norm [primops];
         trefl ();
@@ -217,8 +209,7 @@ let rec canon_point e =
 let canon_point_entry () : Tac unit =
     norm [];
     let g = cur_goal () in
-    let f = term_as_formula g in
-    match f with
+    match term_as_formula g with
     | Comp (Eq _) l r ->
         admit (); // coverage...
         begin match run_tm (is_arith_expr l) with

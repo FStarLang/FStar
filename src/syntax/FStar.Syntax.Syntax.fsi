@@ -89,11 +89,13 @@ type delta_depth =
 // output_value on them (serious).
 type lazy_kind =
   | BadLazy
+  | Lazy_bv
   | Lazy_binder
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_sigelt
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -109,7 +111,7 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of uvar * typ                                  (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
@@ -129,7 +131,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
     lbdef  :term;            //e
-    lbattrs:list<attribute>
+    lbattrs:list<attribute>; //attrs
+    lbpos  :range;           //original position of 'e'
 }
 and comp_typ = {
   comp_univs:universes;
@@ -328,7 +331,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {
@@ -385,6 +389,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of term
 
 and sigelt = {
     sigel:    sigelt';
@@ -417,7 +422,7 @@ val withinfo: 'a -> Range.range -> withinfo_t<'a>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a>>
 
-val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
@@ -511,7 +516,9 @@ val t_float       : term
 val t_char        : term
 val t_range       : term
 val t_term        : term
+val t_decls       : term
 val t_binder      : term
+val t_bv          : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term

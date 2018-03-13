@@ -105,6 +105,7 @@ type env = {
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)

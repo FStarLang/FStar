@@ -43,8 +43,11 @@ or fails if it is untypeable. *)
 let tc (t : term) = TAC?.reflect (__tc t)
 
 assume private val __unshelve : term -> __tac unit
-(** [tc] returns the type of a term in the current environment,
-or fails if it is untypeable. *)
+(** [unshelve] creates a goal from a term for its given type.
+It can be used when the system decided not to present a goal, but
+you want one anyway. For example, if you request a uvar through
+[uvar_env] or [fresh_uvar], you might want to instantiate it
+explicitly. *)
 let unshelve (t : term) = TAC?.reflect (__unshelve t)
 
 assume private val __unquote : #a:Type -> term -> __tac a
@@ -165,8 +168,10 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
-assume private val __t_exact : bool -> bool -> term -> __tac unit
-let t_exact hard guard (t:term) : Tac unit = TAC?.reflect (__t_exact hard guard t)
+(** boolean is whether to set the expected type internally.
+ * Just use `exact` from FStar.Tactics.Derived if you don't know what that means. *)
+assume private val __t_exact : bool -> term -> __tac unit
+let t_exact hard (t:term) : Tac unit = TAC?.reflect (__t_exact hard t)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application
@@ -217,6 +222,34 @@ unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
 let pointwise  (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise BottomUp (reify (tau ())))
 let pointwise' (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise TopDown  (reify (tau ())))
+
+assume private val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __tac unit
+
+(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
+    of the goal on which [fst (ctrl t)] returns true.
+
+    On each such sub-term, [rw] is presented with an equality of goal
+    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
+    the engine will rewrite [t] for [?u] in the original goal
+    type.
+    
+    The goal formula is traversed top-down and the traversal can be
+    controlled by [snd (ctrl t)]:
+    
+    When [snd (ctrl t) = 0], the traversal continues down through the
+    position in the goal term.
+    
+    When [snd (ctrl t) = 1], the traversal continues to the next
+    sub-tree of the goal.
+
+    When [snd (ctrl t) = 2], no more rewrites are performed in the
+    goal.
+*)
+let topdown_rewrite
+       (ctrl : term -> Tac (bool * int))
+       (rw:unit -> Tac unit)
+    : Tac unit
+    = TAC?.reflect (__topdown_rewrite (fun x -> reify (ctrl x)) (reify (rw ())))
 
 assume private val __later : __tac unit
 (** Push the current goal to the back. *)
@@ -284,8 +317,22 @@ performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
 let launch_process (prog args input : string) : Tac string = TAC?.reflect (__launch_process prog args input)
 
-(** Get a fresh binder of some name and type. The name is only useful
+(** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
-the binder too. *)
-assume val __fresh_binder_named : string -> typ -> __tac binder
-let fresh_binder_named nm t : Tac binder = TAC?.reflect (__fresh_binder_named nm t)
+the bv too. *)
+assume val __fresh_bv_named : string -> typ -> __tac bv
+let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
+
+(** Change the goal to another type, given that it is convertible
+ * to the current type. *)
+assume val __change : typ -> __tac unit
+let change (t : typ) : Tac unit = TAC?.reflect (__change t)
+
+assume val __get_guard_policy : __tac guard_policy
+let get_guard_policy () : Tac guard_policy = TAC?.reflect (__get_guard_policy)
+
+assume val __set_guard_policy : guard_policy -> __tac unit
+let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_policy p)
+
+assume val __dismiss : __tac unit
+let dismiss () : Tac unit = TAC?.reflect __dismiss

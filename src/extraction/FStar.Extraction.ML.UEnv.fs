@@ -66,7 +66,7 @@ let erasableTypeNoDelta (t:mlty) =
     else match t with
         | MLTY_Named (_, (["FStar"; "Ghost"], "erased")) -> true
         (* erase tactic terms, unless extracting for tactic compilation *)
-        | MLTY_Named (_, (["FStar"; "Tactics"; "Effect"], "tactic")) -> (Options.codegen () <> Some "tactics")
+        | MLTY_Named (_, (["FStar"; "Tactics"; "Effect"], "tactic")) -> Options.codegen () <> Some Options.Plugin
         | _ -> false // this function is used by another function which does delta unfolding
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)

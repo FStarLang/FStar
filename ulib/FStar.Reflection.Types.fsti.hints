@@ -1,1 +1,18 @@
-[ "$‹\u0003ÿ|#ä––¤÷ÏûÝæÈ", [] ]
+[
+  "D‚‘þ\u0004Â¼Ò\"1€\u0000Ór,¾",
+  [
+    [
+      "FStar.Reflection.Types.name",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "0969a8be4550cbc872deb54f90714be2"
+    ]
+  ]
+]

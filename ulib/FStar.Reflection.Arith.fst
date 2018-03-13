@@ -108,8 +108,7 @@ private let fail #a s = fun i -> Inl s
 val as_arith_expr : term -> tm expr
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
-    // Admitting this subtyping on lists for now, it's provable, but tedious right now
-    let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
+    let tl = List.list_unref tl in
     match inspect hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
@@ -203,7 +202,6 @@ let rec expr_to_string (e:expr) : string =
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
-    | Neg l -> "~ " ^ (expr_to_string l)
     | Udiv l r -> "(" ^ (expr_to_string l) ^ " / " ^ (expr_to_string r) ^ ")"
     | Umod l r -> "(" ^ (expr_to_string l) ^ " % " ^ (expr_to_string r) ^ ")"
     | MulMod l r -> "(" ^ (expr_to_string l) ^ " ** " ^ (expr_to_string r) ^ ")"

@@ -66,10 +66,11 @@ open FStar_String
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE
 %token BACKTICK UNIV_HASH
+%token PERC_BACKTICK
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
@@ -172,6 +173,8 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
+  | SPLICE t=term
+      { Splice t }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
@@ -707,6 +710,8 @@ tmNoEqWith(X):
   | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | LBRACE e=recordExp RBRACE { e }
+  | PERC_BACKTICK e=atomicTerm
+      { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=X { e }

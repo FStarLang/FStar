@@ -557,6 +557,8 @@ and p_rawDecl d = match d.d with
     failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
+  | Splice t ->
+    str "%splice" ^^ space ^^ p_term false false t
 
 (* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function
@@ -986,6 +988,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
     group (str "quote" ^/^ p_noSeqTerm ps pb e)
   | Quote (e, false) ->
     group (str "`" ^^ p_noSeqTerm ps pb e)
+  | VQuote e ->
+    group (str "%`" ^^ p_noSeqTerm ps pb e)
   | _ -> p_typ ps pb e
 
 and p_attrs_opt = function
@@ -1312,6 +1316,7 @@ and p_projectionLHS e = match e.tm with
   | Ensures _   (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
   | Quote _     (* p_noSeqTerm *)
+  | VQuote _     (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
 
 and p_constant = function

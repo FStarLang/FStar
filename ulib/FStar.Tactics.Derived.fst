@@ -2,27 +2,52 @@ module FStar.Tactics.Derived
 
 open FStar.Reflection
 open FStar.Reflection.Formula
+open FStar.Tactics.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
+(* Tac list functions, no effect polymorphism *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
+val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
+let rec fold_left f x l = match l with
+  | [] -> x
+  | hd::tl -> fold_left f (f x hd) tl
+
+val fold_right: ('a -> 'b -> Tac 'b) -> list 'a -> 'b -> Tac 'b
+let rec fold_right f l x = match l with
+  | [] -> x
+  | hd::tl -> f hd (fold_right f tl x)
+
 // TODO: maybe we can increase a counter on each call
-let fresh_binder t = fresh_binder_named "x" t
+let fresh_bv t = fresh_bv_named "x" t
+
+let fresh_binder_named nm t =
+    mk_binder (fresh_bv_named nm t)
+
+let fresh_binder t =
+    fresh_binder_named "x" t
+
+let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
+    let old_pol = get_guard_policy () in
+    set_guard_policy pol;
+    let r = f () in
+    set_guard_policy old_pol;
+    r
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
 let exact (t : term) : Tac unit =
-    t_exact false true t
+    with_policy SMT (fun () -> t_exact false t)
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
-    t_exact false false t
+    with_policy Goal (fun () -> t_exact false t)
 
 let fresh_uvar o =
     let e = cur_env () in
@@ -82,8 +107,9 @@ let guards_to_smt () : Tac unit =
     let _ = repeat skip_guard in
     ()
 
-let simpl () : Tac unit = norm [simplify; primops]
-let whnf  () : Tac unit = norm [weak; hnf; primops]
+let simpl   () : Tac unit = norm [simplify; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops]
+let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
 
@@ -94,6 +120,23 @@ let tcut (t:term) : Tac binder =
     let tt = pack (Tv_App (`__cut) (t, Q_Explicit)) in
     apply tt;
     intro ()
+
+let pose (t:term) : Tac binder =
+    apply (`__cut);
+    flip ();
+    exact t;
+    let _ = trytac flip in // maybe we have less than 2 goals now
+    intro ()
+
+let intro_as (s:string) : Tac binder =
+    let b = intro () in
+    rename_to b s;
+    b
+
+let pose_as (s:string) (t:term) : Tac binder =
+    let b = pose t in
+    rename_to b s;
+    b
 
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
@@ -108,7 +151,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = pack (Tv_Var b) in
+        let t = pack (Tv_Var (bv_of_binder b)) in
         or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
 
 let assumption () : Tac unit =
@@ -190,7 +233,7 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack (Tv_Var e)))
+    pointwise (fun () -> grewrite' t1 t2 (pack (Tv_Var (bv_of_binder e))))
 
 let focus (f : unit -> Tac 'a) : Tac 'a =
     let res, _ = divide 1 f idtac in
@@ -220,7 +263,7 @@ private let push1 #p #q f u = ()
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
-    // This terminates because of the fuel, but we could just expand into Tac and diverge
+    // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
     let g = cur_goal () in
     let ty = tc t in
@@ -243,10 +286,10 @@ let rec apply_squash_or_lem d t =
            | _ ->
                fail "mapply: can't apply (1)"
        end
-    | C_Total rt ->
+    | C_Total rt _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
-       | Some _ -> apply t
+       | Some _ -> apply_lemma t
        (* If not, we can try to introduce the squash ourselves first *)
        | None ->
            apply (`FStar.Squash.return_squash);
@@ -267,3 +310,15 @@ let dump_admit () : Tac unit =
 assume val admit_goal : #a:Type -> unit ->
     Pure a (requires (by_tactic dump_admit a))
            (ensures (fun _ -> False))
+
+let change_with t1 t2 =
+    focus (fun () ->
+        grewrite t1 t2;
+        iseq [idtac; trivial]
+    )
+
+private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
+private let conv #x #y eq w = w
+
+let change_sq t1 =
+    change (mk_e_app (`squash) [t1])

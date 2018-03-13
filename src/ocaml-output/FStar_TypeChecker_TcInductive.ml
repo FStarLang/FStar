@@ -2171,7 +2171,7 @@ let (check_inductive_well_typedness :
                                             | FStar_Syntax_Syntax.Sig_inductive_typ
                                                 (l,univs2,binders,typ,uu____5432,uu____5433)
                                                 ->
-                                                let fail expected inferred =
+                                                let fail1 expected inferred =
                                                   let uu____5449 =
                                                     let uu____5454 =
                                                       let uu____5455 =
@@ -2265,11 +2265,11 @@ let (check_inductive_well_typedness :
                                                                    uu____5532
                                                                  then ()
                                                                  else
-                                                                   fail
+                                                                   fail1
                                                                     expected_typ1
                                                                     inferred_typ))
                                                      else
-                                                       fail expected_typ1
+                                                       fail1 expected_typ1
                                                          inferred_typ)
                                             | uu____5535 -> ()));
                                     (sig_bndle, tcs1, datas3)))))))

@@ -223,11 +223,6 @@ let quals_to_string' quals =
 
 let paren s = "(" ^ s ^ ")"
 
-let term_to_string' env x =
-  let e = Resugar.resugar_term' env x in
-  let d = ToDocument.term_to_document e in
-  Pp.pretty_string (float_of_string "1.0") 100 d
-
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -436,9 +431,11 @@ and args_to_string args =
     args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string' env c =
-  let e = Resugar.resugar_comp' env c in
-  let d = ToDocument.term_to_document e in
-  Pp.pretty_string (float_of_string "1.0") 100 d
+  if Options.ugly ()
+  then comp_to_string c
+  else let e = Resugar.resugar_comp' env c in
+       let d = ToDocument.term_to_document e in
+       Pp.pretty_string (float_of_string "1.0") 100 d
 
 and comp_to_string c =
   if not (Options.ugly()) then
@@ -526,6 +523,13 @@ and metadata_to_string = function
 
     | Meta_quoted (qt, qi) ->
         "`(" ^ term_to_string qt ^ ")"
+
+let term_to_string' env x =
+  if Options.ugly ()
+  then term_to_string x
+  else let e = Resugar.resugar_term' env x in
+       let d = ToDocument.term_to_document e in
+       Pp.pretty_string (float_of_string "1.0") 100 d
 
 let binder_to_json env b =
     let (a, imp) = b in
@@ -680,6 +684,8 @@ let rec sigelt_to_string (x: sigelt) =
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+      | Sig_splice t ->
+        U.format1 "splice (%s)" (term_to_string t)
       in
       match x.sigattrs with
       | [] -> basic

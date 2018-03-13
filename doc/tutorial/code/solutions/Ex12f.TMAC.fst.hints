@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ef11449dc139c183dcc48e1a90a0f985"
+      "f78831284650fdfa2c0f6591ead1a39f"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -25,12 +25,12 @@
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "refinement_interpretation_Ex12.Pad_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
         "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Ex12f.TMAC_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "5d0d7f04f1949cb93899937e6e2324cf"
+      "fb8003f0bb782d65dcf1509cea7da1c0"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -51,7 +51,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "646e9bbe206c123474466258241171d7"
+      "2191e1418fab843df3e393d74ddd4038"
     ],
     [
       "Ex12f.TMAC.keygen",
@@ -60,7 +60,7 @@
       1,
       [ "@query" ],
       0,
-      "59f8da99e6f51d0c250e1a2958d17319"
+      "4b8e347b524bc85fb449ce4e5d45addf"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -77,12 +77,12 @@
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "refinement_interpretation_Ex12.Pad_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
         "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Ex12f.TMAC_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "21d08f594b81ccf0bad4790f864d94e8"
+      "e6043be05ce12e405e8f6e21841f0e74"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -103,7 +103,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "122a37b53e95ebe8693eb8ab47d952f9"
+      "c26a66cc4745ea9e930193fb5698b522"
     ]
   ]
 ]

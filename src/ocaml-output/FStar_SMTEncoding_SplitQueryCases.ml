@@ -152,7 +152,7 @@ let (handle_query :
     (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit)
   =
   fun uu____470  ->
-    fun check  ->
+    fun check1  ->
       match uu____470 with
       | (f,l,negs) -> failwith "SplitQueryCases is not currently supported"
   

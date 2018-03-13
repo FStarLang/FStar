@@ -45,3 +45,4 @@ let rec unzip3 = function
 let bool_of_compare _ _ _ = failwith "FStar_List.Tot.Base.ml: Not implemented: bool_of_compare"
 let compare_of_bool _ _ _ = failwith "FStar_List.Tot.Base.ml: Not implemented: compare_of_bool"
 let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
+let list_unref l = l

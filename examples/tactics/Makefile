@@ -4,7 +4,10 @@ include ../Makefile.include
 .PHONY: neg
 
 all:	Apply.uver		\
+	ApplyLemma.uver		\
 	Canon.uver		\
+	CanonMonoid.uver	\
+	CanonCommMonoid.uver	\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -12,11 +15,16 @@ all:	Apply.uver		\
 	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
+	VC.uver			\
+	Div.uver		\
+	Change.uver		\
 	Tutorial.uver		\
+	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
+	VQuote.uver		\
 	Rename.uver		\
 	Imp.uver		\
 	Inlining.uver		\
@@ -43,6 +51,7 @@ all:	Apply.uver		\
 	Sequences.uver		\
 	Caller.uver		\
 	Retype.uver		\
+	Pose.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\

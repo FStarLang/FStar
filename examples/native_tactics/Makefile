@@ -1,29 +1,30 @@
 FSTAR_HOME=../..
-CACHE = _cache
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+#--cache_checked_modules
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+ALL=Print Split BV UnitTests Canon Simple SimpleTactic Evens Embeddings
 
-OCAML_OUTPUT=$(FSTAR_HOME)/src/ocaml-output
-INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocaml-output/ src/basic/ml)
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
-FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
+all: $(addsuffix .test, $(ALL))
 
-.PRECIOUS: _cache/%.cmxs
+# .depend:
+# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
+
+# include .depend
+
 .PHONY: %.test fstartaclib
 
-MODULES=Print Split Canon UnitTests
-
-all: $(patsubst %,%.test,$(MODULES))
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
 $(FSTARTACLIB):
 	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
-%.cmxs: %.Test.fst $(FSTARTACLIB)
-	mkdir -p $(CACHE)_$*
-	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE)_$* $<
+%.test: %.Test.fst %.ml
+	$(FSTAR) $*.Test.fst --load $*
+	touch $@
 
-%.test: %.Test.fst %.cmxs
-	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE)_$* $<
+%.ml: %.fst $(FSTARTACLIB)
+	$(FSTAR) $*.fst --codegen Plugin --extract $*
+	touch $@
 
 clean:
-	rm -rf $(CACHE)_*
+	rm -f *.test *.ml *.o *.cm[ix] *.cmxs

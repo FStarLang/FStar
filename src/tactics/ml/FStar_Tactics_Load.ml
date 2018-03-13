@@ -23,6 +23,7 @@ let error_message : Dynlink.error -> string =
 let load_tactic tac =
   let dynlink fname =
     try
+      print_string ("Loading plugin from " ^ fname ^ "\n");
       Dynlink.loadfile fname
     with Dynlink.Error e ->
       failwith (U.format2 "Dynlinking %s failed: %s" fname (error_message e)) in
@@ -37,7 +38,7 @@ let load_tactic tac =
 let load_tactics tacs =
     List.iter load_tactic tacs
 
- let load_tactics_dir dir =
+let load_tactics_dir dir =
     (* Dynlink all .cmxs files in the given directory *)
     Sys.readdir dir
     |> Array.to_list
@@ -45,7 +46,7 @@ let load_tactics tacs =
     |> List.map (fun s -> dir ^ "/" ^ s)
     |> List.iter load_tactic
 
- let compile_modules dir ms =
+let compile_modules dir ms =
    let fs_home = FStar_Options.fstar_home () in
    let compile m =
      let packages = ["fstar-tactics-lib"] in

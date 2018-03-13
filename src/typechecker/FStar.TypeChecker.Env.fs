@@ -109,6 +109,7 @@ type env = {
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
@@ -208,6 +209,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     proof_ns = Options.using_facts_from ();
     synth = (fun e g tau -> failwith "no synthesizer available");
+    splice = (fun e tau -> failwith "no splicer available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
@@ -417,7 +419,7 @@ let rec add_sigelt env se = match se.sigel with
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = U.action_as_lb ne.mname a in
+          let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 

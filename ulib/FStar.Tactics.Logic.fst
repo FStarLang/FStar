@@ -31,6 +31,12 @@ let forall_intro () : Tac binder =
     | Forall _ _ -> begin apply_lemma (`fa_intro_lem); intro () end
     | _          -> fail "not a forall"
 
+let forall_intro_as (s:string) : Tac binder =
+    let g = cur_goal () in
+    match term_as_formula g with
+    | Forall _ _ -> begin apply_lemma (`fa_intro_lem); intro_as s end
+    | _          -> fail "not a forall"
+
 let forall_intros () : Tac binders = repeat1 forall_intro
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
@@ -116,7 +122,7 @@ let unsquash (t:term) : Tac term =
     let v = `vbind in
     apply_lemma (mk_e_app v [t]);
     let b = intro () in
-    pack (Tv_Var b)
+    pack (Tv_Var (bv_of_binder b))
 
 let squash_intro () : Tac unit =
     apply (`FStar.Squash.return_squash)

@@ -44,9 +44,10 @@ module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
 
-let module_or_interface_name m = m.is_interface, m.name
+(* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
+let cache_version_number = 1
 
-let user_tactics_modules = Tc.user_tactics_modules
+let module_or_interface_name m = m.is_interface, m.name
 
 let with_tcenv (env:TcEnv.env) (f:DsEnv.withenv<'a>) =
     let a, dsenv = f env.dsenv in
@@ -94,6 +95,7 @@ let init_env deps : TcEnv.env =
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth = FStar.Tactics.Interpreter.synth } in
+  let env = { env with splice = FStar.Tactics.Interpreter.splice} in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
   env
@@ -177,54 +179,64 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
-let load_module_from_cache env fn
-    : option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
-    let cache_file = Dep.cache_file_name fn in
-    let fail tag =
-         FStar.Errors.log_issue
-            (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-            (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
-         None
-    in
-    if BU.file_exists cache_file then
-      match BU.load_value_from_file cache_file with
-      | None ->
-        fail "Corrupt"
-      | Some (digest, tcmod, tcmod_iface_opt, mii) ->
-         match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
-         | Some digest' ->
-           if digest=digest'
-           then Some (tcmod, tcmod_iface_opt, mii)
-           else begin
-                if Options.debug_any()
-                then begin
-                     BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+let load_module_from_cache
+    : env -> string -> option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
+    let some_cache_invalid = BU.mk_ref None in
+    let invalidate_cache fn = some_cache_invalid := Some fn in
+    fun env fn ->
+        let cache_file = Dep.cache_file_name fn in
+        let fail tag =
+             invalidate_cache();
+             FStar.Errors.log_issue
+                (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+                (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn);
+             None
+        in
+        match !some_cache_invalid with
+        | Some _ -> None
+        | _ ->
+          if BU.file_exists cache_file then
+            match BU.load_value_from_file cache_file with
+            | None ->
+              fail "Corrupt"
+            | Some (vnum, digest, tcmod, tcmod_iface_opt, mii) ->
+              if vnum <> cache_version_number then fail "Stale, because inconsistent cache version"
+              else
+                match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
+                | Some digest' ->
+                  if digest=digest'
+                  then Some (tcmod, tcmod_iface_opt, mii)
+                  else begin
+                    if Options.debug_any()
+                    then begin
+                      BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
                                 (BU.string_of_int (List.length digest'))
                                 (FStar.Parser.Dep.print_digest digest')
                                 (BU.string_of_int (List.length digest))
                                 (FStar.Parser.Dep.print_digest digest);
-                    if List.length digest = List.length digest'
-                    then List.iter2
-                            (fun (x,y) (x', y') ->
-                                 if x<>x' || y<>y'
-                                 then BU.print2 "Differ at: Expected %s\n Got %s\n"
-                                        (FStar.Parser.Dep.print_digest [(x,y)])
-                                        (FStar.Parser.Dep.print_digest [(x',y')]))
-                         digest
-                         digest'
-                  end;
-                fail "Stale"
-            end
-         | _ ->
-           fail "Stale"
-    else fail "Absent"
+                      if List.length digest = List.length digest'
+                      then List.iter2
+                           (fun (x,y) (x', y') ->
+                            if x<>x' || y<>y'
+                            then BU.print2 "Differ at: Expected %s\n Got %s\n"
+                                           (FStar.Parser.Dep.print_digest [(x,y)])
+                                           (FStar.Parser.Dep.print_digest [(x',y')]))
+                           digest
+                           digest'
+                    end;
+                    fail "Stale"
+                  end
+                | _ ->
+                  fail "Stale"
+          else fail "Absent"
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
     let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
     match digest with
     | Some hashes ->
-      BU.save_value_to_file cache_file (hashes, m, modul_iface_opt, mii)
+      //cache_version_number should always be the first field here
+      BU.save_value_to_file cache_file (cache_version_number, hashes, m, modul_iface_opt, mii)
     | _ ->
       FStar.Errors.log_issue
         (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
@@ -267,8 +279,16 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
          tcmod, env
        | Some (tcmod, tcmod_iface_opt, mii) ->
-         let tcmod = if is_some tcmod_iface_opt then tcmod_iface_opt |> must else tcmod in
-         if Options.dump_module tcmod.name.str then BU.print1 "Adding to env this from cache: %s\n" (Syntax.Print.modul_to_string tcmod);
+         let tcmod =
+           if tcmod.is_interface then tcmod
+           else
+             if Options.use_extracted_interfaces () then
+               if tcmod_iface_opt = None then
+                 Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces option is set but could not find it in the cache for: " ^ tcmod.name.str)
+                                    Range.dummyRange
+               else tcmod_iface_opt |> must
+             else tcmod
+         in
          let _, env =
             with_tcenv env <|
             FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)

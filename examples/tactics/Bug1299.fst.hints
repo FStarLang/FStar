@@ -14,7 +14,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "594f4fbd08e5f368c2a96ea62afbad81"
+      "f06cf80e676c50f6cd0308d7e90cc3ca"
     ],
     [
       "Bug1299.should_fail",
@@ -41,24 +41,7 @@
         "unit_typing"
       ],
       0,
-      "c8947dcfe49efa4d3801d7f44a1a77fb"
-    ],
-    [
-      "Bug1299.test",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_pre_typing_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_Prims.unit",
-        "equation_FStar.Tactics.Effect.__tac",
-        "function_token_typing_Prims.unit", "string_typing",
-        "typing_FStar.Tactics.Builtins.__fail"
-      ],
-      0,
-      "b266e7017580337f74b51e0d421a2765"
+      "79745895cf52208f351210436cee355f"
     ],
     [
       "Bug1299.id",
@@ -73,7 +56,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "b14f8baaa95da46ce36ce8cebdeba596"
+      "546bae40414e683ba5ced0cb1a212885"
     ],
     [
       "Bug1299.should_fail",
@@ -100,7 +83,7 @@
         "unit_typing"
       ],
       0,
-      "a17652bbbb16954abb48fd4cad6a8141"
+      "65c719a9d00ee73b1c0586a0dcc71f64"
     ]
   ]
 ]

@@ -18,6 +18,7 @@ module FStar.Range
 open FStar.ST
 open FStar.All
 open FStar.BaseTypes
+open FStar.Util
 
 type rng
 type range
@@ -48,3 +49,7 @@ val compare_use_range: range -> range -> int
 val range_before_pos : range -> pos -> bool
 val end_of_line: pos -> pos
 val extend_to_end_of_line: range -> range
+
+val json_of_pos : pos -> json
+val json_of_use_range : range -> json
+val json_of_def_range : range -> json

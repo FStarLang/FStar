@@ -8,6 +8,9 @@ module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
 module EMB = FStar_Syntax_Embeddings
 
+(* GM: most indirections here are super annoying, and seem to
+ * be unneeded. Can we take them out? *)
+
 let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a __result =
   B.run t ps
 
@@ -58,6 +61,9 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 let __fail (msg : string) : 'a __tac = from_tac_1 B.fail msg
 let fail: string -> 'a __tac = fun msg -> __fail msg
 
+let __top_env: RT.env __tac = from_tac_0 B.top_env
+let top_env: unit -> RT.env __tac = fun () -> __top_env
+
 let __cur_env: RT.env __tac = from_tac_0 B.cur_env
 let cur_env: unit -> RT.env __tac = fun () -> __cur_env
 
@@ -100,11 +106,17 @@ let norm_binder_type : norm_step list -> RT.binder -> unit __tac = fun s b -> __
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
 
+let __intro_rec: (RT.binder * RT.binder) __tac = from_tac_0 B.intro_rec
+let intro_rec: unit -> (RT.binder * RT.binder) __tac = fun () -> __intro_rec
+
 let __rename_to (b: RT.binder) (nm : string) : unit __tac = from_tac_2 B.rename_to b nm
 let rename_to: RT.binder -> string -> unit __tac = fun b s -> __rename_to b s
 
 let __revert: unit __tac = from_tac_0 B.revert
 let revert: unit -> unit __tac = fun () -> __revert
+
+let __binder_retype (b: RT.binder) : unit __tac = from_tac_1 B.binder_retype b
+let binder_retype: RT.binder -> unit __tac = fun b -> __binder_retype b
 
 let __clear_top: unit __tac = from_tac_0 B.clear_top
 let clear_top: unit -> unit __tac = fun () -> __clear_top
@@ -126,8 +138,8 @@ let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_t
 let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac =
     fun f -> fun g -> __seq (f ()) (g ())
 
-let __t_exact b1 b2 (t: RT.term): unit __tac = from_tac_3 B.t_exact b1 b2 t
-let t_exact: bool -> bool -> RT.term -> unit __tac = __t_exact
+let __t_exact b1 (t: RT.term): unit __tac = from_tac_2 B.t_exact b1 t
+let t_exact: bool -> RT.term -> unit __tac = __t_exact
 
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term -> unit __tac = __apply
@@ -157,6 +169,9 @@ let pointwise': (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise TopD
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later
 
+let __dup: unit __tac = from_tac_0 B.dup
+let dup: unit -> unit __tac = fun () -> __dup
+
 let __flip: unit __tac = from_tac_0 B.flip
 let flip: unit -> unit __tac = fun () -> __flip
 
@@ -181,5 +196,17 @@ let uvar_env : RT.env -> RT.term option -> RT.term __tac = fun e o -> __uvar_env
 let __unify (t1 : RT.term) (t2 : RT.term) : bool __tac = from_tac_2 B.unify t1 t2
 let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
 
-let __fresh_binder_named (nm : string) (ty : RT.term) : RT.binder __tac = from_tac_2 B.fresh_binder_named nm ty
-let fresh_binder_named : string -> RT.term -> RT.binder __tac = fun nm ty -> __fresh_binder_named nm ty
+let __launch_process (prog : string) (args : string) (input : string) : string __tac = from_tac_3 B.launch_process prog args input
+let launch_process : string -> string -> string -> string __tac = fun prog args input -> __launch_process prog args input
+
+let __fresh_bv_named (nm : string) (ty : RT.term) : RT.bv __tac = from_tac_2 B.fresh_bv_named nm ty
+let fresh_bv_named : string -> RT.term -> RT.bv __tac = fun nm ty -> __fresh_bv_named nm ty
+
+let __change (ty : RT.typ) : unit __tac = from_tac_1 B.change ty
+let change : RT.typ -> unit __tac = fun ty -> __change ty
+
+let __get_guard_policy : guard_policy __tac = from_tac_0 B.get_guard_policy
+let get_guard_policy : unit -> guard_policy __tac = fun () -> __get_guard_policy
+
+let __set_guard_policy : guard_policy -> unit __tac = from_tac_1 B.set_guard_policy
+let set_guard_policy : guard_policy -> unit __tac = __set_guard_policy

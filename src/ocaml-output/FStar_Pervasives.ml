@@ -158,3 +158,5 @@ let (__proj__Comment__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | Comment _0 -> _0 
 let (deprecated : Prims.string -> Prims.unit) = fun s  -> () 
 let (inline_let : Prims.unit) = () 
+let (plugin : Prims.unit) = () 
+let (dm4f_bind_range : Prims.unit) = () 

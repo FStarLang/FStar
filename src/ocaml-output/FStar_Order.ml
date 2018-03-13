@@ -44,3 +44,21 @@ let rec compare_list :
             let uu____140 = f x y  in
             lex uu____140 (fun uu____142  -> compare_list f xs ys)
   
+let compare_option :
+  'a .
+    ('a -> 'a -> order) ->
+      'a FStar_Pervasives_Native.option ->
+        'a FStar_Pervasives_Native.option -> order
+  =
+  fun f  ->
+    fun x  ->
+      fun y  ->
+        match (x, y) with
+        | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) -> Eq
+        | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
+           uu____186) -> Lt
+        | (FStar_Pervasives_Native.Some
+           uu____191,FStar_Pervasives_Native.None ) -> Gt
+        | (FStar_Pervasives_Native.Some x1,FStar_Pervasives_Native.Some y1)
+            -> f x1 y1
+  
