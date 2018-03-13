@@ -266,6 +266,10 @@ let test_ (x: U32.t) : Tot (option U32.t) =
 
 module T = FStar.Tactics
 
+let tfail (#a: Type) (s: Prims.string) : T.Tac a =
+  T.print ("Tactic failure: " ^ s);
+  T.fail s
+
 let unfold_fv (t: T.fv) : T.Tac T.term =
   let env = T.cur_env () in
   let n = T.inspect_fv t in
@@ -273,9 +277,9 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
   | Some s ->
     begin match T.inspect_sigelt s with
     | T.Sg_Let false _ _ def -> def
-    | _ -> T.fail "Not a non-recursive let definition"
+    | _ -> tfail "Not a non-recursive let definition"
     end
-  | _ -> T.fail "Definition not found"
+  | _ -> tfail "Definition not found"
 
 
 module L = FStar.List.Tot
@@ -312,9 +316,8 @@ let app_head_tail (t: T.term) :
 // GM: This is cool!
 let tassert (x: bool) : T.Tac (y: unit { x == true } ) =
   if x then () else (
-    let open T in
     let y = quote x in
-    fail ("Tactic assert failure: " ^ term_to_string y)
+    tfail ("Tactic assert failure: " ^ T.term_to_string y)
   )
 
 let tm_eq_fvar (t1 t2: T.term) : Tot bool =
@@ -400,9 +403,9 @@ let compile_bind
       in
       T.print (T.term_to_string res);
       res
-    | _ -> T.fail ("compile: Not an abstraction: " ^ T.term_to_string y)
+    | _ -> tfail ("compile: Not an abstraction: " ^ T.term_to_string y)
     end
-  | _ -> T.fail ("compile_bind: 4 arguments expected")
+  | _ -> tfail ("compile_bind: 4 arguments expected")
 
 #reset-options "--z3rlimit 32"
 
@@ -426,9 +429,11 @@ let compile_fvar
   (ty: T.term)
   (t: T.term)
 : T.Tac T.term
-= T.print "compile_fvar";
+= T.print ("compile_fvar: " ^ T.term_to_string t);
   let (f, ar) = app_head_tail t in
+  T.print "after app_head_tail";
   let ins = T.inspect f in
+  T.print "after inspect";
   let test = T.Tv_FVar? ins in
   tassert test;
   let (T.Tv_FVar v) = ins in
@@ -436,7 +441,9 @@ let compile_fvar
     let t' = T.mk_app v' (neutralize_argv t ar) in
     // unfolding might have introduced a redex,
     // so we find an opportunity to reduce it here
+    T.print ("before norm_term: " ^ T.term_to_string t');
     let t' = T.norm_term [Prims.iota] t' in // beta implicit
+    T.print "after norm_term";
     let res' = compile ty t' in
     let u = quote () in
     let res = T.mk_app coerce_sz_tm [
@@ -464,13 +471,13 @@ let compile_ifthenelse
     (* ifthenelse: the second branch can be a wildcard or false *)
     let ct = quote (cond_eq true) in
     let ut = T.mk_app ct [cond, T.Q_Explicit] in
-    let vt = T.fresh_binder ut in
+    let vt = T.fresh_binder_named "name1eman" ut in
     let ft = T.pack (T.Tv_Abs vt tt) in
     let ft_sz_body = compile ty tt in
     let ft_sz = T.pack (T.Tv_Abs vt ft_sz_body) in
     let cf = quote (cond_eq false) in
     let uf = T.mk_app cf [cond, T.Q_Explicit] in
-    let vf = T.fresh_binder uf in
+    let vf = T.fresh_binder_named "name2eman" uf in
     let ff = T.pack (T.Tv_Abs vf tf) in
     let ff_sz_body = compile ty tf in
     let ff_sz = T.pack (T.Tv_Abs vf ff_sz_body) in
@@ -482,13 +489,13 @@ let compile_ifthenelse
       ff, T.Q_Explicit;
       ff_sz, T.Q_Explicit;
     ]
-  | _ -> T.fail "Not an ifthenelse"
+  | _ -> tfail "Not an ifthenelse"
 
 let rec first (#t: Type) (l: list (unit -> T.Tac t)) : T.Tac t =
   match l with
-  | [] -> T.fail "All tactics failed"
+  | [] -> tfail "All tactics failed"
   | a :: q ->
-    T.or_else a (fun () -> first q)
+    T.or_else a (fun () -> T.print "failed"; first q)
 
 let rec compile
   (
@@ -507,7 +514,7 @@ let rec compile
   in
   let compile_fuel_lt (ty' : T.term) (t' : T.term) : T.Tac T.term =
     if fuel = 0
-    then T.fail "Fuel exhausted"
+    then tfail "Fuel exhausted"
     else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty' t'
   in
   let res = first [
