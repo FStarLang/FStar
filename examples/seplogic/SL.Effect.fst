@@ -89,10 +89,7 @@ unfold let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
 unfold  let st_if_then_else (a:Type) (p:Type) (wp_then:st_wp a) (wp_else:st_wp a) (post:post a) (m0:memory) =
   l_ITE p (wp_then post m0) (wp_else post m0)
 
-unfold  let st_ite_wp (a:Type) (wp:st_wp a) (p:post a) (m0:memory) =
-  forall (k:post a).
-    (forall (x:a) (m:memory).{:pattern (guard_free (k x m))} k x m <==> p x m)
-    ==> wp k m0
+unfold  let st_ite_wp (a:Type) (wp:st_wp a) (p:post a) (m0:memory) = wp p m0
 
 unfold  let st_stronger (a:Type) (wp1:st_wp a) (wp2:st_wp a) =
   forall (p:post a) (m:memory). wp1 p m ==> wp2 p m
