@@ -50,7 +50,7 @@ let embed_aqualv (rng:Range.range) (q : aqualv) : term =
 
 let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 
-let embed_fvar (rng:Range.range) (fv:fv) : term =
+let embed_fv (rng:Range.range) (fv:fv) : term =
     U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
 
 let embed_comp (rng:Range.range) (c:comp) : term =
@@ -79,7 +79,7 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
     | Pat_Constant c ->
         S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed_const rng c)] None rng
     | Pat_Cons (fv, ps) ->
-        S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
+        S.mk_Tm_app ref_Pat_Cons.t [S.as_arg (embed_fv rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
     | Pat_Var bv ->
         S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed_bv rng bv)] None rng
     | Pat_Wild bv ->
@@ -96,7 +96,7 @@ let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl
 let embed_term_view (rng:Range.range) (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
-        S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fvar rng fv)]
+        S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fv rng fv)]
                     None rng
 
     | Tv_BVar fv ->
@@ -200,7 +200,7 @@ let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     | Sg_Let (r, fv, ty, t) ->
         S.mk_Tm_app ref_Sg_Let.t
                     [S.as_arg (embed_bool rng r);
-                        S.as_arg (embed_fvar rng fv);
+                        S.as_arg (embed_fv rng fv);
                         S.as_arg (embed_term rng ty);
                         S.as_arg (embed_term rng t)]
                     None rng
@@ -262,7 +262,7 @@ let unembed_aqualv (t : term) : option<aqualv> =
 
 let unembed_binders t = unembed_list unembed_binder t
 
-let unembed_fvar (t:term) : option<fv> =
+let unembed_fv (t:term) : option<fv> =
     match (SS.compress t).n with
     | Tm_lazy i when i.kind = Lazy_fvar ->
         Some (undyn i.blob)
@@ -320,7 +320,7 @@ let rec unembed_pattern (t : term) : option<pattern> =
         Some <| Pat_Constant c)
 
     | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
-        BU.bind_opt (unembed_fvar f) (fun f ->
+        BU.bind_opt (unembed_fv f) (fun f ->
         BU.bind_opt (unembed_list unembed_pattern ps) (fun ps ->
         Some <| Pat_Cons (f, ps)))
 
@@ -356,7 +356,7 @@ let unembed_term_view (t:term) : option<term_view> =
         Some <| Tv_BVar b)
 
     | Tm_fvar fv, [(f, _)] when S.fv_eq_lid fv ref_Tv_FVar.lid ->
-        BU.bind_opt (unembed_fvar f) (fun f ->
+        BU.bind_opt (unembed_fv f) (fun f ->
         Some <| Tv_FVar f)
 
     | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App.lid ->
@@ -490,7 +490,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 
     | Tm_fvar fv, [(r, _); (fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
         BU.bind_opt (unembed_bool r) (fun r ->
-        BU.bind_opt (unembed_fvar fvar) (fun fvar ->
+        BU.bind_opt (unembed_fv fvar) (fun fvar ->
         BU.bind_opt (unembed_term ty) (fun ty ->
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Sg_Let (r, fvar, ty, t)))))

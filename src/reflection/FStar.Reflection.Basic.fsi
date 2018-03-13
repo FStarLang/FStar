@@ -13,6 +13,7 @@ val compare_bv     : bv -> bv -> order
 val lookup_typ     : FStar.TypeChecker.Env.env -> list<string> -> option<sigelt>
 val is_free        : bv -> term -> bool
 val binders_of_env : FStar.TypeChecker.Env.env -> binders
+val term_eq        : term -> term -> bool
 val term_to_string : term -> string
 
 (* Views *)

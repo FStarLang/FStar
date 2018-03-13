@@ -2396,9 +2396,9 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac) =
                                                                    Obj.magic
                                                                     (filter'
                                                                     ()
-                                                                    (fun a436
+                                                                    (fun a438
                                                                      ->
-                                                                    fun a437 
+                                                                    fun a439 
                                                                     ->
                                                                     (Obj.magic
                                                                     (fun g 
@@ -2412,7 +2412,7 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac) =
                                                                     goals  in
                                                                     Prims.op_Negation
                                                                     uu____4413))
-                                                                    a436 a437)
+                                                                    a438 a439)
                                                                     (Obj.magic
                                                                     sub_goals))
                                                                     in

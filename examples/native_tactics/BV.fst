@@ -235,6 +235,7 @@ let unfold64 () : Tac unit =
 let aux () : Tac unit = or_else unfold64 (fun () -> fail "SKIP")
 
 /// Finally, a tactic for bitwise operations on U64.t
+[@plugin]
 let bv64_tac () : Tac unit =
     //introduce a single `v e = v e'` at the top, if the goal is a U64.t equality
     mapply (`v64_eq);

@@ -369,84 +369,25 @@ let (mk_refl_data_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
     let uu____1014 = fstar_refl_data_lid s  in
     FStar_Syntax_Syntax.tconst uu____1014
   
-let (mk_inspect_pack_pair :
-  Prims.string ->
-    (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  =
-  fun s  ->
-    let inspect_lid = fstar_refl_basic_lid (Prims.strcat "inspect" s)  in
-    let pack_lid = fstar_refl_basic_lid (Prims.strcat "pack" s)  in
-    let inspect =
-      let uu____1025 =
-        FStar_Syntax_Syntax.fvar inspect_lid
-          (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
-          FStar_Pervasives_Native.None
-         in
-      { lid = inspect_lid; t = uu____1025 }  in
-    let pack =
-      let uu____1027 =
-        FStar_Syntax_Syntax.fvar pack_lid
-          (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
-          FStar_Pervasives_Native.None
-         in
-      { lid = pack_lid; t = uu____1027 }  in
-    (inspect, pack)
+let (fstar_refl_inspect_lid : FStar_Ident.lident) =
+  fstar_refl_basic_lid "inspect" 
+let (fstar_refl_inspect : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar fstar_refl_inspect_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
   
-let (uu___23 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  = mk_inspect_pack_pair "" 
-let (fstar_refl_inspect : refl_constant) =
-  match uu___23 with
-  | (fstar_refl_inspect,fstar_refl_pack) -> fstar_refl_inspect 
-let (fstar_refl_pack : refl_constant) =
-  match uu___23 with
-  | (fstar_refl_inspect1,fstar_refl_pack) -> fstar_refl_pack 
-let (uu___24 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  = mk_inspect_pack_pair "_fv" 
-let (fstar_refl_inspect_fv : refl_constant) =
-  match uu___24 with
-  | (fstar_refl_inspect_fv,fstar_refl_pack_fv) -> fstar_refl_inspect_fv 
-let (fstar_refl_pack_fv : refl_constant) =
-  match uu___24 with
-  | (fstar_refl_inspect_fv1,fstar_refl_pack_fv) -> fstar_refl_pack_fv 
-let (uu___25 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  = mk_inspect_pack_pair "_bv" 
-let (fstar_refl_inspect_bv : refl_constant) =
-  match uu___25 with
-  | (fstar_refl_inspect_bv,fstar_refl_pack_bv) -> fstar_refl_inspect_bv 
-let (fstar_refl_pack_bv : refl_constant) =
-  match uu___25 with
-  | (fstar_refl_inspect_bv1,fstar_refl_pack_bv) -> fstar_refl_pack_bv 
-let (uu___26 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  = mk_inspect_pack_pair "_binder" 
-let (fstar_refl_inspect_binder : refl_constant) =
-  match uu___26 with
-  | (fstar_refl_inspect_binder,fstar_refl_pack_binder) ->
-      fstar_refl_inspect_binder
+let (fstar_refl_pack_lid : FStar_Ident.lident) = fstar_refl_basic_lid "pack" 
+let (fstar_refl_pack : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar fstar_refl_pack_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
   
-let (fstar_refl_pack_binder : refl_constant) =
-  match uu___26 with
-  | (fstar_refl_inspect_binder1,fstar_refl_pack_binder) ->
-      fstar_refl_pack_binder
-  
-let (uu___27 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  = mk_inspect_pack_pair "_comp" 
-let (fstar_refl_inspect_comp : refl_constant) =
-  match uu___27 with
-  | (fstar_refl_inspect_comp,fstar_refl_pack_comp) -> fstar_refl_inspect_comp 
-let (fstar_refl_pack_comp : refl_constant) =
-  match uu___27 with
-  | (fstar_refl_inspect_comp1,fstar_refl_pack_comp) -> fstar_refl_pack_comp 
-let (uu___28 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
-  = mk_inspect_pack_pair "_sigelt" 
-let (fstar_refl_inspect_sigelt : refl_constant) =
-  match uu___28 with
-  | (fstar_refl_inspect_sigelt,fstar_refl_pack_sigelt) ->
-      fstar_refl_inspect_sigelt
-  
-let (fstar_refl_pack_sigelt : refl_constant) =
-  match uu___28 with
-  | (fstar_refl_inspect_sigelt1,fstar_refl_pack_sigelt) ->
-      fstar_refl_pack_sigelt
+let (fstar_refl_pack_fv_lid : FStar_Ident.lident) =
+  fstar_refl_basic_lid "pack_fv" 
+let (fstar_refl_pack_fv : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar fstar_refl_pack_fv_lid
+    (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+    FStar_Pervasives_Native.None
   
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "env" 

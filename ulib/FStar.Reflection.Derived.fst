@@ -6,8 +6,6 @@ open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order
 
-let term_eq (t1 t2 : term) : bool = t1 = t2
-
 let name_of_bv (bv : bv) : string =
     (inspect_bv bv).bv_ppname
 
