@@ -58,6 +58,7 @@ all:	Apply.uver		\
 	StringPrinter.uver      \
 	StringPrinterRec.uver	\
 	stringprintertest \
+	Rewrite.Monoid.uver     \
 	neg
 	# launch			\
 
