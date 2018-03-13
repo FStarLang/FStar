@@ -209,7 +209,7 @@ let set_elements ((s1, eq):set<'a>) :list<'a> =
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
                     else aux (hd::out) tl in
-   aux [] s1 
+   aux [] s1
 let set_add a ((s, b):set<'a>) = (s@[a], b)
 let set_remove x ((s1, eq):set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):set<'a>) = List.exists (b a) s

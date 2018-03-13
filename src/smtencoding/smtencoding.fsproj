@@ -120,8 +120,9 @@
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\reflection\reflection.fsproj">
-      <Project>{8869fa4e-96af-4e01-99bc-b52c88610e3d}</Project>
       <Name>reflection</Name>
+      <Project>{8869fa4e-96af-4e01-99bc-b52c88610e3d}</Project>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
