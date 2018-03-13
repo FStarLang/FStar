@@ -9,7 +9,7 @@ assume val __inspect_ln : t:term -> tv:term_view{smaller tv t}
 let inspect_ln t : term_view = __inspect_ln t
 
 assume val __pack_ln : term_view -> term
-let pack_kn tv : term = __pack_ln tv
+let pack_ln tv : term = __pack_ln tv
 
 assume val __inspect_comp : c:comp -> cv:comp_view{smaller_comp cv c}
 let inspect_comp (c:comp) = __inspect_comp c
