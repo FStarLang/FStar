@@ -41,6 +41,7 @@ val upd : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> x:a -> Tot heap
 
 val fresh : #a:Type0 -> ref a -> heap -> Type0
 val alloc : #a:Type0 -> h:heap -> a -> Tot (ref a * heap) 
+val dealloc : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot heap
 
 val addrs_in : memory -> Set.set nat
 
@@ -164,6 +165,18 @@ val lemma_alloc_emp_points_to (#a:Type0) (h0:heap) (x:a)
           (ensures  (let (r,h1) = alloc h0 x in
                      heap_memory h1 == (r |> x)))
           [SMTPat (alloc h0 x)]
+
+(* dealloc *)
+
+val lemma_dealloc_contains (#a:Type0) (h0:heap) (r:ref a)
+  : Lemma (requires (h0 `hcontains` r))
+          (ensures  (~((dealloc h0 r) `hcontains` r)))
+          [SMTPat ((dealloc h0 r) `hcontains` r)]
+
+val lemma_points_to_dealloc (#a:Type0) (h0:heap) (r:ref a)
+  : Lemma (requires ((exists x . heap_memory h0 == (r |> x)) /\ h0 `hcontains` r))
+          (ensures  (heap_memory (dealloc h0 r) == emp))
+          [SMTPat (heap_memory (dealloc h0 r))]
 
 (* addrs_in *)
 

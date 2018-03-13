@@ -134,9 +134,16 @@ let alloc #a h0 x =
   let domain = FStar.Set.union h0.hdomain (FStar.Set.singleton r) in
   let memory = (fun r' -> if r = r' then Some (| a , x |)
                                     else h0.memory r') in
-  let h1 = { next_addr = next_addr + 1; hdomain = domain; memory = memory } in
+  let h1 = { next_addr = next_addr; hdomain = domain; memory = memory } in
   (r, h1)
 
+let dealloc #a h0 r =
+  let next_addr = h0.next_addr in
+  let domain = FStar.Set.intersect h0.hdomain (FStar.Set.complement (FStar.Set.singleton r)) in
+  let memory = (fun r' -> if r <> r' then h0.memory r'
+                                     else None) in
+  { next_addr = next_addr; hdomain = domain; memory = memory }
+  
 let addrs_in m = 
   match m with
   | Some m' -> m'.domain
@@ -196,6 +203,11 @@ let lemma_alloc_sel #a h0 x = ()
 let lemma_alloc_emp_points_to #a h0 x = 
   assert (let (r,h1) = alloc h0 x in
           equal_memories (heap_memory h1) (r |> x))
+
+let lemma_dealloc_contains #a h0 r = ()
+
+let lemma_points_to_dealloc #a h0 r = 
+  assert (equal_memories (heap_memory (dealloc h0 r)) emp)
 
 let lemma_addrs_in_emp () = ()
 

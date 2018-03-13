@@ -92,6 +92,13 @@ let alloc (#a:Type0) (x:a)
       let (r,h1) = alloc h0 x in
       S.return_squash (r,h1)
 
+let dealloc (#a:Type0) (r:ref a)
+  : st unit (fun post m0 -> (exists x . m0 == (r |> x)) /\ post ((), emp))
+  = fun post h0 -> 
+        assert (mcontains (heap_memory h0) r);
+        let h1 = dealloc h0 r in
+        S.return_squash ((), h1)
+
 let read (#a:Type0) (r:ref a)
   : st a (fun post m0 -> (exists (x:a). m0 == (r |> x) /\ post (x, m0)))
   = fun post h0 -> 
