@@ -1,29 +1,62 @@
 FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
-#--cache_checked_modules
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
-ALL=Print Split BV UnitTests Canon Simple SimpleTactic Evens Embeddings
+# Tests for which the native tactics used in module named Sample.Test.fst are
+# declared in a corresponding module named Sample.fst
+TAC_MODULES=Print\
+    Split\
+    BV\
+    UnitTests\
+    Bane\
+    Canon\
+    Simple\
+    SimpleTactic\
+    Evens\
+    Embeddings
 
-all: $(addsuffix .test, $(ALL))
+# Tests for which the native tatics are declared and used in the same module
+ALL=Apply\
+    Arith\
+    CanonDeep\
+    Clear\
+    Cut\
+    DependentSynth\
+    Fail\
+    Imp\
+    Logic\
+    Nest\
+    Pruning\
+    Rename\
+    Retype\
+    Sequences\
+    Simplifier\
+    Tutorial\
+    Unify
+
+all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
 # 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
 
 # include .depend
 
-.PHONY: %.test fstartaclib
-
-FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
+.PHONY: %.test $(FSTARTACLIB)
+.PRECIOUS: %.ml
 
 $(FSTARTACLIB):
 	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
-%.test: %.Test.fst %.ml
+%.test: %.fst %.ml
+	$(FSTAR) $*.fst --load $*
+	touch $@
+
+%.sep.test: %.fst %.ml
 	$(FSTAR) $*.Test.fst --load $*
 	touch $@
 
 %.ml: %.fst $(FSTARTACLIB)
-	$(FSTAR) $*.fst --codegen Plugin --extract $*
+	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch $@
 
 clean:
