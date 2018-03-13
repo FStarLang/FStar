@@ -215,27 +215,61 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     get_to_the_next_frame ();
 	     process_command ())
 
-let lemma_pattern_inline (psi1 psi2:Type) (h h':memory) (phi1 phi2: memory -> memory -> Type)
-  :Lemma (requires ((psi1 ==> (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi1 h0 h1)) /\
-                    (psi2 ==> (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi2 h0 h1))))
+let lemma_inline_in_patterns_two (psi1 psi2:Type) (h h':memory) (phi1 phi2: memory -> memory -> Type)
+  :Lemma (requires (defined (h <*> h') /\ ((psi1 ==> phi1 (h <*> h') emp) /\ (psi2 ==> phi2 (h <*> h') emp))))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\
 	                              ((psi1 ==> phi1 h0 h1) /\
 				       (psi2 ==> phi2 h0 h1))))
-  = admit ()
+  = ()
 
-let cond (r1 r2:ref int) (n:int) (b:bool)
+let lemma_frame_out_empty_right (phi:memory -> memory -> memory -> Type) (h:memory)
+  :Lemma (requires (defined h /\ phi h h emp))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ h == (h0 <*> h1) /\ phi h h0 h1))
+  = ()
+
+let lemma_frame_out_empty_left (phi:memory -> memory -> memory -> Type) (h:memory)
+  :Lemma (requires (defined h /\ phi h emp h))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ h == (h0 <*> h1) /\ phi h h0 h1))
+  = ()
+
+let cond_test (r1 r2:ref int) (n:int) (b:bool)
   = (let x = !r1 in
-     if b then
-       r1 := x + 1
-     else
-       r2 := x + 2)
+     match b with
+     | true  -> r1 := x + 1
+     | false -> r2 := x + 2)
 
-    <: STATE unit (fun p h -> h == ((r1 |> n) <*> (r2 |> n)) /\ (defined h /\ (b ==> p () ((r1 |> n + 1) <*> (r2 |> n)))))
+    <: STATE unit (fun p h -> h == ((r1 |> n) <*> (r2 |> n)) /\ (defined h /\ (b ==> p () ((r1 |> n + 1) <*> (r2 |> n))) /\
+                                                                       (~ b ==> p () ((r1 |> n) <*> (r2 |> n + 2)))))
 
     by (fun () -> prelude ();
                apply_lemma (`lemma_rw);
 	       get_to_the_next_frame ();
-               dump "A")
+	       apply_lemma (`lemma_inline_in_patterns_two);
+	       split (); smt ();
+	       split ();
+	       //goal 1
+	       ignore (implies_intro ());
+	       apply_lemma (`lemma_rw);
+	       split (); smt (); split (); smt ();
+	       apply_lemma (`lemma_pure_right);
+	       smt ();
+	       //goal 2
+	       ignore (implies_intro ());
+	       apply_lemma (`lemma_frame_out_empty_right);
+	       split (); smt ();
+	       split ();
+	       //goal 2.1
+	       ignore (implies_intro ());
+	       apply_lemma (`lemma_rewrite_sep_comm);
+	       apply_lemma (`lemma_rw);
+	       split (); smt ();
+	       split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       split (); smt (); split (); smt (); split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       smt ();
+	       //goal 2.2
+	       smt ())
 
 
 // #set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
@@ -250,16 +284,16 @@ let cond (r1 r2:ref int) (n:int) (b:bool)
 
 // assume Ref_points_to_axiom: forall (a:Type) (r:ref a) (x:a) (m:memory). m == (r |> x) ==> x << r
 
-// let rec valid (p:listptr) (repr:list int) (h:memory) :Type0 =
-//   match repr with
-//   | []    -> h == (p |> Null)
-//   | hd::tl -> exists (tail:listptr) (h1:memory). defined ((p |> Cell hd tail) <*> h1) /\ h == ((p |> Cell hd tail) <*> h1) /\ valid tail tl h1
+let rec valid (p:listptr) (repr:list int) (h:memory) :Tot Type0 (decreases repr)
+  match repr with
+  | []    -> h == (p |> Null)
+  | hd::tl -> exists (tail:listptr) (h1:memory). defined ((p |> Cell hd tail) <*> h1) /\ h == ((p |> Cell hd tail) <*> h1) /\ valid tail tl h1
 
-// private let __exists_elim_as_forall
-//   (#a:Type) (#b:Type) (#p: a -> b -> Type) (#phi:Type)
-//   (_:(exists x y. p x y)) (_:(squash (forall (x:a) (y:b). p x y ==> phi)))
-//   :Lemma phi
-//   = ()
+private let __exists_elim_as_forall
+  (#a:Type) (#b:Type) (#p: a -> b -> Type) (#phi:Type)
+  (_:(exists x y. p x y)) (_:(squash (forall (x:a) (y:b). p x y ==> phi)))
+  :Lemma phi
+  = ()
 
 // private let __elim_and (h:binder) :Tac unit
 //   = and_elim (pack (Tv_Var (bv_of_binder h)));

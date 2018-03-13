@@ -86,10 +86,12 @@ unfold let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
   = fun post m0 ->
     frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0
 
-//unfold let id_wp (a:Type) (x:a) (p:post a) (m:memory) = p x emp
+unfold let id_wp (a:Type) (x:a) (p:post a) (m:memory) = p x emp
 
 unfold  let st_if_then_else (a:Type) (p:Type) (wp_then:st_wp a) (wp_else:st_wp a) (post:post a) (m0:memory) =
-  l_ITE p (wp_then post m0) (wp_else post m0)
+  // l_ITE p (wp_then post m0) (wp_else post m0)
+  l_ITE p ((bind_wp range_0 a a wp_then (id_wp a)) post m0)
+          ((bind_wp range_0 a a wp_else (id_wp a)) post m0)
 
 unfold  let st_ite_wp (a:Type) (wp:st_wp a) (p:post a) (m0:memory) = wp p m0
 
