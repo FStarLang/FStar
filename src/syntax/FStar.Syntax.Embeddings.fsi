@@ -57,6 +57,10 @@ val embed_list        : embedder<'a> -> typ -> embedder<list<'a>>
 val unembed_list      : unembedder<'a> -> unembedder<list<'a>>
 val unembed_list_safe : unembedder<'a> -> unembedder<list<'a>>
 
+val embed_arrow_1     : unembedder<'a> -> embedder<'b> -> ('a -> 'b) -> args -> option<term>
+val embed_arrow_2     : unembedder<'a> -> unembedder<'b> -> embedder<'c> -> ('a -> 'b -> 'c) -> args -> option<term>
+val embed_arrow_3     : unembedder<'a> -> unembedder<'b> -> unembedder<'c> -> embedder<'d> -> ('a -> 'b -> 'c -> 'd) -> args -> option<term>
+
 val embed_string_list        : embedder<list<string>>
 val unembed_string_list      : unembedder<list<string>>
 val unembed_string_list_safe : unembedder<list<string>>

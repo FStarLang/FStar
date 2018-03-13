@@ -182,7 +182,7 @@ let rec inspect (t:term) : term_view =
             | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
-            | Pat_dot_term _ -> failwith "NYI: Pat_dot_term"
+            | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
         in
         let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
@@ -280,10 +280,17 @@ let pack (tv:term_view) : term =
             | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
+            | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
         S.mk (Tm_match (t, brs)) None Range.dummyRange
+
+    | Tv_AscribedT(e, t, tacopt) ->
+        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+
+    | Tv_AscribedC(e, c, tacopt) ->
+        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
 
     | Tv_Unknown ->
         failwith "pack: unexpected term view"
@@ -360,4 +367,5 @@ let pack_binder (bv:bv) (aqv:aqualv) : binder =
     bv, pack_aqual aqv
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
+let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t

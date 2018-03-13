@@ -50,8 +50,8 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__inspect" inspect E.unembed_term E.embed_term_view;
         mk1 "__pack"    pack    E.unembed_term_view E.embed_term;
 
-        mk1 "__inspect_fv" inspect_fv E.unembed_fvar embed_string_list;
-        mk1 "__pack_fv" pack_fv (unembed_list unembed_string) E.embed_fvar;
+        mk1 "__inspect_fv" inspect_fv E.unembed_fv embed_string_list;
+        mk1 "__pack_fv" pack_fv (unembed_list unembed_string) E.embed_fv;
 
         mk1 "__inspect_comp" inspect_comp E.unembed_comp E.embed_comp_view;
         mk1 "__pack_comp"    pack_comp E.unembed_comp_view E.embed_comp;
@@ -70,6 +70,8 @@ let reflection_primops : list<N.primitive_step> =
         mk2 "__compare_bv" compare_bv E.unembed_bv E.unembed_bv E.embed_order;
 
         mk2 "__is_free" is_free E.unembed_bv E.unembed_term embed_bool;
+
+        mk2 "__term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
 
         mk1 "__term_to_string" term_to_string E.unembed_term embed_string;
         mk1 "__binders_of_env" binders_of_env E.unembed_env E.embed_binders;
