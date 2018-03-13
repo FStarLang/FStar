@@ -350,127 +350,130 @@ let coerce_sz
 : Tot (m_sz ft2)
 = fun t' -> ft1_sz t'
 
-let rec compile
-  (
-    ret_sz_tm
-    bind_sz_tm
-    seq_sz_tm
-    print_char_sz_tm
-    coerce_sz_tm
-    ifthenelse_sz_tm
-  : T.term)
-  (fuel: nat) (ty: T.term) (t: T.term)
+#reset-options "--z3rlimit 32"
+
+let compile_ret
+  (ret_sz_tm: T.term)
+  (t: T.term)
 : T.Tac T.term
-  //(decreases (LexCons fuel (LexCons t LexTop)))
-=
-  let open T in
-  admit (); // GM: VC is too hard, admit for now
+= T.print "compile_ret";
+  let (f, ar) = app_head_tail t in
+  let test = tm_eq_fvar f (ret_tm ()) in
+  tassert test;
+  let res = T.mk_app ret_sz_tm (neutralize_argv t ar) in
+  T.print (T.term_to_string res);
+  res
+
+#reset-options
+
+let compile_bind
+  (bind_sz_tm: T.term)
+  (ty: T.term)
+  (t: T.term)
+  (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+: T.Tac T.term
+= admit ();
+  T.print "compile_bind";
+  let (f, ar) = app_head_tail t in
+  let test = tm_eq_fvar f (bind_tm ()) in
+  tassert test;
+  match ar with
+  | [ (t1, _); (t2, _); (x, _); (y, _) ] ->
+    begin match T.inspect y with
+    | T.Tv_Abs v y' ->
+      let x_ = compile t1 x in
+      let (v_, _) = T.inspect_binder v in
+      let v' = T.pack (T.Tv_Var v_) in
+      let t2' = T.mk_app t2 [
+	v', T.Q_Explicit;
+      ]
+      in
+      let y_ = compile t2' y' in
+      let res = T.mk_app bind_sz_tm [
+	(t1, T.Q_Implicit);
+        (t2, T.Q_Implicit);
+        (x, T.Q_Implicit);
+        (x_, T.Q_Explicit);
+        (y, T.Q_Implicit);
+        (T.pack (T.Tv_Abs v y_), T.Q_Explicit);
+      ]
+      in
+      T.print (T.term_to_string res);
+      res
+    | _ -> T.fail ("compile: Not an abstraction: " ^ T.term_to_string y)
+    end
+  | _ -> T.fail ("compile_bind: 4 arguments expected")
+
+#reset-options "--z3rlimit 32"
+
+let compile_print_char
+  (print_char_sz_tm: T.term)
+  (t: T.term)
+: T.Tac T.term
+= T.print "compile_print_char";
+  let (f, ar) = app_head_tail t in
+  let test = tm_eq_fvar f (print_char_tm ()) in
+  tassert test;
+  let res = T.mk_app print_char_sz_tm (neutralize_argv t ar) in
+  T.print (T.term_to_string res);
+  res
+
+#reset-options
+
+let compile_fvar
+  (coerce_sz_tm: T.term)
+  (compile: (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
+  (ty: T.term)
+  (t: T.term)
+: T.Tac T.term
+= admit ();
+  T.print "compile_fvar";
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
-  | T.Tv_FVar v -> begin
-    print ("Number of arguments: " ^ string_of_int (L.length ar));
-    let r = ret_tm () in
-    let b = bind_tm () in
-    let s = seq_tm () in
-    let p = print_char_tm () in
-    if tm_eq_fvar f r
-    then begin
-      print "is RET";
-      let res = mk_app ret_sz_tm (neutralize_argv t ar) in
-      print (term_to_string res);
-      res
-    end else if tm_eq_fvar f b
-    then begin
-      print "is BIND";
-      match ar with
-      | [ (t1, _); (t2, _); (x, _); (y, _) ] ->
-        print "4 arguments" ;
-        begin match T.inspect y with
-        | T.Tv_Abs v y' ->
-          let x_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t1 x in
-          let (v_, _) = T.inspect_binder v in
-          let v' = pack (T.Tv_Var v_) in
-          let t2' = mk_app t2 [
-            v', Q_Explicit;
-          ]
-          in
-          let y_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t2' y' in
-          let res = mk_app bind_sz_tm [
-            (t1, Q_Implicit);
-            (t2, Q_Implicit);
-            (x, Q_Implicit);
-            (x_, Q_Explicit);
-            (y, Q_Implicit);
-            (pack (Tv_Abs v y_), Q_Explicit);
-          ]
-          in
-          print (term_to_string res);
-          res
-        | _ -> fail ("compile: Not an abstraction: " ^ term_to_string y)
-        end
-      | _ -> fail ("compile: Not the right number of arguments (expected 4, found " ^ string_of_int (L.length ar) ^ ")")
-    end else if tm_eq_fvar f p
-    then begin
-      print "is PRINT_CHAR";
-      let res = mk_app print_char_sz_tm (neutralize_argv t ar) in
-      print (term_to_string res) ;
-      res
-    end else if tm_eq_fvar f s
-    then begin
-      print "is SEQ";
-      match ar with
-      | [ (t2, _); (x, _); (y, _) ] ->
-        let q = quote unit in
-        let x_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel q x in
-        let y_ = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel t2 y in
-        let res = mk_app seq_sz_tm [
-          (t2, Q_Explicit);
-          (x, Q_Explicit);
-          (x_, Q_Explicit);
-          (y, Q_Explicit);
-          (y_, Q_Explicit);
-        ]
-        in
-        print (term_to_string res);
-        res
-      | _ -> fail ("compile: Not the right number of arguments (expected 3, found " ^ string_of_int (L.length ar) ^ ")")
-    end else begin
-      print "is something else" ;
-      if fuel = 0
-      then fail "compile: Not enough unfolding fuel"
-      else
-        let v' = unfold_fv v in
-        let t' = mk_app v' (neutralize_argv t ar) in
-        // unfolding might have introduced a redex,
-        // so we find an opportunity to reduce it here
-        let t' = T.norm_term [Prims.iota] t' in // beta implicit
-        let res' = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty t' in
-        let u = quote () in
-        let res = T.mk_app coerce_sz_tm [
-          ty, T.Q_Explicit;
-          t', T.Q_Explicit;
-          res', T.Q_Explicit;
-          t, T.Q_Explicit;
-          u, T.Q_Explicit;
-        ]
-        in
-        res
-    end
-  end
+  | T.Tv_FVar v ->
+    let v' = unfold_fv v in
+    let t' = T.mk_app v' (neutralize_argv t ar) in
+    // unfolding might have introduced a redex,
+    // so we find an opportunity to reduce it here
+    let t' = T.norm_term [Prims.iota] t' in // beta implicit
+    let res' = compile ty t' in
+    let u = quote () in
+    let res = T.mk_app coerce_sz_tm [
+      ty, T.Q_Explicit;
+      t', T.Q_Explicit;
+      res', T.Q_Explicit;
+      t, T.Q_Explicit;
+      u, T.Q_Explicit;
+    ]
+    in
+    res
+  | _ -> T.fail "Not a FVar"
+
+let compile_ifthenelse
+  (ifthenelse_sz_tm: T.term)
+  (ty: T.term)
+  (t: T.term)
+  (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+: T.Tac T.term
+= admit ();
+  T.print "compile_ifthenelse";
+  let (f, ar) = app_head_tail t in
+  let ins = T.inspect f in
+  match ins with
   | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; _, tf] ->
     (* ifthenelse: the second branch can be a wildcard or false *)
     let ct = quote (cond_eq true) in
     let ut = T.mk_app ct [cond, T.Q_Explicit] in
     let vt = T.fresh_binder ut in
     let ft = T.pack (T.Tv_Abs vt tt) in
-    let ft_sz_body = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty tt in
+    let ft_sz_body = compile ty tt in
     let ft_sz = T.pack (T.Tv_Abs vt ft_sz_body) in
     let cf = quote (cond_eq false) in
     let uf = T.mk_app cf [cond, T.Q_Explicit] in
     let vf = T.fresh_binder uf in
     let ff = T.pack (T.Tv_Abs vf tf) in
-    let ff_sz_body = compile ret_sz_tm bind_sz_tm seq_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty tf in
+    let ff_sz_body = compile ty tf in
     let ff_sz = T.pack (T.Tv_Abs vf ff_sz_body) in
     T.mk_app ifthenelse_sz_tm [
       ty, T.Q_Explicit;
@@ -480,7 +483,44 @@ let rec compile
       ff, T.Q_Explicit;
       ff_sz, T.Q_Explicit;
     ]
-  | _ -> T.fail ("head is not a Tv_FVar, we have instead: " ^ T.term_to_string t)
+  | _ -> T.fail "Not an ifthenelse"
+
+let rec first (#t: Type) (l: list (unit -> T.Tac t)) : T.Tac t =
+  match l with
+  | [] -> T.fail "All tactics failed"
+  | a :: q ->
+    T.or_else a (fun () -> first q)
+
+let rec compile
+  (
+    ret_sz_tm
+    bind_sz_tm
+    print_char_sz_tm
+    coerce_sz_tm
+    ifthenelse_sz_tm
+  : T.term)
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
+  (decreases (LexCons fuel (LexCons t LexTop)))
+= T.print "BEGIN compile";
+  let compile_term_lt (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
+    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel ty' t'
+  in
+  let compile_fuel_lt (ty' : T.term) (t' : T.term) : T.Tac T.term =
+    if fuel = 0
+    then T.fail "Fuel exhausted"
+    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty' t'
+  in
+  let res = first [
+    (fun () -> compile_ret ret_sz_tm t);
+    (fun () -> compile_bind bind_sz_tm ty t compile_term_lt);
+    (fun () -> compile_print_char print_char_sz_tm t);
+    (fun () -> compile_fvar coerce_sz_tm compile_fuel_lt ty t);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t compile_term_lt);
+  ]
+  in
+  T.print ("END compile, result: " ^ T.term_to_string res);
+  res
 
 let mk_sz
   (fuel: nat) (ty: T.term) (t: T.term)
@@ -488,7 +528,6 @@ let mk_sz
 = compile
     (quote ret_sz)
     (quote bind_sz)
-    (quote seq_sz)
     (quote print_char_sz)
     (quote coerce_sz)
     (quote ifthenelse_sz)
@@ -685,7 +724,6 @@ let mk_st
 = compile
     (quote ret_st)
     (quote bind_st)
-    (quote seq_st)
     (quote print_char_st)
     (quote coerce_st)
     (quote ifthenelse_st)
@@ -801,7 +839,7 @@ let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
     in
     exact_guard t
 
-#set-options "--print_implicits --print_bound_var_types"
+#reset-options "--print_implicits --print_bound_var_types --z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection' --use_two_phase_tc true"
 
 let test' (x: U32.t) : Tot (phi_t (example x)) =
   phi (example x) (T.synth_by_tactic (fun () -> test_tac (example x))) (T.synth_by_tactic (fun () -> test_tac_st (example x)))
@@ -810,3 +848,5 @@ inline_for_extraction
 let test (x: U32.t) : HST.ST unit (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
   let _ = (T.synth_by_tactic (fun () -> phi_tac 2 (example x)) <: phi_t (example x)) () in
   ()
+
+let _ = T.assert_by_tactic True (fun () -> T.print "EOF")
