@@ -24,9 +24,9 @@
         "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
       ],
       0,
-      "b88f73e73b7d4dab83edd991a236e700"
+      "57fcb1684d42ebb71d4179c110f6dd5a"
     ],
-    [ "Div.f", 1, 2, 1, [ "@query" ], 0, "55bb78f3b58d1ad64b34e3c5ffcffacb" ],
+    [ "Div.f", 1, 2, 1, [ "@query" ], 0, "4e3fa966e2f557530215f16361eb0ea4" ],
     [
       "Div.g",
       1,
@@ -50,7 +50,7 @@
         "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
       ],
       0,
-      "e7656c4b26d88ff310edcd42515374e4"
+      "2468dde7e58fe6b6ca28a06e654ae23a"
     ],
     [
       "Div.g0",
@@ -75,7 +75,7 @@
         "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
       ],
       0,
-      "2e456af63724c4e2084376fd21d30228"
+      "11bdfc94f28de5443082f06a96613a27"
     ],
     [
       "Div.g",
@@ -100,7 +100,7 @@
         "token_correspondence_FStar.Tactics.Effect.lift_div_tac"
       ],
       0,
-      "b3e25f51138ceb10d1bf2c01fd72faa5"
+      "a085669034a6747d0675c773f0d93135"
     ]
   ]
 ]
