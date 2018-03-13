@@ -196,8 +196,8 @@ private let get_to_the_next_frame () :Tac unit =
 
 (*
  * two commands
-   *)
- let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
+ *)
+let write_read (r:ref int) (s:ref int) (n:int) (m:int) =
   (r := 2;
    !s)
   
@@ -213,7 +213,7 @@ private let get_to_the_next_frame () :Tac unit =
 (*
  * four commands
  *)
-let swap (r1 r2:ref int)
+let swap (r1 r2:ref int) (m n:int)
   = (let x = !r1 in
      let y = !r2 in
      r1 := y;
