@@ -506,26 +506,42 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 (* ------------------------------------- UNFOLDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
+let embed_binder_view   = embed_pair embed_bv fstar_refl_bv_view embed_aqualv fstar_refl_aqualv
+let unembed_binder_view = unembed_pair unembed_bv unembed_aqualv
+
+
 (* Note that most of these are never needed during normalization, since
  * the types are abstract.
  *)
 
 let unfold_lazy_bv  (i : lazyinfo) : term =
-    U.exp_unit
+    let bv : bv = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed_bv_view i.rng (inspect_bv bv))]
+                None i.rng
 
+(* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
-    U.exp_unit
+    let binder : binder = undyn i.blob in
+    let bv, aq = inspect_binder binder in
+    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed_bv i.rng bv);
+                                        S.as_arg (embed_aqualv i.rng aq)]
+                None i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
     let fv : fv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_fv [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
+    S.mk_Tm_app fstar_refl_pack_fv.t [S.as_arg (embed_list embed_string t_string i.rng (inspect_fv fv))]
                 None i.rng
 
 let unfold_lazy_comp (i : lazyinfo) : term =
-    U.exp_unit
+    let comp : comp = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_comp.t [S.as_arg (embed_comp_view i.rng (inspect_comp comp))]
+                None i.rng
 
 let unfold_lazy_env (i : lazyinfo) : term =
+    (* Not needed, metaprograms never see concrete environments. *)
     U.exp_unit
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =
-    U.exp_unit
+    let sigelt : sigelt = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed_sigelt_view i.rng (inspect_sigelt sigelt))]
+                None i.rng
