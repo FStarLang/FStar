@@ -157,7 +157,6 @@ let canon_correct (e:expr) :
 
 // GM: This one gives rise to a seemingly very easy query, but which fails
 let term_to_expr (t:term) : Tac expr =
-  admit(); (* TODO: patterns are incomplete nonsense *)
   match run_tm (is_arith_expr t) with
   | Inr e -> e
   | Inl _ -> fail "Term is not an arithmetic expression"

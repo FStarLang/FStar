@@ -107,13 +107,13 @@ let unembed_result (t:term) (unembed_a:unembedder<'a>)
 
     match hd'_and_args t with
     | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
-        BU.bind_opt (uembed_a a) (fun a ->
-        BU.bind_opt (uembed_proofstate ps) (fun ps ->
+        BU.bind_opt (unembed_a a) (fun a ->
+        BU.bind_opt (unembed_proofstate ps) (fun ps ->
         Some (Inl(a, ps))))
 
     | Tm_fvar fv, [_t; (msg, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-        BU.bind_opt (uembed_string msg) (fun msg ->
-        BU.bind_opt (uembed_proofstate ps) (fun ps ->
+        BU.bind_opt (unembed_string msg) (fun msg ->
+        BU.bind_opt (unembed_proofstate ps) (fun ps ->
         Some (Inr(msg, ps))))
 
     | _ ->
