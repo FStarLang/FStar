@@ -1,5 +1,8 @@
 module SL.Effect
 
+open SepLogic.Heap
+
+
 (*** begin heap interface ***)
 
 (*
@@ -7,6 +10,7 @@ module SL.Effect
  *)
 assume val memory: Type u#1
 assume val defined: memory -> Type0
+
 assume val emp: memory
 assume val ref (a:Type0): Type0
 
@@ -18,7 +22,8 @@ assume val ( <*> ): m0:memory -> m1:memory -> Tot memory
 (* lemmas *)
 assume val lemma_join_is_commutative (m0 m1:memory)
   :Lemma (requires True) (ensures ((m0 <*> m1) == (m1 <*> m0)))
-         [SMTPat (m0 <*> m1)]
+         [SMTPat (m0 <*> m1); 
+          SMTPat (m1 <*> m0)]
 assume val lemma_join_is_associative (m0 m1 m2:memory)
   :Lemma (requires True) (ensures ((m0 <*> (m1 <*> m2)) == ((m0 <*> m1) <*> m2)))
          [SMTPatOr [[SMTPat ((m0 <*> (m1 <*> m2)))];
@@ -26,26 +31,42 @@ assume val lemma_join_is_associative (m0 m1 m2:memory)
 assume val lemma_emp_is_join_unit (m:memory)
   :Lemma (requires True) (ensures ((m <*> emp) == m))
          [SMTPat (m <*> emp)]
+assume val lemma_emp_is_join_unit' (m:memory)
+  :Lemma (requires True) (ensures ((emp <*> m) == m))
+         [SMTPat (emp <*> m)]
 
-(* definedness *)
+(* addrs_in *)
 assume val addrs_in (m:memory) :Set.set nat
 
 assume val lemma_addrs_in_emp (u:unit) :Lemma (Set.equal (addrs_in emp) (Set.empty))
+assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
 assume val lemma_addrs_in_points_to (#a:Type) (r:ref a) (x:a)
   :Lemma (requires True) (ensures (Set.equal (addrs_in (r |> x)) (Set.singleton (addr_of r))))
          [SMTPat (addrs_in (r |> x))]
 assume val lemma_addrs_in_join (m0 m1:memory)
-  :Lemma (requires True) (ensures (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
-         [SMTPat (addrs_in (m0 <*> m1))]
-assume val lemma_definedness_of_join (m0 m1:memory)
-  :Lemma (requires (Set.disjoint (addrs_in m0) (addrs_in m1)))
-         (ensures  (defined (m0 <*> m1)))
+  :Lemma (requires (defined (m0 <*> m1)))
+         (ensures  (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
+	 [SMTPat (addrs_in (m0 <*> m1))]
+
+(* definedness *)
+assume val lemma_defined_emp (u:unit) :Lemma (defined emp)
+assume Defined_emp_axiom: defined emp
+assume val lemma_defined_points_to (#a:Type) (r:ref a) (x:a)
+  :Lemma (requires True) (ensures (defined (r |> x)))
+         [SMTPat (defined (r |> x))]
+assume val lemma_defined_join (m0 m1:memory)
+  :Lemma (requires True)
+         (ensures  (defined (m0 <*> m1) <==> (defined m0 /\ defined m1 /\ Set.disjoint (addrs_in m0) (addrs_in m1))))
 	 [SMTPat (defined (m0 <*> m1))]
-assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
+
+(*let lemma_bad_disjoint_without_pat_on_a_quantifier (a:eqtype) (s1 s2:Set.set a)
+  :Lemma (requires (Set.disjoint s1 s2)) (ensures (forall x. Set.mem x s1 ==> ~ (Set.mem x s2)))
+         [SMTPat (Set.disjoint s1 s2)]
+  = ()*)
+
 
 (*** end heap interface ***)
 
-//unfold let memory = m:memory{defined m}
 
 let pre = memory -> Type0
 let post (a:Type) = a -> memory -> Type0
