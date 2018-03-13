@@ -1,6 +1,6 @@
 module SL.Examples
 
-//open SepLogic.Heap
+open SepLogic.Heap
 open SL.Effect
 
 open FStar.Tactics
@@ -45,27 +45,27 @@ let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0)
 let lemma_pure_right (h h':memory) (phi:memory -> memory -> memory -> Type0)
   :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h')))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h1))
-  = lemma_join_is_commutative (h <*> h') emp
+  = lemma_sep_comm (h <*> h') emp
 
 let lemma_rewrite_sep_comm (h1 h2:memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h1 <*> h2) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
          (ensures  (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h2 <*> h1) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
-  = lemma_join_is_commutative h1 h2
+  = lemma_sep_comm h1 h2
 
 let lemma_rewrite_sep_assoc1 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h2 <*> (h1 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
          (ensures  (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h1 <*> (h2 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
-  = lemma_join_is_commutative h1 h2
+  = lemma_sep_comm h1 h2
 
 let lemma_rewrite_sep_assoc2 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h3 <*> (h1 <*> h2)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
          (ensures  (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h1 <*> (h2 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
-  = lemma_join_is_commutative h3 h1;
-    lemma_join_is_commutative h3 h2
+  = lemma_sep_comm h3 h1;
+    lemma_sep_comm h3 h2
 
 let lemma_rewrite_sep_assoc3 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ ((h1 <*> h2) <*> h3) == (h4 <*> h5) /\
@@ -228,7 +228,7 @@ let lemma_frame_out_empty_right (phi:memory -> memory -> memory -> Type) (h:memo
 let lemma_frame_out_empty_left (phi:memory -> memory -> memory -> Type) (h:memory)
   :Lemma (requires (defined h /\ phi h emp h))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ h == (h0 <*> h1) /\ phi h h0 h1))
-  = ()
+  = lemma_sep_comm h emp
 
 let cond_test (r1 r2:ref int) (n:int) (b:bool)
   = (let x = !r1 in
