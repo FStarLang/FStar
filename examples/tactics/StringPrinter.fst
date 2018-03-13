@@ -353,8 +353,6 @@ let coerce_sz
 : Tot (m_sz ft2)
 = fun t' -> ft1_sz t'
 
-#reset-options "--z3rlimit 32"
-
 let compile_ret
   (ret_sz_tm: T.term)
   (t: T.term)
@@ -367,16 +365,13 @@ let compile_ret
   T.print (T.term_to_string res);
   res
 
-#reset-options
-
 let compile_bind
   (bind_sz_tm: T.term)
   (ty: T.term)
   (t: T.term)
   (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
 : T.Tac T.term
-= admit ();
-  T.print "compile_bind";
+= T.print "compile_bind";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (bind_tm ()) in
   tassert test;
@@ -407,8 +402,6 @@ let compile_bind
     end
   | _ -> tfail ("compile_bind: 4 arguments expected")
 
-#reset-options "--z3rlimit 32"
-
 let compile_print_char
   (print_char_sz_tm: T.term)
   (t: T.term)
@@ -420,8 +413,6 @@ let compile_print_char
   let res = T.mk_app print_char_sz_tm (neutralize_argv t ar) in
   T.print (T.term_to_string res);
   res
-
-#reset-options
 
 let compile_fvar
   (coerce_sz_tm: T.term)
@@ -462,8 +453,7 @@ let compile_ifthenelse
   (t: T.term)
   (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
 : T.Tac T.term
-= admit ();
-  T.print "compile_ifthenelse";
+= T.print "compile_ifthenelse";
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
