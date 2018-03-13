@@ -305,6 +305,7 @@ private let __implies_intros_with_processing_exists_and_and () :Tac unit
 			                   (fun _ -> or_else (fun _ -> rewrite h) idtac)))
             (fun _ -> fail "done")
 
+#set-options "--z3rlimit 30 --use_two_phase_tc false"
 let test0 (l:listptr)
   = (let x = !l in
      match x with
