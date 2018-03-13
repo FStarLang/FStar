@@ -1,6 +1,6 @@
 module SL.Examples
 
-//open SepLogic.Heap
+open SepLogic.Heap
 open SL.Effect
 
 open FStar.Tactics
@@ -53,7 +53,7 @@ let lemma_rw_bind (#a:Type0) (phi:memory -> memory -> memory -> memory -> a -> T
 let lemma_pure_right (h h':memory) (phi:memory -> memory -> memory -> Type0)
   :Lemma (requires (defined (h <*> h') /\ phi h h' (h <*> h')))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h1))
-  = lemma_join_is_commutative (h <*> h') emp
+  = lemma_sep_comm (h <*> h') emp
 
 (*
  * procedure call followed by a read/write command with singleton heap
@@ -108,22 +108,22 @@ let lemma_procedure (phi:memory -> memory -> memory -> memory -> Type0) (h h':me
 let lemma_rewrite_sep_comm (h1 h2:memory) (phi:memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h1 <*> h2) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
          (ensures  (exists (h3 h4:memory). defined (h3 <*> h4) /\ (h2 <*> h1) == (h3 <*> h4) /\ phi h1 h2 h3 h4))
-  = lemma_join_is_commutative h1 h2
+  = lemma_sep_comm h1 h2
 
 let lemma_rewrite_sep_assoc1 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h2 <*> (h1 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
          (ensures  (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h1 <*> (h2 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
-  = lemma_join_is_commutative h1 h2
+  = lemma_sep_comm h1 h2
 
 let lemma_rewrite_sep_assoc2 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h3 <*> (h1 <*> h2)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
          (ensures  (exists (h4 h5:memory). defined (h4 <*> h5) /\ (h1 <*> (h2 <*> h3)) == (h4 <*> h5) /\
 	                     phi h1 h2 h3 h4 h5))
-  = lemma_join_is_commutative h3 h1;
-    lemma_join_is_commutative h3 h2
+  = lemma_sep_comm h3 h1;
+    lemma_sep_comm h3 h2
 
 let lemma_rewrite_sep_assoc3 (h1 h2 h3:memory) (phi:memory -> memory -> memory -> memory -> memory -> Type0)
   :Lemma (requires (exists (h4 h5:memory). defined (h4 <*> h5) /\ ((h1 <*> h2) <*> h3) == (h4 <*> h5) /\
@@ -186,7 +186,7 @@ let split_lem #a #b sa sb = ()
 private let get_to_the_next_frame () :Tac unit =
   ignore (repeat (fun () -> apply_lemma (`split_lem); smt ()))
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --print_full_names"
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --print_full_names --__temp_fast_implicits"
 
 
 (*
@@ -296,13 +296,15 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     get_to_the_next_frame ();
 	     process_command ())
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --print_full_names"
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --print_full_names --__no_positivity"
 
 noeq type listptr' =
   | Null :listptr'
   | Cell :head:int -> tail:listptr -> listptr'
 
 and listptr = ref listptr'
+
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --print_full_names"
 
 assume Ref_points_to_axiom: forall (a:Type) (r:ref a) (x:a) (m:memory). m == (r |> x) ==> x << r
 

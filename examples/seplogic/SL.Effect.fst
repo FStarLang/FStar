@@ -2,7 +2,7 @@ module SL.Effect
 
 open SepLogic.Heap
 
-
+(*
 (*** begin heap interface ***)
 
 (*
@@ -17,7 +17,7 @@ assume val ref (a:Type0): Type0
 (* operations on memories and refs *)
 assume val addr_of: #a:Type0 -> ref a -> Tot nat
 assume val ( |> ): #a:Type0 -> r:ref a -> x:a -> Tot memory
-assume val ( <*> ): m0:memory -> m1:memory -> Tot memory
+assume val ( <*> ): m0:memory -> m1:memory -> GTot memory
 
 (* lemmas *)
 assume val lemma_join_is_commutative (m0 m1:memory)
@@ -63,7 +63,7 @@ assume val lemma_defined_join (m0 m1:memory)
   :Lemma (requires (Set.disjoint s1 s2)) (ensures (forall x. Set.mem x s1 ==> ~ (Set.mem x s2)))
          [SMTPat (Set.disjoint s1 s2)]
   = ()*)
-
+*)
 
 (*** end heap interface ***)
 
