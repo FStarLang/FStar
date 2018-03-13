@@ -11,24 +11,6 @@
       "48762ca0ade8761d75f1724a6f841c9c"
     ],
     [
-      "BinarySearchTree0.uu___is_Leaf",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8a622a5d9781c413ccfab9c6647a43ce"
-    ],
-    [
-      "BinarySearchTree0.uu___is_Node",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b82ee71509f7412c0594a3e7f0071e0c"
-    ],
-    [
       "BinarySearchTree0.__proj__Node__item___0",
       1,
       2,
@@ -40,7 +22,7 @@
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "9ce593bfebe6ef6a221dece1ae4ea122"
+      "cd8d9e8d64c3e37dbeb21b54e6c5ec07"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___1",
@@ -54,7 +36,7 @@
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "919eba21232c017020d5ceb6eabe285e"
+      "3d0290481256cc8905f6abc9dd932544"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___2",
@@ -68,7 +50,7 @@
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "3d35b9048dd8d83e330b9fc508192c7d"
+      "845cb7ae62e2696aaeef4d9952fc374c"
     ],
     [
       "BinarySearchTree0.search",
@@ -86,7 +68,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "ff41f162a572305a1ca3e15190854f7f"
+      "3db017c8841ac7473774dbae65e05c15"
     ],
     [
       "BinarySearchTree0.insert",
@@ -104,7 +86,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "460f6e5eb46ae57146153fc603a99ba8"
+      "0fd9d547e7089790340c6163a23f2ea3"
     ],
     [
       "BinarySearchTree0.tree",
@@ -113,25 +95,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d397132aeaacb8561f1b02f3629f9185"
-    ],
-    [
-      "BinarySearchTree0.uu___is_Leaf",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0f86bab2246c939c91dce2044e9ffc5e"
-    ],
-    [
-      "BinarySearchTree0.uu___is_Node",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "604faeae4202cf04b1ed69cdb7fae721"
+      "0145ddcd3e6443ed92c05a8c5ed5c6b7"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___0",
@@ -145,7 +109,7 @@
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "3cf409e48c05d6e9681d44d037c1c532"
+      "525ca1a0d7da9a161579892eae082419"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___1",
@@ -159,7 +123,7 @@
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "7b22d7977b8dc82bcc8baedb03398957"
+      "0abbe4259cfef8fee13236d6de98d296"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___2",
@@ -173,7 +137,7 @@
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "3c6f6dd540ffaec913f5ab154543627d"
+      "cfe422ff3cd6792276db9f44ef0f73f1"
     ],
     [
       "BinarySearchTree0.search",
@@ -191,7 +155,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "ae56c04033470e00d3f36a44ced3aa02"
+      "f423a34a982d2b310a06b8bc004c33d6"
     ],
     [
       "BinarySearchTree0.insert",
@@ -209,7 +173,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "ab86334eb0e4b5a4ba1d02031a199298"
+      "3b9169ad260c6b8e75c5ed8c97b131e1"
     ]
   ]
 ]

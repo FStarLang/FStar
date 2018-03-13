@@ -11,24 +11,6 @@
       "143f6dbbc6c88455f644e7e2d265feac"
     ],
     [
-      "Bug043.uu___is_O",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "90d610e795a9b3d3eaff78957c27b59f"
-    ],
-    [
-      "Bug043.uu___is_S",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2191741ad719ea1c2f1e460a512cdf79"
-    ],
-    [
       "Bug043.__proj__S__item___0",
       1,
       2,
@@ -39,7 +21,7 @@
         "refinement_interpretation_Bug043_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
       ],
       0,
-      "cd4d6b38676a7e54b88b57afdb9f5622"
+      "9af1ce34d083e536dd073e956fe64bc6"
     ]
   ]
 ]

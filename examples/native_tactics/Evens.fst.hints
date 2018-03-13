@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "38017f1aa8e9eb095fe3adfe666498bb"
-    ],
-    [
-      "Evens.uu___is_U0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "52dee06bd205a8dc321685a8646628f9"
-    ],
-    [
-      "Evens.uu___is_US",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "cdd52930fa2df3434047d930b4c84e56"
+      "143922f0b1ab1731d1b4517bb49779cf"
     ],
     [
       "Evens.__proj__US__item___0",
@@ -39,7 +21,7 @@
         "refinement_interpretation_Evens_Tm_refine_7094be438dbc16658c0caec70fa7452e"
       ],
       0,
-      "d4f2f25912b79a94686f7be2a2d45fc5"
+      "d4257d6a69060ce00ed4555678e12116"
     ],
     [
       "Evens.even",
@@ -48,25 +30,7 @@
       1,
       [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
       0,
-      "0c74984bcaf5ccf2e8f83e18c00268b7"
-    ],
-    [
-      "Evens.uu___is_Even0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6d9ef7d096dc6f61ded254a0932e44a1"
-    ],
-    [
-      "Evens.uu___is_Even_SSn",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b469ba17bddf52881b3f8604526db12d"
+      "e1ef78880abed6bd5d22e64b2ff364fb"
     ],
     [
       "Evens.__proj__Even_SSn__item__n",
@@ -79,7 +43,7 @@
         "refinement_interpretation_Evens_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "ad747412f7ac64b209901ba2aedf8c59"
+      "2e9d3659c0c152fc6edd2a9765a76af5"
     ],
     [
       "Evens.__proj__Even_SSn__item___1",
@@ -94,7 +58,7 @@
         "refinement_interpretation_Evens_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "32c641c371eafbd23599e41c8a1c4e27"
+      "90a501fc2becf93e54e518e3e30998c4"
     ],
     [
       "Evens.nat2unary",
@@ -110,7 +74,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5ec5b430127da20a1001d0595ae14c71"
+      "7814c1b2ee6256310a70b0f9b238d05b"
     ],
     [
       "Evens.even0",
@@ -122,7 +86,7 @@
         "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
       ],
       0,
-      "8eb8fdef1d6580089f0e163deb1689c1"
+      "0666102d148a2033f43bada0760fdde8"
     ],
     [
       "Evens.evenSSn",
@@ -131,7 +95,7 @@
       1,
       [ "@query" ],
       0,
-      "206ff2d6e8e2c32fa40cc618ff1ce834"
+      "aa7ad4dab1900f3a69f7ef1e42f9b052"
     ]
   ]
 ]
