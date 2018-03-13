@@ -10,8 +10,6 @@ open FStar.Tactics
 (*
  * these lemmas match on the VCs
  *)
-
-
 let lemma_singleton_heap_rw (#a:Type0) (phi:memory -> memory -> a -> Type0) (r:ref a) (x:a)
   :Lemma (requires (phi (r |> x) emp x))
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
@@ -352,80 +350,115 @@ let test0 (l:listptr)
 	//goal 2.2
 	smt ())
 
-let test1 (l:listptr)
-  = (let lv = !l in
-     match lv with
-     | Cell hd tail ->
-       l := Cell (hd + 1) tail
-     | Null -> (() <: STATE unit (fun p h -> p () emp)))
+let lemma_rw_branch2
+  (#a:Type0) (#b:Type) (#c:Type) (phi:memory -> memory -> a -> b -> c -> Type0) (psi:b -> c -> Type)
+  (r:ref a) (x:a) (h:memory)
+  :Lemma (requires (defined ((r |> x) <*> h) /\ (forall (y:b) (z:c). phi (r |> x) h x y z)))
+         (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\
+	                              ((r |> x) <*> h) == (h0 <*> h1) /\
+				      (forall (y:b) (z:c). psi y z ==> (exists x. h0 == (r |> x) /\ phi h0 h1 x y z))))
+  = ()
 
-    <: STATE unit (fun p h -> valid l [2; 3] h /\ (defined h /\ (forall h1. valid l [3; 3] h1 ==> p () h1)))
+// let test1 (l:listptr)
+//   = (let lv = !l in
+//      match lv with
+//      | Cell hd tail ->
+//        l := Cell hd tail
+//      | Null -> (() <: STATE unit (fun p h -> p () emp)))
 
-    by (fun () ->
-        let _ = forall_intros () in
-	norm [delta_only ["SL.Examples.valid"]];
-	ignore (repeat __implies_intros_with_processing_exists_and_and);
-	apply_lemma (`lemma_rw);
-	split (); smt (); split (); smt ();
-	dump "A")
-	apply_lemma (`lemma_inline_in_patterns_two);
-	split (); smt ();
-	split ();
-	//goal 1
-	
-        dump "A")
+//     <: STATE unit (fun p h -> valid l [2; 3] h /\ (defined h /\ p () h))
 
-	apply_lemma (`lemma_rw_rw);
-	get_to_the_next_frame ();
-	norm [delta_only ["SL.Examples.uu___is_Cell";
-	                  "SL.Examples.uu___is_Null";
-			  "SL.Examples.__proj__Cell__item__head";
-			  "SL.Examples.__proj__Cell__item__head"]];
-	norm [Prims.simplify];
-	dump "A")
+//     by (fun () ->
+//         let _ = forall_intros () in
+// 	norm [delta_only ["SL.Examples.valid"]];
+// 	ignore (repeat __implies_intros_with_processing_exists_and_and);
+// 	apply_lemma (`lemma_rw);
+// 	split (); smt (); split (); smt ();
+// 	apply_lemma (`lemma_inline_in_patterns_two);
+// 	split (); smt ();
+// 	split ();
+// 	//goal 1
+// 	ignore (implies_intro ());
+// 	apply_lemma (`lemma_rw_branch2);
+// 	split (); smt ();
+// 	ignore (forall_intros ()); split (); smt ();
+//         dump "A")
+
+// 	apply_lemma (`lemma_frame_out_empty_left);
+// 	dump "A")
+// 	smt ();
+// 	//goal 2
+// 	ignore (implies_intro ());
+// 	apply_lemma (`lemma_frame_out_empty_right);
+// 	split (); smt ();
+// 	split ();
+// 	//goal 2.1
+// 	ignore (implies_intro ());
+// 	apply_lemma (`lemma_frame_out_empty_right);
+// 	split (); smt ();
+// 	split (); smt ();
+// 	split (); smt ();
+// 	apply_lemma (`lemma_frame_out_empty_right);
+// 	split (); smt ();
+// 	split (); smt ();
+// 	split (); smt ();
+// 	apply_lemma (`lemma_frame_out_empty_right);
+// 	smt ();
+// 	//goal 2.2
+// 	smt ();
+//         dump "A")
+
+// 	apply_lemma (`lemma_rw_rw);
+// 	get_to_the_next_frame ();
+// 	norm [delta_only ["SL.Examples.uu___is_Cell";
+// 	                  "SL.Examples.uu___is_Null";
+// 			  "SL.Examples.__proj__Cell__item__head";
+// 			  "SL.Examples.__proj__Cell__item__head"]];
+// 	norm [Prims.simplify];
+// 	dump "A")
 
 
 
-// 	// let h = implies_intro () in
-// 	// __elim_and h;
-// 	// let h = implies_intro () in
-// 	// __elim_exists h;
-// 	// let h = implies_intro () in
-// 	// __elim_and h;
-// 	// let h = implies_intro () in
-// 	// __elim_and h;
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-// 	// let h = implies_intro () in
-// 	// __elim_exists h;
-// 	// let h = implies_intro () in
-// 	// __elim_and h;
-// 	// let h = implies_intro () in
-// 	// __elim_and h;
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-// 	// let h = implies_intro () in
-// 	// __elim_and h;
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
-// 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let h = implies_intro () in
+// // 	// __elim_and h;
+// // 	// let h = implies_intro () in
+// // 	// __elim_exists h;
+// // 	// let h = implies_intro () in
+// // 	// __elim_and h;
+// // 	// let h = implies_intro () in
+// // 	// __elim_and h;
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let h = implies_intro () in
+// // 	// __elim_exists h;
+// // 	// let h = implies_intro () in
+// // 	// __elim_and h;
+// // 	// let h = implies_intro () in
+// // 	// __elim_and h;
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let h = implies_intro () in
+// // 	// __elim_and h;
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
+// // 	// let _ = (let h = implies_intro () in or_else (fun _ -> rewrite h) idtac) in
 
-// // let foo (p:int -> int -> Type) (q:int -> int -> int -> int -> Type) (r:Type)
-// //   = assert_by_tactic ((exists x1 x2. (p x1 x2 /\ (exists x3 x4. q x1 x2 x3 x4))) ==> r)
-// //     (fun () -> 
-// //      let h  = implies_intro () in
-// //      let ae = `__exists_elim_as_forall in
-// //      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
-// //      clear h;
-// //      let _ = forall_intros () in
-// //      let h = implies_intro () in
-// //      and_elim (pack (Tv_Var (bv_of_binder h)));
-// //      clear h;
-// //      let _ = implies_intro () in
-// //      let h  = implies_intro () in
-// //      let ae = `__exists_elim_as_forall in
-// //      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
-// //      clear h;
-// //      let _ = forall_intros () in
-// //      let h = implies_intro () in
-// //      dump "A")
+// // // let foo (p:int -> int -> Type) (q:int -> int -> int -> int -> Type) (r:Type)
+// // //   = assert_by_tactic ((exists x1 x2. (p x1 x2 /\ (exists x3 x4. q x1 x2 x3 x4))) ==> r)
+// // //     (fun () -> 
+// // //      let h  = implies_intro () in
+// // //      let ae = `__exists_elim_as_forall in
+// // //      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
+// // //      clear h;
+// // //      let _ = forall_intros () in
+// // //      let h = implies_intro () in
+// // //      and_elim (pack (Tv_Var (bv_of_binder h)));
+// // //      clear h;
+// // //      let _ = implies_intro () in
+// // //      let h  = implies_intro () in
+// // //      let ae = `__exists_elim_as_forall in
+// // //      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
+// // //      clear h;
+// // //      let _ = forall_intros () in
+// // //      let h = implies_intro () in
+// // //      dump "A")
