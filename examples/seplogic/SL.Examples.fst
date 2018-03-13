@@ -295,3 +295,60 @@ let rotate (r1 r2 r3:ref int) (l m n:int) =
 	     process_command ();
 	     get_to_the_next_frame ();
 	     process_command ())
+
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --print_full_names"
+
+noeq type listptr' =
+  | Null :listptr'
+  | Cell :head:int -> tail:listptr -> listptr'
+
+and listptr = ref listptr'
+
+assume Ref_points_to_axiom: forall (a:Type) (r:ref a) (x:a) (m:memory). m == (r |> x) ==> x << r
+
+let rec valid (p:listptr) (repr:list int) (h:memory) :Type0 =
+  match repr with
+  | []    -> h == (p |> Null)
+  | hd::tl -> exists (tail:listptr) (h1:memory). defined ((p |> Cell hd tail) <*> h1) /\ h == ((p |> Cell hd tail) <*> h1) /\ valid tail tl h1
+
+
+// private let __exists_elim_as_forall
+//   (#a:Type) (#b:Type) (#p: a -> b -> Type) (#phi:Type)
+//   (_:(exists x y. p x y)) (_:(squash (forall (x:a) (y:b). p x y ==> phi)))
+//   :Lemma phi
+//   = ()
+
+// let foo (p:int -> int -> Type) (q:int -> int -> int -> int -> Type) (r:Type)
+//   = assert_by_tactic ((exists x1 x2. (p x1 x2 /\ (exists x3 x4. q x1 x2 x3 x4))) ==> r)
+//     (fun () -> 
+//      let h  = implies_intro () in
+//      let ae = `__exists_elim_as_forall in
+//      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
+//      clear h;
+//      let _ = forall_intros () in
+//      let h = implies_intro () in
+//      and_elim (pack (Tv_Var (bv_of_binder h)));
+//      clear h;
+//      let _ = implies_intro () in
+//      let h  = implies_intro () in
+//      let ae = `__exists_elim_as_forall in
+//      apply_lemma (mk_e_app ae [pack (Tv_Var (bv_of_binder h))]);
+//      clear h;
+//      let _ = forall_intros () in
+//      let h = implies_intro () in
+//      dump "A")
+
+// let test (l:listptr)
+//   = (let Cell hd _ = !l in
+//      hd)
+
+//     <: STATE int (fun p h -> valid l [2; 3] h /\ (defined h /\ p 2 h))
+
+//     by (fun () ->
+//         let _ = forall_intros () in
+// 	norm [delta_only ["SL.Examples.valid"]];
+// 	let h = implies_intro () in
+// 	and_elim (pack (Tv_Var (bv_of_binder h)));
+// 	clear h;
+// 	let _ = implies_intro () in
+// 	dump "A")
