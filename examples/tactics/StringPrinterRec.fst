@@ -52,12 +52,6 @@ let do_while_body_t'
 = (x: tin) ->
   Tot (do_while_body_res_t tin tout f decreases x)
 
-let do_while_body_t
-  (tin tout: Type)
-  (f: ((x: tin) -> Tot (m tout)))
-: Tot Type
-= (decreases: (tin -> GTot lex_t) & do_while_body_t' tin tout f decreases)
-
 let lift_c_or
   (tin tout: Type)
   (x: m tout)
@@ -144,7 +138,53 @@ let do_while_body_res_intro
   (ensures (fun y' -> y' == y))
 = y
 
-let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
+let rec do_while
+  (tin tout: Type)
+  (decrease: (tin -> GTot lex_t))
+  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (x: tin)
+: Tot (m tout)
+  (decreases (decrease x))
+= bind (body x) (fun (y' : c_or (tin_decr tin decrease x) tout) -> match y' with
+  | Left x' -> do_while tin tout decrease body x'
+  | Right y' -> ret y'
+  )
+
+let rec do_while_correct
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+  (decrease: (tin -> GTot lex_t))
+  (body: do_while_body_t' tin tout f decrease)
+  (x: tin)
+: Lemma
+  (requires True)
+  (ensures (
+    do_while tin tout decrease body x () == f x ()
+  ))
+  (decreases (decrease x))
+= let g : m (c_or (tin_decr tin decrease x) tout) = body x in
+  match g () with
+  | (Left x', log) -> do_while_correct tin tout f decrease body x'
+  | (Right y, log) -> ()
+
+(* This pattern is necessary to prove rewrite_do_while below *)
+private let seq_append_empty_l
+  (s: Seq.seq FStar.UInt8.t)
+: Lemma
+  (ensures (Seq.append Seq.createEmpty s == s))
+  [SMTPat (Seq.append Seq.createEmpty s)]
+= Seq.append_empty_l s
+
+let rewrite_do_while
+  (tin tout: Type)
+  (f: ((x: tin) -> Tot (m tout)))
+  (decrease: (tin -> GTot lex_t))
+  (body: do_while_body_t' tin tout f decrease)
+  (x: tin)
+: Tot (y: m tout { y () == f x () } )
+= bind (ret (do_while_correct tin tout f decrease body x)) (fun _ -> do_while tin tout decrease body x)
+
+let mk_do_while_tac (#t: Type) (x: t) : T.Tac unit =
   admit ();
     let q = quote x in
     match T.inspect q with
@@ -201,14 +241,10 @@ let mk_do_while_body_tac (#t: Type) (x: t) : T.Tac unit =
                     ]
                     in
                     let res =
-                      T.mk_app (quote Prims.Mkdtuple2) [
-                        decr_ty, T.Q_Implicit;
-                        T.pack (T.Tv_Abs decr_binder (T.mk_app (quote do_while_body_t') [
-                          tin, T.Q_Explicit;
-                          tout, T.Q_Explicit;
-                          q, T.Q_Explicit;
-                          T.pack (T.Tv_Var (T.bv_of_binder decr_binder)), T.Q_Explicit;
-                        ])), T.Q_Implicit;
+                      T.mk_app (quote rewrite_do_while) [
+                        tin, T.Q_Explicit;
+                        tout, T.Q_Explicit;
+                        q, T.Q_Explicit;
                         decr, T.Q_Explicit;
                         T.pack (T.Tv_Abs x body'), T.Q_Explicit;
                       ]
@@ -239,55 +275,8 @@ private let seq_append_empty_r
   [SMTPat (Seq.append s Seq.createEmpty)]
 = Seq.append_empty_r s
 
-let example'_body : do_while_body_t nat unit example' =
-  T.synth_by_tactic (fun () -> mk_do_while_body_tac example' )
+let example'_do_while : (x: nat) -> Tot (y: m unit { y () == example' x () } ) =
+  T.synth_by_tactic (fun () -> mk_do_while_tac example' )
 
-let rec do_while
-  (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
-  (x: tin)
-: Tot (m tout)
-  (decreases (decrease x))
-= bind (body x) (fun (y' : c_or (tin_decr tin decrease x) tout) -> match y' with
-  | Left x' -> do_while tin tout decrease body x'
-  | Right y' -> ret y'
-  )
-
-let rec do_while_correct
-  (tin tout: Type)
-  (f: ((x: tin) -> Tot (m tout)))
-  (body: do_while_body_t tin tout f)
-  (x: tin)
-: Lemma
-  (requires True)
-  (ensures (
-    let (| decrease, body |) = body in
-    do_while tin tout decrease body x () == f x ()
-  ))
-  (decreases (let (| decrease, _ |) = body in decrease x ))
-= let body_ = body in
-  let (| decrease, body |) = body in
-  let g : m (c_or (tin_decr tin decrease x) tout) = body x in
-  match g () with
-  | (Left x', log) -> do_while_correct tin tout f body_ x'
-  | (Right y, log) -> ()
-
-(* This pattern is necessary to prove rewrite_do_while below *)
-private let seq_append_empty_l
-  (s: Seq.seq FStar.UInt8.t)
-: Lemma
-  (ensures (Seq.append Seq.createEmpty s == s))
-  [SMTPat (Seq.append Seq.createEmpty s)]
-= Seq.append_empty_l s
-
-let rewrite_do_while
-  (tin tout: Type)
-  (f: ((x: tin) -> Tot (m tout)))
-  (body: do_while_body_t tin tout f)
-  (x: tin)
-: Tot (y: m tout { y () == f x () } )
-= bind (ret (do_while_correct tin tout f body x)) (fun _ -> do_while tin tout (dfst body) (dsnd body) x)
-
-let example_body : do_while_body_t U32.t unit example =
-  T.synth_by_tactic (fun () -> mk_do_while_body_tac example )
+let example_do_while : (x: U32.t) -> Tot (y: m unit { y () == example x () } ) =
+  T.synth_by_tactic (fun () -> mk_do_while_tac example )
