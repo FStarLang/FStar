@@ -27,7 +27,7 @@ let return (#a:Type) (x:a)
 
 (* frame wp by partitioning a heap whose memory is m into h0 and h1, and then prove post on the resulting heap and h1 *)
 let frame_wp0 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0 m1:memory) =
-  disjoint_memories m0 m1 /\ m == (m0 <*> m1) /\ wp (post m1) m0
+  defined (m0 <*> m1) /\ m == (m0 <*> m1) /\ wp (post m1) m0
 
 let frame_wp1 (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m m0:memory) =
   exists (m1:memory). frame_wp0 wp post m m0 m1
@@ -36,7 +36,8 @@ let frame_wp (#a:Type) (wp:st_wp a) (post:memory -> (a * memory) -> Type0) (m:me
   exists (m0:memory). frame_wp1 wp post m m0
 
 (* the idea is to call frame_wp with (frame_post p)? yes, see frame below *)
-let frame_post (#a:Type) (p:post a) (m0:memory) ((x, m1):(a * memory)) = disjoint_memories m0 m1 /\ p (x, m0 <*> m1)
+let frame_post (#a:Type) (p:post a) (m0:memory) ((x, m1):(a * memory)) = 
+  defined (m0 <*> m1) /\ p (x, m0 <*> m1)
 
 module S = FStar.Squash
 
@@ -47,7 +48,7 @@ let bind_exists
   (h:(exists (x:b). p x))
   (f:(x:b -> p x -> GTot (squash a)))
   : GTot (squash a)
-  = Squash.bind_squash #(x:b & p x) #a h (fun (| x, p |) -> f x p)
+  = S.bind_squash #(x:b & p x) #a h (fun (| x, p |) -> f x p)
 
 val frame: #a:Type -> #wp:st_wp a -> f:st a wp
          -> st a (fun post -> frame_wp wp (frame_post post))
@@ -56,12 +57,13 @@ val frame: #a:Type -> #wp:st_wp a -> f:st a wp
 let frame #a #wp f = 
   fun post h ->
     assert (frame_wp wp (frame_post post) (heap_memory h));
-    let s = FStar.Squash.join_squash (FStar.Squash.get_proof (frame_wp wp (frame_post post) (heap_memory h))) in
+    let s = S.join_squash (S.get_proof (frame_wp wp (frame_post post) (heap_memory h))) in
     bind_exists #(result a post) #memory #(frame_wp1 wp (frame_post post) (heap_memory h)) s (fun m0 s' -> 
       assert (frame_wp1 wp (frame_post post) (heap_memory h) m0);
       bind_exists #(result a post) #memory #(frame_wp0 wp (frame_post post) (heap_memory h) m0) s' (fun m1 _ -> 
         assert (frame_wp0 wp (frame_post post) (heap_memory h) m0 m1);
         let (h0,h1) = split_heap m0 m1 h in
+        assert (disjoint_heaps h0 h1);
         let sqres : squash (result a (frame_post post (heap_memory h1))) = f (frame_post post (heap_memory h1)) h0 in 
         S.bind_squash #(result a (frame_post post (heap_memory h1)))
                       #(result a post)
@@ -69,7 +71,7 @@ let frame #a #wp f =
                       (fun (x_h0':result a (frame_post post (heap_memory h1))) -> 
                          let (x, h0') = x_h0' in
                          let res = (x, join h1 h0') in 
-                         FStar.Squash.return_squash res)))
+                         S.return_squash res)))
       
 val bind (#a:Type) (#wp1:st_wp a)
          (#b:Type) (#wp2:a -> st_wp b)
@@ -89,16 +91,16 @@ let alloc (#a:Type0) (x:a)
   : st (ref a) (fun post m0 -> m0 == emp /\ (forall r m1 . m1 == (r |> x) ==> post (r, m1)))
   = fun post h0 ->
       let (r,h1) = alloc h0 x in
-      FStar.Squash.return_squash (r,h1)
+      S.return_squash (r,h1)
 
 let read (#a:Type0) (r:ref a)
   : st a (fun post m0 -> (exists (x:a). m0 == (r |> x) /\ post (x, m0)))
   = fun post h0 -> 
       assert (mcontains (heap_memory h0) r);
-      FStar.Squash.return_squash (sel h0 r, h0)
+      S.return_squash (sel h0 r, h0)
 
 let write (#a:Type0) (r:ref a) (v:a)
   : st unit (fun post m0 -> (exists (x:a). m0 == (r |> x) /\ post ((), (r |> v))))
     = fun post h0 -> 
         assert (mcontains (heap_memory h0) r);
-        FStar.Squash.return_squash ((), upd h0 r v)
+        S.return_squash ((), upd h0 r v)

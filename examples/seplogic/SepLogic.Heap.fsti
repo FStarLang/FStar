@@ -23,8 +23,6 @@ val addr_of : #a:Type0 -> ref a -> GTot nat
 val heap_memory : heap -> GTot memory
 
 val disjoint_heaps : heap -> heap -> Type0
-val disjoint_memories : memory -> memory -> Type0
-
 val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
 
 val ( |> ) : #a:Type0 -> r:ref a -> x:a -> Tot memory
@@ -46,28 +44,14 @@ val alloc : #a:Type0 -> h:heap -> a -> Tot (ref a * heap)
 
 val addrs_in : memory -> Set.set nat
 
-(* disjoint_heaps and disjoint_memories *)
+(* disjoint_heaps *)
 
 val lemma_disjoint_heaps_comm (h0 h1:heap)
   : Lemma (disjoint_heaps h0 h1 <==> disjoint_heaps h1 h0)
 
-val lemma_disjoint_memories_emp (m:memory)
-  : Lemma (requires (defined m))
-          (ensures  (disjoint_memories m emp))
-          [SMTPat (disjoint_memories m emp)]
-
-val lemma_disjoint_memories_comm (m0 m1:memory)
-  : Lemma (requires (defined m0 /\ defined m1))
-          (ensures  (disjoint_memories m0 m1 <==> disjoint_memories m1 m0))
-
-val lemma_disjoint_heaps_memories (h0 h1:heap)
-  : Lemma (disjoint_heaps h0 h1 <==> disjoint_memories (heap_memory h0) (heap_memory h1))
-          [SMTPat (disjoint_memories (heap_memory h0) (heap_memory h1))]
-
-val lemma_sep_disjoint_memories (m0 m1:memory) 
-  : Lemma (disjoint_memories m0 m1 <==> defined (m0 <*> m1))
-          [SMTPat (disjoint_memories m0 m1);
-           SMTPat (defined (m0 <*> m1))]
+val lemma_sep_defined_disjoint_heaps (h0 h1:heap)
+  : Lemma ((defined ((heap_memory h0) <*> (heap_memory h1))) <==> (disjoint_heaps h0 h1))
+          [SMTPat (defined ((heap_memory h0) <*> (heap_memory h1)))]
 
 (* join *)
 
@@ -86,8 +70,8 @@ val lemma_sep_comm (m0 m1:memory)
           
 val lemma_sep_assoc (m0 m1 m2:memory)
   : Lemma ((m0 <*> (m1 <*> m2)) == ((m0 <*> m1) <*> m2))
-         [SMTPatOr [[SMTPat ((m0 <*> (m1 <*> m2)))];
-	            [SMTPat ((m0 <*> m1) <*> m2)]]]
+          [SMTPatOr [[SMTPat ((m0 <*> (m1 <*> m2)))];
+	             [SMTPat ((m0 <*> m1) <*> m2)]]]
 
 (* heap_memory *)
 

@@ -64,10 +64,10 @@ let disjoint_heaps (h0 h1:heap) =
   let _ = () in
   FStar.Set.disjoint h0.hdomain h1.hdomain
 
-let disjoint_memories (m0 m1:memory) =
+(*let disjoint_memories (m0 m1:memory) =
   match (m0, m1) with
   | (Some m0', Some m1') -> FStar.Set.disjoint m0'.domain m1'.domain
-  | _ -> False
+  | _ -> False*)
 
 let join h0 h1 =
   let domain = FStar.Set.union h0.hdomain h1.hdomain in 
@@ -87,16 +87,17 @@ let ( |> ) #a r x =
   Some ({ domain = domain; contents = contents })
 
 let ( <*> ) m0 m1 = 
-  if (FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint_memories m0 m1)) 
-  then (match (m0, m1) with
-        | (Some m0', Some m1') -> 
-            let domain = FStar.Set.union m0'.domain m1'.domain in 
-            let contents = (fun r -> match (m0'.contents r, m1'.contents r) with
+  match (m0, m1) with
+  | (Some m0', Some m1') ->
+      (if (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Set.disjoint m0'.domain m1'.domain))
+       then (let domain = FStar.Set.union m0'.domain m1'.domain in
+             let contents = (fun r -> match (m0'.contents r, m1'.contents r) with
                                      | (Some v1, None) -> Some v1
                                      | (None, Some v2) -> Some v2
                                      | (None, None)    -> None) in
-            Some ({ domain = domain; contents = contents }))
-  else None
+             Some ({ domain = domain; contents = contents }))
+       else None)
+  | _ -> None
 
 let split_heap m0 m1 h = 
   match (m0, m1) with 
@@ -141,16 +142,11 @@ let addrs_in m =
   | Some m' -> m'.domain
   | None    -> FStar.Set.empty
 
-let lemma_disjoint_heaps_comm (h0 h1:heap)
-  = ()
-
-let lemma_disjoint_memories_emp m = ()
-
-let lemma_disjoint_memories_comm m0 m1 = ()
+let lemma_disjoint_heaps_comm (h0 h1:heap) = ()
 
 let lemma_disjoint_heaps_memories h0 h1 = ()
 
-let lemma_sep_disjoint_memories m0 m1 = ()
+let lemma_sep_defined_disjoint_heaps h0 h1 = ()
 
 let lemma_join_comm h0 h1 =
   assert (equal_heaps (join h0 h1) (join h1 h0))
