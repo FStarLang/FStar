@@ -284,19 +284,20 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
 
 module L = FStar.List.Tot
 
-// GM: We might need to make `inspect` an effectful function,
-// and then you wouldn't be able to use it in the refinement.
 let rec app_head_rev_tail (t: T.term) :
-    T.Tac (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) }) * list (tl: T.argv { tl << t } ))
+    T.Tac (res: ((x: T.term) * list (tl: T.argv { tl << t } ))
                 { if Cons? (snd res) then fst res << t else fst res == t } ) =
-  match T.inspect t with
-  | T.Tv_App u v ->
-    let open T in
+  admit ();
+  let ins = T.inspect t in
+  if T.Tv_App? ins
+  then
+    let (T.Tv_App u v) = ins in
     let (x, l) = app_head_rev_tail u in
-    let res : ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) = (x, v :: L.map (fun (x: argv {x << u}) -> (x <: (x: argv { x << t } ))) l) in
-    let (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
+    let res : ((x: T.term) * list (tl: T.argv { tl << t } )) = (x, v :: L.map (fun (x: T.argv {x << u}) -> (x <: (x: T.argv { x << t } ))) l) in
+    let (res: ((x: T.term) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
     res
-  | _ -> (t, [])
+  else
+    (t, [])
 
 let rev_is_cons (#a: Type) (l: list a) : Lemma
   (requires (Cons? l))
@@ -304,13 +305,12 @@ let rev_is_cons (#a: Type) (l: list a) : Lemma
 = L.rev_rev' l
 
 let app_head_tail (t: T.term) :
-    T.Tac (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } ))
+    T.Tac (res: ((x: T.term) * list (tl: T.argv { tl << t } ))
                 { if Cons? (snd res) then fst res << t else fst res == t } ) =
-  let open T in
   let (x, l) = app_head_rev_tail t in
-  let (res : ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } ))) = (x, L.rev l) in
+  let (res : ((x: T.term) * list (tl: T.argv { tl << t } ))) = (x, L.rev l) in
   Classical.move_requires rev_is_cons l;
-  let (res: ((x: T.term { ~ (T.Tv_App? (T.inspect x)) } ) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
+  let (res: ((x: T.term) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
   res
 
 // GM: This is cool!
@@ -320,7 +320,7 @@ let tassert (x: bool) : T.Tac (y: unit { x == true } ) =
     tfail ("Tactic assert failure: " ^ T.term_to_string y)
   )
 
-let tm_eq_fvar (t1 t2: T.term) : Tot bool =
+let tm_eq_fvar (t1 t2: T.term) : T.Tac bool =
   match T.inspect t1, T.inspect t2 with
   | T.Tv_FVar f1, T.Tv_FVar f2 ->
     (T.inspect_fv f1 = T.inspect_fv f2)
@@ -372,7 +372,8 @@ let compile_bind
   (t: T.term)
   (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
 : T.Tac T.term
-= T.print "compile_bind";
+= admit ();
+  T.print "compile_bind";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (bind_tm ()) in
   tassert test;
@@ -452,7 +453,8 @@ let compile_ifthenelse
   (t: T.term)
   (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
 : T.Tac T.term
-= T.print "compile_ifthenelse";
+= admit ();
+  T.print "compile_ifthenelse";
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
