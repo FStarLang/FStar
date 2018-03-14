@@ -155,7 +155,7 @@ let do_while_st_inv
       log0 == Seq.slice (B.as_seq h blog) 0 blhs
   )))
 
-#reset-options "--z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+#reset-options "--z3rlimit 64 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 inline_for_extraction
 let do_while_st_body

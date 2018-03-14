@@ -5,6 +5,11 @@ module StringPrinter.Base
 module S = FStar.Seq
 module U8 = FStar.UInt8
 
+(* Prims.c_or is not supported by KreMLin, so let's use ours. *)
+type c_or   (p:Type) (q:Type) =
+  | Left  : p -> c_or p q
+  | Right : q -> c_or p q
+
 type string = S.seq U8.t
 
 type m t = (unit -> GTot (t * string))
