@@ -8,6 +8,7 @@ all:	Apply.uver		\
 	Canon.uver		\
 	CanonMonoid.uver	\
 	CanonCommMonoid.uver	\
+	EExists.uver		\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\

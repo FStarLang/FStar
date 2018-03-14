@@ -282,14 +282,13 @@ let where = where_aux 0
 let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b)
     (mult unit t : term) : Tac (exp * list term * vmap a b) =
   let hd, tl = collect_app_ref t in
-  let tl = list_unref tl in
   let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp * list term * vmap a b) =
     match where t ts with
     | Some v -> (Var v, ts, vm)
     | None -> let vfresh = length ts in let z = unquote t in
               (Var vfresh, ts @ [t], update vfresh z (f t) vm)
   in
-  match inspect hd, tl with
+  match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
     then (let (e1,ts,vm) = reification_aux ts vm f mult unit t1 in
@@ -321,8 +320,7 @@ let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
   norm [];
-  let g = cur_goal () in
-  match term_as_formula g with
+  match term_as_formula (cur_goal ()) with
   | Comp (Eq (Some t)) t1 t2 ->
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
@@ -361,6 +359,7 @@ let canon_monoid_with
                             "CanonCommMonoid.const_compare";
                             "CanonCommMonoid.special_compare";
              ]; primops] // TODO: restrict primops to "less than" only
+                         // - would need this even if unfold_def did it's job?
           // ; dump "done"
         | _ -> fail "Unexpected"
       else fail "Goal should be an equality at the right monoid type"
@@ -480,29 +479,3 @@ let sep_logic
                      need to be this pure? Can we prove correctness of
                      denotations intrinsically / by monadic
                      reification for an effectful denotation? *)
-
-(* Old discussion discuss with Nik and Guido about spurious SMT obligations:
-Nik:
-- it's easy to get rid of some of the hasEq goals by just saying `let
-  var :eqtype = nat`
-- but, we still have some extra SMT goals
-- and this is because reification computes a vmap literal vm, which
-  computes all the way to a lambda term
-  `(fun x -> if x = a then (a, ()) else ... )`
-- and we have to prove that this thing is actually a vmap
-- i wonder if there's some way for reification to compute this without
-  fully normalizing it down to a lambda term, i.e., can we leave it as
-  an `update (const_map ...) x a (a, ())` etc.
-- if so, then proving it is a vmap will be trivial and will not incur
-  additional SMT goals
-- this reminds me a little of many prior conversations, including our
-  conversation at the pub yesterday, Catalin. i.e., we want to treat
-  `update` etc. abstractly in some places, but in other places, we
-  want to compute fully with it (edited)
-- I think we should be able to do that with our tactics
-- e.g., something like `let r = set_norm_flags "don't unfold update,
-  const"; let r = reification m [t1;t2] in reset_norm_flags; r in ...`
-- for some as yet unavailable `set_norm_flags` tactic
-- anyway, it's a detail, but one that I suspect we'll have to solve
-  well especially as we build large vmap literals
-*)
