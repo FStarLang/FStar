@@ -229,7 +229,10 @@ let __set_guard_policy : guard_policy -> unit __tac = from_tac_1 B.set_guard_pol
 let set_guard_policy : guard_policy -> unit __tac = __set_guard_policy
 
 let __dismiss : unit __tac = from_tac_0 B.dismiss
-let dismiss : unit __tac = __dismiss
+let dismiss : unit -> unit __tac = fun () -> __dismiss
+
+let __tadmit : unit __tac = from_tac_0 B.tadmit
+let tadmit : unit -> unit __tac = fun () -> __tadmit
 
 let __inspect : RT.term -> RD.term_view __tac = from_tac_1 B.inspect
 let inspect   : RT.term -> RD.term_view __tac = __inspect

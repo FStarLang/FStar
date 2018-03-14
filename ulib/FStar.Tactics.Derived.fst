@@ -85,17 +85,11 @@ let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
 let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
-private
-let admit1' () : Tac unit =
-    exact (`(magic ()))
-
 let admit1 () : Tac unit =
-    print "Warning: Admitting goal";
-    admit1' ()
+    tadmit ()
 
 let admit_all () : Tac unit =
-    print "Warning: Admitting all goals";
-    let _ = repeat admit1' in
+    let _ = repeat tadmit in
     ()
 
 let skip_guard () : Tac unit =
