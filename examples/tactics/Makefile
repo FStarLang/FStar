@@ -1,4 +1,5 @@
 FSTAR_HOME=../..
+OTHERFLAGS += --include ../pattern-matching
 include ../Makefile.include
 
 .PHONY: neg
@@ -55,6 +56,7 @@ all:	Apply.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
+	Tautology.uver		\
 	Rewrite.Monoid.uver     \
 	neg
 	# launch			\
