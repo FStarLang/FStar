@@ -55,6 +55,7 @@ all:	Apply.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
+	Rewrite.Monoid.uver     \
 	neg
 	# launch			\
 

@@ -25,7 +25,7 @@ unfold let reader_ite_wp        (heap:Type) (a:Type)
                             (wp:reader_wp_h heap a)
                             (post:reader_post_h a) (h0:heap) =
      forall (k:reader_post_h a).
-	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
+	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
 	 ==> wp k h0
 unfold let reader_stronger  (heap:Type) (a:Type) (wp1:reader_wp_h heap a)
                         (wp2:reader_wp_h heap a) =

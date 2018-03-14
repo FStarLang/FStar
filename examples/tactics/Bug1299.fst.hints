@@ -2,21 +2,6 @@
   "Ü\u0017\ròø–—d#½¨\u001eF‚½\u0002",
   [
     [
-      "Bug1299.id",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Tactics.Types.proofstate",
-        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
-      ],
-      0,
-      "c7b82738ae325fefd1d57e9134b7783b"
-    ],
-    [
       "Bug1299.should_fail",
       1,
       2,
@@ -41,22 +26,7 @@
         "unit_typing"
       ],
       0,
-      "0eb95704088709ca7d5198e42592e618"
-    ],
-    [
-      "Bug1299.id",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Tactics.Types.proofstate",
-        "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
-      ],
-      0,
-      "35dcab591ecbc76ef783cd6b44b4e2b0"
+      "c9ebb6bb316359ce25ed10032f2bcc43"
     ],
     [
       "Bug1299.should_fail",
@@ -83,7 +53,7 @@
         "unit_typing"
       ],
       0,
-      "30cc66b6aa108915e7ab64785373b3da"
+      "03b674360d923bda571a419d5a9604c0"
     ]
   ]
 ]

@@ -184,15 +184,6 @@
       1,
       2,
       0,
-      [ "@query" ],
-      0,
-      "abfcabb50e3df3e9b7a7b740cdc8f71c"
-    ],
-    [
-      "X64.Vale.Lemmas_i.lemma_ifElse",
-      2,
-      2,
-      0,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_X64.Semantics_s.eval_code.fuel_instrumented",
@@ -212,7 +203,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "cc43f5c4b88471cc0e73d516658d3cb4"
+      "79aeb9cb8cab01301c11a512b87f1eb9"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_whileTrue",
@@ -221,7 +212,7 @@
       0,
       [ "@query" ],
       0,
-      "9af7231a334daa2fcc4152c0698f8ee5"
+      "f8d68026d1d89607358aad2ee4884686"
     ],
     [
       "X64.Vale.Lemmas_i.cf",
@@ -245,7 +236,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "69f5bb2fec17e82bf08d5db6b8999c5c"
+      "6b4702b4d6634873b487c2395093888d"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_cmp_ne",
@@ -259,7 +250,7 @@
         "haseqPrims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "daacc8e8e8a9d2275c7ea30020ac4797"
+      "145dd4e781c59f12eb917b22c1d3e40c"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_block",
@@ -271,11 +262,11 @@
         "equation_X64.Semantics_s.code", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2b6dcf43b3e0a80c65f5f2296b9c810c"
+      "b91b10accfd2a572030cea03111172ee"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_ifElse",
-      3,
+      2,
       2,
       0,
       [
@@ -297,16 +288,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "7c6b6ea910b3b1b595a37f385d3e680e"
-    ],
-    [
-      "X64.Vale.Lemmas_i.lemma_ifElse",
-      4,
-      2,
-      0,
-      [ "@query" ],
-      0,
-      "604f56f4683a165f0e3fb056ab345878"
+      "dd3d77f421a14c50149f027f77bc0e48"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_whileTrue",
@@ -315,7 +297,7 @@
       0,
       [ "@query" ],
       0,
-      "28726e995ca84dd6941372d849432cd7"
+      "626aee74684cc0c52df4433f7322627e"
     ]
   ]
 ]

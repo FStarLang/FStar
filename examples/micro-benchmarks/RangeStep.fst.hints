@@ -2,15 +2,6 @@
   "T¦€_ô'Î\u0004\"ú1\u0015n)¥À",
   [
     [
-      "RangeStep.uu___is_Success",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c314539f7eb9c79a2208e8774fd6e486"
-    ],
-    [
       "RangeStep.__proj__Success__item___0",
       1,
       2,
@@ -21,16 +12,7 @@
         "refinement_interpretation_RangeStep_Tm_refine_30105c1426a2dffc017b47ba8a15b498"
       ],
       0,
-      "a069f162fba81dc20ec3e6c6049cd1c3"
-    ],
-    [
-      "RangeStep.uu___is_Failed",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "baee30e884b1a1bd4db0c2802bfac80c"
+      "60e9e16d32a040ddffc809cc19404666"
     ],
     [
       "RangeStep.__proj__Failed__item___0",
@@ -43,7 +25,7 @@
         "refinement_interpretation_RangeStep_Tm_refine_933a2345b5e878accdf9565aab041e3d"
       ],
       0,
-      "00438cb48eed919199eedd62913c2c8a"
+      "648b5ea653fc8350ea34396c209c3ebc"
     ],
     [
       "RangeStep.bind",
@@ -59,16 +41,7 @@
         "typing_RangeStep.set_proofstate_range"
       ],
       0,
-      "a9703392060fa9374ab08ed2cea8ea2d"
-    ],
-    [
-      "RangeStep.uu___is_Success",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "746340d8f5b8060da3dbfe90fffc8df5"
+      "55c98b1ed724148913a1b85753636808"
     ],
     [
       "RangeStep.__proj__Success__item___0",
@@ -81,16 +54,7 @@
         "refinement_interpretation_RangeStep_Tm_refine_30105c1426a2dffc017b47ba8a15b498"
       ],
       0,
-      "e2b34348288d302ff4859b3df26186b3"
-    ],
-    [
-      "RangeStep.uu___is_Failed",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "06ae87aa860a613e1e49e4ebace9b09a"
+      "5da924bd96866b7a572f459f4b091586"
     ],
     [
       "RangeStep.__proj__Failed__item___0",
@@ -103,7 +67,7 @@
         "refinement_interpretation_RangeStep_Tm_refine_933a2345b5e878accdf9565aab041e3d"
       ],
       0,
-      "8f7c431537e5af5d3be03de8be27cb19"
+      "c4e0d6369b1d48a9bd320d0f12c44a51"
     ],
     [
       "RangeStep.bind",
@@ -119,7 +83,7 @@
         "typing_RangeStep.set_proofstate_range"
       ],
       0,
-      "26fe36cee5a38ef2022aeb8c2258efad"
+      "c6d6adbd6365b17dfbf3a97dca8b8b73"
     ]
   ]
 ]

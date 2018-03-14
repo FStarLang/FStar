@@ -523,7 +523,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "4d7d9913470c611302c865ca5606977c"
+      "2fefd405a99d56566ebcff70607c5458"
     ],
     [
       "Test.step_alt",
@@ -658,7 +658,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "0e8a9386cca07b8c6c0d804f198b089a"
+      "0a30e26d4169039074592984abf99b3c"
     ]
   ]
 ]

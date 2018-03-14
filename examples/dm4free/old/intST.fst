@@ -27,7 +27,7 @@ unfold let ite_wp        (a:Type)
                             (wp:wp a)
                             (h0:int) (q:post a) =
      forall (k:post a).
-         (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> q (x, h))
+         (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} q (x, h) ==> k (x, h))
          ==> wp h0 k
 unfold let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
      (forall (p:post a) (h:int). wp1 h p ==> wp2 h p)

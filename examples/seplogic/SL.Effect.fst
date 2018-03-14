@@ -91,7 +91,7 @@ unfold  let st_if_then_else (a:Type) (p:Type) (wp_then:st_wp a) (wp_else:st_wp a
 
 unfold  let st_ite_wp (a:Type) (wp:st_wp a) (p:post a) (m0:memory) =
   forall (k:post a).
-    (forall (x:a) (m:memory).{:pattern (guard_free (k x m))} k x m <==> p x m)
+    (forall (x:a) (m:memory).{:pattern (guard_free (k x m))} p x m ==> k x m)
     ==> wp k m0
 
 unfold  let st_stronger (a:Type) (wp1:st_wp a) (wp2:st_wp a) =

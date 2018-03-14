@@ -1,17 +1,1 @@
-[
-  "‘;Ó\u0010≥&‰›tú8â3¨ï“",
-  [
-    [
-      "Bug170.mergesort",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Bug170_Tm_refine_0f2f27ffd4aea41f4975e729677f2df9"
-      ],
-      0,
-      "23aece61d2f55f2da3f184eac6cdb722"
-    ]
-  ]
-]
+[ "‘;Ó\u0010≥&‰›tú8â3¨ï“", [] ]

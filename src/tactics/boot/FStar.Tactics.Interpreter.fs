@@ -354,6 +354,10 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__cur_env"       cur_env     RE.embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   RE.embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness RE.embed_term S.t_term;
+
+      mktac0 "__ngoals"        ngoals     embed_int S.t_int;
+      mktac0 "__ngoals_smt"    ngoals_smt embed_int S.t_int;
+
       mktac0 "__is_guard"      is_guard    embed_bool t_bool;
 
       mktac2 "__uvar_env"      uvar_env RE.unembed_env (unembed_option RE.unembed_term) RE.embed_term S.t_term;
@@ -687,7 +691,9 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
                  let phi = match getprop g.context g.goal_ty with
-                           | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))
+                           | None ->
+                                Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
+                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))) env.range
                            | Some phi -> phi
                  in
                  if !tacdbg then

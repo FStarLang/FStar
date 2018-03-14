@@ -2,31 +2,13 @@
   "6ôÍ…Ná'BYj[\u0004‚1Ú»",
   [
     [
-      "IfcComposeReify.uu___is_Low",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "07ac1f9c84d6a5a2c3510de2ee3d12e4"
-    ],
-    [
-      "IfcComposeReify.uu___is_High",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a96a1a175df297f6ca4adaf2e9060f67"
-    ],
-    [
       "IfcComposeReify.low_equiv",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3028d00490be5c9e3f407686e4ee4283"
+      "754d0377feff7771a6e0ffa73b9b661f"
     ],
     [
       "IfcComposeReify.is_x",
@@ -35,25 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d60b2ef73baea942ed82563bf398008d"
-    ],
-    [
-      "IfcComposeReify.p1_r",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9fd1f4bc03abfcb3850e2c5204b38a4a"
-    ],
-    [
-      "IfcComposeReify.p2_r",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "fd0b6f4c9a03eb6098ec0fa9fa22ff04"
+      "a9af88166381d70f747b715d297cd310"
     ],
     [
       "IfcComposeReify.p3_r",
@@ -62,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "84a2f496fb5252b1365f5c8633aa17df"
+      "59c483cdc9d9abd5cdd23722acd7c3f5"
     ],
     [
       "IfcComposeReify.ni_p1",
@@ -122,7 +86,7 @@
         "typing_Rel.__proj__R__item__r", "unit_typing"
       ],
       0,
-      "62f57e5f637e06d5c985ff18df6783ac"
+      "577bf08f7939f34ed98f7b5b88bc3ad8"
     ],
     [
       "IfcComposeReify.ni_p2",
@@ -182,7 +146,7 @@
         "typing_Rel.__proj__R__item__r", "unit_typing"
       ],
       0,
-      "1b549162f524f76ad5c7dbef9fc3300c"
+      "8785acc70f50e712889ae1c5a462e114"
     ],
     [
       "IfcComposeReify.ni_p3",
@@ -238,25 +202,7 @@
         "typing_Rel.__proj__R__item__r", "unit_typing"
       ],
       0,
-      "d280bb5672ae707463b51b0a5e073ccd"
-    ],
-    [
-      "IfcComposeReify.uu___is_Low",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1432fe232590592e3e4b2a3cb9baefb7"
-    ],
-    [
-      "IfcComposeReify.uu___is_High",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "de457826f515eeb134e2f5f0900c467c"
+      "afe6b7661b6d3e0f25db30f4ce3e48dc"
     ],
     [
       "IfcComposeReify.low_equiv",
@@ -265,7 +211,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "798fc457dad132ee4fb81cb21bbade08"
+      "b1b8d5e8aa0a4a9c2776e25aa0eeb998"
     ],
     [
       "IfcComposeReify.is_x",
@@ -274,7 +220,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fcd6e84f799f0640e33ec9d4a9db0a79"
+      "c46bdbc5ced4020d241d3f9f0e2adcbb"
     ],
     [
       "IfcComposeReify.is_x",
@@ -283,7 +229,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1e8cef6fb27bb8ba6e618f54b40c09a4"
+      "2b75190f7c765a83a3593b527d7e7bd6"
     ],
     [
       "IfcComposeReify.p1",
@@ -301,7 +247,7 @@
         "true_interp", "unit_typing"
       ],
       0,
-      "b73d51a54cf3657f4ba800e84e27c8c6"
+      "e0f34d2447f30acf792cf51433292160"
     ],
     [
       "IfcComposeReify.p2",
@@ -319,7 +265,7 @@
         "true_interp", "unit_typing"
       ],
       0,
-      "1eb879e918cd09521c0525432c97c383"
+      "a1ff2a7c83fb4bf2d3fae211966fb333"
     ],
     [
       "IfcComposeReify.p3",
@@ -339,25 +285,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index", "unit_typing"
       ],
       0,
-      "447594e68820ae7bd6ec7d317304ad35"
-    ],
-    [
-      "IfcComposeReify.p1_r",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "bc6fcc09cea0cf975fa4d48903d5f014"
-    ],
-    [
-      "IfcComposeReify.p2_r",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7e33b804a6579925415246e67cdd30be"
+      "63fdcab053586f3ef589ca15ddc541ca"
     ],
     [
       "IfcComposeReify.p3_r",
@@ -366,7 +294,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7850c34ee9dfdff237c0dca52fd8720a"
+      "d669fcbd7bddb7042cacea74de1700dc"
     ]
   ]
 ]

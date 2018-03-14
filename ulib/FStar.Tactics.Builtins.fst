@@ -28,6 +28,14 @@ assume private val __cur_witness : __tac term
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness () = TAC?.reflect __cur_witness
 
+assume private val __ngoals : __tac int
+(** [ngoals ()] returns the number of goals *)
+let ngoals () : Tac int = TAC?.reflect __ngoals
+
+assume private val __ngoals_smt : __tac int
+(** [ngoals_smt ()] returns the number of SMT goals *)
+let ngoals_smt () : Tac int = TAC?.reflect __ngoals_smt
+
 assume private val __is_guard   : __tac bool
 (** [is_guard] returns whether the current goal arised from a typechecking guard *)
 let is_guard () = TAC?.reflect __is_guard

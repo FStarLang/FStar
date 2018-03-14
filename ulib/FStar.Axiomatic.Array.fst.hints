@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3039824915859b54abce641df1785ac4"
+      "acde1ae306b531f49cfc1d9da498db39"
     ],
     [
       "FStar.Axiomatic.Array.IndexUpdate",
@@ -17,34 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e8636c31b7ffe1b74157057ef8986e0a"
-    ],
-    [
-      "FStar.Axiomatic.Array.IndexAppend",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "adcd1890d21cf5c0038f116786784853"
-    ],
-    [
-      "FStar.Axiomatic.Array.IndexUpdate",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "566f674818e4e5f31dcc02c9ff87596d"
-    ],
-    [
-      "FStar.Axiomatic.Array.IndexAppend",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ce909f61327940e50649c384258d1ce5"
+      "72f78ef33915a23b370d1870370ad9de"
     ]
   ]
 ]
