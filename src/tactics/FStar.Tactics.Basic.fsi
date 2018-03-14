@@ -82,6 +82,7 @@ val dup     : tac<unit>
 val flip    : tac<unit>
 val later   : tac<unit>
 val dismiss : tac<unit>
+val tadmit  : tac<unit>
 val qed     : tac<unit>
 
 val cases : term -> tac<(term * term)>

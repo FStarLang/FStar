@@ -375,6 +375,13 @@ let cur_goal : tac<goal> =
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
 
+let tadmit : tac<unit> = wrap_err "tadmit" <|
+    bind cur_goal (fun g ->
+    Err.log_issue g.goal_ty.pos
+        (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
+                    (goal_to_string g));
+    solve g U.exp_unit)
+
 let ngoals : tac<Z.t> =
     bind get (fun ps ->
     let n = List.length ps.goals in

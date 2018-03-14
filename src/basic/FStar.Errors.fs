@@ -303,6 +303,7 @@ type raw_error =
   | Warning_ConsAppliedExplicitArgs
   | Warning_UnembedBinderKnot
   | Fatal_TacticProofRelevantGoal
+  | Warning_TacAdmit
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -608,6 +609,7 @@ let default_flags =
   (Warning_ConsAppliedExplicitArgs                   , CWarning);
   (Warning_UnembedBinderKnot                         , CWarning);
   (Fatal_TacticProofRelevantGoal                     , CFatal);
+  (Warning_TacAdmit                                  , CWarning);
   ]
 
 exception Err of raw_error* string
