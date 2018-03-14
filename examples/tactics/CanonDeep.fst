@@ -126,9 +126,9 @@ let rec canon_expr (e:expr) : Dv expr =
          (see cannon_correct below) *)
 let canon_expr' (e:expr) : Tot expr = e
 
-let pack_fv' (n:name) : term = pack (Tv_FVar (pack_fv n))
+let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
 
-let rec expr_to_term (e:expr) : Tot term =
+let rec expr_to_term (e:expr) : Tac term =
   match e with
   | Atom i t -> t
   | Lit i -> pack (Tv_Const (C_Int i))
@@ -153,7 +153,7 @@ let rec expr_to_term (e:expr) : Tot term =
   | MulMod l r -> mk_e_app (pack_fv' shiftr_qn) [expr_to_term l; expr_to_term r]
 
 let canon_correct (e:expr) :
-  Lemma (expr_to_term e == expr_to_term (canon_expr' e)) = () // cheating
+  Lemma (expr_to_term e == expr_to_term (canon_expr' e)) = () // doesn't work
 
 // GM: This one gives rise to a seemingly very easy query, but which fails
 let term_to_expr (t:term) : Tac expr =

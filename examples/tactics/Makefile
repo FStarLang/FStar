@@ -1,4 +1,5 @@
 FSTAR_HOME=../..
+OTHERFLAGS += --include ../pattern-matching
 include ../Makefile.include
 
 .PHONY: neg
@@ -8,6 +9,8 @@ all:	Apply.uver		\
 	Canon.uver		\
 	CanonMonoid.uver	\
 	CanonCommMonoid.uver	\
+	CanonCommMonoidSimple.uver\
+	EExists.uver		\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -55,6 +58,7 @@ all:	Apply.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
+	Tautology.uver		\
 	Rewrite.Monoid.uver     \
 	neg
 	# launch			\
