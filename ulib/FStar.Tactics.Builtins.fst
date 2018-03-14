@@ -321,9 +321,10 @@ provided, a second uvar is created for the type. *)
 let uvar_env (e : env) (o : option typ) : Tac term = TAC?.reflect (__uvar_env e o)
 
 assume private val __unify : term -> term -> __tac bool
-(** Call the unifier on two terms. The return value is whether
-unification was possible. When the tactics returns true, the terms may
-have been instantited by unification. When false, there is no effect. *)
+(** Call the unifier on two terms. The returned boolean specifies
+whether unification was possible. When the tactic returns true, the
+terms have been unified, instantiating uvars as needed. When false,
+unification was not possible and no change to uvars occurs. *)
 let unify (t1 t2 : term) : Tac bool = TAC?.reflect(__unify t1 t2)
 
 assume private val __launch_process : string -> string -> string -> __tac string
