@@ -474,7 +474,7 @@ tvar:
 /******************************************************************************/
 
 ascribeTyp:
-  | COLON t=tmArrow(tmNoEq) { t }
+  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=atomicTerm {tactic}) { t, tacopt }
 
 (* Remove for stratify *)
 ascribeKind:
