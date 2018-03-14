@@ -241,7 +241,7 @@
         "fuel_guarded_inversion_X64.Vale.State_i.state"
       ],
       0,
-      "865044c72bed62eb9d8f843be7fb3245"
+      "3e8dd2befb4243b1bc00e957363ae501"
     ],
     [
       "X64.Vale.Decls.va_lemma_while",
@@ -1407,7 +1407,7 @@
         "typing_X64.Vale.State_i.eval_operand", "unit_typing"
       ],
       0,
-      "001df8feb5dc5920e8b640b904424fc2"
+      "3e53f283bf2ce7e83822c670017f2947"
     ],
     [
       "X64.Vale.Decls.va_irreducible_lemma_Sub64",
