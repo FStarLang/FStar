@@ -26,7 +26,7 @@ let cur_env () = TAC?.reflect __cur_env
     pushing binders as one traverses a binder in a lambda,
     match, etc. Note, the environment here is disconnected to
     (though perhaps derived from) the environment in the proofstate *)
-assume private val push_binder : env -> binder -> env
+assume val push_binder : env -> binder -> env
 
 assume private val __cur_goal    : __tac term
 (** [cur_goal] returns the current goal's type *)
