@@ -8,12 +8,13 @@ module TD = FStar.Tactics.Derived
 let print_Prims_string : string -> Tot string = fun s -> "\"" ^ s ^ "\""
 let print_Prims_int : int -> Tot string = string_of_int
 
-let rec mk_concat (sep : term) (ts : list term) : term =
+let rec mk_concat (sep : term) (ts : list term) : Tac term =
     mk_e_app (pack (Tv_FVar (pack_fv ["FStar"; "String"; "concat"]))) [sep; mk_list ts]
 
-let mk_flatten = mk_concat (pack (Tv_Const (C_String "")))
+(* TODO: we get stuck if this is not eta-expanded, since it has a top-level effect *)
+let mk_flatten ts = mk_concat (pack (Tv_Const (C_String ""))) ts
 
-let paren (e : term) : term =
+let paren (e : term) : Tac term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
 let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
