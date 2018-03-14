@@ -19,6 +19,7 @@ all:	Apply.uver		\
 	Div.uver		\
 	Change.uver		\
 	Tutorial.uver		\
+	Fresh.uver		\
 	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\

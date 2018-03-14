@@ -44,6 +44,11 @@ assume private val __ngoals_smt : __tac int
 (** [ngoals_smt ()] returns the number of SMT goals *)
 let ngoals_smt () : Tac int = TAC?.reflect __ngoals_smt
 
+assume private val __fresh : __tac int
+(** [fresh ()] returns a fresh integer. It does not get reset when
+catching a failure. *)
+let fresh () : Tac int = TAC?.reflect __fresh
+
 assume private val __is_guard   : __tac bool
 (** [is_guard] returns whether the current goal arised from a typechecking guard *)
 let is_guard () = TAC?.reflect __is_guard

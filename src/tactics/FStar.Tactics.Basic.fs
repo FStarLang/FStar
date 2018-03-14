@@ -187,8 +187,9 @@ let trytac' (t : tac<'a>) : tac<either<string,'a>> =
             | Success (a, q) ->
                 UF.commit tx;
                 Success (Inr a, q)
-            | Failed (m, _) ->
+            | Failed (m, q) ->
                 UF.rollback tx;
+                let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
            )
 let trytac (t : tac<'a>) : tac<option<'a>> =
@@ -381,6 +382,13 @@ let tadmit : tac<unit> = wrap_err "tadmit" <|
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string g));
     solve g U.exp_unit)
+
+let fresh : tac<Z.t> =
+    bind get (fun ps ->
+    let n = ps.freshness in
+    let ps = { ps with freshness = n + 1 } in
+    bind (set ps) (fun () ->
+    ret (Z.of_int_fs n)))
 
 let ngoals : tac<Z.t> =
     bind get (fun ps ->
@@ -1649,6 +1657,7 @@ let proofstate_of_goal_ty env typ =
         psc = N.null_psc;
         entry_range = Range.dummyRange;
         guard_policy = SMT;
+        freshness = 0;
     }
     in
     (ps, g.witness)
