@@ -1,48 +1,16 @@
 module CanonCommMonoid
 
+open FStar.Algebra.CommMonoid
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
 
-(* An expression canonizer for commutative monoids
+(* An expression canonizer for commutative monoids.
    Inspired by:
    - http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html
    - http://poleiro.info/posts/2015-04-13-writing-reflective-tactics.html
 *)
-
-(***** Commutative monoids *)
-
-(* Should eventually go to standard library *)
-
-let right_unitality_lemma (a:Type) (u:a) (mult:a -> a -> a) =
-  x:a -> Lemma (x `mult` u == x)
-
-let left_unitality_lemma (a:Type) (u:a) (mult:a -> a -> a) =
-  x:a -> Lemma (u `mult` x == x)
-
-let associativity_lemma (a:Type) (mult:a -> a -> a) =
-  x:a -> y:a -> z:a -> Lemma (x `mult` y `mult` z == x `mult` (y `mult` z))
-
-let commutativity_lemma (a:Type) (mult:a -> a -> a) =
-  x:a -> y:a -> Lemma (x `mult` y == y `mult` x)
-
-unopteq
-type cm (a:Type) =
-  | CM :
-    unit:a ->
-    mult:(a -> a -> a) ->
-    right_unitality:right_unitality_lemma a unit mult ->
-    left_unitality:left_unitality_lemma a unit mult ->
-    associativity:associativity_lemma a mult ->
-    commutativity:commutativity_lemma a mult ->
-    cm a
-
-let int_plus_cm : cm int =
-  CM 0 (+) (fun x -> ()) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
-
-let int_multiply_cm : cm int =
-  CM 1 op_Multiply (fun x -> ()) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
 
 (***** Expression syntax *)
 

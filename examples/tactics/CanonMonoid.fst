@@ -97,8 +97,7 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
         norm [delta_only ["CanonMonoid.mldenote";
                           "CanonMonoid.flatten";
                           "FStar.List.Tot.Base.op_At";
-                          "FStar.List.Tot.Base.append"]];
-        // dump "done"
+                          "FStar.List.Tot.Base.append"]]
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
