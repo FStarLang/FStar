@@ -2130,8 +2130,8 @@ and (encode_term :
                let uu____5696 = FStar_Syntax_Syntax.as_arg tv  in
                [uu____5696]  in
              FStar_Syntax_Util.mk_app
-               FStar_Reflection_Data.fstar_refl_pack_ln.FStar_Reflection_Data.t
-               uu____5687
+               (FStar_Reflection_Data.refl_constant_term
+                  FStar_Reflection_Data.fstar_refl_pack_ln) uu____5687
               in
            encode_term t1 env
        | FStar_Syntax_Syntax.Tm_meta (t1,uu____5698) -> encode_term t1 env
