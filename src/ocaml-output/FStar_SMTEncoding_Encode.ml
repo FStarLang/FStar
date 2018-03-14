@@ -2121,7 +2121,7 @@ and (encode_term :
             (qt,uu____5673))
            ->
            let tv =
-             let uu____5683 = FStar_Reflection_Basic.inspect qt  in
+             let uu____5683 = FStar_Reflection_Basic.inspect_ln qt  in
              FStar_Reflection_Embeddings.embed_term_view
                t.FStar_Syntax_Syntax.pos uu____5683
               in
@@ -2130,7 +2130,7 @@ and (encode_term :
                let uu____5696 = FStar_Syntax_Syntax.as_arg tv  in
                [uu____5696]  in
              FStar_Syntax_Util.mk_app
-               FStar_Reflection_Data.fstar_refl_pack.FStar_Reflection_Data.t
+               FStar_Reflection_Data.fstar_refl_pack_ln.FStar_Reflection_Data.t
                uu____5687
               in
            encode_term t1 env

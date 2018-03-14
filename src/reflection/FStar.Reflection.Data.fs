@@ -95,7 +95,7 @@ let mk_inspect_pack_pair s =
     let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_defined_at_level 1) None } in
     (inspect, pack)
 
-let fstar_refl_inspect        , fstar_refl_pack        = mk_inspect_pack_pair ""
+let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
 let fstar_refl_inspect_fv     , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
 let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
 let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"

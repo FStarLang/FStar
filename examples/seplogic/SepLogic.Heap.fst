@@ -8,14 +8,14 @@ private noeq type heap_rec = {
 
 let heap = h:heap_rec
   {(forall (r:nat) . 
-      FStar.Set.mem r h.hdomain    ==> r < h.next_addr) /\
-      (forall (r:nat) . FStar.Set.mem r h.hdomain    ==> Some? (h.memory r)) /\ 
-      (forall (r:nat) . FStar.Set.mem r (FStar.Set.complement h.hdomain) ==> None? (h.memory r))}
+      S.mem r h.hdomain ==> r < h.next_addr) /\
+      (forall (r:nat) . S.mem r h.hdomain ==> Some? (h.memory r)) /\ 
+      (forall (r:nat) . S.mem r (S.complement h.hdomain) ==> None? (h.memory r))}
 
 private let equal_heaps (h0 h1:heap) =
   let _ = () in
   h0.next_addr = h1.next_addr /\
-  FStar.Set.equal h0.hdomain h1.hdomain /\ 
+  S.equal h0.hdomain h1.hdomain /\ 
   FStar.FunctionalExtensionality.feq h0.memory h1.memory
 
 private let lemma_heap_ext (h0 h1:heap)
@@ -29,12 +29,12 @@ private noeq type memory_rec = {
 
 let memory = m:(option memory_rec)
   {forall m' . m == Some m' ==> 
-               ((forall r . FStar.Set.mem r m'.domain   ==> Some? (m'.contents r)) /\ 
-                (forall r . FStar.Set.mem r (FStar.Set.complement m'.domain) ==> None? (m'.contents r)))}
+               ((forall r . S.mem r m'.domain ==> Some? (m'.contents r)) /\ 
+                (forall r . S.mem r (S.complement m'.domain) ==> None? (m'.contents r)))}
 
 private let equal_memories (m0 m1:memory) =
   match (m0, m1) with
-  | (Some m0', Some m1') -> FStar.Set.equal m0'.domain m1'.domain /\ 
+  | (Some m0', Some m1') -> S.equal m0'.domain m1'.domain /\ 
                             FStar.FunctionalExtensionality.feq m0'.contents m1'.contents
   | (Some _, None)     -> False
   | (None, Some _)     -> False
@@ -47,30 +47,23 @@ private let lemma_memory_ext (m0 m1:memory)
 let defined m = Some? m
 
 let emp = 
-  let domain = FStar.Set.empty in
+  let domain = S.empty in
   let contents = fun _ -> None in
   Some ({ domain = domain; contents = contents })
   
-let lemma_defined_emp () = ()
-
 let ref a = nat
 
 let addr_of #a n = n
 
 let heap_memory h = Some ({ domain   = h.hdomain;
-                            contents = h.memory  })
+                            contents = h.memory   })
 
 let disjoint_heaps (h0 h1:heap) =
   let _ = () in
-  FStar.Set.disjoint h0.hdomain h1.hdomain
-
-(*let disjoint_memories (m0 m1:memory) =
-  match (m0, m1) with
-  | (Some m0', Some m1') -> FStar.Set.disjoint m0'.domain m1'.domain
-  | _ -> False*)
+  S.disjoint h0.hdomain h1.hdomain
 
 let join h0 h1 =
-  let domain = FStar.Set.union h0.hdomain h1.hdomain in 
+  let domain = S.union h0.hdomain h1.hdomain in 
   let memory = (fun r' ->  match (h0.memory r', h1.memory r') with
                               | (Some v1, None) -> Some v1
 			      | (None, Some v2) -> Some v2
@@ -80,7 +73,7 @@ let join h0 h1 =
   else { next_addr = h0.next_addr; hdomain = domain; memory = memory }
 
 let ( |> ) #a r x = 
-  let domain = FStar.Set.singleton r in
+  let domain = S.singleton r in
   let contents : nat -> Tot (option (a:Type0 & a)) = 
     (fun r' -> if r = r' then Some (| a , x |)
                          else None) in
@@ -89,8 +82,8 @@ let ( |> ) #a r x =
 let ( <*> ) m0 m1 = 
   match (m0, m1) with
   | (Some m0', Some m1') ->
-      (if (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Set.disjoint m0'.domain m1'.domain))
-       then (let domain = FStar.Set.union m0'.domain m1'.domain in
+      (if (FStar.StrongExcludedMiddle.strong_excluded_middle (S.disjoint m0'.domain m1'.domain))
+       then (let domain = S.union m0'.domain m1'.domain in
              let contents = (fun r -> match (m0'.contents r, m1'.contents r) with
                                      | (Some v1, None) -> Some v1
                                      | (None, Some v2) -> Some v2
@@ -131,7 +124,7 @@ let fresh #a r h =
 let alloc #a h0 x = 
   let r = h0.next_addr in 
   let next_addr = h0.next_addr + 1 in
-  let domain = FStar.Set.union h0.hdomain (FStar.Set.singleton r) in
+  let domain = S.union h0.hdomain (S.singleton r) in
   let memory = (fun r' -> if r = r' then Some (| a , x |)
                                     else h0.memory r') in
   let h1 = { next_addr = next_addr; hdomain = domain; memory = memory } in
@@ -139,7 +132,7 @@ let alloc #a h0 x =
 
 let dealloc #a h0 r =
   let next_addr = h0.next_addr in
-  let domain = FStar.Set.intersect h0.hdomain (FStar.Set.complement (FStar.Set.singleton r)) in
+  let domain = S.intersect h0.hdomain (S.complement (S.singleton r)) in
   let memory = (fun r' -> if r <> r' then h0.memory r'
                                      else None) in
   { next_addr = next_addr; hdomain = domain; memory = memory }
@@ -147,7 +140,7 @@ let dealloc #a h0 r =
 let addrs_in m = 
   match m with
   | Some m' -> m'.domain
-  | None    -> FStar.Set.empty
+  | None    -> S.empty
 
 let lemma_disjoint_heaps_comm (h0 h1:heap) = ()
 
@@ -170,6 +163,8 @@ let lemma_sep_assoc m0 m1 m2 =
 let lemma_sep_join (h0 h1:heap) = 
   assert (equal_memories (heap_memory (join h0 h1)) 
                          ((heap_memory h0) <*> (heap_memory h1)))
+
+let lemma_emp_defined () = ()
 
 let lemma_points_to_defined #a r x = ()
 

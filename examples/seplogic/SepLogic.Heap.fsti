@@ -1,9 +1,8 @@
 module SepLogic.Heap
 
 module S  = FStar.Set
-module TS = FStar.TSet
 
-let set  = Set.set
+let set  = S.set
 
 (* heaps, memories, and operations on them *)
 
@@ -13,11 +12,6 @@ val defined : memory -> Type0
 
 val emp : memory
 
-val lemma_defined_emp (u:unit) 
-  : Lemma (defined emp)
-
-assume Emp_defined_axiom : defined emp
-
 val ref (a:Type0) : Type0
 val addr_of : #a:Type0 -> ref a -> GTot nat
 val heap_memory : heap -> GTot memory
@@ -25,7 +19,7 @@ val heap_memory : heap -> GTot memory
 val disjoint_heaps : heap -> heap -> Type0
 val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
 
-val ( |> ) : #a:Type0 -> r:ref a -> x:a -> Tot memory
+val ( |> ) : #a:Type0 -> r:ref a -> x:a -> GTot memory
 val ( <*> ) : m0:memory -> m1:memory -> GTot memory
 
 val split_heap : (m0:memory) 
@@ -43,7 +37,7 @@ val fresh : #a:Type0 -> ref a -> heap -> Type0
 val alloc : #a:Type0 -> h:heap -> a -> Tot (ref a * heap) 
 val dealloc : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot heap
 
-val addrs_in : memory -> Set.set nat
+val addrs_in : memory -> GTot (set nat)
 
 (* disjoint_heaps *)
 
@@ -68,7 +62,7 @@ val lemma_sep_unit (m:memory)
 
 val lemma_sep_comm (m0 m1:memory)
   : Lemma ((m0 <*> m1) == (m1 <*> m0))
-          [SMTPat (m0 <*> m1);         //Temporary SMTPat until the canonizer is ready
+          [SMTPat (m0 <*> m1);         //Temporary SMTPats until the canonizer is ready
            SMTPat (m1 <*> m0)]
           
 val lemma_sep_assoc (m0 m1 m2:memory)
@@ -85,12 +79,17 @@ val lemma_sep_join (h0 h1:heap)
 
 (* defined *)
 
+val lemma_emp_defined (u:unit) 
+  : Lemma (defined emp)
+
+assume Emp_defined_axiom : defined emp
+
 val lemma_points_to_defined (#a:Type0) (r:ref a) (x:a)
   : Lemma (defined (r |> x))
           [SMTPat (defined (r |> x))]
 
 val lemma_sep_defined (m0 m1:memory)
-  : Lemma (defined (m0 <*> m1) <==> (defined m0 /\ defined m1 /\ Set.disjoint (addrs_in m0) (addrs_in m1)))
+  : Lemma (defined (m0 <*> m1) <==> (defined m0 /\ defined m1 /\ S.disjoint (addrs_in m0) (addrs_in m1)))
  	  [SMTPat (defined (m0 <*> m1))]
 
 val lemma_heap_memory_defined (h:heap)
@@ -181,15 +180,15 @@ val lemma_points_to_dealloc (#a:Type0) (h0:heap) (r:ref a)
 (* addrs_in *)
 
 val lemma_addrs_in_emp (u:unit) 
-  : Lemma (Set.equal (addrs_in emp) (Set.empty))
+  : Lemma (S.equal (addrs_in emp) (S.empty))
 
-assume Addrs_in_emp_axiom: Set.equal (addrs_in emp) (Set.empty)
+assume Addrs_in_emp_axiom: S.equal (addrs_in emp) (S.empty)
 
 val lemma_addrs_in_points_to (#a:Type) (r:ref a) (x:a)
-  : Lemma (Set.equal (addrs_in (r |> x)) (Set.singleton (addr_of r)))
+  : Lemma (S.equal (addrs_in (r |> x)) (S.singleton (addr_of r)))
           [SMTPat (addrs_in (r |> x))]
 
 val lemma_addrs_in_join (m0 m1:memory)
   : Lemma (requires (defined (m0 <*> m1)))
-          (ensures  (Set.equal (addrs_in (m0 <*> m1)) (Set.union (addrs_in m0) (addrs_in m1))))
+          (ensures  (S.equal (addrs_in (m0 <*> m1)) (S.union (addrs_in m0) (addrs_in m1))))
           [SMTPat (addrs_in (m0 <*> m1))]
