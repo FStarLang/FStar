@@ -137,6 +137,31 @@ let mk_tactic_interpretation_3 (reflect:bool)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let mk_tactic_interpretation_4 (reflect:bool)
+                               (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
+                               (unembed_a:unembedder<'a>)
+                               (unembed_b:unembedder<'b>)
+                               (unembed_c:unembedder<'c>)
+                               (unembed_d:unembedder<'d>)
+                               (embed_r:embedder<'r>) (t_r:typ)
+                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+  match args with
+  | [(a, _); (b, _); (c, _); (d, _); (embedded_state, _)] ->
+    BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    log ps (fun () ->
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state));
+    BU.bind_opt (unembed_a a) (fun a ->
+    BU.bind_opt (unembed_b b) (fun b ->
+    BU.bind_opt (unembed_c c) (fun c ->
+    BU.bind_opt (unembed_d d) (fun d ->
+    let res = run (t a b c d) ps in
+    Some (E.embed_result embed_r t_r (N.psc_range psc) res))))))
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
 let mk_tactic_interpretation_5 (reflect:bool)
                                (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
                                (unembed_a:unembedder<'a>)

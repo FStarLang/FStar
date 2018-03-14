@@ -2,10 +2,6 @@ module Synthesis
 
 open FStar.Tactics
 
-let a : unit = synth_by_tactic (fun () -> exact (`()))
-
-let _ = assert (a == ())
-
 [@plugin]
 let rec fib (n : int) : Tac unit =
     if n < 2
@@ -37,22 +33,6 @@ let rec fib_norm (n : int) : Tac unit =
 let fn8 : int = synth_by_tactic (fun () -> fib_norm 8)
 let _ = assert (fn8 == 34) // syntactically equal
 
-#set-options "--use_two_phase_tc false"  //AR: need to check
-let iszero (x : int) : int =
-    synth_by_tactic (fun () ->
-        let x = quote x in
-        let t_int = quote int in
-        let _f = fresh_bv t_int in
-        let t = Tv_Match x
-                    [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
-                     (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
-        exact_guard (pack t);
-        smt ())
-
-let _ = assert (iszero 0 = 1)
-let _ = assert (iszero 1 = 0)
-let _ = assert (iszero 2 = 0)
-
 [@plugin]
 let mk_let () : Tac unit =
    match (inspect (`( let f x = if x<=1 then 1 else x - 1 in f 5 ))) with
@@ -74,3 +54,5 @@ let mk_let_rec () : Tac unit =
 
 let f3 : int = synth_by_tactic mk_let_rec
 let _ = assert_norm (f3 == 1)
+let ascribe : int = synth_by_tactic (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None)))
+
