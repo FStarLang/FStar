@@ -687,7 +687,9 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
                  let phi = match getprop g.context g.goal_ty with
-                           | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))
+                           | None ->
+                                Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
+                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))) env.range
                            | Some phi -> phi
                  in
                  if !tacdbg then
