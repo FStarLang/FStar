@@ -34,6 +34,30 @@ let test5 (x y: U64.t) =
     assert_by_tactic (logand (U64.v x) (U64.v y) == logand (U64.v y) (U64.v x))
                       bv_tac
 
+let test6 (x y: uint_t 64) =
+    assert_by_tactic (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)) == logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))
+)
+                      bv_tac
+
+let test7 (x y: uint_t 64) =
+    assert_by_tactic (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) == logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))))
+                      bv_tac
+
+let test8 (x y: uint_t 64) =
+    assert_by_tactic (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) == logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))))
+                      bv_tac
+
+
+let test9 (x y: uint_t 64) =
+    assert_by_tactic (logor (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))))) (logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))))) == logor (logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))))) (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))))))
+                      bv_tac
+
+let test10 (x y: uint_t 64) =
+    assert_by_tactic (
+logand (logor (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))))) (logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))))) (logor (logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))))) (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))))) == logand (logor (logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))))) (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))))) (logor (logand (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))) (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))))) (logand (logor (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x))) (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y)))) (logor (logand (logor (logand x y) (logand y x)) (logor (logand y x) (logand x y))) (logand (logor (logand y x) (logand x y)) (logor (logand x y) (logand y x)))))))
+                      bv_tac
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //Now for some examples working directly on machine integers
 //Here's a tactic that rewrites identities on machine integers U64.t to
@@ -43,7 +67,7 @@ let test5 (x y: U64.t) =
 
 
 /// First a simple one
-let test6 (x y: U64.t) =
+let test11 (x y: U64.t) =
     assert_by_tactic (U64.logand x y == U64.logand y x)
                      bv64_tac
 
@@ -62,7 +86,7 @@ let test6 (x y: U64.t) =
 ///         which bv_tac encodes to FStar.BitVector
 ///   -- 4. Finally, F*'s built-in  SMT encoding encode FStar.BitVector.t 64
 ///         to Z3's primitive bv 64.
-let test7 (x y z: U64.t) =
+let test12 (x y z: U64.t) =
     assert_by_tactic (U64.logand x (U64.logand y (U64.logand z z)) ==
                       U64.logand (U64.logand x y) z)
                      bv64_tac
