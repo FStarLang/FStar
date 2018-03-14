@@ -86,10 +86,10 @@ let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
 let admit1 () : Tac unit =
-    Builtins.admit ()
+    tadmit ()
 
 let admit_all () : Tac unit =
-    let _ = repeat admit1 in
+    let _ = repeat tadmit in
     ()
 
 let skip_guard () : Tac unit =
