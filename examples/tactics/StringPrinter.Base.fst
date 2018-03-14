@@ -1,4 +1,4 @@
-module StringPrinter
+module StringPrinter.Base
 
 (* Ghost Specifications *)
 

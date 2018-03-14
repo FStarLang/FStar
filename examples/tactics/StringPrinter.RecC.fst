@@ -1,5 +1,5 @@
-module StringPrinterRecC
-include StringPrinterRec
+module StringPrinter.RecC
+include StringPrinter.Rec
 
 (* This file depends on KreMLin. *)
 

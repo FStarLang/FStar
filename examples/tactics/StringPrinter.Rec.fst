@@ -1,5 +1,5 @@
-module StringPrinterRec
-include StringPrinter
+module StringPrinter.Rec
+include StringPrinter.Base
 
 module T = FStar.Tactics
 
