@@ -374,6 +374,16 @@ let cur_goal : tac<goal> =
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
 
+let ngoals : tac<Z.t> =
+    bind get (fun ps ->
+    let n = List.length ps.goals in
+    ret (Z.of_int_fs n))
+
+let ngoals_smt : tac<Z.t> =
+    bind get (fun ps ->
+    let n = List.length ps.smt_goals in
+    ret (Z.of_int_fs n))
+
 let is_guard : tac<bool> =
     bind cur_goal (fun g ->
     ret g.is_guard)
