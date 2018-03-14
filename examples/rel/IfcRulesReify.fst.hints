@@ -2,60 +2,6 @@
   "àc:hàÅÑÇ\u0005„r1Î∏Í=",
   [
     [
-      "IfcRulesReify.uu___is_Low",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "44833bf72dc7843aa3595a2e0ae4330a"
-    ],
-    [
-      "IfcRulesReify.uu___is_High",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0d3c47527d1ab8404779aac6f6882536"
-    ],
-    [
-      "IfcRulesReify.op_Less",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6699eeffc57b91943b57bd5435c576c0"
-    ],
-    [
-      "IfcRulesReify.op_Less_Equals",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dbdab1e8c63061d4170e78f9143b950d"
-    ],
-    [
-      "IfcRulesReify.join",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "71084c92f79ebaf4461b6886bbba1871"
-    ],
-    [
-      "IfcRulesReify.meet",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e8186bb7d920da380b985edae5e47d0e"
-    ],
-    [
       "IfcRulesReify.universal_property_meet",
       1,
       2,
@@ -73,7 +19,7 @@
         "typing_IfcRulesReify.meet", "typing_IfcRulesReify.op_Less_Equals"
       ],
       0,
-      "54842e45f75be613a373791cb002a1ab"
+      "4bfc221e655e73194a176fd035c7d8f4"
     ],
     [
       "IfcRulesReify.low_equiv",
@@ -85,7 +31,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "56d8f5e9cd431a1e30df954aa460011e"
+      "8c5e99b379a9cb8eecd4491e4c31f6bb"
     ],
     [
       "IfcRulesReify.ni_exp",
@@ -94,7 +40,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "54b0db013e49994a1140b89b5fedd214"
+      "0c4d0b99b8b2204cbe7d6ae11adb385d"
     ],
     [
       "IfcRulesReify.inv_com'",
@@ -114,16 +60,7 @@
         "typing_WhileReify.interpret_com"
       ],
       0,
-      "5e70c19519ac76cf357ffd8e2cfe71c3"
-    ],
-    [
-      "IfcRulesReify.ni_com'",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1c877a3cf2345007cd68f96b0073e7be"
+      "11bd5904e0e2887803a80f048996f593"
     ],
     [
       "IfcRulesReify.sub_exp",
@@ -145,7 +82,7 @@
         "typing_IfcRulesReify.uu___is_Low"
       ],
       0,
-      "f35195593a8090fe49f81ac87c9e3433"
+      "bcc96a1a42dcfe8106ee245e77dc01e0"
     ],
     [
       "IfcRulesReify.avar_exp",
@@ -174,7 +111,7 @@
         "projection_inverse_WhileReify.AVar__0", "unit_typing"
       ],
       0,
-      "e0cb2909c75ff3e8c5ea901de878e551"
+      "b2cfd515de7807541086de0bba017034"
     ],
     [
       "IfcRulesReify.aint_exp",
@@ -194,7 +131,7 @@
         "projection_inverse_WhileReify.AInt__0"
       ],
       0,
-      "87ff106f0656b1fe4ab4fcfc0874f9f2"
+      "1c3e7b51d9dce0485d55723e76b6a621"
     ],
     [
       "IfcRulesReify.binop_exp",
@@ -216,7 +153,7 @@
         "projection_inverse_WhileReify.AOp__2"
       ],
       0,
-      "4b416fe1e3ad9bd15ef6621bca7e34aa"
+      "61ffd568df20eca015c4b5d9c5944708"
     ],
     [
       "IfcRulesReify.sub_com",
@@ -258,7 +195,7 @@
         "unit_typing"
       ],
       0,
-      "b8e19dfbb349f193b6955b97861e83dd"
+      "a7139f7562bf070f403cddf910b1227f"
     ],
     [
       "IfcRulesReify.assign_inv_com0",
@@ -325,7 +262,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "62b327eb2f7c7bc2be29c3627ac1d970"
+      "70d0b3de85d622b4ad9c9707f315084a"
     ],
     [
       "IfcRulesReify.assign_inv_com'",
@@ -387,7 +324,7 @@
         "typing_WhileReify.interpret_com", "unit_typing"
       ],
       0,
-      "08a6b2443a3a2ba9bb70620ea8ffa193"
+      "db2b0fa5ab9fbba660c68180b5fce454"
     ],
     [
       "IfcRulesReify.assign_com",
@@ -396,7 +333,7 @@
       1,
       [ "@query", "equation_IfcRulesReify.ni_com" ],
       0,
-      "f544d2af028edc33fba705b1cd63bef9"
+      "d9f04f3357c9355d4198691d01ae3b42"
     ],
     [
       "IfcRulesReify.seq_nil1",
@@ -432,7 +369,7 @@
         "projection_inverse_WhileReify.Seq_second", "unit_typing"
       ],
       0,
-      "6dc5b599cef8eca1c0f7923335e57f13"
+      "62737add1ccfa61c768fbc7039fc82ce"
     ],
     [
       "IfcRulesReify.seq_nil2",
@@ -481,7 +418,7 @@
         "true_interp", "typing_WhileReify.interpret_com_st", "unit_typing"
       ],
       0,
-      "533dd5e8d9a88cacf4a4aee7d5383fd8"
+      "ac8c0fcfea99a774464780354124e339"
     ],
     [
       "IfcRulesReify.seq_inv_com'",
@@ -538,7 +475,7 @@
         "typing_WhileReify.interpret_com", "unit_inversion", "unit_typing"
       ],
       0,
-      "08c3be426dc0e18c9a2e6fde2e326f74"
+      "30015ee0ac95df764b2a1a7729afbbda"
     ],
     [
       "IfcRulesReify.use_ni_com",
@@ -547,7 +484,7 @@
       1,
       [ "@query" ],
       0,
-      "3afbe4c429817b1d4d103cda8462409c"
+      "f639e5548de9a36b7deac9c8d076e638"
     ],
     [
       "IfcRulesReify.seq_com'",
@@ -605,7 +542,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "c9d4214ff362f1e8b3b8934399298eff"
+      "4bafb05cae5c3f90efd82815b15d2bd6"
     ],
     [
       "IfcRulesReify.seq_com",
@@ -614,7 +551,7 @@
       1,
       [ "@query", "equation_IfcRulesReify.ni_com" ],
       0,
-      "3822f633aaf7a70582d9b905e2da0a27"
+      "cd007a74b50ff679fa2d98ac7218bf37"
     ],
     [
       "IfcRulesReify.cond_inv_com'",
@@ -653,7 +590,7 @@
         "typing_WhileReify.interpret_com", "unit_typing"
       ],
       0,
-      "8e782c327e0b47217b2ea50ba868faf4"
+      "2af03e585a198b17bc121d591bc9fe85"
     ],
     [
       "IfcRulesReify.interpret_cond",
@@ -687,7 +624,7 @@
         "projection_inverse_WhileReify.If_then_branch", "unit_typing"
       ],
       0,
-      "0b78dd8800162a4879a40a91af60b86f"
+      "dff84dd76c5e999431acfb66471deaad"
     ],
     [
       "IfcRulesReify.cond_ni_com'",
@@ -745,7 +682,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "3a73d5776b30156827b8bf63e3736704"
+      "7bf6d9a07ee5e8b6e5dab8ffc05ba276"
     ],
     [
       "IfcRulesReify.cond_com",
@@ -754,7 +691,7 @@
       1,
       [ "@query", "equation_IfcRulesReify.ni_com" ],
       0,
-      "ba495467c3a5d71a0321cb033a2ca455"
+      "5495471e67a589f1aa3b1a762cbd3785"
     ],
     [
       "IfcRulesReify.skip_com",
@@ -794,7 +731,7 @@
         "typing_tok_WhileReify.Skip@tok", "unit_typing"
       ],
       0,
-      "e464224176a6a488bd18c180bfe19502"
+      "a10b3f11c68cbd8bc500200c64285aa6"
     ],
     [
       "IfcRulesReify.interpret_while_nil",
@@ -840,7 +777,7 @@
         "typing_WhileReify.interpret_com", "unit_typing"
       ],
       0,
-      "53be18b853792a2f160a9ce872f034d0"
+      "407447af9cfaf91d25e17bce4f1f90dc"
     ],
     [
       "IfcRulesReify.interpret_while_loops",
@@ -899,7 +836,7 @@
         "typing_WhileReify.interpret_com", "unit_typing"
       ],
       0,
-      "2b8724ff99b358864498bc1ccf61ea61"
+      "6319af5141ef745daf669a9a0187f8ea"
     ],
     [
       "IfcRulesReify.while_inv_com'",
@@ -971,7 +908,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "25f254b00c59b8960706ed25882d4426"
+      "dfbceeba047d55fd5da2114611b02e09"
     ],
     [
       "IfcRulesReify.while_ni_com'_low_equiv_high",
@@ -1018,7 +955,7 @@
         "typing_IfcRulesReify.uu___is_High", "unit_inversion", "unit_typing"
       ],
       0,
-      "7296c406ff0c5a0b33209eb8a07ea313"
+      "5b322bb319bed1bf1e5a6b91598823bd"
     ],
     [
       "IfcRulesReify.while_ni_com'_low_equiv_low",
@@ -1087,7 +1024,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3de0ab810469ea5b86bfdba546981619"
+      "9704f37a909a33c43f1dfec175d59fd3"
     ],
     [
       "IfcRulesReify.while_ni_com'",
@@ -1107,7 +1044,7 @@
         "typing_IfcRulesReify.low_equiv", "unit_inversion", "unit_typing"
       ],
       0,
-      "4af1ec345722c50f7f9a78c3a276bd67"
+      "55491df6c39e24791287940be001959f"
     ],
     [
       "IfcRulesReify.while_com",
@@ -1116,61 +1053,7 @@
       1,
       [ "@query", "equation_IfcRulesReify.ni_com" ],
       0,
-      "032675e0c4acb93357a6d579289158b9"
-    ],
-    [
-      "IfcRulesReify.uu___is_Low",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "78ec00a9cb8b14d65d5c954eee59a5ce"
-    ],
-    [
-      "IfcRulesReify.uu___is_High",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e47a0b878d7200daac8c25c3774fdc29"
-    ],
-    [
-      "IfcRulesReify.op_Less",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0d4e813baadf5da524b27b547cb65c50"
-    ],
-    [
-      "IfcRulesReify.op_Less_Equals",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "66f2b2b316fe4cca01dc148b4ecff8c6"
-    ],
-    [
-      "IfcRulesReify.join",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1851aa0339d8e0f8236cce0951129881"
-    ],
-    [
-      "IfcRulesReify.meet",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8a6e1e8b39c26559ad9d275050da7de8"
+      "80a0f72d8b6044349739088d50348d88"
     ],
     [
       "IfcRulesReify.low_equiv",
@@ -1182,7 +1065,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "b75855c8f961a32a4b031f6082b6f62c"
+      "74bd3ff2b610c60ef448c380ab9d843a"
     ],
     [
       "IfcRulesReify.ni_exp",
@@ -1191,7 +1074,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7a453cf16d48df66129a4ce90568fd3f"
+      "ce2e70f907046a1998fb31ccbe030f9b"
     ],
     [
       "IfcRulesReify.inv_com'",
@@ -1210,16 +1093,7 @@
         "typing_WhileReify.interpret_com"
       ],
       0,
-      "6c6e9f511760964c1bcb8cf52d873f25"
-    ],
-    [
-      "IfcRulesReify.ni_com'",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ccbab21280b1b6db534fb72a7cba8e72"
+      "915d12b5c53a65b8bd8a7da2a85bc5cd"
     ],
     [
       "IfcRulesReify.seq_nil1",
@@ -1234,7 +1108,7 @@
         "unit_typing"
       ],
       0,
-      "2b5387a5d7d78583594e9640ca1dc78d"
+      "f7e0b95de50c4391ffa5bd645c2a6faf"
     ],
     [
       "IfcRulesReify.seq_nil2",
@@ -1249,7 +1123,7 @@
         "unit_typing"
       ],
       0,
-      "ab28e00d3c9a505d65758f0f7030d606"
+      "c31b934839bff5165d34b5225d604808"
     ],
     [
       "IfcRulesReify.interpret_cond",
@@ -1258,7 +1132,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0eaa8e65023cde323e71d798c2be0aa9"
+      "3706553284627f441623ad0c04eec1bf"
     ],
     [
       "IfcRulesReify.interpret_while_nil",
@@ -1267,7 +1141,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d1e4452804053062a3c69ff78cbdd9f6"
+      "f2ccab1502a6c3cee272dafadfdbd036"
     ],
     [
       "IfcRulesReify.interpret_while_loops",
@@ -1289,7 +1163,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "51ce3cf613a235d4d919c3332500d74e"
+      "226d641196d1aaebb9044b6359bfd1e2"
     ]
   ]
 ]

@@ -224,7 +224,7 @@ noeq type match_exception =
 | UnsupportedTermInPattern of term
 | IncorrectTypeInAbsPatBinder of typ
 
-let term_head t : string =
+let term_head t : Tac string =
   match inspect t with
   | Tv_Var bv -> "Tv_Var"
   | Tv_BVar fv -> "Tv_BVar"
@@ -272,8 +272,8 @@ let return #a (x: a) : match_res a =
 
 let bind (#a #b: Type)
          (f: match_res a)
-         (g: a -> match_res b)
-    : match_res b =
+         (g: a -> Tac (match_res b))
+    : Tac (match_res b) =
   match f with
   | Success aa -> g aa
   | Failure ex -> Failure ex
@@ -306,14 +306,15 @@ let lift_exn_tactic #a #b (f: a -> match_res b) (aa: a) : Tac b =
 type bindings = list (varname * term)
 let string_of_bindings (bindings: bindings) =
   String.concat "\n"
-    (List.Tot.map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
+    (map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
                   bindings)
 
 (** Match a pattern against a term.
 `cur_bindings` is a list of bindings collected while matching previous parts of
 the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
-    : match_res bindings =
+    : Tac (match_res bindings) =
+  admit();
   let interp_any () cur_bindings tm =
     return [] in
   let interp_var (v: varname) cur_bindings tm =
@@ -347,7 +348,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
 
 (** Match a pattern `pat` against a term.
 Returns a result in the exception monad. **)
-let interp_pattern (pat: pattern) : term -> match_res bindings =
+let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
     rev_bindings <-- interp_pattern_aux pat [] tm;
     return (List.Tot.rev rev_bindings)
@@ -355,9 +356,10 @@ let interp_pattern (pat: pattern) : term -> match_res bindings =
 (** Match a term `tm` against a pattern `pat`.
 Raises an exception if the match fails.  This is mostly useful for debugging:
 use ``mgw`` to capture matches. **)
-let match_term pat : term -> Tac bindings =
-  fun tm ->
-    lift_exn_tac (interp_pattern pat) (norm_term [] tm)
+let match_term pat (tm : term) : Tac bindings =
+    match interp_pattern pat (norm_term [] tm) with
+    | Success bb -> bb
+    | Failure ex -> Tactics.fail (string_of_match_exception ex)
 
 /// Pattern-matching problems
 /// =========================
@@ -405,11 +407,11 @@ noeq type matching_solution =
 let string_of_matching_solution ms =
   let vars =
     String.concat "\n            "
-      (List.Tot.map (fun (varname, tm) ->
+      (map (fun (varname, tm) ->
         varname ^ ": " ^ (term_to_string tm)) ms.ms_vars) in
   let hyps =
     String.concat "\n        "
-      (List.Tot.map (fun (nm, binder) ->
+      (map (fun (nm, binder) ->
         nm ^ ": " ^ (binder_to_string binder)) ms.ms_hyps) in
   "\n{ vars: " ^ vars ^ "\n" ^
   "  hyps: " ^ hyps ^ " }"
@@ -528,7 +530,7 @@ assume val __ : #t:Type -> t
 let any_qn = ["PatternMatching"; "__"]
 
 (** Compile a term `tm` into a pattern. **)
-let rec pattern_of_term_ex tm : match_res pattern =
+let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
     return (PVar (name_of_bv bv))
@@ -557,7 +559,9 @@ let beta_reduce (tm: term) : Tac term =
 
 (** Compile a term `tm` into a pattern. **)
 let pattern_of_term tm : Tac pattern =
-  lift_exn_tac pattern_of_term_ex tm
+    match pattern_of_term_ex tm with
+    | Success bb -> bb
+    | Failure ex -> Tactics.fail (string_of_match_exception ex)
 
 /// Problem notations
 /// -----------------
@@ -608,12 +612,13 @@ noeq type abspat_argspec =
 type abspat_continuation =
   list abspat_argspec * term
 
-let classify_abspat_binder binder : Tot (abspat_binder_kind * term) =
+let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
   let varname = "v" in
   let hyp_pat = PApp (PQn hyp_qn) (PVar varname) in
   let goal_pat = PApp (PQn goal_qn) (PVar varname) in
 
   let typ = type_of_binder binder in
+  admit(); // VC
   match interp_pattern hyp_pat typ with
   | Success [(_, hyp_typ)] -> ABKHyp, hyp_typ
   | Failure _ ->
@@ -622,7 +627,7 @@ let classify_abspat_binder binder : Tot (abspat_binder_kind * term) =
     | Failure _ -> ABKVar typ, typ
 
 (** Split an abstraction `tm` into a list of binders and a body. **)
-let rec binders_and_body_of_abs tm : binders * term =
+let rec binders_and_body_of_abs tm : Tac (binders * term) =
   match inspect tm with
   | Tv_Abs binder tm ->
     let binders, body = binders_and_body_of_abs tm in
@@ -651,7 +656,7 @@ let matching_problem_of_abs (tm: term)
 
   let binders, body = binders_and_body_of_abs (cleanup_abspat tm) in
   debug ("Got binders: " ^ (String.concat ", "
-         (List.Tot.map name_of_binder binders)));
+         (map (fun b -> name_of_binder b <: Tac string) binders)));
 
   let classified_binders =
     tacmap (fun binder ->
@@ -677,9 +682,10 @@ let matching_problem_of_abs (tm: term)
       classified_binders in
 
   let continuation =
-    let abspat_argspec_of_binder (binder, _, binder_kind, _) : abspat_argspec =
+    let abspat_argspec_of_binder xx : Tac abspat_argspec =
+    match xx with | (binder, xx, binder_kind, yy)  ->
       { asa_name = binder; asa_kind = binder_kind } in
-    (List.Tot.map abspat_argspec_of_binder classified_binders, tm) in
+    (map abspat_argspec_of_binder classified_binders, tm) in
 
   let mp =
     { mp_vars = List.rev #varname problem.mp_vars;
@@ -750,7 +756,6 @@ This yields a function taking a matching solution and running the body of the
 continuation with appropriate bindings. **)
 let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
-  admit ();
   let applied = specialize_abspat_continuation continuation in
   unquote #(matching_solution -> Tac a) applied
 
@@ -770,10 +775,10 @@ convenience function to avoid duplicating the problem-parsing code. **)
 let match_abspat #b #a (abspat: a)
                  (k: abspat_continuation -> Tac (matching_solution -> Tac b))
     : Tac b =
-  admit ();
   let goal = cur_goal () in
   let hypotheses = binders_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
+  admit();  //NS: imprecision in the encoding of the impure result function type
   solve_mp #matching_solution problem hypotheses goal (k continuation)
 
 (** Inspect the matching problem produced by parsing an abspat. **)
@@ -782,11 +787,9 @@ let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
 
 (** Inspect the matching solution produced by parsing and solving an abspat. **)
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
-  admit ();
   match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
 
 let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
-  admit ();
   fun (y: b) -> (x, y)
 
 /// Our first convenient entry point!
@@ -804,7 +807,6 @@ let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
 (** Solve a greedy pattern-matching problem and run its continuation.
 This if for pattern-matching problems in the ``Tac`` effect. **)
 let gpm #b #a (abspat: a) () : Tac b =
-  admit ();
   let continuation, solution = match_abspat abspat tpair in
   interp_abspat_continuation b continuation solution
 
@@ -815,7 +817,6 @@ let gpm #b #a (abspat: a) () : Tac b =
 (** Solve a greedy pattern-matching problem and run its continuation.
 This if for pattern-matching problems in the ``Tac`` effect. **)
 let pm #b #a (abspat: a) : Tac b =
-  admit ();
   match_abspat abspat (interp_abspat_continuation b)
 
 /// Examples

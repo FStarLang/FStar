@@ -38,14 +38,14 @@ let _ = assert (fn8 == 34) // syntactically equal
 #set-options "--use_two_phase_tc false"  //AR: need to check
 let iszero (x : int) : int =
     synth_by_tactic (fun () ->
+        set_guard_policy SMT;
         let x = quote x in
         let t_int = quote int in
         let _f = fresh_bv t_int in
         let t = Tv_Match x
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
                      (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
-        exact_guard (pack t);
-        smt ())
+        exact (pack t))
 
 let _ = assert (iszero 0 = 1)
 let _ = assert (iszero 1 = 0)

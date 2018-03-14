@@ -175,7 +175,7 @@ unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure
 
 unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
-	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
+	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
 	 ==> wp k
 
 unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =

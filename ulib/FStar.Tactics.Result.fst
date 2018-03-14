@@ -9,10 +9,11 @@ module FStar.Tactics.Result
 open FStar.Tactics.Types
 
 noeq type __result a =
-    | Success of a * proofstate
-    | Failed  of string    //error message
-              * proofstate //the proofstate at time of failure
-
+    | Success : a -> proofstate -> __result a
+    | Failed  : string    //error message
+              -> proofstate //the proofstate at time of failure
+              -> __result a
+              
 val result_split : #a:Type -> r:(__result a) ->
                         Lemma (Success? r \/ Failed? r) [SMTPat (Success? r);
                                                          SMTPat (Failed? r)]

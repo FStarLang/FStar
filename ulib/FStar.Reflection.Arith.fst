@@ -109,7 +109,7 @@ val as_arith_expr : term -> tm expr
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
     let tl = List.list_unref tl in
-    match inspect hd, tl with
+    match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
       let e2' = as_arith_expr e2 in
@@ -158,8 +158,9 @@ let is_arith_expr t =
   match a with
   | Atom _ t -> begin
     let hd, tl = collect_app_ref t in
-    match inspect hd, tl with
+    match inspect_ln hd, tl with
     | Tv_FVar _, []
+    | Tv_BVar _, []
     | Tv_Var _, [] -> return a
     | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
   end

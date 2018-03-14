@@ -1339,7 +1339,7 @@ let destruct_typ_as_formula f : option<connective> =
             if not (is_tot_or_gtot_comp c)
             then None
             else
-                let q = (comp_to_comp_typ c).result_typ in
+                let q = (comp_to_comp_typ_nouniv c).result_typ in
                 if is_free_in (fst b) q
                 then (
                     let pats, q = patterns q in

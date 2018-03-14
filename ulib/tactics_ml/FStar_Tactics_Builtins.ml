@@ -6,6 +6,7 @@ module N = FStar_TypeChecker_Normalize
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
+module RD = FStar_Reflection_Data
 module EMB = FStar_Syntax_Embeddings
 
 (* GM: most indirections here are super annoying, and seem to
@@ -32,6 +33,10 @@ let tr_repr_steps =
 let to_tac_0 (t: 'a __tac): 'a B.tac =
   (fun (ps: proofstate) ->
     uninterpret_tac t ps) |> B.mk_tac
+
+let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a B.tac = fun x ->
+  (fun (ps: proofstate) ->
+    uninterpret_tac (t x) ps) |> B.mk_tac
 
 let from_tac_0 (t: 'a B.tac): 'a __tac =
   fun (ps: proofstate) ->
@@ -72,6 +77,13 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
+
+let __ngoals : int __tac = from_tac_0 B.ngoals
+let ngoals : unit -> int __tac = fun () -> __ngoals
+
+let __ngoals_smt : int __tac = from_tac_0 B.ngoals_smt
+let ngoals_smt : unit -> int __tac = fun () -> __ngoals_smt
+
 
 let __is_guard: bool __tac = from_tac_0 B.is_guard
 let is_guard: unit -> bool __tac = fun () -> __is_guard
@@ -166,6 +178,11 @@ let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.point
 let pointwise:  (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
 let pointwise': (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise TopDown  (E.reify_tactic tau)
 
+let __topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit __tac) : unit __tac =
+        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 t2)
+let topdown_rewrite : (RT.term -> (bool * int) __tac) -> (unit -> unit __tac) -> unit __tac =
+        fun t1 t2 -> __topdown_rewrite t1 (E.reify_tactic t2)
+
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later
 
@@ -210,3 +227,12 @@ let get_guard_policy : unit -> guard_policy __tac = fun () -> __get_guard_policy
 
 let __set_guard_policy : guard_policy -> unit __tac = from_tac_1 B.set_guard_policy
 let set_guard_policy : guard_policy -> unit __tac = __set_guard_policy
+
+let __dismiss : unit __tac = from_tac_0 B.dismiss
+let dismiss : unit __tac = __dismiss
+
+let __inspect : RT.term -> RD.term_view __tac = from_tac_1 B.inspect
+let inspect   : RT.term -> RD.term_view __tac = __inspect
+
+let __pack : RD.term_view -> RT.term __tac = from_tac_1 B.pack
+let pack   : RD.term_view -> RT.term __tac = __pack
