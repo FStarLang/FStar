@@ -4,7 +4,7 @@ open FStar.Tactics
 open FStar.Classical
 open FStar.Squash
 
-let pack_fv' (n:name) : term = pack (Tv_FVar (pack_fv n))
+let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
 
 let eexists (a:Type) (t:unit -> Tac a) : Tac a =
   apply_lemma (`exists_intro); later(); norm[];
