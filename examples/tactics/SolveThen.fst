@@ -1,4 +1,4 @@
-module Examples
+module SolveThen
 
 open FStar.Tactics
 

@@ -319,7 +319,7 @@ let change_sq t1 =
 
 let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
     dup ();
-    let x = focus (fun () -> t1 ();
-                             or_else qed (fun () -> fail "solve_then: t1 did not solve the goal")) in
+    let x = focus (fun () -> let x = t1 () in
+                             or_else (fun () -> qed (); x) (fun () -> fail "solve_then: t1 did not solve the goal")) in
     t2 x;
     trefl ()
