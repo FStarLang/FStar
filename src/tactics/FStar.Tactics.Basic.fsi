@@ -22,6 +22,9 @@ val bind : tac<'a> -> ('a -> tac<'b>) -> tac<'b>
 val get_guard_policy : tac<guard_policy>
 val set_guard_policy : guard_policy -> tac<unit>
 
+val ngoals     : tac<Z.t>
+val ngoals_smt : tac<Z.t>
+
 // Not very uniform....
 val log : proofstate -> (unit -> unit) -> unit
 val tacprint  : string -> unit
