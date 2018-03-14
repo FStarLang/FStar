@@ -621,7 +621,7 @@ let m_st_post (#t: Type) (f: m t) (b: B.buffer U8.t) (h: HS.mem) (rb': t * B.buf
 
 type m_st #t (f: m t) =
   (b: B.buffer U8.t) ->
-  HST.ST (t * B.buffer U8.t)
+  HST.Stack (t * B.buffer U8.t)
   (requires (fun h ->
     B.live h b /\
     S.length (log f) <= B.length b
