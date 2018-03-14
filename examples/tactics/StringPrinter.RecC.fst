@@ -415,4 +415,12 @@ let example_st (x: U32.t) : Tot (m_st (example x)) =
     (example x)
     ()
 
+inline_for_extraction
+let example_test (x: U32.t) : HST.ST (option unit) (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
+  phi
+    (example x)
+    (example_sz x)
+    (example_st x)
+    ()
+
 let _ = T.assert_by_tactic True (fun () -> T.print "EOF")
