@@ -64,8 +64,7 @@ let rec flatten (e:exp) : list var =
   | Var x -> [x]
   | Mult e1 e2 -> flatten e1 @ flatten e2
 
-let rec flatten_correct_aux (#a:Type) (m:cm a) (vm:vmap a)
-                                               (xs1 xs2:list var) :
+let rec flatten_correct_aux (#a:Type) (m:cm a) (vm:vmap a) (xs1 xs2:list var) :
     Lemma (xsdenote m vm (xs1 @ xs2) == CM?.mult m (xsdenote m vm xs1)
                                                    (xsdenote m vm xs2)) =
   match xs1 with
@@ -151,9 +150,8 @@ let permute_via_swaps (p:permute) =
   (#a:Type) -> (vm:vmap a) -> xs:list var ->
     Lemma (exists ss. p xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux
-  (p:permute) (pvs:permute_via_swaps p)
-  (#a:Type) (m:cm a) (vm:vmap a)  (xs:list var) :
+let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
+                               (#a:Type) (m:cm a) (vm:vmap a) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (p xs)) =
   pvs vm xs;
   assert(exists ss. p xs == apply_swaps xs ss);
@@ -173,8 +171,7 @@ let permute_via_swaps_correct
 (***** Sorting variables is a correct permutation
        (since it can be done by swaps) *)
 
-// Here we sort without associating any extra information with the
-// variables and only look at the actual identifiers
+// Here we sort the variable numbers
 
 let sort : permute = List.Tot.sortWith #nat (compare_of_bool (<))
 
@@ -235,7 +232,7 @@ let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (#a:Type) (ts:list term) (vm:vmap a)
-    (mult unit t : term) : Tac (exp * list term * vmap a) =
+                        (mult unit t : term) : Tac (exp * list term * vmap a) =
   let hd, tl = collect_app_ref t in
   let fvar (t:term) (ts:list term) (vm:vmap a) : Tac (exp * list term * vmap a) =
     match where t ts with
@@ -255,56 +252,49 @@ let rec reification_aux (#a:Type) (ts:list term) (vm:vmap a)
     then (Unit, ts, vm)
     else fvar t ts vm
 
-// TODO: could guarantee same-length lists
-let reification (#a:Type) (m:cm a) (ts:list term) :
-    Tac (list exp * vmap a) =
+let reification (#a:Type) (m:cm a) (ts:list term) (vm:vmap a) (t:term) :
+    Tac (exp * list term * vmap a) =
   let mult = norm_term [delta] (quote (CM?.mult m)) in
   let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let ts   = Tactics.Derived.map (norm_term [delta]) ts in
-  let (es,_, vm) =
-    Tactics.Derived.fold_left
-      (fun (es,vs,vm) t ->
-        let (e,vs,vm) = reification_aux vs vm mult unit t in (e::es,vs,vm))
-      ([],[], const (CM?.unit m)) ts
-  in (List.rev es,vm)
+  let t    = norm_term [delta] t in
+  reification_aux ts vm mult unit t
 
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
   | Comp (Eq (Some t)) t1 t2 ->
-      dump ("t1 =" ^ term_to_string t1 ^
-          "; t2 =" ^ term_to_string t2);
+      // dump ("t1 =" ^ term_to_string t1 ^
+      //     "; t2 =" ^ term_to_string t2);
       if term_eq t (quote a) then
-        match reification m [t1;t2] with
-        | [r1;r2], vm ->
-          dump ("r1=" ^ exp_to_string r1 ^
-              "; r2=" ^ exp_to_string r2);
-          dump ("vm =" ^ term_to_string (quote vm));
-          change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
-          dump ("before =" ^ term_to_string (norm_term [delta;primops]
-            (quote (mdenote m vm r1 == mdenote m vm r2))));
-          dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-            (quote (xsdenote m vm (canon r1) ==
-                    xsdenote m vm (canon r2)))));
-          apply (`monoid_reflect);
-          dump ("after apply");
-          norm [delta_only ["CanonCommMonoidSimple.canon";
-                            "CanonCommMonoidSimple.xsdenote";
-                            "CanonCommMonoidSimple.flatten";
-                            "CanonCommMonoidSimple.sort";
-                            "CanonCommMonoidSimple.select";
-                            "FStar.List.Tot.Base.assoc";
-                            "FStar.Pervasives.Native.fst";
-                            "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                            "FStar.List.Tot.Base.op_At";
-                            "FStar.List.Tot.Base.append";
-                            "FStar.List.Tot.Base.sortWith";
-                            "FStar.List.Tot.Base.partition";
-                            "FStar.List.Tot.Base.bool_of_compare";
-                            "FStar.List.Tot.Base.compare_of_bool";
-             ]; primops];
-          dump "done" 
-        | _ -> fail "Unexpected"
+        let (r1, ts, vm) = reification m [] (const (CM?.unit m)) t1 in
+        let (r2, _, vm) = reification m ts vm t2 in
+        // dump ("r1=" ^ exp_to_string r1 ^
+        //     "; r2=" ^ exp_to_string r2);
+        // dump ("vm =" ^ term_to_string (quote vm));
+        change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
+        // dump ("before =" ^ term_to_string (norm_term [delta;primops]
+        //   (quote (mdenote m vm r1 == mdenote m vm r2))));
+        // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
+        //   (quote (xsdenote m vm (canon r1) ==
+        //           xsdenote m vm (canon r2)))));
+        apply (`monoid_reflect);
+        // dump ("after apply");
+        norm [delta_only ["CanonCommMonoidSimple.canon";
+                          "CanonCommMonoidSimple.xsdenote";
+                          "CanonCommMonoidSimple.flatten";
+                          "CanonCommMonoidSimple.sort";
+                          "CanonCommMonoidSimple.select";
+                          "FStar.List.Tot.Base.assoc";
+                          "FStar.Pervasives.Native.fst";
+                          "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+                          "FStar.List.Tot.Base.op_At";
+                          "FStar.List.Tot.Base.append";
+                          "FStar.List.Tot.Base.sortWith";
+                          "FStar.List.Tot.Base.partition";
+                          "FStar.List.Tot.Base.bool_of_compare";
+                          "FStar.List.Tot.Base.compare_of_bool";
+           ]; primops]
+        // ;dump "done"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
