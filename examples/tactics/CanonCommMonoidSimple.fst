@@ -1,4 +1,4 @@
-module CanonCommMonoid
+module CanonCommMonoidSimple
 
 open FStar.List
 open FStar.Tactics
