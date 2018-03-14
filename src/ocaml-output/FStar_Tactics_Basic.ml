@@ -853,7 +853,7 @@ let (cur_goal : FStar_Tactics_Types.goal tac) =
        | [] -> fail "No more goals (1)"
        | hd1::tl1 -> ret hd1)
   
-let (admit : Prims.unit tac) =
+let (tadmit : Prims.unit tac) =
   let uu____1475 =
     bind cur_goal
       (fun g  ->
@@ -868,7 +868,7 @@ let (admit : Prims.unit tac) =
             uu____1482);
          solve g FStar_Syntax_Util.exp_unit)
      in
-  FStar_All.pipe_left (wrap_err "admit") uu____1475 
+  FStar_All.pipe_left (wrap_err "tadmit") uu____1475 
 let (ngoals : FStar_BigInt.bigint tac) =
   bind get
     (fun ps  ->
