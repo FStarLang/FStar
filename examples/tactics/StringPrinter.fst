@@ -367,9 +367,10 @@ let compile_ret
 
 let compile_bind
   (bind_sz_tm: T.term)
+  (env: T.env)
   (ty: T.term)
   (t: T.term)
-  (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+  (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
 : T.Tac T.term
 = T.print "compile_bind";
   let (f, ar) = app_head_tail t in
@@ -379,14 +380,11 @@ let compile_bind
   | [ (t1, _); (t2, _); (x, _); (y, _) ] ->
     begin match T.inspect y with
     | T.Tv_Abs v y' ->
-      let x_ = compile t1 x in
+      let x_ = compile env t1 x in
       let (v_, _) = T.inspect_binder v in
       let v' = T.pack (T.Tv_Var v_) in
-      let t2' = T.mk_app t2 [
-       v', T.Q_Explicit;
-      ]
-      in
-      let y_ = compile t2' y' in
+      let env' = T.push_binder env v in
+      let y_ = compile env' t2 y' in
       let res = T.mk_app bind_sz_tm [
        (t1, T.Q_Implicit);
         (t2, T.Q_Implicit);
@@ -416,6 +414,7 @@ let compile_print_char
 
 let compile_fvar
   (coerce_sz_tm: T.term)
+  (env: T.env)
   (compile: (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
   (ty: T.term)
   (t: T.term)
@@ -433,7 +432,7 @@ let compile_fvar
     // unfolding might have introduced a redex,
     // so we find an opportunity to reduce it here
     T.print ("before norm_term: " ^ T.term_to_string t');
-    let t' = T.norm_term [Prims.iota] t' in // beta implicit
+    let t' = T.norm_term_env env [Prims.iota] t' in // beta implicit
     T.print "after norm_term";
     let res' = compile ty t' in
     let u = quote () in
@@ -495,30 +494,32 @@ let rec compile
     coerce_sz_tm
     ifthenelse_sz_tm
   : T.term)
+  (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
   (decreases (LexCons fuel (LexCons t LexTop)))
 = T.print "BEGIN compile";
-  let compile_term_lt (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
-    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm fuel ty' t'
+  let compile_term_lt (env' : T.env) (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
+    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm env' fuel ty' t'
   in
-  let compile_fuel_lt (ty' : T.term) (t' : T.term) : T.Tac T.term =
+  let compile_fuel_lt (env' : T.env) (ty' : T.term) (t' : T.term) : T.Tac T.term =
     if fuel = 0
     then tfail "Fuel exhausted"
-    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm (fuel - 1) ty' t'
+    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm env' (fuel - 1) ty' t'
   in
   let res = first [
     (fun () -> compile_ret ret_sz_tm t);
-    (fun () -> compile_bind bind_sz_tm ty t compile_term_lt);
+    (fun () -> compile_bind bind_sz_tm env ty t compile_term_lt);
     (fun () -> compile_print_char print_char_sz_tm t);
-    (fun () -> compile_fvar coerce_sz_tm compile_fuel_lt ty t);
-    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t compile_term_lt);
+    (fun () -> compile_fvar coerce_sz_tm env (compile_fuel_lt env) ty t);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile_term_lt env));
   ]
   in
   T.print ("END compile, result: " ^ T.term_to_string res);
   res
 
 let mk_sz
+  (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
@@ -527,6 +528,7 @@ let mk_sz
     (quote print_char_sz)
     (quote coerce_sz)
     (quote ifthenelse_sz)
+    env
     fuel
     ty
     t
@@ -542,7 +544,7 @@ let test_tac (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_sz 2 ty' x in
+    let t = mk_sz (T.cur_env ()) 2 ty' x in
     exact_guard t
 
 let example0 : (m int) =
@@ -715,6 +717,7 @@ let coerce_st
 = fun b -> ft1_st b
 
 let mk_st
+  (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
@@ -723,6 +726,7 @@ let mk_st
     (quote print_char_st)
     (quote coerce_st)
     (quote ifthenelse_st)
+    env
     fuel
     ty
     t
@@ -731,7 +735,7 @@ let test_tac_st (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_st 2 ty' x in
+    let t = mk_st (T.cur_env ()) 2 ty' x in
     exact_guard t
 
 inline_for_extraction
@@ -823,8 +827,8 @@ let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t_sz = mk_sz fuel ty' x in
-    let t_st = mk_st fuel ty' x in
+    let t_sz = mk_sz (T.cur_env ()) fuel ty' x in
+    let t_st = mk_st (T.cur_env ()) fuel ty' x in
     let q = quote phi in
     let t = mk_app q [
       ty', Q_Implicit;

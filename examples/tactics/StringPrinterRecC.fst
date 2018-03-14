@@ -110,8 +110,9 @@ let do_while_tm () : T.Tac T.term = quote do_while
 
 let compile_do_while
   (do_while_sz_tm: T.term)
+  (env: T.env)
   (t: T.term)
-  (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+  (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
 : T.Tac T.term
 = admit ();
   T.print "compile_do_while";
@@ -136,7 +137,8 @@ let compile_do_while
       tout, T.Q_Explicit;
     ]
     in
-    let body_tr = compile ty' body_ in
+    let env' = T.push_binder env x' in
+    let body_tr = compile env' ty' body_ in
     let body' = T.pack (T.Tv_Abs x' body_tr) in
     let res = T.mk_app (quote do_while_sz) [
       tin, T.Q_Explicit;
@@ -161,25 +163,26 @@ let rec compile
     ifthenelse_sz_tm
     do_while_sz_tm
   : T.term)
+  (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
   (decreases (LexCons fuel (LexCons t LexTop)))
 = T.print "BEGIN compile";
-  let compile_term_lt (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
-    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm fuel ty' t'
+  let compile_term_lt (env' : T.env) (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
+    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm env' fuel ty' t'
   in
-  let compile_fuel_lt (ty' : T.term) (t' : T.term) : T.Tac T.term =
+  let compile_fuel_lt (env' : T.env) (ty' : T.term) (t' : T.term) : T.Tac T.term =
     if fuel = 0
     then tfail "Fuel exhausted"
-    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm (fuel - 1) ty' t'
+    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm env' (fuel - 1) ty' t'
   in
   let res = first [
     (fun () -> compile_ret ret_sz_tm t);
-    (fun () -> compile_bind bind_sz_tm ty t compile_term_lt);
+    (fun () -> compile_bind bind_sz_tm env ty t compile_term_lt);
     (fun () -> compile_print_char print_char_sz_tm t);
-    (fun () -> compile_do_while do_while_sz_tm t compile_term_lt);
-    (fun () -> compile_fvar coerce_sz_tm compile_fuel_lt ty t);
-    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t compile_term_lt);
+    (fun () -> compile_do_while do_while_sz_tm env t compile_term_lt);
+    (fun () -> compile_fvar coerce_sz_tm env (compile_fuel_lt env) ty t);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile_term_lt env));
   ]
   in
   T.print ("END compile, result: " ^ T.term_to_string res);
@@ -188,6 +191,7 @@ let rec compile
 #reset-options
 
 let mk_sz
+  (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
@@ -197,6 +201,7 @@ let mk_sz
     (quote coerce_sz)
     (quote ifthenelse_sz)
     (quote do_while_sz)
+    env
     fuel
     ty
     t
@@ -205,12 +210,26 @@ let test_tac (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_sz 4 ty' x in
+    let t = mk_sz (T.cur_env ()) 4 ty' x in
     exact_guard t
 
-(* This will not work: unfold under lambda
+#reset-options "--print_bound_var_types --print_implicits"
 
-#reset-options "--print_full_names --print_bound_var_types"
+let dw (x: U32.t) : Tot (m unit) =
+  do_while
+    _
+    _
+    (fun _ -> LexTop)
+    (fun x -> ret (Right ()))
+    x
+
+let dw_sz (x: U32.t) : Tot (m_sz (dw x)) =
+  T.synth_by_tactic (fun () -> test_tac (dw x))
 
 let example_sz (x: U32.t) : Tot (m_sz (example x)) =
-  T.synth_by_tactic (fun () -> test_tac (example_do_while x))
+  coerce_sz
+    _
+    (example_do_while x)
+    (T.synth_by_tactic (fun () -> test_tac (example_do_while x)))
+    (example x)
+    ()
