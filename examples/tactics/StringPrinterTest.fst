@@ -11,9 +11,7 @@ let test (x: U32.t) : HST.ST unit (requires (fun _ -> True)) (ensures (fun h _ h
 let test2 (x: U32.t) : Tot (option U32.t) =
   SP.test_len x
 
-(* The following does not extract, see StringPrinter.RecC.do_while_st
 let test3 (x: U32.t) : HST.ST (option unit) (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
   SP.example_test x
-*)
 
 // krml -tmpdir ou -bundle 'StringPrinter.*' -drop 'FStar.Tactics.*' -drop 'FStar.Reflection.*' StringPrinterTest.fst -dast -skip-linking
