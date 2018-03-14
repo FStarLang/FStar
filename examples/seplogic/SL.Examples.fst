@@ -115,8 +115,14 @@ private let get_to_the_next_frame () :Tac unit =
 #reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --__temp_fast_implicits"
 
 open PatternMatching
+open CanonCommMonoid
 
+let footprint (t:term) : Tac (list unit) = admit()
 
+let solve_frame_wp (_:unit) : Tac unit =
+  gpm (fun (a:Type) (wp:st_wp a) (post:memory->post a) (m:memory)
+           (_ : goal(squash (frame_wp wp post m))) ->
+    dump "haha") ()
 
 (*
  * two commands
@@ -133,10 +139,16 @@ let write_read (r1 r2:ref int) (x y:int) =
              let post = forall_intro () in
              let m0 = forall_intro () in
              let wp_annot = implies_intro() in
-             dump "bind";
+               and_elim (pack (Tv_Var (fst (inspect_binder wp_annot))));
+               clear wp_annot;
+               let hm0 = implies_intro() in
+               rewrite hm0; clear hm0;
+               let rest = implies_intro() in
              norm [delta_only [%`bind_wp]];
+             dump "solve_wp";
+             solve_frame_wp();
              fail "stop")
-  
+
 //       // prelude ();
 //       // process_command ();
 //       // get_to_the_next_frame ();
