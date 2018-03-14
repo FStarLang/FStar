@@ -307,18 +307,13 @@ private let __elim_exists1 (h:binder) :Tac unit
     clear h;
     ignore (forall_intros ())
 
-private let __elim_exists2 (h:binder) :Tac unit
+private let __elim_exists_return_binders2 (h:binder) :Tac (list binder)
   = let t = `__exists_elim_as_forall2 in
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
     clear h;
-    ignore (forall_intros ())
+    forall_intros ()
 
-private let __implies_intros_with_processing_exists_and_and () :Tac unit
-  = or_else (fun _ -> let h = implies_intro () in
-                    or_else (fun _ -> __elim_and h)
-		            (fun _ -> or_else (fun _ -> __elim_exists2 h)
-			                   (fun _ -> or_else (fun _ -> rewrite h) idtac)))
-            (fun _ -> fail "done")
+private let __elim_exists2 (h:binder) :Tac unit = ignore (__elim_exists_return_binders2 h)
 
 (*
  * AR: these two lemmas are useless because of no match-ing in the unifier
@@ -351,11 +346,12 @@ private let __implies_intros_with_processing_exists_and_and () :Tac unit
 //currently all the arguments have to be provided explicitly
 let __elim_valid_without_match
   (#p:listptr) (#repr:list int) (#m:memory) (#goal:listptr -> list int -> memory -> Type0)
-  :Lemma (requires (((repr == [] /\ p == None /\ m == emp) ==> goal None [] emp) /\
-                    (forall hd tl. (repr == hd::tl /\
-	                       Some? p       /\
-			       (exists tail m1. m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
-		              ==> goal p (Cons hd tl) m)))
+  :Lemma (requires ((valid p repr m) /\
+                    (((repr == [] /\ p == None /\ m == emp) ==> goal None [] emp) /\
+                     (forall hd tl. (repr == hd::tl /\
+	                        Some? p       /\
+			        (exists tail m1. m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
+		               ==> goal p (Cons hd tl) m))))
          (ensures  (goal p repr m))
   = admit ()
 
@@ -379,6 +375,7 @@ let rec length (l:listptr)
 	      ignore (implies_intro ());
 	      apply_lemma (`__elim_valid_without_match);  //this is fragile
 	      assumption (); assumption (); assumption ();
+	      split (); smt ();
 	      split ();
 	      let h = implies_intro () in __elim_and h;
 	      let h = implies_intro () in __elim_and h;
@@ -444,3 +441,45 @@ let rec length (l:listptr)
 	      apply_lemma (`lemma_frame_out_empty_left);
 	      smt ();
 	      smt ())
+
+let rec append (l1 l2:listptr)
+  = (match l1 with
+     | None   -> l2
+     | Some r ->
+       let Cell hd tl = !r in
+       match tl with
+       | Some tl_r ->
+         let rest = append tl l2 in
+	 l1
+       | None ->
+         r := Cell hd l2;
+	 l1)
+
+     <: STATE listptr (fun p m -> exists (fl1 fl2:list int) (m1 m2:memory).
+                                 defined (m1 <*> m2) /\
+				 m == (m1 <*> m2)    /\
+				 valid l1 fl1 m1     /\
+				 valid l2 fl2 m2     /\
+				 (forall mf l. (Set.equal (addrs_in mf) (Set.union (addrs_in m1) (addrs_in m2)) /\
+				           Some? l1 ==> l1 == l                                            /\
+				           valid l (List.Tot.append fl1 fl2) mf) ==> p l mf))
+
+     by (fun () -> ignore (forall_intros ());
+                let h = implies_intro () in let fl1_binder = List.Tot.hd (__elim_exists_return_binders2 h) in
+                let h = implies_intro () in let m1_binder  = List.Tot.hd (__elim_exists_return_binders2 h) in
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		ignore (implies_intro ());
+		let h = implies_intro () in rewrite h;
+		ignore (implies_intro ());
+
+                //induction on fl1
+		apply_lemma (`__elim_valid_without_match);
+		exact (quote l1);
+		let w = let bv, _ = inspect_binder fl1_binder in pack (Tv_Var bv) in exact w;
+		let w = let bv, _ = inspect_binder m1_binder in pack (Tv_Var bv) in exact w;
+		split (); smt ();
+                dump "A";
+		tadmit ())
