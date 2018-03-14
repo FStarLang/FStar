@@ -246,6 +246,8 @@ let do_while_st
 
 module T = FStar.Tactics
 
+let do_while_tm () : T.Tac T.term = quote do_while
+
 let compile_do_while
   (do_while_sz_tm: T.term)
   (env: T.env)
@@ -278,7 +280,7 @@ let compile_do_while
     let env' = T.push_binder env x' in
     let body_tr = compile env' ty' body_ in
     let body' = T.pack (T.Tv_Abs x' body_tr) in
-    let res = T.mk_app (quote do_while_sz) [
+    let res = T.mk_app do_while_sz_tm [
       tin, T.Q_Explicit;
       tout, T.Q_Explicit;
       decrease, T.Q_Explicit;
@@ -376,3 +378,41 @@ let example_sz (x: U32.t) : Tot (m_sz (example x)) =
 inline_for_extraction
 let test_len (x: U32.t) : Tot (option U32.t) =
   log_size (example_sz x)
+
+let mk_st
+  (env: T.env)
+  (fuel: nat) (ty: T.term) (t: T.term)
+: T.Tac T.term
+= compile
+    (quote ret_st)
+    (quote bind_st)
+    (quote print_char_st)
+    (quote coerce_st)
+    (quote ifthenelse_st)
+    (quote do_while_st)
+    env
+    fuel
+    ty
+    t
+
+let test_tac_st (#ty: Type0) (m: m ty) : T.Tac unit =
+  let open T in
+    let x = quote m in
+    let ty' = quote ty in
+    let t = mk_st (T.cur_env ()) 4 ty' x in
+    exact_guard t
+
+inline_for_extraction
+let example_st' (x: U32.t) : Tot (m_st (example_do_while x)) =
+  (T.synth_by_tactic (fun () -> test_tac_st (example_do_while x)))
+
+inline_for_extraction
+let example_st (x: U32.t) : Tot (m_st (example x)) =
+  coerce_st
+    _
+    (example_do_while x)
+    (T.synth_by_tactic (fun () -> test_tac_st (example_do_while x)))
+    (example x)
+    ()
+
+let _ = T.assert_by_tactic True (fun () -> T.print "EOF")
