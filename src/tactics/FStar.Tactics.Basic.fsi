@@ -6,6 +6,7 @@ open FStar.Tactics.Result
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
+open FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
@@ -24,6 +25,9 @@ val set_guard_policy : guard_policy -> tac<unit>
 
 val ngoals     : tac<Z.t>
 val ngoals_smt : tac<Z.t>
+
+val inspect : term -> tac<term_view>
+val pack    : term_view -> tac<term>
 
 // Not very uniform....
 val log : proofstate -> (unit -> unit) -> unit
@@ -78,6 +82,7 @@ val dup     : tac<unit>
 val flip    : tac<unit>
 val later   : tac<unit>
 val dismiss : tac<unit>
+val tadmit  : tac<unit>
 val qed     : tac<unit>
 
 val cases : term -> tac<(term * term)>

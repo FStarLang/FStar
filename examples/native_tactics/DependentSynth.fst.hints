@@ -1,0 +1,17 @@
+[
+  ",y¨<÷õBºÌzû×2\båª",
+  [
+    [
+      "DependentSynth.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
+      ],
+      0,
+      "15ee43dc7d4ec0f199a1425d79ce0c80"
+    ]
+  ]
+]
