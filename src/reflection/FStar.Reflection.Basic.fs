@@ -107,7 +107,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_FVar fv
 
     | Tm_app (hd, []) ->
-        failwith "inspect: empty arguments on Tm_app"
+        failwith "inspect_ln: empty arguments on Tm_app"
 
     | Tm_app (hd, args) ->
         // We split at the last argument, since the term_view does not
@@ -117,7 +117,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
-        failwith "inspect: empty arguments on Tm_abs"
+        failwith "inspect_ln: empty arguments on Tm_abs"
 
     | Tm_abs (b::bs, t, k) ->
         let body =
@@ -131,7 +131,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Type ()
 
     | Tm_arrow ([], k) ->
-        failwith "inspect: empty binders on arrow"
+        failwith "inspect_ln: empty binders on arrow"
 
     | Tm_arrow _ ->
         begin match U.arrow_one t with
@@ -180,7 +180,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =

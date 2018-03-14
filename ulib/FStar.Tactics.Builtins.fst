@@ -6,6 +6,7 @@ module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
 open FStar.Reflection.Types
+open FStar.Reflection.Data
 open FStar.Tactics.Types
 
 assume private val __fail : a:Type -> string -> __tac a
@@ -344,3 +345,9 @@ let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_p
 
 assume val __dismiss : __tac unit
 let dismiss () : Tac unit = TAC?.reflect __dismiss
+
+assume val __inspect : term -> __tac term_view
+let inspect (t : term) : Tac term_view = TAC?.reflect (__inspect t)
+
+assume val __pack    : term_view -> __tac term
+let pack (tv : term_view) : Tac term = TAC?.reflect (__pack tv)

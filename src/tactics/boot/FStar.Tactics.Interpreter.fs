@@ -355,6 +355,9 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__cur_goal"      cur_goal'   RE.embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness RE.embed_term S.t_term;
 
+      mktac1 "__inspect"       inspect RE.unembed_term      RE.embed_term_view RD.fstar_refl_term_view;
+      mktac1 "__pack"          pack    RE.unembed_term_view RE.embed_term      S.t_term;
+
       mktac0 "__ngoals"        ngoals     embed_int S.t_int;
       mktac0 "__ngoals_smt"    ngoals_smt embed_int S.t_int;
 
