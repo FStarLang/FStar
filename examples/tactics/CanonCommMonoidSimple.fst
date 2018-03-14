@@ -7,7 +7,6 @@ open FStar.Reflection
 open FStar.Classical
 
 (* A simple expression canonizer for commutative monoids.
-
    For a canonizer with more features see CanonCommMonoid.fst.
 
    Inspired by:
