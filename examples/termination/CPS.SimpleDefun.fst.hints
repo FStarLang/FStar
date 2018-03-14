@@ -11,24 +11,6 @@
       "19821fb01a54a4973540175516f2131a"
     ],
     [
-      "CPS.SimpleDefun.uu___is_C0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f8cef933e9f0b4de8fe8343db65122b1"
-    ],
-    [
-      "CPS.SimpleDefun.uu___is_C1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bf799220e82614eada2cb4daea91062d"
-    ],
-    [
       "CPS.SimpleDefun.__proj__C1__item___0",
       1,
       2,
@@ -39,7 +21,7 @@
         "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0,
-      "4730f82f925532bcb0be237f23a4a48c"
+      "5e4e8b63c1bc860be2833c17d6012c75"
     ],
     [
       "CPS.SimpleDefun.__proj__C1__item___1",
@@ -52,7 +34,7 @@
         "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0,
-      "9de69a0d868dbdda4da314b737fedd49"
+      "445af8fcb6cc8ccef9b803bfb1e79b1b"
     ],
     [
       "CPS.SimpleDefun.apply",
@@ -68,7 +50,7 @@
         "subterm_ordering_CPS.SimpleDefun.C1"
       ],
       0,
-      "d170d4044ffe297a274a1c421a5e1cdf"
+      "51ed17b205444bea6216315deb2efdd7"
     ],
     [
       "CPS.SimpleDefun.add_cps",
@@ -82,7 +64,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3b840925b5f9a5e26d0ead7be349b549"
+      "96243a508a21b9fb48522202fc4ea1dc"
     ],
     [
       "CPS.SimpleDefun.cont",
@@ -91,25 +73,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "86d2dd94d53a746558428c6e67a56f42"
-    ],
-    [
-      "CPS.SimpleDefun.uu___is_C0",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1b92e188c51cc7c3ab90a9bad88fa251"
-    ],
-    [
-      "CPS.SimpleDefun.uu___is_C1",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dfba9b158080cd3aedd00302130dbb19"
+      "a197e13e43b75d2cd810ef9585972cfc"
     ],
     [
       "CPS.SimpleDefun.__proj__C1__item___0",
@@ -122,7 +86,7 @@
         "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0,
-      "8aa6114bd65984a0000e018930bb6f96"
+      "9e9e8c2d18d6d34a1da85ff46833cf9a"
     ],
     [
       "CPS.SimpleDefun.__proj__C1__item___1",
@@ -135,7 +99,7 @@
         "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0,
-      "6e5b6af4cc9e80566599ef2c598d6a15"
+      "6a6dbccf63da91bfcd839ba6a986a453"
     ],
     [
       "CPS.SimpleDefun.apply",
@@ -151,7 +115,7 @@
         "subterm_ordering_CPS.SimpleDefun.C1"
       ],
       0,
-      "d56f41751bdfbb80f5d59c10da9a85fa"
+      "2a559257435d7cbbe028afcc128de610"
     ],
     [
       "CPS.SimpleDefun.add_cps",
@@ -165,7 +129,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "abc95ab82fc799df63a9e0bd0914622d"
+      "0f242aba99c7f99cd1e68f029cf193a8"
     ]
   ]
 ]
