@@ -15,7 +15,7 @@ open FStar.Const
 open FStar.Ident
 open FStar.String
 (*
- We are expected to have only 7 shift-reduce conflicts.
+ We are expected to have only 5 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -148,6 +148,7 @@ open FStar.String
 %token SUBKIND
 %token SUBTYPE
 %token SUB_EFFECT
+%token SYNTH
 %token THEN
 %token <string> TILDE
 %token TOTAL
@@ -234,6 +235,18 @@ in
     ( Some x )}
 
 option___anonymous_7_:
+  
+    {    ( None )}
+| BY typ
+    {let (_10, tactic0) = ((), $2) in
+let x =
+  let tactic = tactic0 in
+  let _1 = _10 in
+                                                          (tactic)
+in
+    ( Some x )}
+
+option___anonymous_8_:
   
     {    ( None )}
 | LBRACE noSeqTerm RBRACE
@@ -345,10 +358,10 @@ let x =
 in
     ( x :: xs )}
 
-list___anonymous_8_:
+list___anonymous_9_:
   
     {    ( [] )}
-| DOT qlident list___anonymous_8_
+| DOT qlident list___anonymous_9_
     {let (_10, id0, xs) = ((), $2, $3) in
 let x =
   let id = id0 in
@@ -1665,6 +1678,24 @@ in
     {let (_1, e) = ((), $2) in
       ( let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
+| ASSERT atomicTerm option___anonymous_7_
+    {let (_1, e, tactic_opt) = ((), $2, $3) in
+      (
+        match tactic_opt with
+        | None ->
+          let a = set_lid_range assert_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+        | Some tac ->
+          let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
+      )}
+| SYNTH atomicTerm
+    {let (_1, tactic) = ((), $2) in
+     (
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     )}
 
 typ:
   simpleTerm
@@ -2184,7 +2215,7 @@ tmRefinement:
                ( e )}
 
 refineOpt:
-  option___anonymous_7_
+  option___anonymous_8_
     {let phi_opt = $1 in
                                                     (phi_opt)}
 
@@ -2283,10 +2314,6 @@ atomicTermNotQUident:
   UNDERSCORE
     {let _1 = () in
                ( mk_term Wild (rhs parseState 1) Un )}
-| ASSERT
-    {let _1 = () in
-             ( let a = set_lid_range assert_lid (rhs parseState 1) in
-               mk_term (Var a) (rhs parseState 1) Expr )}
 | tvar
     {let tv = $1 in
                 ( mk_term (Tvar tv) (rhs parseState 1) Type_level )}
@@ -2421,7 +2448,7 @@ in
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
       ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
-| projectionLHS list___anonymous_8_
+| projectionLHS list___anonymous_9_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
@@ -2678,7 +2705,7 @@ flag:
     ( if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op))}
 | MINUS
     {let _1 = () in
-   ( CSilent )}
+          ( CSilent )}
 
 range:
   INT

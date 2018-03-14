@@ -1,6 +1,6 @@
 %{
 (*
- We are expected to have only 7 shift-reduce conflicts.
+ We are expected to have only 5 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -52,7 +52,7 @@ open FStar_String
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
-%token AND ASSERT BEGIN ELSE END
+%token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
@@ -553,6 +553,24 @@ noSeqTerm:
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
 
+  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=typ {tactic})
+      {
+        match tactic_opt with
+        | None ->
+          let a = set_lid_range assert_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+        | Some tac ->
+          let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
+      }
+
+   | SYNTH tactic=atomicTerm
+     {
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     }
+
 typ:
   | t=simpleTerm  { t }
 
@@ -795,8 +813,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
-  | ASSERT   { let a = set_lid_range assert_lid (rhs parseState 1) in
-               mk_term (Var a) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
@@ -965,7 +981,7 @@ warn_error_list:
 warn_error:
   | f=flag r=range
     { [(f, r)] }
-  | f=flag r=range e=warn_error 
+  | f=flag r=range e=warn_error
     { (f, r) :: e }
 
 flag:
@@ -974,7 +990,7 @@ flag:
   | op=OPINFIX2
     { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
   | MINUS
-	  { CSilent }
+          { CSilent }
 
 range:
   | i=INT
@@ -1007,7 +1023,7 @@ range:
      { mk_ident(op, rhs parseState 1) }
   | op=OP_MIXFIX_ACCESS
      { mk_ident(op, rhs parseState 1) }
-  
+
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
   | op=OPINFIX0a

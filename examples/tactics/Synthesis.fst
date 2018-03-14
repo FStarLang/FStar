@@ -2,7 +2,7 @@ module Synthesis
 
 open FStar.Tactics
 
-let a : unit = synth_by_tactic (fun () -> exact (`()))
+let a : unit = synth (fun () -> exact (`()))
 
 let _ = assert (a == ())
 
@@ -16,7 +16,7 @@ let rec fib (n : int) : Tac unit =
                (fun () -> fib (n - 2)) ]
     )
 
-let f8 : int = synth_by_tactic (fun () -> fib 8)
+let f8 : int = synth (fun () -> fib 8)
 let _ = assert (f8 == 34) // equal after normalization
 
 let rec fib_norm (n : int) : Tac unit =
@@ -32,12 +32,12 @@ let rec fib_norm (n : int) : Tac unit =
         trefl ()
     )
 
-let fn8 : int = synth_by_tactic (fun () -> fib_norm 8)
+let fn8 : int = synth (fun () -> fib_norm 8)
 let _ = assert (fn8 == 34) // syntactically equal
 
 #set-options "--use_two_phase_tc false"  //AR: need to check
 let iszero (x : int) : int =
-    synth_by_tactic (fun () ->
+    synth (fun () ->
         set_guard_policy SMT;
         let x = quote x in
         let t_int = quote int in
@@ -58,7 +58,7 @@ let mk_let () : Tac unit =
      exact_guard t
    | _ -> dump "uh oh"; exact (`0)
 
-let f2 : int = synth_by_tactic mk_let
+let f2 : int = synth mk_let
 let _ = assert (f2 == 4)
 
 let mk_let_rec () : Tac unit =
@@ -68,7 +68,7 @@ let mk_let_rec () : Tac unit =
      exact_guard t
    | _ -> dump "uh oh"; exact (`0)
 
-let f3 : int = synth_by_tactic mk_let_rec
+let f3 : int = synth mk_let_rec
 let _ = assert_norm (f3 == 1)
-let ascribe : int = synth_by_tactic (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None)))
+let ascribe : int = synth (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None)))
 
