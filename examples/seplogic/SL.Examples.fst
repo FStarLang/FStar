@@ -117,18 +117,16 @@ private let get_to_the_next_frame () :Tac unit =
 (*
  * two commands
  *)
-let write_read (r1 r2:ref int) (x y:int) =
-  (r1 := 2;
-   !r2)
-  
-  <: STATE int (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
-
+let write_read (r1 r2:ref int) (x y:int)
+  : STATE int (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
   by (fun () ->
       prelude ();
       process_command ();
       get_to_the_next_frame ();
       apply_lemma (`lemma_rewrite_sep_comm);
-      process_command ())
+      process_command ()) =
+  r1 := 2;
+  !r2
 
 (*
  * four commands
@@ -365,14 +363,7 @@ let lemma_frame_exact (phi:memory -> memory -> memory -> memory -> Type0) (h h':
   = ()
 
 let rec length (l:listptr)
-  = (match l with
-     | None   -> (0 <: STATE int (fun p h -> p 0 emp))
-     | Some r ->
-       let Cell hd tl = !r in
-       1 + length tl)
-
-    <: STATE int (fun p m -> exists (fl:list int). valid l fl m /\ p (List.Tot.length fl) m)
-
+    : STATE int (fun p m -> exists (fl:list int). valid l fl m /\ p (List.Tot.length fl) m)
     by (fun _ -> ignore (forall_intros ());
               let h = implies_intro () in __elim_exists1 h;
 	      let h = implies_intro () in __elim_and h;
@@ -444,3 +435,8 @@ let rec length (l:listptr)
 	      apply_lemma (`lemma_frame_out_empty_left);
 	      smt ();
 	      smt ())
+  = match l with
+    | None   -> (0 <: STATE int (fun p h -> p 0 emp))
+    | Some r ->
+       let Cell hd tl = !r in
+       1 + length tl
