@@ -11,15 +11,6 @@
       "f439b671a231979011b81ef8353772bc"
     ],
     [
-      "Bug022.uu___is_EAbs",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "afff26d711ecf2bfba8aaaf4baa491b2"
-    ],
-    [
       "Bug022.__proj__EAbs__item___0",
       1,
       2,
@@ -30,16 +21,7 @@
         "refinement_interpretation_Bug022_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
       ],
       0,
-      "c4cd0b88a0be8baf98606037c01ef105"
-    ],
-    [
-      "Bug022.uu___is_EFalse",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "80c66ed9a1ab15c41f0a2f4e7388a8b7"
+      "ab5bff8cf8c587929eee68b5d4b58f7f"
     ],
     [
       "Bug022.subst",
@@ -48,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5aca01888df85d8282e7e008277cb6d7"
+      "94db5a3b9486ba0777f21cc6da557a72"
     ]
   ]
 ]

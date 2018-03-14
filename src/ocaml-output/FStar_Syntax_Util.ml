@@ -3018,7 +3018,7 @@ let (destruct_typ_as_formula :
                then FStar_Pervasives_Native.None
                else
                  (let q =
-                    let uu____8364 = comp_to_comp_typ c  in
+                    let uu____8364 = comp_to_comp_typ_nouniv c  in
                     uu____8364.FStar_Syntax_Syntax.result_typ  in
                   let uu____8365 =
                     is_free_in (FStar_Pervasives_Native.fst b) q  in

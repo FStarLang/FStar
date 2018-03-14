@@ -44,7 +44,7 @@ unfold let st_ite_wp        (heap:Type) (a:Type)
                             (wp:st_wp_h heap a)
                             (post:st_post_h heap a) (h0:heap) =
      forall (k:st_post_h heap a).
-	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
+	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
 	 ==> wp k h0
 unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
                         (wp2:st_wp_h heap a) =
@@ -100,7 +100,7 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
 		       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
          : GTot Type0 =
   forall (k:ex_post b).
-     (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
+     (forall (rb:result b).{:pattern (guard_free (k rb))} p rb ==> k rb)
      ==> (wp1 (function
                | V ra1 -> wp2 ra1 k
                | E e -> k (E e)
@@ -108,7 +108,7 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
-     (forall (rb:result a).{:pattern (guard_free (k rb))} k rb <==> post rb)
+     (forall (rb:result a).{:pattern (guard_free (k rb))} post rb ==> k rb)
      ==> wp k
 
 unfold let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
@@ -154,7 +154,7 @@ unfold let all_ite_wp (heap:Type) (a:Type)
                       (wp:all_wp_h heap a)
                       (post:all_post_h heap a) (h0:heap) =
     forall (k:all_post_h heap a).
-       (forall (x:result a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
+       (forall (x:result a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
        ==> wp k h0
 unfold let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
 unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)

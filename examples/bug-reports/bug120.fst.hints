@@ -15,15 +15,6 @@
       "7a71814966599ee16eee0c3a56f09a01"
     ],
     [
-      "Bug120.uu___is_EVar",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5d64340f4048734f559dc1ec6753b3a6"
-    ],
-    [
       "Bug120.__proj__EVar__item___0",
       1,
       2,
@@ -34,16 +25,7 @@
         "refinement_interpretation_Bug120_Tm_refine_3d608774a59a6a8de561bf79f54add50"
       ],
       0,
-      "1cc9ab6543b59b042520de9aa6b9092b"
-    ],
-    [
-      "Bug120.uu___is_EAbs",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c3a41ce48a46d8d23be2a6ed5fb5327b"
+      "c7e64453f987eefa6c82a44c62d0c9a9"
     ],
     [
       "Bug120.__proj__EAbs__item___0",
@@ -56,7 +38,7 @@
         "refinement_interpretation_Bug120_Tm_refine_b130c893a7c00b8fa4c55e9d2d914c50"
       ],
       0,
-      "2387ba49a59cec7a18989e27c40b3cf2"
+      "a4d9324dfecc8cf5095b5127913e6507"
     ]
   ]
 ]

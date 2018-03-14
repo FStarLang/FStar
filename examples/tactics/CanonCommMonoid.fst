@@ -276,7 +276,6 @@ let rec where_aux (n:nat) (x:term) (xs:list term) :
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
-#reset-options "--z3rlimit 30"
 let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b)
     (mult unit t : term) : Tac (exp * list term * vmap a b) =
   let hd, tl = collect_app_ref t in
@@ -298,7 +297,6 @@ let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b
     if term_eq t unit
     then (Unit, ts, vm)
     else fvar t ts vm
-#reset-options "--z3rlimit 5"
 
 // TODO: could guarantee same-length lists
 let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list term) :

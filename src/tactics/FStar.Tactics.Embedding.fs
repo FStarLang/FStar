@@ -88,22 +88,14 @@ let embed_result (embed_a:embedder<'a>) (t_a:typ) (rng:Range.range) (res:__resul
     | Failed (msg, ps) ->
       S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
              [S.iarg t_a;
-              S.as_arg (S.mk_Tm_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
-                               [S.iarg S.t_string;
-                                S.iarg t_proofstate;
-                                S.as_arg (embed_string rng msg);
-                                S.as_arg (embed_proofstate rng ps)]
-                                None rng)]
+              S.as_arg (embed_string rng msg);
+              S.as_arg (embed_proofstate rng ps)]
              None rng
     | Success (a, ps) ->
       S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success_tm [U_zero])
              [S.iarg t_a;
-              S.as_arg (S.mk_Tm_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
-                               [S.iarg t_a;
-                                S.iarg t_proofstate;
-                                S.as_arg (embed_a rng a);
-                                S.as_arg (embed_proofstate rng ps)]
-                                None rng)]
+              S.as_arg (embed_a rng a);
+              S.as_arg (embed_proofstate rng ps)]
              None rng
 
 let unembed_result (t:term) (unembed_a:unembedder<'a>)
@@ -114,11 +106,15 @@ let unembed_result (t:term) (unembed_a:unembedder<'a>)
       (U.un_uinst hd).n, args in
 
     match hd'_and_args t with
-    | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
-        BU.bind_opt (unembed_pair unembed_a unembed_proofstate tuple2) (fun x -> Some (Inl x))
+    | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
+        BU.bind_opt (unembed_a a) (fun a ->
+        BU.bind_opt (unembed_proofstate ps) (fun ps ->
+        Some (Inl(a, ps))))
 
-    | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-        BU.bind_opt (unembed_pair unembed_string unembed_proofstate tuple2) (fun x -> Some (Inr x))
+    | Tm_fvar fv, [_t; (msg, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+        BU.bind_opt (unembed_string msg) (fun msg ->
+        BU.bind_opt (unembed_proofstate ps) (fun ps ->
+        Some (Inr(msg, ps))))
 
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));

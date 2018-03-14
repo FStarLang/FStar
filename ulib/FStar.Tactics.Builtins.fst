@@ -20,6 +20,13 @@ assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
 let cur_env () = TAC?.reflect __cur_env
 
+(** [push_binder] extends the environment with a single binder.
+    This is useful as one traverses the syntax of a term,
+    pushing binders as one traverses a binder in a lambda,
+    match, etc. Note, the environment here is disconnected to
+    (though perhaps derived from) the environment in the proofstate *)
+assume val push_binder : env -> binder -> env
+
 assume private val __cur_goal    : __tac term
 (** [cur_goal] returns the current goal's type *)
 let cur_goal () = TAC?.reflect __cur_goal
@@ -27,6 +34,14 @@ let cur_goal () = TAC?.reflect __cur_goal
 assume private val __cur_witness : __tac term
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness () = TAC?.reflect __cur_witness
+
+assume private val __ngoals : __tac int
+(** [ngoals ()] returns the number of goals *)
+let ngoals () : Tac int = TAC?.reflect __ngoals
+
+assume private val __ngoals_smt : __tac int
+(** [ngoals_smt ()] returns the number of SMT goals *)
+let ngoals_smt () : Tac int = TAC?.reflect __ngoals_smt
 
 assume private val __is_guard   : __tac bool
 (** [is_guard] returns whether the current goal arised from a typechecking guard *)
