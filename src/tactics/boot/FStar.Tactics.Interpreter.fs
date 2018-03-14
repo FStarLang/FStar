@@ -354,6 +354,10 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__cur_env"       cur_env     RE.embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   RE.embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness RE.embed_term S.t_term;
+
+      mktac0 "__ngoals"        ngoals     embed_int S.t_int;
+      mktac0 "__ngoals_smt"    ngoals_smt embed_int S.t_int;
+
       mktac0 "__is_guard"      is_guard    embed_bool t_bool;
 
       mktac2 "__uvar_env"      uvar_env RE.unembed_env (unembed_option RE.unembed_term) RE.embed_term S.t_term;
