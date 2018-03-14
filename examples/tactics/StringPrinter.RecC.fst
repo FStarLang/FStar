@@ -104,9 +104,147 @@ let do_while_sz
   | IRight sz y' -> g y' sz ()
   | IOverflow -> g' ()
 
-module T = FStar.Tactics
+module B = FStar.Buffer
+module G = FStar.Ghost
+module HS = FStar.HyperStack
+module HST = FStar.HyperStack.ST
+module U8 = FStar.UInt8
 
-let do_while_tm () : T.Tac T.term = quote do_while
+noeq
+type do_while_st_interm (tin tout: Type) = {
+  do_while_st_interm_res: c_or tin tout;
+  do_while_st_interm_log: B.buffer U8.t;
+}
+
+inline_for_extraction
+let do_while_st_inv
+  (tin tout: Type)
+  (decrease: (tin -> GTot lex_t))
+  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (h0: G.erased HS.mem)
+  (x0: tin)
+  (blog: B.buffer U8.t)
+  (binterm: B.buffer (do_while_st_interm tin tout))
+  (h: HS.mem)
+  (interrupt: bool)
+: GTot Type0
+= let (y0, log0) = do_while tin tout decrease body x0 () in
+  B.disjoint binterm blog /\
+  B.live h binterm /\
+  B.live h blog /\
+  B.length binterm == 1 /\
+  Seq.length log0 <= B.length blog /\ (
+    let interm = B.get h binterm 0 in
+    let bout = interm.do_while_st_interm_log in
+    B.length bout <= B.length blog /\ (
+    let blhs = B.length blog - B.length bout in
+    let blhs32 = U32.uint_to_t blhs in
+    B.modifies_2 binterm (B.sub blog 0ul blhs32) (G.reveal h0) h /\
+    bout == B.sub blog blhs32 (U32.uint_to_t (B.length bout)) /\ (
+    match interm.do_while_st_interm_res with
+    | Left x ->
+      interrupt == false /\ (
+      let (y, log) = do_while tin tout decrease body x () in
+      y0 == y /\
+      log0 = Seq.append (Seq.slice (B.as_seq h blog) 0 blhs) log /\
+      Seq.length log <= B.length bout
+      )
+    | Right y ->
+      interrupt == true /\
+      y0 == y /\
+      log0 == Seq.slice (B.as_seq h blog) 0 blhs
+  )))
+
+#reset-options "--z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+
+inline_for_extraction
+let do_while_st_body
+  (tin tout: Type)
+  (decrease: (tin -> GTot lex_t))
+  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body_st: ((x: tin) -> Tot (m_st (body x))))
+  (h0: G.erased HS.mem)
+  (x0: tin)
+  (blog: B.buffer U8.t)
+  (binterm: B.buffer (do_while_st_interm tin tout))
+: HST.Stack bool
+  (requires (fun h ->
+    do_while_st_inv tin tout decrease body h0 x0 blog binterm h false
+  ))
+  (ensures (fun _ b h ->
+    do_while_st_inv tin tout decrease body h0 x0 blog binterm h b
+  ))
+= let interm = B.index binterm 0ul in
+  let bout = interm.do_while_st_interm_log in
+  let (Left x) = interm.do_while_st_interm_res in
+  let h = HST.get () in
+  let (res', bout') = body_st x bout in
+  let res = match res' with | Left x' -> Left x' | Right y -> Right y in
+  B.upd binterm 0ul ({
+    do_while_st_interm_res = res;
+    do_while_st_interm_log = bout';
+  });
+  let b = Right? res in
+  let h = HST.get () in
+  let prf () : Lemma
+    (do_while_st_inv tin tout decrease body h0 x0 blog binterm h b)
+  = let (y0, log0) = do_while tin tout decrease body x0 () in
+    let bout_pre = bout in
+    let interm = B.get h binterm 0 in
+    let bout = interm.do_while_st_interm_log in
+    assert (B.length bout <= B.length blog);
+    let blhs = B.length blog - B.length bout in
+    let blhs32 = U32.uint_to_t blhs in
+    assert (bout == B.sub blog blhs32 (U32.uint_to_t (B.length bout)));
+    assume (B.modifies_2 binterm (B.sub blog 0ul blhs32) (G.reveal h0) h);
+ (*      
+    match interm.do_while_st_interm_res with
+      | Left _ ->
+        interrupt == false /\ (
+        let (y, log) = do_while tin tout decrease body x () in
+        y0 == y /\
+        log0 = Seq.append (Seq.slice (B.as_seq h blog) 0 blhs) log /\
+        Seq.length log <= B.length bout
+        )
+      | Right y ->
+*)        
+        assume (do_while_st_inv tin tout decrease body h0 x0 blog binterm h b)
+  in
+  prf ();
+  b
+
+inline_for_extraction
+let do_while_st
+  (tin tout: Type)
+  (decrease: (tin -> GTot lex_t))
+  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body_st: ((x: tin) -> Tot (m_st (body x))))
+  (x: tin)
+: Tot (m_st (do_while tin tout decrease body x))
+= fun blog ->
+  let h0 = HST.get () in
+  HST.push_frame ();
+  let binterm = B.create
+    ({
+      do_while_st_interm_res = Left x;
+      do_while_st_interm_log = blog;
+    })
+    1ul
+  in
+  let h1 = G.hide (HST.get ()) in
+  Loops.do_while
+    (do_while_st_inv tin tout decrease body h1 x blog binterm)
+    (fun () -> do_while_st_body tin tout decrease body body_st h1 x blog binterm);
+  let interm = B.index binterm 0ul in
+  let (Right y) = interm.do_while_st_interm_res in
+  let res = (y, interm.do_while_st_interm_log) in
+  HST.pop_frame ();
+  let h = HST.get () in
+  res
+
+#reset-options
+
+module T = FStar.Tactics
 
 let compile_do_while
   (do_while_sz_tm: T.term)
