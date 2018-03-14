@@ -23,8 +23,8 @@ val pack_fv       : list<string> -> fv
 val inspect_const : sconst -> vconst
 val pack_const    : vconst -> sconst
 
-val inspect       : term -> term_view
-val pack          : term_view -> term
+val inspect_ln    : term -> term_view
+val pack_ln       : term_view -> term
 
 val inspect_comp  : comp -> comp_view
 val pack_comp     : comp_view -> comp
@@ -37,3 +37,6 @@ val pack_bv        : bv_view -> bv
 
 val inspect_binder : binder -> bv * aqualv
 val pack_binder    : bv -> aqualv -> binder
+
+val inspect_aqual  : aqual -> aqualv
+val pack_aqual     : aqualv -> aqual

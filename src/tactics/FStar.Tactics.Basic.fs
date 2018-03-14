@@ -23,11 +23,12 @@ module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcComm = FStar.TypeChecker.Common
 module N = FStar.TypeChecker.Normalize
-module RD = FStar.Reflection.Data
 module UF = FStar.Syntax.Unionfind
 module EMB = FStar.Syntax.Embeddings
 module Err = FStar.Errors
 module Z = FStar.BigInt
+open FStar.Reflection.Data
+open FStar.Reflection.Basic
 
 // working around #1374
 type goal = FStar.Tactics.Types.goal
@@ -373,6 +374,13 @@ let cur_goal : tac<goal> =
     match p.goals with
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
+
+let tadmit : tac<unit> = wrap_err "tadmit" <|
+    bind cur_goal (fun g ->
+    Err.log_issue g.goal_ty.pos
+        (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
+                    (goal_to_string g));
+    solve g U.exp_unit)
 
 let ngoals : tac<Z.t> =
     bind get (fun ps ->
@@ -1422,6 +1430,199 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
         then replace_cur ({ g with goal_ty = ty })
         else fail "not convertible")
     end)))))
+
+// TODO: move to library?
+let rec last (l:list<'a>) : 'a =
+    match l with
+    | [] -> failwith "last: empty list"
+    | [x] -> x
+    | _::xs -> last xs
+
+let rec init (l:list<'a>) : list<'a> =
+    match l with
+    | [] -> failwith "init: empty list"
+    | [x] -> []
+    | x::xs -> x :: init xs
+
+(* TODO: these are mostly duplicated from FStar.Reflection.Basic, unify *)
+let rec inspect (t:term) : tac<term_view> =
+    let t = U.unascribe t in
+    let t = U.un_uinst t in
+    match t.n with
+    | Tm_meta (t, _) ->
+        inspect t
+
+    | Tm_name bv ->
+        ret <| Tv_Var bv
+
+    | Tm_bvar bv ->
+        ret <| Tv_BVar bv
+
+    | Tm_fvar fv ->
+        ret <| Tv_FVar fv
+
+    | Tm_app (hd, []) ->
+        failwith "inspect: empty arguments on Tm_app"
+
+    | Tm_app (hd, args) ->
+        // We split at the last argument, since the term_view does not
+        // expose n-ary lambdas buy unary ones.
+        let (a, q) = last args in
+        let q' = inspect_aqual q in
+        ret <| Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
+
+    | Tm_abs ([], _, _) ->
+        failwith "inspect: empty arguments on Tm_abs"
+
+    | Tm_abs (bs, t, k) ->
+        let bs, t = SS.open_term bs t in
+        // `let b::bs = bs` gives a coverage warning, avoid it
+        begin match bs with
+        | [] -> failwith "impossible"
+        | b::bs -> ret <| Tv_Abs (b, U.abs bs t k)
+        end
+
+    | Tm_type _ ->
+        ret <| Tv_Type () 
+
+    | Tm_arrow ([], k) ->
+        failwith "inspect: empty binders on arrow"
+
+    | Tm_arrow _ ->
+        begin match U.arrow_one t with
+        | Some (b, c) -> ret <| Tv_Arrow (b, c)
+        | None -> failwith "impossible"
+        end
+
+    | Tm_refine (bv, t) ->
+        let b = S.mk_binder bv in
+        let b', t = SS.open_term [b] t in
+        // `let [b] = b'` gives a coverage warning, avoid it
+        let b = (match b' with
+        | [b'] -> b'
+        | _ -> failwith "impossible") in
+        ret <| Tv_Refine (fst b, t)
+
+    | Tm_constant c ->
+        ret <| Tv_Const (inspect_const c)
+
+    | Tm_uvar (u, t) ->
+        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id u), t)
+
+    | Tm_let ((false, [lb]), t2) ->
+        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+        begin match lb.lbname with
+        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
+        | BU.Inl bv ->
+            // The type of `bv` should match `lb.lbtyp`
+            let b = S.mk_binder bv in
+            let bs, t2 = SS.open_term [b] t2 in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible: open_term returned different amount of binders"
+            in
+            ret <| Tv_Let (false, fst b, lb.lbdef, t2)
+        end
+
+    | Tm_let ((true, [lb]), t2) ->
+        if lb.lbunivs <> [] then ret <| Tv_Unknown else
+        begin match lb.lbname with
+        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
+        | BU.Inl bv ->
+            let lbs, t2 = SS.open_let_rec [lb] t2 in
+            match lbs with
+            | [lb] ->
+                (match lb.lbname with
+                 | BU.Inr _ -> ret Tv_Unknown
+                 | BU.Inl bv -> ret <| Tv_Let (true, bv, lb.lbdef, t2))
+            | _ -> failwith "impossible: open_term returned different amount of binders"
+        end
+
+    | Tm_match (t, brs) ->
+        let rec inspect_pat p =
+            match p.v with
+            | Pat_constant c -> Pat_Constant (inspect_const c)
+            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
+            | Pat_var bv -> Pat_Var bv
+            | Pat_wild bv -> Pat_Wild bv
+            | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
+        in
+        let brs = List.map SS.open_branch brs in
+        let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
+        ret <| Tv_Match (t, brs)
+
+    | Tm_unknown ->
+        ret <| Tv_Unknown
+
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
+        ret <| Tv_Unknown
+
+let pack (tv:term_view) : tac<term> =
+    match tv with
+    | Tv_Var bv ->
+        ret <| S.bv_to_name bv
+
+    | Tv_BVar bv ->
+        ret <| S.bv_to_tm bv
+
+    | Tv_FVar fv ->
+        ret <| S.fv_to_tm fv
+
+    | Tv_App (l, (r, q)) ->
+        let q' = pack_aqual q in
+        ret <| U.mk_app l [(r, q')]
+
+    | Tv_Abs (b, t) ->
+        ret <| U.abs [b] t None // TODO: effect?
+
+    | Tv_Arrow (b, c) ->
+        ret <| U.arrow [b] c
+
+    | Tv_Type () ->
+        ret <| U.ktype
+
+    | Tv_Refine (bv, t) ->
+        ret <| U.refine bv t
+
+    | Tv_Const c ->
+        ret <| S.mk (Tm_constant (pack_const c)) None Range.dummyRange
+
+    | Tv_Uvar (u, t) ->
+        ret <| U.uvar_from_id (Z.to_int_fs u) t
+
+    | Tv_Let (false, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+        ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
+
+    | Tv_Let (true, bv, t1, t2) ->
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
+        let lbs_open, body_open = SS.open_let_rec [lb] t2 in
+        let lbs, body = SS.close_let_rec [lb] body_open in
+        ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
+
+    | Tv_Match (t, brs) ->
+        let wrap v = {v=v;p=Range.dummyRange} in
+        let rec pack_pat p : S.pat =
+            match p with
+            | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
+            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
+            | Pat_Var  bv -> wrap <| Pat_var bv
+            | Pat_Wild bv -> wrap <| Pat_wild bv
+            | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
+        in
+        let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
+        let brs = List.map SS.close_branch brs in
+        ret <| S.mk (Tm_match (t, brs)) None Range.dummyRange
+
+    | Tv_AscribedT(e, t, tacopt) ->
+        ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+
+    | Tv_AscribedC(e, c, tacopt) ->
+        ret <| S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
+
+    | Tv_Unknown ->
+        ret <| S.mk Tm_unknown None Range.dummyRange
 
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in

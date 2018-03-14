@@ -363,6 +363,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
       mktac0 "__dismiss"       dismiss embed_unit t_unit;
+      mktac0 "__tadmit"        tadmit embed_unit t_unit;
 
       mktac1 "__cases"         cases RE.unembed_term (embed_pair
                                                       RE.embed_term S.t_term
@@ -373,6 +374,9 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__cur_env"       cur_env     RE.embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   RE.embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness RE.embed_term S.t_term;
+
+      mktac1 "__inspect"       inspect RE.unembed_term      RE.embed_term_view RD.fstar_refl_term_view;
+      mktac1 "__pack"          pack    RE.unembed_term_view RE.embed_term      S.t_term;
 
       mktac0 "__ngoals"        ngoals     embed_int S.t_int;
       mktac0 "__ngoals_smt"    ngoals_smt embed_int S.t_int;

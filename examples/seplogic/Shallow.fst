@@ -20,7 +20,7 @@ let result (a:Type) (post:post a) = x:(a * heap){post (fst x, heap_memory (snd x
 
 (* st computation, also parametrized by a post *)
 let st (a:Type) (wp:st_wp a) = 
-  post:post a -> h0:heap{wp post (heap_memory h0)} -> GTot (squash (result a post))
+  post:post a -> h0:heap{wp post (heap_memory h0)} -> Tot (squash (result a post))
 
 (* return *)
 let return (#a:Type) (x:a)
@@ -46,8 +46,8 @@ let bind_exists
   (#b:Type)
   (#p:b -> Type)
   (h:(exists (x:b). p x))
-  (f:(x:b -> p x -> GTot (squash a)))
-  : GTot (squash a)
+  (f:(x:b -> p x -> Tot (squash a)))
+  : Tot (squash a)
   = S.bind_squash #(x:b & p x) #a h (fun (| x, p |) -> f x p)
 
 val frame: #a:Type -> #wp:st_wp a -> f:st a wp

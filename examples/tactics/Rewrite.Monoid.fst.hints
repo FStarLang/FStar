@@ -1,0 +1,109 @@
+[
+  "ù>\u0006\u0013Eç\u0003\u000føÔæ\u0003{èÐØ",
+  [
+    [
+      "Rewrite.Monoid.aux",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "5e129a7064bf61ca5b8af3b606c2b3e0"
+    ],
+    [
+      "Rewrite.Monoid.monoid_reflect_rhs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "fd47ce5a32222f8dd0b8fae505326ab0"
+    ],
+    [
+      "Rewrite.Monoid.should_rewrite",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "a658b743c808310fac4abe82a9300f73"
+    ],
+    [
+      "Rewrite.Monoid.rewrite_monoid",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
+      ],
+      0,
+      "13ed866c56810159cdcd2cbe55feb429"
+    ],
+    [
+      "Rewrite.Monoid.elim_implies",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Rewrite.Monoid_Tm_refine_be8d4c3a4018f7bc07ddbce3645c57d4"
+      ],
+      0,
+      "9e0ea801fdd78bfc521378fbfd7a79e3"
+    ],
+    [
+      "Rewrite.Monoid.should_rewrite",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "3de34746596f50b5dfd9b4adaa48b618"
+    ],
+    [
+      "Rewrite.Monoid.rewrite_monoid",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
+      ],
+      0,
+      "39192ff3a3e48fc48f02eddec6eb0289"
+    ],
+    [
+      "Rewrite.Monoid.elim_implies",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Rewrite.Monoid_Tm_refine_be8d4c3a4018f7bc07ddbce3645c57d4"
+      ],
+      0,
+      "495f9c966afd5ea911b0a6725a36c79a"
+    ]
+  ]
+]
