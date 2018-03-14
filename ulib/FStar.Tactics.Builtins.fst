@@ -353,6 +353,9 @@ let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_p
 assume private val __dismiss : __tac unit
 let dismiss () : Tac unit = TAC?.reflect __dismiss
 
+assume val __admit : __tac unit
+let admit () : Tac unit = TAC?.reflect __admit
+
 assume private val __inspect : term -> __tac term_view
 let inspect (t : term) : Tac term_view = TAC?.reflect (__inspect t)
 
