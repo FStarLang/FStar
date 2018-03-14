@@ -226,6 +226,7 @@ let dw (x: U32.t) : Tot (m unit) =
 let dw_sz (x: U32.t) : Tot (m_sz (dw x)) =
   T.synth_by_tactic (fun () -> test_tac (dw x))
 
+inline_for_extraction
 let example_sz (x: U32.t) : Tot (m_sz (example x)) =
   coerce_sz
     _
@@ -233,3 +234,7 @@ let example_sz (x: U32.t) : Tot (m_sz (example x)) =
     (T.synth_by_tactic (fun () -> test_tac (example_do_while x)))
     (example x)
     ()
+
+inline_for_extraction
+let test_len (x: U32.t) : Tot (option U32.t) =
+  log_size (example_sz x)
