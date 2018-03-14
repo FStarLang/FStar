@@ -1,5 +1,5 @@
 [
-  "hË£Ç$Å‡√Ô≠rëÿ“4Ñ",
+  "~}ÖËMÏπ(vgQÓ‡|⁄¬",
   [
     [
       "Syntax.quote_sanity_check",
@@ -22,7 +22,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "84a77b30f9f11aa09e6c6f9a6668e519"
+      "1e8b2d09fc7c637f03554037dc0b43bd"
     ],
     [
       "Syntax.quote_sanity_check",
@@ -45,7 +45,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "524047c7f452282e394a7080f78e2df3"
+      "92823d9ae7e068e98f9778dae7f9360d"
     ],
     [
       "Syntax.goal_sanity_check",
@@ -68,7 +68,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "72c3e3b037ae371b8184adb9d0757b37"
+      "04ebe1d77b4b061b1292acde800ff211"
     ],
     [
       "Syntax.goal_sanity_check",
@@ -91,7 +91,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "e10e5c53a5d8c56c185d6b1fa481887d"
+      "ad57c9ccde528048ab54908c41b48da9"
     ],
     [
       "Syntax.test2",
@@ -114,7 +114,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "a76b9dedb535ca576ed0d42e12210e6d"
+      "d0bb681e9a2098c2ef2f24cb36812c72"
     ],
     [
       "Syntax.test2",
@@ -137,7 +137,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "43fd9131b9ef35a3c35f08cbaa487d2b"
+      "e50c5b2a6303ddbe65d3e6b8689220c4"
     ],
     [
       "Syntax.blah",
@@ -159,6 +159,8 @@
         "disc_equation_FStar.Reflection.Data.Tv_Abs",
         "disc_equation_FStar.Reflection.Data.Tv_App",
         "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_AscribedC",
+        "disc_equation_FStar.Reflection.Data.Tv_AscribedT",
         "disc_equation_FStar.Reflection.Data.Tv_BVar",
         "disc_equation_FStar.Reflection.Data.Tv_Const",
         "disc_equation_FStar.Reflection.Data.Tv_FVar",
@@ -184,7 +186,7 @@
         "typing_FStar.Reflection.Basic.inspect", "unit_inversion"
       ],
       0,
-      "56520475cdbd3b8b99e2c6a14d630269"
+      "33f0ee6bb0e63cea5d3ef8e9b0bdaeb5"
     ],
     [
       "Syntax.uu___57",
@@ -207,7 +209,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "fcfbd385d6027bc15c64ebb8ce3ad24d"
+      "cd5c2c3d9cb21e3db0ca949780c76862"
     ],
     [
       "Syntax.uu___57",
@@ -230,7 +232,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "16666388b0571e15d0a77fa5d5c6aa30"
+      "90230e82238ecea4a871e16b5b6f4189"
     ],
     [
       "Syntax.uu___58",
@@ -253,7 +255,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "056258a68672159a28291e527a076223"
+      "ca981cc47ea145b5d93f833dfa622d15"
     ],
     [
       "Syntax.uu___58",
@@ -276,7 +278,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "20502ff6ff2086332b9ce77900a28346"
+      "c58f303f05175b77f1a3f2cbcbe9a0a9"
     ],
     [
       "Syntax.uu___59",
@@ -299,7 +301,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "f6e2a5a0d307b76089cdec7ec71ee5e9"
+      "ec29b2663b8a861757d6eeffa9e72e7a"
     ],
     [
       "Syntax.uu___59",
@@ -322,7 +324,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "3eef712337c13df8d81ecb9d42268928"
+      "970b3fafcd606f94e5da7488cdacae6a"
     ],
     [
       "Syntax.uu___60",
@@ -345,7 +347,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "94adec4bc92934f84a1c6035f86b26d4"
+      "cd975f269d09b361505e5e6aa23ce744"
     ],
     [
       "Syntax.uu___60",
@@ -368,7 +370,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "58bb6361e619f00302087bcd08dafc1f"
+      "65595f85d5f1f365c273f3059ff6fb39"
     ],
     [
       "Syntax.uu___61",
@@ -391,7 +393,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "5d71e625dfbcab86722c8fdf2b3bcb0d"
+      "a4398ed2ec7cf0708d0edd6df4f6e63f"
     ],
     [
       "Syntax.uu___61",
@@ -414,7 +416,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "b4d366733da843cd9566516c7c0bbf30"
+      "5c96429da6e1479e16abc5cf411ae147"
     ],
     [
       "Syntax.uu___62",
@@ -432,7 +434,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "00535f39b54ca13a91c86e7a7057a94a"
+      "098ef74e627b55d9040a5ae991800fd3"
     ],
     [
       "Syntax.uu___62",
@@ -450,7 +452,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "81eef8c78fcfb4d08e086f758c9faec6"
+      "bb91e2aade614e47b0a5997258b41ff8"
     ],
     [
       "Syntax.arith_test1",
@@ -482,7 +484,7 @@
         "unit_typing"
       ],
       0,
-      "0f71123ad84ce18fb6b8f17464bfbf6d"
+      "9be203d9bd4098108e5b5575fe1c6aeb"
     ],
     [
       "Syntax.arith_test1",
@@ -514,7 +516,7 @@
         "unit_typing"
       ],
       0,
-      "9684e83e302d513e77ec8d77a68778e3"
+      "c7dcc1c7ff5b58694590ddeb00dba3d9"
     ],
     [
       "Syntax.arith_test2",
@@ -546,7 +548,7 @@
         "unit_typing"
       ],
       0,
-      "8c45d28008495c3b70e4f08c1762c560"
+      "89199fb3a7d456daade1163eddd7fa8c"
     ],
     [
       "Syntax.arith_test2",
@@ -578,7 +580,7 @@
         "unit_typing"
       ],
       0,
-      "45065ef72242f64ba138fb56805517a4"
+      "078832cfc9638e0b600d736493992889"
     ],
     [
       "Syntax.uu___63",
@@ -596,7 +598,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "87b36e7010b8977a9bde4a56352f6f24"
+      "2b624194fd8ea3b2413c28d2543b914e"
     ],
     [
       "Syntax.uu___63",
@@ -614,7 +616,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "7ab16dd165e4f1c0605d462e65d8e656"
+      "aff78a81edf128bf02aa3c64094c5f35"
     ],
     [
       "Syntax.uu___64",
@@ -632,7 +634,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "bdd512615d2fc543c9eba68605cfe355"
+      "25e7faa41b8d9b73b04b54472d8ef9bd"
     ],
     [
       "Syntax.uu___64",
@@ -650,7 +652,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "c9d7e7a87591cdfa103ab89b36bce8fe"
+      "d74ee4647d10b1b2a12393dbef3c45db"
     ],
     [
       "Syntax.blah",
@@ -672,6 +674,8 @@
         "disc_equation_FStar.Reflection.Data.Tv_Abs",
         "disc_equation_FStar.Reflection.Data.Tv_App",
         "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_AscribedC",
+        "disc_equation_FStar.Reflection.Data.Tv_AscribedT",
         "disc_equation_FStar.Reflection.Data.Tv_BVar",
         "disc_equation_FStar.Reflection.Data.Tv_Const",
         "disc_equation_FStar.Reflection.Data.Tv_FVar",
@@ -697,7 +701,7 @@
         "typing_FStar.Reflection.Basic.inspect", "unit_inversion"
       ],
       0,
-      "5ae3c79020b1b9f15b96be55a4d15709"
+      "c1297920863b688beac1a70ce38b7520"
     ]
   ]
 ]

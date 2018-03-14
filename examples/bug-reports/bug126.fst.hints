@@ -11,24 +11,6 @@
       "addafbcbc394007919d80301d5672950"
     ],
     [
-      "Bug126.uu___is_TUnit",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4b6cb2903a6a2b0363b3bf75683ed466"
-    ],
-    [
-      "Bug126.uu___is_TArr",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "704c5948315d8380540758c4485cec6f"
-    ],
-    [
       "Bug126.__proj__TArr__item__arg",
       1,
       2,
@@ -39,7 +21,7 @@
         "refinement_interpretation_Bug126_Tm_refine_82996e2fd8e55cc06b19627ffe4234dc"
       ],
       0,
-      "aa1a8c7ae0694885b871c9e938e611f0"
+      "f30d3181fa157bfa11fba5cb0d2b6cfa"
     ],
     [
       "Bug126.__proj__TArr__item__res",
@@ -52,7 +34,7 @@
         "refinement_interpretation_Bug126_Tm_refine_82996e2fd8e55cc06b19627ffe4234dc"
       ],
       0,
-      "aa18d087573ffe0091b46daeefe20c27"
+      "5bae100cd4b1aeb1f5fe8c9122ceb168"
     ],
     [
       "Bug126.exp",
@@ -66,25 +48,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "da1bff9451422439bb9efc8bff740ecd"
-    ],
-    [
-      "Bug126.uu___is_EUnit",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "57b899ba00e3b566725fd18e1c700744"
-    ],
-    [
-      "Bug126.uu___is_EVar",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ace884d401b86ef6a53194007ca7fd39"
+      "3c53f7fd335ac6ac936f220cfff37d01"
     ],
     [
       "Bug126.__proj__EVar__item__x",
@@ -97,16 +61,7 @@
         "refinement_interpretation_Bug126_Tm_refine_46117f0e2abf87e3f99ab2933dff06d7"
       ],
       0,
-      "0ef20097b4c05c6110af3503f110de19"
-    ],
-    [
-      "Bug126.uu___is_EApp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a13ab4aa2c533ab39b2a39d8d0e7920f"
+      "ddba2ac4aee2c1bd9844abe0d9f427b8"
     ],
     [
       "Bug126.__proj__EApp__item__e1",
@@ -119,7 +74,7 @@
         "refinement_interpretation_Bug126_Tm_refine_6300b515f777a9f030ddad14cfe46268"
       ],
       0,
-      "c57dbee8bb51041a5236eb6df6d5ee43"
+      "caef8facd8d6d51777ac47c3f3f993ac"
     ],
     [
       "Bug126.__proj__EApp__item__e2",
@@ -132,16 +87,7 @@
         "refinement_interpretation_Bug126_Tm_refine_6300b515f777a9f030ddad14cfe46268"
       ],
       0,
-      "e120f979550cf4f30d964189bbc46633"
-    ],
-    [
-      "Bug126.uu___is_ELam",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a1001cb09630c547733fa277b4fc7c68"
+      "1a860d85cc058027ae2e86917bb36f66"
     ],
     [
       "Bug126.__proj__ELam__item__t",
@@ -154,7 +100,7 @@
         "refinement_interpretation_Bug126_Tm_refine_8144cd34f51c347b0afc7992a2a47ee2"
       ],
       0,
-      "06a88d9f31ce010cb6e3c660c1f417ee"
+      "c6beb712b3ccb884ca94cba905308d37"
     ],
     [
       "Bug126.__proj__ELam__item__body",
@@ -167,7 +113,7 @@
         "refinement_interpretation_Bug126_Tm_refine_8144cd34f51c347b0afc7992a2a47ee2"
       ],
       0,
-      "83d5e5113ac5d71404c61c5958cec064"
+      "415090258b771e6e7c7f0f8fb24de4ee"
     ],
     [
       "Bug126.extend",
@@ -182,7 +128,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ab7f34aa6f296eff2a0b6541cf047f49"
+      "a9f55bcacf519f845e81e40f5fbea83a"
     ],
     [
       "Bug126.typing",
@@ -195,16 +141,7 @@
         "refinement_interpretation_Bug126_Tm_refine_61d67275a15574eaf5de24d701c8e384"
       ],
       0,
-      "6cab2b62d242f24282cd5e858ddc1e3e"
-    ],
-    [
-      "Bug126.uu___is_TyUn",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "76d628c3eab3bdd647aa36267c77a5ad"
+      "c460f3acf50a4034b9a5d830a400ed32"
     ],
     [
       "Bug126.__proj__TyUn__item__g",
@@ -217,16 +154,7 @@
         "refinement_interpretation_Bug126_Tm_refine_531db1cadfe529187eb7a92f8711a848"
       ],
       0,
-      "879925eb1202fc2414be309cda45894d"
-    ],
-    [
-      "Bug126.uu___is_TyVar",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "16f15a224834f4c99f6c6bc055ee7bc4"
+      "f1bb1449d9f66ef731d0879f8b08952d"
     ],
     [
       "Bug126.__proj__TyVar__item__g",
@@ -239,7 +167,7 @@
         "refinement_interpretation_Bug126_Tm_refine_515f421c7bd17bbf027ecc6fbafb3f6c"
       ],
       0,
-      "e2cebf787dbd8a3335cf13427bf16f2d"
+      "2eb00ac31109aa81ebb72863dffb4593"
     ],
     [
       "Bug126.__proj__TyVar__item__x",
@@ -255,16 +183,7 @@
         "token_correspondence_Bug126.__proj__TyVar__item__g"
       ],
       0,
-      "6a9ac9cd47cb932447ecffb407f7b6da"
-    ],
-    [
-      "Bug126.uu___is_TyLam",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4c33f398d5b56f1d0f1a480edbb6af13"
+      "7539ee329857895d225cb0d9f0417435"
     ],
     [
       "Bug126.__proj__TyLam__item__g",
@@ -277,7 +196,7 @@
         "refinement_interpretation_Bug126_Tm_refine_13780dc621ffa127595a82e4cc50fd29"
       ],
       0,
-      "4bf5c11c91c27543a574ebaddf3d0bc5"
+      "2d077d0944033dded33b335639b49cf8"
     ],
     [
       "Bug126.__proj__TyLam__item__t",
@@ -290,7 +209,7 @@
         "refinement_interpretation_Bug126_Tm_refine_13780dc621ffa127595a82e4cc50fd29"
       ],
       0,
-      "be2a87fb8a9a0bd7ba263dc78f6bb24c"
+      "29643b0de34c5e92e36f05b01e255a9c"
     ],
     [
       "Bug126.__proj__TyLam__item__e1",
@@ -303,7 +222,7 @@
         "refinement_interpretation_Bug126_Tm_refine_13780dc621ffa127595a82e4cc50fd29"
       ],
       0,
-      "5b56de0b81f7ece7d34f0d645f6f63c5"
+      "7786ff239bcc8446a9e09d402999c3b5"
     ],
     [
       "Bug126.__proj__TyLam__item__t'",
@@ -316,7 +235,7 @@
         "refinement_interpretation_Bug126_Tm_refine_13780dc621ffa127595a82e4cc50fd29"
       ],
       0,
-      "1ec10a9646c3e98466fb3357861cf300"
+      "230b5c6ae2b559293de00ae0b6056239"
     ],
     [
       "Bug126.__proj__TyLam__item___4",
@@ -335,16 +254,7 @@
         "refinement_interpretation_Bug126_Tm_refine_13780dc621ffa127595a82e4cc50fd29"
       ],
       0,
-      "52b0ac968ff6dd64fdca1e2f798b46b7"
-    ],
-    [
-      "Bug126.uu___is_TyApp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e15bed884625ba856659e73fdffc0387"
+      "93e7e38185b1f9fae44597214da863f2"
     ],
     [
       "Bug126.__proj__TyApp__item__g",
@@ -357,7 +267,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "74bead25df77860f83fc9c5c0dc5e504"
+      "685a793b11fc31d7bb6f12ef3b30fcc4"
     ],
     [
       "Bug126.__proj__TyApp__item__e1",
@@ -370,7 +280,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "de0013e33a62b2eea5df68f7afdafc99"
+      "5552985489468dd5eb4ba75470bb127e"
     ],
     [
       "Bug126.__proj__TyApp__item__e2",
@@ -383,7 +293,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "7503945b37db1269683a5a741e5edd2a"
+      "90a15b96501a0095932133c1ac40be13"
     ],
     [
       "Bug126.__proj__TyApp__item__t11",
@@ -396,7 +306,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "2bd0b81d6c4a4ef4dd372d6d695ec1b6"
+      "005666935b1342c104d28eed0a3314d4"
     ],
     [
       "Bug126.__proj__TyApp__item__t12",
@@ -409,7 +319,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "b8a1cbdae79fbb2be5b3431b96bcce89"
+      "6238f0a7aa88872173fef27b7a1da36b"
     ],
     [
       "Bug126.__proj__TyApp__item___5",
@@ -429,7 +339,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "a1ddfc1c92cacb7a8f030435196a5faf"
+      "1a30cb9531edce8482926b97fe368729"
     ],
     [
       "Bug126.__proj__TyApp__item___6",
@@ -448,16 +358,7 @@
         "refinement_interpretation_Bug126_Tm_refine_75d94a3a8edd252239dbdf0c6137d707"
       ],
       0,
-      "76645a3afecf38c36ddef0f2f0b700e7"
-    ],
-    [
-      "Bug126.value",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dfc5dc36c1dddf87efbc43ab85e555a0"
+      "6dae601428d4dacd9198b5cb03301b79"
     ],
     [
       "Bug126.invert_lam",
@@ -488,7 +389,7 @@
         "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "0219bf055779040bbbd39269a43339d3"
+      "c3377fae4ec533addbc757142c2f8fc3"
     ],
     [
       "Bug126.invert_lam",
@@ -523,7 +424,7 @@
         "typing_Bug126.value", "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "c79dd7c5dfe195d9053d71863da66d9f"
+      "40acf936f4284d1e30215ec8e1117b3d"
     ]
   ]
 ]
