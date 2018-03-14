@@ -23,6 +23,7 @@ all:	Apply.uver		\
 	Change.uver		\
 	Tutorial.uver		\
 	Fresh.uver		\
+	SolveThen.uver		\
 	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
