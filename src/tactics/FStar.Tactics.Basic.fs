@@ -263,14 +263,20 @@ let do_unify env t1 t2 : tac<bool> =
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
 
-let dismiss : tac<unit> =
+let __dismiss : tac<unit> =
     bind get (fun p ->
     set ({p with goals=List.tl p.goals}))
+
+let dismiss : tac<unit> =
+    bind get (fun p ->
+    match p.goals with
+    | [] -> fail "dismiss: no more goals"
+    | _ -> __dismiss)
 
 let solve (goal : goal) (solution : term) : tac<unit> =
     bind (trysolve goal solution) (fun b ->
     if b
-    then dismiss
+    then __dismiss
     else fail (BU.format3 "%s does not solve %s : %s"
               (tts goal.context solution)
               (tts goal.context goal.witness)
@@ -324,7 +330,7 @@ let push_smt_goals (gs:list<goal>) : tac<unit> =
     set ({p with smt_goals=p.smt_goals@gs}))
 
 let replace_cur (g:goal) : tac<unit> =
-    bind dismiss (fun _ ->
+    bind __dismiss (fun _ ->
     add_goals [g])
 
 let add_implicits (i:implicits) : tac<unit> =
@@ -463,7 +469,7 @@ let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal
 let smt : tac<unit> =
     bind cur_goal (fun g ->
     if is_irrelevant g then
-        bind dismiss (fun _ -> add_smt_goals [g])
+        bind __dismiss (fun _ -> add_smt_goals [g])
     else
         fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (tts g.context g.goal_ty)
     )
@@ -596,7 +602,7 @@ let refine_intro : tac<unit> = wrap_err "refine_intro" <|
         in
         bind (mk_irrelevant_goal "refine_intro refinement" g.context
                     (SS.subst [S.NT (bv, g.witness)] phi) g.opts) (fun g2 ->
-        bind dismiss (fun _ ->
+        bind __dismiss (fun _ ->
         add_goals [g1;g2])))
 
 let __exact_now set_expected_typ (t:term) : tac<unit> =
@@ -915,7 +921,7 @@ let binder_retype (b : binder) : tac<unit> =
         let s = [S.NT (bv, S.bv_to_name bv'')] in
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort}) bvs in
         let env' = push_bvs e0 (bv''::bvs) in
-        bind dismiss (fun _ ->
+        bind __dismiss (fun _ ->
         bind (add_goals [{goal with context = env';
                                     witness = SS.subst s goal.witness;
                                     goal_ty = SS.subst s goal.goal_ty }]) (fun _ ->
@@ -990,14 +996,14 @@ let prune (s:string) : tac<unit> =
     let ctx = g.context in
     let ctx' = Env.rem_proof_ns ctx (path_of_text s) in
     let g' = { g with context = ctx' } in
-    bind dismiss (fun _ -> add_goals [g']))
+    bind __dismiss (fun _ -> add_goals [g']))
 
 let addns (s:string) : tac<unit> =
     bind cur_goal (fun g ->
     let ctx = g.context in
     let ctx' = Env.add_proof_ns ctx (path_of_text s) in
     let g' = { g with context = ctx' } in
-    bind dismiss (fun _ -> add_goals [g']))
+    bind __dismiss (fun _ -> add_goals [g']))
 
 let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in
@@ -1266,7 +1272,7 @@ let dup : tac<unit> =
     bind cur_goal (fun g ->
     bind (new_uvar "dup" g.context g.goal_ty) (fun u ->
     let g' = { g with witness = u } in
-    bind dismiss (fun _ ->
+    bind __dismiss (fun _ ->
     bind (add_irrelevant_goal "dup equation" g.context
                (U.mk_eq2 (TcTerm.universe_of g.context g.goal_ty) g.goal_ty u g.witness) g.opts) (fun _ ->
     bind (add_goals [g']) (fun _ ->
@@ -1303,7 +1309,7 @@ let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
         let v_q = S.new_bv None q in
         let g1 = {g with context = Env.push_bv g.context v_p } in
         let g2 = {g with context = Env.push_bv g.context v_q } in
-        bind dismiss (fun _ ->
+        bind __dismiss (fun _ ->
         bind (add_goals [g1; g2]) (fun _ ->
         ret (S.bv_to_name v_p, S.bv_to_name v_q)))
     | _ ->
