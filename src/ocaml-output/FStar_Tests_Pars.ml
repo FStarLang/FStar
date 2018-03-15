@@ -157,8 +157,8 @@ let (init_once : Prims.unit -> Prims.unit) =
                (uu___51_232.FStar_TypeChecker_Env.qtbl_name_and_index);
              FStar_TypeChecker_Env.proof_ns =
                (uu___51_232.FStar_TypeChecker_Env.proof_ns);
-             FStar_TypeChecker_Env.synth =
-               (uu___51_232.FStar_TypeChecker_Env.synth);
+             FStar_TypeChecker_Env.synth_hook =
+               (uu___51_232.FStar_TypeChecker_Env.synth_hook);
              FStar_TypeChecker_Env.splice =
                (uu___51_232.FStar_TypeChecker_Env.splice);
              FStar_TypeChecker_Env.is_native_tactic =
@@ -281,8 +281,8 @@ let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
           (uu___54_347.FStar_TypeChecker_Env.qtbl_name_and_index);
         FStar_TypeChecker_Env.proof_ns =
           (uu___54_347.FStar_TypeChecker_Env.proof_ns);
-        FStar_TypeChecker_Env.synth =
-          (uu___54_347.FStar_TypeChecker_Env.synth);
+        FStar_TypeChecker_Env.synth_hook =
+          (uu___54_347.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___54_347.FStar_TypeChecker_Env.splice);
         FStar_TypeChecker_Env.is_native_tactic =

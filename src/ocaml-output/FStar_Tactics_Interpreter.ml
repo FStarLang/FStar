@@ -1956,8 +1956,8 @@ let (run_tactic_on_typ :
                           (uu___59_2791.FStar_TypeChecker_Env.qtbl_name_and_index);
                         FStar_TypeChecker_Env.proof_ns =
                           (uu___59_2791.FStar_TypeChecker_Env.proof_ns);
-                        FStar_TypeChecker_Env.synth =
-                          (uu___59_2791.FStar_TypeChecker_Env.synth);
+                        FStar_TypeChecker_Env.synth_hook =
+                          (uu___59_2791.FStar_TypeChecker_Env.synth_hook);
                         FStar_TypeChecker_Env.splice =
                           (uu___59_2791.FStar_TypeChecker_Env.splice);
                         FStar_TypeChecker_Env.is_native_tactic =
@@ -2031,8 +2031,8 @@ let (run_tactic_on_typ :
                           (uu___60_2793.FStar_TypeChecker_Env.qtbl_name_and_index);
                         FStar_TypeChecker_Env.proof_ns =
                           (uu___60_2793.FStar_TypeChecker_Env.proof_ns);
-                        FStar_TypeChecker_Env.synth =
-                          (uu___60_2793.FStar_TypeChecker_Env.synth);
+                        FStar_TypeChecker_Env.synth_hook =
+                          (uu___60_2793.FStar_TypeChecker_Env.synth_hook);
                         FStar_TypeChecker_Env.splice =
                           (uu___60_2793.FStar_TypeChecker_Env.splice);
                         FStar_TypeChecker_Env.is_native_tactic =
@@ -2730,7 +2730,7 @@ let (reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
       FStar_Syntax_Syntax.mk_Tm_app r uu____4850  in
     uu____4849 FStar_Pervasives_Native.None a.FStar_Syntax_Syntax.pos
   
-let (synth :
+let (synthesize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)

@@ -687,7 +687,7 @@ and tc_synth env args rng =
         if env.nosynth
         then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
         else begin
-            let t = env.synth env' typ tau in
+            let t = env.synth_hook env' typ tau in
             if Env.debug env <| Options.Other "Tac" then
                 BU.print1 "Got %s\n" (Print.term_to_string t);
             t
