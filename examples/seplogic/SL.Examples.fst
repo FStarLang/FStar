@@ -276,6 +276,8 @@ noeq type listcell =
 
 and listptr = option (ref listcell)
 
+let null :listptr = None
+
 #reset-options "--print_full_names --__temp_fast_implicits"
 
 let rec valid (p:listptr) (repr:list int) (m:memory) :Tot Type0 (decreases repr) =
@@ -728,11 +730,14 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       ignore (forall_intros ()); ignore (implies_intros ());
 	       process_trivial_tail ())
 
+unfold let equal_dom (m0 m1:memory) =
+  Set.equal (dom m0) (dom m1)
+
 let rev (l:listptr)
-  = (rev_append l None)
+  = (rev_append l null)
 
     <: STATE listptr (fun p m -> exists fl. valid l fl m /\
-                                    (forall mf l. ((Set.equal (dom m) (dom mf)) /\
+                                    (forall mf l. ((equal_dom m mf) /\
 				              (valid l (List.Tot.rev fl) mf)) ==> p l mf))
 
     by (fun () -> ignore (forall_intro ());
