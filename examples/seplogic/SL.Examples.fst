@@ -188,7 +188,9 @@ let solve_frame_wp (_:unit) : Tac unit =
         flip();
         eexists unit (fun _ ->
           canon_monoid memory_cm;
-          dump ("after eexists")
+          dump ("after canon_monoid");
+          trefl();
+          dump ("after trefl")
         )
       else fail "expecting frame_wp"
     else fail "expecting squash"

@@ -19,8 +19,8 @@ val heap_memory : heap -> GTot memory
 val disjoint_heaps : heap -> heap -> Type0
 val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
 
-val ( |> ) : #a:Type0 -> r:ref a -> x:a -> GTot memory
-val ( <*> ) : m0:memory -> m1:memory -> GTot memory
+val ( |> ) : #a:Type0 -> r:ref a -> x:a -> Tot memory
+val ( <*> ) : m0:memory -> m1:memory -> Tot memory
 
 val split_heap : (m0:memory) 
               -> (m1:memory)
