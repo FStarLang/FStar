@@ -98,8 +98,14 @@ let print_cipher_suite_spec (c: cipher_suite) : Tot (m unit) =
 
 module L = FStar.List.Tot
 
+inline_for_extraction
+let is_nil (#t: Type) (l: list t) : Tot bool =
+match l with
+| [] -> true
+| _ -> false
+
 let rec print_list_cipher_suite_spec (l: list cipher_suite) : Tot (m unit) =
-  if Nil? l
+  if is_nil l
   then ret ()
   else begin
     _ <-- print_cipher_suite_spec (L.hd l) ;
