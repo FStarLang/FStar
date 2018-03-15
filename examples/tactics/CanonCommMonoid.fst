@@ -314,6 +314,16 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list ter
       ([],[], const (CM?.unit m) def) ts
   in (List.rev es,vm)
 
+let unfold_topdown (t:term) = 
+  let should_rewrite (s:term) : Tac (bool * int) =
+      (term_eq t s, 0)
+  in
+  let rewrite () : Tac unit = 
+    norm [delta];
+    trefl()
+  in
+  topdown_rewrite should_rewrite rewrite
+
 let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
@@ -328,15 +338,17 @@ let canon_monoid_with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
-          // dump ("vm =" ^ term_to_string (quote vm));
+          dump ("vm =" ^ term_to_string (quote vm));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
-          // dump ("before =" ^ term_to_string (norm_term [delta;primops]
-          //   (quote (mdenote m vm r1 == mdenote m vm r2))));
-          // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-          //   (quote (xsdenote m vm (canon vm p r1) ==
-          //           xsdenote m vm (canon vm p r2)))));
+          dump ("before =" ^ term_to_string (norm_term [delta;primops]
+            (quote (mdenote m vm r1 == mdenote m vm r2))));
+          dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
+            (quote (xsdenote m vm (canon vm p r1) ==
+                    xsdenote m vm (canon vm p r2)))));
           apply (quote (monoid_reflect #a #b p pc));
-          unfold_def (quote p);
+          let q = quote p in
+          dump ("before unfold, p = " ^ term_to_string q);          
+          unfold_topdown q;
           dump ("after unfold");
           norm [delta_only [// term_to_string (quote p);
                             "CanonCommMonoid.canon";

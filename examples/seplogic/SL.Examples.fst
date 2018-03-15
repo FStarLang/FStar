@@ -1,5 +1,4 @@
 module SL.Examples
-
 open SepLogic.Heap
 open SL.Effect
 
@@ -133,6 +132,7 @@ let solve_frame_wp_fails (_:unit) : Tac unit =
 
 let frame_wp_qn = ["SL" ; "Effect" ; "frame_wp"]
 let write_wp_qn = ["SL" ; "Effect" ; "write_wp"]
+let read_wp_qn = ["SL" ; "Effect" ; "read_wp"]
 
 let footprint_of (t:term) : Tac (list term) =
   admit();
@@ -141,6 +141,9 @@ let footprint_of (t:term) : Tac (list term) =
   | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
     if inspect_fv fv = write_wp_qn then [tr]
     else fail "not a write_wp"
+  | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit)] ->
+    if inspect_fv fv = read_wp_qn then [tr]
+    else fail "not a read_wp"
   | _ -> fail "not an applied free variable"
 
 let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
@@ -148,7 +151,11 @@ let eexists (a:Type) (t:unit -> Tac a) : Tac a =
   apply_lemma (`FStar.Classical.exists_intro); later(); norm[];
   fst (divide (ngoals()-1) t dismiss)
 
-let solve_frame_wp (_:unit) : Tac unit =
+let frame_wp_lemma (m0 m1:memory) (a:Type) (wp:st_wp a) (f_post:memory -> post a) : Lemma 
+  (requires (defined (m0 <*> m1) /\ wp (f_post m1) m0))
+  (ensures (frame_wp wp f_post (m0 <*> m1))) = ()
+
+let solve_frame_wp (_:unit) : Tac (term * term) =
   admit();
   norm[];
   let g = cur_goal () in
@@ -163,38 +170,47 @@ let solve_frame_wp (_:unit) : Tac unit =
                      (tpost, Q_Explicit);
                      (tm, Q_Explicit)] ->
       if inspect_fv fv = frame_wp_qn then
-        let fp = footprint_of twp in
-        dump ("fp="^ FStar.String.concat "," (List.Tot.map term_to_string fp));
-        let tm0 = FStar.Tactics.Derived.fold_left
+        let fp_refs = footprint_of twp in
+        dump ("fp_refs="^ FStar.String.concat "," (List.Tot.map term_to_string fp_refs));
+        let fp = FStar.Tactics.Derived.fold_left
                    (fun a t -> if term_eq a (`emp) then t
                                else mk_e_app (`( <*> )) [a;t])
                    (`emp)
                    (FStar.Tactics.Derived.map
                      (fun t -> let u = fresh_uvar (Some (`int)) in
-                               mk_e_app (`( |> )) [t; u]) fp) in
-        dump ("m0=" ^ term_to_string tm0);
+                               mk_e_app (`( |> )) [t; u]) fp_refs) in
+        dump ("m0=" ^ term_to_string fp);
         // let m0 : memory = unquote tm0 in //-- this fails, doesn't type-check
         // let m : memory = unquote tm in //-- this fails, doesn't type-check
         // ignore(tcut(quote(squash (exists m1. m0 <*> m1 == m))));
-        let m1 : binder = fresh_binder (`memory) in
-        let tm1 : term = pack (Tv_Var (bv_of_binder m1)) in
-        let tp : term = pack (Tv_Abs m1 (mk_app (`eq2)
-              [((`memory),                   Q_Implicit);
-               (mk_e_app (`(<*>)) [tm0;tm1], Q_Explicit);
-               (tm,                          Q_Explicit)])) in
-        let new_goal = mk_e_app (pack_fv' squash_qn) [
-          mk_app (pack_fv' exists_qn) [(`memory, Q_Implicit); (tp, Q_Explicit)]] in
+        let env = cur_env () in
+        let frame = uvar_env env (Some (`memory)) in
+        let tp : term = mk_app (`eq2)
+              [((`memory),                     Q_Implicit);
+               (mk_e_app (`(<*>)) [fp;frame],  Q_Explicit);
+               (tm,                            Q_Explicit)] in
+        let new_goal = mk_e_app (pack_fv' squash_qn) [tp] in
         let heq = tcut new_goal in
+        dump "with new goal:";
         flip();
-        eexists unit (fun _ ->
-          canon_monoid memory_cm;
-          dump ("after canon_monoid");
-          trefl();
-          dump ("after trefl")
-        )
+        dump ("before canon_monoid");        
+        canon_monoid memory_cm;
+        dump ("after canon_monoid");
+        trefl();
+        dump ("after trefl");
+        mapply (mk_e_app (`frame_wp_lemma) [fp; frame]);
+        Tactics.split(); admit1(); //easy, hypothesis
+        dump ("after frame lemma");
+        fp, frame
       else fail "expecting frame_wp"
     else fail "expecting squash"
   | _ -> fail "not an applied free variable"
+
+let solve_write () : Tac unit =
+  norm [delta_only [%`write_wp]];
+  dump "after write_wp";
+  eexists unit (fun () -> 
+    Tactics.split(); trefl())
 
 let foo (_:unit) : Tac unit =
    admit();
@@ -210,7 +226,13 @@ let foo (_:unit) : Tac unit =
      let rest = implies_intro() in
    norm [delta_only [%`bind_wp]];
    dump "solve_wp";
-   solve_frame_wp();
+   let fp, frame = solve_frame_wp() in
+   solve_write(); 
+   dump "after write";   
+   norm [delta_only [%`frame_post]];   
+   dump "after frame post"; 
+   Tactics.split(); admit1(); //definedness
+   let fp, frame = solve_frame_wp () in   
    admit1()
 
 (*
