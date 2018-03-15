@@ -69,8 +69,8 @@ let rec flatten_correct_aux (#a:Type) (m:cm a) (vm:vmap a) (xs1 xs2:list var) :
     Lemma (xsdenote m vm (xs1 @ xs2) == CM?.mult m (xsdenote m vm xs1)
                                                    (xsdenote m vm xs2)) =
   match xs1 with
-  | [] -> CM?.left_unitality m (xsdenote m vm xs2)
-  | [x] -> if (Nil? xs2) then CM?.right_unitality m (select x vm)
+  | [] -> CM?.identity m (xsdenote m vm xs2)
+  | [x] -> if (Nil? xs2) then right_identity m (select x vm)
   | x::xs1' -> (CM?.associativity m (select x vm)
                       (xsdenote m vm xs1') (xsdenote m vm xs2);
                 flatten_correct_aux m vm xs1' xs2)
