@@ -445,6 +445,8 @@ let rec length (l:listptr)
 
 let binder_to_term b = let bv, _ = inspect_binder b in pack (Tv_Var bv)
 
+unfold let dom (m:memory) = addrs_in m
+
 //#set-options "--admit_smt_queries true"
 //#set-options "--z3rlimit 30"
 let rec append (l1 l2:listptr)
@@ -465,7 +467,7 @@ let rec append (l1 l2:listptr)
 				 m == (m1 <*> m2)    /\
 				 valid l1 fl1 m1     /\
 				 valid l2 fl2 m2     /\
-				 (forall mf l. ((Set.equal (addrs_in mf) (Set.union (addrs_in m1) (addrs_in m2))) /\
+				 (forall mf l. ((Set.equal (dom mf) (Set.union (dom m1) (dom m2))) /\
 				           (Some? l1 ==> l1 == l)                                             /\
 				           (valid l (List.Tot.append fl1 fl2) mf)) ==> p l mf))
 
@@ -648,7 +650,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 				m == (m1 <*> m2)    /\
 				valid l1 fl1 m1     /\
 				valid l2 fl2 m2     /\
-				(forall mf l. ((Set.equal (addrs_in mf) (Set.union (addrs_in m1) (addrs_in m2))) /\
+				(forall mf l. ((Set.equal (dom mf) (Set.union (dom m1) (dom m2))) /\
 				          (valid l (List.Tot.rev_acc fl1 fl2) mf)) ==> p l mf))
 
     by (fun () -> ignore (forall_intros ());
@@ -759,7 +761,7 @@ let rev (l:listptr)
   = (rev_append l None)
 
     <: STATE listptr (fun p m -> exists fl. valid l fl m /\
-                                    (forall mf l. ((Set.equal (addrs_in m) (addrs_in mf)) /\
+                                    (forall mf l. ((Set.equal (dom m) (dom mf)) /\
 				              (valid l (List.Tot.rev fl) mf)) ==> p l mf))
 
     by (fun () -> ignore (forall_intro ());
