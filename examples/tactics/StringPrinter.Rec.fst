@@ -6,17 +6,6 @@ module T = FStar.Tactics
 module Ca = FStar.Int.Cast
 module U32 = FStar.UInt32
 
-let rec example (x: U32.t) : Tot (m unit) (decreases (U32.v x)) =
-  _ <-- print_char (Ca.uint32_to_uint8 x) ;
-  if U32.lt x 256ul
-  then ret ()
-  else example (U32.div x 256ul)
-
-let _ = T.assert_by_tactic True (fun () ->
-  let q = quote (let f (x: nat) : Tot unit (decreases x) = () in f) in
-  T.print (T.term_to_string q)
-)
-
 let tin_decr
   (tin: Type)
   (decreases: (tin -> GTot lex_t))
@@ -121,12 +110,6 @@ let rec mk_do_while_body
     T.pack (T.Tv_Match cond [T.Pat_Constant T.C_True, tt'; pat, tf'])
   | _ -> T.fail "mk_do_while_body: unsupported"
 
-let rec example' (x: nat) : Tot (m unit) =
-  _ <-- print_char 25uy ;
-  if x < 256
-  then ret ()
-  else example' (x / 256)
-
 let do_while_body_res_intro
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
@@ -184,7 +167,7 @@ let rewrite_do_while
 : Tot (y: m tout { y () == f x () } )
 = bind (ret (do_while_correct tin tout f decrease body x)) (fun _ -> do_while tin tout decrease body x)
 
-let mk_do_while_tac (#t: Type) (x: t) : T.Tac unit =
+let mk_do_while (#t: Type) (x: t) : T.Tac unit =
   admit ();
     let q = quote x in
     match T.inspect q with
@@ -268,15 +251,9 @@ let mk_do_while_tac (#t: Type) (x: t) : T.Tac unit =
     | _ -> T.fail "KO 8"
 
 (* This pattern is necessary to prove do_while_body_post *)
-private let seq_append_empty_r
+let seq_append_empty_r
   (s: Seq.seq FStar.UInt8.t)
 : Lemma
   (ensures (Seq.append s Seq.createEmpty == s))
   [SMTPat (Seq.append s Seq.createEmpty)]
 = Seq.append_empty_r s
-
-let example'_do_while : (x: nat) -> Tot (y: m unit { y () == example' x () } ) =
-  T.synth_by_tactic (fun () -> mk_do_while_tac example' )
-
-let example_do_while : (x: U32.t) -> Tot (y: m unit { y () == example x () } ) =
-  T.synth_by_tactic (fun () -> mk_do_while_tac example )

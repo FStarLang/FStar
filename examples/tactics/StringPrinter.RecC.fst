@@ -352,7 +352,7 @@ let rec compile
 
 #reset-options
 
-let mk_sz
+let mk_sz'
   (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
@@ -368,40 +368,14 @@ let mk_sz
     ty
     t
 
-let test_tac (#ty: Type0) (m: m ty) : T.Tac unit =
+let mk_sz (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_sz (T.cur_env ()) 4 ty' x in
+    let t = mk_sz' (T.cur_env ()) fuel ty' x in
     exact_guard t
 
-#reset-options "--print_bound_var_types --print_implicits"
-
-let dw (x: U32.t) : Tot (m unit) =
-  do_while
-    _
-    _
-    (fun _ -> LexTop)
-    (fun x -> ret (Right ()))
-    x
-
-let dw_sz (x: U32.t) : Tot (m_sz (dw x)) =
-  T.synth_by_tactic (fun () -> test_tac (dw x))
-
-inline_for_extraction
-let example_sz (x: U32.t) : Tot (m_sz (example x)) =
-  coerce_sz
-    _
-    (example_do_while x)
-    (T.synth_by_tactic (fun () -> test_tac (example_do_while x)))
-    (example x)
-    ()
-
-inline_for_extraction
-let test_len (x: U32.t) : Tot (option U32.t) =
-  log_size (example_sz x)
-
-let mk_st
+let mk_st'
   (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
@@ -417,32 +391,9 @@ let mk_st
     ty
     t
 
-let test_tac_st (#ty: Type0) (m: m ty) : T.Tac unit =
+let mk_st (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_st (T.cur_env ()) 4 ty' x in
+    let t = mk_st' (T.cur_env ()) fuel ty' x in
     exact_guard t
-
-inline_for_extraction
-let example_st' (x: U32.t) : Tot (m_st (example_do_while x)) =
-  (T.synth_by_tactic (fun () -> test_tac_st (example_do_while x)))
-
-inline_for_extraction
-let example_st (x: U32.t) : Tot (m_st (example x)) =
-  coerce_st
-    _
-    (example_do_while x)
-    (T.synth_by_tactic (fun () -> test_tac_st (example_do_while x)))
-    (example x)
-    ()
-
-inline_for_extraction
-let example_test (x: U32.t) : HST.ST (option unit) (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
-  phi
-    (example x)
-    (example_sz x)
-    (example_st x)
-    ()
-
-let _ = T.assert_by_tactic True (fun () -> T.print "EOF")

@@ -1,7 +1,7 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-.PHONY: neg stringprintertest stringprinter
+.PHONY: neg stringprintertest-ver stringprintertest stringprinter
 
 all:	Apply.uver		\
 	ApplyLemma.uver		\
@@ -72,14 +72,17 @@ neg:
 	$(MAKE) -C neg
 
 ifdef KREMLIN_HOME
-StringPrinter.RecC.uver StringPrinterTest.uver: OTHERFLAGS+=--include $(KREMLIN_HOME)/kremlib
-stringprintertest: StringPrinter.RecC.uver StringPrinterTest.uver
-	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
+StringPrinter.RecC.uver StringPrinterTest.Aux.uver StringPrinterTest.uver: OTHERFLAGS+=--include $(KREMLIN_HOME)/kremlib
+stringprintertest-ver: StringPrinter.RecC.uver StringPrinterTest.Aux.uver StringPrinterTest.uver
+stringprintertest:
+	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
 else
+stringprintertest-ver:
 stringprintertest:
 endif
 
 stringprinter: \
 	StringPrinter.Base.uver \
 	StringPrinter.Rec.uver \
+	stringprintertest-ver \
 	stringprintertest

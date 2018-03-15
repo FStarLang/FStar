@@ -238,37 +238,6 @@ let log_size
   ))))
 = f_sz _ (fun _ r _ -> Some r) (fun _ -> None)
 
-module Cast = FStar.Int.Cast
-
-let cast (x: U32.t) : Pure (y: U8.t { U8.v y == U32.v x } ) (requires (U32.v x < 256)) (ensures (fun _ -> True)) =
-  Cast.uint32_to_uint8 x
-
-let example (x: U32.t) : Tot (m unit) =
-  if U32.lt x 256ul
-  then begin
-    g <-- ret (cast x) ;
-    print_char g
-  end else begin
-    ret ()
-  end
-
-#set-options "--use_two_phase_tc true"
-
-inline_for_extraction
-let example_sz (x: U32.t) : Tot (m_sz (example x)) =
-  ifthenelse_sz
-    _
-    (U32.lt x 256ul)
-    _
-    (fun _ -> bind_sz (ret_sz (cast x)) (fun g -> print_char_sz g))
-    _
-    (fun _ -> ret_sz ())
-
-(* This should give the same thing as the test function at the very end of this file *)
-inline_for_extraction
-let test_ (x: U32.t) : Tot (option U32.t) =
-  log_size (example_sz x)
-
 module T = FStar.Tactics
 
 let tfail (#a: Type) (s: Prims.string) : T.Tac a =
@@ -525,7 +494,7 @@ let rec compile
   T.print ("END compile, result: " ^ T.term_to_string res);
   res
 
-let mk_sz
+let mk_sz'
   (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
@@ -547,65 +516,12 @@ let unfold_ (#t: Type) (x: t) : T.Tac T.term =
   | Tv_FVar v -> unfold_fv v
   | _ -> fail ("unfold_def: Not a free variable: " ^ term_to_string u)
 
-let test_tac (#ty: Type0) (m: m ty) : T.Tac unit =
+let mk_sz (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_sz (T.cur_env ()) 2 ty' x in
+    let t = mk_sz' (T.cur_env ()) fuel ty' x in
     exact_guard t
-
-let example0 : (m int) =
-  ret 42
-
-(* Works *)
-let z0 : m_sz example0 =
-  T.synth_by_tactic (fun () -> test_tac example0)
-
-let example0' : (m unit) =
-  print_char 128uy
-
-(* Works *)
-let z0' : m_sz example0' =
-  T.synth_by_tactic (fun () -> test_tac example0')
-
-let example1 : (m unit) =
-  seq
-    (print_char 42uy)
-    (ret ())
-
-(* Works, finally *)
-let z1 : m_sz example1 =
-  T.synth_by_tactic (fun () -> test_tac example1)
-
-(* The following term is the term printed by the tactic. This works. *)
-let z1_ : m_sz example1 =
-  seq_sz Prims.unit
-  (print_char (FStar.UInt8.uint_to_t 42))
-  (print_char_sz (FStar.UInt8.uint_to_t 42))
-  (ret ())
-  (ret_sz ())
-
-let example2 : (m unit) =
-  x <-- ret 18uy ;
-  print_char x
-
-let z2 : m_sz example2 =
-  T.synth_by_tactic (fun () -> test_tac example2)
-
-let example3 (x: U8.t) : Tot (m unit) =
-  y <-- ret (if U8.lt 0uy x then U8.sub x 1uy else x) ;
-  print_char y
-
-let z3 (x: U8.t) : Tot (m_sz (example3 x)) =
-  T.synth_by_tactic (fun () -> test_tac (example3 x))
-
-inline_for_extraction
-let z (x: U32.t) : Tot (m_sz (example x)) =
-  T.synth_by_tactic (fun () -> test_tac (example x))
-
-inline_for_extraction
-let test1 (x: U32.t) : Tot (option U32.t) =
-  log_size (z x)
 
 module B = FStar.Buffer
 module HST = FStar.HyperStack.ST
@@ -723,7 +639,7 @@ let coerce_st
 : Tot (m_st ft2)
 = fun b -> ft1_st b
 
-let mk_st
+let mk_st'
   (env: T.env)
   (fuel: nat) (ty: T.term) (t: T.term)
 : T.Tac T.term
@@ -738,16 +654,12 @@ let mk_st
     ty
     t
 
-let test_tac_st (#ty: Type0) (m: m ty) : T.Tac unit =
+let mk_st (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_st (T.cur_env ()) 2 ty' x in
+    let t = mk_st' (T.cur_env ()) fuel ty' x in
     exact_guard t
-
-inline_for_extraction
-let z_st (x: U32.t) : Tot (m_st (example x)) =
-  T.synth_by_tactic (fun () -> test_tac_st (example x))
 
 inline_for_extraction
 let redirect_to_dev_null'
@@ -834,8 +746,8 @@ let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t_sz = mk_sz (T.cur_env ()) fuel ty' x in
-    let t_st = mk_st (T.cur_env ()) fuel ty' x in
+    let t_sz = mk_sz' (T.cur_env ()) fuel ty' x in
+    let t_st = mk_st' (T.cur_env ()) fuel ty' x in
     let q = quote phi in
     let t = mk_app q [
       ty', Q_Implicit;
@@ -845,15 +757,3 @@ let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
     ]
     in
     exact_guard t
-
-#reset-options "--print_implicits --print_bound_var_types --z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection' --use_two_phase_tc true"
-
-let test' (x: U32.t) : Tot (phi_t (example x)) =
-  phi (example x) (T.synth_by_tactic (fun () -> test_tac (example x))) (T.synth_by_tactic (fun () -> test_tac_st (example x)))
-
-inline_for_extraction
-let test (x: U32.t) : HST.ST unit (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
-  let _ = (T.synth_by_tactic (fun () -> phi_tac 2 (example x)) <: phi_t (example x)) () in
-  ()
-
-let _ = T.assert_by_tactic True (fun () -> T.print "EOF")
