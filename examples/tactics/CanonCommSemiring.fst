@@ -373,7 +373,9 @@ val lemma_poly_multiply : n:int -> p:int -> r:int -> h:int -> r0:int -> r1:int -
   )
   (ensures (h * r) % p == hh % p)
 
+// These assumptions are proven in https://github.com/project-everest/vale/blob/fstar/src/lib/math/Math.Lemmas.Int_i.fsti
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
+assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
 let lemma_poly_multiply n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
   let r1_4 = r1 / 4 in
@@ -388,3 +390,23 @@ let lemma_poly_multiply n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
     (fun _ -> canon_semiring int_cr);
   ()
 
+val lemma_poly_reduce : n:int -> p:int -> h:int -> h2:int -> h10:int -> c:int -> hh:int -> Lemma
+  (requires
+    p > 0 /\
+    4 * (n * n) == p + 5 /\
+    h2 == h / (n * n) /\
+    h10 == h % (n * n) /\
+    c == (h2 / 4) + (h2 / 4) * 4 /\
+    hh == h10 + c + (h2 % 4) * (n * n))
+  (ensures h % p == hh % p)
+
+let lemma_poly_reduce n p h h2 h10 c hh =
+  let h2_4 = h2 / 4 in
+  let h2_m = h2 % 4 in
+  let h_expand = h10 + (h2_4 * 4 + h2_m) * (n * n) in
+  let hh_expand = h10 + (h2_m) * (n * n) + h2_4 * 5 in
+  lemma_div_mod h (n * n);
+  modulo_addition_lemma hh_expand p h2_4;
+  assert_by_tactic (h_expand == hh_expand + h2_4 * (n * n * 4 + (-5)))
+    (fun _ -> canon_semiring int_cr);
+  ()
