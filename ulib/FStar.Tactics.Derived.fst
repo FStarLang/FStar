@@ -317,9 +317,14 @@ private let conv #x #y eq w = w
 let change_sq t1 =
     change (mk_e_app (`squash) [t1])
 
+let finish_by (t : unit -> Tac 'a) : Tac 'a =
+    let x = t () in
+    or_else qed (fun () -> fail "finish_by: not finished");
+    x
+
 let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
     dup ();
-    let x = focus (fun () -> let x = t1 () in
-                             or_else (fun () -> qed (); x) (fun () -> fail "solve_then: t1 did not solve the goal")) in
-    t2 x;
-    trefl ()
+    let x = focus (fun () -> finish_by t1) in
+    let y = t2 x in
+    trefl ();
+    y
