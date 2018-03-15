@@ -298,7 +298,7 @@ let rec is_app_pattern p = match p.pat with
 
 let replace_unit_pattern p = match p.pat with
   | PatConst FStar.Const.Const_unit ->
-    mk_pattern (PatAscribed (mk_pattern PatWild p.prange, unit_ty)) p.prange
+    mk_pattern (PatAscribed (mk_pattern PatWild p.prange, (unit_ty, None))) p.prange
   | _ -> p
 
 let rec destruct_app_pattern env is_top_level p = match p.pat with
@@ -337,7 +337,7 @@ let gather_pattern_bound_vars =
 
 type bnd =
   | LocalBinder of bv     * S.aqual
-  | LetBinder   of lident * S.term
+  | LetBinder   of lident * (S.term * option<S.term>)
 let binder_of_bnd = function
   | LocalBinder (a, aq) -> a, aq
   | _ -> failwith "Impossible"
@@ -534,7 +534,11 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatOp op ->
         aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText op.idRange, op.idRange), None); prange = p.prange })
 
-      | PatAscribed(p, t) ->
+      | PatAscribed(p, (t, tacopt)) ->
+        let _ = match tacopt with
+                | None -> ()
+                | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns are cannot be associated with a tactic") orig.prange
+        in
         let loc, env', binder, p, imp = aux loc env p in
         let annot_pat_var p t =
             match p.v with
@@ -651,13 +655,14 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
-  let mklet x = env, LetBinder(qualify env x, tun), [] in
+  let mklet x = env, LetBinder(qualify env x, (tun, None)), [] in
   if top
   then match p.pat with
     | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
     | PatVar (x, _) -> mklet x
-    | PatAscribed({pat=PatVar (x, _)}, t) ->
-      (env, LetBinder(qualify env x, desugar_term env t), [])
+    | PatAscribed({pat=PatVar (x, _)}, (t, tacopt)) ->
+      let tacopt = BU.map_opt tacopt (desugar_term env) in
+      (env, LetBinder(qualify env x, (desugar_term env t, tacopt)), [])
     | _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
   else
     let (env, binder, p) = desugar_data_pat env p is_mut in
@@ -940,7 +945,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let binders = binders |> List.map replace_unit_pattern in
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
-          | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
+          | PatAscribed(_, (t, None)) -> env, free_type_vars env t@ftvs
+          | PatAscribed(_, (t, Some tac)) -> env, free_type_vars env t@free_type_vars env tac@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
       let binders = (ftv |> List.map (fun a ->
@@ -1099,7 +1105,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             let def =
               match result_t with
               | None -> def
-              | Some t ->
+              | Some (t, tacopt) ->
                 let t =
                     if is_comp_type env t
                     then let _ =
@@ -1116,7 +1122,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
-                mk_term (Ascribed(def, t, None)) (Range.union_ranges t.range def.range) Expr
+                mk_term (Ascribed(def, t, tacopt)) (Range.union_ranges t.range def.range) Expr
             in
             let def = match args with
                  | [] -> def
@@ -1154,7 +1160,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat is_mutable in
         let tm =
             match binder with
-            | LetBinder(l, t) ->
+            | LetBinder(l, (t, _tacopt)) -> //_tacopt must be None here
               let body = desugar_term env t2 in
               let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
               mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body)
