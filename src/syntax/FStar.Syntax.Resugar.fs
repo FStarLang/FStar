@@ -815,7 +815,7 @@ and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
   match typ_opt with
   | None | Some { n = Tm_unknown } -> pat
   | Some typ -> if Options.print_bound_var_types ()
-               then mk (A.PatAscribed (pat, resugar_term' env typ))
+               then mk (A.PatAscribed (pat, (resugar_term' env typ, None)))
                else pat
 
 and resugar_bv_as_pat env (x:S.bv) qual body_bv: option<A.pattern> =

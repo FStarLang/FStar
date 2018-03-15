@@ -682,9 +682,13 @@ let collect_one
         collect_patterns ps
     | PatRecord lidpats ->
         List.iter (fun (_, p) -> collect_pattern p) lidpats
-    | PatAscribed (p, t) ->
+    | PatAscribed (p, (t, None)) ->
         collect_pattern p;
         collect_term t
+    | PatAscribed (p, (t, Some tac)) ->
+        collect_pattern p;
+        collect_term t;
+        collect_term tac
 
 
   and collect_branches bs =
@@ -950,7 +954,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                       (cache_file f)
                       norm_f
                       files;
-          
+
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then (

@@ -626,7 +626,8 @@ and p_letlhs (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr_doc =
     match pat.pat with
-    | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
+    | PatAscribed (pat, (t, None)) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
+    | PatAscribed (pat, (t, Some tac)) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t) ^^ group (str "by" ^^ space ^^ p_atomicTerm tac)
     | _ -> pat, empty
   in
   match pat.pat with
@@ -749,7 +750,7 @@ and p_constructorPattern p = match p.pat with
       p_atomicPattern p
 
 and p_atomicPattern p = match p.pat with
-  | PatAscribed (pat, t) ->
+  | PatAscribed (pat, (t, None)) ->
     (* This inverts the first rule of atomicPattern (LPAREN tuplePattern COLON
      * simpleArrow RPAREN). *)
     begin match pat.pat, t.tm with
@@ -936,7 +937,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
        * something in [e2] may swallow. *)
       if is_unit e3
       then group ((str "if" ^/+^ p_noSeqTerm false false e1) ^/^ (str "then" ^/+^ p_noSeqTerm ps pb e2))
-      else 
+      else
            let e2_doc =
               match e2.tm with
                   (* Not protecting, since an ELSE follows. *)
