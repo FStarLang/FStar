@@ -6,7 +6,7 @@
 /// :Contact: clement.pitclaudel@live.com
 /// :Date: 2017-10-13
 
-module PatternMatching
+module FStar.Tactics.PatternMatching
 
 // JP: this file does not seem to type-check without this option.
 #set-options "--use_two_phase_tc true"
@@ -535,7 +535,7 @@ let solve_mp #a (problem: matching_problem)
 
 // This is a hack to allow users to capture anything.
 assume val __ : #t:Type -> t
-let any_qn = ["PatternMatching"; "__"]
+let any_qn = ["FStar"; "Tactics"; "PatternMatching"; "__"]
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
@@ -598,8 +598,8 @@ let pattern_of_term tm : Tac pattern =
 let hyp (a: Type) = binder
 let goal (a: Type) = unit
 
-let hyp_qn = ["PatternMatching"; "hyp"]
-let goal_qn = ["PatternMatching"; "goal"]
+let hyp_qn  = ["FStar"; "Tactics"; "PatternMatching"; "hyp"]
+let goal_qn = ["FStar"; "Tactics"; "PatternMatching"; "goal"]
 
 noeq type abspat_binder_kind =
 | ABKVar of typ

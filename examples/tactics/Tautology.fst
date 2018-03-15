@@ -1,5 +1,5 @@
 module Tautology
-module P = PatternMatching
+module P = FStar.Tactics.PatternMatching
 
 open FStar.Tactics
 
