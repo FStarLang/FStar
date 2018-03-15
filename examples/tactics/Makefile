@@ -1,5 +1,4 @@
 FSTAR_HOME=../..
-OTHERFLAGS += --include ../pattern-matching
 include ../Makefile.include
 
 .PHONY: neg
