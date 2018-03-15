@@ -197,18 +197,22 @@ let do_while_st_body
     let blhs32 = U32.uint_to_t blhs in
     assert (bout == B.sub blog blhs32 (U32.uint_to_t (B.length bout)));
     assume (B.modifies_2 binterm (B.sub blog 0ul blhs32) (G.reveal h0) h);
- (*      
+    let bl = B.sub blog 0ul blhs32 in
+    let blhs_pre = B.length blog - B.length bout_pre in
+    Seq.lemma_split (B.as_seq h bl) blhs_pre;
     match interm.do_while_st_interm_res with
-      | Left _ ->
-        interrupt == false /\ (
+      | Left x ->
+        assert (b == false);
         let (y, log) = do_while tin tout decrease body x () in
-        y0 == y /\
-        log0 = Seq.append (Seq.slice (B.as_seq h blog) 0 blhs) log /\
-        Seq.length log <= B.length bout
-        )
+        assert (y0 == y);
+        Seq.append_assoc (Seq.slice (B.as_seq h bl) 0 blhs_pre) (Seq.slice (B.as_seq h bl) blhs_pre blhs) log;
+        assert (log0 == Seq.append (Seq.slice (B.as_seq h blog) 0 blhs) log);
+        assert (Seq.length log <= B.length bout);
+        assert (do_while_st_inv tin tout decrease body h0 x0 blog binterm h b)
       | Right y ->
-*)        
-        assume (do_while_st_inv tin tout decrease body h0 x0 blog binterm h b)
+        assert (y0 == y);
+        assert (b == true);
+        assert (do_while_st_inv tin tout decrease body h0 x0 blog binterm h b)
   in
   prf ();
   b
