@@ -272,12 +272,12 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list ter
     Tac (list exp * vmap a b) =
   let mult = norm_term [delta] (quote (CM?.mult m)) in
   let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let ts   = Tactics.Derived.map (norm_term [delta]) ts in
+  let ts   = Tactics.Util.map (norm_term [delta]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
   //     ";  t   = " ^ term_to_string t);
   let (es,_, vm) =
-    Tactics.Derived.fold_left
+    Tactics.Util.fold_left
       (fun (es,vs,vm) t ->
         let (e,vs,vm) = reification_aux vs vm f mult unit t in (e::es,vs,vm))
       ([],[], const (CM?.unit m) def) ts

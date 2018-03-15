@@ -5,38 +5,10 @@ open FStar.Reflection.Formula
 open FStar.Tactics.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+open FStar.Tactics.Util
 module L = FStar.List.Tot
 
-(* Tac list functions, no effect polymorphism *)
-val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
-let rec map f x = match x with
-  | [] -> []
-  | a::tl -> f a::map f tl
-
-val iter : ('a -> Tac unit) -> list 'a -> Tac unit
-let iter f x =
-    let _ = map f x in ()
-
-
-val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
-let rec fold_left f x l = match l with
-  | [] -> x
-  | hd::tl -> fold_left f (f x hd) tl
-
-val fold_right: ('a -> 'b -> Tac 'b) -> list 'a -> 'b -> Tac 'b
-let rec fold_right f l x = match l with
-  | [] -> x
-  | hd::tl -> f hd (fold_right f tl x)
-
-// TODO: maybe we can increase a counter on each call
-let fresh_bv t = fresh_bv_named "x" t
-
-let fresh_binder_named nm t =
-    mk_binder (fresh_bv_named nm t)
-
-let fresh_binder t =
-    fresh_binder_named "x" t
-
+(** Set the guard policy only locally, without affecting calling code *)
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let old_pol = get_guard_policy () in
     set_guard_policy pol;
@@ -55,9 +27,51 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact false t)
 
-let fresh_uvar o =
+
+let focus (f : unit -> Tac 'a) : Tac 'a =
+    let res, _ = divide 1 f (fun () -> ()) in
+    res
+
+let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
+    if n = 0
+    then []
+    else let x = t () in
+         let xs = repeatn (n - 1) t in
+         x :: xs
+
+let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
+
+let exact_args (qs : list aqualv) (t : term) : Tac unit =
+    focus (fun () ->
+        let n = List.length qs in
+        let uvs = repeatn n (fun () -> fresh_uvar None) in
+        let t' = mk_app t (zip uvs qs) in
+        exact t';
+        iter (fun uv -> if is_uvar uv
+                        then unshelve uv
+                        else ()) (L.rev uvs)
+    )
+
+
+let exact_n (n : int) (t : term) : Tac unit =
+    exact_args (repeatn n (fun () -> Q_Explicit)) t
+
+let fresh_bv t =
+    (* These bvs are fresh anyway through a separate counter,
+     * but adding the integer allows for more readable code when
+     * generating code *)
+    let i = fresh () in
+    fresh_bv_named ("x" ^ string_of_int i) t
+
+let fresh_binder_named nm t =
+    mk_binder (fresh_bv_named nm t)
+
+let fresh_binder t =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_binder_named ("x" ^ string_of_int i) t
 
 let norm_term (s : list norm_step) (t : term) : Tac term =
     let e = cur_env () in
@@ -83,19 +97,6 @@ let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
     let x = t () in
     x :: repeat t
-
-let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
-    if n = 0
-    then []
-    else let x = t () in
-         let xs = repeatn (n - 1) t in
-         x :: xs
-
-(* There's no unconditionally total zip in Tot.Base, why? Anyway use this *)
-val zip : (#a:Type) -> (#b:Type) -> list a -> list b -> list (a * b)
-let rec zip #a #b l1 l2 = match l1, l2 with
-    | x::xs, y::ys -> (x,y) :: (zip xs ys)
-    | _ -> []
 
 
 let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
@@ -248,25 +249,6 @@ let mk_sq_eq (t1 t2 : term) : term =
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
     pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
-
-let focus (f : unit -> Tac 'a) : Tac 'a =
-    let res, _ = divide 1 f idtac in
-    res
-
-let exact_args (qs : list aqualv) (t : term) : Tac unit =
-    focus (fun () ->
-        let n = List.length qs in
-        let uvs = repeatn n (fun () -> fresh_uvar None) in
-        let t' = mk_app t (zip uvs qs) in
-        exact t';
-        iter (fun uv -> if is_uvar uv
-                        then unshelve uv
-                        else ()) (L.rev uvs)
-    )
-
-
-let exact_n (n : int) (t : term) : Tac unit =
-    exact_args (repeatn n (fun () -> Q_Explicit)) t
 
 
 
