@@ -479,10 +479,7 @@ let rec append (l1 l2:listptr)
 		let l = __elim_exists_return_binders2 h in
 		let m1_binder = List.Tot.hd l in
 		let m2_binder = List.Tot.hd (List.Tot.tl l) in
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in __elim_and h;
+		ignore (repeatn 4 implies_and_elim);
 		ignore (implies_intro ());
 		let h = implies_intro () in rewrite h;
 		ignore (implies_intro ());
@@ -497,11 +494,7 @@ let rec append (l1 l2:listptr)
                 split ();
 
                 //empty fl1 case
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in rewrite h;
-		let h = implies_intro () in rewrite h;
-		let h = implies_intro () in rewrite h;
+		ignore (repeatn 5 implies_and_elim);
 
                 ignore (implies_intro ()); //the valid assumption for l2
 		ignore (implies_intro ()); //this is the foall mf f. assumption, keep an eye on it
@@ -524,15 +517,12 @@ let rec append (l1 l2:listptr)
 
                 let fl1_head = forall_intro () in
 		let fl1_tail = forall_intro () in
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in rewrite h;
+		ignore (repeatn 3 implies_and_elim);
 		ignore (implies_intro ());
 		let h = implies_intro () in let l1 = __elim_exists_return_binders2 h in
 		let l1_tail = List.Tot.hd l1 in
 		let l1_tail_memory = List.Tot.hd (List.Tot.tl l1) in
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in rewrite h;
+		ignore (repeatn 2 implies_and_elim);
 		ignore (implies_intro ());
 		ignore (implies_intro ());
 
@@ -592,8 +582,7 @@ let rec append (l1 l2:listptr)
 
                 //prove the postcondition part
 		ignore (forall_intros ());
-		let h = implies_intro () in __elim_and h;
-		let h = implies_intro () in __elim_and h;
+		ignore (repeatn 2 implies_and_elim);
 		ignore (implies_intros ());
 		split_and_smt ();
 
@@ -657,7 +646,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       let fl1 = List.Tot.hd l in let fl2 = List.Tot.hd (List.Tot.tl l) in
                let h = implies_intro () in let l = __elim_exists_return_binders2 h in
 	       let m1 = List.Tot.hd l in let m2 = List.Tot.hd (List.Tot.tl l) in
-	       let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h;
+	       ignore (repeatn 4 implies_and_elim);
 	       ignore (implies_intro ());
 	       let h = implies_intro () in rewrite h;
 	       ignore (implies_intro ());
@@ -670,8 +659,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
                split (); //split into base case and the inductive case
 
                //base case, fl1 = []
-	       let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h;
-	       let h = implies_intro () in rewrite h; let h = implies_intro () in rewrite h; let h = implies_intro () in rewrite h;
+	       ignore (repeatn 5 implies_and_elim);
 	       ignore (implies_intro ()); //valid assumption for l2
 	       ignore (implies_intro ()); //this is the forall mf f. keep an eye on it
 
@@ -692,17 +680,13 @@ let rec rev_append (l1:listptr) (l2:listptr)
 
                let fl1_hd = forall_intro () in
 	       let fl1_tl = forall_intro () in
-	       let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h;
-	       let h = implies_intro () in rewrite h;
+	       ignore (repeatn 3 implies_and_elim);
 	       ignore (implies_intro ());
 	       let h = implies_intro () in let l = __elim_exists_return_binders2 h in
 	       let l1_tl = List.Tot.hd l in let l1_tail_m = List.Tot.hd (List.Tot.tl l) in
-	       let h = implies_intro () in __elim_and h;
-	       let h = implies_intro () in rewrite h;
-	       ignore (implies_intro ()); ignore (implies_intro ());
+	       ignore (repeatn 2 implies_and_elim);
+	       ignore (implies_intros ());
 	       
-	       ignore (implies_intro ()); //this is forall mf l. assumption, keep an eye on it
-
                split ();
 
                //inconsistent
