@@ -130,6 +130,8 @@ let do_while_st_inv
 : GTot Type0
 = let (y0, log0) = do_while tin tout decrease body x0 () in
   B.disjoint binterm blog /\
+  B.live (G.reveal h0) binterm /\
+  B.live (G.reveal h0) blog /\
   B.live h binterm /\
   B.live h blog /\
   B.length binterm == 1 /\
@@ -139,7 +141,7 @@ let do_while_st_inv
     B.length bout <= B.length blog /\ (
     let blhs = B.length blog - B.length bout in
     let blhs32 = U32.uint_to_t blhs in
-    B.modifies_2 binterm (B.sub blog 0ul blhs32) (G.reveal h0) h /\
+    B.modifies_2 (B.sub blog 0ul blhs32) binterm (G.reveal h0) h /\
     bout == B.sub blog blhs32 (U32.uint_to_t (B.length bout)) /\ (
     match interm.do_while_st_interm_res with
     | Left x ->
@@ -155,7 +157,7 @@ let do_while_st_inv
       log0 == Seq.slice (B.as_seq h blog) 0 blhs
   )))
 
-#reset-options "--z3rlimit 64 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+#reset-options "--z3rlimit 128 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 inline_for_extraction
 let do_while_st_body
@@ -174,11 +176,12 @@ let do_while_st_body
   (ensures (fun _ b h ->
     do_while_st_inv tin tout decrease body h0 x0 blog binterm h b
   ))
-= let interm = B.index binterm 0ul in
+= let h1 = HST.get () in
+  let interm = B.index binterm 0ul in
   let bout = interm.do_while_st_interm_log in
   let (Left x) = interm.do_while_st_interm_res in
-  let h = HST.get () in
   let (res', bout') = body_st x bout in
+  let h2 = HST.get () in
   let res = match res' with | Left x' -> Left x' | Right y -> Right y in
   B.upd binterm 0ul ({
     do_while_st_interm_res = res;
@@ -196,9 +199,22 @@ let do_while_st_body
     let blhs = B.length blog - B.length bout in
     let blhs32 = U32.uint_to_t blhs in
     assert (bout == B.sub blog blhs32 (U32.uint_to_t (B.length bout)));
-    assume (B.modifies_2 binterm (B.sub blog 0ul blhs32) (G.reveal h0) h);
     let bl = B.sub blog 0ul blhs32 in
     let blhs_pre = B.length blog - B.length bout_pre in
+    let blhs_pre32 = U32.uint_to_t blhs_pre in
+    let bout_pre_l32 = U32.uint_to_t (B.length bout_pre - B.length bout) in
+    let bl_pre = B.sub blog 0ul blhs_pre32 in
+    assert (bl_pre == B.sub bl 0ul blhs_pre32);
+    assert (B.modifies_2 bl_pre binterm (G.reveal h0) h1);
+    assert (B.includes bl bl_pre);
+    B.modifies_subbuffer_2 (G.reveal h0) h1 bl_pre binterm bl;
+    let bout_pre_l = B.sub bout_pre 0ul bout_pre_l32 in
+    assert (bout_pre_l == B.sub bl blhs_pre32 bout_pre_l32);
+    assert (B.modifies_1 bout_pre_l h1 h2);
+    B.modifies_subbuffer_1 h1 h2 bout_pre_l bl;
+    B.lemma_modifies_2_1 bl binterm (G.reveal h0) h1 h2;
+    B.lemma_modifies_2_1 binterm bl (G.reveal h0) h2 h;
+    assert (B.modifies_2 bl binterm (G.reveal h0) h);
     Seq.lemma_split (B.as_seq h bl) blhs_pre;
     match interm.do_while_st_interm_res with
       | Left x ->
@@ -216,6 +232,8 @@ let do_while_st_body
   in
   prf ();
   b
+
+#reset-options "--z3rlimit 64 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 inline_for_extraction
 let do_while_st
