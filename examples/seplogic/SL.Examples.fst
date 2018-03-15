@@ -112,17 +112,76 @@ let split_lem #a #b sa sb = ()
 private let get_to_the_next_frame () :Tac unit =
   ignore (repeat (fun () -> apply_lemma (`split_lem); smt ()))
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --__temp_fast_implicits"
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --use_two_phase_tc false --__temp_fast_implicits"
 
 open PatternMatching
 open CanonCommMonoid
+open FStar.Reflection
+open FStar.List
 
-let footprint (t:term) : Tac (list unit) = admit()
+// Fails when called
+// (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
+let solve_frame_wp_fails (_:unit) : Tac unit =
+  gpm #unit (fun (a:Type) (wp:st_wp a) (post:memory->post a) (m:memory)
+            (_ : goal(squash (frame_wp wp post m))) -> idtac()) ()
+
+let frame_wp_qn = ["SL" ; "Effect" ; "frame_wp"]
+let write_wp_qn = ["SL" ; "Effect" ; "write_wp"]
+
+let footprint_of (t:term) : Tac (list term) =
+  admit();
+  let hd, tl = collect_app t in
+  match inspect hd, tl with
+  | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
+    if inspect_fv fv = write_wp_qn then [tr]
+    else fail "not a write_wp"
+  | _ -> fail "not an applied free variable"
 
 let solve_frame_wp (_:unit) : Tac unit =
-  gpm (fun (a:Type) (wp:st_wp a) (post:memory->post a) (m:memory)
-           (_ : goal(squash (frame_wp wp post m))) ->
-    dump "haha") ()
+  admit();
+  norm[];
+  let g = cur_goal () in
+  let hd, tl = collect_app g in
+  match inspect hd, tl with
+  | Tv_FVar fv, [(t1, Q_Explicit)] ->
+    if inspect_fv fv = squash_qn then
+      let hd, tl = collect_app t1 in
+      match inspect hd, tl with
+      | Tv_FVar fv, [(ta, Q_Implicit);
+                     (twp, Q_Explicit);
+                     (tpost, Q_Explicit);
+                     (tm, Q_Explicit)] ->
+      if inspect_fv fv = frame_wp_qn then
+        let fp = footprint_of twp in
+        dump ("fp="^ FStar.String.concat "," (List.Tot.map term_to_string fp));
+        let m0 = FStar.Tactics.Derived.fold_left
+                   (fun a t -> if term_eq a (`emp) then t
+                               else quote (join a t)) (`emp)
+                   (FStar.Tactics.Derived.map
+                     (fun t -> let u = fresh_uvar None in quote (t |> u)) fp)
+        in
+        dump ("m0=" ^ term_to_string m0);
+        idtac()
+      else fail "expecting frame_wp"
+    else fail "expecting squash"
+  | _ -> fail "not an applied free variable"
+
+let foo (_:unit) : Tac unit =
+   admit();
+   norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
+   mapply (`FStar.Squash.return_squash);
+   let post = forall_intro () in
+   let m0 = forall_intro () in
+   let wp_annot = implies_intro() in
+     and_elim (pack (Tv_Var (fst (inspect_binder wp_annot))));
+     clear wp_annot;
+     let hm0 = implies_intro() in
+     rewrite hm0; clear hm0;
+     let rest = implies_intro() in
+   norm [delta_only [%`bind_wp]];
+   dump "solve_wp";
+   solve_frame_wp();
+   admit1()
 
 (*
  * two commands
@@ -130,24 +189,8 @@ let solve_frame_wp (_:unit) : Tac unit =
 let write_read (r1 r2:ref int) (x y:int) =
   (r1 := 2;
    !r2)
-  
   <: STATE int (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
-
-  by (fun () -> dump "with crumbs"; 
-             norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
-             mapply (`FStar.Squash.return_squash);
-             let post = forall_intro () in
-             let m0 = forall_intro () in
-             let wp_annot = implies_intro() in
-               and_elim (pack (Tv_Var (fst (inspect_binder wp_annot))));
-               clear wp_annot;
-               let hm0 = implies_intro() in
-               rewrite hm0; clear hm0;
-               let rest = implies_intro() in
-             norm [delta_only [%`bind_wp]];
-             dump "solve_wp";
-             solve_frame_wp();
-             fail "stop")
+  by foo
 
 //       // prelude ();
 //       // process_command ();
