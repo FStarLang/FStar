@@ -1,0 +1,95 @@
+[
+  "ã{á))ÒèHáz¢!þKÂ0",
+  [
+    [
+      "FStar.Tactics.Util.map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "df51298e4c9da885faece19371428aff"
+    ],
+    [
+      "FStar.Tactics.Util.fold_left",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "fc602dfcaa60ef0dbbc3ce998bc87bff"
+    ],
+    [
+      "FStar.Tactics.Util.fold_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "6c675b028c735912188780f3d25270d8"
+    ],
+    [
+      "FStar.Tactics.Util.zip",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6f766f9230c09e018226588345776edd"
+    ],
+    [
+      "FStar.Tactics.Util.map",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "6dd2b34e69b7ea1f987be3868ea16204"
+    ],
+    [
+      "FStar.Tactics.Util.fold_left",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "9bc0b5134daa21a1a3eb1f0c1e2ecd99"
+    ],
+    [
+      "FStar.Tactics.Util.fold_right",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "4c4d3ab4b4f9a86787f002346691b9c8"
+    ],
+    [
+      "FStar.Tactics.Util.zip",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "793244d6a5f4d2a16611bc87e40a82d8"
+    ]
+  ]
+]
