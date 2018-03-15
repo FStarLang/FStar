@@ -95,8 +95,12 @@ let ( <*> ) m0 m1 =
 let split_heap m0 m1 h = 
   match (m0, m1) with 
   | (Some m0', Some m1') -> 
-      let h0 = { next_addr = h.next_addr; hdomain = m0'.domain; memory = m0'.contents } in
-      let h1 = { next_addr = h.next_addr; hdomain = m1'.domain; memory = m1'.contents } in
+      let h0 = { next_addr = h.next_addr; 
+                 hdomain = m0'.domain; 
+                 memory = m0'.contents } in
+      let h1 = { next_addr = h.next_addr; 
+                 hdomain = m1'.domain; 
+                 memory = m1'.contents } in
       (h0,h1)
 
 let hcontains #a h r = 
@@ -204,9 +208,9 @@ let lemma_alloc_contains #a h0 x = ()
 
 let lemma_alloc_sel #a h0 x = ()
 
-let lemma_alloc_emp_points_to #a h0 x = 
-  assert (let (r,h1) = alloc h0 x in
-          equal_memories (heap_memory h1) (r |> x))
+let lemma_alloc_heap_memory #a h0 x =
+  let (r,h1) = alloc h0 x in 
+  assert (equal_memories (heap_memory h1) (heap_memory h0 <*> (r |> x)))
 
 let lemma_fresh_in_complement #a r h = ()
 
@@ -234,15 +238,20 @@ let lemma_fresh_or_old_trans h0 h1 h2 =
   admit ()
 
 private let lemma_fresh_or_old_disjoint' (h0 h1 h2:heap) (m_old m_fresh:memory)
-  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
+                     disjoint_heaps h0 h2 /\ same_freshness h0 h2))
           (ensures  (disjoint_heaps h1 h2))
   = assert (defined (m_old <*> m_fresh))
 
 private let lemma_fresh_or_old_disjoint'' (h0 h1 h2:heap) (m_old m_fresh:memory)
-  : Lemma ((fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2) ==> (disjoint_heaps h1 h2))
-  = FStar.Classical.move_requires (fun _ -> lemma_fresh_or_old_disjoint' h0 h1 h2 m_old m_fresh) ()
+  : Lemma (fresh_or_old' h0 h1 m_old m_fresh /\ 
+           disjoint_heaps h0 h2 /\ same_freshness h0 h2 ==> disjoint_heaps h1 h2)
+  = FStar.Classical.move_requires (fun _ -> 
+      lemma_fresh_or_old_disjoint' h0 h1 h2 m_old m_fresh) ()
 
-private let forall_to_exists_2 (#a:Type) (#b:Type) (#p:(a -> b -> Type)) (#r:Type) ($f:(x:a -> y:b -> Lemma (p x y ==> r)))
+private let forall_to_exists_2 (#a:Type) (#b:Type) 
+                               (#p:(a -> b -> Type)) (#r:Type) 
+                               ($f:(x:a -> y:b -> Lemma (p x y ==> r)))
   : Lemma ((exists x y . p x y) ==> r)
   = FStar.Classical.forall_to_exists (fun x -> 
       FStar.Classical.forall_to_exists (fun y -> 
@@ -260,7 +269,8 @@ let lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
 #set-options "--max_fuel 0 --max_ifuel 0"
 
 private let lemma_fresh_or_old_sep' (h0 h1 h2:heap) (m_old m_fresh:memory) 
-  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
+                     disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
           (ensures  (fresh_or_old' (join h0 h2) (join h1 h2) (m_old <*> heap_memory h2) m_fresh))
   = lemma_sep_comm (heap_memory h2) m_fresh
 
@@ -272,17 +282,22 @@ private let exists_intro_2 (#a:Type) (#b:Type) (p:(a -> b -> Type)) (witness:a) 
   = ()
 
 private let lemma_fresh_or_old_sep'' (h0 h1 h2:heap) (m_old m_fresh:memory)
-  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
+                     disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
           (ensures  (fresh_or_old (join h0 h2) (join h1 h2)))
   = lemma_fresh_or_old_sep' h0 h1 h2 m_old m_fresh;
-    exists_intro_2 (fun m_old' m_fresh' -> fresh_or_old' (join h0 h2) (join h1 h2) (m_old <*> heap_memory h2) m_fresh)
+    exists_intro_2 (fun m_old' m_fresh' -> 
+                      fresh_or_old' (join h0 h2) (join h1 h2) (m_old <*> heap_memory h2) m_fresh)
                    (m_old <*> heap_memory h2) (m_fresh)
   
-private let lemma_fresh_or_old_sep''' (h0 h1:heap) (h2:heap{disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2}) (m_old m_fresh:memory)
+private let lemma_fresh_or_old_sep''' (h0 h1:heap) 
+                                      (h2:heap{disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2}) 
+                                      (m_old m_fresh:memory)
   : Lemma ((fresh_or_old' h0 h1 m_old m_fresh) ==> (fresh_or_old (join h0 h2) (join h1 h2)))
   = FStar.Classical.move_requires (fun _ -> lemma_fresh_or_old_sep'' h0 h1 h2 m_old m_fresh) ()
 
-private let lemma_fresh_or_old_sep'''' (h0 h1:heap) (h2:heap{disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2})
+private let lemma_fresh_or_old_sep'''' (h0 h1:heap) 
+                                       (h2:heap{disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2})
   : Lemma (fresh_or_old h0 h1 ==> fresh_or_old (join h0 h2) (join h1 h2))
   = forall_to_exists_2 
       (fun m_old m_fresh -> lemma_fresh_or_old_sep''' h0 h1 h2 m_old m_fresh)
@@ -291,10 +306,14 @@ let lemma_fresh_or_old_sep h0 h1 h2 =
   lemma_fresh_or_old_sep'''' h0 h1 h2
 
 let lemma_fresh_or_old_alloc #a x h0 =
-  admit ()
+  let (r,h1) = alloc h0 x in 
+  exists_intro_2 (fun m_old m_fresh -> 
+    fresh_or_old' h0 h1 m_old m_fresh) (heap_memory h0) (r |> x)
 
 let lemma_fresh_or_old_dealloc #a r h0 =
-  admit ()
+  exists_intro_2 (fun m_old m_fresh -> 
+    fresh_or_old' h0 (dealloc h0 r) m_old m_fresh) (heap_memory (dealloc h0 r)) emp
 
 let lemma_fresh_or_old_upd #a r x h0 =
-  admit ()
+  exists_intro_2 (fun m_old m_fresh -> 
+    fresh_or_old' h0 (upd h0 r x) m_old m_fresh) (heap_memory (upd h0 r x)) emp

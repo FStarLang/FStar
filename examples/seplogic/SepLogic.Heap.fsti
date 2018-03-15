@@ -178,10 +178,9 @@ val lemma_alloc_sel (#a:Type0) (h0:heap) (x:a)
            sel h1 r == x)
           [SMTPat (alloc h0 x)]
 
-val lemma_alloc_emp_points_to (#a:Type0) (h0:heap) (x:a)
-  : Lemma (requires (heap_memory h0 == emp))
-          (ensures  (let (r,h1) = alloc h0 x in
-                     heap_memory h1 == (r |> x)))
+val lemma_alloc_heap_memory (#a:Type0) (h0:heap) (x:a)
+  : Lemma (let (r,h1) = alloc h0 x in
+           heap_memory h1 == (heap_memory h0 <*> (r |> x)))
           [SMTPat (alloc h0 x)]
 
 val lemma_fresh_in_complement (#a:Type0) (r:ref a) (h:heap)
@@ -255,7 +254,6 @@ val lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
 val lemma_fresh_or_old_sep (h0 h1 h2:heap) 
   : Lemma (requires (fresh_or_old h0 h1 /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
           (ensures  (fresh_or_old (join h0 h2) (join h1 h2)))
-          [SMTPat (fresh_or_old (join h0 h2) (join h1 h2))]
 
 val lemma_fresh_or_old_alloc (#a:Type0) (x:a) (h0:heap)
   : Lemma (let (_,h1) = alloc h0 x in

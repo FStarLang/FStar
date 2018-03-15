@@ -120,7 +120,7 @@ let bind #a #wp1 #b #wp2 f g =
           sq_3))
 
 let alloc (#a:Type0) (x:a)
-  : st (ref a) (fun post h0 -> heap_memory h0 == emp /\ (let (r,h1) = alloc h0 x in post (r, h1)))
+  : st (ref a) (fun post h0 -> heap_memory h0 == emp /\ post (alloc h0 x))
   = fun post h0 ->
       let (r,h1) = alloc h0 x in
       lemma_fresh_or_old_alloc x h0;
