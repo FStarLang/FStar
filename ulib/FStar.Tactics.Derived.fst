@@ -356,4 +356,4 @@ let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
 
 (* Some syntax utility functions *)
 let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
-let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder in bv_to_term bv
+let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
