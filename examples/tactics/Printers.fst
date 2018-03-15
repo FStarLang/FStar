@@ -2,6 +2,7 @@ module Printers
 
 open FStar.Tactics
 module TD = FStar.Tactics.Derived
+module TU = FStar.Tactics.Util
 
 #set-options "--use_two_phase_tc false"
 
@@ -67,17 +68,17 @@ let printer_fun () : Tac unit =
             | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TD.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
+            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
-            let bod = mk_concat (mk_stringlit " ") (head :: TD.map (mk_print_bv xt_ns fftm) bvs) in
+            let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
             (Pat_Cons (pack_fv name) pats, bod)
             | _ ->
                 fail "Not a constructor..?"
             end
         in
-        let branches = TD.map br1 ctors in
+        let branches = TU.map br1 ctors in
         let xi = fresh_binder_named "v_inner" dom in
 
         // Generate the match on the internal argument
