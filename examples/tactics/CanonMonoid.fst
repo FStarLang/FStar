@@ -79,12 +79,12 @@ let reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
     let mult = norm_term [delta] (quote (Monoid?.mult m)) in
     let unit = norm_term [delta] (quote (Monoid?.unit m)) in
     let me   = norm_term [delta] me in
-    dump ("mult = " ^ term_to_string mult ^
-        "; unit = " ^ term_to_string unit ^
-        "; me   = " ^ term_to_string me);
+    // dump ("mult = " ^ term_to_string mult ^
+    //     "; unit = " ^ term_to_string unit ^
+    //     "; me   = " ^ term_to_string me);
     reification_aux mult unit me
 
-let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
+let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
@@ -92,15 +92,12 @@ let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
       if term_eq t (quote a) then
         let r1 = reification m me1 in
         let r2 = reification m me2 in
-        // this one causes a "Tactic gets stuck!" error
-        // dump ("r1=" ^ exp_to_string a_to_string r1 ^
-        //     "; r2=" ^ exp_to_string a_to_string r2);
         change_sq (quote (mdenote m r1 == mdenote m r2));
         apply (`monoid_reflect);
         norm [delta_only ["CanonMonoid.mldenote";
                           "CanonMonoid.flatten";
                           "FStar.List.Tot.Base.op_At";
-                          "FStar.List.Tot.Base.append"]]; dump "done"
+                          "FStar.List.Tot.Base.append"]]
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 

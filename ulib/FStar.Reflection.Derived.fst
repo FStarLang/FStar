@@ -41,7 +41,7 @@ let rec flatten_name ns =
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
-    match inspect t with
+    match inspect_ln t with
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
@@ -52,7 +52,7 @@ let collect_app = collect_app' []
 let rec mk_app (t : term) (args : list argv) : Tot term (decreases args) =
     match args with
     | [] -> t
-    | (x::xs) -> mk_app (pack (Tv_App t x)) xs
+    | (x::xs) -> mk_app (pack_ln (Tv_App t x)) xs
 
 // Helper for when all arguments are explicit
 let mk_e_app (t : term) (args : list term) : Tot term =
@@ -62,7 +62,7 @@ let mk_e_app (t : term) (args : list term) : Tot term =
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ ->
-        begin match inspect t with
+        begin match inspect_ln t with
         | Tv_Arrow b c ->
             collect_arr' (b::bs) c
         | _ ->
@@ -83,7 +83,7 @@ let collect_arr t =
     (List.Tot.rev ts, c)
 
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
-    match inspect t with
+    match inspect_ln t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
@@ -117,7 +117,7 @@ let compare_binder (b1 b2 : binder) : order =
     compare_bv bv1 bv2
   
 let rec compare_term (s t : term) : order =
-    match inspect s, inspect t with
+    match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
         compare_bv sv tv
 
@@ -218,26 +218,26 @@ and compare_comp (c1 c2 : comp) : order =
     | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
 
 let mk_stringlit (s : string) : term =
-    pack (Tv_Const (C_String s))
+    pack_ln (Tv_Const (C_String s))
 
 let mk_strcat (t1 t2 : term) : term =
-    mk_e_app (pack (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
+    mk_e_app (pack_ln (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
 
 let mk_cons (h t : term) : term =
-   mk_e_app (pack (Tv_FVar (pack_fv cons_qn))) [h; t]
+   mk_e_app (pack_ln (Tv_FVar (pack_fv cons_qn))) [h; t]
 
 let mk_cons_t (ty h t : term) : term =
-   mk_app (pack (Tv_FVar (pack_fv cons_qn))) [(ty, Q_Implicit); (h, Q_Explicit); (t, Q_Explicit)]
+   mk_app (pack_ln (Tv_FVar (pack_fv cons_qn))) [(ty, Q_Implicit); (h, Q_Explicit); (t, Q_Explicit)]
 
 let rec mk_list (ts : list term) : term =
     match ts with
-    | [] -> pack (Tv_FVar (pack_fv nil_qn))
+    | [] -> pack_ln (Tv_FVar (pack_fv nil_qn))
     | t::ts -> mk_cons t (mk_list ts)
 
 let mktuple_n (ts : list term) : term =
     assume (List.Tot.length ts <= 8);
     match List.Tot.length ts with
-    | 0 -> pack (Tv_Const C_Unit)
+    | 0 -> pack_ln (Tv_Const C_Unit)
     | 1 -> let [x] = ts in x
     | n -> begin
            let qn = match n with
@@ -248,14 +248,14 @@ let mktuple_n (ts : list term) : term =
                     | 6 -> mktuple6_qn
                     | 7 -> mktuple7_qn
                     | 8 -> mktuple8_qn
-           in mk_e_app (pack (Tv_FVar (pack_fv qn))) ts
+           in mk_e_app (pack_ln (Tv_FVar (pack_fv qn))) ts
            end
 
 let mkpair (t1 t2 : term) : term =
     mktuple_n [t1;t2]
 
 let rec head (t : term) : term =
-    match inspect t with
+    match inspect_ln t with
     | Tv_Match t _
     | Tv_Let _ _ t _
     | Tv_Abs _ t
@@ -274,6 +274,11 @@ let rec head (t : term) : term =
     | Tv_Arrow _ _ -> t
 
 let nameof (t : term) : string =
-    match inspect t with
+    match inspect_ln t with
     | Tv_FVar fv -> String.concat "." (inspect_fv fv)
     | _ -> "?"
+
+let is_uvar (t : term) : bool =
+    match inspect_ln (head t) with
+    | Tv_Uvar _ _ -> true
+    | _ -> false

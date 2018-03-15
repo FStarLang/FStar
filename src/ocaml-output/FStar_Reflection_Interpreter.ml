@@ -78,15 +78,15 @@ let (reflection_primops :
   let mk2 a b c nm f u1 u2 em =
     let l = mklid nm  in mk1 l (Prims.parse_int "2") (int2 l f u1 u2 em)  in
   let uu____388 =
-    mk11 () () "__inspect"
-      (fun a415  -> (Obj.magic FStar_Reflection_Basic.inspect) a415)
+    mk11 () () "__inspect_ln"
+      (fun a415  -> (Obj.magic FStar_Reflection_Basic.inspect_ln) a415)
       (Obj.magic FStar_Reflection_Embeddings.unembed_term)
       (Obj.magic FStar_Reflection_Embeddings.embed_term_view)
      in
   let uu____389 =
     let uu____392 =
-      mk11 () () "__pack"
-        (fun a416  -> (Obj.magic FStar_Reflection_Basic.pack) a416)
+      mk11 () () "__pack_ln"
+        (fun a416  -> (Obj.magic FStar_Reflection_Basic.pack_ln) a416)
         (Obj.magic FStar_Reflection_Embeddings.unembed_term_view)
         (Obj.magic FStar_Reflection_Embeddings.embed_term)
        in

@@ -6,7 +6,10 @@
 /// :Contact: clement.pitclaudel@live.com
 /// :Date: 2017-10-13
 
-module PatternMatching
+module FStar.Tactics.PatternMatching
+
+// JP: this file does not seem to type-check without this option.
+#set-options "--use_two_phase_tc true"
 
 /// Contents
 /// ========
@@ -50,7 +53,7 @@ let fetch_eq_side () : Tac (term * term) =
   | Tv_App squash (g, _) ->
     (match inspect squash with
      | Tv_FVar squash ->
-       if inspect_fv squash = squash_qn then
+       if fv_to_string squash = flatten_name squash_qn then
          (match inspect g with
           | Tv_App eq_type_x (y, _) ->
             (match inspect eq_type_x with
@@ -59,7 +62,7 @@ let fetch_eq_side () : Tac (term * term) =
                 | Tv_App eq (typ, _) ->
                   (match inspect eq with
                    | Tv_FVar eq ->
-                     if inspect_fv eq = eq2_qn then
+                     if fv_to_string eq = flatten_name eq2_qn then
                        (x, y)
                      else fail "not an equality"
                    | _ -> fail "not an app2 of fvar: ")
@@ -111,48 +114,12 @@ let _ =
 ///
 /// (Skip over this part on a quick read — these are just convenience functions)
 
-(** A ``Tot`` version of ``zip``. **)
-let rec zip (l1: list 'a) (l2: list 'b) =
-  match l1, l2 with
-  | [], _ | _, [] -> []
-  | hd1 :: tl1, hd2 :: tl2 -> (hd1, hd2) :: zip tl1 tl2
-
-(** Like ``List.Tot.map``, for tactics. **)
-let rec tacmap (f: 'a -> Tac 'b) (ls: list 'a) : Tac (list 'b) =
-  match ls with
-  | [] -> []
-  | hd :: tl -> f hd :: tacmap f tl
-
-(** Like ``List.Tot.fold_left``, for tactics. **)
-let rec tacfold_left (f: 'a -> 'b -> Tac 'a) (x: 'a) (l:list 'b)
-        : Tac 'a (decreases l) =
-  match l with
-  | [] -> x
-  | hd :: tl -> tacfold_left f (f x hd) tl
-
-(** Run tactics in `tacs` until one succeeds. **)
-let rec first #a (tacs: list (unit -> Tac a)) : Tac a (decreases tacs) =
-  match tacs with
-  | [] -> fail #a "All tactics failed"
-  | t1 :: tacs -> match trytac t1 with
-                  | Some r -> r
-                  | None -> first tacs
-
-(** Build a tactic to run tactics in `tacs` until one succeeds. **)
-let rec tfirst #a (tacs: list (unit -> Tac a)) : Tac a =
-  match tacs with
-  | [] -> fail #a "All tactics failed"
-  | t1 :: tacs -> or_else t1 (fun () -> tfirst #a tacs)
 
 (** Ensure that tactic `t` fails. **)
 let mustfail #a (t: unit -> Tac a) (message: string) : Tac unit =
     match trytac t with
     | Some _ -> fail message
     | None -> ()
-
-(** Fail unless all goals are solved. **)
-let done () : Tac unit =
-  mustfail cur_goal "Some goals are left"
 
 /// The following two tactics are needed because of issues with the ``Tac``
 /// effect.
@@ -167,9 +134,14 @@ let and_elim' (h: binder) : Tac unit =
   and_elim (pack (Tv_Var (bv_of_binder h)));
   clear h
 
+(** Use a hypothesis at type a to satisfy a goal at type squash a *)
 let exact_hyp (a: Type0) (h: binder) : Tac unit =
   let hd = quote (FStar.Squash.return_squash #a) in
   exact (mk_app hd [((pack (Tv_Var (bv_of_binder h))), Q_Explicit)])
+
+(** Use a hypothesis h (of type a) to satisfy a goal at type a *)
+let exact_hyp' (h: binder): Tac unit =
+  exact (pack (Tv_Var (bv_of_binder h)))
 
 let print_binder (b: binder) : Tac unit =
   print (term_to_string (type_of_binder b))
@@ -182,8 +154,7 @@ let print_binder (b: binder) : Tac unit =
 
 type varname = string
 
-type qn = list string
-let string_of_qn qn = String.concat "." qn
+type qn = string
 
 type pattern =
 | PAny: pattern
@@ -195,14 +166,14 @@ type pattern =
 let desc_of_pattern = function
 | PAny -> "anything"
 | PVar _ -> "a variable"
-| PQn qn -> "a constant (" ^ string_of_qn qn ^ ")"
+| PQn qn -> "a constant (" ^ qn ^ ")"
 | PType -> "Type"
 | PApp _ _ -> "a function application"
 
 let rec string_of_pattern = function
 | PAny -> "__"
 | PVar x -> "?" ^ x
-| PQn qn -> string_of_qn qn
+| PQn qn -> qn
 | PType -> "Type"
 | PApp l r -> "(" ^ string_of_pattern l ^ " "
                  ^ string_of_pattern r ^ ")"
@@ -224,7 +195,7 @@ noeq type match_exception =
 | UnsupportedTermInPattern of term
 | IncorrectTypeInAbsPatBinder of typ
 
-let term_head t : string =
+let term_head t : Tac string =
   match inspect t with
   | Tv_Var bv -> "Tv_Var"
   | Tv_BVar fv -> "Tv_BVar"
@@ -245,7 +216,7 @@ let term_head t : string =
 let string_of_match_exception = function
   | NameMismatch (qn1, qn2) ->
     "Match failure (name mismatch): expecting " ^
-    (string_of_qn qn1) ^ ", found " ^ (string_of_qn qn2)
+    qn1 ^ ", found " ^ qn2
   | SimpleMismatch (pat, tm) ->
     "Match failure (sort mismatch): expecting " ^
     desc_of_pattern pat ^ ", got " ^ term_to_string tm
@@ -272,8 +243,8 @@ let return #a (x: a) : match_res a =
 
 let bind (#a #b: Type)
          (f: match_res a)
-         (g: a -> match_res b)
-    : match_res b =
+         (g: a -> Tac (match_res b))
+    : Tac (match_res b) =
   match f with
   | Success aa -> g aa
   | Failure ex -> Failure ex
@@ -306,14 +277,15 @@ let lift_exn_tactic #a #b (f: a -> match_res b) (aa: a) : Tac b =
 type bindings = list (varname * term)
 let string_of_bindings (bindings: bindings) =
   String.concat "\n"
-    (List.Tot.map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
+    (map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
                   bindings)
 
 (** Match a pattern against a term.
 `cur_bindings` is a list of bindings collected while matching previous parts of
 the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
-    : match_res bindings =
+    : Tac (match_res bindings) =
+  admit();
   let interp_any () cur_bindings tm =
     return [] in
   let interp_var (v: varname) cur_bindings tm =
@@ -324,8 +296,8 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
   let interp_qn (qn: qn) cur_bindings tm =
     match inspect tm with
     | Tv_FVar fv ->
-      if inspect_fv fv = qn then return cur_bindings
-      else raise (NameMismatch (qn, (inspect_fv fv)))
+      if fv_to_string fv = qn then return cur_bindings
+      else raise (NameMismatch (qn, (fv_to_string fv)))
     | _ -> raise (SimpleMismatch (pat, tm)) in
   let interp_type cur_bindings tm =
     match inspect tm with
@@ -347,7 +319,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
 
 (** Match a pattern `pat` against a term.
 Returns a result in the exception monad. **)
-let interp_pattern (pat: pattern) : term -> match_res bindings =
+let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
     rev_bindings <-- interp_pattern_aux pat [] tm;
     return (List.Tot.rev rev_bindings)
@@ -355,9 +327,10 @@ let interp_pattern (pat: pattern) : term -> match_res bindings =
 (** Match a term `tm` against a pattern `pat`.
 Raises an exception if the match fails.  This is mostly useful for debugging:
 use ``mgw`` to capture matches. **)
-let match_term pat : term -> Tac bindings =
-  fun tm ->
-    lift_exn_tac (interp_pattern pat) (norm_term [] tm)
+let match_term pat (tm : term) : Tac bindings =
+    match interp_pattern pat (norm_term [] tm) with
+    | Success bb -> bb
+    | Failure ex -> Tactics.fail (string_of_match_exception ex)
 
 /// Pattern-matching problems
 /// =========================
@@ -405,11 +378,11 @@ noeq type matching_solution =
 let string_of_matching_solution ms =
   let vars =
     String.concat "\n            "
-      (List.Tot.map (fun (varname, tm) ->
+      (map (fun (varname, tm) ->
         varname ^ ": " ^ (term_to_string tm)) ms.ms_vars) in
   let hyps =
     String.concat "\n        "
-      (List.Tot.map (fun (nm, binder) ->
+      (map (fun (nm, binder) ->
         nm ^ ": " ^ (binder_to_string binder)) ms.ms_hyps) in
   "\n{ vars: " ^ vars ^ "\n" ^
   "  hyps: " ^ hyps ^ " }"
@@ -525,21 +498,21 @@ let solve_mp #a (problem: matching_problem)
 
 // This is a hack to allow users to capture anything.
 assume val __ : #t:Type -> t
-let any_qn = ["PatternMatching"; "__"]
+let any_qn = %`__
 
 (** Compile a term `tm` into a pattern. **)
-let rec pattern_of_term_ex tm : match_res pattern =
+let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
     return (PVar (name_of_bv bv))
   | Tv_FVar fv ->
-    let qn = inspect_fv fv in
+    let qn = fv_to_string fv in
     return (if qn = any_qn then PAny else PQn qn)
   | Tv_Type () ->
     return PType
   | Tv_App f (x, _) ->
     let is_any = match inspect f with
-                 | Tv_FVar fv -> inspect_fv fv = any_qn
+                 | Tv_FVar fv -> fv_to_string fv = any_qn
                  | _ -> false in
     if is_any then
       return PAny
@@ -557,7 +530,9 @@ let beta_reduce (tm: term) : Tac term =
 
 (** Compile a term `tm` into a pattern. **)
 let pattern_of_term tm : Tac pattern =
-  lift_exn_tac pattern_of_term_ex tm
+    match pattern_of_term_ex tm with
+    | Success bb -> bb
+    | Failure ex -> Tactics.fail (string_of_match_exception ex)
 
 /// Problem notations
 /// -----------------
@@ -586,8 +561,8 @@ let pattern_of_term tm : Tac pattern =
 let hyp (a: Type) = binder
 let goal (a: Type) = unit
 
-let hyp_qn = ["PatternMatching"; "hyp"]
-let goal_qn = ["PatternMatching"; "goal"]
+let hyp_qn  = %`hyp
+let goal_qn = %`goal
 
 noeq type abspat_binder_kind =
 | ABKVar of typ
@@ -608,12 +583,13 @@ noeq type abspat_argspec =
 type abspat_continuation =
   list abspat_argspec * term
 
-let classify_abspat_binder binder : Tot (abspat_binder_kind * term) =
+let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
   let varname = "v" in
   let hyp_pat = PApp (PQn hyp_qn) (PVar varname) in
   let goal_pat = PApp (PQn goal_qn) (PVar varname) in
 
   let typ = type_of_binder binder in
+  admit(); // VC
   match interp_pattern hyp_pat typ with
   | Success [(_, hyp_typ)] -> ABKHyp, hyp_typ
   | Failure _ ->
@@ -622,7 +598,7 @@ let classify_abspat_binder binder : Tot (abspat_binder_kind * term) =
     | Failure _ -> ABKVar typ, typ
 
 (** Split an abstraction `tm` into a list of binders and a body. **)
-let rec binders_and_body_of_abs tm : binders * term =
+let rec binders_and_body_of_abs tm : Tac (binders * term) =
   match inspect tm with
   | Tv_Abs binder tm ->
     let binders, body = binders_and_body_of_abs tm in
@@ -651,10 +627,10 @@ let matching_problem_of_abs (tm: term)
 
   let binders, body = binders_and_body_of_abs (cleanup_abspat tm) in
   debug ("Got binders: " ^ (String.concat ", "
-         (List.Tot.map name_of_binder binders)));
+         (map (fun b -> name_of_binder b <: Tac string) binders)));
 
   let classified_binders =
-    tacmap (fun binder ->
+    map (fun binder ->
         let bv_name = name_of_binder binder in
         debug ("Got binder: " ^ bv_name ^ "; type is " ^
                term_to_string (type_of_binder binder));
@@ -663,7 +639,7 @@ let matching_problem_of_abs (tm: term)
       binders in
 
   let problem =
-    tacfold_left
+    fold_left
       (fun problem (binder, bv_name, binder_kind, typ) ->
          debug ("Compiling binder " ^ name_of_binder binder ^
                 ", classified as " ^ string_of_abspat_binder_kind binder_kind ^
@@ -677,9 +653,10 @@ let matching_problem_of_abs (tm: term)
       classified_binders in
 
   let continuation =
-    let abspat_argspec_of_binder (binder, _, binder_kind, _) : abspat_argspec =
+    let abspat_argspec_of_binder xx : Tac abspat_argspec =
+    match xx with | (binder, xx, binder_kind, yy)  ->
       { asa_name = binder; asa_kind = binder_kind } in
-    (List.Tot.map abspat_argspec_of_binder classified_binders, tm) in
+    (map abspat_argspec_of_binder classified_binders, tm) in
 
   let mp =
     { mp_vars = List.rev #varname problem.mp_vars;
@@ -729,7 +706,7 @@ let specialize_abspat_continuation' (continuation: abspat_continuation)
   let mk_arg argspec =
     (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
   let argspecs, body = continuation in
-  mk_app body (tacmap mk_arg argspecs)
+  mk_app body (map mk_arg argspecs)
 
 (** Specialize a continuation of type ``abspat_continuation``.  This yields a
 quoted function taking a matching solution and running its body with appropriate
@@ -829,10 +806,20 @@ let fetch_eq_side' #a : Tac (term * term) =
   gpm (fun (left right: a) (g: goal (squash (left == right))) ->
          (quote left, quote right)) ()
 
-let _ =
-  assert_by_tactic (1 + 1 == 2)
-    (fun () -> let l, r = fetch_eq_side' #int in
-               print (term_to_string l ^ " / " ^ term_to_string r))
+// TODO: GM: The following definition breaks extraction with
+(*
+FStar.Tactics.Effect.fst(20,16-20,21): (Error 76) Ill-typed application: application is FStar.Tactics.PatternMatching.fetch_eq_side' (FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range
+ps
+(FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45))))
+remaining args are FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range ps
+(FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45)))
+ml type of head is (FStar_Reflection_Types.term * FStar_Reflection_Types.term)
+*)
+
+(* let _ = *)
+(*   assert_by_tactic (1 + 1 == 2) *)
+(*     (fun () -> let l, r = fetch_eq_side' #int in *)
+(*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
 
 let _ =
   assert_by_tactic (1 + 1 == 2)
@@ -847,10 +834,10 @@ let _ =
 let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
   assert_by_tactic ((a ==> d) ==> (b ==> d) ==> (c ==> d) ==> a ==> d)
     (fun () -> repeat' implies_intro';
-               gpm #unit (fun (a b: Type0) (h: hyp (a ==> b)) ->
+               gpm (fun (a b: Type0) (h: hyp (a ==> b)) ->
                            print (binder_to_string h);
                            fail "fail here" <: Tac unit);
-               done ())
+               qed ())
 *)
 
 /// A real-life example
@@ -874,7 +861,7 @@ let example #a #b #c: unit =
                               rewrite h <: Tac unit) `or_else`
                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
                               exact_hyp a h <: Tac unit) ())))));
-               done ())
+               qed ())
 
 /// Possible extensions
 /// ===================
@@ -898,17 +885,17 @@ let example #a #b #c: unit =
 
 let example2 #a #b #c: unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
-    (fun () -> tfirst #unit
-                   [gpm (fun (a: Type) (h: hyp (squash a)) ->
-                           clear h <: Tac unit);
-                    gpm (fun (a b: Type0) (_: goal (squash (a ==> b))) ->
-                           implies_intro' () <: Tac unit);
-                    gpm (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                           and_elim' h <: Tac unit);
-                    gpm (fun (a b: Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
-                           rewrite h <: Tac unit);
-                    gpm (fun (a: Type0) (h: hyp a) (_: goal (squash a)) ->
-                           exact_hyp a h <: Tac unit);
-                    idtac];
-               smt ();
-               done ())
+    (fun () -> first #unit
+                  [gpm (fun (a: Type) (h: hyp (squash a)) ->
+                          clear h <: Tac unit);
+                   gpm (fun (a b: Type0) (_: goal (squash (a ==> b))) ->
+                          implies_intro' () <: Tac unit);
+                   gpm (fun (a b: Type0) (h: hyp (a /\ b)) ->
+                          and_elim' h <: Tac unit);
+                   gpm (fun (a b: Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
+                          rewrite h <: Tac unit);
+                   gpm (fun (a: Type0) (h: hyp a) (_: goal (squash a)) ->
+                          exact_hyp a h <: Tac unit);
+                   idtac];
+              smt ();
+              qed ())

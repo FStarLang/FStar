@@ -2,18 +2,20 @@ module Printers
 
 open FStar.Tactics
 module TD = FStar.Tactics.Derived
+module TU = FStar.Tactics.Util
 
 #set-options "--use_two_phase_tc false"
 
 let print_Prims_string : string -> Tot string = fun s -> "\"" ^ s ^ "\""
 let print_Prims_int : int -> Tot string = string_of_int
 
-let rec mk_concat (sep : term) (ts : list term) : term =
+let rec mk_concat (sep : term) (ts : list term) : Tac term =
     mk_e_app (pack (Tv_FVar (pack_fv ["FStar"; "String"; "concat"]))) [sep; mk_list ts]
 
-let mk_flatten = mk_concat (pack (Tv_Const (C_String "")))
+(* TODO: we get stuck if this is not eta-expanded, since it has a top-level effect *)
+let mk_flatten ts = mk_concat (pack (Tv_Const (C_String ""))) ts
 
-let paren (e : term) : term =
+let paren (e : term) : Tac term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
 let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
@@ -66,17 +68,17 @@ let printer_fun () : Tac unit =
             | Sg_Constructor name t ->
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TD.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
+            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
-            let bod = mk_concat (mk_stringlit " ") (head :: TD.map (mk_print_bv xt_ns fftm) bvs) in
+            let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
             (Pat_Cons (pack_fv name) pats, bod)
             | _ ->
                 fail "Not a constructor..?"
             end
         in
-        let branches = TD.map br1 ctors in
+        let branches = TU.map br1 ctors in
         let xi = fresh_binder_named "v_inner" dom in
 
         // Generate the match on the internal argument

@@ -6,6 +6,7 @@ module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
 open FStar.Reflection.Types
+open FStar.Reflection.Data
 open FStar.Tactics.Types
 
 assume private val __fail : a:Type -> string -> __tac a
@@ -19,6 +20,13 @@ let top_env () = TAC?.reflect __top_env
 assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
 let cur_env () = TAC?.reflect __cur_env
+
+(** [push_binder] extends the environment with a single binder.
+    This is useful as one traverses the syntax of a term,
+    pushing binders as one traverses a binder in a lambda,
+    match, etc. Note, the environment here is disconnected to
+    (though perhaps derived from) the environment in the proofstate *)
+assume val push_binder : env -> binder -> env
 
 assume private val __cur_goal    : __tac term
 (** [cur_goal] returns the current goal's type *)
@@ -35,6 +43,11 @@ let ngoals () : Tac int = TAC?.reflect __ngoals
 assume private val __ngoals_smt : __tac int
 (** [ngoals_smt ()] returns the number of SMT goals *)
 let ngoals_smt () : Tac int = TAC?.reflect __ngoals_smt
+
+assume private val __fresh : __tac int
+(** [fresh ()] returns a fresh integer. It does not get reset when
+catching a failure. *)
+let fresh () : Tac int = TAC?.reflect __fresh
 
 assume private val __is_guard   : __tac bool
 (** [is_guard] returns whether the current goal arised from a typechecking guard *)
@@ -161,7 +174,7 @@ This does not immediately run the SMT:  it is a marker.
 This tactic never fails, and a goal marked for SMT cannot be brought back. *)
 let smt () : Tac unit = TAC?.reflect __smt
 
-assume private val __divide: int -> __tac 'a -> __tac 'b -> __tac ('a * 'b)
+assume private val __divide : int -> __tac 'a -> __tac 'b -> __tac ('a * 'b)
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
 on the second, returning both results (and concatenating remaining goals). *)
@@ -313,9 +326,10 @@ provided, a second uvar is created for the type. *)
 let uvar_env (e : env) (o : option typ) : Tac term = TAC?.reflect (__uvar_env e o)
 
 assume private val __unify : term -> term -> __tac bool
-(** Call the unifier on two terms. The return value is whether
-unification was possible. When the tactics returns true, the terms may
-have been instantited by unification. When false, there is no effect. *)
+(** Call the unifier on two terms. The returned boolean specifies
+whether unification was possible. When the tactic returns true, the
+terms have been unified, instantiating uvars as needed. When false,
+unification was not possible and no change to uvars occurs. *)
 let unify (t1 t2 : term) : Tac bool = TAC?.reflect(__unify t1 t2)
 
 assume private val __launch_process : string -> string -> string -> __tac string
@@ -328,19 +342,28 @@ let launch_process (prog args input : string) : Tac string = TAC?.reflect (__lau
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
 the bv too. *)
-assume val __fresh_bv_named : string -> typ -> __tac bv
+assume private val __fresh_bv_named : string -> typ -> __tac bv
 let fresh_bv_named nm t : Tac bv = TAC?.reflect (__fresh_bv_named nm t)
 
 (** Change the goal to another type, given that it is convertible
  * to the current type. *)
-assume val __change : typ -> __tac unit
+assume private val __change : typ -> __tac unit
 let change (t : typ) : Tac unit = TAC?.reflect (__change t)
 
-assume val __get_guard_policy : __tac guard_policy
+assume private val __get_guard_policy : __tac guard_policy
 let get_guard_policy () : Tac guard_policy = TAC?.reflect (__get_guard_policy)
 
-assume val __set_guard_policy : guard_policy -> __tac unit
+assume private val __set_guard_policy : guard_policy -> __tac unit
 let set_guard_policy (p : guard_policy) : Tac unit = TAC?.reflect (__set_guard_policy p)
 
-assume val __dismiss : __tac unit
+assume private val __dismiss : __tac unit
 let dismiss () : Tac unit = TAC?.reflect __dismiss
+
+assume val __tadmit : __tac unit
+let tadmit () : Tac unit = TAC?.reflect __tadmit
+
+assume private val __inspect : term -> __tac term_view
+let inspect (t : term) : Tac term_view = TAC?.reflect (__inspect t)
+
+assume private val __pack    : term_view -> __tac term
+let pack (tv : term_view) : Tac term = TAC?.reflect (__pack tv)

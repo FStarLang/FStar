@@ -1,0 +1,65 @@
+[
+  "\u001b‹¶‚e>\u000bﬂÄpVø\u001dà≠≠",
+  [
+    [
+      "Clear.clear_all_of_type",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d18bf3f6137b715a7b483b895db36828"
+    ],
+    [
+      "Clear.l2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
+        "data_elim_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
+      ],
+      0,
+      "326a818796c236cb7c6bc645b5d03510"
+    ],
+    [
+      "Clear.l2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
+      ],
+      0,
+      "299e5139cf87b61d1647ce487f49a4b6"
+    ],
+    [
+      "Clear.l2",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "function_token_typing_Clear.p",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "6d539f8c21f7f9978156e23e8ce7f1b5"
+    ],
+    [
+      "Clear.l2",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "ab408289ca024b643ad505af80e317c8"
+    ]
+  ]
+]

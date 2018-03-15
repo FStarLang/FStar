@@ -8,14 +8,14 @@ private noeq type heap_rec = {
 
 let heap = h:heap_rec
   {(forall (r:nat) . 
-      FStar.Set.mem r h.hdomain    ==> r < h.next_addr) /\
-      (forall (r:nat) . FStar.Set.mem r h.hdomain    ==> Some? (h.memory r)) /\ 
-      (forall (r:nat) . FStar.Set.mem r (FStar.Set.complement h.hdomain) ==> None? (h.memory r))}
+      S.mem r h.hdomain ==> r < h.next_addr) /\
+      (forall (r:nat) . S.mem r h.hdomain ==> Some? (h.memory r)) /\ 
+      (forall (r:nat) . S.mem r (S.complement h.hdomain) ==> None? (h.memory r))}
 
 private let equal_heaps (h0 h1:heap) =
   let _ = () in
   h0.next_addr = h1.next_addr /\
-  FStar.Set.equal h0.hdomain h1.hdomain /\ 
+  S.equal h0.hdomain h1.hdomain /\ 
   FStar.FunctionalExtensionality.feq h0.memory h1.memory
 
 private let lemma_heap_ext (h0 h1:heap)
@@ -29,12 +29,12 @@ private noeq type memory_rec = {
 
 let memory = m:(option memory_rec)
   {forall m' . m == Some m' ==> 
-               ((forall r . FStar.Set.mem r m'.domain   ==> Some? (m'.contents r)) /\ 
-                (forall r . FStar.Set.mem r (FStar.Set.complement m'.domain) ==> None? (m'.contents r)))}
+               ((forall r . S.mem r m'.domain ==> Some? (m'.contents r)) /\ 
+                (forall r . S.mem r (S.complement m'.domain) ==> None? (m'.contents r)))}
 
 private let equal_memories (m0 m1:memory) =
   match (m0, m1) with
-  | (Some m0', Some m1') -> FStar.Set.equal m0'.domain m1'.domain /\ 
+  | (Some m0', Some m1') -> S.equal m0'.domain m1'.domain /\ 
                             FStar.FunctionalExtensionality.feq m0'.contents m1'.contents
   | (Some _, None)     -> False
   | (None, Some _)     -> False
@@ -47,30 +47,23 @@ private let lemma_memory_ext (m0 m1:memory)
 let defined m = Some? m
 
 let emp = 
-  let domain = FStar.Set.empty in
+  let domain = S.empty in
   let contents = fun _ -> None in
   Some ({ domain = domain; contents = contents })
   
-let lemma_defined_emp () = ()
-
 let ref a = nat
 
 let addr_of #a n = n
 
 let heap_memory h = Some ({ domain   = h.hdomain;
-                            contents = h.memory  })
+                            contents = h.memory   })
 
 let disjoint_heaps (h0 h1:heap) =
   let _ = () in
-  FStar.Set.disjoint h0.hdomain h1.hdomain
-
-(*let disjoint_memories (m0 m1:memory) =
-  match (m0, m1) with
-  | (Some m0', Some m1') -> FStar.Set.disjoint m0'.domain m1'.domain
-  | _ -> False*)
+  S.disjoint h0.hdomain h1.hdomain
 
 let join h0 h1 =
-  let domain = FStar.Set.union h0.hdomain h1.hdomain in 
+  let domain = S.union h0.hdomain h1.hdomain in 
   let memory = (fun r' ->  match (h0.memory r', h1.memory r') with
                               | (Some v1, None) -> Some v1
 			      | (None, Some v2) -> Some v2
@@ -80,7 +73,7 @@ let join h0 h1 =
   else { next_addr = h0.next_addr; hdomain = domain; memory = memory }
 
 let ( |> ) #a r x = 
-  let domain = FStar.Set.singleton r in
+  let domain = S.singleton r in
   let contents : nat -> Tot (option (a:Type0 & a)) = 
     (fun r' -> if r = r' then Some (| a , x |)
                          else None) in
@@ -89,8 +82,8 @@ let ( |> ) #a r x =
 let ( <*> ) m0 m1 = 
   match (m0, m1) with
   | (Some m0', Some m1') ->
-      (if (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Set.disjoint m0'.domain m1'.domain))
-       then (let domain = FStar.Set.union m0'.domain m1'.domain in
+      (if (FStar.StrongExcludedMiddle.strong_excluded_middle (S.disjoint m0'.domain m1'.domain))
+       then (let domain = S.union m0'.domain m1'.domain in
              let contents = (fun r -> match (m0'.contents r, m1'.contents r) with
                                      | (Some v1, None) -> Some v1
                                      | (None, Some v2) -> Some v2
@@ -126,12 +119,13 @@ let upd' (#a:Type0) (h:heap) (r:ref a) (x:a) =
 let upd #a h r x = upd' h r x
 
 let fresh #a r h = 
-  h.memory r == None
+  addr_of r >= h.next_addr
+  //h.memory r == None
 
 let alloc #a h0 x = 
   let r = h0.next_addr in 
   let next_addr = h0.next_addr + 1 in
-  let domain = FStar.Set.union h0.hdomain (FStar.Set.singleton r) in
+  let domain = S.union h0.hdomain (S.singleton r) in
   let memory = (fun r' -> if r = r' then Some (| a , x |)
                                     else h0.memory r') in
   let h1 = { next_addr = next_addr; hdomain = domain; memory = memory } in
@@ -139,7 +133,7 @@ let alloc #a h0 x =
 
 let dealloc #a h0 r =
   let next_addr = h0.next_addr in
-  let domain = FStar.Set.intersect h0.hdomain (FStar.Set.complement (FStar.Set.singleton r)) in
+  let domain = S.intersect h0.hdomain (S.complement (S.singleton r)) in
   let memory = (fun r' -> if r <> r' then h0.memory r'
                                      else None) in
   { next_addr = next_addr; hdomain = domain; memory = memory }
@@ -147,7 +141,13 @@ let dealloc #a h0 r =
 let addrs_in m = 
   match m with
   | Some m' -> m'.domain
-  | None    -> FStar.Set.empty
+  | None    -> S.empty
+
+let addr_to_ref m r = 
+  match m with
+  | Some m' ->
+    match m'.contents r with
+    | Some v -> (| dfst v, r |)
 
 let lemma_disjoint_heaps_comm (h0 h1:heap) = ()
 
@@ -171,6 +171,8 @@ let lemma_sep_join (h0 h1:heap) =
   assert (equal_memories (heap_memory (join h0 h1)) 
                          ((heap_memory h0) <*> (heap_memory h1)))
 
+let lemma_emp_defined () = ()
+
 let lemma_points_to_defined #a r x = ()
 
 let lemma_sep_defined m0 m1 = ()
@@ -184,6 +186,8 @@ let lemma_split_heap_join m0 m1 h =
           equal_heaps h (join h0 h1))
 
 let lemma_split_heap_memories m0 m1 h = ()
+
+let lemma_split_heap_fresh m0 m1 h = ()
 
 let lemma_hcontains_mcontains #a r h = ()
 
@@ -204,6 +208,10 @@ let lemma_alloc_emp_points_to #a h0 x =
   assert (let (r,h1) = alloc h0 x in
           equal_memories (heap_memory h1) (r |> x))
 
+let lemma_fresh_in_complement #a r h = ()
+
+let lemma_fresh_join #a r h0 h1 = ()
+
 let lemma_dealloc_contains #a h0 r = ()
 
 let lemma_points_to_dealloc #a h0 r = 
@@ -211,6 +219,80 @@ let lemma_points_to_dealloc #a h0 r =
 
 let lemma_addrs_in_emp () = ()
 
+let lemma_addrs_in_disjoint_heaps h0 h1 = ()
+
 let lemma_addrs_in_points_to #a r x = ()
 
 let lemma_addrs_in_join m0 m1 = ()
+
+let lemma_addr_to_ref_addr_of m r = ()
+
+let lemma_fresh_or_old_refl h = 
+  FStar.Classical.exists_intro (fun m -> fresh_or_old' h h (fst m) (snd m)) (heap_memory h,emp)
+
+let lemma_fresh_or_old_trans h0 h1 h2 =
+  admit ()
+
+private let lemma_fresh_or_old_disjoint' (h0 h1 h2:heap) (m_old m_fresh:memory)
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
+          (ensures  (disjoint_heaps h1 h2))
+  = assert (defined (m_old <*> m_fresh))
+
+private let lemma_fresh_or_old_disjoint'' (h0 h1 h2:heap) (m_old m_fresh:memory)
+  : Lemma ((fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2) ==> (disjoint_heaps h1 h2))
+  = FStar.Classical.move_requires (fun _ -> lemma_fresh_or_old_disjoint' h0 h1 h2 m_old m_fresh) ()
+
+private let forall_to_exists_2 (#a:Type) (#b:Type) (#p:(a -> b -> Type)) (#r:Type) ($f:(x:a -> y:b -> Lemma (p x y ==> r)))
+  : Lemma ((exists x y . p x y) ==> r)
+  = FStar.Classical.forall_to_exists (fun x -> 
+      FStar.Classical.forall_to_exists (fun y -> 
+        f x y))
+
+let lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
+  : Lemma (requires (fresh_or_old h0 h1 /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
+          (ensures  (disjoint_heaps h1 h2))
+          [SMTPat (fresh_or_old h0 h1);
+           SMTPat (same_freshness h0 h2)]
+  = FStar.Classical.forall_to_exists #memory (fun m_old -> 
+      FStar.Classical.forall_to_exists #memory (fun m_fresh -> 
+        lemma_fresh_or_old_disjoint'' h0 h1 h2 m_old m_fresh))
+
+#set-options "--z3rlimit_factor 1 --max_fuel 0 --max_ifuel 0"
+
+private let lemma_fresh_or_old_sep' (h0 h1 h2:heap) (m_old m_fresh:memory) 
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
+          (ensures  (fresh_or_old' (join h0 h2) (join h1 h2) (m_old <*> heap_memory h2) m_fresh))
+  = lemma_sep_comm (heap_memory h2) m_fresh
+
+private let exists_intro_2 (#a:Type) (#b:Type) (p:(a -> b -> Type)) (witness:a) (witness':b)
+  : Lemma (requires (p witness witness'))
+	  (ensures (exists x y. p x y))
+  = ()
+
+private let lemma_fresh_or_old_sep'' (h0 h1 h2:heap) (m_old m_fresh:memory)
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
+          (ensures  (fresh_or_old (join h0 h2) (join h1 h2)))
+  = lemma_fresh_or_old_sep' h0 h1 h2 m_old m_fresh;
+    exists_intro_2 (fun m_old' m_fresh' -> fresh_or_old' (join h0 h2) (join h1 h2) (m_old <*> heap_memory h2) m_fresh)
+                   (m_old <*> heap_memory h2) (m_fresh)
+  
+private let lemma_fresh_or_old_sep''' (h0 h1:heap) (h2:heap{disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2}) (m_old m_fresh:memory)
+  : Lemma ((fresh_or_old' h0 h1 m_old m_fresh) ==> (fresh_or_old (join h0 h2) (join h1 h2)))
+  = FStar.Classical.move_requires (fun _ -> lemma_fresh_or_old_sep'' h0 h1 h2 m_old m_fresh) ()
+
+private let lemma_fresh_or_old_sep'''' (h0 h1:heap) (h2:heap{disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2})
+  : Lemma (fresh_or_old h0 h1 ==> fresh_or_old (join h0 h2) (join h1 h2))
+  = forall_to_exists_2 
+      (fun m_old m_fresh -> lemma_fresh_or_old_sep''' h0 h1 h2 m_old m_fresh)
+
+let lemma_fresh_or_old_sep h0 h1 h2 = 
+  lemma_fresh_or_old_sep'''' h0 h1 h2
+
+let lemma_fresh_or_old_alloc #a x h0 =
+  admit ()
+
+let lemma_fresh_or_old_dealloc #a r h0 =
+  admit ()
+
+let lemma_fresh_or_old_upd #a r x h0 =
+  admit ()

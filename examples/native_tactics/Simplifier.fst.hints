@@ -1,0 +1,17 @@
+[
+  "+sÉ\n\u001b¯√ö¢÷*Úkqç≤",
+  [
+    [
+      "Simplifier.goal_is_true",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "791915e129d723ba066c1b32d5848b5e"
+    ]
+  ]
+]

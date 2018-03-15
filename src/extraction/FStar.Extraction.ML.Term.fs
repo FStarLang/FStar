@@ -860,8 +860,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           ml_int_ty
 
         | Tm_meta ({ n = _ }, Meta_quoted (qt, {qopen = false})) ->
-          let tv = RE.embed_term_view t.pos (R.inspect qt) in
-          let t = U.mk_app RD.fstar_refl_pack.t [S.as_arg tv] in
+          let tv = RE.embed_term_view t.pos (R.inspect_ln qt) in
+          let t = U.mk_app RD.fstar_refl_pack_ln.RD.t [S.as_arg tv] in
           term_as_mlexpr' g t
 
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
