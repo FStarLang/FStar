@@ -42,14 +42,24 @@ val addr_to_ref : m:memory{defined m} -> r:nat{S.mem r (addrs_in m)} -> a:Type0 
 
 let fresh_or_old' (h0 h1:heap) (m_old m_fresh:memory) = 
     heap_memory h1 == (m_old <*> m_fresh) /\ 
-    FStar.Set.subset (addrs_in m_old) (addrs_in (heap_memory h0)) /\
-    (forall a (r:ref a) . FStar.Set.mem (addr_of r) (addrs_in m_fresh) ==> fresh r h0)
+    S.subset (addrs_in m_old) (addrs_in (heap_memory h0)) /\
+    (forall a (r:ref a) . S.mem (addr_of r) (addrs_in m_fresh) ==> fresh r h0) /\ 
+    (forall a (r:ref a) . fresh r h1 ==> fresh r h0)
 
 let fresh_or_old (h0 h1:heap) =
   exists m_old m_fresh . fresh_or_old' h0 h1 m_old m_fresh
 
 let same_freshness (h0 h1:heap) =
   forall a (r:ref a) . fresh r h0 <==> fresh r h1
+
+val restrict_memory : rs:set nat
+                   //-> m:memory{defined m /\ S.subset rs (addrs_in m)}
+                   -> m:memory{defined m}
+                   -> Tot memory
+val complement_memory : rs:set nat
+                     //-> m:memory{defined m /\ S.subset rs (addrs_in m)}
+                     -> m:memory{defined m}
+                     -> Tot memory
 
 (* disjoint_heaps *)
 
@@ -232,6 +242,20 @@ val lemma_addr_to_ref_addr_of (m:memory) (r:nat)
           (ensures  (addr_of (dsnd (addr_to_ref m r)) = r))
           [SMTPat (defined m);
            SMTPat (S.mem r (addrs_in m))]
+
+(* restrict_memory and complement_memory*)
+
+val lemma_restrict_complement_disjoint (rs:set nat) (m:memory)
+  : Lemma (requires (defined m))
+          (ensures  (S.disjoint (addrs_in (restrict_memory rs m)) (addrs_in (complement_memory rs m))))
+          [SMTPat (addrs_in (restrict_memory rs m));
+           SMTPat (addrs_in (complement_memory rs m))]
+
+val lemma_restrict_complement_sep (rs:set nat) (m:memory)
+  : Lemma (requires (defined m))
+          (ensures  (m == ((restrict_memory rs m) <*> (complement_memory rs m))))
+          [SMTPat (restrict_memory rs m);
+           SMTPat (complement_memory rs m)]
 
 (* fresh_or_old *)
 

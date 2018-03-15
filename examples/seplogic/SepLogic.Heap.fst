@@ -153,7 +153,25 @@ let addr_to_ref m r =
     match m'.contents r with
     | Some v -> (| dfst v, r |)
 
-let lemma_disjoint_heaps_comm (h0 h1:heap) = ()
+let restrict_memory rs m = 
+  match m with
+  | Some m' -> 
+      let domain = S.intersect rs m'.domain in 
+      let contents = (fun r -> if S.mem r domain 
+                               then m'.contents r
+                               else None) in
+      Some ({ domain = domain; contents = contents })
+
+let complement_memory rs m = 
+  match m with 
+  | Some m' -> 
+      let domain = S.intersect (S.complement rs) m'.domain in 
+      let contents = (fun r -> if S.mem r domain
+                               then m'.contents r
+                               else None) in
+      Some ({ domain = domain; contents = contents })
+
+let lemma_disjoint_heaps_comm h0 h1 = ()
 
 let lemma_disjoint_heaps_memories h0 h1 = ()
 
@@ -231,11 +249,66 @@ let lemma_addrs_in_join m0 m1 = ()
 
 let lemma_addr_to_ref_addr_of m r = ()
 
+let lemma_restrict_complement_disjoint rs m = ()
+
+let lemma_restrict_complement_sep rs m = 
+  assert (equal_memories m ((restrict_memory rs m) <*> (complement_memory rs m)))
+
 let lemma_fresh_or_old_refl h = 
   FStar.Classical.exists_intro (fun m -> fresh_or_old' h h (fst m) (snd m)) (heap_memory h,emp)
 
-let lemma_fresh_or_old_trans h0 h1 h2 =
-  admit ()
+private let exists_intro_2 (#a:Type) (#b:Type) (p:(a -> b -> Type)) (witness:a) (witness':b)
+  : Lemma (requires (p witness witness'))
+	  (ensures (exists x y. p x y))
+  = ()
+
+private let forall_to_exists_2 (#a:Type) (#b:Type) 
+                               (#p:(a -> b -> Type)) (#r:Type) 
+                               ($f:(x:a -> y:b -> Lemma (p x y ==> r)))
+  : Lemma ((exists x y . p x y) ==> r)
+  = FStar.Classical.forall_to_exists (fun x -> 
+      FStar.Classical.forall_to_exists (fun y -> 
+        f x y))
+
+private let forall_to_exists_4 (#a:Type) (#b:Type) (#c:Type) (#d:Type) 
+                               (#p:(a -> b -> c -> d -> Type)) (#r:Type) 
+                               ($f:(x:a -> y:b -> z:c -> w:d -> Lemma (p x y z w ==> r)))
+  : Lemma ((exists x y z w . p x y z w) ==> r)
+  = FStar.Classical.forall_to_exists (fun x -> 
+      FStar.Classical.forall_to_exists (fun y -> 
+        FStar.Classical.forall_to_exists (fun z -> 
+          FStar.Classical.forall_to_exists (fun w -> 
+            f x y z w))))
+
+private let lemma_fresh_or_old_trans' (h0 h1 h2:heap) (m_old m_fresh m_old' m_fresh':memory)
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ fresh_or_old' h1 h2 m_old' m_fresh'))
+          (ensures  (let m_old'' = restrict_memory (addrs_in m_old) m_old' in
+                     let m_fresh'' = complement_memory (addrs_in m_old) m_old' <*> m_fresh' in
+                     fresh_or_old' h0 h2 m_old'' m_fresh''))
+  = () 
+
+private let lemma_fresh_or_old_trans'' (h0 h1 h2:heap) (m_old m_fresh m_old' m_fresh':memory)
+  : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ fresh_or_old' h1 h2 m_old' m_fresh'))
+          (ensures  (fresh_or_old h0 h2))
+  = let m_old'' = restrict_memory (addrs_in m_old) m_old' in
+    let m_fresh'' = complement_memory (addrs_in m_old) m_old' <*> m_fresh' in 
+    lemma_fresh_or_old_trans' h0 h1 h2 m_old m_fresh m_old' m_fresh';
+    exists_intro_2 (fun m_old'' m_fresh'' -> 
+      fresh_or_old' h0 h2 m_old'' m_fresh'') m_old'' m_fresh''
+
+private let lemma_fresh_or_old_trans''' (h0 h1 h2:heap) (m_old m_fresh m_old' m_fresh':memory)
+  : Lemma (fresh_or_old' h0 h1 m_old m_fresh /\ fresh_or_old' h1 h2 m_old' m_fresh' 
+           ==> 
+           fresh_or_old h0 h2)
+  = FStar.Classical.move_requires (fun _ -> 
+      lemma_fresh_or_old_trans'' h0 h1 h2 m_old m_fresh m_old' m_fresh') ()
+
+let lemma_fresh_or_old_trans (h0 h1 h2:heap) 
+  : Lemma (requires (exists m_old m_fresh m_old' m_fresh' . 
+                       fresh_or_old' h0 h1 m_old m_fresh /\ fresh_or_old' h1 h2 m_old' m_fresh'))
+          (ensures  (fresh_or_old h0 h2))
+  = forall_to_exists_4 (fun m_old m_fresh m_old' m_fresh' -> 
+      lemma_fresh_or_old_trans''' h0 h1 h2 m_old m_fresh m_old' m_fresh')
 
 private let lemma_fresh_or_old_disjoint' (h0 h1 h2:heap) (m_old m_fresh:memory)
   : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
@@ -248,14 +321,6 @@ private let lemma_fresh_or_old_disjoint'' (h0 h1 h2:heap) (m_old m_fresh:memory)
            disjoint_heaps h0 h2 /\ same_freshness h0 h2 ==> disjoint_heaps h1 h2)
   = FStar.Classical.move_requires (fun _ -> 
       lemma_fresh_or_old_disjoint' h0 h1 h2 m_old m_fresh) ()
-
-private let forall_to_exists_2 (#a:Type) (#b:Type) 
-                               (#p:(a -> b -> Type)) (#r:Type) 
-                               ($f:(x:a -> y:b -> Lemma (p x y ==> r)))
-  : Lemma ((exists x y . p x y) ==> r)
-  = FStar.Classical.forall_to_exists (fun x -> 
-      FStar.Classical.forall_to_exists (fun y -> 
-        f x y))
 
 let lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
   : Lemma (requires (fresh_or_old h0 h1 /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
@@ -275,11 +340,6 @@ private let lemma_fresh_or_old_sep' (h0 h1 h2:heap) (m_old m_fresh:memory)
   = lemma_sep_comm (heap_memory h2) m_fresh
 
 #reset-options "--max_fuel 8 --max_ifuel 2"
-
-private let exists_intro_2 (#a:Type) (#b:Type) (p:(a -> b -> Type)) (witness:a) (witness':b)
-  : Lemma (requires (p witness witness'))
-	  (ensures (exists x y. p x y))
-  = ()
 
 private let lemma_fresh_or_old_sep'' (h0 h1 h2:heap) (m_old m_fresh:memory)
   : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
