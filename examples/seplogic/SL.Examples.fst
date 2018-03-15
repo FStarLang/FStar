@@ -323,29 +323,28 @@ let peek_cmd () : Tac cmd =
    else fail "Unrecognized command: not a squash"
  | _ -> fail "Unrecognized command: not an fv app"
 
-let rewrite_bind_eq (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) (post:post b) (m0:memory) (rhs:Type)
-  : Lemma (requires (frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0 == rhs))
-          (ensures (bind_wp r a b wp1 wp2 post m0 == rhs))
-  = ()           
+// let rewrite_bind_eq (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) (post:post b) (m0:memory) (rhs:Type)
+//   : Lemma (requires (frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0 == rhs))
+//           (ensures (bind_wp r a b wp1 wp2 post m0 == rhs))
+//   = ()           
 
-let rewrite_frame_post (a:Type) (p:post a) (m0:memory) (x:a) (m1:memory) (rhs:Type)
-  : Lemma (requires ((defined (m1 <*> m0) /\ p x (m1 <*> m0)) == rhs))
-          (ensures (frame_post #a p m0 x m1 == rhs))
-  = ()           
+// let rewrite_frame_post (a:Type) (p:post a) (m0:memory) (x:a) (m1:memory) (rhs:Type)
+//   : Lemma (requires ((defined (m1 <*> m0) /\ p x (m1 <*> m0)) == rhs))
+//           (ensures (frame_post #a p m0 x m1 == rhs))
+//   = ()           
 
-let rewrite_read_wp (a:Type) (r:ref a) (post:post a) (m0:memory) (rhs:Type)
-  : Lemma (requires ( (exists (x:a). m0 == (r |> x) /\ post x m0) == rhs))
-          (ensures (read_wp #a r post m0 == rhs))
-  = () //assert_norm (read_wp #a r == (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post x m0))
+// let rewrite_read_wp (a:Type) (r:ref a) (post:post a) (m0:memory) (rhs:Type)
+//   : Lemma (requires ( (exists (x:a). m0 == (r |> x) /\ post x m0) == rhs))
+//           (ensures (read_wp #a r post m0 == rhs))
+//   = () //assert_norm (read_wp #a r == (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post x m0))
 
-let rewrite_write_wp (a:Type) (r:ref a) (v:a) (post:post unit) (m0:memory) (rhs:Type)
-  : Lemma (requires ((exists (x:a). m0 == (r |> x) /\ post () (r |> v)) == rhs))
-          (ensures (write_wp #a r v post m0 == rhs))
-  = () //assert_norm (write_wp #a r v == (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post () (r |> v)))
+// let rewrite_write_wp (a:Type) (r:ref a) (v:a) (post:post unit) (m0:memory) (rhs:Type)
+//   : Lemma (requires ((exists (x:a). m0 == (r |> x) /\ post () (r |> v)) == rhs))
+//           (ensures (write_wp #a r v post m0 == rhs))
+//   = () //assert_norm (write_wp #a r v == (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post () (r |> v)))
   
-let unfold_first_occurrence (name:string) (lem:term) : Tac unit =
-  let should_rewrite (s:term) : Tac (bool * int) =
-    let hd, _ = collect_app s in
+let unfold_first_occurrence (name:string) : Tac unit =
+  let should_rewrite (hd:term) : Tac (bool * int) =
     match inspect hd with
     | Tv_FVar fv ->
       if flatten_name (inspect_fv fv) = name 
@@ -354,7 +353,7 @@ let unfold_first_occurrence (name:string) (lem:term) : Tac unit =
     | _ -> false, 0
   in
   let rewrite () : Tac unit =
-    mapply lem;
+    norm [delta_only [name]];
     trefl()
   in
   topdown_rewrite should_rewrite rewrite
@@ -366,24 +365,24 @@ let rec sl (i:int) : Tac unit =
   | Unknown -> smt ()
   
   | Bind -> 
-    unfold_first_occurrence (%`bind_wp) (`rewrite_bind_eq);
+    unfold_first_occurrence (%`bind_wp);
     norm[];
     sl (i + 1)
 
   | Read -> 
-    unfold_first_occurrence (%`read_wp) (`rewrite_read_wp);
+    unfold_first_occurrence (%`read_wp);
     norm[];
     eexists unit (fun () -> FStar.Tactics.split(); trefl());
     sl (i + 1)
 
   | Write -> 
-    unfold_first_occurrence (%`write_wp) (`rewrite_write_wp);
+    unfold_first_occurrence (%`write_wp);
     norm[];
     eexists unit (fun () -> FStar.Tactics.split(); trefl());   
     sl (i + 1)
 
   | FramePost -> 
-    unfold_first_occurrence (%`frame_post) (`rewrite_frame_post);
+    unfold_first_occurrence (%`frame_post);
     norm[];
     FStar.Tactics.split(); smt(); //definedness
     sl (i + 1)

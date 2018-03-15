@@ -17,8 +17,8 @@ let st_wp (a:Type) = post a -> pre
 
 (* unfold *) let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
   :st_wp b
-  = fun post m0 ->
-    frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0
+  = fun post m0 -> wp1 (fun x m1 -> wp2 x post m1) m0
+    // frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0
 
 (* unfold *) let id_wp (a:Type) (x:a) (p:post a) (m:memory) = p x emp
 
@@ -65,18 +65,26 @@ new_effect {
 sub_effect DIV ~> STATE = lift_div_st
 
 let read_wp (#a:Type) (r:ref a) : st_wp a =
-  (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post x m0)
-  
+    (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post x m0)
+
+unfold
+let frame_read_wp (#a:Type) (r:ref a) : st_wp a =
+   fun post m0 -> frame_wp (read_wp r) (frame_post post) m0
+
 assume
 val ( ! ) (#a:Type) (r:ref a)
-  :STATE a (read_wp r)
+  :STATE a (frame_read_wp r)
 
 let write_wp (#a:Type) (r:ref a) (v:a) : st_wp unit =
   (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post () (r |> v))
-  
+
+unfold
+let frame_write_wp (#a:Type) (r:ref a) (v:a) : st_wp unit =
+   fun post m0 -> frame_wp (write_wp r v) (frame_post post) m0
+
 assume
 val ( := ) (#a:Type) (r:ref a) (v:a)
-  :STATE unit (write_wp r v)
+  :STATE unit (frame_write_wp r v)
 
 let alloc_wp (#a:Type) (v:a) : st_wp (ref a) =
   (fun post m0 -> m0 == emp /\ (forall r m1 . m1 == (r |> v) ==> post r m1))
