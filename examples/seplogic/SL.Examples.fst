@@ -301,24 +301,22 @@ private let __elim_and (h:binder) :Tac unit
   = and_elim (pack (Tv_Var (bv_of_binder h)));
     clear h
 
-private let __elim_exists1 (h:binder) :Tac unit
+private let __elim_exists_return_binders1 (h:binder) :Tac (list binder)
   = let t = `__exists_elim_as_forall1 in
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
     clear h;
-    ignore (forall_intros ())
+    forall_intros ()
 
-private let __elim_exists2 (h:binder) :Tac unit
+private let __elim_exists1 (h:binder) :Tac unit
+  = ignore (__elim_exists_return_binders1 h)
+
+private let __elim_exists_return_binders2 (h:binder) :Tac (list binder)
   = let t = `__exists_elim_as_forall2 in
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
     clear h;
-    ignore (forall_intros ())
+    forall_intros ()
 
-private let __implies_intros_with_processing_exists_and_and () :Tac unit
-  = or_else (fun _ -> let h = implies_intro () in
-                    or_else (fun _ -> __elim_and h)
-		            (fun _ -> or_else (fun _ -> __elim_exists2 h)
-			                   (fun _ -> or_else (fun _ -> rewrite h) idtac)))
-            (fun _ -> fail "done")
+private let __elim_exists2 (h:binder) :Tac unit = ignore (__elim_exists_return_binders2 h)
 
 (*
  * AR: these two lemmas are useless because of no match-ing in the unifier
@@ -351,11 +349,12 @@ private let __implies_intros_with_processing_exists_and_and () :Tac unit
 //currently all the arguments have to be provided explicitly
 let __elim_valid_without_match
   (#p:listptr) (#repr:list int) (#m:memory) (#goal:listptr -> list int -> memory -> Type0)
-  :Lemma (requires (((repr == [] /\ p == None /\ m == emp) ==> goal None [] emp) /\
-                    (forall hd tl. (repr == hd::tl /\
-	                       Some? p       /\
-			       (exists tail m1. m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
-		              ==> goal p (Cons hd tl) m)))
+  :Lemma (requires ((valid p repr m) /\
+                    (((repr == [] /\ p == None /\ m == emp) ==> goal None [] emp) /\
+                     (forall hd tl. (repr == hd::tl /\
+	                        Some? p       /\
+			        (exists tail m1. m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
+		               ==> goal p (Cons hd tl) m))))
          (ensures  (goal p repr m))
   = admit ()
 
@@ -379,6 +378,7 @@ let rec length (l:listptr)
 	      ignore (implies_intro ());
 	      apply_lemma (`__elim_valid_without_match);  //this is fragile
 	      assumption (); assumption (); assumption ();
+	      split (); smt ();
 	      split ();
 	      let h = implies_intro () in __elim_and h;
 	      let h = implies_intro () in __elim_and h;
@@ -444,3 +444,355 @@ let rec length (l:listptr)
 	      apply_lemma (`lemma_frame_out_empty_left);
 	      smt ();
 	      smt ())
+
+
+let binder_to_term b = let bv, _ = inspect_binder b in pack (Tv_Var bv)
+
+//#set-options "--admit_smt_queries true"
+//#set-options "--z3rlimit 30"
+let rec append (l1 l2:listptr)
+  = (match l1 with
+     | None   -> l2
+     | Some r ->
+       let Cell hd tl = !r in
+       match tl with
+       | Some tl_r ->
+         let rest = append tl l2 in
+	 l1
+       | None ->
+         r := Cell hd l2;
+	 l1)
+
+     <: STATE listptr (fun p m -> exists (fl1 fl2:list int) (m1 m2:memory).
+                                 defined (m1 <*> m2) /\
+				 m == (m1 <*> m2)    /\
+				 valid l1 fl1 m1     /\
+				 valid l2 fl2 m2     /\
+				 (forall mf l. ((Set.equal (addrs_in mf) (Set.union (addrs_in m1) (addrs_in m2))) /\
+				           (Some? l1 ==> l1 == l)                                             /\
+				           (valid l (List.Tot.append fl1 fl2) mf)) ==> p l mf))
+
+     by (fun () -> ignore (forall_intros ());
+                let h = implies_intro () in
+		let l = __elim_exists_return_binders2 h in
+		let fl1_binder = List.Tot.hd l in
+		let fl2_binder = List.Tot.hd (List.Tot.tl l) in
+                let h = implies_intro () in
+		let l = __elim_exists_return_binders2 h in
+		let m1_binder = List.Tot.hd l in
+		let m2_binder = List.Tot.hd (List.Tot.tl l) in
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		ignore (implies_intro ());
+		let h = implies_intro () in rewrite h;
+		ignore (implies_intro ());
+
+                //induction on fl1
+		apply_lemma (`__elim_valid_without_match);
+		exact (quote l1);
+		exact (binder_to_term fl1_binder);
+		exact (binder_to_term m1_binder);
+		split (); smt ();  //this is the extra valid goal from __elim_valid_without_match
+
+                split ();
+
+                //empty fl1 case
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in rewrite h;
+		let h = implies_intro () in rewrite h;
+		let h = implies_intro () in rewrite h;
+
+                ignore (implies_intro ()); //the valid assumption for l2
+		ignore (implies_intro ()); //this is the foall mf f. assumption, keep an eye on it
+
+                split ();
+
+                ignore (implies_intro ());
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt ();
+		ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
+		split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		smt ();
+
+                //inconsistent ()
+		ignore (implies_intro ());
+		smt ();
+
+                //inductive case fl1 is Cons
+
+                let fl1_head = forall_intro () in
+		let fl1_tail = forall_intro () in
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in rewrite h;
+		ignore (implies_intro ());
+		let h = implies_intro () in let l1 = __elim_exists_return_binders2 h in
+		let l1_tail = List.Tot.hd l1 in
+		let l1_tail_memory = List.Tot.hd (List.Tot.tl l1) in
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in rewrite h;
+		ignore (implies_intro ());
+		ignore (implies_intro ());
+
+                ignore (implies_intro ()); //this is the forall mf f. assumption, keep an eye on it
+
+                split ();
+
+                //inconsistent
+                ignore (implies_intro ());
+		smt ();
+
+                ignore (implies_intro ());
+		apply_lemma (`lemma_inline_in_patterns_two);
+		split (); smt ();
+
+                split ();
+
+                ignore (implies_intro ());
+		apply_lemma (`lemma_frame_out_empty_right);
+		split (); smt ();
+
+                ignore (forall_intro ());
+		let h = implies_intro () in rewrite h;
+	        norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
+		apply_lemma (`lemma_rewrite_sep_assoc4);
+		apply_lemma (`lemma_rw);
+		split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_right);
+		split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_right);
+		split (); smt ();
+                ignore (forall_intros ()); ignore (implies_intro ());
+
+                split ();
+
+                //case where Some tl_r
+		ignore (implies_intro ());
+		apply_lemma (`lemma_frame_out_empty_right);
+		split (); smt ();
+
+                ignore (forall_intro ());  //tl_r binder, not needed
+		ignore (implies_intro ());
+
+                //important, this is where we are sending memory to the recursive call
+		apply_lemma (`lemma_rewrite_sep_comm);
+		apply_lemma (`lemma_frame_exact);
+
+                split (); smt ();
+		//provide wp existentials for recursive call
+		witness (binder_to_term fl1_tail);
+		witness (binder_to_term fl2_binder);
+		witness (binder_to_term l1_tail_memory);
+		witness (binder_to_term m2_binder);
+
+                //prove definedness/validity
+		split (); smt (); //boom! hail smt!
+
+                //prove the postcondition part
+		ignore (forall_intros ());
+		let h = implies_intro () in __elim_and h;
+		let h = implies_intro () in __elim_and h;
+		ignore (implies_intros ());
+		split (); smt ();
+
+                //check this guy, both right and left seemed ok
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt ();
+		ignore (forall_intro ());
+		let h = implies_intro () in rewrite h;
+		split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		smt ();
+
+                //woot! done with the inductive case
+
+                //now in the case when tl is None
+		ignore (implies_intro ());
+		apply_lemma (`lemma_inline_in_patterns_two);
+		split (); smt ();
+		split ();
+		ignore (implies_intro ());
+		apply_lemma (`lemma_frame_out_empty_right);
+		split (); smt ();
+		ignore (implies_intro ());
+		apply_lemma (`lemma_rw);
+		split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt ();
+		ignore (forall_intro ());
+		let h = implies_intro () in rewrite h;
+		split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		split (); smt (); split (); smt (); split (); smt ();
+		apply_lemma (`lemma_frame_out_empty_left);
+		smt ();
+		smt ();
+		smt ())
+
+let lemma_apply_rewrite_assoc_mem1 (m1 m2 m3 m4:memory)
+  :Lemma (requires ((m2 <*> (m1 <*> m3)) == m4))
+         (ensures  ((m1 <*> (m2 <*> m3)) == m4))
+  = ()
+
+let rec rev_append (l1:listptr) (l2:listptr)
+  = (match l1 with
+     | None   -> l2
+     | Some r ->
+       let Cell hd tl = !r in
+       r := Cell hd l2;
+       rev_append tl l1)
+
+    <: STATE listptr (fun p m -> exists (fl1 fl2:list int) (m1 m2:memory).
+                                defined (m1 <*> m2) /\
+				m == (m1 <*> m2)    /\
+				valid l1 fl1 m1     /\
+				valid l2 fl2 m2     /\
+				(forall mf l. ((Set.equal (addrs_in mf) (Set.union (addrs_in m1) (addrs_in m2))) /\
+				          (valid l (List.Tot.rev_acc fl1 fl2) mf)) ==> p l mf))
+
+    by (fun () -> ignore (forall_intros ());
+               let h = implies_intro () in let l = __elim_exists_return_binders2 h in
+	       let fl1 = List.Tot.hd l in let fl2 = List.Tot.hd (List.Tot.tl l) in
+               let h = implies_intro () in let l = __elim_exists_return_binders2 h in
+	       let m1 = List.Tot.hd l in let m2 = List.Tot.hd (List.Tot.tl l) in
+	       let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h;
+	       ignore (implies_intro ());
+	       let h = implies_intro () in rewrite h;
+	       ignore (implies_intro ());
+
+               //induction on fl1
+	       apply_lemma (`__elim_valid_without_match);
+	       exact (quote l1); exact (binder_to_term fl1); exact (binder_to_term m1);
+	       split (); smt (); //send the valid on l1 goal to smt
+
+               split (); //split into base case and the inductive case
+
+               //base case, fl1 = []
+	       let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h;
+	       let h = implies_intro () in rewrite h; let h = implies_intro () in rewrite h; let h = implies_intro () in rewrite h;
+	       ignore (implies_intro ()); //valid assumption for l2
+	       ignore (implies_intro ()); //this is the forall mf f. keep an eye on it
+
+               split ();
+
+               ignore (implies_intro ());
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       split (); smt ();
+	       ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
+	       split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       smt ();
+
+               //inconsistent
+	       ignore (implies_intro ()); smt ();
+              
+               //inductive case fl1 is cons
+
+               let fl1_hd = forall_intro () in
+	       let fl1_tl = forall_intro () in
+	       let h = implies_intro () in __elim_and h; let h = implies_intro () in __elim_and h;
+	       let h = implies_intro () in rewrite h;
+	       ignore (implies_intro ());
+	       let h = implies_intro () in let l = __elim_exists_return_binders2 h in
+	       let l1_tl = List.Tot.hd l in let l1_tail_m = List.Tot.hd (List.Tot.tl l) in
+	       let h = implies_intro () in __elim_and h;
+	       let h = implies_intro () in rewrite h;
+	       ignore (implies_intro ()); ignore (implies_intro ());
+	       
+	       ignore (implies_intro ()); //this is forall mf l. assumption, keep an eye on it
+
+               split ();
+
+               //inconsistent
+	       ignore (implies_intro ());
+	       smt ();
+
+               ignore (implies_intro ());
+	       apply_lemma (`lemma_inline_in_patterns_two);
+	       split (); smt ();
+
+               split ();
+
+               ignore (implies_intro ());
+	       apply_lemma (`lemma_frame_out_empty_right);
+	       split (); smt ();
+
+               ignore (forall_intro ());
+	       let h = implies_intro () in rewrite h;
+	       norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
+	       apply_lemma (`lemma_rewrite_sep_assoc4);
+	       apply_lemma (`lemma_rw); //!r in the Some branch
+	       split (); smt (); split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_right);
+	       split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_right);
+	       split (); smt ();
+	       ignore (forall_intros ()); ignore (implies_intro ());
+               apply_lemma (`lemma_rw); //r:= in the Some branch
+               split (); smt (); split (); smt ();
+
+               //give memory to the recursive call
+	       apply_lemma (`lemma_frame_out_empty_right);
+	       split (); smt ();
+
+               //partition the recursive call's memory and provide witnesses for existentials
+	       witness (binder_to_term fl1_tl);
+               //here i want: fl1_hd::fl2
+	       //mk_app `Cons (binder_to_term fl1_hd) (binder_to_term fl2)
+	       witness (mk_e_app (`Prims.Cons) [binder_to_term fl1_hd; binder_to_term fl2]);
+	       witness (binder_to_term l1_tail_m);
+	       let uv = uvar_env (cur_env ()) (Some (`SepLogic.Heap.memory)) in
+	       witness uv;
+	       split (); split (); split (); split ();
+	       flip ();
+               apply_lemma (`lemma_apply_rewrite_assoc_mem1);
+	       trefl ();
+	       smt ();
+	       smt ();
+	       smt ();
+
+	       ignore (forall_intros ()); ignore (implies_intros ());
+	       split (); smt (); split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       split (); smt (); split (); smt (); split (); smt (); split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       split (); smt (); split (); smt (); split (); smt ();
+	       apply_lemma (`lemma_frame_out_empty_left);
+	       smt (); smt ())
+
+let rev (l:listptr)
+  = (rev_append l None)
+
+    <: STATE listptr (fun p m -> exists fl. valid l fl m /\
+                                    (forall mf l. ((Set.equal (addrs_in m) (addrs_in mf)) /\
+				              (valid l (List.Tot.rev fl) mf)) ==> p l mf))
+
+    by (fun () -> ignore (forall_intro ());
+               let m = forall_intro () in
+	       let h = implies_intro () in let l = __elim_exists_return_binders1 h in
+	       let fl = List.Tot.hd l in
+	       let h = implies_intro () in __elim_and h;
+	       ignore (implies_intros ());
+
+               //provide existentials for the procedure call
+	       witness (binder_to_term fl);
+	       witness (`(Prims.Nil #int));
+	       witness (binder_to_term m);
+	       witness (`SepLogic.Heap.emp);
+	       smt ())

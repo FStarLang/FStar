@@ -72,12 +72,6 @@ private let rec split_all () : Tac unit =
 
 (***** Tactics *****)
 
-private let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
-    match ts with
-    | [] -> fail "no tactics to try"
-    | [t] -> t ()
-    | t::ts -> or_else t (fun () -> first ts)
-
 private let simplify_unused_in () : Tac unit =
   first [(fun () -> apply_lemma (`lemma_r_unused_in_minus));
          (fun () -> apply_lemma (`lemma_r_unused_in_h));
