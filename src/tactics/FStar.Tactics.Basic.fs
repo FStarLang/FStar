@@ -417,13 +417,14 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
+    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (tts e t)) (fun () ->
     try ret (ps.main_context.type_of e t)
     with | Errors.Err (_, msg)
          | Errors.Error (_, msg, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
-           end)
+           end))
 
 let istrivial (e:env) (t:term) : bool =
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
@@ -643,16 +644,19 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
               else goal.context
     in
     bind (__tc env t) (fun (t, typ, guard) ->
+    mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now and guard %s\n"
+                                                     (tts goal.context typ)
+                                                     (Rel.guard_to_string goal.context guard)) (fun _ ->
     bind (proc_guard "__exact typing" goal.context guard goal.opts) (fun _ ->
-    mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
-                                                            (tts goal.context goal.goal_ty)) (fun _ ->
+    mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (tts goal.context typ)
+                                                                  (tts goal.context goal.goal_ty)) (fun _ ->
     bind (do_unify goal.context typ goal.goal_ty) (fun b -> if b
     then solve goal t
     else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
                     (tts goal.context t)
                     (tts goal.context typ)
                     (tts goal.context goal.goal_ty)
-                    (tts goal.context goal.witness))))))
+                    (tts goal.context goal.witness)))))))
 
 let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
