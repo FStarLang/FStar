@@ -259,33 +259,21 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
 module L = FStar.List.Tot
 
 let rec app_head_rev_tail (t: T.term) :
-    T.Tac (res: ((x: T.term) * list (tl: T.argv { tl << t } ))
-                { if Cons? (snd res) then fst res << t else fst res == t } ) =
-  admit ();
+  T.Tac (T.term * list T.argv)
+=
   let ins = T.inspect t in
   if T.Tv_App? ins
   then
     let (T.Tv_App u v) = ins in
     let (x, l) = app_head_rev_tail u in
-    let res : ((x: T.term) * list (tl: T.argv { tl << t } )) = (x, v :: L.map (fun (x: T.argv {x << u}) -> (x <: (x: T.argv { x << t } ))) l) in
-    let (res: ((x: T.term) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
-    res
+    (x, v :: l)
   else
     (t, [])
 
-let rev_is_cons (#a: Type) (l: list a) : Lemma
-  (requires (Cons? l))
-  (ensures (Cons? (L.rev l)))
-= L.rev_rev' l
-
 let app_head_tail (t: T.term) :
-    T.Tac (res: ((x: T.term) * list (tl: T.argv { tl << t } ))
-                { if Cons? (snd res) then fst res << t else fst res == t } ) =
-  let (x, l) = app_head_rev_tail t in
-  let (res : ((x: T.term) * list (tl: T.argv { tl << t } ))) = (x, L.rev l) in
-  Classical.move_requires rev_is_cons l;
-  let (res: ((x: T.term) * list (tl: T.argv { tl << t } )) { if Cons? (snd res) then fst res << t else fst res == t } ) = res in
-  res
+    T.Tac (T.term * list T.argv)
+= let (x, l) = app_head_rev_tail t in
+  (x, L.rev l)
 
 // GM: This is cool!
 let tassert (x: bool) : T.Tac (y: unit { x == true } ) =
@@ -312,11 +300,6 @@ let seq_tm () : T.Tac T.term =
 let print_char_tm () : T.Tac T.term =
   quote print_char
 
-let rec neutralize_argv (t: T.term) (ar: list (x: T.argv { x << t } )) : Tot (list T.argv) =
-  match ar with
-  | [] -> []
-  | a :: q -> a :: neutralize_argv t q
-
 inline_for_extraction
 let coerce_sz
   (t: Type0)
@@ -335,7 +318,7 @@ let compile_ret
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (ret_tm ()) in
   tassert test;
-  let res = T.mk_app ret_sz_tm (neutralize_argv t ar) in
+  let res = T.mk_app ret_sz_tm ar in
   T.print (T.term_to_string res);
   res
 
@@ -344,10 +327,9 @@ let compile_bind
   (env: T.env)
   (ty: T.term)
   (t: T.term)
-  (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+  (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
 : T.Tac T.term
-= admit ();
-  T.print "compile_bind";
+= T.print "compile_bind";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (bind_tm ()) in
   tassert test;
@@ -383,7 +365,7 @@ let compile_print_char
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (print_char_tm ()) in
   tassert test;
-  let res = T.mk_app print_char_sz_tm (neutralize_argv t ar) in
+  let res = T.mk_app print_char_sz_tm ar in
   T.print (T.term_to_string res);
   res
 
@@ -403,7 +385,7 @@ let compile_fvar
   tassert test;
   let (T.Tv_FVar v) = ins in
     let v' = unfold_fv v in
-    let t' = T.mk_app v' (neutralize_argv t ar) in
+    let t' = T.mk_app v' ar in
     // unfolding might have introduced a redex,
     // so we find an opportunity to reduce it here
     T.print ("before norm_term: " ^ T.term_to_string t');
@@ -425,10 +407,9 @@ let compile_ifthenelse
   (ifthenelse_sz_tm: T.term)
   (ty: T.term)
   (t: T.term)
-  (compile: (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+  (compile: (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
 : T.Tac T.term
-= admit ();
-  T.print "compile_ifthenelse";
+= T.print "compile_ifthenelse";
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
@@ -471,24 +452,16 @@ let rec compile
     ifthenelse_sz_tm
   : T.term)
   (env: T.env)
-  (fuel: nat) (ty: T.term) (t: T.term)
+  (ty: T.term) (t: T.term)
 : T.Tac T.term
-  (decreases (LexCons fuel (LexCons t LexTop)))
 = T.print "BEGIN compile";
-  let compile_term_lt (env' : T.env) (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
-    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm env' fuel ty' t'
-  in
-  let compile_fuel_lt (env' : T.env) (ty' : T.term) (t' : T.term) : T.Tac T.term =
-    if fuel = 0
-    then tfail "Fuel exhausted"
-    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm env' (fuel - 1) ty' t'
-  in
+  let compile' = compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm in
   let res = first [
     (fun () -> compile_ret ret_sz_tm t);
-    (fun () -> compile_bind bind_sz_tm env ty t compile_term_lt);
+    (fun () -> compile_bind bind_sz_tm env ty t compile');
     (fun () -> compile_print_char print_char_sz_tm t);
-    (fun () -> compile_fvar coerce_sz_tm env (compile_fuel_lt env) ty t);
-    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile_term_lt env));
+    (fun () -> compile_fvar coerce_sz_tm env (compile' env) ty t);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile' env));
   ]
   in
   T.print ("END compile, result: " ^ T.term_to_string res);
@@ -496,7 +469,7 @@ let rec compile
 
 let mk_sz'
   (env: T.env)
-  (fuel: nat) (ty: T.term) (t: T.term)
+  (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
     (quote ret_sz)
@@ -505,7 +478,6 @@ let mk_sz'
     (quote coerce_sz)
     (quote ifthenelse_sz)
     env
-    fuel
     ty
     t
 
@@ -516,11 +488,11 @@ let unfold_ (#t: Type) (x: t) : T.Tac T.term =
   | Tv_FVar v -> unfold_fv v
   | _ -> fail ("unfold_def: Not a free variable: " ^ term_to_string u)
 
-let mk_sz (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
+let mk_sz (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_sz' (T.cur_env ()) fuel ty' x in
+    let t = mk_sz' (T.cur_env ()) ty' x in
     exact_guard t
 
 module B = FStar.Buffer
@@ -641,7 +613,7 @@ let coerce_st
 
 let mk_st'
   (env: T.env)
-  (fuel: nat) (ty: T.term) (t: T.term)
+  (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
     (quote ret_st)
@@ -650,15 +622,14 @@ let mk_st'
     (quote coerce_st)
     (quote ifthenelse_st)
     env
-    fuel
     ty
     t
 
-let mk_st (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
+let mk_st (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_st' (T.cur_env ()) fuel ty' x in
+    let t = mk_st' (T.cur_env ()) ty' x in
     exact_guard t
 
 // unfold // FAILS if set
@@ -770,12 +741,12 @@ let phi
     Some (alloc_and_fill_in x sz x_st)
   | None -> None
 
-let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
+let phi_tac (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t_sz = mk_sz' (T.cur_env ()) fuel ty' x in
-    let t_st = mk_st' (T.cur_env ()) fuel ty' x in
+    let t_sz = mk_sz' (T.cur_env ()) ty' x in
+    let t_st = mk_st' (T.cur_env ()) ty' x in
     let q = quote phi in
     let t = mk_app q [
       ty', Q_Implicit;

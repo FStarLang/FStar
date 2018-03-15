@@ -23,7 +23,7 @@ let example_sz (x: U32.t) : Tot (m_sz (example x)) =
   coerce_sz
     _
     (example_do_while x)
-    (T.synth_by_tactic (fun () -> mk_sz 4 (example_do_while x)))
+    (T.synth_by_tactic (fun () -> mk_sz (example_do_while x)))
     (example x)
     ()
 
@@ -32,7 +32,7 @@ let example_st (x: U32.t) : Tot (m_st (example x)) =
   coerce_st
     _
     (example_do_while x)
-    (T.synth_by_tactic (fun () -> mk_st 4 (example_do_while x)))
+    (T.synth_by_tactic (fun () -> mk_st (example_do_while x)))
     (example x)
     ()
 
@@ -121,7 +121,7 @@ let print_list_cipher_suite_sz (l: list cipher_suite) : Tot (m_sz (print_list_ci
   coerce_sz
     _
     (print_list_cipher_suite_spec_do_while l)
-    (T.synth_by_tactic (fun () -> mk_sz 4 (print_list_cipher_suite_spec_do_while l)))
+    (T.synth_by_tactic (fun () -> mk_sz (print_list_cipher_suite_spec_do_while l)))
     (print_list_cipher_suite_spec l)
     ()
 
@@ -130,7 +130,7 @@ let print_list_cipher_suite_st (l: list cipher_suite) : Tot (m_st (print_list_ci
   coerce_st
     _
     (print_list_cipher_suite_spec_do_while l)
-    (T.synth_by_tactic (fun () -> mk_st 4 (print_list_cipher_suite_spec_do_while l)))
+    (T.synth_by_tactic (fun () -> mk_st (print_list_cipher_suite_spec_do_while l)))
     (print_list_cipher_suite_spec l)
     ()
 

@@ -58,10 +58,7 @@ let rec mk_do_while_body
   (t: T.term)
   (f: T.fv)
 : T.Tac T.term
-//  (decreases t)
-= 
-  admit ();
-  let (t', ar) = app_head_tail t in
+= let (t', ar) = app_head_tail t in
   let ins = T.inspect t' in
   let tty = T.mk_app (quote c_or) [
     tin, T.Q_Explicit;
@@ -168,7 +165,6 @@ let rewrite_do_while
 = bind (ret (do_while_correct tin tout f decrease body x)) (fun _ -> do_while tin tout decrease body x)
 
 let mk_do_while (#t: Type) (x: t) : T.Tac unit =
-  admit ();
     let q = quote x in
     match T.inspect q with
     | T.Tv_FVar v ->

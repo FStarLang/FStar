@@ -274,10 +274,9 @@ let compile_do_while
   (do_while_sz_tm: T.term)
   (env: T.env)
   (t: T.term)
-  (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term { t' << t } ) -> T.Tac T.term)
+  (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
 : T.Tac T.term
-= admit ();
-  T.print "compile_do_while";
+= T.print "compile_do_while";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (do_while_tm ()) in
   tassert test;
@@ -326,25 +325,17 @@ let rec compile
     do_while_sz_tm
   : T.term)
   (env: T.env)
-  (fuel: nat) (ty: T.term) (t: T.term)
+  (ty: T.term) (t: T.term)
 : T.Tac T.term
-  (decreases (LexCons fuel (LexCons t LexTop)))
 = T.print "BEGIN compile";
-  let compile_term_lt (env' : T.env) (ty' : T.term) (t' : T.term {t' << t}) : T.Tac T.term =
-    compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm env' fuel ty' t'
-  in
-  let compile_fuel_lt (env' : T.env) (ty' : T.term) (t' : T.term) : T.Tac T.term =
-    if fuel = 0
-    then tfail "Fuel exhausted"
-    else compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm env' (fuel - 1) ty' t'
-  in
+  let compile' = compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm in
   let res = first [
     (fun () -> compile_ret ret_sz_tm t);
-    (fun () -> compile_bind bind_sz_tm env ty t compile_term_lt);
+    (fun () -> compile_bind bind_sz_tm env ty t compile');
     (fun () -> compile_print_char print_char_sz_tm t);
-    (fun () -> compile_do_while do_while_sz_tm env t compile_term_lt);
-    (fun () -> compile_fvar coerce_sz_tm env (compile_fuel_lt env) ty t);
-    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile_term_lt env));
+    (fun () -> compile_do_while do_while_sz_tm env t compile');
+    (fun () -> compile_fvar coerce_sz_tm env (compile' env) ty t);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile' env));
   ]
   in
   T.print ("END compile, result: " ^ T.term_to_string res);
@@ -354,7 +345,7 @@ let rec compile
 
 let mk_sz'
   (env: T.env)
-  (fuel: nat) (ty: T.term) (t: T.term)
+  (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
     (quote ret_sz)
@@ -364,20 +355,19 @@ let mk_sz'
     (quote ifthenelse_sz)
     (quote do_while_sz)
     env
-    fuel
     ty
     t
 
-let mk_sz (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
+let mk_sz (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_sz' (T.cur_env ()) fuel ty' x in
+    let t = mk_sz' (T.cur_env ()) ty' x in
     exact_guard t
 
 let mk_st'
   (env: T.env)
-  (fuel: nat) (ty: T.term) (t: T.term)
+  (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
     (quote ret_st)
@@ -387,13 +377,12 @@ let mk_st'
     (quote ifthenelse_st)
     (quote do_while_st)
     env
-    fuel
     ty
     t
 
-let mk_st (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
+let mk_st (#ty: Type0) (m: m ty) : T.Tac unit =
   let open T in
     let x = quote m in
     let ty' = quote ty in
-    let t = mk_st' (T.cur_env ()) fuel ty' x in
+    let t = mk_st' (T.cur_env ()) ty' x in
     exact_guard t
