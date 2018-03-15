@@ -370,6 +370,14 @@ let rec process_trivial_tail () :Tac unit
 
 let split_and_smt () :Tac unit = split (); smt ()
 
+let implies_and_elim () :Tac unit =
+  let h = implies_intro () in
+  first [(fun () -> __elim_and h);
+         (fun () -> rewrite h);
+	 (fun () -> __elim_exists2 h);
+	 (fun () -> __elim_exists1 h);
+	 idtac]
+
 let rec length (l:listptr)
   = (match l with
      | None   -> (0 <: STATE int (fun p h -> p 0 emp))
@@ -384,13 +392,10 @@ let rec length (l:listptr)
 	      let h = implies_intro () in __elim_and h;
 	      ignore (implies_intro ());
 	      apply_lemma (`__elim_valid_without_match);  //this is fragile
-	      assumption (); assumption (); assumption ();
+	      ignore (repeatn 3 assumption);
 	      split_and_smt ();
 	      split ();
-	      let h = implies_intro () in __elim_and h;
-	      let h = implies_intro () in __elim_and h;
-	      let h = implies_intro () in rewrite h; let h = implies_intro () in rewrite h;
-              let h = implies_intro () in rewrite h;
+	      ignore (repeatn 5 implies_and_elim);
 	      ignore (implies_intro ());
 	      split ();
 	      ignore (implies_intro ());
@@ -404,15 +409,9 @@ let rec length (l:listptr)
               //inductive case
 	      let hd_binder = forall_intro () in
 	      let tl_binder = forall_intro () in
-	      let h = implies_intro () in __elim_and h;
-	      let h = implies_intro () in __elim_and h;
-	      let h = implies_intro () in rewrite h;
-	      ignore (implies_intro ());
-	      let h = implies_intro () in __elim_exists2 h;
-	      let h = implies_intro () in __elim_and h;
-	      let h = implies_intro () in rewrite h;
+	      ignore (repeatn 7 implies_and_elim);
 	      ignore (implies_intros ());
-	      split (); smt ();
+	      split_and_smt ();
 
               ignore (implies_intro ());
 	      apply_lemma (`lemma_inline_in_patterns_two);
