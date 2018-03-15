@@ -219,7 +219,14 @@ let solve_frame_wp (_:unit) : Tac (term * term) =
         dump ("after canon_monoid");
         trefl();
         dump ("after trefl");
-        mapply (mk_e_app (`frame_wp_lemma) [fp; frame]);
+        let fp : term = norm_term [] fp in
+        let frame : term = norm_term [] frame in
+        dump ("m0/fp=" ^ term_to_string fp ^ "\n" ^
+              "m1/frame=" ^ term_to_string frame ^ "\n" ^
+              "a/ta=" ^ term_to_string ta ^ "\n" ^
+              "wp/twp=" ^ term_to_string twp ^ "\n" ^
+              "f_post/tpost=" ^ term_to_string tpost);
+        mapply (mk_e_app (`frame_wp_lemma) [fp; frame; ta; twp; tpost]);
         FStar.Tactics.split(); admit1(); //easy, hypothesis
         dump ("after frame lemma");
         fp, frame
