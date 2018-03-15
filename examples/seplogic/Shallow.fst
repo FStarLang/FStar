@@ -87,24 +87,6 @@ val bind (#a:Type) (#wp1:st_wp a)
     : st b (fun post h ->
             frame_wp wp1 (frame_post (fun (x, h1) ->
               frame_wp (wp2 x) (frame_post post) h1)) h)
-              
-(*
-bind f g post :
--> h0:heap{frame_wp wp1 (frame_post (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) h0} 
--> Tot (squash (result h0 a post))
-*)
-
-(*
-frame f (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) :
--> h0:heap{frame_wp wp1 (frame_post (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) h0} 
--> Tot (squash (x_h:(a * heap){(fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) x_h /\ fresh_or_old h0 (snd x_h)}))
-*)
-
-(*
-frame (g x) post :
--> h1:heap{frame_wp (wp2 x) (frame_post post) h1}
--> Tot (squash (x_h':(a * heap){post x_h' /\ fresh_or_old h1 (snd x_h')}))
-*)
 
 let bind #a #wp1 #b #wp2 f g =
     fun post h0 ->
@@ -115,8 +97,8 @@ let bind #a #wp1 #b #wp2 f g =
           frame (g x) post h1 in 
         S.bind_squash sq_2 (fun ((y,h2):(b * heap){post (y,h2) /\ fresh_or_old h1 h2}) -> 
           assert (fresh_or_old h0 h2);
-          assert (post (y,h2));
-          let sq_3 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd x_h)}) = admit () in //= (y,h2) in //unsolved unification variables ?!?
+          let sq_3 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd x_h)}) = 
+            S.return_squash (y,h2) in
           sq_3))
 
 let alloc (#a:Type0) (x:a)
