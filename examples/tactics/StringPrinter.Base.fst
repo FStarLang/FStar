@@ -661,42 +661,70 @@ let mk_st (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =
     let t = mk_st' (T.cur_env ()) fuel ty' x in
     exact_guard t
 
+// unfold // FAILS if set
+let buffer_is_mm (#t: Type) (b: B.buffer t) : GTot bool = HS.is_mm (B.content b)
+
+let buffer_create_mm_post
+  (#t: Type)
+  (r: HS.rid)
+  (h h' : HS.mem)
+  (b: B.buffer t)
+: GTot Type0
+=   b `B.unused_in` h /\
+    B.live h' b /\
+    B.idx b == 0 /\
+    Map.domain h'.HS.h == Map.domain h.HS.h /\
+    h'.HS.tip == h.HS.tip /\
+    HS.modifies (Set.singleton r) h h' /\
+    HS.modifies_ref r Set.empty h h' /\
+    buffer_is_mm b
+
+let alloc_and_fill_in_post
+  (#t: Type0)
+  (x: m t)
+  (resb: t * B.buffer U8.t)
+  (h h' : HS.mem)
+: GTot Type0
+=   let (res, b) = resb in
+    let (res', log) = x () in
+    res == res' /\
+    buffer_create_mm_post HS.root h h' b /\
+    log == B.as_seq h' b
+
 inline_for_extraction
-let redirect_to_dev_null'
+let alloc_and_fill_in
   (#t: Type0)
   (x: m t)
   (x_sz: U32.t)
   (x_st: m_st x)
-: HST.ST t
+: HST.ST (t * B.buffer U8.t)
   (requires (fun _ ->
     U32.v x_sz == S.length (log x)
   ))
-  (ensures (fun h res h' ->
-    B.modifies_0 h h' /\
-    res == (fst (x ()))
+  (ensures (fun h resb h' ->
+    alloc_and_fill_in_post x resb h h'
   ))
-= HST.push_frame ();
-  let b = B.create 42uy x_sz in
+= let b = B.rcreate_mm HS.root 42uy x_sz in
+  let h1 = HST.get () in
   let (r, _) = x_st b in
-  HST.pop_frame ();
-  r
+  let h2 = HST.get () in
+  B.lemma_reveal_modifies_1 b h1 h2;
+  (r, b)
 
 let phi_post
   (#t: Type0)
   (x: m t)
   (h: HS.mem)
-  (res: option t)
+  (res: option (t * B.buffer U8.t))
   (h' : HS.mem)
 : GTot Type0
-= B.modifies_0 h h' /\ (
-    if S.length (log x) > 4294967295
-    then res == None
-    else res == Some (fst (x ()))
-  )
+= if S.length (log x) > 4294967295
+  then (res == None /\ h' == h)
+  else (Some? res /\ (let (Some rb) = res in alloc_and_fill_in_post x rb h h'))
 
 let phi_t (#t: Type0) (x: m t) : Type =
   unit ->
-  HST.ST (option t)
+  HST.ST (option (t * B.buffer U8.t))
   (requires (fun _ -> True))
   (ensures (fun h res h' ->
     phi_post x h res h'
@@ -708,7 +736,7 @@ let phi_t_internal
   (x: m t)
   (h0: HS.mem)
 : Tot Type
-= (unit -> HST.ST (option t) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
+= (unit -> HST.ST (option (t * B.buffer U8.t)) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
 
 (* FIXME: the following does not extract to KreMLin. This was an attempt to push the CPS-style down to the effectful code as well, but does not work.
 
@@ -723,8 +751,8 @@ let phi
   let h0 = HST.get () in
   x_sz
 //    (phi_t_internal x h0) // does not typecheck
-    (unit -> HST.ST (option t) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
-    (fun _ sz u () -> Some (redirect_to_dev_null' x sz x_st))
+    (unit -> HST.ST (option (t * B.buffer U8.t)) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
+    (fun _ sz u () -> Some (alloc_and_fill_in x sz x_st))
     (fun _ () -> None)
     ()
 *)
@@ -739,7 +767,7 @@ let phi
 = fun () ->
   match log_size x_sz with
   | Some sz ->
-    Some (redirect_to_dev_null' x sz x_st)
+    Some (alloc_and_fill_in x sz x_st)
   | None -> None
 
 let phi_tac (#ty: Type0) (fuel: nat) (m: m ty) : T.Tac unit =

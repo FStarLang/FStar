@@ -36,12 +36,27 @@ let example_st (x: U32.t) : Tot (m_st (example x)) =
     (example x)
     ()
 
+module U8 = FStar.UInt8
+module HS = FStar.HyperStack
+
 inline_for_extraction
-let example_test (x: U32.t) : HST.ST (option unit) (requires (fun _ -> True)) (ensures (fun h _ h' -> B.modifies_0 h h')) =
-  phi
+let example_test
+  (x: U32.t)
+: HST.ST (option (B.buffer U8.t))
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+    match res with
+    | None -> h' == h
+    | Some b -> buffer_create_mm_post HS.root h h' b
+  ))
+= let res = phi
     (example x)
     (example_sz x)
     (example_st x)
     ()
+  in
+  match res with
+  | None -> None
+  | Some (_, b) -> Some b
 
 let _ = T.assert_by_tactic True (fun () -> T.print "EOF")
