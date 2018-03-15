@@ -241,6 +241,11 @@ let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     try
             let res = Rel.teq_nosmt env t1 t2 in
             debug_off();
+            if Env.debug env (Options.Other "1346")
+            then BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                            (string_of_bool res)
+                            (Print.term_to_string t1)
+                            (Print.term_to_string t2);
             ret res
     with | Errors.Err (_, msg) -> begin
             debug_off();
