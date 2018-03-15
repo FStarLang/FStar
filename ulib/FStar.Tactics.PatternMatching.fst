@@ -806,10 +806,20 @@ let fetch_eq_side' #a : Tac (term * term) =
   gpm (fun (left right: a) (g: goal (squash (left == right))) ->
          (quote left, quote right)) ()
 
-let _ =
-  assert_by_tactic (1 + 1 == 2)
-    (fun () -> let l, r = fetch_eq_side' #int in
-               print (term_to_string l ^ " / " ^ term_to_string r))
+// TODO: GM: The following definition breaks extraction with
+(*
+FStar.Tactics.Effect.fst(20,16-20,21): (Error 76) Ill-typed application: application is FStar.Tactics.PatternMatching.fetch_eq_side' (FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range
+ps
+(FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45))))
+remaining args are FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range ps
+(FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45)))
+ml type of head is (FStar_Reflection_Types.term * FStar_Reflection_Types.term)
+*)
+
+(* let _ = *)
+(*   assert_by_tactic (1 + 1 == 2) *)
+(*     (fun () -> let l, r = fetch_eq_side' #int in *)
+(*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
 
 let _ =
   assert_by_tactic (1 + 1 == 2)
