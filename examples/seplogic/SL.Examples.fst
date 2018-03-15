@@ -388,8 +388,7 @@ let rec length (l:listptr)
     <: STATE int (fun p m -> exists (fl:list int). valid l fl m /\ p (List.Tot.length fl) m)
 
     by (fun _ -> ignore (forall_intros ());
-              let h = implies_intro () in __elim_exists1 h;
-	      let h = implies_intro () in __elim_and h;
+              ignore (repeatn 2 implies_and_elim);
 	      ignore (implies_intro ());
 	      apply_lemma (`__elim_valid_without_match);  //this is fragile
 	      ignore (repeatn 3 assumption);
@@ -425,10 +424,7 @@ let rec length (l:listptr)
 	      norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
 	      apply_lemma (`lemma_rw);
 	      ignore (repeatn 2 split_and_smt);
-	      apply_lemma (`lemma_frame_out_empty_right);
-	      split_and_smt ();
-	      apply_lemma (`lemma_frame_out_empty_right);
-	      split_and_smt ();
+	      ignore (repeatn 2 (fun () -> apply_lemma (`lemma_frame_out_empty_right); split_and_smt ()));
 	      ignore (forall_intros ()); ignore (implies_intro ());
 	      apply_lemma (`lemma_rewrite_sep_comm);
 	      apply_lemma (`lemma_frame_exact);
@@ -550,10 +546,7 @@ let rec append (l1 l2:listptr)
 		apply_lemma (`lemma_rewrite_sep_assoc4);
 		apply_lemma (`lemma_rw);
 		ignore (repeatn 2 split_and_smt);
-		apply_lemma (`lemma_frame_out_empty_right);
-		split_and_smt ();
-		apply_lemma (`lemma_frame_out_empty_right);
-		split_and_smt ();
+		ignore (repeatn 2 (fun () -> apply_lemma (`lemma_frame_out_empty_right); split_and_smt ()));
                 ignore (forall_intros ()); ignore (implies_intro ());
 
                 split ();
@@ -709,10 +702,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       apply_lemma (`lemma_rewrite_sep_assoc4);
 	       apply_lemma (`lemma_rw); //!r in the Some branch
 	       ignore (repeatn 2 split_and_smt);
-	       apply_lemma (`lemma_frame_out_empty_right);
-	       split_and_smt ();
-	       apply_lemma (`lemma_frame_out_empty_right);
-	       split_and_smt ();
+	       ignore (repeatn 2 (fun () -> apply_lemma (`lemma_frame_out_empty_right); split_and_smt ()));
 	       ignore (forall_intros ()); ignore (implies_intro ());
                apply_lemma (`lemma_rw); //r:= in the Some branch
                ignore (repeatn 2 split_and_smt);
