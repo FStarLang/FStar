@@ -133,6 +133,7 @@ let solve_frame_wp_fails (_:unit) : Tac unit =
 let frame_wp_qn = ["SL" ; "Effect" ; "frame_wp"]
 let write_wp_qn = ["SL" ; "Effect" ; "write_wp"]
 let read_wp_qn = ["SL" ; "Effect" ; "read_wp"]
+let pointsto_qn = ["SepLogic"; "Heap"; "op_Bar_Greater"]
 
 let footprint_of (t:term) : Tac (list term) =
   admit();
@@ -154,6 +155,26 @@ let eexists (a:Type) (t:unit -> Tac a) : Tac a =
 let frame_wp_lemma (m0 m1:memory) (a:Type) (wp:st_wp a) (f_post:memory -> post a) : Lemma 
   (requires (defined (m0 <*> m1) /\ wp (f_post m1) m0))
   (ensures (frame_wp wp f_post (m0 <*> m1))) = ()
+
+let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
+  admit();
+  let hd, tl = collect_app t in
+  dump (term_to_string hd);
+  match inspect hd, tl with
+  | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
+    if inspect_fv fv = pointsto_qn then
+       (if tr `term_mem` fp_refs then "0" else "1") ^ term_to_string tr
+    else "2"
+  | _, _ -> "2" // have to accept at least Tv_Uvar _ here
+
+let sort_sl (a:Type) (vm:vmap a string) (xs:list var) =
+  List.Tot.sortWith #var
+    (fun x y -> FStar.String.compare (select_extra x vm)
+                                     (select_extra y vm)) xs
+
+let canon_monoid_sl fp =
+  canon_monoid_with string (pointsto_to_string fp) ""
+                           sort_sl (fun #a m vm xs -> admit())
 
 let solve_frame_wp (_:unit) : Tac (term * term) =
   admit();
@@ -194,12 +215,12 @@ let solve_frame_wp (_:unit) : Tac (term * term) =
         dump "with new goal:";
         flip();
         dump ("before canon_monoid");        
-        canon_monoid memory_cm;
+        canon_monoid_sl fp_refs memory_cm;
         dump ("after canon_monoid");
         trefl();
         dump ("after trefl");
         mapply (mk_e_app (`frame_wp_lemma) [fp; frame]);
-        Tactics.split(); admit1(); //easy, hypothesis
+        FStar.Tactics.split(); admit1(); //easy, hypothesis
         dump ("after frame lemma");
         fp, frame
       else fail "expecting frame_wp"
@@ -210,7 +231,7 @@ let solve_write () : Tac unit =
   norm [delta_only [%`write_wp]];
   dump "after write_wp";
   eexists unit (fun () -> 
-    Tactics.split(); trefl())
+    FStar.Tactics.split(); trefl())
 
 let foo (_:unit) : Tac unit =
    admit();
@@ -231,7 +252,7 @@ let foo (_:unit) : Tac unit =
    dump "after write";   
    norm [delta_only [%`frame_post]];   
    dump "after frame post"; 
-   Tactics.split(); admit1(); //definedness
+   FStar.Tactics.split(); admit1(); //definedness
    let fp, frame = solve_frame_wp () in   
    admit1()
 
