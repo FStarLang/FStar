@@ -1,5 +1,7 @@
 module FStar.Algebra.CommMonoid
 
+open FStar.Mul
+
 unopteq
 type cm (a:Type) =
   | CM :
@@ -19,4 +21,4 @@ let int_plus_cm : cm int =
   CM 0 (+) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
 
 let int_multiply_cm : cm int =
-  CM 1 op_Multiply (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
+  CM 1 ( * ) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())

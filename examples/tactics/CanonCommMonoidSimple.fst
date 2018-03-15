@@ -20,8 +20,8 @@ let var : eqtype = nat
 
 type exp : Type =
   | Unit : exp
-  | Var : var -> exp
   | Mult : exp -> exp -> exp
+  | Var : var -> exp
 
 let rec exp_to_string (e:exp) : string =
   match e with
@@ -217,6 +217,11 @@ let canon_correct (#a:Type) (m:cm a) (vm:vmap a) (e:exp) :
     Lemma (mdenote m vm e == xsdenote m vm (canon e)) =
   flatten_correct m vm e; sort_correct m vm (flatten e)
 
+let monoid_reflect_orig (#a:Type) (m:cm a) (vm:vmap a) (e1 e2:exp) :
+  Lemma (requires (xsdenote m vm (canon e1) == xsdenote m vm (canon e2)))
+        (ensures (mdenote m vm e1 == mdenote m vm e2)) =
+  canon_correct m vm e1; canon_correct m vm e2
+
 let monoid_reflect (#a:Type) (m:cm a) (vm:vmap a) (e1 e2:exp)
     (_ : squash (xsdenote m vm (canon e1) == xsdenote m vm (canon e2)))
        : squash (mdenote m vm e1 == mdenote m vm e2) =
@@ -269,9 +274,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       if term_eq t (quote a) then
         let (r1, ts, vm) = reification m [] (const (CM?.unit m)) t1 in
         let (r2, _, vm) = reification m ts vm t2 in
-        // dump ("r1=" ^ exp_to_string r1 ^
-        //     "; r2=" ^ exp_to_string r2);
-        // dump ("vm =" ^ term_to_string (quote vm));
+         dump ("vm =" ^ term_to_string (quote vm));
         change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
         // dump ("before =" ^ term_to_string (norm_term [delta;primops]
         //   (quote (mdenote m vm r1 == mdenote m vm r2))));
@@ -280,20 +283,10 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
         //           xsdenote m vm (canon r2)))));
         apply (`monoid_reflect);
         // dump ("after apply");
-        norm [delta_only ["CanonCommMonoidSimple.canon";
-                          "CanonCommMonoidSimple.xsdenote";
-                          "CanonCommMonoidSimple.flatten";
-                          "CanonCommMonoidSimple.sort";
-                          "CanonCommMonoidSimple.select";
-                          "FStar.List.Tot.Base.assoc";
-                          "FStar.Pervasives.Native.fst";
-                          "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                          "FStar.List.Tot.Base.op_At";
-                          "FStar.List.Tot.Base.append";
-                          "FStar.List.Tot.Base.sortWith";
-                          "FStar.List.Tot.Base.partition";
-                          "FStar.List.Tot.Base.bool_of_compare";
-                          "FStar.List.Tot.Base.compare_of_bool";
+        norm [delta_only [%`canon; %`xsdenote; %`flatten; %`sort;
+                %`select; %`assoc; %`fst; %`__proj__Mktuple2__item___1;
+                %`(@); %`append; %`List.Tot.Base.sortWith;
+                %`List.Tot.Base.partition; %`bool_of_compare; %`compare_of_bool;
            ]; primops]
         // ;dump "done"
       else fail "Goal should be an equality at the right monoid type"
@@ -304,3 +297,9 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid int_plus_cm; trefl())
+
+open FStar.Mul
+
+let _ =
+  assert_by_tactic (forall (a b c d : int). (b * 1) * 2 * a * (c * a) * 1 == 1 * a * b * c * a * 2)
+  (fun _ -> ignore (forall_intros()); canon_monoid int_multiply_cm; trefl())
