@@ -16,23 +16,23 @@ open FStar.OrdMap
 
 (* Should eventually go to standard library *)
 
-let right_unitality_lemma (a:Type) (u:a) (mult:a -> a -> a) =
+let right_unitality_lemma (a:Type) (u:a) (mult:a -> a -> GTot a) =
   x:a -> Lemma (x `mult` u == x)
 
-let left_unitality_lemma (a:Type) (u:a) (mult:a -> a -> a) =
+let left_unitality_lemma (a:Type) (u:a) (mult:a -> a -> GTot a) =
   x:a -> Lemma (u `mult` x == x)
 
-let associativity_lemma (a:Type) (mult:a -> a -> a) =
+let associativity_lemma (a:Type) (mult:a -> a -> GTot a) =
   x:a -> y:a -> z:a -> Lemma (x `mult` y `mult` z == x `mult` (y `mult` z))
 
-let commutativity_lemma (a:Type) (mult:a -> a -> a) =
+let commutativity_lemma (a:Type) (mult:a -> a -> GTot a) =
   x:a -> y:a -> Lemma (x `mult` y == y `mult` x)
 
 unopteq
 type cm (a:Type) =
   | CM :
     unit:a ->
-    mult:(a -> a -> a) ->
+    mult:(a -> a -> GTot a) ->
     right_unitality:right_unitality_lemma a unit mult ->
     left_unitality:left_unitality_lemma a unit mult ->
     associativity:associativity_lemma a mult ->
@@ -77,13 +77,13 @@ let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b =
 let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) : vmap a b =
   (x, (xa, xb))::fst vm, snd vm
 
-let rec mdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : a =
+let rec mdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : GTot a =
   match e with
   | Unit -> CM?.unit m
   | Var x -> select x vm
   | Mult e1 e2 -> CM?.mult m (mdenote m vm e1) (mdenote m vm e2)
 
-let rec xsdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) : a =
+let rec xsdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) : GTot a =
   match xs with
   | [] -> CM?.unit m
   | [x] -> select x vm

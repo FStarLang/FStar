@@ -119,6 +119,12 @@ open CanonCommMonoid
 open FStar.Reflection
 open FStar.List
 
+(* Had to add GTot for the mul for this to work;
+   and there is still and admit below for left_unitality;
+   TODO: Got stuck on norm_term not accepting Ghost *)
+let memory_cm : cm memory =
+  CM emp (<*>) (fun x -> ()) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())
+
 // Fails when called
 // (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
 let solve_frame_wp_fails (_:unit) : Tac unit =
@@ -137,6 +143,11 @@ let footprint_of (t:term) : Tac (list term) =
     else fail "not a write_wp"
   | _ -> fail "not an applied free variable"
 
+let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
+let eexists (a:Type) (t:unit -> Tac a) : Tac a =
+  apply_lemma (`FStar.Classical.exists_intro); later(); norm[];
+  fst (divide (ngoals()-1) t dismiss)
+
 let solve_frame_wp (_:unit) : Tac unit =
   admit();
   norm[];
@@ -154,14 +165,31 @@ let solve_frame_wp (_:unit) : Tac unit =
       if inspect_fv fv = frame_wp_qn then
         let fp = footprint_of twp in
         dump ("fp="^ FStar.String.concat "," (List.Tot.map term_to_string fp));
-        let m0 = FStar.Tactics.Derived.fold_left
+        let tm0 = FStar.Tactics.Derived.fold_left
                    (fun a t -> if term_eq a (`emp) then t
-                               else quote (join a t)) (`emp)
+                               else mk_e_app (`( <*> )) [a;t])
+                   (`emp)
                    (FStar.Tactics.Derived.map
-                     (fun t -> let u = fresh_uvar None in quote (t |> u)) fp)
-        in
-        dump ("m0=" ^ term_to_string m0);
-        idtac()
+                     (fun t -> let u = fresh_uvar (Some (`int)) in
+                               mk_e_app (`( |> )) [t; u]) fp) in
+        dump ("m0=" ^ term_to_string tm0);
+        // let m0 : memory = unquote tm0 in //-- this fails, doesn't type-check
+        // let m : memory = unquote tm in //-- this fails, doesn't type-check
+        // ignore(tcut(quote(squash (exists m1. m0 <*> m1 == m))));
+        let m1 : binder = fresh_binder (`memory) in
+        let tm1 : term = pack (Tv_Var (bv_of_binder m1)) in
+        let tp : term = pack (Tv_Abs m1 (mk_app (`eq2)
+              [((`memory),                   Q_Implicit);
+               (mk_e_app (`(<*>)) [tm0;tm1], Q_Explicit);
+               (tm,                          Q_Explicit)])) in
+        let new_goal = mk_e_app (pack_fv' squash_qn) [
+          mk_app (pack_fv' exists_qn) [(`memory, Q_Implicit); (tp, Q_Explicit)]] in
+        let heq = tcut new_goal in
+        flip();
+        eexists unit (fun _ ->
+          canon_monoid memory_cm;
+          dump ("after eexists")
+        )
       else fail "expecting frame_wp"
     else fail "expecting squash"
   | _ -> fail "not an applied free variable"
