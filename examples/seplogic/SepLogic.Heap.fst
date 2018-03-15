@@ -257,12 +257,14 @@ let lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
       FStar.Classical.forall_to_exists #memory (fun m_fresh -> 
         lemma_fresh_or_old_disjoint'' h0 h1 h2 m_old m_fresh))
 
-#set-options "--z3rlimit_factor 1 --max_fuel 0 --max_ifuel 0"
+#set-options "--max_fuel 0 --max_ifuel 0"
 
 private let lemma_fresh_or_old_sep' (h0 h1 h2:heap) (m_old m_fresh:memory) 
   : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ disjoint_heaps h0 h2 /\ disjoint_heaps h1 h2 /\ same_freshness h0 h2))
           (ensures  (fresh_or_old' (join h0 h2) (join h1 h2) (m_old <*> heap_memory h2) m_fresh))
   = lemma_sep_comm (heap_memory h2) m_fresh
+
+#reset-options "--max_fuel 8 --max_ifuel 2"
 
 private let exists_intro_2 (#a:Type) (#b:Type) (p:(a -> b -> Type)) (witness:a) (witness':b)
   : Lemma (requires (p witness witness'))

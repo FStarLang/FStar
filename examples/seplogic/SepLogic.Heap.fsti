@@ -243,6 +243,8 @@ val lemma_fresh_or_old_refl (h:heap)
 val lemma_fresh_or_old_trans (h0 h1 h2:heap)
   : Lemma (requires (fresh_or_old h0 h1 /\ fresh_or_old h1 h2))
           (ensures  (fresh_or_old h0 h2))
+          [SMTPat (fresh_or_old h0 h1);
+           SMTPat (fresh_or_old h1 h2)]
 
 val lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
   : Lemma (requires (fresh_or_old h0 h1 /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))

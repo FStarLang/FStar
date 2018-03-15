@@ -55,7 +55,7 @@ let bind_exists
   : Tot (squash a)
   = S.bind_squash #(x:b & p x) #a h (fun (| x, p |) -> f x p)
 
-(*val frame: #a:Type -> #wp:st_wp a -> f:st a wp
+val frame: #a:Type -> #wp:st_wp a -> f:st a wp
          -> st a (fun post -> frame_wp wp (frame_post post))
 let frame #a #wp f = 
   fun post h -> 
@@ -75,8 +75,9 @@ let frame #a #wp f =
                          let res = (x, join h1 h0') in 
                          lemma_fresh_or_old_disjoint h0 h0' h1;
                          lemma_fresh_or_old_sep h0 h0' h1;
-                         S.return_squash res)))*)
-(*
+                         lemma_join_comm h0' h1;
+                         S.return_squash res)))
+
 #set-options "--z3rlimit_factor 1 --max_fuel 0 --max_ifuel 0"
 
 val bind (#a:Type) (#wp1:st_wp a)
@@ -107,22 +108,16 @@ frame (g x) post :
 
 let bind #a #wp1 #b #wp2 f g =
     fun post h0 ->
-      assert (frame_wp wp1 (frame_post (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) h0);
       let sq_1 : squash (result h0 a (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) =
-        frame f (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) h0 in 
-      S.bind_squash #(result h0 a (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) #(result h0 b post) sq_1 (fun (x, h1) -> 
-        assert (frame_wp (wp2 x) (frame_post post) h1);
-        assert (fresh_or_old h0 h1);
-        let sq_2 : squash (result h1 b post) = 
+        frame f (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) h0 in
+      S.bind_squash sq_1 (fun (x, h1) ->
+        let sq_2 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h1 (snd x_h)}) = //result h1 b post
           frame (g x) post h1 in 
-        S.bind_squash #(result h1 b post) #(result h0 b post) sq_2 (fun (y_h:result h1 b post) ->
-          let (y, h2) : x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd #b #heap x_h)} = y_h in
-          assert (post (y, h2));
-          assert (fresh_or_old h1 h2);
-          lemma_fresh_or_old_trans h0 h1 h2; 
+        S.bind_squash sq_2 (fun ((y,h2):(b * heap){post (y,h2) /\ fresh_or_old h1 h2}) -> 
           assert (fresh_or_old h0 h2);
-          let res : squash (result h0 b post) = (y, h2) post in 
-          res))*)
+          assert (post (y,h2));
+          let sq_3 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd x_h)}) = admit () in //= (y,h2) in //unsolved unification variables ?!?
+          sq_3))
 
 let alloc (#a:Type0) (x:a)
   : st (ref a) (fun post h0 -> heap_memory h0 == emp /\ (let (r,h1) = alloc h0 x in post (r, h1)))
