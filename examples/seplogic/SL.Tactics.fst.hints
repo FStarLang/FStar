@@ -1,5 +1,5 @@
 [
-  "I\u0017ÿQÇHîá!`\u0010Üã>Ï#",
+  "\u0005î c\u0018ZÕ´¾\u0016K\u001fê\u001bú\u0016",
   [
     [
       "SL.Tactics.split_all",
@@ -22,19 +22,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "65ea54b3e21623bb87e969b27fe4c6f9"
-    ],
-    [
-      "SL.Tactics.first",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
-      ],
-      0,
-      "aaf704b9ec1338b5ea46747dc7329a37"
+      "e9380ad86b2278f6dadd42a282272725"
     ],
     [
       "SL.Tactics.simplify_restrict",
@@ -58,7 +46,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "747174d277e0facb6a8386aa632abb0b"
+      "7522b58d61c248156a47c42f9ebd33be"
     ],
     [
       "SL.Tactics.step_select",
@@ -82,7 +70,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "52b31de5c2748eb509b73dc2806b70b9"
+      "767155c783e293185d81f5e5f1f87cb0"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -110,7 +98,7 @@
         "unit_typing"
       ],
       0,
-      "ee830920cc9ba41f3ca0d8278797ec27"
+      "6bf370455f68bbec1b4355f0b40689fb"
     ],
     [
       "SL.Tactics.solve",
@@ -128,7 +116,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "0000f076b38ec6210d67d2747471a8d8"
+      "947d5445d8079773163446a9e55a26cf"
     ],
     [
       "SL.Tactics.split_all",
@@ -154,19 +142,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "79d05f79e4bc41a5c9df71e684466260"
-    ],
-    [
-      "SL.Tactics.first",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
-      ],
-      0,
-      "6bfac2c69fd1e351bc46c2563103527c"
+      "cd7e31f8602892193e0314e3bbd9890e"
     ],
     [
       "SL.Tactics.simplify_restrict",
@@ -190,7 +166,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "0d40ad00598d8932905a6978ffbc3c06"
+      "077befab3c818616c232b5cb8ff02afc"
     ],
     [
       "SL.Tactics.step_select",
@@ -214,7 +190,7 @@
         "function_token_typing_Prims.unit", "unit_inversion", "unit_typing"
       ],
       0,
-      "bf0c37ee8e14389b635867d65ce2bddb"
+      "d40feab2993e0fa2116e7de601b380a6"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -242,7 +218,7 @@
         "unit_typing"
       ],
       0,
-      "6a76324d713e3b3bbcbe3d24450c7697"
+      "6229ae73c596da06e79b1d9944855708"
     ],
     [
       "SL.Tactics.solve",
@@ -260,7 +236,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "4b881d67ea52d5256ee95dde6bb7d3e6"
+      "bb1c3e8495cbe0ad91d68647c8ec489d"
     ]
   ]
 ]
