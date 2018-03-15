@@ -73,6 +73,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.CInline" -> Some CInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
+      | _ -> None
       end
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
       begin match string_of_lid (lid_of_fv fv) with
