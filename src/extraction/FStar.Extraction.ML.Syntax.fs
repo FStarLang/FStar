@@ -158,6 +158,9 @@ type meta =
   | PpxDerivingShowConstant of string
   | Comment of string
   | StackInline
+  | CPrologue of string
+  | CEpilogue of string
+  | CConst of string
 
 // rename
 type metadata = list<meta>

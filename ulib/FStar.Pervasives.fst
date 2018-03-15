@@ -261,19 +261,46 @@ let ignore #a x = ()
 irreducible
 let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
 
-(* For the compiler. Use as follows:
+(* These are the supported attributes for top-level declarations. Syntax
+ * example:
+ *   [@ Gc ] type list a = | Nil | Cons of a * list a
+ * or:
+ *   [@ CInline ] let f x = UInt32.(x +%^ 1)
  *
- * [@ PpxDerivingShow ]
- * type t = A | B
- *
- * The resulting OCaml extracted type definition will have [@@ ppx_deriving show] attached to it. *)
+ * Please add new attributes to this list along with a comment! Attributes are
+ * desugared but not type-checked; using the constructors of a data type
+ * guarantees a minimal amount of typo-checking.
+ * *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
+    (* Generate [@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingShowConstant of string
+    (* Similar, but for constant printers. *)
   | CInline
+    (* KreMLin-only: generates a C "inline" attribute on the resulting
+     * function declaration. *)
   | Substitute
+    (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
+     * deprecated and the recommended way is now to use F*'s
+     * [inline_for_extraction], which now also works for stateful functions. *)
   | Gc
+    (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
+     * data-type; this requires running with a conservative GC as the
+     * allocations are not freed. *)
   | Comment of string
+    (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
+     * syntax automatically fills in this attribute. *)
+  | CPrologue of string
+    (* KreMLin-only: berbatim C code to be prepended to the declaration.
+     * Multiple attributes are valid and accumulate, separated by newlines. *)
+  | CEpilogue of string
+    (* Ibid. *)
+  | CConst of string
+    (* KreMLin-only: indicates that the parameter with that name is to be marked
+     * a C const.  This will be checked by the C compiler, not by KreMLin or F*.
+     * *)
+
+(* Some supported attributes encoded using functions. *)
 
 (*
  * to be used in attributes
