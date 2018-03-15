@@ -750,9 +750,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       flip ();
                apply_lemma (`lemma_apply_rewrite_assoc_mem1);
 	       trefl ();
-	       smt ();
-	       smt ();
-	       smt ();
+	       ignore (repeatn 3 smt);
 
 	       ignore (forall_intros ()); ignore (implies_intros ());
 	       process_trivial_tail ())
