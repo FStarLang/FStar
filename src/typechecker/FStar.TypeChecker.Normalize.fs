@@ -1833,8 +1833,10 @@ and maybe_simplify_aux cfg env stack tm =
     in
     // A very F*-specific optimization:
     //  1)                        (p ==> E[p])     ~>     E[True]
-    //  2)  (forall j1 j2 ... jn. p j1 j2 ... jn) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
-    let is_quantified_true (phi : term) : option<term> =
+    //  2)                       (~p ==> E[p])     ~>     E[False]
+    //  3)  (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
+    //  4)  (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
+    let is_quantified_const (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
             begin match U.destruct_typ_as_formula p with
@@ -1845,12 +1847,33 @@ and maybe_simplify_aux cfg env stack tm =
                       end
 
             // Case 2)
+            | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
+                begin match (SS.compress p).n with
+                | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_false)] q)
+                | _ -> None
+                end
+
             | Some (QAll (bs, pats, phi)) ->
-                begin match is_applied_maybe_squashed bs phi with
-                | Some bv ->
-                    let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
-                    Some (SS.subst [NT (bv, ftrue)] q)
+                begin match U.destruct_typ_as_formula phi with
                 | None ->
+                    begin match is_applied_maybe_squashed bs phi with
+                    // Case 3)
+                    | Some bv ->
+                        let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
+                        Some (SS.subst [NT (bv, ftrue)] q)
+                    | None ->
+                        None
+                    end
+                | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
+                    begin match is_applied_maybe_squashed bs p with
+                    // Case 4)
+                    | Some bv ->
+                        let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
+                        Some (SS.subst [NT (bv, ffalse)] q)
+                    | _ ->
+                        None
+                    end
+                | _ ->
                     None
                 end
 
@@ -1909,7 +1932,7 @@ and maybe_simplify_aux cfg env stack tm =
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
-    match is_quantified_true tm with
+    match is_quantified_const tm with
     (* We need to recurse, and maybe reduce further! *)
     | Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
     (* Otherwise try to simplify this point *)
@@ -1949,6 +1972,8 @@ and maybe_simplify_aux cfg env stack tm =
            | [(Some false, _) ; (Some true, _)]  -> w U.t_false
            | [(_, (arg, _))   ; (Some true, _)]
            | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+           | [(_, (arg, _))   ; (Some false, _)]
+           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg)
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
              then w U.t_true

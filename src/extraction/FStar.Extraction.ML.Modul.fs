@@ -66,23 +66,29 @@ let as_pair = function
 // amount of typo-checking via desugaring.
 let rec extract_meta x =
   match SS.compress x with
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
-      Some PpxDerivingShow
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.CInline" -> Some CInline
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Substitute" -> Some Substitute
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Gc" -> Some GCType
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
-      Some (PpxDerivingShowConstant s)
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
-      Some (Comment s)
-  | { n = Tm_constant (Const_string (data, _)) } when data = "KremlinPrivate" -> Some Private
+  | { n = Tm_fvar fv } ->
+      begin match string_of_lid (lid_of_fv fv) with
+      | "KremlinPrivate" -> Some Private // This one generated internally
+      | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Pervasives.CInline" -> Some CInline
+      | "FStar.Pervasives.Substitute" -> Some Substitute
+      | "FStar.Pervasives.Gc" -> Some GCType
+      | _ -> None
+      end
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
+      begin match string_of_lid (lid_of_fv fv) with
+      | "FStar.Pervasives.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
+      | "FStar.Pervasives.Comment" -> Some (Comment s)
+      | "FStar.Pervasives.CPrologue" -> Some (CPrologue s)
+      | "FStar.Pervasives.CEpilogue" -> Some (CEpilogue s)
+      | "FStar.Pervasives.CConst" -> Some (CConst s)
+      | _ -> None
+      end
   // These are only for backwards compatibility, they should be removed at some point.
-  | { n = Tm_constant (Const_string (data, _)) } when data = "c_inline" -> Some CInline
-  | { n = Tm_constant (Const_string (data, _)) } when data = "substitute" -> Some Substitute
-  | { n = Tm_meta (x, _) } ->
-      extract_meta x
-  | a ->
-      None
+  | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
+  | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
+  | { n = Tm_meta (x, _) } -> extract_meta x
+  | _ -> None
 
 let extract_metadata metas =
   List.choose extract_meta metas
