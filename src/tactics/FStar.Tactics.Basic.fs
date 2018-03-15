@@ -1574,7 +1574,8 @@ let rec inspect (t:term) : tac<term_view> =
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         ret <| Tv_Unknown
-
+(* This function could actually be pure, it doesn't need freshness
+ * like `inspect` does, but we mark it as Tac for uniformity. *)
 let pack (tv:term_view) : tac<term> =
     match tv with
     | Tv_Var bv ->
@@ -1614,8 +1615,7 @@ let pack (tv:term_view) : tac<term> =
 
     | Tv_Let (true, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
-        let lbs_open, body_open = SS.open_let_rec [lb] t2 in
-        let lbs, body = SS.close_let_rec [lb] body_open in
+        let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
