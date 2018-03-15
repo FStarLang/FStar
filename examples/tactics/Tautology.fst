@@ -3,11 +3,11 @@ module P = FStar.Tactics.PatternMatching
 
 open FStar.Tactics
 
-// Note: putting ``P.done ()`` inside each call to ``gpm`` would give early
+// Note: putting ``qed ()`` inside each call to ``gpm`` would give early
 // errors, at the price of verbosity.
 let rec tauto (): Tac unit =
   // dump "[tauto]";
-  P.repeat' (fun () -> P.tfirst #unit [
+  P.repeat' (fun () -> first #unit [
     P.gpm (fun (g: P.goal (squash True)) ->
       trivial ()
     );
@@ -30,7 +30,7 @@ let rec tauto (): Tac unit =
       P.exact_hyp' h
     );
   ]);
-  P.done ()
+  qed ()
 
 
 assume val p: prop
