@@ -1972,6 +1972,8 @@ and maybe_simplify_aux cfg env stack tm =
            | [(Some false, _) ; (Some true, _)]  -> w U.t_false
            | [(_, (arg, _))   ; (Some true, _)]
            | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+           | [(_, (arg, _))   ; (Some false, _)]
+           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg)
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
              then w U.t_true
