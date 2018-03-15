@@ -10,7 +10,6 @@
     <RootNamespace>smtencoding</RootNamespace>
     <AssemblyName>smtencoding</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>smtencoding</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>

@@ -72,6 +72,8 @@ type refl_constant = {
     lid : FStar.Ident.lid;
     t : term;
 }
+let get_refl_const_lid r = r.lid
+let get_refl_const_t   r = r.t
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 

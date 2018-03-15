@@ -10,7 +10,6 @@
     <RootNamespace>prettyprint</RootNamespace>
     <AssemblyName>prettyprint</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>prettyprint</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
