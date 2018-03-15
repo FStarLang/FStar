@@ -1,4 +1,5 @@
 module CanonCommSemiring
+#reset-options
 
 (*
 Commutative semiring (a ring with commutative multiplication and without an additive inverse)
@@ -24,7 +25,8 @@ module CCM = CanonCommMonoid
 
 irreducible let canon_attr = ()
 
-[@canon_attr] unfold let cm_op = CM?.mult
+[@canon_attr]
+unfold let cm_op = CM?.mult
 
 (***** Commutative semirings *)
 
@@ -40,6 +42,7 @@ let distribute_right_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   let ( * ) = cm_op cm_mult in
   x:a -> y:a -> z:a -> Lemma ((x + y) * z == x * z + y * z)
 
+[@canon_attr]
 unopteq
 type cr (a:Type) =
   | CR :
@@ -71,6 +74,8 @@ let rec exp_to_string (e:exp) : string =
 (***** Expression denotation *)
 
 unfold let vmap = CCM.vmap
+
+[@canon_attr]
 unfold let select = CCM.select
 
 [@canon_attr]
@@ -239,34 +244,36 @@ let reification (b:Type) (f:term -> Tac b) (def:b) (#a:Type) (r:cr a) (ts:list t
   (List.rev es, vm)
 
 let canon_norm () : Tac unit =
-            norm [
-              primops;
-              iota;
-              zeta;
-//              delta_attr canon_attr;
-              delta
-              (*
-              delta_only [
-                // term_to_string (quote p);
-                "CanonCommMonoid.canon";
-                "CanonCommMonoid.xsdenote";
-                "CanonCommMonoid.flatten";
-                "CanonCommMonoid.select";
-                "CanonCommMonoid.select_extra";
-                "FStar.List.Tot.Base.assoc";
-                "FStar.Pervasives.Native.fst";
-                "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                "FStar.List.Tot.Base.op_At";
-                "FStar.List.Tot.Base.append";
-                "FStar.List.Tot.Base.sortWith";
-                "FStar.List.Tot.Base.partition";
-                "FStar.List.Tot.Base.bool_of_compare";
-                "FStar.List.Tot.Base.compare_of_bool";
-                "CanonCommMonoid.const_compare";
-                "CanonCommMonoid.special_compare";
-              ]
-              *)
-            ]
+  norm [
+    primops;
+    iota;
+    zeta;
+    delta_attr canon_attr;
+    delta_only [
+      "FStar.Algebra.CommMonoid.int_plus_cm";
+      "FStar.Algebra.CommMonoid.int_multiply_cm";
+      "FStar.Algebra.CommMonoid.__proj__CM__item__mult";
+      "CanonCommSemiring.__proj__CR__item__cm_add";
+      "CanonCommSemiring.__proj__CR__item__cm_mult";
+      "CanonCommMonoid.canon";
+      "CanonCommMonoid.xsdenote";
+      "CanonCommMonoid.flatten";
+      "CanonCommMonoid.select";
+      "CanonCommMonoid.select_extra";
+      "CanonCommMonoid.const_last";
+      "CanonCommMonoid.const_compare";
+      "CanonCommMonoid.special_compare";
+      "FStar.List.Tot.Base.assoc";
+      "FStar.Pervasives.Native.fst";
+      "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+      "FStar.List.Tot.Base.op_At";
+      "FStar.List.Tot.Base.append";
+      "FStar.List.Tot.Base.sortWith";
+      "FStar.List.Tot.Base.partition";
+      "FStar.List.Tot.Base.bool_of_compare";
+      "FStar.List.Tot.Base.compare_of_bool";
+    ]
+  ]
 
 let canon_semiring_with
     (b:Type) (f:term -> Tac b) (def:b) (p:permute b) (pc:permute_correct p)
