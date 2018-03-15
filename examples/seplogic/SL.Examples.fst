@@ -363,6 +363,11 @@ let lemma_frame_exact (phi:memory -> memory -> memory -> memory -> Type0) (h h':
          (ensures  (exists (h0 h1:memory). defined (h0 <*> h1) /\ (h <*> h') == (h0 <*> h1) /\ phi h h' h0 h1))
   = ()
 
+let rec process_trivial_tail () :Tac unit
+  = ignore (repeat (fun () -> split (); smt ()));
+    or_else (fun () -> apply_lemma (`lemma_frame_out_empty_left); process_trivial_tail ())
+            (fun () -> idtac ())
+
 let rec length (l:listptr)
   = (match l with
      | None   -> (0 <: STATE int (fun p h -> p 0 emp))
@@ -435,15 +440,7 @@ let rec length (l:listptr)
 	      split (); smt ();
 	      ignore (forall_intro ());
 	      ignore (implies_intro ());
-	      split (); smt (); split (); smt ();
-	      apply_lemma (`lemma_frame_out_empty_left);
-	      split (); smt (); split (); smt ();
-	      split (); smt (); split (); smt ();
-	      apply_lemma (`lemma_frame_out_empty_left);
-	      split (); smt (); split (); smt (); split (); smt ();
-	      apply_lemma (`lemma_frame_out_empty_left);
-	      smt ();
-	      smt ())
+	      process_trivial_tail ())
 
 
 let binder_to_term b = let bv, _ = inspect_binder b in pack (Tv_Var bv)
@@ -631,19 +628,7 @@ let rec append (l1 l2:listptr)
 		split (); smt ();
 		ignore (forall_intro ());
 		let h = implies_intro () in rewrite h;
-		split (); smt (); split (); smt ();
-		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt ();
-		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt ();
-		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt (); split (); smt ();
-		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt ();
-		apply_lemma (`lemma_frame_out_empty_left);
-		smt ();
-		smt ();
-		smt ())
+		process_trivial_tail ())
 
 let lemma_apply_rewrite_assoc_mem1 (m1 m2 m3 m4:memory)
   :Lemma (requires ((m2 <*> (m1 <*> m3)) == m4))
@@ -768,13 +753,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       smt ();
 
 	       ignore (forall_intros ()); ignore (implies_intros ());
-	       split (); smt (); split (); smt ();
-	       apply_lemma (`lemma_frame_out_empty_left);
-	       split (); smt (); split (); smt (); split (); smt (); split (); smt ();
-	       apply_lemma (`lemma_frame_out_empty_left);
-	       split (); smt (); split (); smt (); split (); smt ();
-	       apply_lemma (`lemma_frame_out_empty_left);
-	       smt (); smt ())
+	       process_trivial_tail ())
 
 let rev (l:listptr)
   = (rev_append l None)
@@ -794,5 +773,4 @@ let rev (l:listptr)
 	       witness (binder_to_term fl);
 	       witness (`(Prims.Nil #int));
 	       witness (binder_to_term m);
-	       witness (`SepLogic.Heap.emp);
-	       smt ())
+	       witness (`SepLogic.Heap.emp))
