@@ -84,8 +84,8 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.qtbl_name_and_index = uu____49;
             FStar_TypeChecker_Env.proof_ns =
               (uu___61_48.FStar_TypeChecker_Env.proof_ns);
-            FStar_TypeChecker_Env.synth =
-              (uu___61_48.FStar_TypeChecker_Env.synth);
+            FStar_TypeChecker_Env.synth_hook =
+              (uu___61_48.FStar_TypeChecker_Env.synth_hook);
             FStar_TypeChecker_Env.splice =
               (uu___61_48.FStar_TypeChecker_Env.splice);
             FStar_TypeChecker_Env.is_native_tactic =
@@ -175,8 +175,8 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.qtbl_name_and_index = uu____99;
             FStar_TypeChecker_Env.proof_ns =
               (uu___62_98.FStar_TypeChecker_Env.proof_ns);
-            FStar_TypeChecker_Env.synth =
-              (uu___62_98.FStar_TypeChecker_Env.synth);
+            FStar_TypeChecker_Env.synth_hook =
+              (uu___62_98.FStar_TypeChecker_Env.synth_hook);
             FStar_TypeChecker_Env.splice =
               (uu___62_98.FStar_TypeChecker_Env.splice);
             FStar_TypeChecker_Env.is_native_tactic =
@@ -1413,9 +1413,9 @@ let (tc_eff_decl :
                                                      FStar_TypeChecker_Env.proof_ns
                                                        =
                                                        (uu___66_1420.FStar_TypeChecker_Env.proof_ns);
-                                                     FStar_TypeChecker_Env.synth
+                                                     FStar_TypeChecker_Env.synth_hook
                                                        =
-                                                       (uu___66_1420.FStar_TypeChecker_Env.synth);
+                                                       (uu___66_1420.FStar_TypeChecker_Env.synth_hook);
                                                      FStar_TypeChecker_Env.splice
                                                        =
                                                        (uu___66_1420.FStar_TypeChecker_Env.splice);
@@ -1723,9 +1723,9 @@ let (tc_eff_decl :
                                                   FStar_TypeChecker_Env.proof_ns
                                                     =
                                                     (uu___68_1630.FStar_TypeChecker_Env.proof_ns);
-                                                  FStar_TypeChecker_Env.synth
+                                                  FStar_TypeChecker_Env.synth_hook
                                                     =
-                                                    (uu___68_1630.FStar_TypeChecker_Env.synth);
+                                                    (uu___68_1630.FStar_TypeChecker_Env.synth_hook);
                                                   FStar_TypeChecker_Env.splice
                                                     =
                                                     (uu___68_1630.FStar_TypeChecker_Env.splice);
@@ -4506,8 +4506,8 @@ let (tc_decl :
                                 (uu___79_5304.FStar_TypeChecker_Env.qtbl_name_and_index);
                               FStar_TypeChecker_Env.proof_ns =
                                 (uu___79_5304.FStar_TypeChecker_Env.proof_ns);
-                              FStar_TypeChecker_Env.synth =
-                                (uu___79_5304.FStar_TypeChecker_Env.synth);
+                              FStar_TypeChecker_Env.synth_hook =
+                                (uu___79_5304.FStar_TypeChecker_Env.synth_hook);
                               FStar_TypeChecker_Env.splice =
                                 (uu___79_5304.FStar_TypeChecker_Env.splice);
                               FStar_TypeChecker_Env.is_native_tactic =
@@ -5221,8 +5221,8 @@ let (tc_decl :
                            (uu___88_6698.FStar_TypeChecker_Env.qtbl_name_and_index);
                          FStar_TypeChecker_Env.proof_ns =
                            (uu___88_6698.FStar_TypeChecker_Env.proof_ns);
-                         FStar_TypeChecker_Env.synth =
-                           (uu___88_6698.FStar_TypeChecker_Env.synth);
+                         FStar_TypeChecker_Env.synth_hook =
+                           (uu___88_6698.FStar_TypeChecker_Env.synth_hook);
                          FStar_TypeChecker_Env.splice =
                            (uu___88_6698.FStar_TypeChecker_Env.splice);
                          FStar_TypeChecker_Env.is_native_tactic =
@@ -5812,8 +5812,8 @@ let (check_exports :
               (uu___95_8115.FStar_TypeChecker_Env.qtbl_name_and_index);
             FStar_TypeChecker_Env.proof_ns =
               (uu___95_8115.FStar_TypeChecker_Env.proof_ns);
-            FStar_TypeChecker_Env.synth =
-              (uu___95_8115.FStar_TypeChecker_Env.synth);
+            FStar_TypeChecker_Env.synth_hook =
+              (uu___95_8115.FStar_TypeChecker_Env.synth_hook);
             FStar_TypeChecker_Env.splice =
               (uu___95_8115.FStar_TypeChecker_Env.splice);
             FStar_TypeChecker_Env.is_native_tactic =
@@ -6388,8 +6388,8 @@ let (push_context :
           (uu___102_9155.FStar_TypeChecker_Env.qtbl_name_and_index);
         FStar_TypeChecker_Env.proof_ns =
           (uu___102_9155.FStar_TypeChecker_Env.proof_ns);
-        FStar_TypeChecker_Env.synth =
-          (uu___102_9155.FStar_TypeChecker_Env.synth);
+        FStar_TypeChecker_Env.synth_hook =
+          (uu___102_9155.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___102_9155.FStar_TypeChecker_Env.splice);
         FStar_TypeChecker_Env.is_native_tactic =
@@ -6492,8 +6492,8 @@ let (tc_partial_modul :
              (uu___103_9181.FStar_TypeChecker_Env.qtbl_name_and_index);
            FStar_TypeChecker_Env.proof_ns =
              (uu___103_9181.FStar_TypeChecker_Env.proof_ns);
-           FStar_TypeChecker_Env.synth =
-             (uu___103_9181.FStar_TypeChecker_Env.synth);
+           FStar_TypeChecker_Env.synth_hook =
+             (uu___103_9181.FStar_TypeChecker_Env.synth_hook);
            FStar_TypeChecker_Env.splice =
              (uu___103_9181.FStar_TypeChecker_Env.splice);
            FStar_TypeChecker_Env.is_native_tactic =
@@ -6628,8 +6628,8 @@ let rec (tc_modul :
               (uu___106_9314.FStar_TypeChecker_Env.qtbl_name_and_index);
             FStar_TypeChecker_Env.proof_ns =
               (uu___106_9314.FStar_TypeChecker_Env.proof_ns);
-            FStar_TypeChecker_Env.synth =
-              (uu___106_9314.FStar_TypeChecker_Env.synth);
+            FStar_TypeChecker_Env.synth_hook =
+              (uu___106_9314.FStar_TypeChecker_Env.synth_hook);
             FStar_TypeChecker_Env.splice =
               (uu___106_9314.FStar_TypeChecker_Env.splice);
             FStar_TypeChecker_Env.is_native_tactic =
@@ -6716,8 +6716,8 @@ let rec (tc_modul :
                       (uu___107_9369.FStar_TypeChecker_Env.qtbl_name_and_index);
                     FStar_TypeChecker_Env.proof_ns =
                       (uu___107_9369.FStar_TypeChecker_Env.proof_ns);
-                    FStar_TypeChecker_Env.synth =
-                      (uu___107_9369.FStar_TypeChecker_Env.synth);
+                    FStar_TypeChecker_Env.synth_hook =
+                      (uu___107_9369.FStar_TypeChecker_Env.synth_hook);
                     FStar_TypeChecker_Env.splice =
                       (uu___107_9369.FStar_TypeChecker_Env.splice);
                     FStar_TypeChecker_Env.is_native_tactic =
@@ -6824,8 +6824,8 @@ and (finish_partial_modul :
                 FStar_TypeChecker_Env.qtbl_name_and_index = uu____9396;
                 FStar_TypeChecker_Env.proof_ns =
                   (uu___108_9395.FStar_TypeChecker_Env.proof_ns);
-                FStar_TypeChecker_Env.synth =
-                  (uu___108_9395.FStar_TypeChecker_Env.synth);
+                FStar_TypeChecker_Env.synth_hook =
+                  (uu___108_9395.FStar_TypeChecker_Env.synth_hook);
                 FStar_TypeChecker_Env.splice =
                   (uu___108_9395.FStar_TypeChecker_Env.splice);
                 FStar_TypeChecker_Env.is_native_tactic =
@@ -6952,8 +6952,8 @@ and (finish_partial_modul :
                      (uu___109_9469.FStar_TypeChecker_Env.qtbl_name_and_index);
                    FStar_TypeChecker_Env.proof_ns =
                      (uu___109_9469.FStar_TypeChecker_Env.proof_ns);
-                   FStar_TypeChecker_Env.synth =
-                     (uu___109_9469.FStar_TypeChecker_Env.synth);
+                   FStar_TypeChecker_Env.synth_hook =
+                     (uu___109_9469.FStar_TypeChecker_Env.synth_hook);
                    FStar_TypeChecker_Env.splice =
                      (uu___109_9469.FStar_TypeChecker_Env.splice);
                    FStar_TypeChecker_Env.is_native_tactic =
@@ -7170,8 +7170,8 @@ let (check_module :
              (uu___113_9656.FStar_TypeChecker_Env.qtbl_name_and_index);
            FStar_TypeChecker_Env.proof_ns =
              (uu___113_9656.FStar_TypeChecker_Env.proof_ns);
-           FStar_TypeChecker_Env.synth =
-             (uu___113_9656.FStar_TypeChecker_Env.synth);
+           FStar_TypeChecker_Env.synth_hook =
+             (uu___113_9656.FStar_TypeChecker_Env.synth_hook);
            FStar_TypeChecker_Env.splice =
              (uu___113_9656.FStar_TypeChecker_Env.splice);
            FStar_TypeChecker_Env.is_native_tactic =

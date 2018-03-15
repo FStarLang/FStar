@@ -187,8 +187,9 @@ let trytac' (t : tac<'a>) : tac<either<string,'a>> =
             | Success (a, q) ->
                 UF.commit tx;
                 Success (Inr a, q)
-            | Failed (m, _) ->
+            | Failed (m, q) ->
                 UF.rollback tx;
+                let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
            )
 let trytac (t : tac<'a>) : tac<option<'a>> =
@@ -240,6 +241,11 @@ let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     try
             let res = Rel.teq_nosmt env t1 t2 in
             debug_off();
+            if Env.debug env (Options.Other "1346")
+            then BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                            (string_of_bool res)
+                            (Print.term_to_string t1)
+                            (Print.term_to_string t2);
             ret res
     with | Errors.Err (_, msg) -> begin
             debug_off();
@@ -382,6 +388,13 @@ let tadmit : tac<unit> = wrap_err "tadmit" <|
                     (goal_to_string g));
     solve g U.exp_unit)
 
+let fresh : tac<Z.t> =
+    bind get (fun ps ->
+    let n = ps.freshness in
+    let ps = { ps with freshness = n + 1 } in
+    bind (set ps) (fun () ->
+    ret (Z.of_int_fs n)))
+
 let ngoals : tac<Z.t> =
     bind get (fun ps ->
     let n = List.length ps.goals in
@@ -404,13 +417,14 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
+    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (tts e t)) (fun () ->
     try ret (ps.main_context.type_of e t)
     with | Errors.Err (_, msg)
          | Errors.Error (_, msg, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
-           end)
+           end))
 
 let istrivial (e:env) (t:term) : bool =
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
@@ -630,16 +644,19 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
               else goal.context
     in
     bind (__tc env t) (fun (t, typ, guard) ->
+    mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now and guard %s\n"
+                                                     (tts goal.context typ)
+                                                     (Rel.guard_to_string goal.context guard)) (fun _ ->
     bind (proc_guard "__exact typing" goal.context guard goal.opts) (fun _ ->
-    mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
-                                                            (tts goal.context goal.goal_ty)) (fun _ ->
+    mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (tts goal.context typ)
+                                                                  (tts goal.context goal.goal_ty)) (fun _ ->
     bind (do_unify goal.context typ goal.goal_ty) (fun b -> if b
     then solve goal t
     else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
                     (tts goal.context t)
                     (tts goal.context typ)
                     (tts goal.context goal.goal_ty)
-                    (tts goal.context goal.witness))))))
+                    (tts goal.context goal.witness)))))))
 
 let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
@@ -1557,7 +1574,8 @@ let rec inspect (t:term) : tac<term_view> =
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         ret <| Tv_Unknown
-
+(* This function could actually be pure, it doesn't need freshness
+ * like `inspect` does, but we mark it as Tac for uniformity. *)
 let pack (tv:term_view) : tac<term> =
     match tv with
     | Tv_Var bv ->
@@ -1597,8 +1615,7 @@ let pack (tv:term_view) : tac<term> =
 
     | Tv_Let (true, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
-        let lbs_open, body_open = SS.open_let_rec [lb] t2 in
-        let lbs, body = SS.close_let_rec [lb] body_open in
+        let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
@@ -1649,6 +1666,7 @@ let proofstate_of_goal_ty env typ =
         psc = N.null_psc;
         entry_range = Range.dummyRange;
         guard_policy = SMT;
+        freshness = 0;
     }
     in
     (ps, g.witness)

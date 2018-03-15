@@ -87,7 +87,7 @@ let test_apply_ascription' (x:nat) (y:nat) =
   assert_by_tactic (op_Multiply x y == op_Multiply y x) (fun () -> visit idtac)
 
 let test_apply_ascription (x:nat) (y:nat) =
-  assert (op_Multiply x y == op_Multiply y x)
+  (assert (op_Multiply x y == op_Multiply y x))
   <: Tot unit
   by idtac
 

@@ -277,3 +277,8 @@ let nameof (t : term) : string =
     match inspect_ln t with
     | Tv_FVar fv -> String.concat "." (inspect_fv fv)
     | _ -> "?"
+
+let is_uvar (t : term) : bool =
+    match inspect_ln (head t) with
+    | Tv_Uvar _ _ -> true
+    | _ -> false

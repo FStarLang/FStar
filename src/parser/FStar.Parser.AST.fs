@@ -110,7 +110,7 @@ and pattern' =
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
-  | PatAscribed of pattern * term
+  | PatAscribed of pattern * (term * option<term>)
   | PatOr       of list<pattern>
   | PatOp       of ident
 and pattern = {pat:pattern'; prange:range}
@@ -404,7 +404,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                 let x = gen t.range in
                 mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type_level None, phi)) range Type_level
      in
-     mk_pattern (PatAscribed(pat, t)) range
+     mk_pattern (PatAscribed(pat, (t, None))) range
 
 let rec extract_named_refinement t1  =
     match t1.tm with
@@ -628,7 +628,8 @@ and pat_to_string x = match x.pat with
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
-  | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
 
 and attrs_opt_to_string = function
   | None -> ""
