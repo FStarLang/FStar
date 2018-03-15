@@ -78,6 +78,9 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
+let __fresh : int __tac = from_tac_0 B.fresh
+let fresh : unit -> int __tac = fun () -> __fresh
+
 let __ngoals : int __tac = from_tac_0 B.ngoals
 let ngoals : unit -> int __tac = fun () -> __ngoals
 

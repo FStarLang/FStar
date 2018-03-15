@@ -42,7 +42,8 @@ type proofstate = {
 
     psc          : N.psc;        //primitive step context where we started execution
     entry_range  : Range.range;  //position of entry, set by the use
-    guard_policy : guard_policy;
+    guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
+    freshness    : int;          //a simple freshness counter for the fresh tactic
 }
 
 val decr_depth : proofstate -> proofstate
