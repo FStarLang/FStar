@@ -5,12 +5,18 @@ open FStar.Reflection.Formula
 open FStar.Tactics.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+module L = FStar.List.Tot
 
 (* Tac list functions, no effect polymorphism *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
+
+val iter : ('a -> Tac unit) -> list 'a -> Tac unit
+let iter f x =
+    let _ = map f x in ()
+
 
 val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
 let rec fold_left f x l = match l with
@@ -77,6 +83,20 @@ let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
     let x = t () in
     x :: repeat t
+
+let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
+    if n = 0
+    then []
+    else let x = t () in
+         let xs = repeatn (n - 1) t in
+         x :: xs
+
+(* There's no unconditionally total zip in Tot.Base, why? Anyway use this *)
+val zip : (#a:Type) -> (#b:Type) -> list a -> list b -> list (a * b)
+let rec zip #a #b l1 l2 = match l1, l2 with
+    | x::xs, y::ys -> (x,y) :: (zip xs ys)
+    | _ -> []
+
 
 let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
     fun () -> let _ = tau () in ()
@@ -232,6 +252,23 @@ let grewrite (t1 t2 : term) : Tac unit =
 let focus (f : unit -> Tac 'a) : Tac 'a =
     let res, _ = divide 1 f idtac in
     res
+
+let exact_args (qs : list aqualv) (t : term) : Tac unit =
+    focus (fun () ->
+        let n = List.length qs in
+        let uvs = repeatn n (fun () -> fresh_uvar None) in
+        let t' = mk_app t (zip uvs qs) in
+        exact t';
+        iter (fun uv -> if is_uvar uv
+                        then unshelve uv
+                        else ()) (L.rev uvs)
+    )
+
+
+let exact_n (n : int) (t : term) : Tac unit =
+    exact_args (repeatn n (fun () -> Q_Explicit)) t
+
+
 
 let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
