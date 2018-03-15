@@ -152,14 +152,21 @@ let eexists (a:Type) (t:unit -> Tac a) : Tac a =
   apply_lemma (`FStar.Classical.exists_intro); later(); norm[];
   fst (divide (ngoals()-1) t dismiss)
 
-let frame_wp_lemma (m0 m1:memory) (a:Type) (wp:st_wp a) (f_post:memory -> post a) : Lemma 
+let frame_wp_lemma (m0 m1:memory) (a:Type) (wp:st_wp a)
+    (f_post:memory -> post a) : Lemma
   (requires (defined (m0 <*> m1) /\ wp (f_post m1) m0))
   (ensures (frame_wp wp f_post (m0 <*> m1))) = ()
+
+let frame_wp_lemma_with_squashes (m m0 m1:memory) (a:Type) (wp:st_wp a)
+    (f_post:memory -> post a)
+    (_ : (squash ((m0 <*> m1) == m)))
+    (_ : (squash (defined m /\ wp (f_post m1) m0))) :
+         (squash (frame_wp wp f_post m)) = ()
 
 let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   admit();
   let hd, tl = collect_app t in
-  dump (term_to_string hd);
+  // dump (term_to_string hd);
   match inspect hd, tl with
   | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
     if inspect_fv fv = pointsto_qn then
@@ -176,14 +183,19 @@ let canon_monoid_sl fp =
   canon_monoid_with string (pointsto_to_string fp) ""
                            sort_sl (fun #a m vm xs -> admit())
 
+let binder_to_term (b : binder) : Tac term =
+  let bv, _ = inspect_binder b in pack (Tv_Var bv)
+
 let solve_frame_wp (_:unit) : Tac (term * term) =
   admit();
   norm[];
+  (* is the goal a squash *)
   let g = cur_goal () in
   let hd, tl = collect_app g in
   match inspect hd, tl with
   | Tv_FVar fv, [(t1, Q_Explicit)] ->
     if inspect_fv fv = squash_qn then
+      (* is the goal fram_wp *)
       let hd, tl = collect_app t1 in
       match inspect hd, tl with
       | Tv_FVar fv, [(ta, Q_Implicit);
@@ -192,7 +204,8 @@ let solve_frame_wp (_:unit) : Tac (term * term) =
                      (tm, Q_Explicit)] ->
       if inspect_fv fv = frame_wp_qn then
         let fp_refs = footprint_of twp in
-        dump ("fp_refs="^ FStar.String.concat "," (List.Tot.map term_to_string fp_refs));
+        // dump ("fp_refs="^ FStar.String.concat ","
+        //   (List.Tot.map term_to_string fp_refs));
         let fp = FStar.Tactics.Derived.fold_left
                    (fun a t -> if term_eq a (`emp) then t
                                else mk_e_app (`( <*> )) [a;t])
@@ -200,7 +213,7 @@ let solve_frame_wp (_:unit) : Tac (term * term) =
                    (FStar.Tactics.Derived.map
                      (fun t -> let u = fresh_uvar (Some (`int)) in
                                mk_e_app (`( |> )) [t; u]) fp_refs) in
-        dump ("m0=" ^ term_to_string fp);
+        // dump ("m0=" ^ term_to_string fp);
         // let m0 : memory = unquote tm0 in //-- this fails, doesn't type-check
         // let m : memory = unquote tm in //-- this fails, doesn't type-check
         // ignore(tcut(quote(squash (exists m1. m0 <*> m1 == m))));
@@ -212,23 +225,24 @@ let solve_frame_wp (_:unit) : Tac (term * term) =
                (tm,                            Q_Explicit)] in
         let new_goal = mk_e_app (pack_fv' squash_qn) [tp] in
         let heq = tcut new_goal in
-        dump "with new goal:";
+        // dump "with new goal:";
         flip();
-        dump ("before canon_monoid");        
+        // dump ("before canon_monoid");
         canon_monoid_sl fp_refs memory_cm;
-        dump ("after canon_monoid");
+        // dump ("after canon_monoid");
         trefl();
-        dump ("after trefl");
-        let fp : term = norm_term [] fp in
-        let frame : term = norm_term [] frame in
-        dump ("m0/fp=" ^ term_to_string fp ^ "\n" ^
-              "m1/frame=" ^ term_to_string frame ^ "\n" ^
-              "a/ta=" ^ term_to_string ta ^ "\n" ^
-              "wp/twp=" ^ term_to_string twp ^ "\n" ^
-              "f_post/tpost=" ^ term_to_string tpost);
-        mapply (mk_e_app (`frame_wp_lemma) [fp; frame; ta; twp; tpost]);
-        FStar.Tactics.split(); admit1(); //easy, hypothesis
-        dump ("after frame lemma");
+        // dump ("after trefl");
+        // let fp : term = norm_term [] fp in
+        // let frame : term = norm_term [] frame in
+        // dump ("m0/fp=" ^ term_to_string fp ^ "\n" ^
+        //       "m1/frame=" ^ term_to_string frame ^ "\n" ^
+        //       "a/ta=" ^ term_to_string ta ^ "\n" ^
+        //       "wp/twp=" ^ term_to_string twp ^ "\n" ^
+        //       "f_post/tpost=" ^ term_to_string tpost);
+        apply_lemma (mk_e_app (`frame_wp_lemma_with_squashes)
+                       [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
+        FStar.Tactics.split(); smt(); //definedness
+        // dump ("after frame lemma");
         fp, frame
       else fail "expecting frame_wp"
     else fail "expecting squash"
@@ -236,9 +250,13 @@ let solve_frame_wp (_:unit) : Tac (term * term) =
 
 let solve_write () : Tac unit =
   norm [delta_only [%`write_wp]];
-  dump "after write_wp";
-  eexists unit (fun () -> 
-    FStar.Tactics.split(); trefl())
+  eexists unit (fun () -> FStar.Tactics.split(); trefl())
+  //; dump "after solve_write"
+
+let solve_read () : Tac unit =
+  norm [delta_only [%`read_wp]];
+  eexists unit (fun () ->  FStar.Tactics.split(); trefl())
+  //; dump "after solve_read"
 
 let foo (_:unit) : Tac unit =
    admit();
@@ -259,9 +277,10 @@ let foo (_:unit) : Tac unit =
    dump "after write";   
    norm [delta_only [%`frame_post]];   
    dump "after frame post"; 
-   FStar.Tactics.split(); admit1(); //definedness
+   FStar.Tactics.split(); smt(); //definedness
    let fp, frame = solve_frame_wp () in   
-   admit1()
+   solve_read();
+   smt() //definedness
 
 (*
  * two commands
