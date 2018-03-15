@@ -368,6 +368,8 @@ let rec process_trivial_tail () :Tac unit
     or_else (fun () -> apply_lemma (`lemma_frame_out_empty_left); process_trivial_tail ())
             (fun () -> idtac ())
 
+let split_and_smt () :Tac unit = split (); smt ()
+
 let rec length (l:listptr)
   = (match l with
      | None   -> (0 <: STATE int (fun p h -> p 0 emp))
@@ -383,7 +385,7 @@ let rec length (l:listptr)
 	      ignore (implies_intro ());
 	      apply_lemma (`__elim_valid_without_match);  //this is fragile
 	      assumption (); assumption (); assumption ();
-	      split (); smt ();
+	      split_and_smt ();
 	      split ();
 	      let h = implies_intro () in __elim_and h;
 	      let h = implies_intro () in __elim_and h;
@@ -393,9 +395,9 @@ let rec length (l:listptr)
 	      split ();
 	      ignore (implies_intro ());
 	      apply_lemma (`lemma_frame_out_empty_left);
-	      split (); smt ();
+	      split_and_smt ();
 	      ignore (implies_intro ());
-	      split (); smt (); split (); smt ();
+	      ignore (repeatn 2 split_and_smt);
 	      apply_lemma (`lemma_frame_out_empty_left);
 	      smt (); smt ();
 
@@ -414,34 +416,32 @@ let rec length (l:listptr)
 
               ignore (implies_intro ());
 	      apply_lemma (`lemma_inline_in_patterns_two);
-	      split (); smt ();
+	      split_and_smt ();
 	      split ();
 	      ignore (implies_intro ());
 	      apply_lemma (`lemma_frame_out_empty_right);
-	      split (); smt ();
+	      split_and_smt ();
 	      ignore (forall_intro ());
 	      let h = implies_intro () in rewrite h;
 	      norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
 	      apply_lemma (`lemma_rw);
-	      split (); smt ();
-	      split (); smt ();
+	      ignore (repeatn 2 split_and_smt);
 	      apply_lemma (`lemma_frame_out_empty_right);
-	      split (); smt ();
+	      split_and_smt ();
 	      apply_lemma (`lemma_frame_out_empty_right);
-	      split (); smt ();
+	      split_and_smt ();
 	      ignore (forall_intros ()); ignore (implies_intro ());
 	      apply_lemma (`lemma_rewrite_sep_comm);
 	      apply_lemma (`lemma_frame_exact);
-	      split (); smt ();
+	      split_and_smt ();
 	      let w = let bv, _ = inspect_binder tl_binder in pack (Tv_Var bv) in
 	      witness w;
-	      split (); smt (); split (); smt ();
+	      ignore (repeatn 2 split_and_smt);
 	      apply_lemma (`lemma_frame_out_empty_left);
-	      split (); smt ();
+	      split_and_smt ();
 	      ignore (forall_intro ());
 	      ignore (implies_intro ());
 	      process_trivial_tail ())
-
 
 let binder_to_term b = let bv, _ = inspect_binder b in pack (Tv_Var bv)
 
@@ -511,9 +511,9 @@ let rec append (l1 l2:listptr)
 
                 ignore (implies_intro ());
 		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt ();
+		split_and_smt ();
 		ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
-		split (); smt ();
+		split_and_smt ();
 		apply_lemma (`lemma_frame_out_empty_left);
 		smt ();
 
@@ -547,24 +547,24 @@ let rec append (l1 l2:listptr)
 
                 ignore (implies_intro ());
 		apply_lemma (`lemma_inline_in_patterns_two);
-		split (); smt ();
+		split_and_smt ();
 
                 split ();
 
                 ignore (implies_intro ());
 		apply_lemma (`lemma_frame_out_empty_right);
-		split (); smt ();
+		split_and_smt ();
 
                 ignore (forall_intro ());
 		let h = implies_intro () in rewrite h;
 	        norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
 		apply_lemma (`lemma_rewrite_sep_assoc4);
 		apply_lemma (`lemma_rw);
-		split (); smt (); split (); smt ();
+		ignore (repeatn 2 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_right);
-		split (); smt ();
+		split_and_smt ();
 		apply_lemma (`lemma_frame_out_empty_right);
-		split (); smt ();
+		split_and_smt ();
                 ignore (forall_intros ()); ignore (implies_intro ());
 
                 split ();
@@ -572,7 +572,7 @@ let rec append (l1 l2:listptr)
                 //case where Some tl_r
 		ignore (implies_intro ());
 		apply_lemma (`lemma_frame_out_empty_right);
-		split (); smt ();
+		split_and_smt ();
 
                 ignore (forall_intro ());  //tl_r binder, not needed
 		ignore (implies_intro ());
@@ -581,7 +581,7 @@ let rec append (l1 l2:listptr)
 		apply_lemma (`lemma_rewrite_sep_comm);
 		apply_lemma (`lemma_frame_exact);
 
-                split (); smt ();
+                split_and_smt ();
 		//provide wp existentials for recursive call
 		witness (binder_to_term fl1_tail);
 		witness (binder_to_term fl2_binder);
@@ -589,27 +589,27 @@ let rec append (l1 l2:listptr)
 		witness (binder_to_term m2_binder);
 
                 //prove definedness/validity
-		split (); smt (); //boom! hail smt!
+		split_and_smt (); //boom! hail smt!
 
                 //prove the postcondition part
 		ignore (forall_intros ());
 		let h = implies_intro () in __elim_and h;
 		let h = implies_intro () in __elim_and h;
 		ignore (implies_intros ());
-		split (); smt ();
+		split_and_smt ();
 
                 //check this guy, both right and left seemed ok
 		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt ();
+		split_and_smt ();
 		ignore (forall_intro ());
 		let h = implies_intro () in rewrite h;
-		split (); smt (); split (); smt ();
+		ignore (repeatn 2 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt ();
+		ignore (repeatn 3 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt (); split (); smt ();
+		ignore (repeatn 4 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt (); split (); smt (); split (); smt ();
+		ignore (repeatn 3 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
 		smt ();
 
@@ -618,16 +618,16 @@ let rec append (l1 l2:listptr)
                 //now in the case when tl is None
 		ignore (implies_intro ());
 		apply_lemma (`lemma_inline_in_patterns_two);
-		split (); smt ();
+		split_and_smt ();
 		split ();
 		ignore (implies_intro ());
 		apply_lemma (`lemma_frame_out_empty_right);
-		split (); smt ();
+		split_and_smt ();
 		ignore (implies_intro ());
 		apply_lemma (`lemma_rw);
-		split (); smt (); split (); smt ();
+		ignore (repeatn 2 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
-		split (); smt ();
+		split_and_smt ();
 		ignore (forall_intro ());
 		let h = implies_intro () in rewrite h;
 		process_trivial_tail ())
@@ -666,7 +666,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
                //induction on fl1
 	       apply_lemma (`__elim_valid_without_match);
 	       exact (quote l1); exact (binder_to_term fl1); exact (binder_to_term m1);
-	       split (); smt (); //send the valid on l1 goal to smt
+	       split_and_smt (); //send the valid on l1 goal to smt
 
                split (); //split into base case and the inductive case
 
@@ -680,9 +680,9 @@ let rec rev_append (l1:listptr) (l2:listptr)
 
                ignore (implies_intro ());
 	       apply_lemma (`lemma_frame_out_empty_left);
-	       split (); smt ();
+	       split_and_smt ();
 	       ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
-	       split (); smt ();
+	       split_and_smt ();
 	       apply_lemma (`lemma_frame_out_empty_left);
 	       smt ();
 
@@ -712,31 +712,31 @@ let rec rev_append (l1:listptr) (l2:listptr)
 
                ignore (implies_intro ());
 	       apply_lemma (`lemma_inline_in_patterns_two);
-	       split (); smt ();
+	       split_and_smt ();
 
                split ();
 
                ignore (implies_intro ());
 	       apply_lemma (`lemma_frame_out_empty_right);
-	       split (); smt ();
+	       split_and_smt ();
 
                ignore (forall_intro ());
 	       let h = implies_intro () in rewrite h;
 	       norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
 	       apply_lemma (`lemma_rewrite_sep_assoc4);
 	       apply_lemma (`lemma_rw); //!r in the Some branch
-	       split (); smt (); split (); smt ();
+	       ignore (repeatn 2 split_and_smt);
 	       apply_lemma (`lemma_frame_out_empty_right);
-	       split (); smt ();
+	       split_and_smt ();
 	       apply_lemma (`lemma_frame_out_empty_right);
-	       split (); smt ();
+	       split_and_smt ();
 	       ignore (forall_intros ()); ignore (implies_intro ());
                apply_lemma (`lemma_rw); //r:= in the Some branch
-               split (); smt (); split (); smt ();
+               ignore (repeatn 2 split_and_smt);
 
                //give memory to the recursive call
 	       apply_lemma (`lemma_frame_out_empty_right);
-	       split (); smt ();
+	       split_and_smt ();
 
                //partition the recursive call's memory and provide witnesses for existentials
 	       witness (binder_to_term fl1_tl);
