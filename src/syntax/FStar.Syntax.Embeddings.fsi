@@ -49,6 +49,11 @@ val embed_pair        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<(
 val unembed_pair      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
 val unembed_pair_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
 
+(* VD: These are just aliases for the functions above, to be used in plugin extraction *)
+val embed_tuple2        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<('a * 'b)>
+val unembed_tuple2      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
+val unembed_tuple2_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
+
 val embed_option        : embedder<'a> -> typ -> embedder<option<'a>>
 val unembed_option      : unembedder<'a> -> unembedder<option<'a>>
 val unembed_option_safe : unembedder<'a> -> unembedder<option<'a>>

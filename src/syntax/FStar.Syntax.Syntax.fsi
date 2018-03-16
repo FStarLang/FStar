@@ -523,4 +523,5 @@ val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term
 val t_option_of   : term -> term
+val t_tuple2_of   : term -> term -> term
 val unit_const    : term

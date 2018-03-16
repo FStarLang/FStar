@@ -74,3 +74,6 @@ val unembed_sigelt_view : unembedder<sigelt_view>
 
 val embed_bv_view       : embedder<bv_view>
 val unembed_bv_view     : unembedder<bv_view>
+
+val embed_exp       : embedder<exp>
+val unembed_exp     : unembedder<exp>

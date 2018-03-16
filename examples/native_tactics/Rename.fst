@@ -10,6 +10,7 @@ assume val xi : Type
 
 assume val p : squash xi
 
+[@plugin]
 let tau =
   fun () ->
     let h0 = implies_intro () in

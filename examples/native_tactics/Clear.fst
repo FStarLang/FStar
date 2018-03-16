@@ -8,17 +8,18 @@ assume val xi : Type
 
 assume val p : squash xi
 
-let l1 (x : bool) (y : int) (z : unit) =
-    assert_by_tactic (phi ==> (psi ==> xi))
-            (fun () ->
+[@plugin]
+let tau1 = fun () ->
                 let _ = implies_intro () in
                 clear_top ();
                 let _ = implies_intro () in
                 clear_top ();
                 exact (`p)
-             )
 
-[@plugin]
+let l1 (x : bool) (y : int) (z : unit) =
+    assert_by_tactic (phi ==> (psi ==> xi)) tau1
+
+
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
     let bs = binders_of_env e in
@@ -31,13 +32,15 @@ let clear_all_of_type (t : typ) : Tac unit =
          (List.rev bs) in
     ()
 
-#set-options "--use_two_phase_tc false"
-let l2 (x : int) (y : bool) (z : int) =
-    assert_by_tactic (phi ==> (psi ==> xi))
-            (fun () -> let e = cur_env () in
+[@plugin]
+let tau2 = fun () -> let e = cur_env () in
                        let n = List.length (binders_of_env e) in
                        let u = `int in
                        clear_all_of_type u;
                        let e = cur_env () in
                        // We're removing two binders
-                       guard (List.length (binders_of_env e) = n - 2))
+                       guard (List.length (binders_of_env e) = n - 2)
+
+#set-options "--use_two_phase_tc false"
+let l2 (x : int) (y : bool) (z : int) =
+    assert_by_tactic (phi ==> (psi ==> xi)) tau2

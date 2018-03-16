@@ -50,7 +50,7 @@ let try_unref_eq () : Tac unit =
     end
   | _ -> fail "done"
 
-[@plugin]
+
 let sequence_pruning () : Tac unit =
   norm [] ; //normalize the current goal
   // GM: if `seq a` is refined, applying lemma_eq_elim misbehaves and spins off a different goal, work around it by removing refinements here
@@ -80,6 +80,8 @@ let sequence_pruning () : Tac unit =
     end
 *)
 
+[@plugin]
+let tau = fun () -> or_else sequence_pruning idtac
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +89,7 @@ let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}
   assume (y == 17); //I would like to prune this out
   assume (l == snoc s x); //I would like to retain this fact from the local environment
   assert_by_tactic (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
-                   (fun () -> or_else sequence_pruning idtac)
+                   (tau)
 
 
 (* ////////////////// *)

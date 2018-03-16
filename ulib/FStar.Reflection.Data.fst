@@ -87,6 +87,14 @@ type sigelt_view =
 
   | Unk
 
+let var : eqtype = nat
+
+type exp : Type =
+  | Unit : exp
+  | Var : var -> exp
+  | Mult : exp -> exp -> exp
+
+
 type decls = list sigelt
 
 let rec forall_list (p:'a -> Type) (l:list 'a) : Type =

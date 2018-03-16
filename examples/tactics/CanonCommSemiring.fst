@@ -341,10 +341,10 @@ let is_not_const (t:term) : Tac bool =
 
 let canon_semiring (#a:Type) (r:cr a) : Tac unit =
 //  canon_semiring_with unit (fun _ -> ()) () sort (fun #a -> sort_correct #a) r
-  canon_semiring_with bool is_not_const true const_last (fun #a -> admit ()) r
-
-//let canon_monoid_const = canon_monoid_with bool is_const false
-//  const_last (fun #a m vm xs -> admit())
+//  canon_semiring_with bool is_not_const true const_last (fun #a -> admit ()) r
+  canon_semiring_with bool is_not_const true const_last
+    (fun #a m vm xs -> CCM.sortWith_correct #bool (CCM.const_compare vm) #a m vm xs)
+    r
 
 #reset-options "--z3cliopt smt.arith.nl=false"
 
