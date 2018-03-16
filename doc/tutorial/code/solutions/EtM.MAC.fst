@@ -20,7 +20,7 @@ open FStar.Monotonic.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
 
-open Platform.Bytes
+open FStar.Bytes
 open CoreCrypto
 open EtM.CPA
 
@@ -31,15 +31,12 @@ module HST = FStar.HyperStack.ST
 type rid = HST.erid
 type msg = EtM.CPA.cipher
 
-let keysize   = 64
+let keysize   = 64ul
 let blocksize = keysize
 let macsize   = hashSize SHA1
 
-type sha1_key = lbytes keysize
+type sha1_key = lbytes32 keysize
 type tag = lbytes macsize
-
-
-
 
 val sha1: bytes -> Tot (h:bytes{length h = macsize})
 let sha1 b = hash SHA1 b
@@ -48,10 +45,11 @@ val hmac_sha1: sha1_key -> msg -> Tot tag
 let hmac_sha1 k t =
   let x5c = byte_of_int 92 in
   let x36 = byte_of_int 54 in
-  let opad = createBytes blocksize x5c in
-  let ipad = createBytes blocksize x36 in
+  let opad = create blocksize x5c in
+  let ipad = create blocksize x36 in
   let xor_key_opad = xor keysize k opad in
   let xor_key_ipad = xor keysize k ipad in
+  assume (UInt.fits (Bytes.length xor_key_ipad + Bytes.length t) 32);
   sha1 (xor_key_opad @| (sha1 (xor_key_ipad @| t)))
 
 (* ------------------------------------------------------------------------ *)
@@ -82,7 +80,7 @@ val keygen: parent:rid -> ST key
   (ensures  (genPost parent))
 
 let keygen parent =
-  let raw = random keysize in
+  let raw = random32 keysize in
   let region = new_region parent in
   let log = alloc_mref_seq region createEmpty in
   Key #region raw log

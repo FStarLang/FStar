@@ -23,10 +23,10 @@ open FStar.HyperStack.ST
 open EtM.Ideal
 
 
-open Platform.Bytes
+open FStar.Bytes
 open CoreCrypto
 
-module B = Platform.Bytes
+module B = FStar.Bytes
 
 module HST = FStar.HyperStack.ST
 
@@ -46,7 +46,7 @@ type log_t (r:rid) = Monotonic.Seq.log_t r (msg * cipher)
           we would additionally need this
 type log_t (r:rid) (raw:aes_key) =
   Monotonic.Seq.log_t r (m:msg & c:cipher{
-    let p = if ind_cpa then createBytes (length m) 0z else repr m in
+    let p = if ind_cpa then create_ (len m) 0z else repr m in
     let (iv,c') = split c ivsize in
     c' = CoreCrypto.block_encrypt AES_128_CBC raw iv p}) *)
 
@@ -86,9 +86,12 @@ val encrypt: k:key -> m:msg -> ST cipher
 let encrypt k m =
   recall k.log;
   let iv = random ivsize in
-  let text = if ind_cpa then createBytes (length m) 0z else repr m in
+  assume (UInt.fits (length m) 32);
+  let c0 = create (UInt32.uint_to_t (length m)) 0z in
+  let text = if ind_cpa then c0 else repr m in
   let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
-  let c = iv@|c in
+  assume (UInt.fits (Bytes.length iv + Bytes.length c) 32);
+  let c = Bytes.append iv c in
   write_at_end k.log (m,c);
   c
 // END: EtMCPAEncrypt
@@ -136,6 +139,6 @@ let decrypt k c =
     match seq_find (fun mc -> snd mc = c) log with
     | Some mc -> fst mc
   else
-    let iv,c' = split c ivsize in
+    let iv,c' = split c (UInt32.uint_to_t ivsize) in
     coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
 // END: EtMCPADecrypt

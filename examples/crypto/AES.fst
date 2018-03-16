@@ -17,7 +17,7 @@ module AES (* concrete implementation of a one-block symmetric cipher *)
 open FStar.ST
 open FStar.Array
 
-module Bytes = Platform.Bytes
+module Bytes = FStar.Bytes
 
 type bytes = Bytes.bytes // TODO unclear why we need this instead of seq byte
 type nbytes (n:nat) = b:bytes{Bytes.length b == n}

@@ -935,27 +935,6 @@ let rfree (#a:Type) (b:buffer a)
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
-// ocaml-only, used for conversions to Platform.bytes
-val to_seq: #a:Type -> b:buffer a -> l:UInt32.t{v l <= length b} -> STL (seq a)
-  (requires (fun h -> live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ Seq.length r == v l
-    (*/\ r == as_seq #a h1 b *) ))
-let to_seq #a b l =
-  let s = !b.content in
-  let i = v b.idx in
-  Seq.slice s i (i + v l)
-
-
-// ocaml-only, used for conversions to Platform.bytes
-val to_seq_full: #a:Type -> b:buffer a -> ST (seq a)
-  (requires (fun h -> live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ 
-			 r == as_seq #a h1 b ))
-let to_seq_full #a b =
-  let s = !b.content in
-  let i = v b.idx in
-  Seq.slice s i (i + v b.length)
-
 val index: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> Stack a
   (requires (fun h -> live h b))
   (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0

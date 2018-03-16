@@ -246,9 +246,9 @@ let mac k t =
 let verify k text tag =
   (* to verify, we simply recompute & compare *)
   let m = hmac_sha1 k text in
-  let verified = (Platform.Bytes.equalBytes m tag) in
+  let verified = m = tag in
   let equal_entry (Entry k' text' tag') =
-    Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text'
+    k = k' && text = text'
   in
   let entry_opt = List.Tot.find equal_entry !log in
   let found = Some? entry_opt in

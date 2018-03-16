@@ -29,7 +29,7 @@ open FStar.String
 
 let init_print = print_string "\ninitializing...\n\n"
 
-open Platform.Bytes
+open FStar.Bytes
 open Ex12.SHA1
 open Ex12b2.Format
 open Ex12.MAC
@@ -112,25 +112,32 @@ let client_send (s:string16) =
   // assert(key_prop k == reqresp);          (* this also works *)
   assert (reqresp (Formatting.request s)) ;
   // assert(key_prop k (Formatting.request s));  (* this fails *) 
-  send ( (utf8 s) @| (mac k (Formatting.request s)))
+  send ( (utf8_encode s) @| (mac k (Formatting.request s)))
 
 
 val client_recv : string16 -> ML unit
 let client_recv (s:string16) =
   recv (fun msg ->
-    if length msg < macsize then failwith "Too short"
+    if FStar.UInt32.(len msg <^ macsize) then failwith "Too short"
     else
-      let (v, m') = split msg (length msg - macsize) in
-      let t = iutf8 v in
-      if verify k (Formatting.response s t) m'
-      then (
-        from_key_prop k (Formatting.response s t);
-        assert (pResponse s t);
-        recall_token log (resp s t);
-        let xs = !log in
-        assert (Response s t `mem` xs);
-        print_string "\nclient verified:";
-        print_string t) )
+      let (v, m') = split msg FStar.UInt32.(len msg -^ macsize) in
+      match iutf8_opt v with      
+      | Some t ->
+        assert (String.length t < pow2 30);
+        let m = Formatting.response s t in
+        assume (UInt.fits (Bytes.length m) 31);
+        if verify k m m'
+        then (
+          from_key_prop k (Formatting.response s t);
+          assert (pResponse s t);
+          recall_token log (resp s t);
+          let xs = !log in
+          assert (Response s t `mem` xs);
+          print_string "\nclient verified:";
+          print_string t)
+      | None -> ()
+  )
+
 
 // BEGIN: RpcProtocol
 val client : string16 -> ML unit
@@ -141,36 +148,49 @@ let client (s:string16) =
 val server : unit -> ML unit
 let server () =
   recv (fun msg ->
-    if length msg < macsize then failwith "Too short"
+    if FStar.UInt32.(len msg <^ macsize) then failwith "Too short"
     else
-      let (v,m) = split msg (length msg - macsize) in
+      let (v,m) = split msg FStar.UInt32.(len msg -^ macsize) in
       if length v > 65535 then failwith "Too long"
       else
-        let s = iutf8 v in
-        if verify k (Formatting.request s) m
-        then
-          (
-            from_key_prop k (Formatting.request s);
-            assert (pRequest s);
-            recall_token log (req s);
-            let xs = !log in
-            assert (Request s `mem` xs);
-            print_string "\nserver verified:";
-            print_string s;
-            let t = "42" in
-            add_to_log log (Response s t);
-            witness_token log (resp s t);
-            print_string "\nserver sent:";
-            print_string t;
-            send ( (utf8 t) @| (mac k (Formatting.response s t)))
-            )
-        else failwith "Invalid MAC" )
+        match iutf8_opt v with 
+        | Some s ->
+          if verify k (Formatting.request s) m
+          then
+            (
+              from_key_prop k (Formatting.request s);
+              assert (pRequest s);
+              recall_token log (req s);
+              let xs = !log in
+              assert (Request s `mem` xs);
+              print_string "\nserver verified:";
+              print_string s;
+              let t = "42" in
+              add_to_log log (Response s t);
+              witness_token log (resp s t);
+              print_string "\nserver sent:";
+              print_string t;
+              assume (String.length t < pow2 30);
+              assume (String.length s < pow2 16);
+              let rst = Formatting.response s t in
+              assume (UInt.fits (length rst) 31);
+              let et = utf8_encode t in 
+              let mkr = mac k rst in
+              assume (UInt.fits (Bytes.length et + Bytes.length mkr) 32);
+              let st = Bytes.append et mkr  in
+              assume (UInt.fits (Bytes.length st) 32);
+              send (st)
+              )
+          else failwith "Invalid MAC" 
+       | None -> ()
+   )
 // END: RpcProtocol
 
 private val test : unit -> ML unit
 let test () =
   let query = "4 + 2" in
-  if length (utf8 query) > 65535 then failwith "Too long"
+  assume (String.length query < pow2 16);
+  if length (utf8_encode query) > 65535 then failwith "Too long"
   else
     client_send query;
     server();

@@ -205,6 +205,14 @@ val int_of_bytes_of_int:
   -> Lemma (ensures (int_of_bytes (bytes_of_int k n) == n))
           [SMTPat (bytes_of_int k n)]
 
+val int_of_byte:
+    b:byte
+  -> Tot (uint_k 1)
+
+val byte_of_int:
+    k:nat
+  -> byte
+
 val bytes_of_int_of_bytes:
     b:bytes{length b <= 32}
   -> Lemma (ensures (bytes_of_int (length b) (int_of_bytes b) == b))

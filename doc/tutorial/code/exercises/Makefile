@@ -40,7 +40,7 @@ include ../Makefile.include
 HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
 
 verify-%: __force__
-	$(FSTAR) --use_extracted_interfaces true --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
+	$(FSTAR) --use_extracted_interfaces true --include $(FSTAR_HOME)/contrib/CoreCrypto/fst $*
 
 
 all: uall sall
@@ -63,5 +63,4 @@ Ex01a-ocaml: out Ex01a.fst
 
 # # Parameter for interactive mode
 # %.fst-in: 
-# 	@echo $(OPTIONS) \
-# 	--include $(FSTAR_HOME)/ulib/hyperstack \
+# 	@echo $(OPTIONS) --use_extracted_interfaces --include $(FSTAR_HOME)/contrib/CoreCrypto/fst

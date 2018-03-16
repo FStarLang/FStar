@@ -15,7 +15,7 @@
 *)
 module EtM.Plain
 
-open Platform.Bytes
+open FStar.Bytes
 open CoreCrypto
 open EtM.Ideal
 

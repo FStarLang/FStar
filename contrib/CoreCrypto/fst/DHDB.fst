@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module DHDB
-open Platform.Bytes
+open FStar.Bytes
 open CoreCrypto
 
 type key   = bytes * bytes // p, g

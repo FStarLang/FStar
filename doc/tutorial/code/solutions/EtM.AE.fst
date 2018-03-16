@@ -22,7 +22,7 @@ open FStar.HyperStack.ST
 
 open EtM
 
-open Platform.Bytes
+open FStar.Bytes
 open CoreCrypto
 
 module HST = FStar.HyperStack.ST
