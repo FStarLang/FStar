@@ -149,7 +149,7 @@ val lemma_split_heap_fresh (m0 m1:memory) (h:heap)
 
 val lemma_hcontains_mcontains (#a:Type0) (r:ref a) (h:heap)
   : Lemma (h `hcontains` r <==> (heap_memory h) `mcontains` r)
-          [SMTPat ((heap_memory h) `mcontains` r)]
+          [SMTPat (h `hcontains` r)]
 
 val lemma_points_to_mcontains (#a:Type0) (r:ref a) (x:a)
   : Lemma ((r |> x) `mcontains` r)
