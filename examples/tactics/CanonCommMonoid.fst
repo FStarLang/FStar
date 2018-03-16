@@ -295,7 +295,7 @@ let canon_monoid_with
           // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
-          apply (quote (monoid_reflect #a #b p pc));
+          mapply (quote (monoid_reflect #a #b p pc));
           // dump ("after apply");
           unfold_def (quote p);
           // dump ("after unfold");
@@ -352,8 +352,8 @@ let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
 
 let canon_monoid_const #a cm = canon_monoid_with bool is_const false
   (fun a -> const_last a)
-  (fun #a m vm xs -> admit ()) #a cm
-//  (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
+//  (fun #a m vm xs -> admit ()) #a cm
+  (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
 
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
@@ -385,8 +385,8 @@ let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
 let canon_monoid_special (ts:list term) =
   canon_monoid_with bool (is_special ts) false
     (fun a -> special_first a)
-    (fun #a m vm xs -> admit ())
-//    (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
+//    (fun #a m vm xs -> admit ())
+    (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
 
 let lem2 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
