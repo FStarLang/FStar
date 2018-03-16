@@ -25,6 +25,7 @@ let bool_false_qn = ["Prims"; "false"]
 let int_lid      = ["Prims"; "int"]
 let bool_lid     = ["Prims"; "bool"]
 let unit_lid     = ["Prims"; "unit"]
+let string_lid   = ["Prims"; "string"]
 
 let add_qn       = ["Prims"; "op_Addition"]
 let neg_qn       = ["Prims"; "op_Minus"]

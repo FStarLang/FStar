@@ -74,7 +74,7 @@ let _ = assert_by_tactic True
  * when this definition is type-checked, and not when it's called. So, this function is just an
  * identity function with no special semantics. *)
 let does_not_normalize (#t:Type) (x:t) : t =
-  synth_by_tactic #t #unit (fun () -> normalize [primops; delta] x)
+  synth_by_tactic #t (fun () -> normalize [primops; delta] x)
 
 let four'' : int = does_not_normalize (2+2)
 
