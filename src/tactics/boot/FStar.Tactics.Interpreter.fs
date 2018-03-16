@@ -378,6 +378,8 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__inspect"       inspect RE.unembed_term      RE.embed_term_view RD.fstar_refl_term_view;
       mktac1 "__pack"          pack    RE.unembed_term_view RE.embed_term      S.t_term;
 
+      mktac0 "__fresh"         fresh     embed_int S.t_int;
+
       mktac0 "__ngoals"        ngoals     embed_int S.t_int;
       mktac0 "__ngoals_smt"    ngoals_smt embed_int S.t_int;
 
@@ -732,7 +734,7 @@ let reify_tactic (a : term) : term =
     let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv PC.reify_tactic_lid Delta_equational None)) [U_zero] in
     mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
 
-let synth (env:Env.env) (typ:typ) (tau:term) : term =
+let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
     let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant. We don't need to check their

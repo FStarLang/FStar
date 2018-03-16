@@ -72,6 +72,9 @@ and flag =
   | GCType
   | Comment of string
   | MustDisappear
+  | Const of string
+  | Prologue of string
+  | Epilogue of string
 
 and fsdoc = string
 
@@ -355,6 +358,9 @@ and translate_flags flags =
     | Syntax.GCType -> Some GCType
     | Syntax.Comment s -> Some (Comment s)
     | Syntax.StackInline -> Some MustDisappear
+    | Syntax.CConst s -> Some (Const s)
+    | Syntax.CPrologue s -> Some (Prologue s)
+    | Syntax.CEpilogue s -> Some (Epilogue s)
     | _ -> None // is this all of them?
   ) flags
 

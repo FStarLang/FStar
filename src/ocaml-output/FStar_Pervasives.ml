@@ -125,37 +125,60 @@ type __internal_ocaml_attributes =
   | CInline 
   | Substitute 
   | Gc 
-  | Comment of Prims.string [@@deriving show]
+  | Comment of Prims.string 
+  | CPrologue of Prims.string 
+  | CEpilogue of Prims.string 
+  | CConst of Prims.string [@@deriving show]
 let (uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____2346 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____2358 -> false
   
 let (uu___is_PpxDerivingShowConstant :
   __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____2351 -> false
+    | uu____2363 -> false
   
 let (__proj__PpxDerivingShowConstant__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0 
 let (uu___is_CInline : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CInline  -> true | uu____2362 -> false
+    match projectee with | CInline  -> true | uu____2374 -> false
   
 let (uu___is_Substitute : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Substitute  -> true | uu____2366 -> false
+    match projectee with | Substitute  -> true | uu____2378 -> false
   
 let (uu___is_Gc : __internal_ocaml_attributes -> Prims.bool) =
-  fun projectee  -> match projectee with | Gc  -> true | uu____2370 -> false 
+  fun projectee  -> match projectee with | Gc  -> true | uu____2382 -> false 
 let (uu___is_Comment : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Comment _0 -> true | uu____2375 -> false
+    match projectee with | Comment _0 -> true | uu____2387 -> false
   
 let (__proj__Comment__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | Comment _0 -> _0 
+let (uu___is_CPrologue : __internal_ocaml_attributes -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | CPrologue _0 -> true | uu____2399 -> false
+  
+let (__proj__CPrologue__item___0 :
+  __internal_ocaml_attributes -> Prims.string) =
+  fun projectee  -> match projectee with | CPrologue _0 -> _0 
+let (uu___is_CEpilogue : __internal_ocaml_attributes -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | CEpilogue _0 -> true | uu____2411 -> false
+  
+let (__proj__CEpilogue__item___0 :
+  __internal_ocaml_attributes -> Prims.string) =
+  fun projectee  -> match projectee with | CEpilogue _0 -> _0 
+let (uu___is_CConst : __internal_ocaml_attributes -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | CConst _0 -> true | uu____2423 -> false
+  
+let (__proj__CConst__item___0 : __internal_ocaml_attributes -> Prims.string)
+  = fun projectee  -> match projectee with | CConst _0 -> _0 
 let (deprecated : Prims.string -> Prims.unit) = fun s  -> () 
 let (inline_let : Prims.unit) = () 
 let (plugin : Prims.unit) = () 

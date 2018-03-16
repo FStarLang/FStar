@@ -1,14 +1,15 @@
 FSTAR_HOME=../..
-OTHERFLAGS += --include ../pattern-matching
 include ../Makefile.include
 
-.PHONY: neg
+.PHONY: neg stringprintertest-ver stringprintertest stringprinter
 
 all:	Apply.uver		\
 	ApplyLemma.uver		\
 	Canon.uver		\
 	CanonMonoid.uver	\
 	CanonCommMonoid.uver	\
+	CanonCommMonoidSimple.uver\
+	EExists.uver		\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -20,6 +21,8 @@ all:	Apply.uver		\
 	Div.uver		\
 	Change.uver		\
 	Tutorial.uver		\
+	Fresh.uver		\
+	SolveThen.uver		\
 	Splice.uver		\
 	Syntax.uver		\
 	NormBinderType.uver	\
@@ -56,6 +59,7 @@ all:	Apply.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
+	stringprinter \
 	Tautology.uver		\
 	Rewrite.Monoid.uver     \
 	neg
@@ -66,3 +70,19 @@ launch: Launch.fst
 
 neg:
 	$(MAKE) -C neg
+
+ifdef KREMLIN_HOME
+StringPrinter.RecC.uver StringPrinterTest.Aux.uver StringPrinterTest.uver: OTHERFLAGS+=--include $(KREMLIN_HOME)/kremlib
+stringprintertest-ver: StringPrinter.RecC.uver StringPrinterTest.Aux.uver StringPrinterTest.uver
+stringprintertest:
+	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
+else
+stringprintertest-ver:
+stringprintertest:
+endif
+
+stringprinter: \
+	StringPrinter.Base.uver \
+	StringPrinter.Rec.uver \
+	stringprintertest-ver \
+	stringprintertest

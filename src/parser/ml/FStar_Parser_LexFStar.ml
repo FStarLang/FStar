@@ -84,8 +84,9 @@ let () =
   Hashtbl.add keywords "reify"         REIFY       ;
   Hashtbl.add keywords "reflectable"   REFLECTABLE ;
   Hashtbl.add keywords "requires"      REQUIRES    ;
-  Hashtbl.add keywords "set_range_of"                 SET_RANGE_OF    ;
+  Hashtbl.add keywords "set_range_of"  SET_RANGE_OF;
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
+  Hashtbl.add keywords "synth"         SYNTH       ;
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;
   Hashtbl.add keywords "true"          TRUE        ;
