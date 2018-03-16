@@ -72,18 +72,32 @@ let frame #a #wp f =
                          let res = (x, join h1 h0') in 
                          S.return_squash res)))
 
-val bind (#a:Type) (#wp1:st_wp a)
+val bind_without_framing (#a:Type) (#wp1:st_wp a)
          (#b:Type) (#wp2:a -> st_wp b)
          (f:st a wp1)
          (g: (x:a -> st b (wp2 x)))
     : st b (fun post m0 ->
               wp1 (fun (x,m1) -> wp2 x post m1) m0)
-let bind #a #wp1 #b #wp2 f g =
+let bind_without_framing #a #wp1 #b #wp2 f g =
     fun post h0 ->
       let sq_1 : squash (result a (fun (x,m1) -> wp2 x post m1)) =
         f (fun (x,m1) -> wp2 x post m1) h0 in
       S.bind_squash sq_1 (fun (x, m1) ->
         g x post m1)
+
+val bind_with_framing (#a:Type) (#wp1:st_wp a)
+         (#b:Type) (#wp2:a -> st_wp b)
+         (f:st a wp1)
+         (g: (x:a -> st b (wp2 x)))
+    : st b (fun post h ->
+            frame_wp wp1 (frame_post (fun (x, h1) ->
+              frame_wp (wp2 x) (frame_post post) h1)) h)
+let bind_with_framing #a #wp1 #b #wp2 f g =
+    fun post h0 ->
+      let sq_1 : squash (result a (fun (x,m1) -> frame_wp (wp2 x) (frame_post post) m1)) =
+        frame f (fun (x,m1) -> frame_wp (wp2 x) (frame_post post) m1) h0 in
+      S.bind_squash sq_1 (fun (x, m1) ->
+        frame (g x) post m1)
 
 let read_wp (#a:Type) (r:ref a) : st_wp a =
     (fun post m0 -> exists (x:a). m0 == (r |> x) /\ post (x, m0))
