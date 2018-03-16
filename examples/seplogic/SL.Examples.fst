@@ -358,7 +358,9 @@ let __elim_valid_without_match
 			        (exists tail m1. m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
 		               ==> goal p (Cons hd tl) m))))
          (ensures  (goal p repr m))
-  = admit ()
+  = match repr with
+    | []    -> ()
+    | hd::tl -> assume (exists (tail:listptr) (m1:memory). m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1)  //this assume is exactly the hd::tl case of the valid predicate, but the smt encoding of valid is deep embedding, and so, it cannot prove the shallow encoding of the same predicate, there are other ways to do this, but adding an assume for now
 
 let lemma_frame_exact (phi:memory -> memory -> memory -> memory -> Type0) (h h':memory)
   :Lemma (requires (defined (h <*> h') /\ phi h h' h h'))
@@ -444,8 +446,6 @@ let binder_to_term b = let bv, _ = inspect_binder b in pack (Tv_Var bv)
 
 unfold let dom (m:memory) = addrs_in m
 
-//#set-options "--admit_smt_queries true"
-//#set-options "--z3rlimit 30"
 let rec append (l1 l2:listptr)
   = (match l1 with
      | None   -> l2
