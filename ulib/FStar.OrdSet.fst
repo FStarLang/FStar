@@ -407,3 +407,136 @@ let lemma_intersect_union_empty (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordse
          (ensures  (intersect (union s1 s2) s3 == empty))
    [SMTPat (intersect (union s1 s2) s3)]
   = admit ()
+
+let lemma_intersect_union_empty' (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (s3:ordset a f)
+  :Lemma (requires (intersect (union s1 s2) s3 == empty))
+         (ensures  (intersect s1 s3 == empty /\ intersect s2 s3 == empty))
+   [SMTPat (intersect (union s1 s2) s3)]
+  = admit ()
+
+(* Conversion from OrdSet to Set *)
+
+module S = FStar.Set
+
+abstract val as_set : #a:eqtype -> #f:cmp a -> ordset a f -> S.set a
+//abstract val intersect_with_set : #a:eqtype -> #f:cmp a -> ordset a f -> S.set a -> ordset a f
+//abstract val minus_with_set : #a:eqtype -> #f:cmp a -> ordset a f -> S.set a -> ordset a f
+
+(*let disjoint #a #f s1 s2 = 
+  intersect s1 s2 = empty*)
+
+let rec as_set #a #f s = 
+  match s with
+  | []     -> S.empty
+  | hd::tl -> S.union (S.singleton hd) (as_set #a #f tl)
+
+(*let rec intersect_with_set #a #f s1 s2 = 
+  match s1 with
+  | []     -> empty
+  | hd::tl -> 
+      if S.mem hd s2 
+      then union (singleton hd) (intersect_with_set #a #f tl s2)
+      else intersect_with_set #a #f tl s2
+
+let rec minus_with_set #a #f s1 s2 = 
+  match s1 with
+  | []     -> empty
+  | hd::tl -> 
+      if S.mem hd s2 
+      then intersect_with_set #a #f tl s2
+      else union (singleton hd) (intersect_with_set #a #f tl s2)*)
+
+(*let lemma_intersect_union (#a:eqtype) (#f:cmp a) (s1 s2 s3:ordset a f)
+  : Lemma ((intersect s1 s2 = empty /\ intersect s1 s3 = empty)
+           <==>
+           intersect s1 (union s2 s3) = empty)
+  = ()*)
+
+(*private let lemma_intersect_union_size (#a:eqtype) (#f:cmp a) (s1 s2 s3:ordset a f)
+  : Lemma (requires (size (intersect s1 s2) > 0))
+          (ensures  (size (intersect s1 (union s2 s3)) > 0))
+  = assert (size (intersect s1 s2) > 0 ==> intersect s1 s2 <> empty);
+    admit ()*)
+
+(*let lemma_disjoint_union_component (#a:eqtype) (#f:cmp a) (s1 s2 s3:ordset a f)
+  : Lemma (requires (disjoint s1 (union s2 s3)))
+          (ensures  (disjoint s1 s2 \/ ))
+          [SMTPat (not (disjoint s1 (union s1 s3)))]
+  = admit ()*)
+
+let rec lemma_as_set_disjoint (#a:eqtype) (#f:cmp a) (s1 s2:ordset a f)
+  : Lemma (intersect s1 s2 = empty <==> S.disjoint (as_set s1) (as_set s2))
+          [SMTPat (S.disjoint (as_set s1) (as_set s2))]
+  = match s1 with
+    | []     -> ()
+    | hd::tl -> 
+        (if mem hd s2 
+         then ()
+         else lemma_as_set_disjoint tl s2);
+        ()
+
+let rec lemma_as_set_mem (#a:eqtype) (#f:cmp a) (s:ordset a f) (x:a)
+  : Lemma (mem x s <==> S.mem x (as_set s))
+          [SMTPat (mem x s);
+           SMTPat (S.mem x (as_set s))]
+  = match s with
+    | []     -> ()
+    | hd::tl -> 
+        if x = hd 
+        then ()
+        else lemma_as_set_mem #a #f tl x
+
+(*let rec lemma_as_set_union (#a:eqtype) (#f:cmp a) (s s':ordset a f)
+  : Lemma (S.equal (as_set (union s s')) (S.union (as_set s) (as_set s')))
+          [SMTPat (as_set (union s s'))]
+  = admit ()
+
+let rec lemma_intersect_with_set_union (#a:eqtype) (#f:cmp a) (s s':ordset a f) (s'':S.set a)
+  : Lemma (intersect_with_set (union s s') s'' = union (intersect_with_set s s'') (intersect_with_set s' s''))
+          [SMTPat (intersect_with_set (union s s') s'')]
+  = admit ()
+
+let rec lemma_as_set_intersect_with_set (#a:eqtype) (#f:cmp a) (s:ordset a f) (s':S.set a)
+  : Lemma (S.equal (as_set (intersect_with_set s s')) (S.intersect (as_set s) s'))
+          [SMTPat (intersect_with_set s s')]
+  = match s with 
+    | []     -> ()
+    | hd::tl -> 
+        if S.mem hd s' 
+        then (lemma_as_set_intersect_with_set #a #f tl s';
+              assert (S.equal (as_set #a #f (hd::tl)) (S.union (as_set (singleton #a #f hd)) (as_set #a #f tl))))
+        else lemma_as_set_intersect_with_set #a #f tl s'*)
+
+(*let rec lemma_intersect_with_set_mem (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:S.set a) (x:a)
+  : Lemma (mem x (intersect_with_set s1 s2) <==> (mem x s1 /\ S.mem x s2))
+          [SMTPat (mem x (intersect_with_set s1 s2))]
+  = match s1 with 
+    | []     -> ()
+    | hd::tl -> 
+        if hd = x
+        then (if S.mem x s2 
+              then () 
+              else (lemma_intersect_with_set_mem #a #f tl s2 x))
+        else lemma_intersect_with_set_mem #a #f tl s2 x*)
+
+(*private let rec lemma_minus_with_set_union (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:S.set a) (x y:a)
+  : Lemma (requires (x <> y /\ mem x (minus_with_set #a #f (union (singleton y) s1) s2)))
+          (ensures  (mem x (minus_with_set s1 s2)))
+  = match s1 with
+    | [] -> ()
+    | 
+
+let rec lemma_minus_with_set_mem (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:S.set a) (x:a)
+  : Lemma (requires (mem x (minus_with_set s1 s2)))
+          (ensures  (mem x s1))
+          [SMTPat (mem x (minus_with_set s1 s2))]
+  = match s1 with
+    | []     -> ()
+    | hd::tl -> 
+        if hd = x 
+        then ()
+        else (//assert (mem #a #f x tl ==> mem #a #f x (hd::tl));
+              lemma_minus_with_set_union #a #f tl s2 x hd;
+              //assert (mem #a #f x (minus_with_set (hd::tl) s2) ==> mem #a #f x (minus_with_set tl s2));
+              lemma_minus_with_set_mem #a #f tl s2 x)*)
+             
