@@ -437,6 +437,26 @@ let unembed_bv_view (t : term) : option<bv_view> =
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv_view: %s" (Print.term_to_string t)));
         None
 
+let rec unembed_exp (t: term) : option<exp> =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_E_Unit.lid ->
+        Some Unit
+
+    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_E_Var.lid ->
+        BU.bind_opt (unembed_int i) (fun i ->
+        Some <| Var i)
+
+    | Tm_fvar fv, [(e1, _); (e2, _)] when S.fv_eq_lid fv ref_E_Mult.lid ->
+        BU.bind_opt (unembed_exp e1) (fun e1 ->
+        BU.bind_opt (unembed_exp e2) (fun e2 ->
+        Some <| Mult (e1, e2)))
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded exp: %s" (Print.term_to_string t)));
+        None
+
+
 let unembed_comp_view (t : term) : option<comp_view> =
     let t = U.unascribe t in
     let hd, args = U.head_and_args t in

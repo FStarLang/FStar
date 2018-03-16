@@ -66,6 +66,13 @@ type sigelt_view =
     | Sg_Constructor of name * typ
     | Unk
 
+type var = Z.t
+
+type exp =
+    | Unit
+    | Var of var
+    | Mult of exp * exp
+
 (* Contains all lids and terms needed for embedding/unembedding *)
 
 type refl_constant = {
@@ -176,6 +183,11 @@ let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
 let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
 let ref_Unk            = fstar_refl_data_const "Unk"
+
+(* exp *)
+let ref_E_Unit = fstar_refl_data_const "Unit"
+let ref_E_Var = fstar_refl_data_const "Var"
+let ref_E_Mult = fstar_refl_data_const "Mult"
 
 (* Should not be here *)
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange

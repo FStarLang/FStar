@@ -428,7 +428,8 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           (PC.norm_step_lid, [], fstar_syn_syn_prefix "t_norm_step", S);
           (PC.list_lid,   [Covariant], fstar_syn_syn_prefix "t_list_of", S); //one covariant argument
           (PC.option_lid, [Covariant], fstar_syn_syn_prefix "t_option_of", S);
-          (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_syn_syn_prefix "t_tuple2_of", S) //two covariant arguments
+          (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_syn_syn_prefix "t_tuple2_of", S); //two covariant arguments
+          (RD.fstar_refl_data_lid "exp", [], fstar_syn_syn_prefix "embedding_not_defined", R) //VD: only unembedding defined forthis type
         ]
     in
     let is_known_type_constructor fv n =

@@ -16,13 +16,6 @@ open FStar.Classical
 
 (***** Expression syntax *)
 
-let var : eqtype = nat
-
-type exp : Type =
-  | Unit : exp
-  | Var : var -> exp
-  | Mult : exp -> exp -> exp
-
 let rec exp_to_string (e:exp) : string =
   match e with
   | Unit -> "Unit"
@@ -211,6 +204,7 @@ let sort_correct : permute_correct sort = (fun #a -> sort_correct_aux #a)
 
 (***** Canonicalization tactics *)
 
+[@plugin]
 let canon (e:exp) = sort (flatten e)
 
 let canon_correct (#a:Type) (m:cm a) (vm:vmap a) (e:exp) :
