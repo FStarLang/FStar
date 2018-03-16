@@ -24,8 +24,11 @@ let st (a:Type) (wp:st_wp a) =
   post:post a -> h0:heap{wp post h0} -> Tot (squash (result h0 a post))
 
 (* return *)
-let return (#a:Type) (x:a)
-  //: st a (fun post h0 -> heap_memory h0 == emp /\ post (x, h0))
+let return_without_binding (#a:Type) (x:a)
+  : st a (fun post h0 -> heap_memory h0 == emp /\ post (x, h0))
+  = fun post h0 -> S.return_squash (x, h0)
+
+let return_with_binding (#a:Type) (x:a)
   : st a (fun post h0 -> post (x, h0))
   = fun post h0 -> S.return_squash (x, h0)
 
