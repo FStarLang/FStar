@@ -167,7 +167,7 @@ let rec sl (i:int) : Tac unit =
                                mk_e_app (`( |> )) [t; u]) fp_refs) in
          dump ("m0=" ^ term_to_string fp);
         let env = cur_env () in
-        let frame = uvar_env env (Some (`memory)) in
+        let frame = uvar_env env None in
         let tp : term = mk_app (`eq2)
               [((`memory),                     Q_Implicit);
                (mk_e_app (`(<*>)) [fp;frame],  Q_Explicit);
