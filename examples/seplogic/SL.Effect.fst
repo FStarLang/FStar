@@ -7,7 +7,7 @@ let post (a:Type) = a -> memory -> Type0
 let st_wp (a:Type) = post a -> pre
 
 (* unfold *) let return_wp (a:Type) (x:a) :st_wp a = 
-  fun post m0 -> m0 == emp /\ post x m0
+  fun post m0 -> post x m0
 
 (* unfold *) let frame_wp (#a:Type) (wp:st_wp a) (post:memory -> post a) (m:memory) =
   exists (m0 m1:memory). defined (m0 <*> m1) /\ m == (m0 <*> m1) /\ wp (post m1) m0
@@ -61,7 +61,7 @@ new_effect {
      ; trivial      = st_trivial
 }
 
-(* unfold *) let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = wp (fun a -> p a emp)
+(* unfold *) let lift_div_st (a:Type) (wp:pure_wp a) (p:post a) (m:memory) = wp (fun a -> p a m)
 sub_effect DIV ~> STATE = lift_div_st
 
 let read_wp (#a:Type) (r:ref a) : st_wp a =
