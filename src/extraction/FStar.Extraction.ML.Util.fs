@@ -390,7 +390,11 @@ type variance =
   | Invariant
 
 let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
-    let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] tcenv t in
+    let t = N.normalize [
+      N.EraseUniverses;
+      N.AllowUnboundUniverses;
+      N.UnfoldUntil S.Delta_constant // unfold abbreviations such as nat
+    ] tcenv t in
     let w = with_ty MLTY_Top in
     let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
     let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
@@ -488,6 +492,13 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
         | Tm_name bv
              when BU.for_some (find_env_entry bv) env ->
           snd (BU.must (BU.find_opt (find_env_entry bv) env))
+
+        | Tm_refine (x, _) ->
+          (* Refinements are irrelevant to generate embeddings. *)
+          mk_embedding env x.sort
+
+        | Tm_ascribed (t, _, _) ->
+          mk_embedding env t
 
         | _ ->
           let t = FStar.TypeChecker.Normalize.unfold_whnf tcenv t in
