@@ -2,7 +2,7 @@ module SepLogic.Heap
 
 module S  = FStar.Set
 
-let set = S.set
+let set  = S.set
 
 (* heaps, memories, and operations on them *)
 
@@ -37,7 +37,7 @@ val fresh : #a:Type0 -> ref a -> heap -> Type0
 val alloc : #a:Type0 -> h:heap -> a -> Tot (ref a * heap) 
 val dealloc : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot heap
 
-val addrs_in : memory -> GTot (set nat)
+val addrs_in : memory -> Tot (set nat)
 val addr_to_ref : m:memory{defined m} -> r:nat{S.mem r (addrs_in m)} -> a:Type0 & ref a
 
 let fresh_or_old' (h0 h1:heap) (m_old m_fresh:memory) = 
