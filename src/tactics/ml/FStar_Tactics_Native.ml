@@ -85,3 +85,25 @@ let from_tactic_4 (t: 'a -> 'b -> 'c -> 'd -> 'e __tac): ('a -> 'b -> 'c -> 'd -
                     (fun (ps: proofstate) ->
                         BU.print_string "In compiled code (4)\n";
                         interpret_tactic ps (t x y z w)) |> mk_tac
+
+let from_tactic_5 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f __tac): ('a -> 'b -> 'c -> 'd -> 'e -> 'f tac) =
+    fun (x: 'a) ->
+        fun (y: 'b) ->
+            fun (z: 'c) ->
+                fun (w: 'd) ->
+                    fun (v: 'e) ->
+                        (fun (ps: proofstate) ->
+                            BU.print_string "In compiled code (5)\n";
+                            interpret_tactic ps (t x y z w v)) |> mk_tac
+
+let from_tactic_6 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g __tac): ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g tac) =
+    fun (x: 'a) ->
+        fun (y: 'b) ->
+            fun (z: 'c) ->
+                fun (w: 'd) ->
+                    fun (v: 'e) ->
+                        fun (u: 'f) ->
+                            (fun (ps: proofstate) ->
+                                BU.print_string "In compiled code (6)\n";
+                                interpret_tactic ps (t x y z w v u)) |> mk_tac
+

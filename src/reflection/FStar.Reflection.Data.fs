@@ -188,6 +188,7 @@ let ref_Unk            = fstar_refl_data_const "Unk"
 let ref_E_Unit = fstar_refl_data_const "Unit"
 let ref_E_Var = fstar_refl_data_const "Var"
 let ref_E_Mult = fstar_refl_data_const "Mult"
+let t_exp = tconst (Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"] Range.dummyRange)
 
 (* Should not be here *)
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange

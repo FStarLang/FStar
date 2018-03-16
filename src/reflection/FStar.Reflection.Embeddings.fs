@@ -222,6 +222,19 @@ let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     | Unk ->
         { ref_Unk.t with pos = rng }
 
+let rec embed_exp (rng:Range.range) (e:exp) : term =
+    let r =
+    match e with
+    | Unit    -> ref_E_Unit.t
+    | Var i ->
+        S.mk_Tm_app ref_E_Var.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
+                    None Range.dummyRange
+    | Mult (e1, e2) ->
+        S.mk_Tm_app ref_E_Mult.t [S.as_arg (embed_exp rng e1); S.as_arg (embed_exp rng e2)]
+                    None Range.dummyRange
+    in { r with pos = rng }
+
+
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------ UNEMBEDDINGS ------------------------------------ *)
 (* -------------------------------------------------------------------------------------- *)
