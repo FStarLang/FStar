@@ -187,13 +187,29 @@ let rec sl (i:int) : Tac unit =
         // dump ("after frame lemma");
         sl(i + 1)
 
+let __elim_exists_as_forall
+  (#a:Type) (#p:a -> Type) (#phi:Type) (_:(exists x. p x)) (_:squash (forall (x:a). p x ==> phi))
+  :Lemma phi
+  = ()
+
+let __elim_exists (h:binder) :Tac unit
+  = let t = `__elim_exists_as_forall in
+    apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
+    clear h;
+    ignore (forall_intro ())
+
+let rec intro_annotated_wp () :Tac binder
+  = let h = implies_intro () in
+    or_else (fun () -> __elim_exists h; intro_annotated_wp ())
+            (fun () -> h)
+  
 let prelude' () : Tac unit =
    // dump "start";
    norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
    mapply (`FStar.Squash.return_squash);
    let post = forall_intro () in
    let m0 = forall_intro () in
-   let wp_annot = implies_intro() in
+   let wp_annot = intro_annotated_wp () in
    and_elim (pack (Tv_Var (fst (inspect_binder wp_annot))));
    clear wp_annot;
    let hm0 = implies_intro() in
@@ -208,27 +224,27 @@ let sl_tac () : Tac unit =
 (*
  * two commands
  *)
-let write_read (r1 r2:ref int) (x y:int) =
+let write_read (r1 r2:ref int) =
   (r1 := 2;
    !r2)
-  <: STATE int (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
+  <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
   by sl_tac
 
-let read_write (r1 r2:ref int) (x y:int) =
+let read_write (r1 r2:ref int) =
   (let x = !r1 in
    r2 := x)
-  <: STATE unit (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
+  <: STATE unit (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
   by sl_tac
 
 (*
  * four commands
  *)
-let swap (r1 r2:ref int) (x y:int)
+let swap (r1 r2:ref int)
   = (let x = !r1 in
      let y = !r2 in
      r1 := y;
      r2 := x)
 
-     <: STATE unit (fun post m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x))))
+     <: STATE unit (fun post m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x))))
 
      by sl_tac
