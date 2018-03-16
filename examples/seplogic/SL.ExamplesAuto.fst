@@ -65,9 +65,9 @@ let sort_sl (a:Type) (vm:vmap a string) (xs:list var) =
     (fun x y -> FStar.String.compare (select_extra x vm)
                                      (select_extra y vm)) xs
 
-let canon_monoid_sl fp =
+let canon_monoid_sl (fp:list term) : Tac unit =
   canon_monoid_with string (pointsto_to_string fp) ""
-                            sort_sl (fun #a m vm xs -> admit())
+                            sort_sl (fun #a m vm xs -> admit()) memory_cm
 
 let binder_to_term (b : binder) : Tac term =
   let bv, _ = inspect_binder b in pack (Tv_Var bv)
@@ -177,7 +177,7 @@ let rec sl (i:int) : Tac unit =
         // dump "with new goal:";
         flip();
         // dump ("before canon_monoid");
-        canon_monoid_sl fp_refs memory_cm;
+        canon_monoid_sl fp_refs;
         // dump ("after canon_monoid");
         trefl();
         // dump ("after trefl");
