@@ -657,8 +657,7 @@ and tc_synth env args rng =
     match args with
     | (tau, None)::rest ->
         tau, None, rest
-    | (a, Some (Implicit _)) :: (tau, None) :: rest
-    | (a, Some (Implicit _)) :: (_, Some (Implicit _)) :: (tau, None) :: rest ->
+    | (a, Some (Implicit _)) :: (tau, None) :: rest ->
         tau, Some a, rest
     | _ ->
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng

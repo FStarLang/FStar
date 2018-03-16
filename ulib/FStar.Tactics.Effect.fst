@@ -62,7 +62,7 @@ reifiable reflectable new_effect {
      ; __get    = __get
 }
 effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
-effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (not type safety!)
+effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (nor type safety!)
 
 let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
     fun ps p -> wp (fun x -> p (Success x ps))
@@ -79,7 +79,7 @@ unfold let by_tactic (t : unit -> Tac 'a) (p:Type) : Type = __by_tactic (reify (
 // during typechecking, it is forced to be fully applied and the tactic
 // is run. A failure of the tactic is a typechecking failure.
 // TODO: `a` is really fixed to unit for now. Make it consistent
-assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> (unit -> Tac a) -> Tot t
+assume val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
 let assert_by_tactic (p:Type) (t:unit -> Tac unit)
   : Pure unit
