@@ -2,7 +2,7 @@ module SepLogic.Heap
 
 module S  = FStar.Set
 
-let set  = S.set
+let set = S.set
 
 (* heaps, memories, and operations on them *)
 
@@ -13,14 +13,14 @@ val defined : memory -> Type0
 val emp : memory
 
 val ref (a:Type0) : Type0
-val addr_of : #a:Type0 -> ref a -> GTot nat
-val heap_memory : heap -> GTot memory
+val addr_of : #a:Type0 -> ref a -> Tot nat
+val heap_memory : heap -> Tot memory
 
 val disjoint_heaps : heap -> heap -> Type0
 val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
 
-val ( |> ) : #a:Type0 -> r:ref a -> x:a -> GTot memory
-val ( <*> ) : m0:memory -> m1:memory -> GTot memory
+val ( |> ) : #a:Type0 -> r:ref a -> x:a -> Tot memory
+val ( <*> ) : m0:memory -> m1:memory -> Tot memory
 
 val split_heap : (m0:memory) 
               -> (m1:memory)
@@ -53,11 +53,9 @@ let same_freshness (h0 h1:heap) =
   forall a (r:ref a) . fresh r h0 <==> fresh r h1
 
 val restrict_memory : rs:set nat
-                   //-> m:memory{defined m /\ S.subset rs (addrs_in m)}
                    -> m:memory{defined m}
                    -> Tot memory
 val complement_memory : rs:set nat
-                     //-> m:memory{defined m /\ S.subset rs (addrs_in m)}
                      -> m:memory{defined m}
                      -> Tot memory
 

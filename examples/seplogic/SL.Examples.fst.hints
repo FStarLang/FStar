@@ -67,10 +67,11 @@
       1,
       [
         "@query", "function_token_typing_SepLogic.Heap.emp",
-        "lemma_SepLogic.Heap.lemma_sep_unit"
+        "lemma_SepLogic.Heap.lemma_sep_unit",
+        "typing_SepLogic.Heap.op_Less_Star_Greater"
       ],
       0,
-      "01f3d7ac5177fb72bae1320a5ad6f76c"
+      "4beb62e6b452f6a93a26110d946b3fb1"
     ],
     [
       "SL.Examples.lemma_rewrite_sep_comm",
