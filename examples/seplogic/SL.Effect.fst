@@ -1,6 +1,6 @@
 module SL.Effect
 
-open SepLogic.Heap
+open SL.Heap
 
 let pre = memory -> Type0
 let post (a:Type) = a -> memory -> Type0

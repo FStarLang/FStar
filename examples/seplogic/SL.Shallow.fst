@@ -1,6 +1,6 @@
 module SL.Shallow
 
-open SepLogic.Heap
+open SL.Heap
 
 module S = FStar.Squash
 

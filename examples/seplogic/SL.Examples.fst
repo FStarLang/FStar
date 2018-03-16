@@ -1,6 +1,6 @@
 module SL.Examples
 
-open SepLogic.Heap
+open SL.Heap
 open SL.Effect
 
 open FStar.Tactics
@@ -719,7 +719,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       //mk_app `Cons (binder_to_term fl1_hd) (binder_to_term fl2)
 	       witness (mk_e_app (`Prims.Cons) [binder_to_term fl1_hd; binder_to_term fl2]);
 	       witness (binder_to_term l1_tail_m);
-	       let uv = uvar_env (cur_env ()) (Some (`SepLogic.Heap.memory)) in
+	       let uv = uvar_env (cur_env ()) (Some (`SL.Heap.memory)) in
 	       witness uv;
 	       split (); split (); split (); split ();
 	       flip ();
@@ -751,4 +751,4 @@ let rev (l:listptr)
 	       witness (binder_to_term fl);
 	       witness (`(Prims.Nil #int));
 	       witness (binder_to_term m);
-	       witness (`SepLogic.Heap.emp))
+	       witness (`SL.Heap.emp))
