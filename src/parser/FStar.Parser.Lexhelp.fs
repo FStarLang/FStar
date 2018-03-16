@@ -182,8 +182,9 @@ let keywords =
     ALWAYS, "reify"      ,REIFY;
     ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
-    ALWAYS, "set_range_of"              ,SET_RANGE_OF;
+    ALWAYS, "set_range_of",SET_RANGE_OF;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
+    ALWAYS, "synth"      ,SYNTH;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;

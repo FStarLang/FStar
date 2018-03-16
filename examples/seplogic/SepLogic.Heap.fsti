@@ -38,6 +38,18 @@ val alloc : #a:Type0 -> h:heap -> a -> Tot (ref a * heap)
 val dealloc : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot heap
 
 val addrs_in : memory -> GTot (set nat)
+val addr_to_ref : m:memory{defined m} -> r:nat{S.mem r (addrs_in m)} -> a:Type0 & ref a
+
+let fresh_or_old' (h0 h1:heap) (m_old m_fresh:memory) = 
+    heap_memory h1 == (m_old <*> m_fresh) /\ 
+    FStar.Set.subset (addrs_in m_old) (addrs_in (heap_memory h0)) /\
+    (forall a (r:ref a) . FStar.Set.mem (addr_of r) (addrs_in m_fresh) ==> fresh r h0)
+
+let fresh_or_old (h0 h1:heap) =
+  exists m_old m_fresh . fresh_or_old' h0 h1 m_old m_fresh
+
+let same_freshness (h0 h1:heap) =
+  forall a (r:ref a) . fresh r h0 <==> fresh r h1
 
 (* disjoint_heaps *)
 
@@ -95,6 +107,7 @@ val lemma_sep_defined (m0 m1:memory)
 val lemma_heap_memory_defined (h:heap)
   : Lemma (defined (heap_memory h))
           [SMTPat (defined (heap_memory h))]
+          
 
 (* split_heap *)
 
@@ -114,6 +127,12 @@ val lemma_split_heap_memories (m0 m1:memory) (h:heap)
   : Lemma (requires (defined (m0 <*> m1) /\ heap_memory h == (m0 <*> m1)))
           (ensures  (let (h0,h1) = split_heap m0 m1 h in
                      heap_memory h0 == m0 /\ heap_memory h1 == m1))
+          [SMTPat (split_heap m0 m1 h)]
+
+val lemma_split_heap_fresh (m0 m1:memory) (h:heap)
+  : Lemma (requires (defined (m0 <*> m1) /\ heap_memory h == (m0 <*> m1)))
+          (ensures  (let (h0,h1) = split_heap m0 m1 h in 
+                     (forall a (r:ref a) . fresh r h0 <==> fresh r h1)))
           [SMTPat (split_heap m0 m1 h)]
 
 (* hcontains and mcontains *)
@@ -165,6 +184,17 @@ val lemma_alloc_emp_points_to (#a:Type0) (h0:heap) (x:a)
                      heap_memory h1 == (r |> x)))
           [SMTPat (alloc h0 x)]
 
+val lemma_fresh_in_complement (#a:Type0) (r:ref a) (h:heap)
+  : Lemma (requires (fresh r h))
+          (ensures  (S.mem (addr_of r) (S.complement (addrs_in (heap_memory h)))))
+          [SMTPat (fresh r h);
+           SMTPat (heap_memory h)]
+
+val lemma_fresh_join (#a:Type0) (r:ref a) (h0 h1:heap)
+  : Lemma (requires (disjoint_heaps h0 h1 /\ fresh r h0 /\ fresh r h1))
+          (ensures  (fresh r (join h0 h1)))
+          [SMTPat (fresh r (join h0 h1))]
+
 (* dealloc *)
 
 val lemma_dealloc_contains (#a:Type0) (h0:heap) (r:ref a)
@@ -184,6 +214,10 @@ val lemma_addrs_in_emp (u:unit)
 
 assume Addrs_in_emp_axiom: S.equal (addrs_in emp) (S.empty)
 
+val lemma_addrs_in_disjoint_heaps (h0 h1:heap)
+  : Lemma (disjoint_heaps h0 h1 <==> S.disjoint (addrs_in (heap_memory h0)) (addrs_in (heap_memory h1)))
+          [SMTPat (S.disjoint (addrs_in (heap_memory h0)) (addrs_in (heap_memory h1)))]
+
 val lemma_addrs_in_points_to (#a:Type) (r:ref a) (x:a)
   : Lemma (S.equal (addrs_in (r |> x)) (S.singleton (addr_of r)))
           [SMTPat (addrs_in (r |> x))]
@@ -192,3 +226,43 @@ val lemma_addrs_in_join (m0 m1:memory)
   : Lemma (requires (defined (m0 <*> m1)))
           (ensures  (S.equal (addrs_in (m0 <*> m1)) (S.union (addrs_in m0) (addrs_in m1))))
           [SMTPat (addrs_in (m0 <*> m1))]
+
+(* addr_to_ref *)
+val lemma_addr_to_ref_addr_of (m:memory) (r:nat) 
+  : Lemma (requires (defined m /\ S.mem r (addrs_in m)))
+          (ensures  (addr_of (dsnd (addr_to_ref m r)) = r))
+          [SMTPat (defined m);
+           SMTPat (S.mem r (addrs_in m))]
+
+(* fresh_or_old *)
+
+val lemma_fresh_or_old_refl (h:heap)
+  : Lemma (fresh_or_old h h)
+          [SMTPat (fresh_or_old h h)]
+
+val lemma_fresh_or_old_trans (h0 h1 h2:heap)
+  : Lemma (requires (fresh_or_old h0 h1 /\ fresh_or_old h1 h2))
+          (ensures  (fresh_or_old h0 h2))
+
+val lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
+  : Lemma (requires (fresh_or_old h0 h1 /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
+          (ensures  (disjoint_heaps h1 h2))
+          [SMTPat (fresh_or_old h0 h1);
+           SMTPat (same_freshness h0 h2)]
+
+val lemma_fresh_or_old_sep (h0 h1 h2:heap) 
+  : Lemma (requires (fresh_or_old h0 h1 /\ disjoint_heaps h0 h2 /\ same_freshness h0 h2))
+          (ensures  (fresh_or_old (join h0 h2) (join h1 h2)))
+          [SMTPat (fresh_or_old (join h0 h2) (join h1 h2))]
+
+val lemma_fresh_or_old_alloc (#a:Type0) (x:a) (h0:heap)
+  : Lemma (let (_,h1) = alloc h0 x in
+           fresh_or_old h0 h1)
+
+val lemma_fresh_or_old_dealloc (#a:Type0) (r:ref a) (h0:heap)
+  : Lemma (requires (h0 `hcontains` r))
+          (ensures  (fresh_or_old h0 (dealloc h0 r)))
+
+val lemma_fresh_or_old_upd (#a:Type0) (r:ref a) (x:a) (h0:heap)
+  : Lemma (requires (h0 `hcontains` r))
+          (ensures  (fresh_or_old h0 (upd h0 r x)))

@@ -1,46 +1,16 @@
 module CanonCommMonoid
 
+open FStar.Algebra.CommMonoid
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
-open FStar.OrdMap
 
-(* An expression canonizer for commutative monoids
+(* An expression canonizer for commutative monoids.
    Inspired by:
    - http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html
    - http://poleiro.info/posts/2015-04-13-writing-reflective-tactics.html
 *)
-
-(***** Commutative monoids *)
-
-(* Should eventually go to standard library *)
-
-let right_unitality_lemma (a:Type) (u:a) (mult:a -> a -> Tot a) =
-  x:a -> Lemma (x `mult` u == x)
-
-let left_unitality_lemma (a:Type) (u:a) (mult:a -> a -> Tot a) =
-  x:a -> Lemma (u `mult` x == x)
-
-let associativity_lemma (a:Type) (mult:a -> a -> Tot a) =
-  x:a -> y:a -> z:a -> Lemma (x `mult` y `mult` z == x `mult` (y `mult` z))
-
-let commutativity_lemma (a:Type) (mult:a -> a -> Tot a) =
-  x:a -> y:a -> Lemma (x `mult` y == y `mult` x)
-
-unopteq
-type cm (a:Type) =
-  | CM :
-    unit:a ->
-    mult:(a -> a -> Tot a) ->
-    right_unitality:right_unitality_lemma a unit mult ->
-    left_unitality:left_unitality_lemma a unit mult ->
-    associativity:associativity_lemma a mult ->
-    commutativity:commutativity_lemma a mult ->
-    cm a
-
-let int_plus_cm : cm int =
-  CM 0 (+) (fun x -> ()) (fun x -> ()) (fun x y z -> ()) (fun x y -> ())
 
 (***** Expression syntax *)
 
@@ -246,7 +216,7 @@ let sort_via_swaps (#a:Type) (vm : vmap a unit)  (xs:list var) :
 
 let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
-  permute_via_swaps_correct #unit sort (fun #a vm -> sort_via_swaps vm) m vm xs
+  permute_via_swaps_correct #unit (fun a -> sort a) (fun #a vm -> sort_via_swaps vm) m vm xs
 
 let sort_correct : permute_correct #unit sort = (fun #a -> sort_correct_aux #a)
 
@@ -279,14 +249,13 @@ let where = where_aux 0
 let rec reification_aux (#a #b:Type) (ts:list term) (vm:vmap a b) (f:term->Tac b)
     (mult unit t : term) : Tac (exp * list term * vmap a b) =
   let hd, tl = collect_app_ref t in
-  let tl = list_unref tl in
   let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp * list term * vmap a b) =
     match where t ts with
     | Some v -> (Var v, ts, vm)
     | None -> let vfresh = length ts in let z = unquote t in
               (Var vfresh, ts @ [t], update vfresh z (f t) vm)
   in
-  match inspect hd, tl with
+  match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
     then (let (e1,ts,vm) = reification_aux ts vm f mult unit t1 in
@@ -303,12 +272,12 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list ter
     Tac (list exp * vmap a b) =
   let mult = norm_term [delta] (quote (CM?.mult m)) in
   let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let ts   = Tactics.Derived.map (norm_term [delta]) ts in
+  let ts   = Tactics.Util.map (norm_term [delta]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
   //     ";  t   = " ^ term_to_string t);
   let (es,_, vm) =
-    Tactics.Derived.fold_left
+    Tactics.Util.fold_left
       (fun (es,vs,vm) t ->
         let (e,vs,vm) = reification_aux vs vm f mult unit t in (e::es,vs,vm))
       ([],[], const (CM?.unit m) def) ts
@@ -328,8 +297,7 @@ let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
   norm [];
-  let g = cur_goal () in
-  match term_as_formula g with
+  match term_as_formula (cur_goal ()) with
   | Comp (Eq (Some t)) t1 t2 ->
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
@@ -368,14 +336,15 @@ let canon_monoid_with
                             "FStar.List.Tot.Base.compare_of_bool";
                             "CanonCommMonoid.const_compare";
                             "CanonCommMonoid.special_compare";
-             ]; primops]; // TODO: restrict primops to "less than" only
-          dump "done"
+             ]; primops] // TODO: restrict primops to "less than" only
+                         // - would need this even if unfold_def did it's job?
+          // ; dump "done"
         | _ -> fail "Unexpected"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
-let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
-                                     sort (fun #a -> sort_correct #a)
+let canon_monoid #a cm = canon_monoid_with unit (fun _ -> ()) ()
+                                     (fun a -> sort a) (fun #a -> sort_correct #a) #a cm
 
 (***** Examples *)
 
@@ -400,8 +369,10 @@ let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (const_compare vm) xs
 
-let canon_monoid_const = canon_monoid_with bool is_const false
-  const_last (fun #a m vm xs -> admit())
+let canon_monoid_const #a cm = canon_monoid_with bool is_const false
+  (fun a -> const_last a) (fun #a m vm xs -> admit()) #a cm
+(* TODO Try to reduce the number of admits by further generalizing
+        the sort stuff at the top (from `unit` to `a`). *)
 
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
@@ -431,7 +402,7 @@ let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (special_compare vm) xs
 
 let canon_monoid_special (ts:list term) =
-  canon_monoid_with bool (is_special ts) false special_first
+  canon_monoid_with bool (is_special ts) false (fun a -> special_first a)
                     (fun #a m vm xs -> admit())
 
 let lem2 (a b c d : int) =
@@ -439,9 +410,40 @@ let lem2 (a b c d : int) =
   (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
             dump "this won't work, admitting"; admit1())
 
+(* Trying to do something separation logic like. Want to
+   prove a goal of the form: given some concrete h0 and h1
+   exists h1', h1 * h1' == h0. -- can use apply exists_intro to get an uvar
+   Do this for an arbitrary commutative monoid. *)
+
+let sep_logic
+// TODO: this generality makes unfold_def fail with:
+//       (Error) Variable "mult#1139342" not found
+//       - Guido thinks this is related to
+//         https://github.com/FStarLang/FStar/issues/1392
+// (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
+// so working around it for now
+(x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
+  let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
+  let h1 = x * y in
+  assert_by_tactic (exists h1'. h1 * h1' == h0)
+  (fun _ -> apply_lemma (`exists_intro);
+            flip();
+            canon_monoid m;
+            trefl();
+            // this one blows up big time (takes up all RAM)
+            // exact (cur_witness())
+            dismiss()
+  )
+
 (* TODO: Need better control of reduction:
-         - unfold_def still not good enough, see stopgap above
-*)
+         - unfold_def still not good enough, see stopgap above *)
+
+(* TODO: need a version of canon that works on assumption(s)
+         (canon_in / canon_all) *)
+
+(* TODO: Wondering whether we should support arbitrary re-association?
+         Could be useful for separation logic, but we might also just
+         work around it. *)
 
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
@@ -455,29 +457,3 @@ let lem2 (a b c d : int) =
                      need to be this pure? Can we prove correctness of
                      denotations intrinsically / by monadic
                      reification for an effectful denotation? *)
-
-(* Old discussion discuss with Nik and Guido about spurious SMT obligations:
-Nik:
-- it's easy to get rid of some of the hasEq goals by just saying `let
-  var :eqtype = nat`
-- but, we still have some extra SMT goals
-- and this is because reification computes a vmap literal vm, which
-  computes all the way to a lambda term
-  `(fun x -> if x = a then (a, ()) else ... )`
-- and we have to prove that this thing is actually a vmap
-- i wonder if there's some way for reification to compute this without
-  fully normalizing it down to a lambda term, i.e., can we leave it as
-  an `update (const_map ...) x a (a, ())` etc.
-- if so, then proving it is a vmap will be trivial and will not incur
-  additional SMT goals
-- this reminds me a little of many prior conversations, including our
-  conversation at the pub yesterday, Catalin. i.e., we want to treat
-  `update` etc. abstractly in some places, but in other places, we
-  want to compute fully with it (edited)
-- I think we should be able to do that with our tactics
-- e.g., something like `let r = set_norm_flags "don't unfold update,
-  const"; let r = reification m [t1;t2] in reset_norm_flags; r in ...`
-- for some as yet unavailable `set_norm_flags` tactic
-- anyway, it's a detail, but one that I suspect we'll have to solve
-  well especially as we build large vmap literals
-*)
