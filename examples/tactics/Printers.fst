@@ -30,20 +30,21 @@ let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
     | _ ->
         mk_stringlit "?"
 
+let mk_printer_type (t : term) : Tac term =
+    let b = fresh_binder_named "arg" t in
+    let str = pack (Tv_FVar (pack_fv string_lid)) in
+    let c = pack_comp (C_Total str None) in
+    pack (Tv_Arrow b c)
+
+
 (* This tactics generates the entire let rec at once and
  * then uses exact. We could do something better. *)
-let printer_fun () : Tac unit =
+let mk_printer_fun (dom : term) : Tac term =
     admit ();
     set_guard_policy SMT;
-    let ty = cur_goal () in
     let e = cur_env () in
-    let dom =
-        match inspect ty with
-        | Tv_Arrow b c -> type_of_binder b
-        | _ -> fail "printer_fun called on bad goal"
-    in
     (* Recursive binding *)
-    let ff = fresh_bv_named "ff_rec" ty in
+    let ff = fresh_bv_named "ff_rec" (mk_printer_type dom) in
     let fftm = pack (Tv_Var ff) in
 
     let x = fresh_binder_named "v" dom in
@@ -99,8 +100,24 @@ let printer_fun () : Tac unit =
         let tm = pack (Tv_Abs x b) in
         (* print ("tm = " ^ term_to_string tm); *)
 
-        exact tm
+        tm
     | _ -> fail "type not found?"
+
+let rec maplast (f : 'a -> 'a) (l : list 'a) : list 'a =
+    match l with
+    | [] -> []
+    | [x] -> [f x]
+    | x::xs -> x :: (maplast f xs)
+
+let mk_printer dom : Tac unit =
+    let nm = match inspect dom with
+             | Tv_FVar fv -> inspect_fv fv
+             | _ -> fail "not an fv?"
+    in
+    let nm = maplast (fun s -> s ^ "_print") nm in
+    let sv : sigelt_view = Sg_Let false (pack_fv nm) (mk_printer_type dom) (mk_printer_fun dom) in
+    let ses : list sigelt = [pack_sigelt sv] in
+    exact (quote ses)
 
 noeq
 type t1 =
@@ -111,11 +128,18 @@ type t1 =
     | E : t1 -> t1
     | F : (unit -> t1) -> t1
 
-let t1_print : t1 -> string = synth_by_tactic printer_fun
+%splice (fun () -> mk_printer (`t1))
 
-let _ = assert_norm (t1_print (A 5 "hey") = "(Printers.A 5 \"hey\")")
-let _ = assert_norm (t1_print (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
-let _ = assert_norm (t1_print C = "Printers.C")
-let _ = assert_norm (t1_print (D "test") = "(Printers.D \"test\")")
-let _ = assert_norm (t1_print (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
-let _ = assert_norm (t1_print (F (fun _ -> C)) = "(Printers.F ?)")
+(* Haven't still done the desugaring modification the code following this
+to reoslve properly. The printer is there but using it in this module
+will fail, so add a declaration like this. *)
+let t1_print' : t1 -> string = synth_by_tactic (fun () -> exact (mk_printer_fun (`t1)))
+
+
+
+let _ = assert_norm (t1_print' (A 5 "hey") = "(Printers.A 5 \"hey\")")
+let _ = assert_norm (t1_print' (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
+let _ = assert_norm (t1_print' C = "Printers.C")
+let _ = assert_norm (t1_print' (D "test") = "(Printers.D \"test\")")
+let _ = assert_norm (t1_print' (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
+let _ = assert_norm (t1_print' (F (fun _ -> C)) = "(Printers.F ?)")
