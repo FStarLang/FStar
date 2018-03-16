@@ -9,15 +9,6 @@
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
       "dc642c27e302beb4f1bae9f691cfc479"
-    ],
-    [
-      "Bug424.get",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "da28154ed9ba05ee4880a4746071bd66"
     ]
   ]
 ]

@@ -2692,6 +2692,10 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
          | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
             solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
+         // Optimizing tactics
+         | Total (t1, _), Comp c when Ident.lid_equals c.effect_name Const.effect_Tac_lid ->
+            solve_t env (problem_using_guard orig t1 problem.relation c.result_typ None "result type") wl
+
          | GTotal _, Comp _
          | Total _,  Comp _ ->
             solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl

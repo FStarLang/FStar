@@ -1706,7 +1706,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "36f63252b0cd50e6eb7560536005514a"
+      "349b2edbc38a7711cc7ee4d484744840"
     ],
     [
       "Test.HyperStack.mods_test2",
@@ -1780,7 +1780,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "cae799e6d5e0820ee6e6cad6471b3644"
+      "334eea7f26b3fc7f879bfbc93609224a"
     ],
     [
       "Test.HyperStack.test2",
@@ -1792,7 +1792,7 @@
         "haseqTest.HyperStack_Tm_refine_228e8c4be4c95d9efa1bfabc8d1080a2"
       ],
       0,
-      "e64fbff9e76bea760a0334979556a0e0"
+      "4f15961cc65de4db7ccf390a8e260906"
     ],
     [
       "Test.HyperStack.dc_elim",
@@ -1801,7 +1801,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "fbf37b9a7e3346a9d662783a9baaebe2"
+      "cba39d0aa039f6afd83fd3fe8c568298"
     ],
     [
       "Test.HyperStack.test_do_something",
@@ -1810,7 +1810,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d691ee9d4f3794f0678e3d0f9c8c2657"
+      "f256fa7361c43381f66329ecb2551190"
     ],
     [
       "Test.HyperStack.test_do_something_else",
@@ -1819,7 +1819,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "39eae3f4aa3ef7b25a6eab17e91bc6e8"
+      "56bb94e9e37e140998f6c8da4d6c29fa"
     ],
     [
       "Test.HyperStack.test_stack_with_long_lived",
@@ -1828,7 +1828,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d751432b4ce8658e03343faa7b72ce8a"
+      "e0445ec3bda2d11036459bb3813ca7d2"
     ],
     [
       "Test.HyperStack.test_to_be_stack_inlined",
@@ -1837,7 +1837,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "68d6db45d1057824f2843b24ba78650a"
+      "5c6f80582d924903447c0fb49a60f029"
     ],
     [
       "Test.HyperStack.with_frame",
@@ -1852,7 +1852,7 @@
         "refinement_interpretation_Test.HyperStack_Tm_refine_84acff27f7e89d6fa6a0f8d221b6aaf1"
       ],
       0,
-      "f55a870ba1b894561b55c7c24a8b26e8"
+      "6e6596475a82205043d67366f5ef8228"
     ],
     [
       "Test.HyperStack.test_with_frame",
@@ -1861,7 +1861,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "156567f33e20ba23f9ca78158e353089"
+      "8408bf893d102c90c4add41764cd7409"
     ],
     [
       "Test.HyperStack.mods_test2",
@@ -1877,7 +1877,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f45c74039e2bfff413fff24ad68b647e"
+      "1ad69961952a143e87bb1afb05c8c6c6"
     ]
   ]
 ]

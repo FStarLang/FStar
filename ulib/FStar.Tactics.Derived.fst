@@ -85,17 +85,11 @@ let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
 let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
-private
-let admit1' () : Tac unit =
-    exact (`(magic ()))
-
 let admit1 () : Tac unit =
-    print "Warning: Admitting goal";
-    admit1' ()
+    tadmit ()
 
 let admit_all () : Tac unit =
-    print "Warning: Admitting all goals";
-    let _ = repeat admit1' in
+    let _ = repeat tadmit in
     ()
 
 let skip_guard () : Tac unit =
@@ -117,7 +111,7 @@ private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
 let tcut (t:term) : Tac binder =
-    let tt = pack (Tv_App (`__cut) (t, Q_Explicit)) in
+    let tt = pack_ln (Tv_App (`__cut) (t, Q_Explicit)) in
     apply tt;
     intro ()
 
@@ -151,7 +145,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
     | [] ->
         fail "no assumption matches goal"
     | b::bs ->
-        let t = pack (Tv_Var (bv_of_binder b)) in
+        let t = pack_ln (Tv_Var (bv_of_binder b)) in
         or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
 
 let assumption () : Tac unit =
@@ -186,7 +180,7 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     | x_t::bs -> begin
         begin match term_as_formula (type_of_binder x_t) with
         | Comp (Eq _) lhs _ ->
-            begin match inspect lhs with
+            begin match inspect_ln lhs with
             | Tv_Var _ -> rewrite x_t
             | _ -> ()
             end
@@ -224,16 +218,16 @@ let grewrite' (t1 t2 eq : term) : Tac unit =
         fail "impossible"
 
 let mk_squash (t : term) : term =
-    let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
+    let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
     mk_e_app sq [t]
 
 let mk_sq_eq (t1 t2 : term) : term =
-    let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
+    let eq : term = pack_ln (Tv_FVar (pack_fv eq2_qn)) in
     mk_squash (mk_e_app eq [t1; t2])
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack (Tv_Var (bv_of_binder e))))
+    pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
 
 let focus (f : unit -> Tac 'a) : Tac 'a =
     let res, _ = divide 1 f idtac in

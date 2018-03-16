@@ -122,7 +122,7 @@ let unsquash (t:term) : Tac term =
     let v = `vbind in
     apply_lemma (mk_e_app v [t]);
     let b = intro () in
-    pack (Tv_Var (bv_of_binder b))
+    pack_ln (Tv_Var (bv_of_binder b))
 
 let squash_intro () : Tac unit =
     apply (`FStar.Squash.return_squash)

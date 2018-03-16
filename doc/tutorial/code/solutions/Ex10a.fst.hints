@@ -11,15 +11,6 @@
       "ede01c3accbea0fe828d70cb6ac23ae9"
     ],
     [
-      "Ex10a.uu___is_Readable",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d22514b5a92ae5405efc27c544721594"
-    ],
-    [
       "Ex10a.__proj__Readable__item___0",
       1,
       2,
@@ -30,16 +21,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "21a3d5b09a45b6f8a6d652dbe090c91d"
-    ],
-    [
-      "Ex10a.uu___is_Writable",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7656e2a55bdba402b28d795308a87ebe"
+      "42b468935ba1af47ad9527f9d4025cfd"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -52,7 +34,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "c8da441c9a27e6f20ad3415104b020c6"
+      "f85c9c889cece0d5d4b525fd92875691"
     ],
     [
       "Ex10a.canWrite",
@@ -61,7 +43,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "24dadcc0d789a9ff8e19d3af7a00a1b0"
+      "8ea183e163dbaa2528fdbbf95e8de439"
     ],
     [
       "Ex10a.canRead",
@@ -74,7 +56,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "8e293490d05f03f78465eb09e1db5c31"
+      "4c8cbf5f1a21c4140a5bc6b2f3ff7bf3"
     ],
     [
       "Ex10a.revoke",
@@ -83,7 +65,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "8bd2ff5630edc0876b525365aa89d6d2"
+      "abf6b3be8c84849772631cd5aa5694db"
     ],
     [
       "Ex10a.grant",
@@ -92,7 +74,7 @@
       1,
       [ "@query" ],
       0,
-      "884a0812bf76d99c22ac6beb29d4890c"
+      "cfe0c2c233e1d717d40228f301c60ddb"
     ],
     [
       "Ex10a.revoke",
@@ -124,7 +106,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "fbd251d7945e1770179266e8c91626e8"
+      "87edd46c7e7ae32eb7443beb9a2ce66e"
     ],
     [
       "Ex10a.safe_delete",
@@ -146,7 +128,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "a8166dfd2ac0937894377f06b78268fd"
+      "664b71cb2da5166017f616cd852a0613"
     ],
     [
       "Ex10a.test_acls",
@@ -175,7 +157,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "aae5d113870a8d8b8f5b6a72c02757fa"
+      "43f012091b627acea85129faa968a7bd"
     ],
     [
       "Ex10a.entry",
@@ -184,16 +166,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "4a080161bacec94c5f5bd40e282b94b5"
-    ],
-    [
-      "Ex10a.uu___is_Readable",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f519a372a80ae2c4745e57d2149d15ac"
+      "4458de9b77facfa922bf44611134204a"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -206,16 +179,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "3712ee21940816eb3b000096ee7a4d4d"
-    ],
-    [
-      "Ex10a.uu___is_Writable",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "980dfccffdb70c94f2174342e6bd354a"
+      "698e813f430b4f364092265421fdbc74"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -228,7 +192,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "219bab9bdc496268fa8b1772664fb7f3"
+      "8d8d760cd6a0bbc7935fbd714a885919"
     ],
     [
       "Ex10a.canWrite",
@@ -237,7 +201,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "91ebfa865d26513194c781fd2cc0c977"
+      "89a58d7c97c9112dc0502732541d5174"
     ],
     [
       "Ex10a.canRead",
@@ -250,7 +214,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "28c75ff53568374212035c12c30dc423"
+      "3c83d9441c0b5cebbe8b3e859b71a6a2"
     ],
     [
       "Ex10a.revoke",
@@ -259,7 +223,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "8b0635fb6452fef9d01e573fba8508a6"
+      "657c252218d79f0e3df49a4a20499241"
     ]
   ]
 ]

@@ -1,0 +1,32 @@
+[
+  "L+YÑ‰\u0017\u001f–OŽ&E²\u001ažš",
+  [
+    [
+      "Bane.big_phi",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "0dc6c09ea1c532075c5a3894eb8a1515"
+    ],
+    [
+      "Bane.repeat_or_fail",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "data_elim_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit",
+        "lemma_FStar.Pervasives.invertOption", "unit_typing"
+      ],
+      0,
+      "9f57e4790252b56b60fbcf194abedc40"
+    ]
+  ]
+]

@@ -2,24 +2,6 @@
   "s≥vö\u000e8o$\u0006ÇùöÙ3Á(",
   [
     [
-      "FStar.DM4F.IFC.uu___is_Low",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3131d99910282035d0ff343d50eff34d"
-    ],
-    [
-      "FStar.DM4F.IFC.uu___is_High",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "24de067063af2964497abf2b18358446"
-    ],
-    [
       "FStar.DM4F.IFC.bind_ifc",
       1,
       2,
@@ -39,7 +21,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "3e54344c9f231cdf33cd8a62de0dfc24"
+      "a1accc5b80803fc30023062c42729568"
     ],
     [
       "FStar.DM4F.IFC.join",
@@ -48,7 +30,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "90dba1e5d13e945d4f41973038de8588"
+      "3ff4e83cc424e8f86842d69f637179b6"
     ],
     [
       "FStar.DM4F.IFC.flows",
@@ -57,34 +39,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "56bd0000bb85add491c74d03e8c4de7c"
-    ],
-    [
-      "FStar.DM4F.IFC.write",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "be7a5409705c0e6ce4d635eba3e8f328"
-    ],
-    [
-      "FStar.DM4F.IFC.uu___is_Low",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1b08e25bd3f27b00c3e9c41bd39d1676"
-    ],
-    [
-      "FStar.DM4F.IFC.uu___is_High",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3c055b342f8163ce6359346c3ca06d8a"
+      "53eaed490b9a049a8598d5158b532e3d"
     ],
     [
       "FStar.DM4F.IFC.bind_ifc",
@@ -106,7 +61,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0d4205e5351141cce86a4e7641059b40"
+      "a13583669c7f0dff1d2a25334384c0af"
     ],
     [
       "FStar.DM4F.IFC.join",
@@ -115,7 +70,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "ac9d9f8ebe3eaf8996bb1d1dc1df5fe7"
+      "3b58a3887ca49ace1bba8941f6d18667"
     ],
     [
       "FStar.DM4F.IFC.flows",
@@ -124,16 +79,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-      "cab55b682dab1813eb6d6c60c628613e"
-    ],
-    [
-      "FStar.DM4F.IFC.write",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f9fa314412eae2c28dd084f0d2064437"
+      "8d2827952ed6f69652fef86cf59e348b"
     ]
   ]
 ]
