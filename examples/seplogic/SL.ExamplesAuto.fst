@@ -156,8 +156,8 @@ let rec sl (i:int) : Tac unit =
 
   | Frame ta twp tpost tm ->
         let fp_refs = footprint_of twp in
-        // dump ("fp_refs="^ FStar.String.concat ","
-        //   (List.Tot.map term_to_string fp_refs));
+        dump ("fp_refs="^ FStar.String.concat ","
+           (List.Tot.map term_to_string fp_refs));
         let fp = FStar.Tactics.Util.fold_left
                    (fun a t -> if term_eq a (`emp) then t
                                else mk_e_app (`( <*> )) [a;t])
@@ -165,7 +165,7 @@ let rec sl (i:int) : Tac unit =
                    (FStar.Tactics.Util.map
                      (fun t -> let u = fresh_uvar (Some (`int)) in
                                mk_e_app (`( |> )) [t; u]) fp_refs) in
-        // dump ("m0=" ^ term_to_string fp);
+         dump ("m0=" ^ term_to_string fp);
         let env = cur_env () in
         let frame = uvar_env env (Some (`memory)) in
         let tp : term = mk_app (`eq2)
@@ -174,17 +174,17 @@ let rec sl (i:int) : Tac unit =
                (tm,                            Q_Explicit)] in
         let new_goal = mk_e_app (pack_fv' squash_qn) [tp] in
         let heq = tcut new_goal in
-        // dump "with new goal:";
+         dump "with new goal:";
         flip();
-        // dump ("before canon_monoid");
+        dump ("before canon_monoid");
         canon_monoid_sl fp_refs;
-        // dump ("after canon_monoid");
+         dump ("after canon_monoid");
         trefl();
-        // dump ("after trefl");
+         dump ("after trefl");
         apply_lemma (mk_e_app (`frame_wp_lemma)
                        [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
         FStar.Tactics.split(); smt(); //definedness
-        // dump ("after frame lemma");
+         dump ("after frame lemma");
         sl(i + 1)
 
 let __elim_exists_as_forall
@@ -221,6 +221,13 @@ let sl_tac () : Tac unit =
    // dump "after prelude";
    sl(0)
 
+let test (r1 r2:ref int) =
+  (!r1)
+
+  <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m))
+
+  by sl_tac
+
 (*
  * two commands
  *)
@@ -240,11 +247,8 @@ let read_write (r1 r2:ref int) =
  * four commands
  *)
 let swap (r1 r2:ref int)
+     : STATE unit (fun post m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x)))) by sl_tac
   = (let x = !r1 in
      let y = !r2 in
      r1 := y;
      r2 := x)
-
-     <: STATE unit (fun post m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x))))
-
-     by sl_tac
