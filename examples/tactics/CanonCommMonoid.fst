@@ -5,6 +5,7 @@ open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
+open CanonCommSwaps
 
 (* An expression canonizer for commutative monoids.
    Inspired by:
@@ -102,19 +103,6 @@ let permute_correct (#b:Type) (p:permute b) =
 // sufficient condition:
 // permutation has to be expressible as swaps of adjacent list elements
 
-let swap (n:nat) :Type = x:nat{x < n-1}
-
-let rec apply_swap_aux (#a:Type) (n:nat) (xs:list a) (s:swap (length xs + n)) :
-    Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases xs) =
-  match xs with
-  | [] | [_] -> xs
-  | x1 :: x2 :: xs' -> if n = (s <: nat)
-                       then x2 :: x1 :: xs'
-                       else x1 :: apply_swap_aux (n+1) (x2 :: xs') s
-
-let apply_swap (#a:Type) = apply_swap_aux #a 0
-
 let rec apply_swap_aux_correct (#a #b:Type) (n:nat) (m:cm a) (vm:vmap a b)
                            (xs:list var) (s:swap (length xs + n)) :
     Lemma (requires True)
@@ -137,13 +125,6 @@ let apply_swap_correct (#a #b:Type) (m:cm a) (vm:vmap a b)
     Lemma (requires True)
           (ensures (xsdenote m vm xs == xsdenote m vm (apply_swap xs s)))
           (decreases xs) = apply_swap_aux_correct 0 m vm xs s
-
-let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs))) :
-    Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases ss) =
-  match ss with
-  | [] -> xs
-  | s::ss' -> apply_swaps (apply_swap xs s) ss'
 
 let rec apply_swaps_correct (#a #b:Type) (m:cm a) (vm:vmap a b)
                             (xs:list var) (ss:list (swap (length xs))):
@@ -173,11 +154,6 @@ let permute_via_swaps_correct
   (#b:Type) (p:permute b) (pvs:permute_via_swaps p) : permute_correct p =
      permute_via_swaps_correct_aux p pvs
 
-// TODO In the general case, an arbitrary permutation can be done via
-// swaps. To show this we could for instance, write the permutation as
-// a sequence of transpositions and then each transposition as a
-// series of swaps.
-
 (***** Sorting variables is a correct permutation
        (since it can be done by swaps) *)
 
@@ -187,12 +163,10 @@ let permute_via_swaps_correct
 let sort : permute unit =
   (fun a vm -> List.Tot.sortWith #nat (compare_of_bool (<)))
 
-// TODO: Show that sorting is a correct way to permute things;
-// from sortWith_permutation we get
-// (ensures (forall x. count x l = count x (sortWith f l)))
-// but need instead a sequence of swaps of adjacent elements
-// - can probably use bubble sort to show this special case
+let sortWith (#b:Type) (f:nat -> nat -> int) : permute b =
+  (fun a vm -> List.Tot.sortWith #nat f)
 
+(*
 let rec bubble_sort_with_aux1 (#a:Type) (f:(a -> a -> Tot int)) (xs:list a) :
     Pure (list a) (requires True)
                   (ensures (fun zs -> length xs == length zs))
@@ -210,15 +184,33 @@ let rec bubble_sort_with_aux2 (#a:Type) (n:nat) (f:(a -> a -> Tot int))
   else bubble_sort_with_aux2 (n+1) f (bubble_sort_with_aux1 f xs)
 
 let bubble_sort_with (#a:Type) = bubble_sort_with_aux2 #a 0
+*)
 
-let sort_via_swaps (#a:Type) (vm : vmap a unit)  (xs:list var) :
-  Lemma (exists ss. sort a vm xs == apply_swaps xs ss) = admit() // TODO
+let sort_via_swaps (#a:Type) (vm : vmap a unit) (xs:list var) :
+    Lemma (exists ss. sort a vm xs == apply_swaps xs ss) =
+  List.Tot.Properties.sortWith_permutation #nat (compare_of_bool (<)) xs;
+  let ss = equal_counts_implies_swaps #nat xs (sort a vm xs) in
+  assert (sort a vm xs == apply_swaps xs ss)
+
+let sortWith_via_swaps (#a #b:Type) (f:nat -> nat -> int) (vm : vmap a b) (xs:list var) :
+    Lemma (exists ss. sortWith #b f a vm xs == apply_swaps xs ss) =
+  List.Tot.Properties.sortWith_permutation #nat f xs;
+  let ss = equal_counts_implies_swaps #nat xs (sortWith #b f a vm xs) in
+  assert (sortWith #b f a vm xs == apply_swaps xs ss)
 
 let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
   permute_via_swaps_correct #unit (fun a -> sort a) (fun #a vm -> sort_via_swaps vm) m vm xs
 
+let rec sortWith_correct_aux (#a #b:Type) (f:nat -> nat -> int) (m:cm a) (vm:vmap a b) (xs:list var) :
+    Lemma (xsdenote m vm xs == xsdenote m vm (sortWith #b f a vm xs)) =
+  permute_via_swaps_correct #b (fun a -> sortWith #b f a) (fun #a vm -> sortWith_via_swaps f vm) m vm xs
+
 let sort_correct : permute_correct #unit sort = (fun #a -> sort_correct_aux #a)
+
+let sortWith_correct (#b:Type) (f:nat -> nat -> int) :
+  permute_correct #b (sortWith #b f) =
+  (fun #a -> sortWith_correct_aux #a #b f)
 
 (***** Canonicalization tactics *)
 
@@ -308,16 +300,16 @@ let canon_monoid_with
           //     "; r2=" ^ exp_to_string r2);
           dump ("vm =" ^ term_to_string (quote vm));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
-          dump ("before =" ^ term_to_string (norm_term [delta;primops]
-            (quote (mdenote m vm r1 == mdenote m vm r2))));
-          dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-            (quote (xsdenote m vm (canon vm p r1) ==
-                    xsdenote m vm (canon vm p r2)))));
+          // dump ("before =" ^ term_to_string (norm_term [delta;primops]
+          //   (quote (mdenote m vm r1 == mdenote m vm r2))));
+          // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
+          //   (quote (xsdenote m vm (canon vm p r1) ==
+          //           xsdenote m vm (canon vm p r2)))));
           apply (quote (monoid_reflect #a #b p pc));
           let q = quote p in
-          dump ("before unfold, p = " ^ term_to_string q);          
+          // dump ("before unfold, p = " ^ term_to_string q);          
           unfold_topdown q;
-          dump ("after unfold");
+          // dump ("after unfold");
           norm [delta_only [// term_to_string (quote p);
                             "CanonCommMonoid.canon";
                             "CanonCommMonoid.xsdenote";
@@ -370,9 +362,9 @@ let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (const_compare vm) xs
 
 let canon_monoid_const #a cm = canon_monoid_with bool is_const false
-  (fun a -> const_last a) (fun #a m vm xs -> admit()) #a cm
-(* TODO Try to reduce the number of admits by further generalizing
-        the sort stuff at the top (from `unit` to `a`). *)
+  (fun a -> const_last a)
+//  (fun #a m vm xs -> admit ()) #a cm
+  (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
 
 let lem1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
@@ -402,8 +394,10 @@ let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (special_compare vm) xs
 
 let canon_monoid_special (ts:list term) =
-  canon_monoid_with bool (is_special ts) false (fun a -> special_first a)
-                    (fun #a m vm xs -> admit())
+  canon_monoid_with bool (is_special ts) false
+    (fun a -> special_first a)
+//    (fun #a m vm xs -> admit ())
+    (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
 
 let lem2 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
