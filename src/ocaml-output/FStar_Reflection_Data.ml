@@ -552,6 +552,12 @@ let (ref_Unk : refl_constant) = fstar_refl_data_const "Unk"
 let (ref_E_Unit : refl_constant) = fstar_refl_data_const "Unit" 
 let (ref_E_Var : refl_constant) = fstar_refl_data_const "Var" 
 let (ref_E_Mult : refl_constant) = fstar_refl_data_const "Mult" 
+let (t_exp : FStar_Syntax_Syntax.term) =
+  let uu____1151 =
+    FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"]
+      FStar_Range.dummyRange
+     in
+  FStar_Syntax_Syntax.tconst uu____1151 
 let (ord_Lt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange 
 let (ord_Eq_lid : FStar_Ident.lident) =
