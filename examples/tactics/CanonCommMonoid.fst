@@ -72,8 +72,8 @@ let rec flatten_correct_aux (#a #b:Type) (m:cm a) (vm:vmap a b)
     Lemma (xsdenote m vm (xs1 @ xs2) == CM?.mult m (xsdenote m vm xs1)
                                                    (xsdenote m vm xs2)) =
   match xs1 with
-  | [] -> CM?.left_unitality m (xsdenote m vm xs2)
-  | [x] -> if (Nil? xs2) then CM?.right_unitality m (select x vm)
+  | [] -> CM?.identity m (xsdenote m vm xs2)
+  | [x] -> if (Nil? xs2) then right_identity m (select x vm)
   | x::xs1' -> (CM?.associativity m (select x vm)
                       (xsdenote m vm xs1') (xsdenote m vm xs2);
                 flatten_correct_aux m vm xs1' xs2)
@@ -216,7 +216,7 @@ let sort_via_swaps (#a:Type) (vm : vmap a unit)  (xs:list var) :
 
 let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
-  permute_via_swaps_correct #unit sort (fun #a vm -> sort_via_swaps vm) m vm xs
+  permute_via_swaps_correct #unit (fun a -> sort a) (fun #a vm -> sort_via_swaps vm) m vm xs
 
 let sort_correct : permute_correct #unit sort = (fun #a -> sort_correct_aux #a)
 
@@ -332,8 +332,8 @@ let canon_monoid_with
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 
-let canon_monoid = canon_monoid_with unit (fun _ -> ()) ()
-                                     sort (fun #a -> sort_correct #a)
+let canon_monoid #a cm = canon_monoid_with unit (fun _ -> ()) ()
+                                     (fun a -> sort a) (fun #a -> sort_correct #a) #a cm
 
 (***** Examples *)
 
@@ -358,8 +358,8 @@ let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (const_compare vm) xs
 
-let canon_monoid_const = canon_monoid_with bool is_const false
-  const_last (fun #a m vm xs -> admit())
+let canon_monoid_const #a cm = canon_monoid_with bool is_const false
+  (fun a -> const_last a) (fun #a m vm xs -> admit()) #a cm
 (* TODO Try to reduce the number of admits by further generalizing
         the sort stuff at the top (from `unit` to `a`). *)
 
@@ -391,7 +391,7 @@ let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (special_compare vm) xs
 
 let canon_monoid_special (ts:list term) =
-  canon_monoid_with bool (is_special ts) false special_first
+  canon_monoid_with bool (is_special ts) false (fun a -> special_first a)
                     (fun #a m vm xs -> admit())
 
 let lem2 (a b c d : int) =

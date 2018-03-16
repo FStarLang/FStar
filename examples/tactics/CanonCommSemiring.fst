@@ -1,4 +1,5 @@
 module CanonCommSemiring
+#reset-options
 
 (*
 Commutative semiring (a ring with commutative multiplication and without an additive inverse)
@@ -24,7 +25,8 @@ module CCM = CanonCommMonoid
 
 irreducible let canon_attr = ()
 
-[@canon_attr] unfold let cm_op = CM?.mult
+[@canon_attr]
+unfold let cm_op = CM?.mult
 
 (***** Commutative semirings *)
 
@@ -40,6 +42,7 @@ let distribute_right_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   let ( * ) = cm_op cm_mult in
   x:a -> y:a -> z:a -> Lemma ((x + y) * z == x * z + y * z)
 
+[@canon_attr]
 unopteq
 type cr (a:Type) =
   | CR :
@@ -71,6 +74,8 @@ let rec exp_to_string (e:exp) : string =
 (***** Expression denotation *)
 
 unfold let vmap = CCM.vmap
+
+[@canon_attr]
 unfold let select = CCM.select
 
 [@canon_attr]
@@ -239,34 +244,36 @@ let reification (b:Type) (f:term -> Tac b) (def:b) (#a:Type) (r:cr a) (ts:list t
   (List.rev es, vm)
 
 let canon_norm () : Tac unit =
-            norm [
-              primops;
-              iota;
-              zeta;
-//              delta_attr canon_attr;
-              delta
-              (*
-              delta_only [
-                // term_to_string (quote p);
-                "CanonCommMonoid.canon";
-                "CanonCommMonoid.xsdenote";
-                "CanonCommMonoid.flatten";
-                "CanonCommMonoid.select";
-                "CanonCommMonoid.select_extra";
-                "FStar.List.Tot.Base.assoc";
-                "FStar.Pervasives.Native.fst";
-                "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                "FStar.List.Tot.Base.op_At";
-                "FStar.List.Tot.Base.append";
-                "FStar.List.Tot.Base.sortWith";
-                "FStar.List.Tot.Base.partition";
-                "FStar.List.Tot.Base.bool_of_compare";
-                "FStar.List.Tot.Base.compare_of_bool";
-                "CanonCommMonoid.const_compare";
-                "CanonCommMonoid.special_compare";
-              ]
-              *)
-            ]
+  norm [
+    primops;
+    iota;
+    zeta;
+    delta_attr canon_attr;
+    delta_only [
+      "FStar.Algebra.CommMonoid.int_plus_cm";
+      "FStar.Algebra.CommMonoid.int_multiply_cm";
+      "FStar.Algebra.CommMonoid.__proj__CM__item__mult";
+      "CanonCommSemiring.__proj__CR__item__cm_add";
+      "CanonCommSemiring.__proj__CR__item__cm_mult";
+      "CanonCommMonoid.canon";
+      "CanonCommMonoid.xsdenote";
+      "CanonCommMonoid.flatten";
+      "CanonCommMonoid.select";
+      "CanonCommMonoid.select_extra";
+      "CanonCommMonoid.const_last";
+      "CanonCommMonoid.const_compare";
+      "CanonCommMonoid.special_compare";
+      "FStar.List.Tot.Base.assoc";
+      "FStar.Pervasives.Native.fst";
+      "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+      "FStar.List.Tot.Base.op_At";
+      "FStar.List.Tot.Base.append";
+      "FStar.List.Tot.Base.sortWith";
+      "FStar.List.Tot.Base.partition";
+      "FStar.List.Tot.Base.bool_of_compare";
+      "FStar.List.Tot.Base.compare_of_bool";
+    ]
+  ]
 
 let canon_semiring_with
     (b:Type) (f:term -> Tac b) (def:b) (p:permute b) (pc:permute_correct p)
@@ -366,7 +373,9 @@ val lemma_poly_multiply : n:int -> p:int -> r:int -> h:int -> r0:int -> r1:int -
   )
   (ensures (h * r) % p == hh % p)
 
+// These assumptions are proven in https://github.com/project-everest/vale/blob/fstar/src/lib/math/Math.Lemmas.Int_i.fsti
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
+assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
 let lemma_poly_multiply n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
   let r1_4 = r1 / 4 in
@@ -381,3 +390,23 @@ let lemma_poly_multiply n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
     (fun _ -> canon_semiring int_cr);
   ()
 
+val lemma_poly_reduce : n:int -> p:int -> h:int -> h2:int -> h10:int -> c:int -> hh:int -> Lemma
+  (requires
+    p > 0 /\
+    4 * (n * n) == p + 5 /\
+    h2 == h / (n * n) /\
+    h10 == h % (n * n) /\
+    c == (h2 / 4) + (h2 / 4) * 4 /\
+    hh == h10 + c + (h2 % 4) * (n * n))
+  (ensures h % p == hh % p)
+
+let lemma_poly_reduce n p h h2 h10 c hh =
+  let h2_4 = h2 / 4 in
+  let h2_m = h2 % 4 in
+  let h_expand = h10 + (h2_4 * 4 + h2_m) * (n * n) in
+  let hh_expand = h10 + (h2_m) * (n * n) + h2_4 * 5 in
+  lemma_div_mod h (n * n);
+  modulo_addition_lemma hh_expand p h2_4;
+  assert_by_tactic (h_expand == hh_expand + h2_4 * (n * n * 4 + (-5)))
+    (fun _ -> canon_semiring int_cr);
+  ()
