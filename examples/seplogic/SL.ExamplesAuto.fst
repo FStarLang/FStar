@@ -2,14 +2,15 @@ module SL.ExamplesAuto
 open SepLogic.Heap
 open SL.Effect
 
+open FStar.Algebra.CommMonoid
 open FStar.Tactics
-open FStar.PatternMatching
+open FStar.Tactics.PatternMatching
 open CanonCommMonoid
 open FStar.Reflection
 open FStar.List
 
 // --using_facts_from '* -FStar.Tactics -FStar.Reflection'
-// #reset-options "--use_two_phase_tc false --__temp_fast_implicits"
+#reset-options "--use_two_phase_tc false --__temp_fast_implicits"
 
 
 let memory_cm : cm memory =
@@ -164,11 +165,11 @@ let rec sl (i:int) : Tac unit =
         let fp_refs = footprint_of twp in
         // dump ("fp_refs="^ FStar.String.concat ","
         //   (List.Tot.map term_to_string fp_refs));
-        let fp = FStar.Tactics.Derived.fold_left
+        let fp = FStar.Tactics.Util.fold_left
                    (fun a t -> if term_eq a (`emp) then t
                                else mk_e_app (`( <*> )) [a;t])
                    (`emp)
-                   (FStar.Tactics.Derived.map
+                   (FStar.Tactics.Util.map
                      (fun t -> let u = fresh_uvar (Some (`int)) in
                                mk_e_app (`( |> )) [t; u]) fp_refs) in
         // dump ("m0=" ^ term_to_string fp);

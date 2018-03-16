@@ -11,4 +11,4 @@ shallow: SepLogic.Heap.uver Shallow.uver SL.Effect.uver example
 
 #not worrying about two phases or extracted interfaces right now
 example:
-	$(FSTAR) --use_two_phase_tc false --record_hints --use_hints SL.Examples.fst
+	$(FSTAR) --use_two_phase_tc false --record_hints --use_hints SL.Examples.fst SL.ExamplesAuto.fst
