@@ -1,7 +1,7 @@
 module SL.ExamplesAuto
+
 open SepLogic.Heap
 open SL.Effect
-
 open FStar.Algebra.CommMonoid
 open FStar.Tactics
 open FStar.Tactics.PatternMatching
@@ -12,9 +12,8 @@ open FStar.List
 // --using_facts_from '* -FStar.Tactics -FStar.Reflection'
 #reset-options "--use_two_phase_tc false --__temp_fast_implicits"
 
-
 let memory_cm : cm memory =
-  CM emp (<*>) (fun x -> ()) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())
+  CM emp (<*>) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())
 
 // Fails when called
 // (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
@@ -45,12 +44,7 @@ let eexists (a:Type) (t:unit -> Tac a) : Tac a =
   apply_lemma (`FStar.Classical.exists_intro); later(); norm[];
   fst (divide (ngoals()-1) t dismiss)
 
-let frame_wp_lemma (m0 m1:memory) (a:Type) (wp:st_wp a)
-    (f_post:memory -> post a) : Lemma
-  (requires (defined (m0 <*> m1) /\ wp (f_post m1) m0))
-  (ensures (frame_wp wp f_post (m0 <*> m1))) = ()
-
-let frame_wp_lemma_with_squashes (m m0 m1:memory) (a:Type) (wp:st_wp a)
+let frame_wp_lemma (m m0 m1:memory) (a:Type) (wp:st_wp a)
     (f_post:memory -> post a)
     (_ : (squash ((m0 <*> m1) == m)))
     (_ : (squash (defined m /\ wp (f_post m1) m0))) :
@@ -73,7 +67,7 @@ let sort_sl (a:Type) (vm:vmap a string) (xs:list var) =
 
 let canon_monoid_sl fp =
   canon_monoid_with string (pointsto_to_string fp) ""
-                           sort_sl (fun #a m vm xs -> admit())
+                            sort_sl (fun #a m vm xs -> admit())
 
 let binder_to_term (b : binder) : Tac term =
   let bv, _ = inspect_binder b in pack (Tv_Var bv)
@@ -133,8 +127,7 @@ let unfold_first_occurrence (name:string) : Tac unit =
   topdown_rewrite should_rewrite rewrite
 
 let rec sl (i:int) : Tac unit =
-  dump ("SL :" ^ string_of_int i);
-//  admit();
+  // dump ("SL :" ^ string_of_int i);
   match peek_cmd () with
   | Unknown -> smt ()
 
@@ -188,21 +181,14 @@ let rec sl (i:int) : Tac unit =
         // dump ("after canon_monoid");
         trefl();
         // dump ("after trefl");
-        // let fp : term = norm_term [] fp in
-        // let frame : term = norm_term [] frame in
-        // dump ("m0/fp=" ^ term_to_string fp ^ "\n" ^
-        //       "m1/frame=" ^ term_to_string frame ^ "\n" ^
-        //       "a/ta=" ^ term_to_string ta ^ "\n" ^
-        //       "wp/twp=" ^ term_to_string twp ^ "\n" ^
-        //       "f_post/tpost=" ^ term_to_string tpost);
-        apply_lemma (mk_e_app (`frame_wp_lemma_with_squashes)
+        apply_lemma (mk_e_app (`frame_wp_lemma)
                        [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
         FStar.Tactics.split(); smt(); //definedness
         // dump ("after frame lemma");
         sl(i + 1)
 
 let prelude' () : Tac unit =
-   dump "start";
+   // dump "start";
    norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
    mapply (`FStar.Squash.return_squash);
    let post = forall_intro () in
@@ -214,9 +200,9 @@ let prelude' () : Tac unit =
    rewrite hm0; clear hm0;
    ignore (implies_intro() )
 
-let sl' () : Tac unit =
+let sl_tac () : Tac unit =
    prelude'();
-   dump "after prelude";
+   // dump "after prelude";
    sl(0)
 
 (*
@@ -226,13 +212,13 @@ let write_read (r1 r2:ref int) (x y:int) =
   (r1 := 2;
    !r2)
   <: STATE int (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
-  by sl'
+  by sl_tac
 
 let read_write (r1 r2:ref int) (x y:int) =
   (let x = !r1 in
    r2 := x)
   <: STATE unit (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
-  by sl'
+  by sl_tac
 
 (*
  * four commands
@@ -245,4 +231,4 @@ let swap (r1 r2:ref int) (x y:int)
 
      <: STATE unit (fun post m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x))))
 
-     by sl'
+     by sl_tac
