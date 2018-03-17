@@ -12,16 +12,14 @@ let rec tauto (): Tac unit =
       trivial ()
     );
     P.gpm (fun (a b: Type0) (g: P.goal (squash (a /\ b))) ->
-      split ();
-      tauto ()
+      split ()
     );
     P.gpm (fun (a b: Type0) (g: P.goal (squash (a \/ b))) ->
       (fun () -> left (); tauto ()) `or_else`
       (fun () -> right (); tauto ())
     );
     P.gpm (fun (a b: Type0) (g: P.goal (squash (a ==> b))) ->
-      P.implies_intro' ();
-      tauto ()
+      P.implies_intro' ()
     );
     P.gpm (fun (a: Type0) (h: P.hyp a) (g: P.goal (squash a)) ->
       P.exact_hyp a h

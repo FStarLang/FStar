@@ -119,6 +119,8 @@ let embed_pair (embed_a:embedder<'a>) (t_a:term)
                 None
                 rng
 
+let embed_tuple2 = embed_pair
+
 let __unembed_pair (w:bool)
                    (unembed_a:unembedder<'a>)
                    (unembed_b:unembedder<'b>)
@@ -137,6 +139,9 @@ let __unembed_pair (w:bool)
 
 let unembed_pair      ul ur t = __unembed_pair true  ul ur t
 let unembed_pair_safe ul ur t = __unembed_pair false ul ur t
+
+let unembed_tuple2 = unembed_pair
+let unembed_tuple2_safe = unembed_pair_safe
 
 let embed_option (embed_a:embedder<'a>) (typ:term) (rng:range) (o:option<'a>) : term =
     match o with

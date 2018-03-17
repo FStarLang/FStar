@@ -222,6 +222,19 @@ let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     | Unk ->
         { ref_Unk.t with pos = rng }
 
+let rec embed_exp (rng:Range.range) (e:exp) : term =
+    let r =
+    match e with
+    | Unit    -> ref_E_Unit.t
+    | Var i ->
+        S.mk_Tm_app ref_E_Var.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
+                    None Range.dummyRange
+    | Mult (e1, e2) ->
+        S.mk_Tm_app ref_E_Mult.t [S.as_arg (embed_exp rng e1); S.as_arg (embed_exp rng e2)]
+                    None Range.dummyRange
+    in { r with pos = rng }
+
+
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------ UNEMBEDDINGS ------------------------------------ *)
 (* -------------------------------------------------------------------------------------- *)
@@ -436,6 +449,26 @@ let unembed_bv_view (t : term) : option<bv_view> =
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv_view: %s" (Print.term_to_string t)));
         None
+
+let rec unembed_exp (t: term) : option<exp> =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_E_Unit.lid ->
+        Some Unit
+
+    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_E_Var.lid ->
+        BU.bind_opt (unembed_int i) (fun i ->
+        Some <| Var i)
+
+    | Tm_fvar fv, [(e1, _); (e2, _)] when S.fv_eq_lid fv ref_E_Mult.lid ->
+        BU.bind_opt (unembed_exp e1) (fun e1 ->
+        BU.bind_opt (unembed_exp e2) (fun e2 ->
+        Some <| Mult (e1, e2)))
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded exp: %s" (Print.term_to_string t)));
+        None
+
 
 let unembed_comp_view (t : term) : option<comp_view> =
     let t = U.unascribe t in
