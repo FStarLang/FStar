@@ -504,6 +504,16 @@ and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<
 and unembed_tactic_0'<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : option<(tac<'b>)> = //JUST FSHARP
     Some <| unembed_tactic_0 unembed_b embedded_tac_b
 
+//IN F*: let unembed_tactic_1_alt (#a:Type) (#b:Type) (arg:embedder a) (res:unembedder b) (f:term) : option (a -> tac b) =
+let unembed_tactic_1_alt<'a,'b> (arg:embedder<'a>) (res:unembedder<'b>) (f:term) : option<('a -> tac<'b>)> = //JUST FSHARP
+    Some (fun x ->
+      let rng = FStar.Range.dummyRange  in
+      let x_tm = arg rng x in
+      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      let app = U.mk_reify app in
+      unembed_tactic_0 res app)
+
+
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun (r, _, uv, _, ty, rng) ->
                 (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
