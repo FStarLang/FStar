@@ -1105,12 +1105,10 @@ let rec (desugar_data_pat :
                    let uu____2699 =
                      let uu____2704 =
                        FStar_Util.format1
-                         "Non-linear patterns are not permitted. %s appears more than once in this pattern."
+                         "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
                          (first_nonlinear_var.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
                         in
-                     (FStar_Errors.Fatal_NonLinearPatternNotPermitted,
-                       uu____2704)
-                      in
+                     (FStar_Errors.Fatal_IncoherentPatterns, uu____2704)  in
                    FStar_Errors.raise_error uu____2699 r)
                  in
               FStar_List.iter aux ps
