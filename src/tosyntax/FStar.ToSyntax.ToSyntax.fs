@@ -465,7 +465,7 @@ let check_fields env fields rg =
 
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
-let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) = 
+let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
   let check_linear_pattern_variables pats r =
     // returns the set of pattern variables
     let rec pat_vars p = match p.v with
@@ -481,10 +481,10 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
             else
               let duplicate_bv = List.hd (BU.set_elements intersection) in
               raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
-                            BU.format1 
+                            BU.format1
                               "Non-linear patterns are not permitted. %s appears more than once in this pattern."
                                (duplicate_bv.ppname.idText) )
-                            
+
                           r
         in
         List.fold_left aux S.no_names pats
@@ -493,16 +493,16 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
     match pats with
     | [] -> ()
     | [p] -> pat_vars p |> ignore
-    | p::ps -> 
+    | p::ps ->
       let pvars = pat_vars p in
       let aux p =
         if BU.set_eq pvars (pat_vars p) then () else
         let nonlinear_vars = BU.set_symmetric_difference pvars (pat_vars p) in
         let first_nonlinear_var = List.hd (BU.set_elements nonlinear_vars) in
-        raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
-                      BU.format1 
-                        "Non-linear patterns are not permitted. %s appears more than once in this pattern."
-                         (first_nonlinear_var.ppname.idText) ) 
+        raise_error ( Errors.Fatal_IncoherentPatterns,
+                      BU.format1
+                        "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
+                         (first_nonlinear_var.ppname.idText) )
                     r
       in
       List.iter aux ps
