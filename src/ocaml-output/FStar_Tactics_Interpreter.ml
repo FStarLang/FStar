@@ -583,7 +583,7 @@ let mk_tactic_interpretation_6 :
           fun unembed_c  ->
             fun unembed_d  ->
               fun unembed_e  ->
-                fun unembed_e1  ->
+                fun unembed_f  ->
                   fun embed_r  ->
                     fun t_r  ->
                       fun nm  ->
@@ -630,13 +630,13 @@ let mk_tactic_interpretation_6 :
                                                        uu____1767
                                                        (fun d1  ->
                                                           let uu____1775 =
-                                                            unembed_e1 e  in
+                                                            unembed_e e  in
                                                           FStar_Util.bind_opt
                                                             uu____1775
                                                             (fun e1  ->
                                                                let uu____1783
                                                                  =
-                                                                 unembed_e1 f
+                                                                 unembed_f f
                                                                   in
                                                                FStar_Util.bind_opt
                                                                  uu____1783
@@ -645,10 +645,8 @@ let mk_tactic_interpretation_6 :
                                                                     let uu____1795
                                                                     =
                                                                     t a1 b1
-                                                                    c1 d1
-                                                                    (Obj.magic
-                                                                    e1) f1
-                                                                     in
+                                                                    c1 d1 e1
+                                                                    f1  in
                                                                     FStar_Tactics_Basic.run
                                                                     uu____1795
                                                                     ps1  in
