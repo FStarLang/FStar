@@ -1,5 +1,5 @@
 [
-  "+sÉ\n\u001b¯√ö¢÷*Úkqç≤",
+  "c\u0001ÔÑµN˜æVúF‡∆ãœv",
   [
     [
       "Simplifier.goal_is_true",
@@ -11,7 +11,41 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "53eeb2112dd85c260394f4cd41f8769e"
+      "bddeb2588f5e4cf4c349fc3f130f051b"
+    ],
+    [
+      "Simplifier.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel", "equation_FStar.UInt32.n",
+        "equation_Prims.l_True", "function_token_typing_FStar.UInt32.n",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0,
+      "7fc440a87e8a9405801a8dc9fbdff833"
+    ],
+    [
+      "Simplifier.test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel", "equation_FStar.UInt32.n",
+        "equation_Prims.l_True", "function_token_typing_FStar.UInt32.n",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0,
+      "7b3565827a4b3f04a080b8973f472b31"
     ]
   ]
 ]
