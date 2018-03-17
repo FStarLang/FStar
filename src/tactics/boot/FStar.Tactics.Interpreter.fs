@@ -196,7 +196,7 @@ let mk_tactic_interpretation_6 (reflect:bool)
                                (unembed_c:unembedder<'c>)
                                (unembed_d:unembedder<'d>)
                                (unembed_e:unembedder<'e>)
-                               (unembed_e:unembedder<'f>)
+                               (unembed_f:unembedder<'f>)
                                (embed_r:embedder<'r>) (t_r:typ)
                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
   match args with
@@ -212,7 +212,7 @@ let mk_tactic_interpretation_6 (reflect:bool)
     BU.bind_opt (unembed_c c) (fun c ->
     BU.bind_opt (unembed_d d) (fun d ->
     BU.bind_opt (unembed_e e) (fun e ->
-    BU.bind_opt (unembed_e f) (fun f ->
+    BU.bind_opt (unembed_f f) (fun f ->
     let res = run (t a b c d e f) ps in
     Some (E.embed_result embed_r t_r (N.psc_range psc) res))))))))
   | _ ->
