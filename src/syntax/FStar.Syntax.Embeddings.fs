@@ -119,7 +119,8 @@ let embed_pair (embed_a:embedder<'a>) (t_a:term)
                 None
                 rng
 
-let embed_tuple2 = embed_pair
+(* Need eta expansion for F# *)
+let embed_tuple2 ea ta eb tb rng x = embed_pair ea ta eb tb rng x
 
 let __unembed_pair (w:bool)
                    (unembed_a:unembedder<'a>)
@@ -137,11 +138,11 @@ let __unembed_pair (w:bool)
         Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
         None
 
-let unembed_pair      ul ur t = __unembed_pair true  ul ur t
-let unembed_pair_safe ul ur t = __unembed_pair false ul ur t
-
-let unembed_tuple2 = unembed_pair
-let unembed_tuple2_safe = unembed_pair_safe
+(* Need eta expansion for F# *)
+let unembed_pair        ul ur t = __unembed_pair true  ul ur t
+let unembed_pair_safe   ul ur t = __unembed_pair false ul ur t
+let unembed_tuple2      ul ur t = unembed_pair ul ur t
+let unembed_tuple2_safe ul ur t = unembed_pair_safe ul ur t
 
 let embed_option (embed_a:embedder<'a>) (typ:term) (rng:range) (o:option<'a>) : term =
     match o with
