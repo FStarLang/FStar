@@ -466,20 +466,46 @@ let check_fields env fields rg =
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
-  let check_linear_pattern_variables (p:Syntax.pat) r =
-    let rec pat_vars (p:Syntax.pat) = match p.v with
+  let check_linear_pattern_variables pats r =
+    // returns the set of pattern variables
+    let rec pat_vars p = match p.v with
       | Pat_dot_term _
       | Pat_wild _
       | Pat_constant _ -> S.no_names
       | Pat_var x -> BU.set_add x S.no_names
       | Pat_cons(_, pats) ->
-        pats |> List.fold_left (fun out (p, _) ->
-                                  if BU.set_is_empty (BU.set_intersect (pat_vars p) out)
-                                  then BU.set_union out (pat_vars p)
-                                  else raise_error (Errors.Fatal_NonLinearPatternNotPermitted, "Non-linear patterns are not permitted.") r)
-                                S.no_names
+        let aux out (p, _) =
+            let intersection = BU.set_intersect (pat_vars p) out in
+            if BU.set_is_empty intersection
+            then BU.set_union out (pat_vars p)
+            else
+              let duplicate_bv = List.hd (BU.set_elements intersection) in
+              raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
+                            BU.format1
+                              "Non-linear patterns are not permitted. %s appears more than once in this pattern."
+                               (duplicate_bv.ppname.idText) )
+
+                          r
+        in
+        List.fold_left aux S.no_names pats
     in
-    pat_vars p
+    // check that the same variables are bound in each pattern
+    match pats with
+    | [] -> ()
+    | [p] -> pat_vars p |> ignore
+    | p::ps ->
+      let pvars = pat_vars p in
+      let aux p =
+        if BU.set_eq pvars (pat_vars p) then () else
+        let nonlinear_vars = BU.set_symmetric_difference pvars (pat_vars p) in
+        let first_nonlinear_var = List.hd (BU.set_elements nonlinear_vars) in
+        raise_error ( Errors.Fatal_IncoherentPatterns,
+                      BU.format1
+                        "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
+                         (first_nonlinear_var.ppname.idText) )
+                    r
+      in
+      List.iter aux ps
   in
 
   begin match is_mut, p.pat with
@@ -625,7 +651,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
         env, vars, [pat]
   in
   let env, b, pats = aux_maybe_or env p in
-  ignore <| (List.map (fun pats -> check_linear_pattern_variables pats p.prange) pats );
+  check_linear_pattern_variables pats p.prange;
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
