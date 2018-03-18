@@ -1015,6 +1015,11 @@ let tc_inductive env ses quals lids =
     ignore (Env.pop env "tc_inductive");
     res
 
+//when we process a reset-options pragma, we need to restart z3 etc.
+let z3_reset_options (en:env) :env =
+  let env = Env.set_proof_ns (Options.using_facts_from ()) en in
+  env.solver.refresh ();
+  env
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
@@ -1449,10 +1454,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (ResetOptions _) ->
-    let env = Env.set_proof_ns (Options.using_facts_from ()) env in
-    env.solver.refresh();
-    env
+  | Sig_pragma (ResetOptions _) -> z3_reset_options env
   | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
@@ -1763,7 +1765,13 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
     //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from env
     let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
 
-    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+    let en0 =
+      if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
+        Options.restore_cmd_line_options true |> ignore;
+        z3_reset_options en0
+      end
+      else en0
+    in
 
     //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
     let modul_iface = extract_interface en m in
