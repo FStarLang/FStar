@@ -274,8 +274,6 @@ let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
                              || lid_equals c.eff_name PC.effect_GTot_lid
                              || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tac_lcomp c = lid_equals c.eff_name PC.effect_Tac_lid
-
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
@@ -283,9 +281,6 @@ let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIA
 let is_tot_or_gtot_comp c =
     is_total_comp c
     || lid_equals PC.effect_GTot_lid (comp_effect_name c)
-
-let is_tac_comp c =
-    lid_equals PC.effect_Tac_lid (comp_effect_name c)
 
 let is_pure_effect l =
      lid_equals l PC.effect_Tot_lid
