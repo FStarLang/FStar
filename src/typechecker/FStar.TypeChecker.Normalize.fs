@@ -1793,10 +1793,9 @@ and maybe_simplify_aux cfg env stack tm =
     else
     let w t = {t with pos=tm.pos} in
     let simp_t t =
-        match t.n with
-        | Tm_meta ({n = Tm_fvar fv}, _) // catch annotated subformulae too
+        // catch annotated subformulae too
+        match (U.unmeta t).n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
-        | Tm_meta ({n = Tm_fvar fv}, _)
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None
     in
