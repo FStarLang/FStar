@@ -14,28 +14,29 @@ module FStar.Tactics.PatternMatching
 /// Contents
 /// ========
 ///
-///  1  Contents
-///  2  Motivation
-///  3  Some utility functions
-///  4  Pattern types
-///  5  Pattern matching exceptions
-///    5.1  Types of exceptions
-///    5.2  The exception monad
-///    5.3  Liftings
-///  6  Pattern interpretation
-///  7  Pattern-matching problems
-///    7.1  Definitions
-///    7.2  Resolution
-///  8  A DSL for pattern-matching
-///    8.1  Pattern notations
-///    8.2  Problem notations
-///    8.3  Continuations
-///  9  Putting it all together
-/// 10  Examples
-///   10.1  Simple examples
-///   10.2  A real-life example
-/// 11  Possible extensions
-/// 12  Notes
+/// ..
+///     1  Contents
+///     2  Motivation
+///     3  Some utility functions
+///     4  Pattern types
+///     5  Pattern matching exceptions
+///       5.1  Types of exceptions
+///       5.2  The exception monad
+///       5.3  Liftings
+///     6  Pattern interpretation
+///     7  Pattern-matching problems
+///       7.1  Definitions
+///       7.2  Resolution
+///     8  A DSL for pattern-matching
+///       8.1  Pattern notations
+///       8.2  Problem notations
+///       8.3  Continuations
+///     9  Putting it all together
+///    10  Examples
+///      10.1  Simple examples
+///      10.2  A real-life example
+///    11  Possible extensions
+///    12  Notes
 ///
 /// Motivation
 /// ==========
@@ -549,7 +550,7 @@ let pattern_of_term tm : Tac pattern =
 /// ``b``, and ``c``, appropriate binders bound to ``h1``, ``h2``, and ``h3``,
 /// and ``()`` bound to ``g``.
 ///
-/// We call these patterns ``abspat``s (abstraction patterns), and we provide
+/// We call these patterns ``abspat``\ s (abstraction patterns), and we provide
 /// facilities to parse them into matching problems, and to run their bodies
 /// against a particular matching solution.
 
