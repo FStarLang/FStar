@@ -1,11 +1,5 @@
 module SepLogic.Heap
 
-module OS = FStar.OrdSet
-
-let addrs = OS.ordset nat (fun n m -> n <= m)
-
-unfold let disjoint_addrs (s0 s1:addrs) = OS.intersect s0 s1 = OS.empty
-
 private noeq type heap_rec = {
   next_addr : nat;
   hdomain   : addrs;
@@ -73,8 +67,7 @@ let join h0 h1 =
 let ( |> ) #a r x = 
   let domain = OS.singleton r in
   let contents : nat -> Tot (option (a:Type0 & a)) = 
-    (fun r' -> if r = r' then Some (| a , x |)
-                         else None) in
+    (fun r' -> if r = r' then Some (| a , x |) else None) in
   Some ({ domain = domain; contents = contents })
 
 let ( <*> ) m0 m1 = 
@@ -115,8 +108,7 @@ let sel #a h r =
   x
 
 let upd' (#a:Type0) (h:heap) (r:ref a) (x:a) =
-  { h with memory = (fun r' -> if r = r' then Some (| a, x |)
-                                         else h.memory r') }
+  { h with memory = (fun r' -> if r = r' then Some (| a, x |) else h.memory r') }
 
 let upd #a h r x = upd' h r x
 
@@ -127,22 +119,20 @@ let alloc #a h0 x =
   let r = h0.next_addr in 
   let next_addr = h0.next_addr + 1 in
   let domain = OS.union h0.hdomain (OS.singleton r) in
-  let memory = (fun r' -> if r = r' then Some (| a , x |)
-                                    else h0.memory r') in
+  let memory = (fun r' -> if r = r' then Some (| a , x |) else h0.memory r') in
   let h1 = { next_addr = next_addr; hdomain = domain; memory = memory } in
   (r, h1)
 
 let dealloc #a h0 r =
   let next_addr = h0.next_addr in
   let domain = OS.remove r h0.hdomain in
-  let memory = (fun r' -> if r <> r' then h0.memory r'
-                                     else None) in
+  let memory = (fun r' -> if r <> r' then h0.memory r' else None) in
   { next_addr = next_addr; hdomain = domain; memory = memory }
   
 let addrs_in m = 
   match m with
-  | Some m' -> OS.as_set m'.domain
-  | None    -> S.empty
+  | Some m' -> m'.domain
+  | None    -> OS.empty
 
 let addr_to_ref m r = 
   match m with
@@ -150,23 +140,19 @@ let addr_to_ref m r =
     match m'.contents r with
     | Some v -> (| dfst v, r |)
 
-let restrict_memory rs m = admit ()
-  (*match m with
+let restrict_memory rs m = 
+  match m with 
   | Some m' -> 
-      let domain = OS.intersect_with_set m'.domain rs in 
-      let contents = (fun r -> if OS.mem r domain 
-                               then m'.contents r
-                               else None) in
-      Some ({ domain = domain; contents = contents })*)
+      let domain = OS.intersect m'.domain rs in 
+      let contents = (fun r -> if OS.mem r domain then m'.contents r else None) in
+      Some ({ domain = domain; contents = contents })
 
-let complement_memory rs m = admit () //skipping this to do non alloc/dealloc parts first
-  (*match m with 
+let complement_memory rs m =  
+  match m with 
   | Some m' -> 
-      let domain = S.intersect (S.complement rs) m'.domain in 
-      let contents = (fun r -> if S.mem r domain
-                               then m'.contents r
-                               else None) in
-      Some ({ domain = domain; contents = contents })*)
+      let domain = OS.minus m'.domain rs in
+      let contents = (fun r -> if OS.mem r domain then m'.contents r else None) in
+      Some ({ domain = domain; contents = contents })
 
 let lemma_disjoint_heaps_comm h0 h1 = ()
 
@@ -179,22 +165,20 @@ let lemma_join_comm h0 h1 =
   assert (equal_heaps (join h0 h1) (join h1 h0))
 
 let lemma_sep_unit m = 
-  match m with 
-  | None    -> ()
-  | Some m' -> 
-      let (Some e) = emp in 
+  match (m,emp) with 
+  | None   , _      -> ()
+  | Some m', Some e -> 
       assert (OS.equal (OS.intersect m'.domain e.domain) OS.empty);
-      let (Some m'') = m <*> emp in 
-      assert (OS.equal m''.domain m'.domain);
-      assert (equal_memories (m <*> emp) m)
+      match m <*> emp with 
+      | Some m'' -> 
+          assert (OS.equal m''.domain m'.domain);
+          assert (equal_memories (m <*> emp) m)
 
 let lemma_sep_comm m0 m1 =
   match (m0,m1) with
   | (Some m0', Some m1') -> 
       if (disjoint_addrs m0'.domain m1'.domain)
       then (assert (OS.equal (OS.union m0'.domain m1'.domain) (OS.union m1'.domain m0'.domain));
-            let (Some m)  = m0 <*> m1 in
-            let (Some m') = m1 <*> m0 in
             assert (equal_memories (m0 <*> m1) (m1 <*> m0)))
       else (assert (equal_memories (m0 <*> m1) (m1 <*> m0)))
   | _ -> ()
@@ -231,8 +215,7 @@ let lemma_heap_memory_defined h = ()
 let lemma_split_heap_disjoint m0 m1 h = ()
 
 let lemma_split_heap_join m0 m1 h = 
-  assert (let (h0,h1) = split_heap m0 m1 h in
-          equal_heaps h (join h0 h1))
+  assert (let (h0,h1) = split_heap m0 m1 h in equal_heaps h (join h0 h1))
 
 let lemma_split_heap_memories m0 m1 h = ()
 
@@ -253,10 +236,10 @@ let lemma_alloc_contains #a h0 x = ()
 
 let lemma_alloc_sel #a h0 x = ()
 
-let lemma_alloc_heap_memory #a h0 x = //TODO
-  admit ()
-  //let (r,h1) = alloc h0 x in 
-  //assert (equal_memories (heap_memory h1) (heap_memory h0 <*> (r |> x)))
+let lemma_alloc_heap_memory #a h0 x = 
+  let (r,h1) = alloc h0 x in 
+  assert (OS.equal (OS.intersect (addrs_in (heap_memory h0)) (OS.singleton (addr_of r))) OS.empty);
+  assert (equal_memories (heap_memory h1) (heap_memory h0 <*> (r |> x)))
 
 let lemma_fresh_in_complement #a r h = ()
 
@@ -264,9 +247,10 @@ let lemma_fresh_join #a r h0 h1 = ()
 
 let lemma_dealloc_contains #a h0 r = ()
 
-let lemma_points_to_dealloc #a h0 r = //TODO
-  admit ()
-  //assert (equal_memories (heap_memory (dealloc h0 r)) emp)
+let lemma_points_to_dealloc #a h0 r = 
+  let h1 = dealloc h0 r in 
+  assert (OS.equal (addrs_in (heap_memory h1)) OS.empty);
+  assert (equal_memories (heap_memory (dealloc h0 r)) emp)
 
 let lemma_addrs_in_emp () = ()
 
@@ -278,12 +262,12 @@ let lemma_addrs_in_join m0 m1 = ()
 
 let lemma_addr_to_ref_addr_of m r = ()
 
-let lemma_restrict_complement_disjoint rs m = //TODO
-  admit ()
+let lemma_restrict_complement_disjoint rs m = 
+  assert (OS.equal (OS.intersect (addrs_in (restrict_memory rs m)) (addrs_in (complement_memory rs m))) OS.empty)
 
-let lemma_restrict_complement_sep rs m = //TODO
-  admit ()
-  //assert (equal_memories m ((restrict_memory rs m) <*> (complement_memory rs m)))
+let lemma_restrict_complement_sep rs m = 
+  assert (OS.equal (addrs_in m) (addrs_in ((restrict_memory rs m) <*> (complement_memory rs m))));
+  assert (equal_memories m ((restrict_memory rs m) <*> (complement_memory rs m)))
 
 let lemma_fresh_or_old_refl h = 
   FStar.Classical.exists_intro (fun m -> fresh_or_old' h h (fst m) (snd m)) (heap_memory h,emp)
@@ -345,8 +329,9 @@ private let lemma_fresh_or_old_disjoint' (h0 h1 h2:heap) (m_old m_fresh:memory)
   : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
                      disjoint_heaps h0 h2 /\ same_freshness h0 h2))
           (ensures  (disjoint_heaps h1 h2))
-  = admit () //TODO
-    //assert (defined (m_old <*> m_fresh))
+  = assert (OS.equal (OS.intersect (addrs_in (heap_memory h0)) (addrs_in (heap_memory h2))) OS.empty);
+    assert (defined (m_old <*> m_fresh));
+    assert (OS.equal (OS.intersect (addrs_in (heap_memory h1)) (addrs_in (heap_memory h2))) OS.empty)
 
 private let lemma_fresh_or_old_disjoint'' (h0 h1 h2:heap) (m_old m_fresh:memory)
   : Lemma (fresh_or_old' h0 h1 m_old m_fresh /\ 
