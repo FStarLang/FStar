@@ -726,6 +726,9 @@ and star_type' env t =
   | Tm_uinst _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uinst is outside of the definition language: %s"
         (Print.term_to_string t)))
+  | Tm_quoted _ ->
+      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_quoted is outside of the definition language: %s"
+        (Print.term_to_string t)))
   | Tm_constant _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_constant is outside of the definition language: %s"
         (Print.term_to_string t)))
@@ -856,6 +859,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_fvar _
   | Tm_abs _
   | Tm_constant _
+  | Tm_quoted _
   | Tm_app _ ->
       return_if (infer env e)
 
@@ -1128,6 +1132,9 @@ and infer (env: env) (e: term): nm * term * term =
 
   | Tm_constant c ->
       N (env.tc_const c), e, e
+
+  | Tm_quoted (tm, qt) ->
+      N S.t_term, e, e
 
   | Tm_let _ ->
       failwith (BU.format1 "[infer]: Tm_let %s" (Print.term_to_string e))

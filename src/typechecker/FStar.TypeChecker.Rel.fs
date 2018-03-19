@@ -525,6 +525,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
         | Tm_bvar _
         | Tm_arrow _
         | Tm_abs _
+        | Tm_quoted _
         | Tm_uvar _
         | Tm_let _
         | Tm_match _ -> (t1, None)
@@ -842,6 +843,7 @@ let rec delta_depth_of_term env t =
     | Tm_constant _
     | Tm_type _
     | Tm_arrow _
+    | Tm_quoted _
     | Tm_abs _ -> Some Delta_constant
     | Tm_fvar fv -> Some (fv_delta_depth env fv)
 
@@ -2307,11 +2309,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.tag_of_term t2)
                             in
     let r = Env.get_range env in
-    let not_quote t =
-        match (SS.compress t).n with
-        | Tm_meta (_, Meta_quoted _) -> false
-        | _ -> true
-    in
     match t1.n, t2.n with
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
@@ -2325,16 +2322,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_ascribed _, _ ->
         solve_t' env ({problem with lhs=U.unascribe t1}) wl
 
-      | Tm_meta _, _ when not_quote t1 ->
+      | Tm_meta _, _ ->
         solve_t' env ({problem with lhs=U.unmeta t1}) wl
 
       | _, Tm_ascribed _ ->
         solve_t' env ({problem with rhs=U.unascribe t2}) wl
 
-      | _, Tm_meta _ when not_quote t2 ->
+      | _, Tm_meta _ ->
         solve_t' env ({problem with rhs=U.unmeta t2}) wl
 
-      | Tm_meta (_, Meta_quoted (t1, _)), Tm_meta (_, Meta_quoted (t2, _)) ->
+      | Tm_quoted (t1, _), Tm_quoted (t2, _) ->
         (* solve_prob orig None [] wl *)
         solve env (solve_prob orig None [] wl)
         (* solve_t' env ({problem with lhs = t1; rhs = t2}) wl *)

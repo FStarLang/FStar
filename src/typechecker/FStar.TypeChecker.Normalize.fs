@@ -443,6 +443,12 @@ let rec closure_as_term cfg (env:env) t =
                              (annot, tacopt),
                              lopt)) t.pos
 
+           | Tm_quoted (t', qi) ->
+             begin match qi.qkind with
+             | Quote_static  -> mk (Tm_quoted(t', qi)) t.pos
+             | Quote_dynamic -> mk (Tm_quoted(closure_as_term_delayed cfg env t', qi)) t.pos
+             end
+
            | Tm_meta(t', Meta_pattern args) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t',
                          Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
@@ -452,11 +458,6 @@ let rec closure_as_term cfg (env:env) t =
 
            | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
                  mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
-
-           | Tm_meta(t', Meta_quoted (t'', qi)) ->
-             if qi.qopen
-             then mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(closure_as_term_delayed cfg env t'', qi))) t.pos
-             else mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(t'', qi))) t.pos
 
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
@@ -1037,13 +1038,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_meta (t0, Meta_quoted (t1, qi)) ->
-            let t0 = closure_as_term cfg env t0 in
-            let t1 = if qi.qopen
-                     then closure_as_term cfg env t1
-                     else t1
+          | Tm_quoted (qt, qi) ->
+            let qt = match qi.qkind with
+                     | Quote_static  -> qt
+                     | Quote_dynamic -> closure_as_term cfg env qt
             in
-            let t = { t with n = Tm_meta (t0, Meta_quoted (t1, qi)) } in
+            let t = { t with n = Tm_quoted (qt, qi) } in
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -1387,9 +1387,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
               | Meta_monadic_lift (m, m', t) ->
                 reduce_impure_comp cfg env stack head (Inr (m, m')) t
-
-              | Meta_quoted (qt, inf) ->
-                rebuild cfg env stack t
 
               | _ ->
                 if cfg.steps.unmeta
@@ -2556,6 +2553,9 @@ let rec elim_delayed_subst_term (t:term) : term =
 
     | Tm_uvar(uv, t) ->
       mk (Tm_uvar(uv, elim_delayed_subst_term t))
+
+    | Tm_quoted (tm, qi) ->
+      mk (Tm_quoted (elim_delayed_subst_term tm, qi))
 
     | Tm_meta(t, md) ->
       mk (Tm_meta(elim_delayed_subst_term t, elim_delayed_subst_meta md))

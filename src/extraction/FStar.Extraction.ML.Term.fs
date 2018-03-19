@@ -155,6 +155,7 @@ let rec is_arity env t =
     | Tm_uvar _
     | Tm_constant _
     | Tm_name _
+    | Tm_quoted _
     | Tm_bvar _ -> false
     | Tm_type _ -> true
     | Tm_arrow(_, c) ->
@@ -239,8 +240,7 @@ let rec is_type_aux env t =
         | _ -> false
       end
 
-    | Tm_meta ({ n = Tm_unknown }, Meta_quoted (qt, qi)) ->
-      false
+    | Tm_quoted _ -> false
 
     | Tm_meta(t, _) ->
       is_type_aux env t
@@ -461,6 +461,7 @@ and term_as_mlty' env t =
       | Tm_lazy i -> term_as_mlty' env (U.unfold_lazy i)
 
       | Tm_constant _ -> unknownType
+      | Tm_quoted _ -> unknownType
 
       | Tm_uvar _ -> unknownType //really shouldn't have any uvars left; TODO: fatal failure?
 
@@ -853,13 +854,14 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_arrow _ ->
           ml_unit, E_PURE, ml_unit_ty
 
-        | Tm_meta ({ n = _ }, Meta_quoted (qt, {qopen = true })) ->
+
+        | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
           let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
           E_PURE,
           ml_int_ty
 
-        | Tm_meta ({ n = _ }, Meta_quoted (qt, {qopen = false})) ->
+        | Tm_quoted (qt, { qkind = Quote_static }) ->
           let tv = RE.embed_term_view t.pos (R.inspect_ln qt) in
           let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
           term_as_mlexpr' g t
