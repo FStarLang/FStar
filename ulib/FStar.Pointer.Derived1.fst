@@ -1,7 +1,7 @@
 module FStar.Pointer.Derived1
 
 module DM = FStar.DependentMap
-module HH = FStar.HyperHeap
+module HH = FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 

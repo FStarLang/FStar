@@ -1,6 +1,7 @@
 module FStar.Pointer.Base
 
 module DM = FStar.DependentMap
+module HH = FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 open FStar.HyperStack.ST // for := , !

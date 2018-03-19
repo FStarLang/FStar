@@ -1,5 +1,5 @@
 module FStar.BufferNG
-module HH = FStar.HyperHeap
+module HH = FStar.HyperStack
 module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
