@@ -90,8 +90,8 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
                     None rng
 
 
-let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
-let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
+let embed_branch rng br = embed_tuple2 embed_pattern fstar_refl_pattern embed_term S.t_term rng br
+let embed_argv   rng aq = embed_tuple2 embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
 
 let embed_term_view (rng:Range.range) (t:term_view) : term =
     match t with
@@ -354,8 +354,8 @@ let rec unembed_pattern (t : term) : option<pattern> =
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
         None
 
-let unembed_branch = unembed_pair unembed_pattern unembed_term
-let unembed_argv = unembed_pair unembed_term unembed_aqualv
+let unembed_branch = unembed_tuple2 unembed_pattern unembed_term
+let unembed_argv = unembed_tuple2 unembed_term unembed_aqualv
 
 let unembed_term_view (t:term) : option<term_view> =
     let hd, args = U.head_and_args t in
@@ -539,8 +539,8 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 (* ------------------------------------- UNFOLDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
-let embed_binder_view   = embed_pair embed_bv fstar_refl_bv_view embed_aqualv fstar_refl_aqualv
-let unembed_binder_view = unembed_pair unembed_bv unembed_aqualv
+let embed_binder_view   = embed_tuple2 embed_bv fstar_refl_bv_view embed_aqualv fstar_refl_aqualv
+let unembed_binder_view = unembed_tuple2 unembed_bv unembed_aqualv
 
 
 (* Note that most of these are never needed during normalization, since

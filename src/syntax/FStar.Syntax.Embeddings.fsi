@@ -16,7 +16,10 @@ module Z = FStar.BigInt
  * to unembed.
  *
  * Polymorphic embedders need the type of whatever they're embedding to construct
- * a propert well-typed term.
+ * a proper well-typed term.
+ *
+ * GM: TODO: Make the `embedder` type return a term and type, so they can
+ * be composed seamlessly.
  *)
 
 type embedder<'a>   = Range.range -> 'a -> term
@@ -45,11 +48,6 @@ val embed_string        : embedder<string>
 val unembed_string      : unembedder<string>
 val unembed_string_safe : unembedder<string>
 
-val embed_pair        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<('a * 'b)>
-val unembed_pair      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
-val unembed_pair_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
-
-(* VD: These are just aliases for the functions above, to be used in plugin extraction *)
 val embed_tuple2        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<('a * 'b)>
 val unembed_tuple2      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
 val unembed_tuple2_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>

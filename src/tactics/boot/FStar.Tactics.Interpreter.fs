@@ -368,7 +368,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) get (unembed_tactic_0' get) (embed_option put t_unit) t_unit;
       mktac0 "__intro"         intro RE.embed_binder RD.fstar_refl_binder;
-      mktac0 "__intro_rec"     intro_rec (embed_pair
+      mktac0 "__intro_rec"     intro_rec (embed_tuple2
                                               RE.embed_binder RD.fstar_refl_binder
                                               RE.embed_binder RD.fstar_refl_binder)
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
@@ -390,7 +390,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__apply_lemma"   apply_lemma RE.unembed_term embed_unit t_unit;
       // A tac 5... oh my...
       mktac5 "__divide"        (fun _ _ -> divide) get get unembed_int (unembed_tactic_0' get) (unembed_tactic_0' get)
-                                                            (embed_pair put t_unit put t_unit) t_unit;
+                                                            (embed_tuple2 put t_unit put t_unit) t_unit;
       mktac1 "__set_options"   set_options unembed_string embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0' unembed_unit) (unembed_tactic_0' unembed_unit) embed_unit t_unit;
 
@@ -407,7 +407,7 @@ let rec primitive_steps () : list<N.primitive_step> =
 
       mktac2 "__pointwise"     pointwise E.unembed_direction (unembed_tactic_0' unembed_unit) embed_unit t_unit;
       mktac2 "__topdown_rewrite" topdown_rewrite
-                                 (unembed_tactic_1 RE.embed_term (unembed_pair unembed_bool unembed_int))
+                                 (unembed_tactic_1 RE.embed_term (unembed_tuple2 unembed_bool unembed_int))
                                  (unembed_tactic_0' unembed_unit)
                                  embed_unit t_unit;
 
@@ -419,7 +419,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__dismiss"       dismiss embed_unit t_unit;
       mktac0 "__tadmit"        tadmit embed_unit t_unit;
 
-      mktac1 "__cases"         cases RE.unembed_term (embed_pair
+      mktac1 "__cases"         cases RE.unembed_term (embed_tuple2
                                                       RE.embed_term S.t_term
                                                       RE.embed_term S.t_term)
                                                   (E.pair_typ S.t_term S.t_term);
