@@ -38,10 +38,6 @@ let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a B.tac = fun x ->
   (fun (ps: proofstate) ->
     uninterpret_tac (t x) ps) |> B.mk_tac
 
-let from_tac_0 (t: 'a B.tac): 'a __tac =
-  fun (ps: proofstate) ->
-    interpret_tac t ps
-
 let from_tac_1 (t: 'a -> 'b B.tac): 'a  -> 'b __tac =
   fun (x: 'a) ->
     fun (ps: proofstate) ->
@@ -66,33 +62,33 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 let __fail (msg : string) : 'a __tac = from_tac_1 B.fail msg
 let fail: string -> 'a __tac = fun msg -> __fail msg
 
-let __top_env: RT.env __tac = from_tac_0 B.top_env
-let top_env: unit -> RT.env __tac = fun () -> __top_env
+let __top_env: unit -> RT.env __tac = from_tac_1 B.top_env
+let top_env: unit -> RT.env __tac = __top_env
 
-let __cur_env: RT.env __tac = from_tac_0 B.cur_env
-let cur_env: unit -> RT.env __tac = fun () -> __cur_env
+let __cur_env: unit -> RT.env __tac = from_tac_1 B.cur_env
+let cur_env: unit -> RT.env __tac = __cur_env
 
-let __cur_goal: RT.term __tac = from_tac_0 B.cur_goal'
-let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
+let __cur_goal: unit -> RT.term __tac = from_tac_1 B.cur_goal'
+let cur_goal: unit -> RT.term __tac = __cur_goal
 
-let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
-let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
+let __cur_witness: unit -> RT.term __tac = from_tac_1 B.cur_witness
+let cur_witness: unit -> RT.term __tac = __cur_witness
 
-let __fresh : int __tac = from_tac_0 B.fresh
-let fresh : unit -> int __tac = fun () -> __fresh
+let __fresh : unit -> int __tac = from_tac_1 B.fresh
+let fresh : unit -> int __tac = __fresh
 
-let __ngoals : int __tac = from_tac_0 B.ngoals
-let ngoals : unit -> int __tac = fun () -> __ngoals
+let __ngoals : unit -> int __tac = from_tac_1 B.ngoals
+let ngoals : unit -> int __tac = __ngoals
 
-let __ngoals_smt : int __tac = from_tac_0 B.ngoals_smt
-let ngoals_smt : unit -> int __tac = fun () -> __ngoals_smt
+let __ngoals_smt : unit -> int __tac = from_tac_1 B.ngoals_smt
+let ngoals_smt : unit -> int __tac = __ngoals_smt
 
 
-let __is_guard: bool __tac = from_tac_0 B.is_guard
-let is_guard: unit -> bool __tac = fun () -> __is_guard
+let __is_guard: unit -> bool __tac = from_tac_1 B.is_guard
+let is_guard: unit -> bool __tac = __is_guard
 
-let __refine_intro : unit __tac = from_tac_0 B.refine_intro
-let refine_intro: unit -> unit __tac = fun () -> __refine_intro
+let __refine_intro : unit -> unit __tac = from_tac_1 B.refine_intro
+let refine_intro: unit -> unit __tac = __refine_intro
 
 let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
 let tc: RT.term -> RT.term __tac = fun t -> __tc t
@@ -106,8 +102,8 @@ let unquote : RT.term -> 'a __tac = fun tm ->
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: (unit -> 'a __tac) -> ('a option) __tac = fun t -> __trytac (E.reify_tactic t)
 
-let __trivial: unit __tac = from_tac_0 B.trivial
-let trivial: unit -> unit __tac = fun () -> __trivial
+let __trivial: unit -> unit __tac = from_tac_1 B.trivial
+let trivial: unit -> unit __tac = __trivial
 
 let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
 let norm: norm_step list -> unit __tac = fun s -> __norm s
@@ -118,23 +114,23 @@ let norm_term_env: RT.env -> norm_step list -> RT.term -> RT.term __tac = fun e 
 let __norm_binder_type (s: norm_step list) (b: RT.binder) : unit __tac = from_tac_2 B.norm_binder_type (tr_repr_steps s) b
 let norm_binder_type : norm_step list -> RT.binder -> unit __tac = fun s b -> __norm_binder_type s b
 
-let __intro: RT.binder __tac = from_tac_0 B.intro
-let intro: unit -> RT.binder __tac = fun () -> __intro
+let __intro: unit -> RT.binder __tac = from_tac_1 B.intro
+let intro: unit -> RT.binder __tac = __intro
 
-let __intro_rec: (RT.binder * RT.binder) __tac = from_tac_0 B.intro_rec
-let intro_rec: unit -> (RT.binder * RT.binder) __tac = fun () -> __intro_rec
+let __intro_rec: unit -> (RT.binder * RT.binder) __tac = from_tac_1 B.intro_rec
+let intro_rec: unit -> (RT.binder * RT.binder) __tac = __intro_rec
 
 let __rename_to (b: RT.binder) (nm : string) : unit __tac = from_tac_2 B.rename_to b nm
 let rename_to: RT.binder -> string -> unit __tac = fun b s -> __rename_to b s
 
-let __revert: unit __tac = from_tac_0 B.revert
-let revert: unit -> unit __tac = fun () -> __revert
+let __revert: unit -> unit __tac = from_tac_1 B.revert
+let revert: unit -> unit __tac = __revert
 
 let __binder_retype (b: RT.binder) : unit __tac = from_tac_1 B.binder_retype b
 let binder_retype: RT.binder -> unit __tac = fun b -> __binder_retype b
 
-let __clear_top: unit __tac = from_tac_0 B.clear_top
-let clear_top: unit -> unit __tac = fun () -> __clear_top
+let __clear_top: unit -> unit __tac = from_tac_1 B.clear_top
+let clear_top: unit -> unit __tac = __clear_top
 
 let __clear (h: RT.binder) : unit __tac = from_tac_1 B.clear h
 let clear: RT.binder -> unit __tac = fun b -> __clear b
@@ -142,8 +138,8 @@ let clear: RT.binder -> unit __tac = fun b -> __clear b
 let __rewrite (h: RT.binder): unit __tac = from_tac_1 B.rewrite h
 let rewrite: RT.binder -> unit __tac = fun b  -> __rewrite b
 
-let __smt: unit __tac = from_tac_0 B.smt
-let smt: unit -> unit __tac = fun () -> __smt
+let __smt: unit -> unit __tac = from_tac_1 B.smt
+let smt: unit -> unit __tac = __smt
 
 let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
 let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =
@@ -174,8 +170,8 @@ let dump: string -> unit __tac = fun s -> __dump s
 let __dump1 (s: string): unit __tac = from_tac_1 (B.print_proof_state1) s
 let dump1: string -> unit __tac = fun s -> __dump1 s
 
-let __trefl: unit __tac = from_tac_0 B.trefl
-let trefl: unit -> unit __tac = fun () -> __trefl
+let __trefl: unit -> unit __tac = from_tac_1 B.trefl
+let trefl: unit -> unit __tac = __trefl
 
 let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
 let pointwise:  (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
@@ -186,17 +182,17 @@ let __topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit __tac) : u
 let topdown_rewrite : (RT.term -> (bool * int) __tac) -> (unit -> unit __tac) -> unit __tac =
         fun t1 t2 -> __topdown_rewrite t1 (E.reify_tactic t2)
 
-let __later: unit __tac = from_tac_0 B.later
-let later: unit -> unit __tac = fun () -> __later
+let __later: unit -> unit __tac = from_tac_1 B.later
+let later: unit -> unit __tac = __later
 
-let __dup: unit __tac = from_tac_0 B.dup
-let dup: unit -> unit __tac = fun () -> __dup
+let __dup: unit -> unit __tac = from_tac_1 B.dup
+let dup: unit -> unit __tac = __dup
 
-let __flip: unit __tac = from_tac_0 B.flip
-let flip: unit -> unit __tac = fun () -> __flip
+let __flip: unit -> unit __tac = from_tac_1 B.flip
+let flip: unit -> unit __tac = __flip
 
-let __qed: unit __tac = from_tac_0 B.qed
-let qed: unit -> unit __tac = fun () ->__qed
+let __qed: unit -> unit __tac = from_tac_1 B.qed
+let qed: unit -> unit __tac = __qed
 
 let __prune (s: string): unit __tac = from_tac_1 B.prune s
 let prune: string -> unit __tac = fun ns  -> __prune ns
@@ -225,17 +221,17 @@ let fresh_bv_named : string -> RT.term -> RT.bv __tac = fun nm ty -> __fresh_bv_
 let __change (ty : RT.typ) : unit __tac = from_tac_1 B.change ty
 let change : RT.typ -> unit __tac = fun ty -> __change ty
 
-let __get_guard_policy : guard_policy __tac = from_tac_0 B.get_guard_policy
-let get_guard_policy : unit -> guard_policy __tac = fun () -> __get_guard_policy
+let __get_guard_policy : unit -> guard_policy __tac = from_tac_1 B.get_guard_policy
+let get_guard_policy : unit -> guard_policy __tac = __get_guard_policy
 
 let __set_guard_policy : guard_policy -> unit __tac = from_tac_1 B.set_guard_policy
 let set_guard_policy : guard_policy -> unit __tac = __set_guard_policy
 
-let __dismiss : unit __tac = from_tac_0 B.dismiss
-let dismiss : unit -> unit __tac = fun () -> __dismiss
+let __dismiss : unit -> unit __tac = from_tac_1 B.dismiss
+let dismiss : unit -> unit __tac = __dismiss
 
-let __tadmit : unit __tac = from_tac_0 B.tadmit
-let tadmit : unit -> unit __tac = fun () -> __tadmit
+let __tadmit : unit -> unit __tac = from_tac_1 B.tadmit
+let tadmit : unit -> unit __tac = __tadmit
 
 let __inspect : RT.term -> RD.term_view __tac = from_tac_1 B.inspect
 let inspect   : RT.term -> RD.term_view __tac = __inspect
