@@ -11,7 +11,6 @@ let g =
     synth_by_tactic #((f 3 == f 5) -> q == p)
             (fun () ->
                 let b = intro () in
-                admit ();
 
                 norm_binder_type [delta; primops] b;
 
