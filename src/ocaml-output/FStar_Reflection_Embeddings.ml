@@ -216,7 +216,7 @@ let (embed_branch :
   fun rng  ->
     fun br  ->
       let uu____185 =
-        FStar_Syntax_Embeddings.embed_pair embed_pattern
+        FStar_Syntax_Embeddings.embed_tuple2 embed_pattern
           FStar_Reflection_Data.fstar_refl_pattern embed_term
           FStar_Syntax_Syntax.t_term
          in
@@ -228,7 +228,7 @@ let (embed_argv :
   fun rng  ->
     fun aq  ->
       let uu____204 =
-        FStar_Syntax_Embeddings.embed_pair embed_term
+        FStar_Syntax_Embeddings.embed_tuple2 embed_term
           FStar_Syntax_Syntax.t_term embed_aqualv
           FStar_Reflection_Data.fstar_refl_aqualv
          in
@@ -1071,11 +1071,11 @@ let rec (unembed_pattern :
 let (unembed_branch :
   (FStar_Reflection_Data.pattern,FStar_Syntax_Syntax.term)
     FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder)
-  = FStar_Syntax_Embeddings.unembed_pair unembed_pattern unembed_term 
+  = FStar_Syntax_Embeddings.unembed_tuple2 unembed_pattern unembed_term 
 let (unembed_argv :
   (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)
     FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder)
-  = FStar_Syntax_Embeddings.unembed_pair unembed_term unembed_aqualv 
+  = FStar_Syntax_Embeddings.unembed_tuple2 unembed_term unembed_aqualv 
 let (unembed_term_view :
   FStar_Syntax_Syntax.term ->
     FStar_Reflection_Data.term_view FStar_Pervasives_Native.option)
@@ -1629,14 +1629,14 @@ let (embed_binder_view :
   (FStar_Syntax_Syntax.bv,FStar_Reflection_Data.aqualv)
     FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.embedder)
   =
-  FStar_Syntax_Embeddings.embed_pair embed_bv
+  FStar_Syntax_Embeddings.embed_tuple2 embed_bv
     FStar_Reflection_Data.fstar_refl_bv_view embed_aqualv
     FStar_Reflection_Data.fstar_refl_aqualv
   
 let (unembed_binder_view :
   (FStar_Syntax_Syntax.bv,FStar_Reflection_Data.aqualv)
     FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder)
-  = FStar_Syntax_Embeddings.unembed_pair unembed_bv unembed_aqualv 
+  = FStar_Syntax_Embeddings.unembed_tuple2 unembed_bv unembed_aqualv 
 let (unfold_lazy_bv :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i  ->

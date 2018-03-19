@@ -925,7 +925,7 @@ let rec (primitive_steps :
             let uu____2690 =
               let uu____2693 =
                 let uu____2694 =
-                  FStar_Syntax_Embeddings.embed_pair
+                  FStar_Syntax_Embeddings.embed_tuple2
                     FStar_Reflection_Embeddings.embed_binder
                     FStar_Reflection_Data.fstar_refl_binder
                     FStar_Reflection_Embeddings.embed_binder
@@ -1122,7 +1122,7 @@ let rec (primitive_steps :
                                             let uu____2795 =
                                               let uu____2798 =
                                                 let uu____2799 =
-                                                  FStar_Syntax_Embeddings.embed_pair
+                                                  FStar_Syntax_Embeddings.embed_tuple2
                                                     put1
                                                     FStar_Syntax_Syntax.t_unit
                                                     put1
@@ -1348,7 +1348,7 @@ let rec (primitive_steps :
                                                                     =
                                                                     let uu____2879
                                                                     =
-                                                                    FStar_Syntax_Embeddings.unembed_pair
+                                                                    FStar_Syntax_Embeddings.unembed_tuple2
                                                                     FStar_Syntax_Embeddings.unembed_bool
                                                                     FStar_Syntax_Embeddings.unembed_int
                                                                      in
@@ -1465,7 +1465,7 @@ let rec (primitive_steps :
                                                                     =
                                                                     let uu____2930
                                                                     =
-                                                                    FStar_Syntax_Embeddings.embed_pair
+                                                                    FStar_Syntax_Embeddings.embed_tuple2
                                                                     FStar_Reflection_Embeddings.embed_term
                                                                     FStar_Syntax_Syntax.t_term
                                                                     FStar_Reflection_Embeddings.embed_term
