@@ -73,11 +73,36 @@ and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
+
+type quote_kind =
+  | Quote_static
+  | Quote_dynamic
+
+type quoteinfo = {
+    qkind : quote_kind;
+}
+
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+///[@ PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_sigelt
+
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -92,10 +117,12 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of uvar * typ                                  (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
+  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -110,7 +137,9 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
-    lbdef  :term             //e
+    lbdef  :term;            //e
+    lbattrs:list<attribute>; //attrs
+    lbpos  :range;           //original position of 'e'
 }
 and comp_typ = {
   comp_univs:universes;
@@ -137,6 +166,8 @@ and cflags =
   | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
   | DECREASES of term
@@ -150,9 +181,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -196,11 +225,11 @@ and free_vars = {
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = {
+and lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -210,13 +239,25 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and attribute = term
+
+and lazyinfo = {
+    blob  : dyn;
+    lkind : lazy_kind;
+    typ   : typ;
+    rng   : Range.range;
+ }
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
+
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
-val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
+val new_universe_names_set: unit -> set<univ_name>
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
@@ -245,8 +286,6 @@ type qualifier =
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
-
-type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -298,7 +337,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {
@@ -355,6 +395,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of term
 
 and sigelt = {
     sigel:    sigelt';
@@ -387,7 +428,7 @@ val withinfo: 'a -> Range.range -> withinfo_t<'a>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a>>
 
-val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
@@ -400,6 +441,12 @@ val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
 val mk_GTotal':     typ -> option<universe> -> comp
 val mk_Comp:        comp_typ -> comp
+val mk_lcomp:
+    eff_name: lident ->
+    res_typ: typ ->
+    cflags: list<cflags> ->
+    comp_thunk: (unit -> comp) -> lcomp
+val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 
@@ -416,7 +463,7 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_universe_names: fifo_set<univ_name>
+val no_universe_names: set<univ_name>
 val no_fvars:          set<lident>
 
 val freenames_of_list:    list<bv> -> freenames
@@ -458,6 +505,8 @@ val set_range_of_fv:fv -> range -> fv
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
 
+val eq_pat : pat -> pat -> bool
+
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
@@ -473,8 +522,12 @@ val t_float       : term
 val t_char        : term
 val t_range       : term
 val t_term        : term
+val t_decls       : term
+val t_binder      : term
+val t_bv          : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term
 val t_option_of   : term -> term
+val t_tuple2_of   : term -> term -> term
 val unit_const    : term

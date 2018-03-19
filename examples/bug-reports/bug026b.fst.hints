@@ -1,0 +1,23 @@
+[
+  "\u0017©½=ÊDÁçM>\rúP\u0017FÞ",
+  [
+    [
+      "Bug026b.bar",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "357f6a9ddd57e33ca9f7916ff8cd8473"
+    ],
+    [
+      "Bug026b.bar",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "5809bdb62d2d84f756243e718419c51f"
+    ]
+  ]
+]

@@ -245,7 +245,7 @@ let coerce_validator #t (#p: parser t)
 
 inline_for_extraction [@"substitute"]
 val and_check (#t:Type) (#t':Type) (p: parser t) (p': t -> parser t') (p_st: parser_st (hide p))
-              (v: x:t -> stateful_validator (hide (p' x)))
+              (v: (x:t -> stateful_validator (hide (p' x))))
               : stateful_validator (hide (p `and_then` p'))
 let and_check #t #t' p p' p_st v =
     fun input -> match p_st input with
@@ -324,9 +324,10 @@ let unfold_only (ns:list (list string)) : Tot (list norm_step) =
 #reset-options "--lax"
 
 let ser_TwoNums'' (n m:U32.t) : serializer_ty =
-  synth_by_tactic (normalize [delta_only
-                  ["EnumParsing.ser_TwoNums";
-                  "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
+  synth_by_tactic (fun () ->
+                      normalize [delta_only
+                      ["EnumParsing.ser_TwoNums";
+                      "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
 
 #reset-options
 
@@ -358,8 +359,9 @@ let ser_numbers_data2 ns =
 // this is the same as ser_numbers_data; haven't synthesized the eta expansion
 #set-options "--lax"
 let ser_numbers_data'' ns : serializer_ty =
-    synth_by_tactic (normalize' [delta_only
-                                ["EnumParsing.ser_numbers_data2"]] (ser_numbers_data2 ns))
+    synth_by_tactic (fun () ->
+                        normalize' [delta_only
+                                   ["EnumParsing.ser_numbers_data2"]] (ser_numbers_data2 ns))
 
 #reset-options
 val ser_numbers: ns:numbers -> serializer (hide (encode_numbers ns))
@@ -370,6 +372,6 @@ let ser_numbers ns = fun buf ->
 //same problem as ser_numbers_data''
 #set-options "--lax"
 let ser_numbers' ns : serializer_ty =
-  synth_by_tactic (normalize' [delta_only
-                  ["EnumParsing.ser_numbers";
-                   "Serializing.ser_append"]] (ser_numbers ns <: serializer_ty))
+  synth_by_tactic (fun () -> normalize' [delta_only
+                             ["EnumParsing.ser_numbers";
+                              "Serializing.ser_append"]] (ser_numbers ns <: serializer_ty))

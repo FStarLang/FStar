@@ -1,0 +1,23 @@
+[
+  ":\u0018¼PÄƒ‰ÅhTòù\u0001¡_\u001b",
+  [
+    [
+      "Bug769c.u",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_unit" ],
+      0,
+      "1b619f572778dd788ac92e5a68b0eadd"
+    ],
+    [
+      "Bug769c.v",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_unit" ],
+      0,
+      "485f6ae966a4c38ca5f783243ea3ff3d"
+    ]
+  ]
+]

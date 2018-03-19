@@ -1,5 +1,5 @@
 [
-  "c~;Í£C\u0006‘dÒ°ž\u000e°(Ü",
+  "—Ë»`ß\u0015Þ%TïÀÀ>i7a",
   [
     [
       "Memo.dom",
@@ -8,16 +8,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "063d4e8d27df758e8d82a57f7cb6c3ce"
+      "21283218bb2773e9a4488de7e89e70b1"
     ],
     [
-      "Memo.bind",
-      1,
+      "Memo.dom",
+      2,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a061c49642ef5f4256099f9fd362b25c"
+      "19b36050ed213f0af4d93c7b34f2c0e2"
     ]
   ]
 ]

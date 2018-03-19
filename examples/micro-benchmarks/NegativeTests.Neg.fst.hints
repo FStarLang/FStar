@@ -2,22 +2,13 @@
   "Ë!\u001eV\u0018IÂí–Q€¹y$%ê",
   [
     [
-      "NegativeTests.Neg.assert_0_eq_1",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4f58ebc3f26126c859a9f5c423c4b3ca"
-    ],
-    [
       "NegativeTests.Neg.test_label",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "f87724aae93eac2a88d7d5b5f1494a20"
+      "1f393c08ff1c5fc47c1f110f24ab641a"
     ],
     [
       "NegativeTests.Neg.TEST",
@@ -26,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "52427766610d3088d7bd85cc43155353"
+      "513cf38b5b8508a31fbea5f5f2f37ad8"
     ]
   ]
 ]

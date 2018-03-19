@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
-      "c7214ed640f5c04c0f65ab56d74cc412"
+      "f560a493a1fa300adeab62325bbe1d17"
     ],
     [
       "PureEncoder.encode_store",
@@ -16,9 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_KeyValue.Store",
-        "equation_FStar.UInt.uint_t",
-        "fuel_guarded_inversion_KeyValue.store",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_KeyValue.Store", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "fuel_guarded_inversion_KeyValue.store",
+        "function_token_typing_FStar.UInt32.n",
         "lemma_FStar.Buffer.lemma_size",
         "proj_equation_KeyValue.Store_entries",
         "proj_equation_KeyValue.Store_num_entries",
@@ -28,7 +30,38 @@
         "typing_KeyValue.__proj__Store__item__num_entries"
       ],
       0,
-      "967d964f2cf51b86e2b9d71a53384b4d"
+      "e957f1495294a4f6cb6056b4a412d1a9"
+    ],
+    [
+      "PureEncoder.encode_entry",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
+      0,
+      "d77bb95494be753231769f9f2fdbb7c5"
+    ],
+    [
+      "PureEncoder.encode_store",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_KeyValue.Store", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "fuel_guarded_inversion_KeyValue.store",
+        "function_token_typing_FStar.UInt32.n",
+        "lemma_FStar.Buffer.lemma_size",
+        "proj_equation_KeyValue.Store_entries",
+        "proj_equation_KeyValue.Store_num_entries",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_KeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
+        "typing_FStar.UInt32.v",
+        "typing_KeyValue.__proj__Store__item__num_entries"
+      ],
+      0,
+      "ad6a84b802fc43b9ccc084d03da2a3f7"
     ]
   ]
 ]

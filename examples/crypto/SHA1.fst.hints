@@ -10,19 +10,7 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "08461383657886209481a430ff162c64"
-    ],
-    [
-      "SHA1.sample",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
-      0,
-      "ea32d959e3fb4bd260d4a381e5f4724a"
+      "081120cdec16d80d54ead8386b7fc68e"
     ],
     [
       "SHA1.sha1",
@@ -31,7 +19,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2e0474d9834d01e29ebe35d2684b14f3"
+      "8797f653b81ed46639e77d29e9a61317"
     ],
     [
       "SHA1.sha1",
@@ -43,7 +31,7 @@
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
       ],
       0,
-      "df14d73f8800d23eca4af97ca0bf53ae"
+      "6e4187434c0394ee2f90544f9d0fd5aa"
     ],
     [
       "SHA1.hmac_sha1",
@@ -55,7 +43,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ea7e3c34668732ffb3d9e737345d01ee"
+      "7c8a39e6e7d4a5129436c9baa439ecb8"
     ]
   ]
 ]

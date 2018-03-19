@@ -1,5 +1,5 @@
 [
-  "æl%\u0018¾fxì\u0003mÒ}eXG\u0012",
+  "}\u0015ãóþt\u0013\b\b^ãõy³+\u007f",
   [
     [
       "OTP.xor_idempotent",
@@ -17,7 +17,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "7ee21e5bb5bcec421870ce0ba99ce8b3"
+      "c046b2f4fa6284a68d11683ab4e15f87"
     ],
     [
       "OTP.xor_idempotent",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "8a27e6d8a17499f36001c5d3048beb43"
+      "359d9e2ee5e44c606c79990197f2405e"
     ],
     [
       "OTP.xor_idempotent",
@@ -48,9 +48,7 @@
         "function_token_typing_Prims.bool", "int_inversion",
         "lemma_FStar.BitVector.logxor_vec_definition",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "lemma_FStar.Seq.Base.lemma_eq_intro",
         "primitive_Prims.op_disEquality",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
@@ -62,7 +60,7 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "571c34f1cb6f1e677cf3246c992869b7"
+      "9c7d74e3436646df693d70dcd2a75ef9"
     ],
     [
       "OTP.bij",
@@ -71,18 +69,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.OTP.Heap.elem",
         "equation_FStar.DM4F.OTP.Heap.sel",
         "equation_FStar.DM4F.OTP.Heap.size",
-        "equation_FStar.DM4F.OTP.Heap.to_id", "equation_OTP.op_Hat_Hat",
+        "equation_FStar.DM4F.OTP.Heap.to_id",
+        "equation_FStar.DM4F.OTP.Heap.upd", "equation_OTP.op_Hat_Hat",
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_FStar.DM4F.OTP.Heap.q",
         "function_token_typing_FStar.DM4F.OTP.Heap.size", "int_inversion",
-        "int_typing",
-        "interpretation_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_eq_intro",
+        "int_typing", "lemma_FStar.DM4F.OTP.Heap.lemma_eq_intro",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd1",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd2",
         "lemma_OTP.xor_idempotent", "projection_inverse_BoxInt_proj_0",
@@ -93,41 +89,11 @@
         "token_correspondence_FStar.BitVector.logxor_vec",
         "token_correspondence_OTP.op_Hat_Hat",
         "typing_FStar.BitVector.logxor_vec",
-        "typing_FStar.DM4F.OTP.Heap.sel", "typing_FStar.DM4F.OTP.Heap.to_id"
+        "typing_FStar.DM4F.OTP.Heap.sel", "typing_FStar.DM4F.OTP.Heap.to_id",
+        "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "8743d3ddea5c4b99e5cf3a1dcc17b2e0"
-    ],
-    [
-      "OTP.otp",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Pervasives.Native.None@tok",
-        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.DM4F.OTP.Heap.elem",
-        "function_token_typing_FStar.DM4F.OTP.Heap.id",
-        "kinding_FStar.Pervasives.Native.option@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.None_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.DM4F.OTP.Heap_Tm_refine_a345258ed5886f51f9223507d868c355",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.DM4F.OTP.Heap.incr"
-      ],
-      0,
-      "1bdefd7464f7956a10ff124a28690977"
+      "9940f942c54aaf0b0f4fb64faa45f505"
     ],
     [
       "OTP.xor_prop",
@@ -145,7 +111,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b0156871c6bdfaf6e0f66a1950727a0d"
+      "cc62afdab81fdca90faa37034df12c82"
     ],
     [
       "OTP.xor_prop",
@@ -154,7 +120,7 @@
       1,
       [ "@query" ],
       0,
-      "6181884b0c8f7ef5d560ba4d8a385d3b"
+      "38e3de18a4fdf3e2041a31db8340d410"
     ],
     [
       "OTP.xor_prop",
@@ -165,24 +131,18 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.BitVector.logxor_vec.fuel_instrumented",
         "@fuel_irrelevance_FStar.BitVector.logxor_vec.fuel_instrumented",
-        "@query",
-        "FStar.BitVector_interpretation_Tm_arrow_3a656a9c42cd07d7f3caa5bf33717900",
-        "OTP_interpretation_Tm_arrow_47bf4cc39a02d867ef093bf2c915524e",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
         "bool_typing", "equation_FStar.BitVector.bv_t",
         "equation_FStar.DM4F.OTP.Heap.elem",
         "equation_FStar.DM4F.OTP.Heap.size", "equation_OTP.op_Hat_Hat",
         "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_FStar.BitVector.logxor_vec",
         "function_token_typing_FStar.DM4F.OTP.Heap.q",
         "function_token_typing_FStar.DM4F.OTP.Heap.size",
-        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
+        "function_token_typing_Prims.bool", "int_inversion",
         "lemma_FStar.BitVector.logxor_vec_definition",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "primitive_Prims.op_disEquality",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
@@ -191,11 +151,10 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_FStar.BitVector.logxor_vec",
         "token_correspondence_OTP.op_Hat_Hat",
-        "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index",
-        "typing_OTP.op_Hat_Hat"
+        "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "d7fa7c4add1c0d7aaeed14f32a211443"
+      "dc24f9c6975eff588b80e622280d7569"
     ],
     [
       "OTP.otp_secure",
@@ -203,14 +162,14 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
         "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
         "equation_FStar.DM4F.OTP.Heap.elem",
         "function_token_typing_Prims.bool",
         "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "004d26b99c73578f8e13cf5d5e9bd359"
+      "55d875e87f5016afd369e9bf4b44851a"
     ],
     [
       "OTP.otp_secure",
@@ -218,14 +177,14 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
         "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
         "equation_FStar.DM4F.OTP.Heap.elem",
         "function_token_typing_Prims.bool",
         "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "b2d8e338e087ba205676749e5a7f5da0"
+      "7b5118fd27a7207bc3eda8a4aff3c01d"
     ],
     [
       "OTP.otp_secure",
@@ -236,18 +195,19 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.OTP.Random.__proj__RAND__item__get_equality",
         "FStar.DM4F.OTP.Random.__proj__RAND__item__get_token_correspondence",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__put_equality",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__put_token_correspondence",
         "FStar.DM4F.OTP.Random_interpretation_Tm_arrow_20b9fbf7a2a4dcc76223e61d0816af6a",
         "OTP_interpretation_Tm_arrow_7019e928280837af723f22a0549d4e61",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_FStar.Seq.Base.seq__uu___haseq",
+        "assumption_Prims.HasEq_bool",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Tm_unit",
         "data_elim_FStar.DM4F.OTP.Random.Bijection",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "eq2-interp", "equation_FStar.BitVector.bv_t",
         "equation_FStar.DM4F.OTP.Heap.elem",
         "equation_FStar.DM4F.OTP.Heap.incr",
         "equation_FStar.DM4F.OTP.Heap.incrementable",
@@ -258,19 +218,19 @@
         "equation_FStar.DM4F.OTP.Random.sample",
         "equation_FStar.Pervasives.Native.snd", "equation_OTP.bij",
         "equation_OTP.op_Hat_Hat", "equation_OTP.otp",
-        "equation_Prims.as_requires", "equation_Prims.eqtype",
-        "equation_Prims.l_True", "equation_Prims.nat", "equation_Prims.pos",
-        "forall-interp",
+        "equation_Prims.as_ensures", "equation_Prims.as_requires",
+        "equation_Prims.eqtype", "equation_Prims.l_True",
+        "equation_Prims.nat", "equation_Prims.pos", "forall-interp",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.DM4F.OTP.Heap.id",
         "function_token_typing_FStar.DM4F.OTP.Heap.q",
         "function_token_typing_FStar.DM4F.OTP.Heap.size",
-        "function_token_typing_FStar.DM4F.OTP.Heap.tape", "int_inversion",
-        "int_typing",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_16a38a369d941f86939cb8741a5e49e2",
+        "function_token_typing_FStar.DM4F.OTP.Heap.tape",
+        "function_token_typing_Prims.bool",
+        "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
+        "int_inversion", "int_typing",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_32cc41bede7f6734de6df1293749079b",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_9db29db46153c4404783fe7ac1f4ce6e",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_a819e8bb3636b28a63b659e491bcebc0",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_cb1d7c49893c180307d69f9d6dfbb5fd",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_df051fbd79622fee9db51c8c3065f6ee",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_eb5a642e5085f84ef6a9ea94652b8cbc",
@@ -278,7 +238,8 @@
         "interpretation_OTP_Tm_abs_ba3fb22ce803c9d319da0025889ae3a7",
         "interpretation_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40",
         "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_eq_elim",
+        "interpretation_Prims_Tm_abs_cc0ce251c10a6cba9664080c8e806896",
+        "l_not-interp", "lemma_FStar.DM4F.OTP.Heap.lemma_eq_elim",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd1", "lemma_OTP.xor_prop",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan",
@@ -289,6 +250,7 @@
         "projection_inverse_FStar.DM4F.OTP.Random.Bijection_f",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.DM4F.OTP.Random_Tm_refine_8a730f9be4fc3e6d9b4fbd3fe5cbcbf8",
@@ -302,44 +264,14 @@
         "token_correspondence_FStar.DM4F.OTP.Random.__proj__Bijection__item__f",
         "token_correspondence_OTP.op_Hat_Hat", "true_interp",
         "typing_FStar.BitVector.logxor_vec",
-        "typing_FStar.DM4F.OTP.Heap.index", "typing_FStar.DM4F.OTP.Heap.sel",
+        "typing_FStar.DM4F.OTP.Heap.index",
         "typing_FStar.DM4F.OTP.Heap.to_id",
         "typing_FStar.DM4F.OTP.Random.sample", "typing_OTP.bij",
         "typing_OTP.otp",
         "typing_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40", "unit_typing"
       ],
       0,
-      "28e8caf318675db4a8d194d186cb2c20"
-    ],
-    [
-      "OTP.otp_secure",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Seq.Base.seq_haseq",
-        "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
-        "equation_FStar.DM4F.OTP.Heap.elem",
-        "function_token_typing_Prims.bool",
-        "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
-      ],
-      0,
-      "13d4c136ee705783d565e2ea4dacdd50"
-    ],
-    [
-      "OTP.otp_secure",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Seq.Base.seq_haseq",
-        "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
-        "equation_FStar.DM4F.OTP.Heap.elem",
-        "function_token_typing_Prims.bool",
-        "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
-      ],
-      0,
-      "224954823c2fc984160fa031b713d4b2"
+      "80b4e556a0048d754728ae17817e8097"
     ],
     [
       "OTP.one_time_pad",
@@ -348,129 +280,91 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_FStar.Pervasives.Native.None@tok",
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "equation_FStar.DM4F.OTP.Heap.elem",
-        "equation_FStar.DM4F.OTP.Heap.incrementable",
-        "equation_Prims.eqtype",
+        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.eqtype",
+        "equation_Prims.pos",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.DM4F.OTP.Heap.id",
+        "function_token_typing_FStar.DM4F.OTP.Heap.q",
         "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.None_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.DM4F.OTP.Heap_Tm_refine_a345258ed5886f51f9223507d868c355",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "594c4cb8f02181de029f0a8f90cb37bc"
+      "3c6e51cec6c5c9fab927c05075cdc255"
     ],
     [
-      "OTP.one_time_pad_ok",
+      "OTP.op_Hat_Hat",
       1,
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "30e3c7d0becaf576a0234244edf5f407"
+    ],
+    [
+      "OTP.xor_idempotent",
+      4,
+      2,
+      1,
+      [
         "@MaxIFuel_assumption", "@query",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__get_equality",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__get_token_correspondence",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__put_equality",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__put_token_correspondence",
-        "FStar.DM4F.OTP.Random_interpretation_Tm_arrow_20b9fbf7a2a4dcc76223e61d0816af6a",
-        "OTP_interpretation_Tm_arrow_47bf4cc39a02d867ef093bf2c915524e",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
-        "constructor_distinct_FStar.Pervasives.Native.Mktuple2",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
-        "constructor_distinct_Tm_unit",
-        "data_elim_FStar.DM4F.OTP.Random.Bijection",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some", "eq2-interp",
-        "equation_FStar.DM4F.OTP.Heap.elem",
-        "equation_FStar.DM4F.OTP.Heap.incrementable",
-        "equation_FStar.DM4F.OTP.Heap.sel",
-        "equation_FStar.DM4F.OTP.Heap.size",
-        "equation_FStar.DM4F.OTP.Heap.to_id",
-        "equation_FStar.DM4F.OTP.Random.sample",
-        "equation_FStar.Pervasives.Native.snd", "equation_OTP.bij",
-        "equation_OTP.one_time_pad", "equation_OTP.op_Hat_Hat",
-        "equation_Prims.as_ensures", "equation_Prims.as_requires",
-        "equation_Prims.eq2", "equation_Prims.eqtype",
-        "equation_Prims.l_True", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.DM4F.OTP.Heap.id",
+        "assumption_Prims.HasEq_int", "equation_FStar.DM4F.OTP.Heap.size",
+        "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_FStar.DM4F.OTP.Heap.q",
         "function_token_typing_FStar.DM4F.OTP.Heap.size",
-        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_16a38a369d941f86939cb8741a5e49e2",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_32cc41bede7f6734de6df1293749079b",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_9db29db46153c4404783fe7ac1f4ce6e",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_a819e8bb3636b28a63b659e491bcebc0",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_cb1d7c49893c180307d69f9d6dfbb5fd",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_df051fbd79622fee9db51c8c3065f6ee",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_eb5a642e5085f84ef6a9ea94652b8cbc",
-        "interpretation_OTP_Tm_abs_c2b46f74284882981a4167b90b28c955",
-        "interpretation_OTP_Tm_abs_c9f43919e174b00c924760194993584e",
-        "interpretation_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40",
-        "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
-        "interpretation_Prims_Tm_abs_cc0ce251c10a6cba9664080c8e806896",
-        "kinding_FStar.Pervasives.Native.option@tok",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Tm_arrow_f82c3fb9ac6610efb97620a59b378092", "l_not-interp",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_eq_elim",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "63c42ecc37e3064415b34d58286a3d4c"
+    ],
+    [
+      "OTP.bij",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.DM4F.OTP.Heap.elem",
+        "equation_FStar.DM4F.OTP.Heap.sel",
+        "equation_FStar.DM4F.OTP.Heap.size", "equation_OTP.op_Hat_Hat",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_FStar.DM4F.OTP.Heap.q",
+        "function_token_typing_FStar.DM4F.OTP.Heap.size", "int_inversion",
+        "int_typing", "lemma_FStar.DM4F.OTP.Heap.lemma_eq_intro",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd1",
-        "lemma_FStar.Pervasives.invertOption",
-        "lemma_FStar.Seq.Base.lemma_create_len", "lemma_OTP.xor_idempotent",
-        "lemma_OTP.xor_prop", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_disEquality",
-        "proj_equation_FStar.DM4F.OTP.Random.Bijection_f",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.DM4F.OTP.Random.Bijection_f",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.DM4F.OTP.Random_Tm_refine_8a730f9be4fc3e6d9b4fbd3fe5cbcbf8",
-        "refinement_interpretation_FStar.DM4F.OTP.Random_Tm_refine_a699d07d3a8edc369f5d5b724f47e50f",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd2",
+        "lemma_OTP.xor_idempotent", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.DM4F.OTP.Heap_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_FStar.BitVector.logxor_vec",
-        "token_correspondence_FStar.DM4F.OTP.Random.__proj__Bijection__item__f",
-        "token_correspondence_OTP.op_Hat_Hat", "true_interp",
+        "token_correspondence_OTP.op_Hat_Hat",
         "typing_FStar.BitVector.logxor_vec",
-        "typing_FStar.DM4F.OTP.Heap.index", "typing_FStar.DM4F.OTP.Heap.sel",
-        "typing_FStar.DM4F.OTP.Random.sample",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "typing_OTP.bij", "typing_OTP.op_Hat_Hat",
-        "typing_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40",
-        "unit_inversion", "unit_typing"
+        "typing_FStar.DM4F.OTP.Heap.sel", "typing_FStar.DM4F.OTP.Heap.to_id",
+        "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "7f3b703f62f3ba9b6791fcdc6142567e"
+      "d89a7e4f12789f34cf963baf68662197"
     ],
     [
-      "OTP.one_time_pad_ok",
-      2,
+      "OTP.xor_prop",
+      4,
       2,
       1,
       [
@@ -484,25 +378,54 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ed6d4b4b3aef9f39f957865787b91e36"
+      "cbcd346a7dadf59db8b824c88b8dde1b"
     ],
     [
-      "OTP.one_time_pad_ok",
-      3,
+      "OTP.otp_secure",
+      4,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_FStar.DM4F.OTP.Heap.size",
-        "equation_Prims.nat", "equation_Prims.pos",
+        "assumption_FStar.Seq.Base.seq__uu___haseq",
+        "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
+        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.pos",
         "function_token_typing_FStar.DM4F.OTP.Heap.q",
-        "function_token_typing_FStar.DM4F.OTP.Heap.size",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "function_token_typing_Prims.bool",
+        "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
+        "int_inversion",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "40e20f43960edca7c6a2223a5bba55ed"
+      "1ce8714034ad2a7194ac5aad45ccb419"
+    ],
+    [
+      "OTP.one_time_pad",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Pervasives.Native.None@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
+        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.eqtype",
+        "equation_Prims.pos",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_FStar.DM4F.OTP.Heap.id",
+        "function_token_typing_FStar.DM4F.OTP.Heap.q",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.DM4F.OTP.Heap_Tm_refine_a345258ed5886f51f9223507d868c355",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.DM4F.OTP.Heap.incr"
+      ],
+      0,
+      "d289ffce7b8d24b5f9f026d65a64b05b"
     ]
   ]
 ]

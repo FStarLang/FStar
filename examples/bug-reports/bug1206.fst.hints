@@ -1,0 +1,50 @@
+[
+  "\u0019!zSü{\u0015ÙwÆ¡T\u000fSD\n",
+  [
+    [
+      "Bug1206.bslice",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "201f58ffea4c2971a1525a55ba04068c"
+    ],
+    [
+      "Bug1206.ser_id",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option"
+      ],
+      0,
+      "33eea4fbda1351862420ed45ad7eb34b"
+    ],
+    [
+      "Bug1206.ser'",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_Bug1206.bslice",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "proj_equation_Bug1206.BSlice_len"
+      ],
+      0,
+      "fe1c82241c875570c3fbc7cedcd8008d"
+    ]
+  ]
+]

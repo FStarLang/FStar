@@ -28,6 +28,10 @@ let sel _ _ = Obj.magic ()
 let upd _ _ _ = Obj.magic ()
 let alloc _ _ _ = Obj.magic ()
 
+let free_mm _ _ = Obj.magic ()
+let sel_tot = sel
+let upd_tot = upd
+                
 (* Untyped view of references *)
 type aref =
    | Ref of (unit * unit)

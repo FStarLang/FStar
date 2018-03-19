@@ -15,7 +15,23 @@
         "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
       ],
       0,
-      "184759c9c49b88a619f28fd8c4d180ea"
+      "ac8d366afc40a2e4ec8863e5959632f0"
+    ],
+    [
+      "FStar.DM4F.Exceptions.bind_ex",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.Exceptions_interpretation_Tm_arrow_f2d128b41b807a50fc4bea0cd4f225d8",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.DM4F.Exceptions.ex",
+        "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
+      ],
+      0,
+      "af7e7ed57e55c51c680c46a888344e2a"
     ]
   ]
 ]

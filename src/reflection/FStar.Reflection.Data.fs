@@ -22,6 +22,7 @@ type pattern =
     | Pat_Cons     of fv * list<pattern>
     | Pat_Var      of bv
     | Pat_Wild     of bv
+    | Pat_Dot_Term of bv * term
 
 type branch = pattern * term
 
@@ -32,139 +33,164 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of binder
+    | Tv_Var    of bv
+    | Tv_BVar   of bv
     | Tv_FVar   of fv
     | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * comp
     | Tv_Type   of unit
-    | Tv_Refine of binder * term
+    | Tv_Refine of bv * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * typ
-    | Tv_Let    of binder * term * term
+    | Tv_Let    of bool * bv * term * term
     | Tv_Match  of term * list<branch>
+    | Tv_AscribedT of term * term * option<term>
+    | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
 
+type bv_view = {
+    bv_ppname : string;
+    bv_index : Z.t;
+    bv_sort : typ;
+}
+
 type comp_view =
-    | C_Total of typ
+    | C_Total of typ * option<term> //optional decreases clause
     | C_Lemma of term * term
     | C_Unknown
 
-// See ulib/FStar.Reflection.Syntax.fst for explanations of these two
-type ctor =
-    | Ctor of  name * typ
 type sigelt_view =
-    | Sg_Inductive of name * list<binder> * typ * list<ctor>
-    | Sg_Let of fv * typ * term
+    | Sg_Let of bool * fv * typ * term
+    | Sg_Inductive of name * list<binder> * typ * list<name> // name, params, type, constructors
+    | Sg_Constructor of name * typ
     | Unk
 
+type var = Z.t
+
+type exp =
+    | Unit
+    | Var of var
+    | Mult of exp * exp
+
+(* Contains all lids and terms needed for embedding/unembedding *)
+
+type refl_constant = {
+    lid : FStar.Ident.lid;
+    t : term;
+}
+
+let refl_constant_lid rc = rc.lid
+let refl_constant_term rc = rc.t
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
-let fstar_refl_basic_lid s = fstar_refl_lid ["Basic"; s]
-let fstar_refl_types_lid s = fstar_refl_lid ["Types"; s]
+let fstar_refl_basic_lid  s = fstar_refl_lid ["Basic";  s]
 let fstar_refl_syntax_lid s = fstar_refl_lid ["Syntax"; s]
-let fstar_refl_data_lid s  = fstar_refl_lid ["Data"; s]
+let fstar_refl_types_lid  s = fstar_refl_lid ["Types";  s]
+let fstar_refl_data_lid   s = fstar_refl_lid ["Data";   s]
 
-let mk_refl_types_lid_as_term (s:string) = tconst (fstar_refl_types_lid s)
+let fstar_refl_data_const s =
+    let lid = fstar_refl_data_lid s in
+    { lid = lid ; t = tdataconstr lid }
+
+let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
-let mk_refl_data_lid_as_term (s:string)  = tconst (fstar_refl_data_lid s)
-let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
+let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 
-(* types *)
-let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
+let mk_inspect_pack_pair s =
+    let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
+    let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
+    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_defined_at_level 1) None } in
+    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_defined_at_level 1) None } in
+    (inspect, pack)
+
+let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
+let fstar_refl_inspect_fv     , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
+let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
+let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
+let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
+let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
+
+(* assumed types *)
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
-let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
+let fstar_refl_bv        = mk_refl_types_lid_as_term "bv"
+let fstar_refl_fv        = mk_refl_types_lid_as_term "fv"
 let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
-let fstar_refl_comp_view = mk_refl_types_lid_as_term "comp_view"
-let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
-let fstar_refl_binders   = mk_refl_types_lid_as_term "binders"
-let fstar_refl_term_view = mk_refl_types_lid_as_term "term_view"
+let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
 let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
-let fstar_refl_ctor      = mk_refl_types_lid_as_term "ctor"
-let fstar_refl_pattern   = mk_refl_syntax_lid_as_term "pattern"
-let fstar_refl_branch    = mk_refl_types_lid_as_term "branch"
+let fstar_refl_term      = mk_refl_types_lid_as_term "term"
+
+(* auxiliary types *)
+let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
+let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
+let fstar_refl_term_view = mk_refl_data_lid_as_term "term_view"
+let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
+let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
+let fstar_refl_bv_view   = mk_refl_data_lid_as_term "bv_view"
+
+(* bv_view, this is a record constructor *)
+
+let ref_Mk_bv =
+    let lid = fstar_refl_data_lid "Mkbv_view" in
+    let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
+                                Ident.mk_ident ("bv_ppname", Range.dummyRange);
+                                Ident.mk_ident ("bv_index" , Range.dummyRange);
+                                Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    { lid = lid ; t = fvar lid Delta_constant (Some attr) }
 
 (* quals *)
-let ref_Q_Explicit_lid   = fstar_refl_data_lid "Q_Explicit"
-let ref_Q_Implicit_lid   = fstar_refl_data_lid "Q_Implicit"
-let ref_Q_Explicit       = tdataconstr ref_Q_Explicit_lid
-let ref_Q_Implicit       = tdataconstr ref_Q_Implicit_lid
+let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
+let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
 
 (* const *)
-let ref_C_Unit_lid  = fstar_refl_data_lid "C_Unit"
-let ref_C_True_lid  = fstar_refl_data_lid "C_True"
-let ref_C_False_lid = fstar_refl_data_lid "C_False"
-let ref_C_Int_lid   = fstar_refl_data_lid "C_Int"
-let ref_C_String_lid = fstar_refl_data_lid "C_String"
-
-let ref_C_Unit   = tdataconstr ref_C_Unit_lid
-let ref_C_True   = tdataconstr ref_C_True_lid
-let ref_C_False  = tdataconstr ref_C_False_lid
-let ref_C_Int    = tdataconstr ref_C_Int_lid
-let ref_C_String = tdataconstr ref_C_String_lid
+let ref_C_Unit   = fstar_refl_data_const "C_Unit"
+let ref_C_True   = fstar_refl_data_const "C_True"
+let ref_C_False  = fstar_refl_data_const "C_False"
+let ref_C_Int    = fstar_refl_data_const "C_Int"
+let ref_C_String = fstar_refl_data_const "C_String"
 
 (* pattern *)
-let ref_Pat_Constant_lid   = fstar_refl_data_lid "Pat_Constant"
-let ref_Pat_Cons_lid       = fstar_refl_data_lid "Pat_Cons"
-let ref_Pat_Var_lid        = fstar_refl_data_lid "Pat_Var"
-let ref_Pat_Wild_lid       = fstar_refl_data_lid "Pat_Wild"
-
-let ref_Pat_Constant   = tdataconstr ref_Pat_Constant_lid
-let ref_Pat_Cons       = tdataconstr ref_Pat_Cons_lid
-let ref_Pat_Var        = tdataconstr ref_Pat_Var_lid
-let ref_Pat_Wild       = tdataconstr ref_Pat_Wild_lid
+let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
+let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
+let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
+let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
+let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
 
 (* term_view *)
-let ref_Tv_Var_lid     = fstar_refl_data_lid "Tv_Var"
-let ref_Tv_FVar_lid    = fstar_refl_data_lid "Tv_FVar"
-let ref_Tv_App_lid     = fstar_refl_data_lid "Tv_App"
-let ref_Tv_Abs_lid     = fstar_refl_data_lid "Tv_Abs"
-let ref_Tv_Arrow_lid   = fstar_refl_data_lid "Tv_Arrow"
-let ref_Tv_Type_lid    = fstar_refl_data_lid "Tv_Type"
-let ref_Tv_Refine_lid  = fstar_refl_data_lid "Tv_Refine"
-let ref_Tv_Const_lid   = fstar_refl_data_lid "Tv_Const"
-let ref_Tv_Uvar_lid    = fstar_refl_data_lid "Tv_Uvar"
-let ref_Tv_Let_lid     = fstar_refl_data_lid "Tv_Let"
-let ref_Tv_Match_lid   = fstar_refl_data_lid "Tv_Match"
-let ref_Tv_Unknown_lid = fstar_refl_data_lid "Tv_Unknown"
-
-let ref_Tv_Var     = tdataconstr ref_Tv_Var_lid
-let ref_Tv_FVar    = tdataconstr ref_Tv_FVar_lid
-let ref_Tv_App     = tdataconstr ref_Tv_App_lid
-let ref_Tv_Abs     = tdataconstr ref_Tv_Abs_lid
-let ref_Tv_Arrow   = tdataconstr ref_Tv_Arrow_lid
-let ref_Tv_Type    = tdataconstr ref_Tv_Type_lid
-let ref_Tv_Refine  = tdataconstr ref_Tv_Refine_lid
-let ref_Tv_Const   = tdataconstr ref_Tv_Const_lid
-let ref_Tv_Uvar    = tdataconstr ref_Tv_Uvar_lid
-let ref_Tv_Let     = tdataconstr ref_Tv_Let_lid
-let ref_Tv_Match   = tdataconstr ref_Tv_Match_lid
-let ref_Tv_Unknown = tdataconstr ref_Tv_Unknown_lid
+let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"
+let ref_Tv_BVar    = fstar_refl_data_const "Tv_BVar"
+let ref_Tv_FVar    = fstar_refl_data_const "Tv_FVar"
+let ref_Tv_App     = fstar_refl_data_const "Tv_App"
+let ref_Tv_Abs     = fstar_refl_data_const "Tv_Abs"
+let ref_Tv_Arrow   = fstar_refl_data_const "Tv_Arrow"
+let ref_Tv_Type    = fstar_refl_data_const "Tv_Type"
+let ref_Tv_Refine  = fstar_refl_data_const "Tv_Refine"
+let ref_Tv_Const   = fstar_refl_data_const "Tv_Const"
+let ref_Tv_Uvar    = fstar_refl_data_const "Tv_Uvar"
+let ref_Tv_Let     = fstar_refl_data_const "Tv_Let"
+let ref_Tv_Match   = fstar_refl_data_const "Tv_Match"
+let ref_Tv_AscT    = fstar_refl_data_const "Tv_AscribedT"
+let ref_Tv_AscC    = fstar_refl_data_const "Tv_AscribedC"
+let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
 
 (* comp_view *)
-let ref_C_Total_lid     = fstar_refl_data_lid "C_Total"
-let ref_C_Lemma_lid     = fstar_refl_data_lid "C_Lemma"
-let ref_C_Unknown_lid   = fstar_refl_data_lid "C_Unknown"
-
-let ref_C_Total         = tdataconstr ref_C_Total_lid
-let ref_C_Lemma         = tdataconstr ref_C_Lemma_lid
-let ref_C_Unknown       = tdataconstr ref_C_Unknown_lid
+let ref_C_Total   = fstar_refl_data_const "C_Total"
+let ref_C_Lemma   = fstar_refl_data_const "C_Lemma"
+let ref_C_Unknown = fstar_refl_data_const "C_Unknown"
 
 (* inductives & sigelts *)
-let ref_Sg_Inductive_lid = fstar_refl_data_lid "Sg_Inductive"
-let ref_Sg_Let_lid       = fstar_refl_data_lid "Sg_Let"
-let ref_Unk_lid          = fstar_refl_data_lid "Unk"
-let ref_Ctor_lid         = fstar_refl_data_lid "Ctor"
-let ref_Sg_Inductive = tdataconstr ref_Sg_Inductive_lid
-let ref_Sg_Let       = tdataconstr ref_Sg_Let_lid
-let ref_Unk          = tdataconstr ref_Unk_lid
-let ref_Ctor         = tdataconstr ref_Ctor_lid
+let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
+let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
+let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
+let ref_Unk            = fstar_refl_data_const "Unk"
 
-let t_binder = tabbrev <| fstar_refl_types_lid "binder"
-let t_term = tabbrev <| fstar_refl_types_lid "term"
-let t_fv = tabbrev <| fstar_refl_types_lid "fv"
-let t_binders = tabbrev <| fstar_refl_types_lid "binders"
+(* exp *)
+let ref_E_Unit = fstar_refl_data_const "Unit"
+let ref_E_Var = fstar_refl_data_const "Var"
+let ref_E_Mult = fstar_refl_data_const "Mult"
+let t_exp = tconst (Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"] Range.dummyRange)
 
+(* Should not be here *)
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange
 let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange
 let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange

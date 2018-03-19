@@ -11,7 +11,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "5c5d0628c9e2efb71ad395771d152ea7"
+      "6740b7a83f04016c22d136846daf73fd"
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0864d396fdedd59265beea6dec453da5"
+      "e4805bfb2c6cce4e8fee77ab2473a0e4"
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -32,7 +32,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "22b7e254bb7e2fcf3eca6c6b205172bc"
+      "570ba5af4fed888376af8bca8f6c312e"
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -41,19 +41,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "bool_inversion", "equation_FStar.Heap.ref",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_rel",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "equation_FStar.Set.eqtype", "equation_FStar.TwoLevelHeap.as_ref",
+        "bool_inversion", "bool_typing", "equation_FStar.Heap.ref",
+        "equation_FStar.Heap.trivial_preorder", "equation_FStar.Set.eqtype",
+        "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.modifies",
         "equation_FStar.TwoLevelHeap.rid",
         "equation_FStar.TwoLevelHeap.rref",
         "equation_FStar.TwoLevelHeap.sel", "equation_FStar.TwoLevelHeap.t",
-        "equation_Prims.eqtype", "equation_Prims.l_True",
+        "equation_Prims.eqtype",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_Prims.int", "int_inversion",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConcat",
         "lemma_FStar.Map.lemma_InDomRestrict",
@@ -69,19 +66,29 @@
         "lemma_FStar.Set.mem_union", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_TestTwoLevelHeap_Tm_refine_bdd7cf97d4b17c7b65136fc13b914970",
-        "true_interp", "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Map.concat", "typing_FStar.Map.contains",
-        "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
+        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Map.concat",
+        "typing_FStar.Map.contains", "typing_FStar.Map.domain",
+        "typing_FStar.Map.restrict", "typing_FStar.Map.sel",
         "typing_FStar.Monotonic.Heap.upd", "typing_FStar.Set.complement",
         "typing_FStar.Set.empty", "typing_FStar.Set.singleton",
         "typing_FStar.Set.union"
       ],
       0,
-      "c8a46d946bec0cf4bbf5fa74be81acc5"
+      "52fee4246d67b4c710afa084ff9a0acd"
+    ],
+    [
+      "TestTwoLevelHeap.test0",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "93147a987d1c6973c10925312ea26c6e"
     ]
   ]
 ]

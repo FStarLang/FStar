@@ -3,15 +3,15 @@ module Simplifier
 open FStar.Tactics
 open FStar.Tactics.Simplifier
 
-let goal_is_true : tactic unit =
-    g <-- cur_goal;
+let goal_is_true () : Tac unit =
+    let g = cur_goal () in
     match term_as_formula g with
-    | True_ -> trivial
+    | True_ -> trivial ()
     | _ -> fail "not syntactically true"
 
-let test_simplify : tactic unit =
-    simplify;;
-    or_else goal_is_true (dump "";; fail "simplify left open goals")
+let test_simplify () : Tac unit =
+    simplify ();
+    or_else goal_is_true (fun () -> dump ""; fail "simplify left open goals")
 
 let _ = assert_by_tactic (True /\ True)
                          test_simplify

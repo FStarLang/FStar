@@ -2,9 +2,7 @@ module EtM.CPA
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
-open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.Monotonic.RRef
 open EtM.Ideal
 
 open Platform.Bytes
@@ -12,6 +10,8 @@ module CC = EtM.CoreCrypto
 module B = Platform.Bytes
 
 open EtM.Plain
+
+type rid = erid
 
 (*** Basic types ***)
 
@@ -85,7 +85,7 @@ type key =
 /// An accessor for the log in state h
 let log (k:key) (h:mem) 
   : GTot (seq log_entry) =
-    m_sel h (Key?.log k)
+    sel h (Key?.log k)
 
 (*** Invariants on the ideal state ***)
 
@@ -158,7 +158,7 @@ let cipher_functional_correctness (raw_key:bytes) (log:seq log_entry) =
 let invariant (k:key) (h:mem) =
     let Key raw_key lg = k in
     let log = log k h in
-    m_contains lg h /\ //<-- technical: the log must be allocated
+    contains h lg /\ //<-- technical: the log must be allocated
     pairwise_distinct_ivs log /\
     cipher_functional_correctness raw_key log
 
@@ -170,11 +170,11 @@ let invariant (k:key) (h:mem) =
 ///       -- Returns a fresh key satisfying its invariant whose log is initially empty
 let keygen (parent:rid)
   : ST key
-  (requires (fun _ -> True))
+  (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
   (ensures  (fun m0 k m1 -> 
-               modifies Set.empty m0 m1 /\
-               extends k.region parent /\
-               stronger_fresh_region k.region m0 m1 /\
+               modifies Set.empty m0 m1    /\
+               extends k.region parent  /\
+               fresh_region k.region m0 m1 /\
                log k m1 == createEmpty /\
                invariant k m1)) =
   let raw = CC.random keysize in
@@ -205,7 +205,7 @@ let encrypt (k:key) (m:plain)
      let log1 = log k h1 in
      invariant k h1 /\
      modifies_one k.region h0 h1 /\
-     m_contains k.log h1 /\
+     contains h1 k.log  /\
      log1 == snoc log0 (Entry m c)))) =
   let iv = fresh_iv k in
   let text = if ind_cpa
@@ -262,7 +262,7 @@ let decrypt (k:key) (c:cipher)
   let iv,c' = split c ivsize in
   let raw_plain = CC.block_dec CC.AES_128_CBC raw_key iv c' in
   if ind_cpa_rest_adv then
-    let log = m_read log in
+    let log = !log in
     let Entry plain _ = find_entry log c in
     split_entry plain c iv c';
     if not ind_cpa then begin

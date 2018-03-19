@@ -32,6 +32,7 @@ open FStar.SMTEncoding.Util
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
+module Print = FStar.Syntax.Print
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -77,7 +78,7 @@ let initialize_hints_db src_filename format_filename : unit =
                 then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
          end
 
-let finalize_hints_db src_filename : unit =
+let finalize_hints_db src_filename :unit =
     begin if Options.record_hints () then
           let hints = Option.get !recorded_hints in
           let hints_db = {
@@ -164,7 +165,7 @@ type errors = {
     error_fuel: int;
     error_ifuel: int;
     error_hint: option<(list<string>)>;
-    error_messages: list<(string * Range.range)>
+    error_messages: list<(Errors.raw_error * string * Range.range)>
 }
 
 let error_to_short_string err =
@@ -234,7 +235,7 @@ let query_errors settings z3result =
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
-            error_messages = List.map (fun (_, x, y) -> x,y) error_labels
+            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,x,y) error_labels
         }
      in
      Some err
@@ -288,7 +289,6 @@ let report_errors settings : unit =
           settings.query_errors |> List.iter (fun e ->
           FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
           FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
-
         | None ->
           let err_detail =
             settings.query_errors |>
@@ -296,7 +296,7 @@ let report_errors settings : unit =
             String.concat "; " in
           FStar.TypeChecker.Err.add_errors
                    settings.query_env
-                   [(BU.format1 "Unknown assertion failed (%s)" err_detail,
+                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
     end
 
@@ -328,9 +328,8 @@ let query_info settings z3result =
                 BU.string_of_int settings.query_rlimit;
                 stats ];
         errs |> List.iter (fun (_, msg, range) ->
-            let e = FStar.Errors.mk_issue FStar.Errors.EInfo (Some range) msg in
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
-            BU.print2 "\t\t%s%s\n" tag (FStar.Errors.format_issue e))
+            FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
 let record_hint settings z3result =
@@ -394,9 +393,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let default_settings, next_hint =
         let qname, index =
-            match env.qname_and_index with
-            | None -> failwith "No query name set!"
-            | Some (q, n) -> Ident.text_of_lid q, n
+            match env.qtbl_name_and_index with
+            | _, None -> failwith "No query name set!"
+            | _, Some (q, n) -> Ident.text_of_lid q, n
         in
         let rlimit =
             Prims.op_Multiply
@@ -499,6 +498,14 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
 let solve use_env_msg tcenv q : unit =
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    if Options.no_smt ()
+    then
+        FStar.TypeChecker.Err.add_errors
+                 tcenv
+                 [(Errors.Error_NoSMTButNeeded,
+                    BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
+                        tcenv.range)]
+    else
     let tcenv = incr_query_index tcenv in
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in

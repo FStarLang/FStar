@@ -10,7 +10,7 @@
         "@query", "equation_Sig.sigsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "968675d0fa123de25462f54bbdc697ab"
+      "4209870c67fdef1ad5b990631ae8caa8"
     ],
     [
       "Sig.pk",
@@ -19,7 +19,7 @@
       1,
       [ "@query", "equation_Sig.pksize", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "e85a5ec5ffafc07dd411d46207acff66"
+      "17cae8023f9d029a5dc032fc5c5129b0"
     ],
     [
       "Sig.sk",
@@ -28,7 +28,7 @@
       1,
       [ "@query", "equation_Sig.sksize", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "e68cc22805e4c01cdec06537e9d27461"
+      "3d6dcf043245989c67cb1672cb705712"
     ],
     [
       "Sig.entry",
@@ -44,16 +44,7 @@
         "haseqSig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
       0,
-      "a75b1af268a61d5e5593314abebbfb1f"
-    ],
-    [
-      "Sig.__proj__Entry__item__k",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "14c91abae0aea3d5b76290eb7f4a0742"
+      "2da43ecb13773f9ae1ab833a9d54dc93"
     ],
     [
       "Sig.__proj__Entry__item__t",
@@ -61,22 +52,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Platform.Bytes.bytes",
-        "equation_Sig.text", "proj_equation_Sig.Entry_k",
-        "projection_inverse_Sig.Entry_k",
-        "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
+        "@query", "proj_equation_Sig.Entry_k",
+        "projection_inverse_Sig.Entry_k"
       ],
       0,
-      "b52f07548ef8137b537f2f62cbbe4638"
-    ],
-    [
-      "Sig.__proj__Entry__item__m",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ee11069def22e6b0c320338eb1cc3865"
+      "068b672470477ae0d5adbdcafe91401b"
     ],
     [
       "Sig.sign",
@@ -90,7 +70,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "b82afc4f6a6a773ebd5a91bbc5f439c3"
+      "b98159fd872c9bcf602e27df733fbe59"
     ],
     [
       "Sig.verify",
@@ -99,58 +79,20 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_Platform.Bytes.HasEq_bytes",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Sig.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Platform.Bytes.bytes", "equation_Sig.pk",
-        "equation_Sig.pksize", "equation_Sig.sigsize", "equation_Sig.text",
-        "fuel_guarded_inversion_Sig.entry", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "equation_Sig.text", "fuel_guarded_inversion_Sig.entry",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d",
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
       0,
-      "08d85a2e3c1ae8cfd143fbfc474f55ed"
-    ],
-    [
-      "Sig.verify",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "46cd758b86e6529f6ccf6df208421f5b"
-    ],
-    [
-      "Sig.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Sig.text"
-      ],
-      0,
-      "9099467e56c40bd3615598371bf83aa9"
-    ],
-    [
-      "Sig.verify",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "equation_Sig.text",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "3f24375b377ccd8ddc6eea11992a8e61"
+      "8660a5953e7ed5c8cc2b0d1c497a1c2d"
     ]
   ]
 ]

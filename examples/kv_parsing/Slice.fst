@@ -86,7 +86,7 @@ let modifies_prefix (b:bslice) (len:U32.t{U32.v len <= U32.v b.len}) =
 let u32_max (a b:U32.t) : max:U32.t{U32.lte a max /\ U32.lte b max} =
   if U32.gt a b then a else b
 
-let modifies_prefix_plus (b:bslice) (len1 len2: off:U32.t{U32.v off <= U32.v b.len}) h h' h''
+let modifies_prefix_plus (b:bslice) (len1 len2: (off:U32.t{U32.v off <= U32.v b.len})) h h' h''
   : Lemma (requires (modifies_prefix b len1 h h' /\
                      modifies_prefix b len2 h' h''))
           (ensures (modifies_prefix b (u32_max len1 len2) h h'')) =
@@ -110,7 +110,7 @@ let modifies_prefix_times (b:bslice) (len1: U32.t) (len2: U32.t{U32.v len1 + U32
 let same_ref (#a:Type) (b1 b2:B.buffer a) =
     B.frameOf b1 == B.frameOf b2 /\
     B.max_length b1 == B.max_length b2 /\
-    B.content b1 == B.content b2
+    B.content b1 === B.content b2
 
 // XXX: why is this not in the standard library?
 let same_ref_equivalence (#a:Type) :

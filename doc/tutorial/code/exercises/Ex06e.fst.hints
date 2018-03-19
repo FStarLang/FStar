@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "7dc8a55aa4749a2285163be39bde21da"
+      "1abb6e185fa9331575bb19a077490845"
     ],
     [
       "Ex06e.mem",
@@ -27,6 +27,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
@@ -35,16 +36,44 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "93f207705ab8753d161d6b689dee734c"
+      "c2f7413ef9860173dae0b213b387f1b6"
+    ],
+    [
+      "Ex06e.sorted",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
+      ],
+      0,
+      "dcdb9e7c4f926cf5e300b3338618cb4e"
     ],
     [
       "Ex06e.mem",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "int_inversion", "projection_inverse_Prims.Cons_tl",
+        "subterm_ordering_Prims.Cons"
+      ],
       0,
-      "6793e1d50c2fc287b90e9283c83ef524"
+      "1e581b63fbeebbfbccfd49e12754ccb0"
     ]
   ]
 ]

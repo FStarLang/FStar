@@ -43,7 +43,7 @@ let guard_eq i g g' =
         BU.format3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
                         Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g) in
-    raise (Error(msg, Range.dummyRange))
+    raise_error (Errors.Fatal_UnexpectedGuard, msg) Range.dummyRange
 
 let unify i x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
@@ -60,7 +60,7 @@ let should_fail x y =
         match g.guard_f with
             | Trivial -> failwith (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
-    with Error(msg, r) -> BU.print1 "%s\n" msg
+    with Error(e, msg, r) -> BU.print1 "%s\n" msg
 
 let unify' x y =
     let x = pars x in
@@ -152,7 +152,7 @@ let run_all () =
     let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in
     let tm2 = tc ("x:int -> y:int -> bool") in
     unify 11 tm1 tm2
-            (NonTrivial (tc "forall (x:int). (forall (y:int). y==x <==> True)"));
+            (NonTrivial (tc "forall (x:int). (forall (y:int). y==x)"));
 
     let tm1 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
     let tm2 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in

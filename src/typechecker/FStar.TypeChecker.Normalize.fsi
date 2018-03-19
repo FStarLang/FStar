@@ -36,6 +36,7 @@ type step =
   | NoDeltaSteps
   | UnfoldUntil of delta_depth
   | UnfoldOnly of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -46,6 +47,7 @@ type step =
   | NoFullNorm
   | CheckNoUvars
   | Unmeta
+  | Unascribe
 and steps = list<step>
 type closure =
   | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
@@ -60,11 +62,13 @@ val psc_subst : psc -> subst_t
 type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
+    auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
     interpretation:(psc -> args -> option<term>)
 }
 
+val register_plugin: primitive_step -> unit
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
@@ -82,3 +86,7 @@ val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
 val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
+
+val remove_uvar_solutions: Env.env -> term -> term
+
+val unembed_binder_knot : ref<option<FStar.Syntax.Embeddings.unembedder<binder>>>

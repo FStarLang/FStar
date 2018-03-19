@@ -84,36 +84,42 @@ let delay t s =
     mk_Tm_delayed ((t, s)) t.pos
 
 (*
-    force_uvar' (t:term)
+    force_uvar' (t:term) : term * bool
         replaces any unification variable at the head of t
         with the term that it has been fixed to, if any.
+
+        Also returns `true`, if it actually resolved the uvar at the head
+                     `false` otherwise
 *)
 let rec force_uvar' t =
   match t.n with
   | Tm_uvar (uv,_) ->
-      begin
-        match Unionfind.find uv with
-          | Some t' -> force_uvar' t'
-          | _ -> t
-      end
-  | _ -> t
+      (match Unionfind.find uv with
+          | Some t' -> fst (force_uvar' t'), true
+          | _ -> t, false)
+  | _ -> t, false
 
 //wraps force_uvar' to propagate any position information
 //from the uvar to anything it may have been resolved to
 let force_uvar t =
-  let t' = force_uvar' t in
-  if U.physical_equality t t'
-  then t
-  else delay t' ([], Some t.pos)
+  let t', forced = force_uvar' t in
+  if not forced
+  then t, forced
+  else delay t' ([], Some t.pos), forced
 
 //If a delayed node has already been memoized, then return the memo
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
-let rec force_delayed_thunk t = match t.n with
+let rec try_read_memo_aux t =
+  match t.n with
   | Tm_delayed(f, m) ->
     (match !m with
-      | None -> t
-      | Some t' -> let t' = force_delayed_thunk t' in m := Some t'; t')
-  | _ -> t
+      | None -> t, false
+      | Some t' ->
+        let t', shorten = try_read_memo_aux t' in
+        if shorten then m := Some t';
+        t', true)
+  | _ -> t, false
+let try_read_memo t = fst (try_read_memo_aux t)
 
 let rec compress_univ u = match u with
     | U_unif u' ->
@@ -192,12 +198,15 @@ let rec subst' (s:subst_ts) t =
   | [], None
   | [[]], None -> t
   | _ ->
-    let t0 = force_delayed_thunk t in
+    let t0 = try_read_memo t in
     match t0.n with
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
     | Tm_fvar _                          //fvars are never subject to substitution
-    | Tm_uvar _ -> tag_with_range t0 s    //uvars are always resolved to closed terms
+    | Tm_uvar _ -> tag_with_range t0 s   //uvars are always resolved to closed terms, AR: doesn't seem so
+                                         //there could be free universe names, and so universe substs need to be taken care of
+                                         //right now the problem is masked by using a normalization/compress pass
+                                         //AR: update, it happens that univ subst is applied to a uvar, see the example from commit: 3ac46a2a40dd97025522afb19b1437d0e4bbbe4a
 
     | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
@@ -297,11 +306,12 @@ let push_subst s t =
     let mk t' = Syntax.mk t' None (mk_range t.pos s) in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
+    | Tm_lazy i -> t
 
     | Tm_constant _
     | Tm_fvar _
-    | Tm_unknown
-    | Tm_uvar _ -> tag_with_range t s
+    | Tm_uvar _
+    | Tm_unknown -> tag_with_range t s
 
     | Tm_type _
     | Tm_bvar _
@@ -370,21 +380,42 @@ let push_subst s t =
 
     | Tm_meta(t0, Meta_monadic_lift (m1, m2, t)) ->
         mk (Tm_meta(subst' s t0, Meta_monadic_lift (m1, m2, subst' s t)))
+
+    | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static ->  mk (Tm_quoted (tm, qi))
+        | Quote_dynamic -> mk (Tm_quoted (subst' s tm, qi))
+        end
+
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))
 
+(* compress:
+      This is used pervasively, throughout the codebase
+
+      The recommended use for inspecting a term
+      is to first call compress on it, which should
+         1. push delayed substitutions down one level
+
+         2. eliminate any top-level (Tm_uvar uv) node,
+            when uv has been assigned a solution already
+
+      Internally, compress should memoize the result of any
+      delayed substitution (i.e., step 1 above), but not
+      memoize the result of uvar solutions (since those
+      could be reverted).
+*)
 let rec compress (t:term) =
-    let t = force_delayed_thunk t in
+    let t = try_read_memo t in
     match t.n with
-    | Tm_delayed((t, s), memo) ->
-        let t' = compress (push_subst s t) in
-        Unionfind.update_in_tx memo (Some t');
-//          memo := Some t';
-        t'
-    | _ -> let t' = force_uvar t in
-           match t'.n with
-           | Tm_delayed _ -> compress t'
-           | _ -> t'
+    | Tm_delayed((t', s), memo) ->
+        memo := Some (push_subst s t');
+        compress t
+    | _ ->
+        let t', forced = force_uvar t in
+        match t'.n with
+        | Tm_delayed _ -> compress t'
+        | _ -> t'
 
 
 let subst s t = subst' ([s], None) t
@@ -463,8 +494,10 @@ let close_binders (bs:binders) : binders =
 
 let close_lcomp (bs:binders) lc =
     let s = closing_subst bs in
-    {lc with res_typ=subst s lc.res_typ;
-             comp=(fun () -> subst_comp s (lc.comp())); }
+    Syntax.mk_lcomp lc.eff_name
+                    lc.res_typ
+                    lc.cflags
+                    (fun () -> subst_comp s (lcomp_comp lc))
 
 let close_pat p =
     let rec aux sub p = match p.v with
@@ -528,10 +561,21 @@ let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
     subst_comp s c
 
 let open_let_rec lbs (t:term) =
-    if is_top_level lbs then lbs, t //top-level let recs are not opened
-    else (* Consider
+    let n_let_recs, lbs, let_rec_opening =
+      if is_top_level lbs
+      then 0, lbs, []  //top-level let recs are not opened,
+                       //but we still have to open their universe binders,
+                       //if any (see below)
+      else List.fold_right
+              (fun lb (i, lbs, out) ->
+                 let x = Syntax.freshen_bv (left lb.lbname) in
+                 i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out)
+              lbs
+              (0, [], [])
+    in
+      (* Consider
                 let rec f<u> x = g x
-                and g<u'> y = f y in
+                and g<u> y = f y in
                 f 0, g 0
             In de Bruijn notation, this is
                 let rec f x = g@1 x@0
@@ -544,30 +588,43 @@ let open_let_rec lbs (t:term) =
                   and for the body is
                         f, g
          *)
-         let n_let_recs, lbs, let_rec_opening =
-             List.fold_right (fun lb (i, lbs, out) ->
-                let x = Syntax.freshen_bv (left lb.lbname) in
-                i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs (0, [], []) in
-
-         let lbs = lbs |> List.map (fun lb ->
-              let _, us, u_let_rec_opening =
-                  List.fold_right (fun u (i, us, out) ->
-                    i+1, u::us, UN(i, U_name u)::out)
-                  lb.lbunivs (n_let_recs, [], let_rec_opening) in
-             {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in
-
-         let t = subst let_rec_opening t in
-         lbs, t
+    let lbs = lbs |> List.map (fun lb ->
+        let _, us, u_let_rec_opening =
+            List.fold_right
+             (fun u (i, us, out) ->
+                  let u = Syntax.new_univ_name None in
+                  i+1, u::us, UN(i, U_name u)::out)
+             lb.lbunivs
+             (n_let_recs, [], let_rec_opening)
+        in
+        {lb with lbunivs=us;
+                 lbdef=subst u_let_rec_opening lb.lbdef;
+                 lbtyp=subst u_let_rec_opening lb.lbtyp})
+    in
+    let t = subst let_rec_opening t in
+    lbs, t
 
 let close_let_rec lbs (t:term) =
-    if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
-    else let n_let_recs, let_rec_closing =
-            List.fold_right (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out) lbs (0, []) in
-         let lbs = lbs |> List.map (fun lb ->
-                let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
-                {lb with lbdef=subst u_let_rec_closing lb.lbdef}) in
-         let t = subst let_rec_closing t in
-         lbs, t
+    let n_let_recs, let_rec_closing =
+      if is_top_level lbs
+      then 0, [] //top-level let recs do not have to be closed
+                 //except for their universe binders, if any (see below)
+      else List.fold_right
+               (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out)
+               lbs
+               (0, [])
+    in let lbs = lbs |> List.map (fun lb ->
+           let _, u_let_rec_closing =
+               List.fold_right
+                 (fun u (i, out) -> i+1, UD(u, i)::out)
+                 lb.lbunivs
+                 (n_let_recs, let_rec_closing)
+           in
+           {lb with lbdef=subst u_let_rec_closing lb.lbdef;
+                    lbtyp=subst u_let_rec_closing lb.lbtyp})
+       in
+       let t = subst let_rec_closing t in
+       lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
     let n = List.length binders - 1 in

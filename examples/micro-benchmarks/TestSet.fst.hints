@@ -12,11 +12,10 @@
         "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
-        "lemma_FStar.TSet.subset_mem", "typing_FStar.TSet.singleton",
-        "typing_FStar.TSet.union"
+        "typing_FStar.TSet.singleton", "typing_FStar.TSet.union"
       ],
       0,
-      "8d3d28d905652df3504d629a5946da6b"
+      "560069db9ddf5dc914e2ec6c507300b8"
     ]
   ]
 ]

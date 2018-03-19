@@ -15,7 +15,7 @@ let r = seq (assign x asx_e) (while cond (assign i asi_e))
 
 let phi () : GTot (gexp bool) = gand (geq (gvar i Left) (gvar i Right)) (gand (geq (gvar n Left) (gvar n Right)) (geq (gvar y Left) (gvar y Right)))
 
-#set-options "--z3rlimit 32"
+#set-options "--z3rlimit 100"
 
 let proof () : Lemma
   (related l r (phi ()) (phi ()))

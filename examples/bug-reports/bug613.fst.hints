@@ -1,0 +1,41 @@
+[
+  "ØµŒ8\"\u0011ó„Àå”iêë_»",
+  [
+    [
+      "Bug613.l",
+      1,
+      2,
+      1,
+      [
+        "@query", "token_correspondence_Bug613.f",
+        "token_correspondence_Bug613.g"
+      ],
+      0,
+      "8c04625a9808adfc818f167c95919d64"
+    ],
+    [
+      "Bug613.l'",
+      1,
+      2,
+      1,
+      [
+        "@query", "token_correspondence_Bug613.f",
+        "token_correspondence_Bug613.g"
+      ],
+      0,
+      "32b24981853e2fa485e25d5a4f89a48e"
+    ],
+    [
+      "Bug613.l''",
+      1,
+      2,
+      1,
+      [
+        "@query", "token_correspondence_Bug613.f",
+        "token_correspondence_Bug613.h"
+      ],
+      0,
+      "82fbf0fed0ed1fb8f26f938771868c8f"
+    ]
+  ]
+]

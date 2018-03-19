@@ -23,11 +23,13 @@ type token =
   | TOTAL
   | TILDE of (string)
   | THEN
+  | SYNTH
   | SUB_EFFECT
   | SUBTYPE
   | SUBKIND
   | STRING of (string)
   | SQUIGGLY_RARROW
+  | SPLICE
   | SET_RANGE_OF
   | SEMICOLON_SEMICOLON
   | SEMICOLON
@@ -41,6 +43,8 @@ type token =
   | RBRACE
   | RARROW
   | RANGE_OF
+  | RANGE of (string)
+  | QUOTE
   | QMARK_DOT
   | QMARK
   | PRIVATE
@@ -48,7 +52,10 @@ type token =
   | PRAGMA_RESET_OPTIONS
   | PRAGMALIGHT
   | PIPE_RIGHT
+  | PERC_BACKTICK
   | PERCENT_LBRACK
+  | OP_MIXFIX_ASSIGNMENT of (string)
+  | OP_MIXFIX_ACCESS of (string)
   | OPPREFIX of (string)
   | OPINFIX4 of (string)
   | OPINFIX3 of (string)
@@ -114,6 +121,8 @@ type token =
   | ELSE
   | EFFECT
   | DOT_LPAREN
+  | DOT_LENS_PAREN_LEFT
+  | DOT_LBRACK_BAR
   | DOT_LBRACK
   | DOT
   | DOLLAR
@@ -160,11 +169,13 @@ type tokenId =
     | TOKEN_TOTAL
     | TOKEN_TILDE
     | TOKEN_THEN
+    | TOKEN_SYNTH
     | TOKEN_SUB_EFFECT
     | TOKEN_SUBTYPE
     | TOKEN_SUBKIND
     | TOKEN_STRING
     | TOKEN_SQUIGGLY_RARROW
+    | TOKEN_SPLICE
     | TOKEN_SET_RANGE_OF
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_SEMICOLON
@@ -178,6 +189,8 @@ type tokenId =
     | TOKEN_RBRACE
     | TOKEN_RARROW
     | TOKEN_RANGE_OF
+    | TOKEN_RANGE
+    | TOKEN_QUOTE
     | TOKEN_QMARK_DOT
     | TOKEN_QMARK
     | TOKEN_PRIVATE
@@ -185,7 +198,10 @@ type tokenId =
     | TOKEN_PRAGMA_RESET_OPTIONS
     | TOKEN_PRAGMALIGHT
     | TOKEN_PIPE_RIGHT
+    | TOKEN_PERC_BACKTICK
     | TOKEN_PERCENT_LBRACK
+    | TOKEN_OP_MIXFIX_ASSIGNMENT
+    | TOKEN_OP_MIXFIX_ACCESS
     | TOKEN_OPPREFIX
     | TOKEN_OPINFIX4
     | TOKEN_OPINFIX3
@@ -251,6 +267,8 @@ type tokenId =
     | TOKEN_ELSE
     | TOKEN_EFFECT
     | TOKEN_DOT_LPAREN
+    | TOKEN_DOT_LENS_PAREN_LEFT
+    | TOKEN_DOT_LBRACK_BAR
     | TOKEN_DOT_LBRACK
     | TOKEN_DOT
     | TOKEN_DOLLAR
@@ -278,27 +296,30 @@ type tokenId =
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
+    | NONTERM__startwarn_error_list
     | NONTERM__startterm
     | NONTERM__startinputFragment
     | NONTERM_option_FSDOC_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_5_
-    | NONTERM_option___anonymous_7_
+    | NONTERM_option___anonymous_6_
+    | NONTERM_option___anonymous_8_
+    | NONTERM_option___anonymous_9_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
-    | NONTERM_option_mainDecl_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
+    | NONTERM_list___anonymous_10_
     | NONTERM_list___anonymous_4_
-    | NONTERM_list___anonymous_8_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
+    | NONTERM_list_attr_letbinding_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
@@ -324,8 +345,8 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
-    | NONTERM_mainDecl
     | NONTERM_pragma
+    | NONTERM_attribute
     | NONTERM_decoration
     | NONTERM_decl
     | NONTERM_rawDecl
@@ -335,6 +356,7 @@ type nonTerminalId =
     | NONTERM_typeDefinition
     | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
+    | NONTERM_attr_letbinding
     | NONTERM_letbinding
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
@@ -383,11 +405,19 @@ type nonTerminalId =
     | NONTERM_tmImplies
     | NONTERM_tmArrow_tmFormula_
     | NONTERM_tmArrow_tmNoEq_
+    | NONTERM_simpleArrow
+    | NONTERM_simpleArrowDomain
     | NONTERM_tmFormula
     | NONTERM_tmConjunction
     | NONTERM_tmTuple
+    | NONTERM_tmEqWith_appTerm_
+    | NONTERM_tmEqWith_tmRefinement_
+    | NONTERM_tmNoEqWith_appTerm_
+    | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq
+    | NONTERM_tmRefinement
     | NONTERM_refineOpt
     | NONTERM_recordExp
     | NONTERM_simpleDef
@@ -408,13 +438,17 @@ type nonTerminalId =
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
+    | NONTERM_warn_error_list
+    | NONTERM_warn_error
+    | NONTERM_flag
+    | NONTERM_range
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
-    | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_7_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
@@ -427,5 +461,6 @@ val prodIdxToNonTerminal: int -> nonTerminalId
 
 /// This function gets the name of a token as a string
 val token_to_string: token -> string
+val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((flag * string) list) 
 val term : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (term) 
 val inputFragment : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (inputFragment) 

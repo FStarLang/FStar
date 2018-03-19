@@ -1,15 +1,6 @@
 [
-  "∂\fÊè˘ﬁ\bL\u007fèfºA^e\u0015",
+  "$˚∑,ÆÑ∞˚”æ\u000evÊÑ’Q",
   [
-    [
-      "FStar.WellFounded.__proj__AccIntro__item___0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "af49b648251391700b46f7691ab157cd"
-    ],
     [
       "FStar.WellFounded.acc_inv",
       1,
@@ -20,16 +11,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "668e1a5defcfef4c15e34fc0c6ca0b0c"
-    ],
-    [
-      "FStar.WellFounded.axiom1",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "16222e17a2343efe59c31215088141b5"
+      "e169006eab57d10811cf214033a384e7"
     ],
     [
       "FStar.WellFounded.apply",
@@ -38,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "1e12818693c5e2e047fa217c280b08bb"
+      "2096464029e8534af33fddda1beb9123"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -54,7 +36,44 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "e91bf89fc6a10dfd432af374ac51dc03"
+      "419dbd379b306e531703c578910ff03c"
+    ],
+    [
+      "FStar.WellFounded.acc_inv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "ab295fd58cd928094a5705e62163662e"
+    ],
+    [
+      "FStar.WellFounded.apply",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "276bbe901315344b75b6f599aa1997a1"
+    ],
+    [
+      "FStar.WellFounded.fix_F",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f744f63ab9a82765f30b542dd6ad1ecf_7",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.WellFounded.acc_inv",
+        "fuel_guarded_inversion_FStar.WellFounded.acc",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "34767bece427becc02b6ca9ba5d801a8"
     ]
   ]
 ]

@@ -1,6 +1,6 @@
 %{
 (*
- We are expected to have only 7 shift-reduce conflicts.
+ We are expected to have only 5 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -35,6 +35,7 @@ open FStar_String
 %token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT
+%token <string> RANGE
 
 %token <string> UINT8
 %token <string> UINT16
@@ -51,7 +52,7 @@ open FStar_String
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
-%token AND ASSERT BEGIN ELSE END
+%token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
@@ -61,16 +62,18 @@ open FStar_String
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
-%token MINUS COLON_EQUALS
+%token MINUS COLON_EQUALS QUOTE
 %token BACKTICK UNIV_HASH
+%token PERC_BACKTICK
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
+%token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 
 /* These are artificial */
 %token EOF
@@ -89,36 +92,25 @@ open FStar_String
 %left     OPINFIX0d
 %left     PIPE_RIGHT
 %right    OPINFIX1
-%left     OPINFIX2 MINUS
+%left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
 %left     BACKTICK
 %right    OPINFIX4
 
 %start inputFragment
 %start term
+%start warn_error_list
 %type <FStar_Parser_AST.inputFragment> inputFragment
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
-
+%type <(FStar_Errors.flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) main_opt=mainDecl? EOF
+  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) EOF
       {
-        let decls = match main_opt with
-           | None -> decls
-           | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) decls
-      }
-
-(* TODO : let's try to remove that *)
-mainDecl:
-  | SEMICOLON_SEMICOLON doc=FSDOC? t=term
-      { let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+        as_frag is_light (rhs parseState 1) decls
       }
 
 
@@ -132,10 +124,14 @@ pragma:
   | PRAGMA_RESET_OPTIONS s_opt=string?
       { ResetOptions s_opt }
 
+attribute:
+  | LBRACK_AT x = list(atomicTerm) RBRACK
+      { x }
+
 decoration:
   | x=FSDOC
       { Doc x }
-  | LBRACK_AT x = list(atomicTerm) RBRACK
+  | x=attribute
       { DeclAttributes x }
   | x=qualifier
       { Qualifier x }
@@ -144,11 +140,8 @@ decl:
   | ASSUME lid=uident COLON phi=formula
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
-  | d=decoration ds=list(decoration) decl=rawDecl
-      { mk_decl decl (rhs parseState 3) (d :: ds) }
-
-  | decl=rawDecl
-      { mk_decl decl (rhs parseState 1) [] }
+  | ds=list(decoration) decl=rawDecl
+      { mk_decl decl (rhs parseState 2) ds }
 
 rawDecl:
   | p=pragma
@@ -170,7 +163,7 @@ rawDecl:
         let r = rhs2 parseState 1 3 in
         let lbs = focusLetBindings lbs r in
         if q <> Rec && List.length lbs <> 1
-        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
+        then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
@@ -180,6 +173,8 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
+  | SPLICE t=term
+      { Splice t }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
@@ -222,6 +217,10 @@ recordFieldDecl:
 constructorDecl:
   | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
   | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
+
+attr_letbinding:
+  | attr=ioption(attribute) AND lb=letbinding
+    { attr, lb }
 
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
@@ -279,14 +278,14 @@ subEffect:
           | ("lift_wp", lift_wp) ->
              { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
           | _ ->
-             raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
+             raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
           end
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | _ -> raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      }
@@ -299,10 +298,10 @@ subEffect:
 qualifier:
   | ASSUME        { Assumption }
   | INLINE        {
-    raise (Error("The 'inline' qualifier has been renamed to 'unfold'", lhs parseState))
+    raise_error (Fatal_InlineRenamedAsUnfold, "The 'inline' qualifier has been renamed to 'unfold'") (lhs parseState)
    }
   | UNFOLDABLE    {
-              raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+              raise_error (Fatal_UnfoldableDeprecated, "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it") (lhs parseState)
    }
   | INLINE_FOR_EXTRACTION {
      Inline_for_extraction
@@ -334,7 +333,7 @@ letqualifier:
 
  (* Remove with stratify *)
 aqual:
-  | EQUALS    { warn (lhs parseState) "The '=' notation for equality constraints on binders is deprecated; use '$' instead";
+  | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
                                         Equality }
   | q=aqualUniverses { q }
 
@@ -366,7 +365,7 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | LPAREN pat=tuplePattern COLON t=typ phi_opt=refineOpt RPAREN
+  | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
         let pos = rhs2 parseState 1 6 in
@@ -404,7 +403,7 @@ fieldPattern:
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
@@ -422,7 +421,7 @@ binder:
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=typ r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
@@ -475,7 +474,7 @@ tvar:
 /******************************************************************************/
 
 ascribeTyp:
-  | COLON t=tmArrow(tmNoEq) { t }
+  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=atomicTerm {tactic}) { t, tacopt }
 
 (* Remove for stratify *)
 ascribeKind:
@@ -538,9 +537,11 @@ noSeqTerm:
       }
   | LET OPEN uid=quident IN e=term
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
-  | LET q=letqualifier lbs=separated_nonempty_list(AND,letbinding) IN e=term
+  | attrs=ioption(attribute)
+    LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
+        let lbs = (attrs, lb)::lbs in
+        let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
@@ -551,8 +552,24 @@ noSeqTerm:
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
-  | id=lident LARROW e=noSeqTerm
-      { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
+
+  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=typ {tactic})
+      {
+        match tactic_opt with
+        | None ->
+          let a = set_lid_range assert_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+        | Some tac ->
+          let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
+      }
+
+   | SYNTH tactic=atomicTerm
+     {
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     }
 
 typ:
   | t=simpleTerm  { t }
@@ -560,7 +577,7 @@ typ:
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
         match bs with
-            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
+            | [] -> raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
             | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       }
 
@@ -628,6 +645,21 @@ tmArrow(Tm):
      }
   | e=Tm { e }
 
+simpleArrow:
+  | dom=simpleArrowDomain RARROW tgt=simpleArrow
+     {
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     }
+  | e=tmEqNoRefinement { e }
+
+simpleArrowDomain:
+  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
+
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
@@ -652,32 +684,36 @@ tmTuple:
       }
 
 
-tmEq:
-  | e1=tmEq EQUALS e2=tmEq
+tmEqWith(X):
+  | e1=tmEqWith(X) EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
-  | e1=tmEq COLON_EQUALS e2=tmEq
+  | e1=tmEqWith(X) COLON_EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq PIPE_RIGHT e2=tmEq
+  | e1=tmEqWith(X) PIPE_RIGHT e2=tmEqWith(X)
       { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=operatorInfix0ad12 e2=tmEq
+  | e1=tmEqWith(X) op=operatorInfix0ad12 e2=tmEqWith(X)
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq MINUS e2=tmEq
+  | e1=tmEqWith(X) MINUS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | MINUS e=tmEq
+  | MINUS e=tmEqWith(X)
       { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
-  | e=tmNoEq
+  | QUOTE e=tmEqWith(X)
+      { mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un }
+  | BACKTICK e=tmEqWith(X)
+      { mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un }
+  | e=tmNoEqWith(X)
       { e }
 
-tmNoEq:
-  | e1=tmNoEq COLON_COLON e2=tmNoEq
+tmNoEqWith(X):
+  | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rhs parseState 2) e1 e2 }
-  | e1=tmNoEq AMP e2=tmNoEq
+  | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
-            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs parseState 1)) in
+            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
         let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
         let tail = e2 in
         let dom, res = match tail.tm with
@@ -685,12 +721,29 @@ tmNoEq:
             | _ -> [dom], tail in
         mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
-  | e1=tmNoEq op=OPINFIX3 e2=tmNoEq
+  | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmNoEq BACKTICK id=qlident BACKTICK e2=tmNoEq
+  | e1=tmNoEqWith(X) BACKTICK id=qlident BACKTICK e2=tmNoEqWith(X)
       { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
-  | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
+  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | LBRACE e=recordExp RBRACE { e }
+  | PERC_BACKTICK e=atomicTerm
+      { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
+  | op=TILDE e=atomicTerm
+      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
+  | e=X { e }
+
+tmEqNoRefinement:
+  | e=tmEqWith(appTerm) { e }
+
+tmEq:
+  | e=tmEqWith(tmRefinement)  { e }
+
+tmNoEq:
+  | e=tmNoEqWith(tmRefinement) { e }
+
+tmRefinement:
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -698,10 +751,7 @@ tmNoEq:
           | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
         in mk_term t (rhs2 parseState 1 4) Type_level
       }
-  | LBRACE e=recordExp RBRACE { e }
-  | op=TILDE e=atomicTerm
-      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
-  | e=appTerm { e }
+  | e=appTerm  { e }
 
 refineOpt:
   | phi_opt=option(LBRACE phi=formula RBRACE {phi}) {phi_opt}
@@ -763,8 +813,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
-  | ASSERT   { let a = set_lid_range assert_lid (rhs parseState 1) in
-               mk_term (Var a) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
@@ -791,6 +839,13 @@ projectionLHS:
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
+        (* Note: we have to keep the parentheses here. Consider t * u * v. This
+         * is parsed as Op2( *, Op2( *, t, u), v). The desugaring phase then looks
+         * up * and figures out that it hasn't been overridden, meaning that
+         * it's a tuple type, and proceeds to flatten out the whole tuple. Now
+         * consider (t * u) * v. We keep the Paren node, which prevents the
+         * flattening from happening, hence ensuring the proper type is
+         * generated. *)
         let e1 = match sort_opt with
           | None -> e
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
@@ -842,7 +897,7 @@ constant:
   | n=INT
      {
         if snd n then
-          errorR(Error("This number is outside the allowable range for representable integer constants", lhs(parseState)));
+          log_issue (lhs parseState) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      }
   | c=CHAR { Const_char c }
@@ -855,28 +910,28 @@ constant:
   | n=INT8
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 8-bit signed integers", lhs(parseState)));
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
   | n=INT16
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 16-bit signed integers", lhs(parseState)));
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
   | n=INT32
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 32-bit signed integers", lhs(parseState)));
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
   | n=INT64
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       }
   (* TODO : What about reflect ? There is also a constant representing it *)
@@ -893,18 +948,16 @@ universeFrom:
   | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
        {
          if op_plus <> "+"
-         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
-                           ^ "The only allowed operator in that context is +.",
-                           rhs parseState 2)) ;
+         then log_issue (rhs parseState 2) (Error_OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +."));
          mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
         if text_of_id max <> text_of_lid max_lid
-        then errorR(Error("A lower case ident " ^ text_of_id max ^
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
-                          "It should be either max or a universe variable 'usomething.",
-                          rhs parseState 1)) ;
+                          "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
         mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
       }
@@ -915,13 +968,36 @@ atomicUniverse:
   | n=INT
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for representable integer constants",
-                       lhs(parseState)));
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       }
   | u=lident { mk_term (Uvar u) u.idRange Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
+
+warn_error_list:
+  | e=warn_error EOF { e }
+
+warn_error:
+  | f=flag r=range
+    { [(f, r)] }
+  | f=flag r=range e=warn_error
+    { (f, r) :: e }
+
+flag:
+  | op=OPINFIX1
+    { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
+  | op=OPINFIX2
+    { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
+  | MINUS
+          { CSilent }
+
+range:
+  | i=INT
+    { format2 "%s..%s" (fst i) (fst i) }
+  | r=RANGE
+    { r }
+
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */
@@ -937,12 +1013,16 @@ atomicUniverse:
      { mk_ident (op, rhs parseState 1) }
   | op=operatorInfix0ad12
      { op }
-  | op=PIPE_RIGHT
+       | op=PIPE_RIGHT
      { mk_ident("|>", rhs parseState 1) }
   | op=COLON_EQUALS
      { mk_ident(":=", rhs parseState 1) }
   | op=COLON_COLON
      { mk_ident("::", rhs parseState 1) }
+  | op=OP_MIXFIX_ASSIGNMENT
+     { mk_ident(op, rhs parseState 1) }
+  | op=OP_MIXFIX_ACCESS
+     { mk_ident(op, rhs parseState 1) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
@@ -957,6 +1037,8 @@ atomicUniverse:
 %inline dotOperator:
   | DOT_LPAREN e=term RPAREN { mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 }
   | DOT_LBRACK e=term RBRACK { mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LBRACK_BAR e=term RBRACE { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LENS_PAREN_LEFT e=term LENS_PAREN_RIGHT { mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 }
 
 some(X):
   | x=X { Some x }

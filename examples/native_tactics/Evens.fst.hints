@@ -1,0 +1,101 @@
+[
+  "µá¨Yï[‡PjòØ\u0016>]EÔ",
+  [
+    [
+      "Evens.unary_nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "493086d731e40af4a2a6c8ff1c5100e4"
+    ],
+    [
+      "Evens.__proj__US__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.US",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Evens_Tm_refine_7094be438dbc16658c0caec70fa7452e"
+      ],
+      0,
+      "92f6c416c17480acab86e9ea33aca396"
+    ],
+    [
+      "Evens.even",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
+      0,
+      "3933f78b3bb89a9ceda388c88156b537"
+    ],
+    [
+      "Evens.__proj__Even_SSn__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Evens_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
+      ],
+      0,
+      "8f58496e068960ecb7976df220fc5fa0"
+    ],
+    [
+      "Evens.__proj__Even_SSn__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
+        "proj_equation_Evens.Even_SSn_n",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Evens.Even_SSn_n",
+        "refinement_interpretation_Evens_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
+      ],
+      0,
+      "dde6d30ea435b3c4fc4eea9e142c22ce"
+    ],
+    [
+      "Evens.nat2unary",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "fe6d781d24e613528fae020cdf5c08f4"
+    ],
+    [
+      "Evens.even0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equality_tok_Evens.Even0@tok",
+        "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
+      ],
+      0,
+      "b8427748906465ecb6a26a57d08de587"
+    ],
+    [
+      "Evens.evenSSn",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b52d142d39a8c0fc303cacd5d7dc9cbc"
+    ]
+  ]
+]

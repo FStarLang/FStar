@@ -1,0 +1,29 @@
+[
+  "ñ\r~Þ„ï]=–­ËG\u000f\u0000ÖZ",
+  [
+    [
+      "Bug279.t",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.list__uu___haseq", "kinding_Bug279.t@tok"
+      ],
+      0,
+      "476153ccb49110b857527c26d6334f94"
+    ],
+    [
+      "Bug279.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_91fb826417ba3a918ffbd7d13c1c1540_0",
+        "subterm_ordering_Bug279.T"
+      ],
+      0,
+      "f450c0dfe9662a9cb510482685745917"
+    ]
+  ]
+]

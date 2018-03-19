@@ -94,13 +94,18 @@ val settable                    : string -> bool
 val resettable                  : string -> bool
 
 val __temp_no_proj              : string  -> bool
+val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
-val codegen                     : unit    -> option<string>
+type codegen_t =
+    | OCaml | FSharp | Kremlin | Plugin
+val codegen                     : unit    -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
+val defensive                   : unit    -> bool // true if "warn" or "fail"
+val defensive_fail              : unit    -> bool // true if "fail"
 val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
@@ -116,7 +121,6 @@ val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
-val gen_native_tactics          : unit    -> option<string>
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file                   : unit    -> option<string>
@@ -140,7 +144,11 @@ val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
+val no_smt                      : unit    -> bool
+val normalize_pure_terms_for_extraction
+                                : unit    -> bool
 val output_dir                  : unit    -> option<string>
+val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string
@@ -169,7 +177,7 @@ val smtencoding_nl_arith_wrapped: unit    -> bool
 val smtencoding_nl_arith_native : unit    -> bool
 val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
-val split_cases                 : unit    -> int
+val tactic_raw_binders          : unit    -> bool
 val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
 val timing                      : unit    -> bool
@@ -183,6 +191,8 @@ val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list<(Ident.path * bool)>
+val vcgen_optimize_bind_as_seq  : unit    -> bool
+val vcgen_decorate_with_type    : unit    -> bool
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
@@ -191,10 +201,11 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
+val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
-
-val codegen_fsharp              : unit    -> bool
+val warn_error                  : unit    -> string
+val use_extracted_interfaces    : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

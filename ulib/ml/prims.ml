@@ -1,19 +1,19 @@
 (** The [int] type and the various default operators. *)
-type int      = Big_int_Z.big_int
+type int      = Z.t
 type nonzero  = int
-let ( + )     = Big_int_Z.add_big_int
-let ( - )     = Big_int_Z.sub_big_int
-let ( * )     = Big_int_Z.mult_big_int
-let ( / )     = Big_int_Z.div_big_int
-let ( <= )    = Big_int_Z.le_big_int
-let ( >= )    = Big_int_Z.ge_big_int
-let ( < )     = Big_int_Z.lt_big_int
-let ( > )     = Big_int_Z.gt_big_int
-let ( mod )   = Big_int_Z.mod_big_int
-let ( ~- )    = Big_int_Z.minus_big_int
-let abs       = Big_int_Z.abs_big_int
-let parse_int = Big_int_Z.big_int_of_string
-let to_string = Big_int_Z.string_of_big_int
+let ( + )     = Z.add
+let ( - )     = Z.sub
+let ( * )     = Z.mul
+let ( / )     = Z.ediv
+let ( <= )    = Z.leq
+let ( >= )    = Z.geq
+let ( < )     = Z.lt
+let ( > )     = Z.gt
+let ( mod )   = Z.erem
+let ( ~- )    = Z.neg
+let abs       = Z.abs
+let parse_int = Z.of_string
+let to_string = Z.to_string
 
 (** Some misc. types defined in Prims *)
 type nonrec unit = unit
@@ -79,6 +79,24 @@ type (' p, ' q, 'dummyP) eq2 =  unit
 type (' p, ' q, 'dummyP, 'dummyQ) eq3 =  unit
 
 type prop     = Obj.t
+
+type lex_t =
+  | LexTop
+  | LexCons of unit * Obj.t * lex_t
+let (uu___is_LexTop : lex_t -> bool) =
+  fun projectee  ->
+    match projectee with | LexTop  -> true | uu____18 -> false
+
+let (uu___is_LexCons : lex_t -> bool) =
+  fun projectee  ->
+    match projectee with | LexCons (a,_1,_2) -> true | uu____30 -> false
+
+type 'Aprojectee __proj__LexCons__item__a = Obj.t
+let (__proj__LexCons__item___1 :
+  lex_t -> unit __proj__LexCons__item__a) =
+  fun projectee  -> match projectee with | LexCons (a,_1,_2) -> _1
+let (__proj__LexCons__item___2 : lex_t -> lex_t) =
+  fun projectee  -> match projectee with | LexCons (a,_1,_2) -> _2
 
 let cut = ()
 let admit () = failwith "no admits"
@@ -156,3 +174,5 @@ let iota    : norm_step = Iota
 let delta_only (s:string list) : norm_step = UnfoldOnly s
 
 type ('a, 'b) admit = unit
+
+let singleton x = x

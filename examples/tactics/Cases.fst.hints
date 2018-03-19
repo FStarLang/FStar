@@ -1,54 +1,28 @@
 [
-  "∞êÃ€\\ˇ˜i⁄ô∂ÃÀÑâﬁ",
+  "Ö’YÓ¯∞∏ˆ\u001a\u000eõRâÏJ‚",
   [
     [
-      "Cases.test_cases",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3233075696e3013ceb3cde5f860abebc"
-    ],
-    [
-      "Cases.test_cases_unsquash",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bb451992a9c6dcf68f34c5fab4603990"
-    ],
-    [
-      "Cases.test_cases_bool",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "984670224a69d5f82579ac683cfb0cce"
-    ],
-    [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
+        "data_elim_FStar.Tactics.Result.Failed",
+        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
       0,
-      "e90253e803f4f4c3a48ebb3f506b4943"
+      "f6ccc53209f8350fcb2d96edde05eada"
     ],
     [
       "Cases.test_cases_bool_2",
       2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ffdb7e52394bd0ac75b31eee2b0c5cd0"
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      3,
       2,
       1,
       [
@@ -56,11 +30,11 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "80b44696c75341e9ad5e442d73cd6d03"
+      "bf10eb37e2da1e99e389dbc04a660b50"
     ],
     [
       "Cases.test_cases_bool_2",
-      4,
+      3,
       2,
       1,
       [
@@ -70,16 +44,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3ecd660dca4adfbfdb9d8eaff344638d"
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5a626d0fc230aab5ecd3a1a530767d81"
+      "eca11be3629840ae4d195d34879f22b5"
     ]
   ]
 ]

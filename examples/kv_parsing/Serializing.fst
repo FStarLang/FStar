@@ -2,12 +2,13 @@ module Serializing
 
 open Slice
 
-open FStar.Ghost
 open FStar.Seq
 module List = FStar.List.Tot
 open FStar.HyperStack
 open FStar.HyperStack.ST
 module B = FStar.Buffer
+
+open FStar.Ghost
 
 // kremlib libraries
 module C = C
@@ -64,7 +65,7 @@ let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem)
 /// on.
 let buffer_fun (inputs:erased (TSet.set bslice)) =
     f:(h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b} -> GTot bytes){
-      forall (h0 h1: h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b}).
+      forall (h0 h1: (h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b})).
       (forall b. TSet.mem b (reveal inputs) ==> as_seq h0 b == as_seq h1 b) ==>
       f h0 == f h1}
 

@@ -1,27 +1,26 @@
 [
-  "0m‡§žGÆ§eT¯QmÙ\u000fv",
+  "”4úê7L6•ý¦\u0003_ÝÞè2",
   [
     [
       "Setopts.mult_ass",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "079816264014007a5531777f3c732b41"
+      "19469508a441545da6baa3073a318c06"
     ],
     [
       "Setopts.mult_ass",
       2,
       2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      2,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
       0,
-      "1e73cb91a5fe03d91e91cb455f9d562e"
+      "3486d5575201285e86dcc31cceb0ea12"
     ]
   ]
 ]

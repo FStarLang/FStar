@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "4c6c20921b808d6dc4b633f921eead18"
+      "ee79346c4a98420acd263fbec4838f41"
     ],
     [
       "Normalization.id",
@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b5a56fb6b80ea492558fe901ca27ef61"
+      "005bcc3f63a089a471cac584b5dc9cce"
     ],
     [
       "Normalization.test2",
@@ -34,7 +34,7 @@
       0,
       [ "@query" ],
       0,
-      "4abf39fba97da30adba24bef7a9961b7"
+      "90ca91b2703497a3bccce3f2453ba543"
     ],
     [
       "Normalization.pow2_values",
@@ -43,7 +43,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "255bf52dcc62e8189123bfb41c653796"
+      "8379855ced053a1a4977cfd78736e596"
     ],
     [
       "Normalization.pow2_values",
@@ -52,7 +52,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5da333822bb07fd20145897c20dce8f0"
+      "0e8443b259ae7e7ba3ce9d39c177b2b7"
     ],
     [
       "Normalization.pow2_values",
@@ -61,7 +61,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b925154c07ed3ed8981c3d6397f835cd"
+      "1dca154bb048a5d0387356625c425503"
     ],
     [
       "Normalization.pow2_values",
@@ -70,7 +70,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3c206ab0b151c6e46c87ba33e125652b"
+      "ff871af72053f9e5be9de40356993b59"
     ],
     [
       "Normalization.pow2_values",
@@ -79,7 +79,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "35b712801cb1bcfcb40a996028602005"
+      "7adc7f185bab698f3ed3d9132fdc3730"
     ],
     [
       "Normalization.pow2_values",
@@ -88,7 +88,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1c488d4e86fa85373321a0e5b89df2fe"
+      "41384bd8b057441c9c41f5fad804420f"
     ],
     [
       "Normalization.pow2_values",
@@ -97,7 +97,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "69f100fee251c1bb879c0cdcb122657e"
+      "25ece11798c1026eb9a74ebaa6c70328"
     ],
     [
       "Normalization.pow2_values",
@@ -106,34 +106,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c474562fb1b4fa5fe35a6c2127d50586"
+      "ea4b89c30d95856965cde43fb49d9b59"
     ],
     [
       "Normalization.pow2_values",
       9,
       0,
       0,
-      [ "@query", "equation_Prims.l_True" ],
-      0,
-      "100ad106a3959459d3cbeac2d06072e1"
-    ],
-    [
-      "Normalization.pow2_values",
-      10,
-      0,
-      0,
       [ "@query" ],
       0,
-      "3e50b0f723b966cbe16c1ec17678e8ca"
-    ],
-    [
-      "Normalization.compare",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "fd4edc8fc72b9e2fc53870e70cf422b7"
+      "8d6d3a0e97d82bb24e1689ae8f9e3176"
     ],
     [
       "Normalization.test_sort",
@@ -142,19 +124,37 @@
       0,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
       ],
       0,
-      "83e2e898414a0658fad097effee84392"
+      "0c715f3d8391319c17fab6e634651ba5"
     ],
     [
-      "Normalization.test_sort",
+      "Normalization.id",
       2,
       0,
       0,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
       0,
-      "145322ef56a98b726e7927beda5045d6"
+      "23c4722b2e194526351d08061b47cb8b"
+    ],
+    [
+      "Normalization.pow2_values",
+      10,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "2ce6ad1ee2bea3739dac2799fa7d2e4f"
     ]
   ]
 ]

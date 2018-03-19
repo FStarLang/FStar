@@ -25,6 +25,11 @@ type goal = {
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
 }
+type guard_policy =
+    | Goal
+    | SMT
+    | Force
+    | Drop // unsound
 
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
@@ -36,7 +41,9 @@ type proofstate = {
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
 
     psc          : N.psc;        //primitive step context where we started execution
-    entry_range  : Range.range;
+    entry_range  : Range.range;  //position of entry, set by the use
+    guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
+    freshness    : int;          //a simple freshness counter for the fresh tactic
 }
 
 val decr_depth : proofstate -> proofstate

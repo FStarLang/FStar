@@ -1,5 +1,5 @@
 [
-  "qÙ…\u0015Å@l\u0001\"é≥T|#Nr",
+  "üª¿\u000e>\bRz&f]ù≤ÁÂÙ",
   [
     [
       "Calc.op_Amp_Equals",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "c46e1eff0e80ee5448b54ccbb6d2cffe"
+      "5005870e67aafa3467feb4cf97c65531"
     ],
     [
       "Calc.op_Amp_Bar",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "23da5cda3e6bbb4ad7a868163e2b86b2"
+      "1265fe9bc31350b5e9a826dcf2b43dbf"
     ],
     [
       "Calc.op_Amp_Bar_Bar",
@@ -26,23 +26,40 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_arrow_7e4b1fa81e64a006f3a144df042765be",
-        "FStar.Tactics.Effect_interpretation_Tm_arrow_da51d6432cc088aa37a2db161691fbcd",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_FStar.Tactics.Derived.rewrite_eqs_from_context",
-        "equation_Prims.delta", "equation_Prims.pure_pre",
-        "equation_Prims.squash",
-        "function_token_typing_FStar.Tactics.Derived.rewrite_eqs_from_context",
-        "function_token_typing_Prims.unit",
-        "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Calc_Tm_refine_f44c3d9c5cd6462679e5b9c6a8c6355f",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_Calc_Tm_abs_a46c3dc8af54b4f7c24c0320a48f593c",
-        "typing_FStar.Tactics.Effect.bind", "typing_Prims.squash",
-        "unit_typing"
+        "refinement_interpretation_Calc_Tm_refine_520c26588ca8b20c2f9b4a3ce746481d"
       ],
       0,
-      "659e9893c83dfda6ddf9ec6935a75a16"
+      "48dd9640db42b091c9874c16bdb65386"
+    ],
+    [
+      "Calc.op_Amp_Equals",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "b5807cdea7dbd1f1398338c06cc62136"
+    ],
+    [
+      "Calc.op_Amp_Bar",
+      2,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "9787ae82c3448ca923ff03443eefe4ea"
+    ],
+    [
+      "Calc.op_Amp_Bar_Bar",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Calc_Tm_refine_66ec944699615bebe7a49747df4f6569"
+      ],
+      0,
+      "d356cb9ec3a783dc5c7a7a38c7804c71"
     ]
   ]
 ]

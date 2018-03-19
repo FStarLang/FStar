@@ -1,9 +1,15 @@
-all: verify-all
+.PHONY: all
+
+FSTAR_HOME=..
+include $(FSTAR_HOME)/src/gmake/z3.mk
+include $(FSTAR_HOME)/src/gmake/fstar.mk
 
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
-include Makefile.verify
+
+all:
+	+$(MAKE) -f Makefile.verify verify-all
 
 include ml/Makefile.include
 
@@ -19,14 +25,25 @@ FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPP
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
-	$(FSTAR) --expose_interfaces --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTARLIB_MODULES)
+	rm -f .depend.extract
+	FSTAR_FILES='$(FSTARLIB_MODULES)' \
+	OUTPUT_DIRECTORY=ml/extracted \
+	EXTRACT_MODULES='$(FSTAR_DEFAULT_ARGS)' \
+	$(MAKE) -f Makefile.extract all-ml
+	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
+	# we could follow this style for other files too, e.g., FStar_Option.ml
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
 	touch fstarlib.mgen
 
 FSTARLIB_LEFTOVERS=$(shell python fstarlib_leftovers.py +ml +ml/extracted -../bin/fstar-compiler-lib/)
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
-	$(FSTAR) --expose_interfaces --lax --codegen tactics --odir tactics_ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_TAC_LIB_MODULES)
+	rm -f .depend.extract
+	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
+	OUTPUT_DIRECTORY=tactics_ml/extracted \
+	CODEGEN=Plugin \
+	EXTRACT_MODULES='$(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_DEFAULT_ARGS)' \
+	$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
@@ -84,9 +101,9 @@ FSTARLIB_DIR=../bin/fstarlib/
 TACLIB_DIR=../bin/fstar-tactics-lib/
 
 FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/ml/, \
-	*.cmi extracted/*.cmi $(FSTARLIB_OBJECTS))
+	*.cmi *.cmx extracted/*.cmi extracted/*.cmx $(FSTARLIB_OBJECTS))
 TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
-	*.cmi fstarlib_leftovers/*.cmi extracted/*.cmi $(TACLIB_OBJECTS))
+	*.cmi *.cmx fstarlib_leftovers/*.cmi fstarlib_leftovers/*.cmx extracted/*.cmi extracted/*.cmx $(TACLIB_OBJECTS))
 
 install-fstarlib: $(FSTARLIB_OBJECTS)
 	mkdir -p $(FSTARLIB_DIR)
@@ -95,8 +112,10 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	mkdir -p $(TACLIB_DIR)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
 
-clean: basic_clean
+clean:
+	rm -f .depend .depend.extract
 	rm -f *.mgen
+	rm -f *.checked *.source *.checked.lax
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
 	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
@@ -104,3 +123,14 @@ clean: basic_clean
 	rm -f $(TACLIB_DIR)/*.cm[aiox]
 	rm -f $(TACLIB_DIR)/*.cmx[as]
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
+
+clean_ocaml:
+	rm -f *.mgen
+	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
+	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
+	rm -f $(FSTARLIB_DIR)/*.cmx[as]
+	rm -f $(TACLIB_DIR)/*.cm[aiox]
+	rm -f $(TACLIB_DIR)/*.cmx[as]
+	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
+
+rebuild: clean_ocaml install-fstarlib install-fstar-tactics

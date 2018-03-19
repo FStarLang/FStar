@@ -15,6 +15,7 @@
 *)
 module FStar.String
 open FSharp.Compatibility.OCaml
+let make (n:int) (c:char) = FSharp.Compatibility.OCaml.String.make n c
 let split (chars:list<char>) s = String.split chars s
 let strcat s1 s2 = s1 ^ s2
 let concat (s:string) (ts:list<string>) = String.concat s ts

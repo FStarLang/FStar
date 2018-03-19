@@ -50,11 +50,11 @@ let singleton_uv x   = {fst no_free_vars with free_uvars=[x]}, snd no_free_vars
 let singleton_univ x = {fst no_free_vars with free_univs=[x]}, snd no_free_vars
 let singleton_univ_name x = {fst no_free_vars with free_univ_names=[x]}, snd no_free_vars
 
-let union f1 f2 = {
+let union (f1 : free_vars_and_fvars) (f2 : free_vars_and_fvars) = {
     free_names=(fst f1).free_names @ (fst f2).free_names;
     free_uvars=(fst f1).free_uvars @ (fst f2).free_uvars;
     free_univs=(fst f1).free_univs @ (fst f2).free_univs;
-    free_univ_names=(fst f2).free_univ_names @ (fst f1).free_univ_names; //THE ORDER HERE IS IMPORTANT!
+    free_univ_names=(fst f1).free_univ_names @ (fst f2).free_univ_names; //THE ORDER HERE IS IMPORTANT!
     //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
 }, Util.set_union (snd f1) (snd f2)
 
@@ -76,7 +76,7 @@ let rec free_univs u = match Subst.compress_univ u with
 //on the other hand, for earlier interface use_cache is true
 //this flag is propagated, and is used in the function should_invalidate_cache below
 let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
-    let aux_binders bs from_body =
+    let aux_binders (bs : binders) (from_body : free_vars_and_fvars) =
         let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) no_free_vars in
         union from_binders from_body
     in
@@ -95,7 +95,9 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
 
       | Tm_bvar _ -> no_free_vars
       | Tm_fvar fv -> singleton_fvar fv
+
       | Tm_constant _
+      | Tm_lazy _
       | Tm_unknown ->
         no_free_vars
 
@@ -142,14 +144,29 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
           union n (union (free_names_and_uvars lb.lbtyp use_cache) (free_names_and_uvars lb.lbdef use_cache)))
           (free_names_and_uvars t use_cache)
 
-      | Tm_meta(t, Meta_pattern args) ->
-        List.fold_right (fun a acc -> free_names_and_uvars_args a acc use_cache) args (free_names_and_uvars t use_cache)
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static  -> no_free_vars
+        | Quote_dynamic -> free_names_and_uvars tm use_cache
+        end
 
-      | Tm_meta(t, Meta_monadic(_, t')) ->
-        union (free_names_and_uvars t use_cache) (free_names_and_uvars t' use_cache)
+      | Tm_meta(t, m) ->
+        let u1 = free_names_and_uvars t use_cache in
+        begin match m with
+        | Meta_pattern args ->
+            List.fold_right (fun a acc -> free_names_and_uvars_args a acc use_cache) args u1
 
-      | Tm_meta(t, _) ->
-        free_names_and_uvars t use_cache
+        | Meta_monadic(_, t') ->
+          union u1 (free_names_and_uvars t' use_cache)
+
+        | Meta_monadic_lift(_, _, t') ->
+          union u1 (free_names_and_uvars t' use_cache)
+
+        | Meta_labeled _
+        | Meta_desugared _
+        | Meta_named _ -> u1
+        end
+
 
 and free_names_and_uvars t use_cache =
   let t = Subst.compress t in
@@ -208,9 +225,10 @@ let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
 let new_universe_uvar_set () : set<universe_uvar> =
     Util.new_set compare_universe_uvar
 
+let empty = Util.new_set Syntax.order_bv
 let names t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_names Syntax.order_bv
 let uvars t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uvars compare_uv
 let univs t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univs compare_universe_uvar
-let univnames t = FStar.Util.as_fifo_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
+let univnames t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
 let fvars t = snd (free_names_and_uvars t false)
 let names_of_binders (bs:binders) = FStar.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv

@@ -1,5 +1,6 @@
 module FStar.BufferNG
 module HH = FStar.HyperHeap
+module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module P = FStar.Pointer
@@ -219,6 +220,12 @@ val index
 
 let index #a b n =
   P.read_buffer b n
+
+let frameOf
+  (#t: typ)
+  (b: buffer t)
+: GTot HS.rid
+= P.frameOf_buffer b
 
 val upd
   (#a: typ)

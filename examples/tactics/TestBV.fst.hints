@@ -1,5 +1,5 @@
 [
-  "Œ:¨¹\u0003GX0Ó‘ý^}–ÐÍ",
+  "Ž8EÂŽj‘Rcï`#Ì’†¹",
   [
     [
       "TestBV.test1",
@@ -8,7 +8,16 @@
       1,
       [ "@query" ],
       0,
-      "c9e4a4153db15149c97e2eb7e1fbdc6c"
+      "2ddeee0cea3a93ca51bda50d6db8e8eb"
+    ],
+    [
+      "TestBV.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "24a26fbf20f81d02d5220529d08c3695"
     ],
     [
       "TestBV.test2",
@@ -17,7 +26,16 @@
       1,
       [ "@query" ],
       0,
-      "9f81a2ccafe0f965d9652d69c6952fda"
+      "9aca54ad9d9a4877334fd23660c3b888"
+    ],
+    [
+      "TestBV.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "138800b2bf551418451076f5a76e46d9"
     ],
     [
       "TestBV.test3",
@@ -26,7 +44,16 @@
       1,
       [ "@query" ],
       0,
-      "1a55fd00ff694698876ffe5ab7595d95"
+      "7bd1bcbb5adaf21ed8fdd361302dee0c"
+    ],
+    [
+      "TestBV.test3",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f7d40e516696c41c2a5cbc281e160551"
     ],
     [
       "TestBV.test4",
@@ -35,7 +62,16 @@
       1,
       [ "@query" ],
       0,
-      "9d4b6858132269e9543d29d38c5fad86"
+      "2519c8651f044c2c6da964d0cbccde89"
+    ],
+    [
+      "TestBV.test4",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ef8ef9b420e368fd7070960831a1b0a7"
     ],
     [
       "TestBV.test5",
@@ -44,7 +80,16 @@
       1,
       [ "@query" ],
       0,
-      "333b902fe25bc9944c313a9144ad4723"
+      "41f6badfe0e57ddaa768ed601bb1a6f9"
+    ],
+    [
+      "TestBV.test5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d5be70984b8a456bf85c8ed4e92a5874"
     ],
     [
       "TestBV.v64_eq",
@@ -53,7 +98,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "07bfc7a3d30ced7a06f0fb5c46901424"
+      "2b7e4c9b0cd6faa26d52a7601b2a5ea4"
     ],
     [
       "TestBV.unfold_logand64",
@@ -67,7 +112,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "22f726d67fc4a28caff7723235053960"
+      "bbe8618a44709b0da50fce654cc7a427"
     ],
     [
       "TestBV.unfold_logor64",
@@ -81,7 +126,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "807155eb9cff184b483c60c74693a0a5"
+      "9a0dd84268d1cccbccbe7cb84190ce5a"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -95,24 +140,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "7158eae93c88f92f79a96f07953b71b8"
-    ],
-    [
-      "TestBV.bv64_tac",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
-        "function_token_typing_FStar.UInt64.n",
-        "refinement_interpretation_FStar.UInt64_Tm_refine_914204241ec678f78fab3aacff9aaa9b",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
-        "typing_FStar.UInt64.v"
-      ],
-      0,
-      "ce5381d32f83ff14d0a852be9e0e4a78"
+      "7df1bcaa0e11ff019cc0b87695b27102"
     ],
     [
       "TestBV.test6",
@@ -121,7 +149,7 @@
       1,
       [ "@query" ],
       0,
-      "d74ec949795ed0e9620d071d52423f32"
+      "4ef7ec5cbb3035dfc3f3465eeb0a4361"
     ],
     [
       "TestBV.test6",
@@ -130,7 +158,7 @@
       1,
       [ "@query" ],
       0,
-      "c52abfed6f50160735e8d69ca645a6fa"
+      "95b7601e8db4bedb4118c103c5e447a2"
     ],
     [
       "TestBV.test6",
@@ -139,7 +167,7 @@
       1,
       [ "@query" ],
       0,
-      "fa73187838d7450ddcaadd2c6f135efb"
+      "140f25d5e6f44115285320e4e6eecb6f"
     ],
     [
       "TestBV.test7",
@@ -148,7 +176,7 @@
       1,
       [ "@query" ],
       0,
-      "d6f6ec5076517094835604dc632d11df"
+      "c3ef4405df844a60b7d953e8b5f0f731"
     ],
     [
       "TestBV.test7",
@@ -157,7 +185,7 @@
       1,
       [ "@query" ],
       0,
-      "baeb34e7aaf233fc012f8213569bfe30"
+      "1d9659a2e989069c556d28798684e300"
     ],
     [
       "TestBV.test7",
@@ -166,7 +194,7 @@
       1,
       [ "@query" ],
       0,
-      "2cf166fcda1f642031b3d6036afa57f9"
+      "ca8660f7e2e2b07fb2f7e4278dbf5117"
     ],
     [
       "TestBV.test7",
@@ -175,7 +203,7 @@
       1,
       [ "@query" ],
       0,
-      "0d56c423d7a06a3fb83755ee85d28e94"
+      "0ac6ad4ee353efdd20d58500412c4d96"
     ],
     [
       "TestBV.test7",
@@ -184,7 +212,7 @@
       1,
       [ "@query" ],
       0,
-      "51ebf22ebaf909ed9237073643c01fba"
+      "474bab0cde6ca7549d369ed4adb6cbfb"
     ],
     [
       "TestBV.test7",
@@ -193,7 +221,16 @@
       1,
       [ "@query" ],
       0,
-      "a2924fbd02db3c8091ba1dee39ed136b"
+      "98658ae7c70cd3dec72a6640152674c3"
+    ],
+    [
+      "TestBV.v64_eq",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eebb22a81316b41740af052db0acccaa"
     ]
   ]
 ]

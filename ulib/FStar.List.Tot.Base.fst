@@ -463,7 +463,7 @@ let rec sortWith f = function
      append (sortWith f lo) (pivot::sortWith f hi)
 
 #set-options "--initial_fuel 4 --initial_ifuel 4"
-private abstract let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
+private abstract let test_sort :unit = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
 
 (** A l1 is a strict prefix of l2. *)
 
@@ -475,3 +475,9 @@ let rec strict_prefix_of (#a: Type) (l1 l2: list a)
 = match l2 with
   | [] -> False
   | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
+
+val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
+let rec list_unref #a #p l =
+    match l with
+    | [] -> []
+    | x::xs -> x :: list_unref xs

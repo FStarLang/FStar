@@ -1,0 +1,92 @@
+[
+  "xsÀ\u000bÃ E÷Åez4n†iÅ",
+  [
+    [
+      "Simple.Test.test0",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8cc49b22f1f3e48e4b0b816288002c0f"
+    ],
+    [
+      "Simple.Test.test0",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fb9c13b8061930edca899836ddc7364b"
+    ],
+    [
+      "Simple.Test.test1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
+      0,
+      "3aef67d89ab9fb0c6d46182e9d0c18a5"
+    ],
+    [
+      "Simple.Test.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "109db66c42b0d96de5c2b4ce964d99c2"
+    ],
+    [
+      "Simple.Test.test2",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.list__uu___haseq",
+        "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
+      ],
+      0,
+      "e4963aec0c68893da8c32dfe8b3cc5d9"
+    ],
+    [
+      "Simple.Test.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c99ddd4215fbb8d6e59821077e923175"
+    ],
+    [
+      "Simple.Test.test3",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.list__uu___haseq",
+        "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
+      ],
+      0,
+      "f91c83d6b4b788873d5e9f03efc9c880"
+    ],
+    [
+      "Simple.Test.test3",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "540344673225037e69f5c53d273e342a"
+    ],
+    [
+      "Simple.Test.test4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d2557b83dd2b94c5c1e5dcd77728e3e9"
+    ]
+  ]
+]

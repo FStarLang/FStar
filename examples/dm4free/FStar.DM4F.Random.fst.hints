@@ -2,15 +2,6 @@
   "\u0003\u0019ÅlOc\u001b\u0015Ë:Ç’èôÃJ",
   [
     [
-      "FStar.DM4F.Random.return",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "df4acb3477858956be6693a1dfe3b09d"
-    ],
-    [
       "FStar.DM4F.Random.bind",
       1,
       2,
@@ -24,25 +15,23 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "34ed9d965355d0d79e45174bf615ac99"
+      "bd64dacb96e57d914ddb8228bf41488f"
     ],
     [
-      "FStar.DM4F.Random._dm4f_RAND_lift_from_pure",
-      1,
+      "FStar.DM4F.Random.bind",
+      2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
       0,
-      "a6915ca3f930302f40b2185dc4219c88"
-    ],
-    [
-      "FStar.DM4F.Random._dm4f_RAND_return_wp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "048e88a091ded41d8bd1b9de6807d56f"
+      "6acc1739811d3b0b1d8d342412f2dd06"
     ]
   ]
 ]

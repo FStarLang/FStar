@@ -56,7 +56,7 @@ let fsharpkeywords = [
   "override"; "private"; "public"; "rec"; "return"; "return!";
   "select"; "static"; "struct"; "then"; "to"; "true"; "try";
   "type"; "upcast"; "use"; "use!"; "val"; "void"; "when";
-  "while"; "with"; "yield"; "yield!"; 
+  "while"; "with"; "yield"; "yield!";
   // --mlcompatibility keywords
   "asr"; "land"; "lor";
   "lsl"; "lsr"; "lxor"; "mod"; "sig";
@@ -69,8 +69,8 @@ let fsharpkeywords = [
 ]
 
 let is_reserved k =
-  let reserved_keywords () = 
-      if Options.codegen_fsharp()
+  let reserved_keywords () =
+      if Options.codegen() = Some Options.FSharp
       then fsharpkeywords
       else ocamlkeywords
   in
@@ -145,8 +145,9 @@ type mlpattern =
 | MLP_Tuple  of list<mlpattern>
 
 
-type meta = // C backend only
-  | Mutable
+(* metadata, suitable for either the C or the OCaml backend *)
+type meta =
+  | Mutable (* deprecated *)
   | Assumed
   | Private
   | NoExtract
@@ -156,6 +157,10 @@ type meta = // C backend only
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
   | Comment of string
+  | StackInline
+  | CPrologue of string
+  | CEpilogue of string
+  | CConst of string
 
 // rename
 type metadata = list<meta>
@@ -197,10 +202,11 @@ and mllb = {
     mllb_tysc:option<mltyscheme>; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
+    mllb_meta:metadata;
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * metadata * list<mllb>
+and mlletbinding = mlletflavor * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -249,8 +255,8 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_ns = if Options.codegen_fsharp() 
-                 then "FSharp.Compatibility.OCaml.Obj" 
+    let obj_ns = if Options.codegen() = Some Options.FSharp
+                 then "FSharp.Compatibility.OCaml.Obj"
                  else "Obj" in
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc

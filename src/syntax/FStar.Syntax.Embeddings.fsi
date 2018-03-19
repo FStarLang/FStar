@@ -16,11 +16,17 @@ module Z = FStar.BigInt
  * to unembed.
  *
  * Polymorphic embedders need the type of whatever they're embedding to construct
- * a propert well-typed term.
+ * a proper well-typed term.
+ *
+ * GM: TODO: Make the `embedder` type return a term and type, so they can
+ * be composed seamlessly.
  *)
 
 type embedder<'a>   = Range.range -> 'a -> term
 type unembedder<'a> = term -> option<'a>
+
+val embed_any         : embedder<term>
+val unembed_any       : unembedder<term>
 
 val embed_unit        : embedder<unit>
 val unembed_unit      : unembedder<unit>
@@ -42,9 +48,9 @@ val embed_string        : embedder<string>
 val unembed_string      : unembedder<string>
 val unembed_string_safe : unembedder<string>
 
-val embed_pair        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<('a * 'b)>
-val unembed_pair      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
-val unembed_pair_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
+val embed_tuple2        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<('a * 'b)>
+val unembed_tuple2      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
+val unembed_tuple2_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
 
 val embed_option        : embedder<'a> -> typ -> embedder<option<'a>>
 val unembed_option      : unembedder<'a> -> unembedder<option<'a>>
@@ -53,6 +59,10 @@ val unembed_option_safe : unembedder<'a> -> unembedder<option<'a>>
 val embed_list        : embedder<'a> -> typ -> embedder<list<'a>>
 val unembed_list      : unembedder<'a> -> unembedder<list<'a>>
 val unembed_list_safe : unembedder<'a> -> unembedder<list<'a>>
+
+val embed_arrow_1     : unembedder<'a> -> embedder<'b> -> ('a -> 'b) -> args -> option<term>
+val embed_arrow_2     : unembedder<'a> -> unembedder<'b> -> embedder<'c> -> ('a -> 'b -> 'c) -> args -> option<term>
+val embed_arrow_3     : unembedder<'a> -> unembedder<'b> -> unembedder<'c> -> embedder<'d> -> ('a -> 'b -> 'c -> 'd) -> args -> option<term>
 
 val embed_string_list        : embedder<list<string>>
 val unembed_string_list      : unembedder<list<string>>
@@ -67,6 +77,7 @@ type norm_step =
     | Zeta
     | Iota
     | UnfoldOnly of list<string>
+    | UnfoldAttr of attribute
 
 val steps_Simpl : term
 val steps_Weak : term

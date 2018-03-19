@@ -48,9 +48,20 @@ let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
 let fstar_tactics_topdown = lid_as_data_tm fstar_tactics_topdown_lid
 let fstar_tactics_bottomup = lid_as_data_tm fstar_tactics_bottomup_lid
 
+let fstar_tactics_SMT_lid   = fstar_tactics_lid' ["Types"; "SMT"]
+let fstar_tactics_Goal_lid  = fstar_tactics_lid' ["Types"; "Goal"]
+let fstar_tactics_Drop_lid  = fstar_tactics_lid' ["Types"; "Drop"]
+let fstar_tactics_Force_lid = fstar_tactics_lid' ["Types"; "Force"]
+
+let fstar_tactics_SMT   = lid_as_data_tm fstar_tactics_SMT_lid
+let fstar_tactics_Goal  = lid_as_data_tm fstar_tactics_Goal_lid
+let fstar_tactics_Drop  = lid_as_data_tm fstar_tactics_Drop_lid
+let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
+
 let mktuple2_tm = lid_as_data_tm (PC.lid_Mktuple2)
 
 let t_proofstate = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 
 let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;U_zero])
                                       [S.as_arg t;
@@ -59,35 +70,32 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;
                                       Range.dummyRange
 
 let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
-    U.mk_alien t_proofstate ps "tactics.embed_proofstate" (Some rng)
+    U.mk_lazy ps t_proofstate Lazy_proofstate (Some rng)
 
 let unembed_proofstate (t:term) : option<proofstate> =
-    try Some (U.un_alien t |> FStar.Dyn.undyn)
-    with | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t));
+    match (SS.compress t).n with
+    | Tm_lazy i when i.lkind = Lazy_proofstate ->
+        Some <| FStar.Dyn.undyn i.blob
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));
         None
+
+let unfold_lazy_proofstate (i : lazyinfo) : term =
+    U.exp_string "(((proofstate)))"
 
 let embed_result (embed_a:embedder<'a>) (t_a:typ) (rng:Range.range) (res:__result<'a>) : term =
     match res with
     | Failed (msg, ps) ->
       S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
              [S.iarg t_a;
-              S.as_arg (S.mk_Tm_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
-                               [S.iarg S.t_string;
-                                S.iarg t_proofstate;
-                                S.as_arg (embed_string rng msg);
-                                S.as_arg (embed_proofstate rng ps)]
-                                None rng)]
+              S.as_arg (embed_string rng msg);
+              S.as_arg (embed_proofstate rng ps)]
              None rng
     | Success (a, ps) ->
       S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success_tm [U_zero])
              [S.iarg t_a;
-              S.as_arg (S.mk_Tm_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
-                               [S.iarg t_a;
-                                S.iarg t_proofstate;
-                                S.as_arg (embed_a rng a);
-                                S.as_arg (embed_proofstate rng ps)]
-                                None rng)]
+              S.as_arg (embed_a rng a);
+              S.as_arg (embed_proofstate rng ps)]
              None rng
 
 let unembed_result (t:term) (unembed_a:unembedder<'a>)
@@ -98,14 +106,18 @@ let unembed_result (t:term) (unembed_a:unembedder<'a>)
       (U.un_uinst hd).n, args in
 
     match hd'_and_args t with
-    | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
-        BU.bind_opt (unembed_pair unembed_a unembed_proofstate tuple2) (fun x -> Some (Inl x))
+    | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
+        BU.bind_opt (unembed_a a) (fun a ->
+        BU.bind_opt (unembed_proofstate ps) (fun ps ->
+        Some (Inl(a, ps))))
 
-    | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-        BU.bind_opt (unembed_pair unembed_string unembed_proofstate tuple2) (fun x -> Some (Inr x))
+    | Tm_fvar fv, [_t; (msg, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+        BU.bind_opt (unembed_string msg) (fun msg ->
+        BU.bind_opt (unembed_proofstate ps) (fun ps ->
+        Some (Inr(msg, ps))))
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
         None
 
 let embed_direction (rng:Range.range) (d : direction) : term =
@@ -118,5 +130,22 @@ let unembed_direction (t : term) : option<direction> =
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
+        None
+
+let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
+    match p with
+    | SMT   -> fstar_tactics_SMT
+    | Goal  -> fstar_tactics_Goal
+    | Force -> fstar_tactics_Force
+    | Drop  -> fstar_tactics_Drop
+
+let unembed_guard_policy (t : term) : option<guard_policy> =
+    match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Force_lid -> Some Force
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Drop_lid  -> Some Drop
+    | _ ->
+        Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded guard_policy: %s" (Print.term_to_string t)));
         None

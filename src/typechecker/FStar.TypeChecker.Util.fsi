@@ -40,7 +40,7 @@ val check_uvars: Range.range -> typ -> unit
 val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
 
 //pattern utilities
-val pat_as_exp: bool -> env -> pat -> (env -> term -> term) -> (list<bv> * term * pat)
+val pat_as_exp: bool -> env -> pat -> (env -> term -> term * guard_t) -> (list<bv> * term * guard_t * pat)
 val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
@@ -55,10 +55,11 @@ type lcomp_with_binder = option<bv> * lcomp
 val subst_lcomp: subst_t -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
-val return_value: env -> typ -> term -> comp
+val should_not_inline_lc: lcomp -> bool
+//val return_value: env -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
-val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
-val ite: env -> formula -> lcomp -> lcomp -> lcomp
+val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+val bind_cases: env -> typ -> list<(typ * lident * list<cflags> * (bool -> lcomp))> -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
@@ -92,5 +93,10 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit
 
-//elaborate discriminator and projectors
-val mk_data_operations : list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>
+//inductive types utilities
+
+val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
+
+val is_haseq_lid: lid -> bool  //see if the given lid is that of an haseq axiom
+val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get the haseq axiom lid
+val get_optimized_haseq_axiom: env -> sigelt -> list<subst_elt> -> univ_names -> (lident * term * binders * binders * term)

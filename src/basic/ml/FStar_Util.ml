@@ -211,7 +211,7 @@ let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
-    | [] -> out
+    | [] -> BatList.rev_append out []
     | hd::tl ->
        if BatList.exists (eq hd) out then
          aux out tl
@@ -219,7 +219,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
          aux (hd::out) tl in
   aux [] s1
 
-let set_add a ((s, b):'a set) = (a::s, b)
+let set_add a ((s, b):'a set) = (s@[a], b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):'a set) = BatList.exists (b a) s
@@ -231,40 +231,12 @@ let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
 let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
+let set_symmetric_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
+  set_union (set_difference (s1, eq) (s2, eq))
+            (set_difference (s2, eq) (s1, eq))
+let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
+  set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
-
-(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
-type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
-[@@deriving show]
-
-let fifo_set_is_empty ((s, _):'a fifo_set) =
-  match s with
-  | [] -> true
-  | _ -> false
-
-let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
-  (l, fun x y -> cmp x y = Z.zero)
-
-let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
-    as_fifo_set [] cmp
-
-let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
-  let rec aux out = function
-    | [] -> out
-    | hd::tl ->
-       if BatList.exists (eq hd) tl then
-         aux out tl
-       else
-         aux (hd::out) tl in
-  aux [] s1
-let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
-let fifo_set_remove x ((s1, eq):'a fifo_set) =
-  (BatList.filter (fun y -> not (eq x y)) s1, eq)
-let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
-let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
-let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
-let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
-  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
@@ -394,7 +366,8 @@ let unicode_of_string (string:string) =
   let i = ref 0 in
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
-
+let base64_encode s = BatBase64.str_encode s
+let base64_decode s = BatBase64.str_decode s
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
 let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
@@ -528,11 +501,6 @@ let find_opt f l =
 
 (* JP: why so many duplicates? :'( *)
 let sort_with = FStar_List.sortWith
-
-let set_eq (f: 'a -> 'a -> Z.t) (l1: 'a list) (l2: 'a list) =
-  let l1 = sort_with f l1 in
-  let l2 = sort_with f l2 in
-  BatList.for_all2 (fun l1 l2 -> f l1 l2 = Z.zero) l1 l2
 
 let bind_opt opt f =
   match opt with
@@ -832,6 +800,7 @@ let readdir dir =
 
 let file_exists = Sys.file_exists
 let basename = Filename.basename
+let dirname = Filename.dirname
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
@@ -855,8 +824,15 @@ let load_value_from_file (fname:string) =
 let print_exn e =
   Printexc.to_string e
 
-let digest_of_file (fname:string) =
-  BatDigest.file fname
+let digest_of_file =
+  let cache = smap_create (Z.of_int 101) in
+  fun (fname:string) ->
+    match smap_try_find cache fname with
+    | Some dig -> dig
+    | None ->
+      let dig = BatDigest.file fname in
+      smap_add cache fname dig;
+      dig
 
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)

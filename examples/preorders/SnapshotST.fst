@@ -8,6 +8,7 @@ module SnapshotST
 *)
 
 open FStar.Preorder
+open FStar.Monotonic.Witnessed
 
 (* The original type of states and a preorder on it *)
 
@@ -65,7 +66,9 @@ new_effect MSTATE = STATE_h t
 
 (* DIV is a sub-effect of the snapshots instance of the monotonic-state monad. *)
 
-sub_effect DIV ~> MSTATE = fun a wp p t -> wp (fun x -> p x t)
+(* AR: this failed when inline, investigate more *)
+unfold let div_lift (a:Type) (wp:pure_wp a) (p:mst_post a) (x:t) = wp (fun y -> p y x)
+sub_effect DIV ~> MSTATE = div_lift
 
 (* A pre- and postcondition version of this monotonic-state monad. *)
 
@@ -75,7 +78,7 @@ effect MST (a:Type) (pre:mst_pre) (post:(t -> Tot (mst_post a)))
 
 (* The logical witnessed capability for the richer type of states *)
 
-assume type witnessed : p:predicate t -> Type0
+let witnessed (p:predicate t) = witnessed rel_t p
 
 (* Actions of MST. *)
 

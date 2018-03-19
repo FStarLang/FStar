@@ -57,16 +57,6 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
-let is_tactic_decl (tac_lid: lident) (h: term) (current_module:mlpath) =
-  match h.n with
-  | Tm_uinst (h', _) ->
-    (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
-          (* TODO change this test *)
-          not (BU.starts_with (string_of_mlpath current_module) "FStar.Tactics")
-      | _ -> false)
-  | _ -> false
-
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
@@ -76,27 +66,29 @@ let is_tactic_decl (tac_lid: lident) (h: term) (current_module:mlpath) =
 // amount of typo-checking via desugaring.
 let rec extract_meta x =
   match SS.compress x with
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
-      Some PpxDerivingShow
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.CInline" -> Some CInline
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Substitute" -> Some Substitute
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Gc" -> Some GCType
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
-      Some (PpxDerivingShowConstant s)
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
-      Some (Comment s)
+  | { n = Tm_fvar fv } ->
+      begin match string_of_lid (lid_of_fv fv) with
+      | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Pervasives.CInline" -> Some CInline
+      | "FStar.Pervasives.Substitute" -> Some Substitute
+      | "FStar.Pervasives.Gc" -> Some GCType
+      | _ -> None
+      end
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
+      begin match string_of_lid (lid_of_fv fv) with
+      | "FStar.Pervasives.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
+      | "FStar.Pervasives.Comment" -> Some (Comment s)
+      | "FStar.Pervasives.CPrologue" -> Some (CPrologue s)
+      | "FStar.Pervasives.CEpilogue" -> Some (CEpilogue s)
+      | "FStar.Pervasives.CConst" -> Some (CConst s)
+      | _ -> None
+      end
+  | { n = Tm_constant (Const_string ("KremlinPrivate", _)) } -> Some Private // This one generated internally
   // These are only for backwards compatibility, they should be removed at some point.
-  | { n = Tm_constant (Const_string (data, _)) } when data = "c_inline" -> Some CInline
-  | { n = Tm_constant (Const_string (data, _)) } when data = "substitute" -> Some Substitute
-  | { n = Tm_meta (x, _) } ->
-      extract_meta x
-  | a ->
-      print1_warning "Unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`.\n"
-      (Print.term_to_string a);
-      (* BU.print2 "Unrecognized attribute at extraction: %s (%s)\n" *)
-      (*   (Print.term_to_string a) *)
-      (*   (Print.tag_of_term a); *)
-      None
+  | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
+  | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
+  | { n = Tm_meta (x, _) } -> extract_meta x
+  | _ -> None
 
 let extract_metadata metas =
   List.choose extract_meta metas
@@ -238,6 +230,37 @@ let extract_bundle env se =
 
         | _ -> failwith "Unexpected signature element"
 
+(* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
+   is extracted along with an invocation to FStar.Tactics.Native.register_tactic,
+   which installs the compiled term as a primitive step in the normalizer
+ *)
+let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
+    let w = with_ty MLTY_Top in
+    if Options.codegen() <> Some Options.Plugin
+    || not (U.has_attribute se.sigattrs PC.plugin_attr)
+    then []
+    else match se.sigel with
+         | Sig_let(lbs, lids) ->
+           let mk_registration lb : list<mlmodule1> =
+              let fv = (right lb.lbname).fv_name.v in
+              let fv_t = lb.lbtyp in
+              let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv)) in
+              match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t ml_name_str with
+              | Some (interp, arity, plugin) ->
+                  let register =
+                    if plugin
+                    then "FStar_Tactics_Native.register_plugin"
+                    else "FStar_Tactics_Native.register_tactic"
+                  in
+                  let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
+                  let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
+                  let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity; interp]) in
+                  [MLM_Top app]
+              | None -> []
+           in
+           List.collect mk_registration (snd lbs)
+        | _ -> []
+
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
@@ -259,10 +282,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 mllb_tysc=None;
                 mllb_add_unit=false;
                 mllb_def=tm;
+                mllb_meta = [];
                 print_typ=false
               }
             in
-            g, MLM_Let(NonRec, [], [lb])
+            g, MLM_Let(NonRec, [lb])
           in
 
           let rec extract_fv tm =
@@ -284,14 +308,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
             let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
-            let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn) in
+            let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, a.action_defn.pos) in
             let lbs = (false, [lb]) in
             let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
               BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
             let exp, tysc = match a_let.expr with
-              | MLE_Let((_, _, [mllb]), _) ->
+              | MLE_Let((_, [mllb]), _) ->
                   (match mllb.mllb_tysc with
                   | Some(tysc) -> mllb.mllb_def, tysc
                   | None -> failwith "No type scheme")
@@ -314,6 +338,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let g, actions = BU.fold_map extract_action g ed.actions in
 
           g, [return_decl;bind_decl]@actions
+
+        | Sig_splice _ ->
+          failwith "impossible: trying to extract splice"
 
         | Sig_new_effect _ ->
           g, []
@@ -344,63 +371,69 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
-          let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
+          let ml_let, _, _ =
+            Term.term_as_mlexpr
+                    g
+                    (mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng)
+          in
+          begin
+          match ml_let.expr with
+          | MLE_Let((flavor, bindings), _) ->
 
-          (* When extracting with the "tactics" option, if the top-level let is a user-defined tactic, automatically add
-             the matching invocation to FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked. *)
-          let tactic_registration_decl =
-            let mk_registration tac_lid assm_lid t bs =
-              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
-              let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
-              let tac_arity = List.length bs in
-              let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-              match mk_interpretation_fun tac_lid lid_arg t bs with
-              | Some tac_interpretation ->
-                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
-                  [MLM_Top app]
-              | None -> [] in
+            (* Treatment of qualifiers: we synthesize the metadata that goes
+                * onto each let-binding as follows:
+                * - F* keywords (qualifiers, such as "inline_for_extraction" or
+                *   "private") are in [quals] and are distributed on each
+                *   let-binding in the mutually recursive block of bindings
+                * - F* attributes (custom arbitrary terms, such as "[@ GcType
+                *   ]"), are attached to the block of mutually recursive
+                *   definitions, we don't have syntax YET for attaching these
+                *   to individual definitions
+                * - some extra information is looked up here and added as a
+                *   bonus; in particular, the MustDisappear attribute (that
+                *   StackInline bestows upon an individual let-binding) is
+                *   specific to each let-binding! *)
+            let flags = List.choose (function
+                | Assumption -> Some Assumed
+                | S.Private -> Some Private
+                | S.NoExtract -> Some NoExtract
+                | _ -> None
+            ) quals in
+            let flags' = extract_metadata attrs in
 
-            if Options.codegen() = Some "tactics" then
-              (match (snd lbs) with
-               | [hd] ->
-                  let bs, comp = U.arrow_formals_comp hd.lbtyp in
-                  let t = U.comp_result comp in
-                  (match (SS.compress t).n with
-                   | Tm_app(h, args) ->
-                        let tac_lid = (right hd.lbname).fv_name.v in
-                        let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                        if is_tactic_decl assm_lid (SS.compress h) g.currentModule then begin
-                          mk_registration tac_lid assm_lid (fst(List.hd args)) bs
-                        end else []
-                   | _ -> [])
-               | _ -> []
-              ) else [] in
+            let g, ml_lbs' =
+                List.fold_left2
+                    (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
+                        // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                        let lb_lid = (right lbname).fv_name.v in
+                        let flags'' =
+                            match (SS.compress t).n with
+                            | Tm_arrow (_, { n = Comp { effect_name = e }})
+                                when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                                [ StackInline ]
+                            | _ ->
+                                []
+                        in
+                        let meta = flags @ flags' @ flags'' in
+                        let ml_lb = { ml_lb with mllb_meta = meta } in
+                        let g, ml_lb =
+                            if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                            then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
+                                let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                                env, {ml_lb with mllb_name=snd mname }
+                            else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                        g, ml_lb::ml_lbs)
+                (g, [])
+                bindings
+                (snd lbs) in
+            g,
+            [MLM_Loc (Util.mlloc_of_range se.sigrng);
+             MLM_Let (flavor, List.rev ml_lbs')]
+            @ maybe_register_plugin g se
 
-            let ml_let, _, _ = Term.term_as_mlexpr g elet in
-            begin match ml_let.expr with
-              | MLE_Let((flavor, _, bindings), _) ->
-                let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} ->
-                // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                    let lb_lid = (right lbname).fv_name.v in
-                    let g, ml_lb =
-                      if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                      then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                           let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                           env, {ml_lb with mllb_name=snd mname }
-                      else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
-                   g, ml_lb::ml_lbs)
-                (g, []) bindings (snd lbs) in
-                let flags = List.choose (function
-                  | Assumption -> Some Assumed
-                  | S.Private -> Some Private
-                  | S.NoExtract -> Some NoExtract
-                  | _ -> None
-                ) quals in
-                let flags' = extract_metadata attrs in
-                g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
-              | _ ->
-                failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
-            end
+        | _ ->
+          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
+        end
 
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
@@ -417,7 +450,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                       lbunivs=[];
                                                       lbtyp=t;
                                                       lbeff=PC.effect_ML_lid;
-                                                      lbdef=imp}]), []) } in
+                                                      lbdef=imp;
+                                                      lbattrs=[];
+                                                      lbpos=imp.pos;
+                                                     }]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
@@ -445,30 +481,20 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
        | Sig_pragma (p) ->
-         if p = S.LightOff
-         then Options.set_ml_ish();
+         U.process_pragma p se.sigrng;
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
-let extract (g:env) (m:modul) : env * list<mllib> =
+let extract' (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
-  if Options.debug_any ()
-  then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
-  let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
-  (* since command line options are reset, need to set OCaml extraction for when
-     extraction is driven from the F* compiler itself; currently this is only the case for
-     automatic tactic compilation *)
-  let _ = match codegen_opt with
-    | Some "tactics" -> Options.set_option "codegen" (Options.String "tactics")
-    | _ -> () in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
-  let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
+  let is_kremlin = Options.codegen () = Some Options.Kremlin in
   if m.name.str <> "Prims"
   && (is_kremlin || not m.is_interface)
   && Options.should_extract m.name.str then begin
@@ -477,3 +503,9 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   end else begin
     g, []
   end
+
+let extract (g:env) (m:modul) =
+  if Options.debug_any ()
+  then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
+       BU.measure_execution_time msg (fun () -> extract' g m)
+  else extract' g m

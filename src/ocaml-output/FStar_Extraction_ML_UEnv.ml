@@ -12,17 +12,17 @@ type binding =
   
   | Fv of (FStar_Syntax_Syntax.fv,ty_or_exp_b) FStar_Pervasives_Native.tuple2 
 [@@deriving show]
-let uu___is_Bv : binding -> Prims.bool =
+let (uu___is_Bv : binding -> Prims.bool) =
   fun projectee  -> match projectee with | Bv _0 -> true | uu____41 -> false 
-let __proj__Bv__item___0 :
+let (__proj__Bv__item___0 :
   binding ->
-    (FStar_Syntax_Syntax.bv,ty_or_exp_b) FStar_Pervasives_Native.tuple2
+    (FStar_Syntax_Syntax.bv,ty_or_exp_b) FStar_Pervasives_Native.tuple2)
   = fun projectee  -> match projectee with | Bv _0 -> _0 
-let uu___is_Fv : binding -> Prims.bool =
+let (uu___is_Fv : binding -> Prims.bool) =
   fun projectee  -> match projectee with | Fv _0 -> true | uu____69 -> false 
-let __proj__Fv__item___0 :
+let (__proj__Fv__item___0 :
   binding ->
-    (FStar_Syntax_Syntax.fv,ty_or_exp_b) FStar_Pervasives_Native.tuple2
+    (FStar_Syntax_Syntax.fv,ty_or_exp_b) FStar_Pervasives_Native.tuple2)
   = fun projectee  -> match projectee with | Fv _0 -> _0 
 type env =
   {
@@ -34,24 +34,24 @@ type env =
     ;
   type_names: FStar_Syntax_Syntax.fv Prims.list ;
   currentModule: FStar_Extraction_ML_Syntax.mlpath }[@@deriving show]
-let __proj__Mkenv__item__tcenv : env -> FStar_TypeChecker_Env.env =
+let (__proj__Mkenv__item__tcenv : env -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
     | { tcenv = __fname__tcenv; gamma = __fname__gamma;
         tydefs = __fname__tydefs; type_names = __fname__type_names;
         currentModule = __fname__currentModule;_} -> __fname__tcenv
   
-let __proj__Mkenv__item__gamma : env -> binding Prims.list =
+let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
   fun projectee  ->
     match projectee with
     | { tcenv = __fname__tcenv; gamma = __fname__gamma;
         tydefs = __fname__tydefs; type_names = __fname__type_names;
         currentModule = __fname__currentModule;_} -> __fname__gamma
   
-let __proj__Mkenv__item__tydefs :
+let (__proj__Mkenv__item__tydefs :
   env ->
     (FStar_Extraction_ML_Syntax.mlsymbol Prims.list,FStar_Extraction_ML_Syntax.mltydecl)
-      FStar_Pervasives_Native.tuple2 Prims.list
+      FStar_Pervasives_Native.tuple2 Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -59,23 +59,23 @@ let __proj__Mkenv__item__tydefs :
         tydefs = __fname__tydefs; type_names = __fname__type_names;
         currentModule = __fname__currentModule;_} -> __fname__tydefs
   
-let __proj__Mkenv__item__type_names :
-  env -> FStar_Syntax_Syntax.fv Prims.list =
+let (__proj__Mkenv__item__type_names :
+  env -> FStar_Syntax_Syntax.fv Prims.list) =
   fun projectee  ->
     match projectee with
     | { tcenv = __fname__tcenv; gamma = __fname__gamma;
         tydefs = __fname__tydefs; type_names = __fname__type_names;
         currentModule = __fname__currentModule;_} -> __fname__type_names
   
-let __proj__Mkenv__item__currentModule :
-  env -> FStar_Extraction_ML_Syntax.mlpath =
+let (__proj__Mkenv__item__currentModule :
+  env -> FStar_Extraction_ML_Syntax.mlpath) =
   fun projectee  ->
     match projectee with
     | { tcenv = __fname__tcenv; gamma = __fname__gamma;
         tydefs = __fname__tydefs; type_names = __fname__type_names;
         currentModule = __fname__currentModule;_} -> __fname__currentModule
   
-let debug : env -> (Prims.unit -> Prims.unit) -> Prims.unit =
+let (debug : env -> (Prims.unit -> Prims.unit) -> Prims.unit) =
   fun g  ->
     fun f  ->
       let c = FStar_Extraction_ML_Syntax.string_of_mlpath g.currentModule  in
@@ -83,16 +83,16 @@ let debug : env -> (Prims.unit -> Prims.unit) -> Prims.unit =
         FStar_Options.debug_at_level c (FStar_Options.Other "Extraction")  in
       if uu____257 then f () else ()
   
-let mkFvvar :
-  FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.fv =
+let (mkFvvar :
+  FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.fv) =
   fun l  ->
     fun t  ->
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
         FStar_Pervasives_Native.None
   
-let erasedContent : FStar_Extraction_ML_Syntax.mlty =
+let (erasedContent : FStar_Extraction_ML_Syntax.mlty) =
   FStar_Extraction_ML_Syntax.ml_unit_ty 
-let erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty -> Prims.bool =
+let (erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty -> Prims.bool) =
   fun t  ->
     if t = FStar_Extraction_ML_Syntax.ml_unit_ty
     then true
@@ -103,36 +103,36 @@ let erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty -> Prims.bool =
        | FStar_Extraction_ML_Syntax.MLTY_Named
            (uu____282,("FStar"::"Tactics"::"Effect"::[],"tactic")) ->
            let uu____295 = FStar_Options.codegen ()  in
-           uu____295 <> (FStar_Pervasives_Native.Some "tactics")
+           uu____295 <> (FStar_Pervasives_Native.Some FStar_Options.Plugin)
        | uu____300 -> false)
   
-let unknownType : FStar_Extraction_ML_Syntax.mlty =
+let (unknownType : FStar_Extraction_ML_Syntax.mlty) =
   FStar_Extraction_ML_Syntax.MLTY_Top 
-let prependTick : Prims.string -> Prims.string =
+let (prependTick : Prims.string -> Prims.string) =
   fun x  -> if FStar_Util.starts_with x "'" then x else Prims.strcat "'A" x 
-let removeTick : Prims.string -> Prims.string =
+let (removeTick : Prims.string -> Prims.string) =
   fun x  ->
     if FStar_Util.starts_with x "'"
     then FStar_Util.substring_from x (Prims.parse_int "1")
     else x
   
-let convRange : FStar_Range.range -> Prims.int =
+let (convRange : FStar_Range.range -> Prims.int) =
   fun r  -> (Prims.parse_int "0") 
-let convIdent : FStar_Ident.ident -> FStar_Extraction_ML_Syntax.mlident =
-  fun id  -> id.FStar_Ident.idText 
-let bv_as_ml_tyvar : FStar_Syntax_Syntax.bv -> Prims.string =
+let (convIdent : FStar_Ident.ident -> FStar_Extraction_ML_Syntax.mlident) =
+  fun id1  -> id1.FStar_Ident.idText 
+let (bv_as_ml_tyvar : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun x  ->
     let uu____318 = FStar_Extraction_ML_Syntax.bv_as_mlident x  in
     prependTick uu____318
   
-let bv_as_ml_termvar : FStar_Syntax_Syntax.bv -> Prims.string =
+let (bv_as_ml_termvar : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun x  ->
     let uu____322 = FStar_Extraction_ML_Syntax.bv_as_mlident x  in
     removeTick uu____322
   
-let rec lookup_ty_local :
+let rec (lookup_ty_local :
   binding Prims.list ->
-    FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty
+    FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty)
   =
   fun gamma  ->
     fun b  ->
@@ -156,8 +156,8 @@ let rec lookup_ty_local :
   
 let tyscheme_of_td :
   'Auu____419 'Auu____420 'Auu____421 'Auu____422 .
-    ('Auu____422,'Auu____421,'Auu____420,FStar_Extraction_ML_Syntax.mlidents,
-      'Auu____419,FStar_Extraction_ML_Syntax.mltybody
+    ('Auu____419,'Auu____420,'Auu____421,FStar_Extraction_ML_Syntax.mlidents,
+      'Auu____422,FStar_Extraction_ML_Syntax.mltybody
                     FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.tuple6 ->
       FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option
@@ -171,10 +171,10 @@ let tyscheme_of_td :
              FStar_Pervasives_Native.Some (vars, t)
          | uu____476 -> FStar_Pervasives_Native.None)
   
-let lookup_ty_const :
+let (lookup_ty_const :
   env ->
     FStar_Extraction_ML_Syntax.mlpath ->
-      FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option
+      FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun uu____486  ->
@@ -197,16 +197,16 @@ let lookup_ty_const :
                               else FStar_Pervasives_Native.None)
                    else FStar_Pervasives_Native.None)
   
-let module_name_of_fv : FStar_Syntax_Syntax.fv -> Prims.string Prims.list =
+let (module_name_of_fv : FStar_Syntax_Syntax.fv -> Prims.string Prims.list) =
   fun fv  ->
     FStar_All.pipe_right
       ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.ns
       (FStar_List.map (fun i  -> i.FStar_Ident.idText))
   
-let maybe_mangle_type_projector :
+let (maybe_mangle_type_projector :
   env ->
     FStar_Syntax_Syntax.fv ->
-      FStar_Extraction_ML_Syntax.mlpath FStar_Pervasives_Native.option
+      FStar_Extraction_ML_Syntax.mlpath FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun fv  ->
@@ -237,16 +237,16 @@ let maybe_mangle_type_projector :
                            else FStar_Pervasives_Native.None)
                         else FStar_Pervasives_Native.None))
   
-let lookup_tyvar :
-  env -> FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty =
+let (lookup_tyvar :
+  env -> FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty) =
   fun g  -> fun bt  -> lookup_ty_local g.gamma bt 
-let lookup_fv_by_lid : env -> FStar_Ident.lident -> ty_or_exp_b =
+let (lookup_fv_by_lid : env -> FStar_Ident.lident -> ty_or_exp_b) =
   fun g  ->
     fun lid  ->
       let x =
         FStar_Util.find_map g.gamma
-          (fun uu___360_732  ->
-             match uu___360_732 with
+          (fun uu___55_732  ->
+             match uu___55_732 with
              | Fv (fv',x) when FStar_Syntax_Syntax.fv_eq_lid fv' lid ->
                  FStar_Pervasives_Native.Some x
              | uu____737 -> FStar_Pervasives_Native.None)
@@ -260,13 +260,13 @@ let lookup_fv_by_lid : env -> FStar_Ident.lident -> ty_or_exp_b =
           failwith uu____738
       | FStar_Pervasives_Native.Some y -> y
   
-let lookup_fv : env -> FStar_Syntax_Syntax.fv -> ty_or_exp_b =
+let (lookup_fv : env -> FStar_Syntax_Syntax.fv -> ty_or_exp_b) =
   fun g  ->
     fun fv  ->
       let x =
         FStar_Util.find_map g.gamma
-          (fun uu___361_752  ->
-             match uu___361_752 with
+          (fun uu___56_752  ->
+             match uu___56_752 with
              | Fv (fv',t) when FStar_Syntax_Syntax.fv_eq fv fv' ->
                  FStar_Pervasives_Native.Some t
              | uu____757 -> FStar_Pervasives_Native.None)
@@ -288,13 +288,13 @@ let lookup_fv : env -> FStar_Syntax_Syntax.fv -> ty_or_exp_b =
           failwith uu____758
       | FStar_Pervasives_Native.Some y -> y
   
-let lookup_bv : env -> FStar_Syntax_Syntax.bv -> ty_or_exp_b =
+let (lookup_bv : env -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
   fun g  ->
     fun bv  ->
       let x =
         FStar_Util.find_map g.gamma
-          (fun uu___362_774  ->
-             match uu___362_774 with
+          (fun uu___57_774  ->
+             match uu___57_774 with
              | Bv (bv',r) when FStar_Syntax_Syntax.bv_eq bv bv' ->
                  FStar_Pervasives_Native.Some r
              | uu____779 -> FStar_Pervasives_Native.None)
@@ -313,11 +313,11 @@ let lookup_bv : env -> FStar_Syntax_Syntax.bv -> ty_or_exp_b =
           failwith uu____780
       | FStar_Pervasives_Native.Some y -> y
   
-let lookup :
+let (lookup :
   env ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
       (ty_or_exp_b,FStar_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun g  ->
     fun x  ->
@@ -329,11 +329,11 @@ let lookup :
           let uu____815 = lookup_fv g x1  in
           (uu____815, (x1.FStar_Syntax_Syntax.fv_qual))
   
-let lookup_term :
+let (lookup_term :
   env ->
     FStar_Syntax_Syntax.term ->
       (ty_or_exp_b,FStar_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun g  ->
     fun t  ->
@@ -342,10 +342,10 @@ let lookup_term :
       | FStar_Syntax_Syntax.Tm_fvar x -> lookup g (FStar_Util.Inr x)
       | uu____838 -> failwith "Impossible: lookup_term for a non-name"
   
-let extend_ty :
+let (extend_ty :
   env ->
     FStar_Syntax_Syntax.bv ->
-      FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option -> env
+      FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option -> env)
   =
   fun g  ->
     fun a  ->
@@ -359,16 +359,16 @@ let extend_ty :
         let gamma = (Bv (a, (FStar_Util.Inl (ml_a, mapped_to1)))) ::
           (g.gamma)  in
         let tcenv = FStar_TypeChecker_Env.push_bv g.tcenv a  in
-        let uu___364_893 = g  in
+        let uu___59_893 = g  in
         {
           tcenv;
           gamma;
-          tydefs = (uu___364_893.tydefs);
-          type_names = (uu___364_893.type_names);
-          currentModule = (uu___364_893.currentModule)
+          tydefs = (uu___59_893.tydefs);
+          type_names = (uu___59_893.type_names);
+          currentModule = (uu___59_893.currentModule)
         }
   
-let sanitize : Prims.string -> Prims.string =
+let (sanitize : Prims.string -> Prims.string) =
   fun s  ->
     let cs = FStar_String.list_of_string s  in
     let valid c = ((FStar_Util.is_letter_or_digit c) || (c = 95)) || (c = 39)
@@ -377,18 +377,18 @@ let sanitize : Prims.string -> Prims.string =
       FStar_List.fold_right
         (fun c  ->
            fun cs1  ->
-             let uu____916 =
-               let uu____919 = valid c  in
-               if uu____919 then [c] else [95; 95]  in
-             FStar_List.append uu____916 cs1) cs []
+             let uu____919 =
+               let uu____922 = valid c  in
+               if uu____922 then [c] else [95; 95]  in
+             FStar_List.append uu____919 cs1) cs []
        in
     let cs'1 =
       match cs' with
       | c::cs1 when (FStar_Util.is_digit c) || (c = 39) -> 95 :: c :: cs1
-      | uu____932 -> cs  in
+      | uu____945 -> cs  in
     FStar_String.string_of_list cs'1
   
-let find_uniq : binding Prims.list -> Prims.string -> Prims.string =
+let (find_uniq : binding Prims.list -> Prims.string -> Prims.string) =
   fun gamma  ->
     fun mlident  ->
       let rec find_uniq mlident1 i =
@@ -399,19 +399,19 @@ let find_uniq : binding Prims.list -> Prims.string -> Prims.string =
         let target_mlident = Prims.strcat mlident1 suffix  in
         let has_collision =
           FStar_List.existsb
-            (fun uu___363_960  ->
-               match uu___363_960 with
-               | Bv (uu____961,FStar_Util.Inl (mlident',uu____963)) ->
+            (fun uu___58_973  ->
+               match uu___58_973 with
+               | Bv (uu____974,FStar_Util.Inl (mlident',uu____976)) ->
                    target_mlident = mlident'
-               | Fv (uu____992,FStar_Util.Inl (mlident',uu____994)) ->
+               | Fv (uu____1005,FStar_Util.Inl (mlident',uu____1007)) ->
                    target_mlident = mlident'
                | Fv
-                   (uu____1023,FStar_Util.Inr
-                    (mlident',uu____1025,uu____1026,uu____1027))
+                   (uu____1036,FStar_Util.Inr
+                    (mlident',uu____1038,uu____1039,uu____1040))
                    -> target_mlident = mlident'
                | Bv
-                   (uu____1056,FStar_Util.Inr
-                    (mlident',uu____1058,uu____1059,uu____1060))
+                   (uu____1069,FStar_Util.Inr
+                    (mlident',uu____1071,uu____1072,uu____1073))
                    -> target_mlident = mlident') gamma
            in
         if has_collision
@@ -420,7 +420,7 @@ let find_uniq : binding Prims.list -> Prims.string -> Prims.string =
       let mlident1 = sanitize mlident  in
       find_uniq mlident1 (Prims.parse_int "0")
   
-let extend_bv :
+let (extend_bv :
   env ->
     FStar_Syntax_Syntax.bv ->
       FStar_Extraction_ML_Syntax.mltyscheme ->
@@ -428,7 +428,7 @@ let extend_bv :
           Prims.bool ->
             Prims.bool ->
               (env,FStar_Extraction_ML_Syntax.mlident)
-                FStar_Pervasives_Native.tuple2
+                FStar_Pervasives_Native.tuple2)
   =
   fun g  ->
     fun x  ->
@@ -439,11 +439,11 @@ let extend_bv :
               let ml_ty =
                 match t_x with
                 | ([],t) -> t
-                | uu____1121 -> FStar_Extraction_ML_Syntax.MLTY_Top  in
+                | uu____1134 -> FStar_Extraction_ML_Syntax.MLTY_Top  in
               let mlident =
-                let uu____1123 = FStar_Extraction_ML_Syntax.bv_as_mlident x
+                let uu____1136 = FStar_Extraction_ML_Syntax.bv_as_mlident x
                    in
-                find_uniq g.gamma uu____1123  in
+                find_uniq g.gamma uu____1136  in
               let mlx = FStar_Extraction_ML_Syntax.MLE_Var mlident  in
               let mlx1 =
                 if mk_unit
@@ -468,37 +468,37 @@ let extend_bv :
                 (Bv (x, (FStar_Util.Inr (mlident, mlx1, t_x1, is_rec)))) ::
                 (g.gamma)  in
               let tcenv =
-                let uu____1164 = FStar_Syntax_Syntax.binders_of_list [x]  in
-                FStar_TypeChecker_Env.push_binders g.tcenv uu____1164  in
-              ((let uu___365_1166 = g  in
+                let uu____1177 = FStar_Syntax_Syntax.binders_of_list [x]  in
+                FStar_TypeChecker_Env.push_binders g.tcenv uu____1177  in
+              ((let uu___60_1179 = g  in
                 {
                   tcenv;
                   gamma;
-                  tydefs = (uu___365_1166.tydefs);
-                  type_names = (uu___365_1166.type_names);
-                  currentModule = (uu___365_1166.currentModule)
+                  tydefs = (uu___60_1179.tydefs);
+                  type_names = (uu___60_1179.type_names);
+                  currentModule = (uu___60_1179.currentModule)
                 }), mlident)
   
-let rec mltyFvars :
+let rec (mltyFvars :
   FStar_Extraction_ML_Syntax.mlty ->
-    FStar_Extraction_ML_Syntax.mlident Prims.list
+    FStar_Extraction_ML_Syntax.mlident Prims.list)
   =
   fun t  ->
     match t with
     | FStar_Extraction_ML_Syntax.MLTY_Var x -> [x]
     | FStar_Extraction_ML_Syntax.MLTY_Fun (t1,f,t2) ->
-        let uu____1178 = mltyFvars t1  in
-        let uu____1181 = mltyFvars t2  in
-        FStar_List.append uu____1178 uu____1181
+        let uu____1191 = mltyFvars t1  in
+        let uu____1194 = mltyFvars t2  in
+        FStar_List.append uu____1191 uu____1194
     | FStar_Extraction_ML_Syntax.MLTY_Named (args,path) ->
         FStar_List.collect mltyFvars args
     | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
         FStar_List.collect mltyFvars ts
     | FStar_Extraction_ML_Syntax.MLTY_Top  -> []
   
-let rec subsetMlidents :
+let rec (subsetMlidents :
   FStar_Extraction_ML_Syntax.mlident Prims.list ->
-    FStar_Extraction_ML_Syntax.mlident Prims.list -> Prims.bool
+    FStar_Extraction_ML_Syntax.mlident Prims.list -> Prims.bool)
   =
   fun la  ->
     fun lb  ->
@@ -506,12 +506,13 @@ let rec subsetMlidents :
       | h::tla -> (FStar_List.contains h lb) && (subsetMlidents tla lb)
       | [] -> true
   
-let tySchemeIsClosed : FStar_Extraction_ML_Syntax.mltyscheme -> Prims.bool =
+let (tySchemeIsClosed : FStar_Extraction_ML_Syntax.mltyscheme -> Prims.bool)
+  =
   fun tys  ->
-    let uu____1214 = mltyFvars (FStar_Pervasives_Native.snd tys)  in
-    subsetMlidents uu____1214 (FStar_Pervasives_Native.fst tys)
+    let uu____1227 = mltyFvars (FStar_Pervasives_Native.snd tys)  in
+    subsetMlidents uu____1227 (FStar_Pervasives_Native.fst tys)
   
-let extend_fv' :
+let (extend_fv' :
   env ->
     FStar_Syntax_Syntax.fv ->
       FStar_Extraction_ML_Syntax.mlpath ->
@@ -519,7 +520,7 @@ let extend_fv' :
           Prims.bool ->
             Prims.bool ->
               (env,FStar_Extraction_ML_Syntax.mlident)
-                FStar_Pervasives_Native.tuple2
+                FStar_Pervasives_Native.tuple2)
   =
   fun g  ->
     fun x  ->
@@ -527,22 +528,22 @@ let extend_fv' :
         fun t_x  ->
           fun add_unit  ->
             fun is_rec  ->
-              let uu____1243 = tySchemeIsClosed t_x  in
-              if uu____1243
+              let uu____1256 = tySchemeIsClosed t_x  in
+              if uu____1256
               then
                 let ml_ty =
                   match t_x with
                   | ([],t) -> t
-                  | uu____1252 -> FStar_Extraction_ML_Syntax.MLTY_Top  in
-                let uu____1253 =
-                  let uu____1264 = y  in
-                  match uu____1264 with
+                  | uu____1265 -> FStar_Extraction_ML_Syntax.MLTY_Top  in
+                let uu____1266 =
+                  let uu____1277 = y  in
+                  match uu____1277 with
                   | (ns,i) ->
                       let mlsymbol =
                         FStar_Extraction_ML_Syntax.avoid_keyword i  in
                       ((ns, mlsymbol), mlsymbol)
                    in
-                match uu____1253 with
+                match uu____1266 with
                 | (mlpath,mlsymbol) ->
                     let mly = FStar_Extraction_ML_Syntax.MLE_Name mlpath  in
                     let mly1 =
@@ -564,24 +565,24 @@ let extend_fv' :
                       (Fv
                          (x, (FStar_Util.Inr (mlsymbol, mly1, t_x1, is_rec))))
                       :: (g.gamma)  in
-                    ((let uu___366_1347 = g  in
+                    ((let uu___61_1360 = g  in
                       {
-                        tcenv = (uu___366_1347.tcenv);
+                        tcenv = (uu___61_1360.tcenv);
                         gamma;
-                        tydefs = (uu___366_1347.tydefs);
-                        type_names = (uu___366_1347.type_names);
-                        currentModule = (uu___366_1347.currentModule)
+                        tydefs = (uu___61_1360.tydefs);
+                        type_names = (uu___61_1360.type_names);
+                        currentModule = (uu___61_1360.currentModule)
                       }), mlsymbol)
               else failwith "freevars found"
   
-let extend_fv :
+let (extend_fv :
   env ->
     FStar_Syntax_Syntax.fv ->
       FStar_Extraction_ML_Syntax.mltyscheme ->
         Prims.bool ->
           Prims.bool ->
             (env,FStar_Extraction_ML_Syntax.mlident)
-              FStar_Pervasives_Native.tuple2
+              FStar_Pervasives_Native.tuple2)
   =
   fun g  ->
     fun x  ->
@@ -594,7 +595,7 @@ let extend_fv :
                in
             extend_fv' g x mlp t_x add_unit is_rec
   
-let extend_lb :
+let (extend_lb :
   env ->
     FStar_Syntax_Syntax.lbname ->
       FStar_Syntax_Syntax.typ ->
@@ -602,7 +603,7 @@ let extend_lb :
           Prims.bool ->
             Prims.bool ->
               (env,FStar_Extraction_ML_Syntax.mlident)
-                FStar_Pervasives_Native.tuple2
+                FStar_Pervasives_Native.tuple2)
   =
   fun g  ->
     fun l  ->
@@ -613,52 +614,52 @@ let extend_lb :
               match l with
               | FStar_Util.Inl x -> extend_bv g x t_x add_unit is_rec false
               | FStar_Util.Inr f ->
-                  let uu____1405 =
+                  let uu____1418 =
                     FStar_Extraction_ML_Syntax.mlpath_of_lident
                       (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                      in
-                  (match uu____1405 with
+                  (match uu____1418 with
                    | (p,y) -> extend_fv' g f (p, y) t_x add_unit is_rec)
   
-let extend_tydef :
-  env -> FStar_Syntax_Syntax.fv -> FStar_Extraction_ML_Syntax.mltydecl -> env
+let (extend_tydef :
+  env -> FStar_Syntax_Syntax.fv -> FStar_Extraction_ML_Syntax.mltydecl -> env)
   =
   fun g  ->
     fun fv  ->
       fun td  ->
         let m = module_name_of_fv fv  in
-        let uu___367_1430 = g  in
+        let uu___62_1443 = g  in
         {
-          tcenv = (uu___367_1430.tcenv);
-          gamma = (uu___367_1430.gamma);
+          tcenv = (uu___62_1443.tcenv);
+          gamma = (uu___62_1443.gamma);
           tydefs = ((m, td) :: (g.tydefs));
           type_names = (fv :: (g.type_names));
-          currentModule = (uu___367_1430.currentModule)
+          currentModule = (uu___62_1443.currentModule)
         }
   
-let extend_type_name : env -> FStar_Syntax_Syntax.fv -> env =
+let (extend_type_name : env -> FStar_Syntax_Syntax.fv -> env) =
   fun g  ->
     fun fv  ->
-      let uu___368_1445 = g  in
+      let uu___63_1458 = g  in
       {
-        tcenv = (uu___368_1445.tcenv);
-        gamma = (uu___368_1445.gamma);
-        tydefs = (uu___368_1445.tydefs);
+        tcenv = (uu___63_1458.tcenv);
+        gamma = (uu___63_1458.gamma);
+        tydefs = (uu___63_1458.tydefs);
         type_names = (fv :: (g.type_names));
-        currentModule = (uu___368_1445.currentModule)
+        currentModule = (uu___63_1458.currentModule)
       }
   
-let is_type_name : env -> FStar_Syntax_Syntax.fv -> Prims.bool =
+let (is_type_name : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun g  ->
     fun fv  ->
       FStar_All.pipe_right g.type_names
         (FStar_Util.for_some (FStar_Syntax_Syntax.fv_eq fv))
   
-let emptyMlPath :
+let (emptyMlPath :
   (FStar_Extraction_ML_Syntax.mlsymbol Prims.list,Prims.string)
-    FStar_Pervasives_Native.tuple2
+    FStar_Pervasives_Native.tuple2)
   = ([], "") 
-let mkContext : FStar_TypeChecker_Env.env -> env =
+let (mkContext : FStar_TypeChecker_Env.env -> env) =
   fun e  ->
     let env =
       {
@@ -677,23 +678,23 @@ let mkContext : FStar_TypeChecker_Env.env -> env =
              FStar_Extraction_ML_Syntax.E_IMPURE,
              (FStar_Extraction_ML_Syntax.MLTY_Var a))))
        in
-    let uu____1492 =
-      let uu____1497 =
-        let uu____1498 =
+    let uu____1505 =
+      let uu____1510 =
+        let uu____1511 =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
             FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None
            in
-        FStar_Util.Inr uu____1498  in
-      extend_lb env uu____1497 FStar_Syntax_Syntax.tun failwith_ty false
+        FStar_Util.Inr uu____1511  in
+      extend_lb env uu____1510 FStar_Syntax_Syntax.tun failwith_ty false
         false
        in
-    FStar_All.pipe_right uu____1492 FStar_Pervasives_Native.fst
+    FStar_All.pipe_right uu____1505 FStar_Pervasives_Native.fst
   
-let monad_op_name :
+let (monad_op_name :
   FStar_Syntax_Syntax.eff_decl ->
     Prims.string ->
       (FStar_Extraction_ML_Syntax.mlpath,FStar_Ident.lident)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun ed  ->
     fun nm  ->
@@ -701,14 +702,14 @@ let monad_op_name :
         FStar_Syntax_Util.mk_field_projector_name_from_ident
           ed.FStar_Syntax_Syntax.mname (FStar_Ident.id_of_text nm)
          in
-      let uu____1514 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
-      (uu____1514, lid)
+      let uu____1527 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
+      (uu____1527, lid)
   
-let action_name :
+let (action_name :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.action ->
       (FStar_Extraction_ML_Syntax.mlpath,FStar_Ident.lident)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun ed  ->
     fun a  ->
@@ -720,6 +721,6 @@ let action_name :
         FStar_Ident.lid_of_ids
           (FStar_List.append module_name [FStar_Ident.id_of_text nm])
          in
-      let uu____1530 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
-      (uu____1530, lid)
+      let uu____1543 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
+      (uu____1543, lid)
   

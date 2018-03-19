@@ -48,17 +48,15 @@ val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : guard_t -> guard_t
 val resolve_implicits_tac     : guard_t -> guard_t
-val guard_unbound_vars        : env -> guard_t -> set<bv>
-val check_term                : string -> env -> term -> unit
-val check_guard               : string -> env -> guard_t -> unit
 val base_and_refinement       : env -> term -> term * option<(bv * term)>
 
 val unrefine   : env -> typ -> typ
 val try_teq    : bool -> env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
 val teq_nosmt  : env -> typ -> typ -> bool
-val try_subtype: env -> typ -> typ -> option<guard_t>
-val try_subtype': env -> typ -> typ -> bool -> option<guard_t>
+val get_subtyping_predicate: env -> typ -> typ -> option<guard_t>
+val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
+val subtype_nosmt: env -> typ -> typ -> bool
 val sub_comp   : env -> comp -> comp -> option<guard_t>
 
 val universe_inequality : universe -> universe -> guard_t

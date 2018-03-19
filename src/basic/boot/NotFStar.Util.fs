@@ -205,12 +205,12 @@ let new_set (cmp:'a -> 'a -> int) : set<'a> = as_set [] cmp
 
 let set_elements ((s1, eq):set<'a>) :list<'a> =
    let rec aux out = function
-        | [] -> out
+        | [] -> List.rev_append out []
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
                     else aux (hd::out) tl in
    aux [] s1
-let set_add a ((s, b):set<'a>) = (a::s, b)
+let set_add a ((s, b):set<'a>) = (s@[a], b)
 let set_remove x ((s1, eq):set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):set<'a>) = List.exists (b a) s
 let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = (s1@s2, b)//set_elements (s1,b)@set_elements (s2,b), b)
@@ -218,44 +218,49 @@ let set_intersect ((s1, eq):set<'a>) ((s2, _):set<'a>) = List.filter (fun y -> L
 let set_is_subset_of ((s1, eq): set<'a>) ((s2, _):set<'a>) = List.for_all (fun y -> List.exists (eq y) s2) s1
 let set_count ((s1, _):set<'a>) = s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+let set_symmetric_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> =
+    set_union (set_difference (s1, eq) (s2, eq))
+              (set_difference (s2, eq) (s1, eq))
+let set_eq ((s1, eq):set<'a>) ((s2, _):set<'a>) : bool =
+    set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
 
 (* fifo_set is implemented with the same underlying representation as sets         *)
 (* (i.e. a list + equality) and the invariant that "insertion order" is preserved. *)
 (* The convention is that the first element in insertion order is at the end of the*)
 (* underlying list.                                                                *)
-type fifo_set<'a> = set<'a>
-
-let fifo_set_is_empty ((s, _):fifo_set<'a>) =
-    match s with
-    | [] -> true
-    | _ -> false
-
-let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
-    (l, fun x y -> cmp x y = 0)
-
-let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
-    as_fifo_set [] cmp
-
-(* The input list [s1] is in reverse order and we need to keep only the last       *)
-(* occurence of each elements in s1. Note that accumulating over such elements     *)
-(* will reverse the order of the input list so that we obtain back the insertion   *)
-(* order.                                                                          *)
-let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
-   let rec aux out = function
-        | [] -> out
-        | hd::tl -> if List.exists (eq hd) out
-                    then aux out tl
-                    else aux (hd::out) tl
-   in
-   aux [] s1
-let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
-let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
-let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
-let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
-let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
-let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
-  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+//type fifo_set<'a> = set<'a>
+//
+//let fifo_set_is_empty ((s, _):fifo_set<'a>) =
+//    match s with
+//    | [] -> true
+//    | _ -> false
+//
+//let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
+//    (l, fun x y -> cmp x y = 0)
+//
+//let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
+//    as_fifo_set [] cmp
+//
+//(* The input list [s1] is in reverse order and we need to keep only the last       *)
+//(* occurence of each elements in s1. Note that accumulating over such elements     *)
+//(* will reverse the order of the input list so that we obtain back the insertion   *)
+//(* order.                                                                          *)
+//let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
+//   let rec aux out = function
+//        | [] -> out
+//        | hd::tl -> if List.exists (eq hd) out
+//                    then aux out tl
+//                    else aux (hd::out) tl
+//   in
+//   aux [] s1
+//let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
+//let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
+//let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
+//let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
+//let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
+//let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
+//  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 type System.Collections.Generic.Dictionary<'K, 'V> with
   member x.TryFind(key) =
@@ -384,7 +389,8 @@ let unicodeEncoding = new System.Text.UnicodeEncoding()
 let asciiEncoding = new System.Text.ASCIIEncoding()
 let string_of_unicode (bytes:byte []) = unicodeEncoding.GetString(bytes)
 let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
-
+let base64_encode (s:string) = System.Convert.ToBase64String(unicode_of_string s)
+let base64_decode (s:string) = System.Convert.FromBase64String(s) |> string_of_unicode
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
 let safe_int_of_string (s:string) =
@@ -520,14 +526,6 @@ let try_find f l = List.tryFind f l
 let try_find_index f l = List.tryFindIndex f l
 
 let sort_with f l = List.sortWith f l
-
-let set_eq f l1 l2 =
-  let eq x y = f x y = 0 in
-  let l1 = sort_with f l1 |> remove_dups eq in
-  let l2 = sort_with f l2 |> remove_dups eq in
-  if List.length l1 <> List.length l2
-  then false
-  else List.forall2 eq l1 l2
 
 let bind_opt opt f =
     match opt with
@@ -798,6 +796,9 @@ let file_exists f =
 
 let basename f =
   System.IO.Path.GetFileName f
+
+let dirname f =
+  System.IO.Path.GetDirectoryName f
 
 let print_endline x =
   print_endline x

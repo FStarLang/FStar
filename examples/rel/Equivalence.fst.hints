@@ -6,15 +6,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "12e32af36a0c21addcd74b2847171d6a"
-    ],
-    [
-      "Equivalence.if_left",
-      2,
-      2,
-      1,
       [
         "@query",
         "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
@@ -22,7 +13,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "b870e089379efe3a1a8b30cd9466a310"
+      "487262bdbb67df5f3076d736f50bd927"
     ],
     [
       "Equivalence.if_left_wp",
@@ -32,24 +23,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "interpretation_Equivalence_Tm_abs_302db0542cb84fe174f74449dff28a8e",
+        "interpretation_Equivalence_Tm_abs_0fa59d72b49b5a2bc999d88ede729bfa",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__a",
         "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281",
         "unit_typing"
       ],
       0,
-      "8fb799b00f2ce714291a59b5ed3161bb"
-    ],
-    [
-      "Equivalence.if_left_wp",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c3cd46a0e30895b41d5797b8bee3aa13"
+      "e94fd0917a9e1d79f4d9deced21b9da8"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -66,7 +47,33 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
-      "d41385afd8fb55faa18d8aa41aa47dca"
+      "bb01785bd8d057b3d8706597b529c4cc"
+    ],
+    [
+      "Equivalence.if_left_wp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281"
+      ],
+      0,
+      "5652d24f18361e57354c74ab7e4e0cc5"
+    ],
+    [
+      "Equivalence.if_left_wp'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
+      ],
+      0,
+      "9fedae592899419e3c59c49e64694346"
     ]
   ]
 ]

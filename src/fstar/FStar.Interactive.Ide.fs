@@ -33,18 +33,29 @@ open FStar.Interactive
 open FStar.Parser.ParseIt
 
 module SS = FStar.Syntax.Syntax
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
 exception ExitREPL of int
 
+(** Checkpoint the current (typechecking and desugaring) environment **)
 let push env msg =
   let res = push_context env msg in
   Options.push();
   res
 
+(** Revert to the last checkpoint.
+
+Usage note: [pop] alters the value returned by [push], but not the value that
+[push] operated on.  That is, a proper push/pop pair looks like this:
+
+  let noop =
+    let env_snapshot = push env in
+    // [Do stuff with env]
+    pop env_snapshot;
+    env_snapshot // Discard env **)
 let pop env msg =
   pop_context env msg;
   Options.pop()
@@ -64,18 +75,17 @@ let with_captured_errors' env f =
               "F* may be in an inconsistent state.\n" ^
               "Please file a bug report, ideally with a " ^
               "minimized version of the program that triggered the error." in
-    TcErr.add_errors env [(msg, TcEnv.get_range env)];
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Util.print_error msg;
+    Errors.log_issue (TcEnv.get_range env) (Errors.Error_IDEAssertionFailure, msg);
     None
 
-  | Error(msg, r) ->
-    TcErr.add_errors env [(msg, r)];
+  | Error(e, msg, r) ->
+    TcErr.add_errors env [(e, msg, r)];
     None
 
-  | Err msg ->
-    TcErr.add_errors env [(msg, TcEnv.get_range env)];
+  | Err (e, msg) ->
+    TcErr.add_errors env [(e, msg, TcEnv.get_range env)];
     None
 
   | Stop ->
@@ -314,16 +324,16 @@ let deps_and_repl_ld_tasks_of_our_file filename
     match same_name with
     | [intf; impl] ->
       if not (Parser.Dep.is_interface intf) then
-         raise (Err (Util.format1 "Expecting an interface, got %s" intf));
+         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
       if not (Parser.Dep.is_implementation impl) then
-         raise (Err (Util.format1 "Expecting an implementation, got %s" impl));
+         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
       [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
     | [impl] ->
       []
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise (Err (Util.format2 message our_mod_name mods_str));
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
       [] in
 
   let tasks =
@@ -549,7 +559,7 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"]
+   "vfs-add"; "tactic-ranges"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -629,26 +639,6 @@ let read_interactive_query stream : query =
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
-
-let json_of_pos pos =
-  JsonList [JsonInt (Range.line_of_pos pos); JsonInt (Range.col_of_pos pos)]
-
-let json_of_range_fields file b e =
-  JsonAssoc [("fname", JsonStr file);
-             ("beg", json_of_pos b);
-             ("end", json_of_pos e)]
-
-let json_of_use_range r =
-    json_of_range_fields
-            (Range.file_of_use_range r)
-            (Range.start_of_use_range r)
-            (Range.end_of_use_range r)
-
-let json_of_def_range r =
-    json_of_range_fields
-            (Range.file_of_range r)
-            (Range.start_of_range r)
-            (Range.end_of_range r)
 
 let json_of_issue_level i =
   JsonStr (match i with
@@ -1148,12 +1138,18 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
+// let string_of_sigmap sigmap =
+//   Util.smap_fold sigmap
+//     (fun k (v, _) acc ->
+//        (k ^ ": " ^ (sigelt_to_string v)) :: acc) []
+//   |> Util.concat_l "\n"
+
 let run_and_rewind st task =
   let env' = push st.repl_env "#compute" in
   let results = try Inl <| task st with e -> Inr e in
   pop env' "#compute";
   match results with
-  | Inl results -> (results, Inl st)
+  | Inl results -> (results, Inl ({ st with repl_env = env' }))
   | Inr e -> raise e
 
 let run_with_parsed_and_tc_term st term line column continuation =
@@ -1406,7 +1402,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Option.isSome (Options.codegen ()) then
-    Util.print_warning "--ide: ignoring --codegen";
+    Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces

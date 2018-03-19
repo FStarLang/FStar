@@ -27,11 +27,12 @@ val hard_coded_dependencies : string -> list<(lident * open_kind)>
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-val cache_file_name: string -> string
 
 type deps
 val empty_deps : deps
+val cache_file_name: string -> string
 val collect: list<string> -> list<string> * deps
 val deps_of : deps -> string -> list<string>
 val print : deps -> unit
-val hash_dependences: deps -> string -> option<(list<string>)>
+val hash_dependences: deps -> string -> option<(list<(string*string)>)>
+val print_digest: list<(string * string)> -> string

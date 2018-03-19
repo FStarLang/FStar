@@ -751,8 +751,7 @@ let d_das
     exec_equiv (st_cons phi x f) (st_cons phi x ns_t) (assign x e) skip
   ))
   [SMTPat (exec_equiv (st_cons phi x f) (st_cons phi x ns_t) (assign x e) skip)]
-= let ec = reify_exp e in // TODO: WHY is this necessary?
-  ()
+= assert (Benton2004.mention (reify_exp e)) // TODO: WHY is this necessary?
 
 (* Equivalent branches for conditional *)
 

@@ -738,8 +738,14 @@ let d_lu2
       end else ()
     end else ()
   in
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf2 x))
+  let prf1' (s0:heap) (fuel:nat) :Lemma (fst (fl fuel s0) == true ==> fr fuel s0 == fl fuel s0)
+    = Classical.move_requires (prf1 s0) fuel
+  in
+  let prf2' (s0:heap) (fuel:nat) :Lemma (fst (fr fuel s0) == true ==> fl (fuel + fuel) s0 == fr fuel s0)
+    = Classical.move_requires (prf2 s0) fuel
+  in
+  Classical.forall_intro_2 prf1';  //AR: same pattern as in Pointer, see the comment there
+  Classical.forall_intro_2 prf2'
 
 (* 3.2 Optimizing Transformations *)
 
@@ -755,6 +761,8 @@ let d_bre
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c1))
 *)
 
+let mention (#a:Type) (x:a) = True
+
 let d_bre
   (c1 c2 c0: computation)
   (phi phi' : sttype)
@@ -766,5 +774,4 @@ let d_bre
   ))
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c0))
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c0)]
-= let ec = reify_exp b in // TODO: WHY is this necessary?
-  ()
+= assert (mention (reify_exp b)) //Just mentioning `reify_exp b` triggers the necessary reduction; not sure exactly why though
