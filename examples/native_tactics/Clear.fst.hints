@@ -2,15 +2,6 @@
   "\u0002tõGPÅ\u0005˜£\u001a˜ƒ‚EÇe",
   [
     [
-      "Clear.clear_all_of_type",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8ae05a3d47dd936c59ca4566bcdbdccd"
-    ],
-    [
       "Clear.l2",
       1,
       2,
@@ -24,7 +15,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
       ],
       0,
-      "7b5440bd9dbfac747c85021e1049843f"
+      "a35d7be4ac47b7ca23d2361225b3c1b5"
     ],
     [
       "Clear.l2",
@@ -40,7 +31,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
       ],
       0,
-      "8e7a9b90e9834495374e4f732823df01"
+      "379aa05109285925fcfb5916a76df8d3"
     ],
     [
       "Clear.l2",
@@ -53,7 +44,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "3a7e27e5f5c35a65e4294693b571a368"
+      "20586fd8db939c07602cdb9ad74f0be7"
     ]
   ]
 ]

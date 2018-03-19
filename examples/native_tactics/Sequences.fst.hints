@@ -12,48 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "dbf53ec7142f4a87507ab9e783cb9ce2"
-    ],
-    [
-      "Sequences.prune_for_seq",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "69bf11756a7f8a59e846a26516b6c374"
-    ],
-    [
-      "Sequences.try_unref_eq",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "e81a19ae05a445e066f75025271f0902"
-    ],
-    [
-      "Sequences.sequence_pruning",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
-      ],
-      0,
-      "c02cccd58f45497b259aa64a672bbb7a"
+      "54948f8bb172814579d3de9d093f6499"
     ],
     [
       "Sequences.test",
@@ -75,7 +34,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "6c3bb60915a5fe525f5490262f367f92"
+      "aee43013de750fbb824e876bc010859b"
     ],
     [
       "Sequences.test",
@@ -95,7 +54,7 @@
         "unit_typing"
       ],
       0,
-      "39cc2ca30698aa5793595107c2a41318"
+      "36161ce76b2d261250d2a8c4181f90b3"
     ],
     [
       "Sequences.test",
@@ -115,7 +74,7 @@
         "unit_typing"
       ],
       0,
-      "c6e4a110036198987665b0f1cd640fb2"
+      "198d9aa57cf9910f59633b4d0badb77f"
     ],
     [
       "Sequences.test",
@@ -148,7 +107,7 @@
         "unit_typing"
       ],
       0,
-      "8323fc34622d7ab7f27d34e4de4b85a9"
+      "87e454bfe8b6a7dd888b6895c8a24ac1"
     ]
   ]
 ]
