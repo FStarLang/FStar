@@ -186,7 +186,8 @@ val rcreate
   (len:UInt32.t)
 : HST.ST (buffer a)
   (requires (fun h ->
-    HS.is_eternal_region r /\
+    HST.is_eternal_region r /\
+    HST.witnessed (HST.region_contains_pred r) /\
     UInt32.v len > 0
   ))
   (ensures (fun (h0: HS.mem) b h1 ->
