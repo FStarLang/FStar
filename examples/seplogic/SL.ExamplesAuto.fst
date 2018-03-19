@@ -27,16 +27,24 @@ let read_wp_qn = ["SL" ; "Effect" ; "read_wp"]
 let bind_wp_qn = ["SL" ; "Effect" ; "bind_wp"]
 let framepost_qn = ["SL" ; "Effect" ; "frame_post"]
 let pointsto_qn = ["SepLogic"; "Heap"; "op_Bar_Greater"]
+let ref_qn = ["SepLogic"; "Heap"; "ref"]
+
+let footprint_aux (a : argv) : Tac (list term) =
+  (match inspect (fst (collect_app (tc (fst a)))) with
+  | Tv_FVar fv -> if inspect_fv fv = ref_qn then [fst a] else []
+  | _ -> [])
 
 let footprint_of (t:term) : Tac (list term) =
   let hd, tl = collect_app t in
   match inspect hd, tl with
-  | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
-    if inspect_fv fv = write_wp_qn then [tr]
-    else fail "not a write_wp"
-  | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit)] ->
-    if inspect_fv fv = read_wp_qn then [tr]
-    else fail "not a read_wp"
+  // | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
+  //   if inspect_fv fv = write_wp_qn then [tr]
+  //   else fail "not a write_wp"
+  // | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit)] ->
+  //   if inspect_fv fv = read_wp_qn then [tr]
+  //   else fail "not a read_wp"
+  // -- generalizing the above to arbitrary "footprint expressions"
+  | Tv_FVar fv, xs -> flatten (FStar.Tactics.Util.map footprint_aux xs)
   | _ -> fail "not an applied free variable"
 
 let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
@@ -60,10 +68,10 @@ let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
     else "2"
   | _, _ -> "2" // have to accept at least Tv_Uvar _ here
 
-let sort_sl (a:Type) (vm:vmap a string) (xs:list var) =
+let sort_sl (a:Type) (vm:vmap a string) (xs:list var) : Tot (list var) =
   List.Tot.sortWith #var
-    (fun x y -> FStar.String.compare (select_extra x vm)
-                                     (select_extra y vm)) xs
+    (fun x y -> FStar.String.compare (select_extra y vm)
+                                     (select_extra x vm)) xs
 
 let canon_monoid_sl (fp:list term) : Tac unit =
   canon_monoid_with string (pointsto_to_string fp) ""
@@ -79,7 +87,7 @@ type cmd =
   | Write     : cmd
   | Bind      : cmd
   | FramePost : cmd
-  | Unknown   : cmd
+  | Unknown   : option fv ->cmd
 
 let peek_cmd () : Tac cmd =
   let g = cur_goal () in
@@ -106,8 +114,8 @@ let peek_cmd () : Tac cmd =
        then Bind
        else if inspect_fv fv = framepost_qn
        then FramePost
-       else Unknown
-      | _ -> Unknown)
+       else Unknown (Some fv)
+      | _ -> Unknown None)
    else fail "Unrecognized command: not a squash"
  | _ -> fail "Unrecognized command: not an fv app"
 
@@ -127,9 +135,16 @@ let unfold_first_occurrence (name:string) : Tac unit =
   topdown_rewrite should_rewrite rewrite
 
 let rec sl (i:int) : Tac unit =
-  // dump ("SL :" ^ string_of_int i);
+  dump ("SL :" ^ string_of_int i);
   match peek_cmd () with
-  | Unknown -> smt ()
+  | Unknown None -> smt()
+  | Unknown (Some fv) ->
+    // eventually this will use attributes,
+    // but we can't currently get at them
+    unfold_first_occurrence (fv_to_string fv);
+    ignore (repeat (fun () -> FStar.Tactics.split(); smt())); //definedness
+    norm[];
+    sl (i + 1)
 
   | Bind ->
     unfold_first_occurrence (%`bind_wp);
@@ -180,6 +195,7 @@ let rec sl (i:int) : Tac unit =
         canon_monoid_sl fp_refs;
          dump ("after canon_monoid");
         trefl();
+        norm_binder_type [] heq;
          dump ("after trefl");
         apply_lemma (mk_e_app (`frame_wp_lemma)
                        [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
@@ -195,8 +211,7 @@ let __elim_exists_as_forall
 let __elim_exists (h:binder) :Tac unit
   = let t = `__elim_exists_as_forall in
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
-    clear h;
-    ignore (forall_intro ())
+    clear h
 
 let rec intro_annotated_wp () :Tac binder
   = let h = implies_intro () in
@@ -204,51 +219,93 @@ let rec intro_annotated_wp () :Tac binder
             (fun () -> h)
   
 let prelude' () : Tac unit =
-   // dump "start";
+   dump "start";
    norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
    mapply (`FStar.Squash.return_squash);
-   let post = forall_intro () in
-   let m0 = forall_intro () in
+   let post = forall_intro_as "post" in
+   let m = forall_intro_as "m" in
+   unfold_first_occurrence (%`frame_wp);
+   unfold_first_occurrence (%`frame_post);
+   norm [];
+   let h = implies_intro () in
+   __elim_exists h;
+   let m0 = forall_intro_as "m0" in
+   let h = implies_intro () in
+   __elim_exists h;
+   let m1 = forall_intro_as "m1" in
+   //ignore (implies_intro ());
+   
    let wp_annot = intro_annotated_wp () in
    and_elim (pack (Tv_Var (fst (inspect_binder wp_annot))));
    clear wp_annot;
    let hm0 = implies_intro() in
+   and_elim (binder_to_term hm0);
+   clear hm0;
+   ignore (implies_intro ());
+   let hm0 = implies_intro () in
+   dump "before rewrite";
    rewrite hm0; clear hm0;
-   ignore (implies_intro() )
+   dump "after rewrite";
+   let user_annot = implies_intro() in
+   norm_binder_type [primops; iota; delta; zeta] user_annot;
+   and_elim (binder_to_term user_annot);
+   clear user_annot;
+   let h = implies_intro () in rewrite h; clear h;
+   ignore (implies_intro ())
 
-let sl_tac () : Tac unit =
+let sl_auto () : Tac unit =
    prelude'();
-   // dump "after prelude";
+   dump "after prelude";
    sl(0)
 
-let test (r1 r2:ref int) =
-  (!r1)
+// let test (r1 r2:ref int) =
+//   (!r1)
 
-  <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m))
+//   <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m))
 
-  by sl_tac
+//   by sl_auto
 
-(*
- * two commands
- *)
-let write_read (r1 r2:ref int) =
-  (r1 := 2;
-   !r2)
-  <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
-  by sl_tac
+// (*
+// //  * two commands
+// //  *)
+// let write_read (r1 r2:ref int) =
+//   (r1 := 2;
+//    !r2)
+//   <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
+//   by sl_auto
 
-let read_write (r1 r2:ref int) =
-  (let x = !r1 in
-   r2 := x)
-  <: STATE unit (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
-  by sl_tac
+// let read_write (r1 r2:ref int) =
+//   (let x = !r1 in
+//    r2 := x)
+//   <: STATE unit (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
+//   by sl_auto
 
-(*
- * four commands
- *)
-let swap (r1 r2:ref int)
-     : STATE unit (fun post m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x)))) by sl_tac
-  = (let x = !r1 in
+// (*
+// //  * four commands
+// //  *)
+// let swap (r1 r2:ref int)
+//      : STATE unit (fun post m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x)))) by sl_auto
+//   = (let x = !r1 in
+//      let y = !r2 in
+//      r1 := y;
+//      r2 := x)
+
+[@"unfold_for_sl"]
+let swap_wp (r1 r2:ref int) (x y:int) =
+  fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
+
+let swap0 (r1 r2:ref int) (x y:int)
+     : STATE unit (fun post m -> frame_wp (swap_wp r1 r2 x y) (frame_post post) m) by sl_auto
+  =
+     (let x = !r1 in
      let y = !r2 in
      r1 := y;
      r2 := x)
+
+// let call (#wp:...) (f:unit -> STATE 'a (fun :STATE unit (fun p m -> frame_wp (
+
+let rotate (r1 r2 r3:ref int)
+  : STATE unit (fun post m -> m == ((r1 |> 1) <*> ((r2 |> 2) <*> (r3 |> 3))) /\
+                         (defined m /\ post () ((r1 |> 3) <*> ((r2 |> 1) <*> (r3 |> 2))))) by sl_auto =
+  swap0 r2 r3 2 3;
+  swap0 r1 r2 1 3
