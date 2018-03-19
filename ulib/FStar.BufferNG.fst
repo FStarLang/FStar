@@ -221,12 +221,6 @@ val index
 let index #a b n =
   P.read_buffer b n
 
-let frameOf
-  (#t: typ)
-  (b: buffer t)
-: GTot HS.rid
-= P.frameOf_buffer b
-
 val upd
   (#a: typ)
   (b: buffer a)
