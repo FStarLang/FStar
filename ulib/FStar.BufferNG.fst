@@ -104,20 +104,20 @@ let lemma_disjoint_symm #a #a' (x:buffer a) (y:buffer a') : Lemma
 let lemma_disjoint_sub #a #a' (x:buffer a) (subx:buffer a) (y:buffer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
-  [SMTPatT (disjoint subx y); SMTPatT (includes x subx)]
+  [SMTPat (disjoint subx y); SMTPat (includes x subx)]
   = P.buffer_includes_loc_includes x subx;
     P.loc_disjoint_includes (P.loc_buffer x) (P.loc_buffer y) (P.loc_buffer subx) (P.loc_buffer y)
 
 let lemma_disjoint_sub' #a #a' (x:buffer a) (subx:buffer a) (y:buffer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
-  [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
+  [SMTPat (disjoint y subx); SMTPat (includes x subx)]
   = ()
 
 let lemma_live_disjoint #a #a' h (b:buffer a) (b':buffer a') : Lemma
   (requires (live h b /\ b' `unused_in` h))
   (ensures (disjoint b b'))
-  [SMTPatT (disjoint b b'); SMTPatT (live h b)]
+  [SMTPat (disjoint b b'); SMTPat (live h b)]
 = ()
 
 (** Concrete getters and setters *)
@@ -321,7 +321,7 @@ let lemma_sub_spec (#a:typ) (b:buffer a)
     as_seq h (gsub b i len) == Seq.slice (as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)
   ))
   [SMTPatOr [
-    [SMTPat (gsub b i len); SMTPatT (live h b)];
+    [SMTPat (gsub b i len); SMTPat (live h b)];
     [SMTPat (live h (gsub b i len))]
   ]]
   = Seq.lemma_eq_intro (as_seq h (gsub b i len)) (Seq.slice (as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len))

@@ -2218,7 +2218,7 @@ val write_union_field
 val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures  (modifies loc_none h0 h1))
-  [SMTPatT (HS.fresh_frame h0 h1)]
+  [SMTPat (HS.fresh_frame h0 h1)]
 
 val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
   (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
@@ -2241,12 +2241,12 @@ val no_upd_popped_buffer: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:buffer t -> Lemm
     buffer_as_seq h1 b == buffer_as_seq h0 b
   ))))
   [SMTPatOr [
-    [SMTPatT (buffer_live h0 b); SMTPatT (HS.popped h0 h1)];
-    [SMTPatT (buffer_readable h0 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (buffer_as_seq h0 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (buffer_live h1 b); SMTPatT (HS.popped h0 h1)];
-    [SMTPatT (buffer_readable h1 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (buffer_as_seq h1 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPat (buffer_live h0 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (buffer_readable h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (buffer_as_seq h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (buffer_live h1 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (buffer_readable h1 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (buffer_as_seq h1 b); SMTPat (HS.popped h0 h1)];    
   ]]
 
 val modifies_fresh_frame_popped
@@ -2306,7 +2306,7 @@ val modifies_1_readable_struct
     [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h p)];
     [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
-    [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
+//    [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))]; // this pattern is incomplete
     [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gfield p f)];
 ]]
 
@@ -2323,7 +2323,7 @@ val modifies_1_readable_array
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h p)];
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
-    [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
+//    [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))]; // this pattern is incomplete
     [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gcell p i)];
   ]]
 
