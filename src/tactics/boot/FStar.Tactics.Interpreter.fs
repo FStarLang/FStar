@@ -399,7 +399,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "prune"         prune unembed_string embed_unit t_unit;
       mktac1 "addns"         addns unembed_string embed_unit t_unit;
 
-      mktac1 "print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
+      mktac1 "print"         print unembed_string embed_unit t_unit;
       mktac1 "dump"          print_proof_state unembed_string embed_unit t_unit;
       mktac1 "dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 

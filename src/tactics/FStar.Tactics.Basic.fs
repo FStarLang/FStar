@@ -93,6 +93,10 @@ let is_irrelevant (g:goal) : bool =
     | Some t -> true
     | _ -> false
 
+let print (msg:string) : tac<unit> =
+    tacprint msg;
+    ret ()
+
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
     ()
