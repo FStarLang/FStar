@@ -108,7 +108,7 @@ let (unembed_proofstate :
       uu____62.FStar_Syntax_Syntax.n  in
     match uu____61 with
     | FStar_Syntax_Syntax.Tm_lazy i when
-        i.FStar_Syntax_Syntax.kind = FStar_Syntax_Syntax.Lazy_proofstate ->
+        i.FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate ->
         let uu____68 = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
         FStar_All.pipe_left
           (fun _0_40  -> FStar_Pervasives_Native.Some _0_40) uu____68
