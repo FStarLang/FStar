@@ -235,6 +235,7 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_uinst _ -> "Tm_uinst"
   | Tm_constant _ -> "Tm_constant"
   | Tm_type _ -> "Tm_type"
+  | Tm_quoted _ -> "Tm_quoted"
   | Tm_abs _ -> "Tm_abs"
   | Tm_arrow _ -> "Tm_arrow"
   | Tm_refine _ -> "Tm_refine"
@@ -265,7 +266,13 @@ and term_to_string x =
       | Tm_app(_, []) ->  failwith "Empty args!"
 
       // TODO: add an option to mark where this happens
-      | Tm_lazy i -> term_to_string (must !lazy_chooser i.kind i) // can't call into Syntax.Util here..
+      | Tm_lazy i -> term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+
+      | Tm_quoted (tm, { qkind = Quote_static  }) ->
+        U.format1 "`(%s)" (term_to_string tm)
+
+      | Tm_quoted (tm, { qkind = Quote_dynamic }) ->
+        U.format1 "quote (%s)" (term_to_string tm)
 
       | Tm_meta(t, Meta_pattern ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
@@ -283,9 +290,6 @@ and term_to_string x =
 
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
-
-      | Tm_meta(t, Meta_quoted(s, qi)) ->
-        U.format2 "(Meta_quoted \"%s\" {qopen=%s})" (term_to_string s) (string_of_bool qi.qopen)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
@@ -520,9 +524,6 @@ and metadata_to_string = function
 
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
-
-    | Meta_quoted (qt, qi) ->
-        "`(" ^ term_to_string qt ^ ")"
 
 let term_to_string' env x =
   if Options.ugly ()

@@ -2646,6 +2646,17 @@ let buffer_live_gbuffer_of_array_pointer
   [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
 = ()
 
+let buffer_unused_in #t b h =
+  match b.broot with
+  | BufferRootSingleton p -> unused_in p h
+  | BufferRootArray #mlen p -> unused_in p h
+
+let buffer_live_not_unused_in #t b h = ()
+
+let buffer_unused_in_gsingleton_buffer_of_pointer #t p h = ()
+
+let buffer_unused_in_gbuffer_of_array_pointer #t #length p h = ()
+
 let frameOf_buffer
   (#t: typ)
   (b: buffer t)
@@ -2664,6 +2675,8 @@ let frameOf_buffer_gbuffer_of_array_pointer
   (#length: array_length_t)
   (p: pointer (TArray length t))
 = ()
+
+let live_region_frameOf_buffer #value h p = ()
 
 let buffer_as_addr #t b =
   match b.broot with
@@ -2693,7 +2706,7 @@ let sub_buffer
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
 
 let offset_buffer #t b i =
-  Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) (UInt32.sub (Buffer?.blength b) i)
+  sub_buffer b i (UInt32.sub (Buffer?.blength b) i)
 
 let buffer_length_gsub_buffer
   (#t: typ)
@@ -2717,6 +2730,8 @@ let buffer_live_gsub_buffer_intro
   len
   h
 = ()
+
+let buffer_unused_in_gsub_buffer #t b i len h = ()
 
 let gsub_buffer_gsub_buffer
   (#a: typ)
@@ -2953,6 +2968,8 @@ let buffer_readable_intro
   (h: HS.mem)
   (b: buffer t)
 = ()
+
+let buffer_readable_elim #t h b = ()
 
 (*** Disjointness of pointers *)
 
@@ -3280,6 +3297,9 @@ let loc_none = Loc
   (fun _ _ -> false_elim ())
 
 let loc_union s1 s2 =
+  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
+  then s1
+  else
   let addr_regions1 = Ghost.reveal (Loc?.addr_regions s1) in
   let addr_regions2 = Ghost.reveal (Loc?.addr_regions s2) in
   let addr_regions = Set.union addr_regions1 addr_regions2 in
@@ -3332,6 +3352,8 @@ let loc_union s1 s2 =
     (Ghost.hide aux_regions)
     aux_addrs
     aux
+
+let loc_union_idem s = ()
 
 let loc_pointer #t p =
   Loc
@@ -3720,6 +3742,25 @@ let loc_includes_trans s1 s2 s3 =
 
 let loc_includes_union_r s s1 s2 = ()
 
+#set-options "--z3rlimit 32"
+
+let loc_includes_union_l s1 s2 s =
+  let u12 = loc_union s1 s2 in
+  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
+  then ()
+  else begin
+    Classical.forall_intro loc_aux_includes_refl';
+    Classical.forall_intro_2 loc_aux_includes_union_l_l;    
+    Classical.forall_intro_2 loc_aux_includes_union_l_r;
+    Classical.or_elim
+      #(loc_includes s1 s)
+      #(loc_includes s2 s)
+      #(fun _ -> loc_includes (loc_union s1 s2) s)
+      (fun _ -> loc_includes_trans u12 s1 s)
+      (fun _ -> loc_includes_trans u12 s2 s)
+  end
+
+(* Left to be merged from:  9b3bd6cce17e430a68409dbc838dc3314aef6b2a
 private let loc_includes_union_l_helper_l (s1 s2:loc)
   :Lemma (loc_includes (loc_union s1 s2) s1)
   = Classical.forall_intro loc_aux_includes_refl';
@@ -3742,6 +3783,7 @@ let loc_includes_union_l s1 s2 s =
   end
 
 #set-options "--z3rlimit 32"
+*)
 
 let loc_includes_none s = ()
 
@@ -4126,6 +4168,12 @@ let live_unused_in_disjoint #value1 #value2 h p1 p2 =
   live_unused_in_disjoint_strong h p1 p2;
   disjoint_root p1 p2
 
+let pointer_live_reference_unused_in_disjoint #value1 #value2 h p1 p2 =
+  disjoint_roots_intro_pointer_vs_reference h p1 p2
+
+let reference_live_pointer_unused_in_disjoint #value1 #value2 h p1 p2 =
+  disjoint_roots_intro_reference_vs_pointer h p1 p2
+
 let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 = ()
 
 let loc_disjoint_gpointer_of_buffer_cell #t b i1 i2 = ()
@@ -4133,6 +4181,8 @@ let loc_disjoint_gpointer_of_buffer_cell #t b i1 i2 = ()
 let loc_disjoint_addresses r1 r2 n1 n2 = ()
 
 let loc_disjoint_pointer_addresses #t p r n = ()
+
+let loc_disjoint_buffer_addresses #t p r n = ()
 
 let loc_disjoint_regions rs1 rs2 = ()
 
@@ -4195,7 +4245,26 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 
 #set-options "--z3rlimit 256"
 
-let modifies_buffer_elim #t1 b p h h' =
+val modifies_buffer_elim'
+  (#t1: typ)
+  (b: buffer t1)
+  (p: loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_buffer b) p /\
+    buffer_live h b /\
+    UInt32.v (buffer_length b) > 0 /\
+    modifies p h h'
+  ))
+  (ensures (
+    buffer_live h' b /\ (
+      buffer_readable h b ==> (
+	buffer_readable h' b /\
+	buffer_as_seq h b == buffer_as_seq h' b
+  ))))
+
+let modifies_buffer_elim' #t1 b p h h' =
   Classical.forall_intro_2 HS.lemma_tip_top;
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
@@ -4234,6 +4303,11 @@ let modifies_buffer_elim #t1 b p h h' =
     in
     Classical.move_requires g ()
   end
+
+let modifies_buffer_elim #t1 b p h h' =
+  if buffer_length b = 0ul
+  then ()
+  else modifies_buffer_elim' b p h h'
 
 let modifies_reference_elim #t b p h h' =
   Classical.forall_intro_2 HS.lemma_tip_top;
@@ -4666,8 +4740,11 @@ let modifies_fresh_frame_popped_weak
   Classical.forall_intro_2 h //AR: note
 
 let no_upd_popped #t h0 h1 b =
+  (* hint replayability *)
   let g = greference_of b in
   assert (HS.sel h1 g == HS.sel h0 g)
+
+let no_upd_popped_buffer #t h0 h1 b = ()
 
 (* Restrict a set of locations along a set of regions *)
 
@@ -4825,18 +4902,30 @@ let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
+		
+let read_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  i		
+= read (pointer_of_buffer_cell b i)		
+		
+let write_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  i v		
+= write (pointer_of_buffer_cell b i) v		
 
-let read_buffer
-  (#t: typ)
-  (b: buffer t)
-  i
-= read (pointer_of_buffer_cell b i)
+(* unused_in, cont'd *)
 
-let write_buffer
-  (#t: typ)
-  (b: buffer t)
-  i v
-= write (pointer_of_buffer_cell b i) v
+let buffer_live_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let pointer_live_buffer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let buffer_live_pointer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let reference_live_buffer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let buffer_live_reference_unused_in_disjoint #t1 #t2 h b1 b2 = ()
 
 (* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
 

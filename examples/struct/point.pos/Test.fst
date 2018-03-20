@@ -32,6 +32,8 @@ let flip
   S.write (S.field p "Y") x;
   S.write (S.field p "Color") (not color)
 
+#set-options "--z3rlimit 16"
+
 let flip'
   (p: point)
 : HST.Stack unit

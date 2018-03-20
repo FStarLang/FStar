@@ -148,7 +148,6 @@ let arith_to_bv_tac () : Tac unit = focus (fun () ->
     let f = term_as_formula g in
     match f with
     | Comp (Eq _) l r ->
-     admit (); // coverage...
      begin match run_tm (as_arith_expr l) with
       | Inl s ->
           dump s;

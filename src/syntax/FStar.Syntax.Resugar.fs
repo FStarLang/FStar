@@ -667,6 +667,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       (* TODO : should we put a pretty_non_parseable option for these cases ? *)
       label s (mk A.Wild)
 
+    | Tm_quoted (tm, qi) ->
+      let qi = match qi.qkind with
+               | Quote_static -> Static
+               | Quote_dynamic -> Dynamic
+      in
+      mk (A.Quote (resugar_term' env tm, qi))
+
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
           | Sequence ->
@@ -719,7 +726,6 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         mk (A.Ascribed(resugar_term' env e,
                        mk (A.Construct(name,[resugar_term' env t, A.Nothing])),
                        None))
-      | Meta_quoted (qt, qi) -> mk (A.Quote (resugar_term' env qt, qi.qopen))
       end
 
     | Tm_unknown -> mk A.Wild

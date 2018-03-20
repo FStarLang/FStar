@@ -68,7 +68,6 @@ let rec extract_meta x =
   match SS.compress x with
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
-      | "KremlinPrivate" -> Some Private // This one generated internally
       | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
       | "FStar.Pervasives.CInline" -> Some CInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
@@ -84,6 +83,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.CConst" -> Some (CConst s)
       | _ -> None
       end
+  | { n = Tm_constant (Const_string ("KremlinPrivate", _)) } -> Some Private // This one generated internally
   // These are only for backwards compatibility, they should be removed at some point.
   | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
   | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute

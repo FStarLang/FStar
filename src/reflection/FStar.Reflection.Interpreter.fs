@@ -47,32 +47,32 @@ let reflection_primops : list<N.primitive_step> =
     let mk1 nm (f : 'a -> 'b)       u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
     let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
     [
-        mk1 "__inspect_ln" inspect_ln E.unembed_term E.embed_term_view;
-        mk1 "__pack_ln"    pack_ln    E.unembed_term_view E.embed_term;
+        mk1 "inspect_ln" inspect_ln E.unembed_term E.embed_term_view;
+        mk1 "pack_ln"    pack_ln    E.unembed_term_view E.embed_term;
 
-        mk1 "__inspect_fv" inspect_fv E.unembed_fv embed_string_list;
-        mk1 "__pack_fv" pack_fv (unembed_list unembed_string) E.embed_fv;
+        mk1 "inspect_fv" inspect_fv E.unembed_fv embed_string_list;
+        mk1 "pack_fv" pack_fv (unembed_list unembed_string) E.embed_fv;
 
-        mk1 "__inspect_comp" inspect_comp E.unembed_comp E.embed_comp_view;
-        mk1 "__pack_comp"    pack_comp E.unembed_comp_view E.embed_comp;
+        mk1 "inspect_comp" inspect_comp E.unembed_comp E.embed_comp_view;
+        mk1 "pack_comp"    pack_comp E.unembed_comp_view E.embed_comp;
 
-        mk1 "__inspect_sigelt" inspect_sigelt E.unembed_sigelt E.embed_sigelt_view;
-        mk1 "__pack_sigelt"    pack_sigelt E.unembed_sigelt_view E.embed_sigelt;
+        mk1 "inspect_sigelt" inspect_sigelt E.unembed_sigelt E.embed_sigelt_view;
+        mk1 "pack_sigelt"    pack_sigelt E.unembed_sigelt_view E.embed_sigelt;
 
-        mk1 "__inspect_bv" inspect_bv E.unembed_bv   E.embed_bv_view;
-        mk1 "__pack_bv"    pack_bv E.unembed_bv_view E.embed_bv;
+        mk1 "inspect_bv" inspect_bv E.unembed_bv   E.embed_bv_view;
+        mk1 "pack_bv"    pack_bv E.unembed_bv_view E.embed_bv;
 
-        mk1 "__inspect_binder" inspect_binder E.unembed_binder E.embed_binder_view;
+        mk1 "inspect_binder" inspect_binder E.unembed_binder E.embed_binder_view;
 
-        mk2 "__pack_binder"    pack_binder E.unembed_bv E.unembed_aqualv E.embed_binder;
+        mk2 "pack_binder"    pack_binder E.unembed_bv E.unembed_aqualv E.embed_binder;
 
-        mk2 "__compare_bv" compare_bv E.unembed_bv E.unembed_bv E.embed_order;
+        mk2 "compare_bv" compare_bv E.unembed_bv E.unembed_bv E.embed_order;
 
-        mk2 "__is_free" is_free E.unembed_bv E.unembed_term embed_bool;
+        mk2 "is_free" is_free E.unembed_bv E.unembed_term embed_bool;
 
-        mk2 "__term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
+        mk2 "term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
 
-        mk1 "__term_to_string" term_to_string E.unembed_term embed_string;
-        mk1 "__binders_of_env" binders_of_env E.unembed_env E.embed_binders;
-        mk2 "__lookup_typ" lookup_typ E.unembed_env unembed_string_list (embed_option E.embed_sigelt fstar_refl_sigelt);
+        mk1 "term_to_string" term_to_string E.unembed_term embed_string;
+        mk1 "binders_of_env" binders_of_env E.unembed_env E.embed_binders;
+        mk2 "lookup_typ" lookup_typ E.unembed_env unembed_string_list (embed_option E.embed_sigelt fstar_refl_sigelt);
     ]

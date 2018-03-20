@@ -428,11 +428,12 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           (RD.fstar_refl_types_lid "term", [], fstar_syn_syn_prefix "t_term", R);
           (RD.fstar_refl_types_lid "fv", [], fstar_syn_syn_prefix "t_fv", R);
           (RD.fstar_refl_types_lid "binder", [], fstar_syn_syn_prefix "t_binder", R);
-          (RD.fstar_refl_syntax_lid "binders", [], fstar_refl_data_prefix "t_binders", R);
+          (RD.fstar_refl_syntax_lid "binders", [], fstar_syn_syn_prefix "t_binders", R);
           (PC.norm_step_lid, [], fstar_syn_syn_prefix "t_norm_step", S);
           (PC.list_lid,   [Covariant], fstar_syn_syn_prefix "t_list_of", S); //one covariant argument
           (PC.option_lid, [Covariant], fstar_syn_syn_prefix "t_option_of", S);
-          // (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_tc_common_prefix "t_tuple2_of", S) //two covariant arguments
+          (PC.mk_tuple_lid 2 Range.dummyRange, [Covariant; Covariant], fstar_syn_syn_prefix "t_tuple2_of", S); //two covariant arguments
+          (RD.fstar_refl_data_lid "exp", [], fstar_refl_data_prefix "t_exp", R)
         ]
     in
     let is_known_type_constructor fv n =
@@ -595,7 +596,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
             let tac_fun = w <| MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name fv]) in
             let tac_lid_app = w <| MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
-            let args = str_to_name "args" in
+            let all_args = str_to_name "args" in
             let args =
                 [w <| MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
                  tac_fun] @
@@ -603,9 +604,13 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
                 [res_embedding.embed;
                  res_embedding.type_repr;
                  tac_lid_app;
-                 psc;
-                 args] in
-            Some (mk_lam "psc" <| (mk_lam "args" (w <| MLE_App (h, args))),
+                 psc] in
+            let tabs =
+              match tvar_names with
+              | [] -> mk_lam "args" (w <| MLE_App (h, args@[all_args]))
+              | _ -> abstract_tvars tvar_names (w <| MLE_App (h, args))
+            in
+            Some (mk_lam "psc" tabs,
                   arity + 1,
                   false)
           end

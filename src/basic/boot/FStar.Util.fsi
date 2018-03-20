@@ -53,6 +53,8 @@ val set_intersect: set<'a> -> set<'a> -> set<'a>
 val set_is_subset_of: set<'a> -> set<'a> -> bool
 val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
+val set_symmetric_difference: set<'a> -> set<'a> -> set<'a>
+val set_eq: set<'a> -> set<'a> -> bool
 
 (* A fifo_set is a set preserving the insertion order *)
 //type fifo_set<'a>
@@ -285,7 +287,6 @@ val right: either<'a,'b> -> 'b
 val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
-val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
 val try_find: ('a -> bool) -> list<'a> -> option<'a>

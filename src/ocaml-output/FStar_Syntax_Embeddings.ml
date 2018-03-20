@@ -215,7 +215,7 @@ let (unembed_string :
 let (unembed_string_safe :
   FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option) =
   fun t  -> __unembed_string false t 
-let embed_pair :
+let embed_tuple2 :
   'a 'b .
     'a embedder ->
       FStar_Syntax_Syntax.typ ->
@@ -259,7 +259,7 @@ let embed_pair :
                 FStar_Syntax_Syntax.mk_Tm_app uu____379 uu____381  in
               uu____378 FStar_Pervasives_Native.None rng
   
-let __unembed_pair :
+let __unembed_tuple2 :
   'a 'b .
     Prims.bool ->
       'a unembedder ->
@@ -310,16 +310,16 @@ let __unembed_pair :
                     else ();
                     FStar_Pervasives_Native.None))
   
-let unembed_pair :
+let unembed_tuple2 :
   'a 'b .
     'a unembedder ->
       'b unembedder -> ('a,'b) FStar_Pervasives_Native.tuple2 unembedder
-  = fun ul  -> fun ur  -> fun t  -> __unembed_pair true ul ur t 
-let unembed_pair_safe :
+  = fun ul  -> fun ur  -> fun t  -> __unembed_tuple2 true ul ur t 
+let unembed_tuple2_safe :
   'a 'b .
     'a unembedder ->
       'b unembedder -> ('a,'b) FStar_Pervasives_Native.tuple2 unembedder
-  = fun ul  -> fun ur  -> fun t  -> __unembed_pair false ul ur t 
+  = fun ul  -> fun ur  -> fun t  -> __unembed_tuple2 false ul ur t 
 let embed_option :
   'a .
     'a embedder ->

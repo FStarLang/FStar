@@ -54,7 +54,6 @@ let exact_args (qs : list aqualv) (t : term) : Tac unit =
                         else ()) (L.rev uvs)
     )
 
-
 let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
@@ -138,8 +137,9 @@ private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
 let tcut (t:term) : Tac binder =
-    let tt = pack_ln (Tv_App (`__cut) (t, Q_Explicit)) in
-    exact_n 3 tt;
+    let g = cur_goal () in
+    let tt = mk_e_app (`__cut) [t; g] in
+    apply tt;
     intro ()
 
 let pose (t:term) : Tac binder =

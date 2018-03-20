@@ -144,6 +144,12 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
           union n (union (free_names_and_uvars lb.lbtyp use_cache) (free_names_and_uvars lb.lbdef use_cache)))
           (free_names_and_uvars t use_cache)
 
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static  -> no_free_vars
+        | Quote_dynamic -> free_names_and_uvars tm use_cache
+        end
+
       | Tm_meta(t, m) ->
         let u1 = free_names_and_uvars t use_cache in
         begin match m with
@@ -155,11 +161,6 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
 
         | Meta_monadic_lift(_, _, t') ->
           union u1 (free_names_and_uvars t' use_cache)
-
-        | Meta_quoted (qt, qi) ->
-            if qi.qopen
-            then union u1 (free_names_and_uvars qt use_cache)
-            else u1
 
         | Meta_labeled _
         | Meta_desugared _

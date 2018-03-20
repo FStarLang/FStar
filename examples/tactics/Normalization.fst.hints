@@ -1,7 +1,31 @@
 [
-  "º+µ™˙\n\u0007~J\u001e’Ma˙ﬂ4",
+  "√‡è˜Ø`/ËEW∆\fúªU∑",
   [
     [
+      "Normalization.def_of",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "bool_inversion", "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Reflection.Basic.inspect_fv",
+        "typing_FStar.Reflection.Basic.lookup_typ"
+      ],
+      0,
+      "5de464a695fa5c2e5400e49386199f3a"
+    ],
+    [
       "Normalization.uu___57",
       1,
       2,
@@ -12,7 +36,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "b25c65cd17449e5a5cc978e0edf16969"
+      "78b48f62934e8a1b11e1b6746af352ba"
     ],
     [
       "Normalization.uu___57",
@@ -25,7 +49,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "b467f9fc07d16ad7ff8c27a1b2bb8837"
+      "65458968a7c9086d08aab76cf7f7eea9"
     ],
     [
       "Normalization.uu___58",
@@ -38,7 +62,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "62e1693adb4535034ed32f2f809851b0"
+      "c49034deb80d10fc0afac4eada8aa47c"
     ],
     [
       "Normalization.uu___58",
@@ -51,7 +75,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "aa9d7e8f7dc4cb1591a5eb7b811a26bc"
+      "003e72f9dce1dfda72e7d8b9fb06c5ae"
     ],
     [
       "Normalization.uu___59",
@@ -64,7 +88,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "ebe58f84d5f07856999b1c820c0caa40"
+      "cbf565d1c54fe012e481f3016499fcbc"
     ],
     [
       "Normalization.uu___59",
@@ -77,7 +101,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "f6b0b807f81e224b6bb2d4b30a7f959d"
+      "01839983483641459a5d0e26e617f155"
     ],
     [
       "Normalization.uu___60",
@@ -92,7 +116,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e175dea7d5fb57f8989e4fe9e1c0475f"
+      "1c0d96ef5c306babd06a6ab916d1e464"
     ],
     [
       "Normalization.uu___61",
@@ -105,7 +129,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "e64578033e0db7345dc425f75951cb12"
+      "eb4092a6a6d2ed16a8521a7310281f61"
     ],
     [
       "Normalization.uu___61",
@@ -118,7 +142,31 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "5aaf9d16f35247327bb0ba11bb10566a"
+      "7a4681450010aa3552c61027684f2669"
+    ],
+    [
+      "Normalization.def_of",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "bool_inversion", "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Reflection.Basic.inspect_fv",
+        "typing_FStar.Reflection.Basic.lookup_typ"
+      ],
+      0,
+      "44213a42624307563cf4959c784ce877"
     ]
   ]
 ]

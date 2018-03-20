@@ -38,15 +38,6 @@
       "54ec1e25b9a9ba26717bc7ba95cd9df0"
     ],
     [
-      "FStar.Tactics.Util.zip",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5d2d77fef3503a80a3ab6e06e39561cd"
-    ],
-    [
       "FStar.Tactics.Util.map",
       2,
       2,
@@ -56,7 +47,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "0bdafa451c0ab4621ccd67d240c31b01"
+      "fbab7c328b52e02d8c7a7d82cab85224"
     ],
     [
       "FStar.Tactics.Util.fold_left",
@@ -68,7 +59,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "3981fa7aa132ea9927092c00b9d3073a"
+      "1477131cabf85f9e7fe67a3afb711c5a"
     ],
     [
       "FStar.Tactics.Util.fold_right",
@@ -80,16 +71,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "bc3554d262a30208e93c5b915dc9b82e"
-    ],
-    [
-      "FStar.Tactics.Util.zip",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3e27db59ab0ba2ab421205a5cd9fd710"
+      "322d2242a6eba464b1eb0949e3596ff7"
     ]
   ]
 ]

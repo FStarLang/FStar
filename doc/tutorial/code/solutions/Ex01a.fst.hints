@@ -11,18 +11,6 @@
       "ca6705acf531c1a7f7640a3b9b358886"
     ],
     [
-      "Ex01a.read",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Pervasives.result"
-      ],
-      0,
-      "eb0dff27e3821eea3fb6e60f0f60ad4c"
-    ],
-    [
       "Ex01a.staticChecking",
       1,
       2,
@@ -39,7 +27,7 @@
         "projection_inverse_FStar.Pervasives.V_v"
       ],
       0,
-      "b5f80fa492a7d83059af450bb71f66fb"
+      "32ede99f20dbc29770a10bac01516a50"
     ],
     [
       "Ex01a.checkedRead",
@@ -48,7 +36,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "526b0291fdc974ce8881df1ce7c968f0"
+      "09d3a22255b7e107041aa8723a6d979e"
     ],
     [
       "Ex01a.checkedWrite",
@@ -57,7 +45,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "e348df83ad3085ebf1fc2862f04a0046"
+      "509d63f334684c74f122d362c6b2df4b"
     ]
   ]
 ]

@@ -2253,13 +2253,13 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Slash_Hat uu____4948 uu____4949  in
               FStar_Pprint.group uu____4947  in
             let uu____4958 = paren_if (ps || pb)  in uu____4958 uu____4946
-        | FStar_Parser_AST.Quote (e1,true ) ->
+        | FStar_Parser_AST.Quote (e1,FStar_Parser_AST.Dynamic ) ->
             let uu____4962 =
               let uu____4963 = str "quote"  in
               let uu____4964 = p_noSeqTerm ps pb e1  in
               FStar_Pprint.op_Hat_Slash_Hat uu____4963 uu____4964  in
             FStar_Pprint.group uu____4962
-        | FStar_Parser_AST.Quote (e1,false ) ->
+        | FStar_Parser_AST.Quote (e1,FStar_Parser_AST.Static ) ->
             let uu____4966 =
               let uu____4967 = str "`"  in
               let uu____4968 = p_noSeqTerm ps pb e1  in

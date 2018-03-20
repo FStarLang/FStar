@@ -47,6 +47,10 @@ type let_qualifier =
   | Rec
   | Mutable
 
+type quote_kind =
+  | Static
+  | Dynamic
+
 type term' =
   | Wild
   | Const     of sconst
@@ -84,7 +88,7 @@ type term' =
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
-  | Quote     of term * bool (* boolean marks whether this is an open quotation, i.e., one that gets substituted inside *)
+  | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
 and term = {tm:term'; range:range; level:level}
