@@ -51,19 +51,28 @@ type typ =
 | TBuffer:
   (t: typ) ->
   typ
-and struct_typ = (l: list (string * typ) {
+and struct_typ' = (l: list (string * typ) {
   Cons? l /\ // C11, 6.2.5 al. 20: structs and unions must have at least one field
   List.Tot.noRepeats (List.Tot.map fst l)
 })
+and struct_typ = {
+  name: string;
+  fields: struct_typ' ;
+}
 and union_typ = struct_typ
 
 (** `struct_field l` is the type of fields of `TStruct l`
     (i.e. a refinement of `string`).
 *)
+let struct_field'
+  (l: struct_typ')
+: Tot eqtype
+= (s: string { List.Tot.mem s (List.Tot.map fst l) } )
+
 let struct_field
   (l: struct_typ)
 : Tot eqtype
-= (s: string { List.Tot.mem s (List.Tot.map fst l) } )
+= struct_field' l.fields
 
 (** `union_field l` is the type of fields of `TUnion l`
     (i.e. a refinement of `string`).
@@ -73,14 +82,21 @@ let union_field = struct_field
 (** `typ_of_struct_field l f` is the type of data associated with field `f` in
     `TStruct l` (i.e. a refinement of `typ`).
 *)
-let typ_of_struct_field
-  (l: struct_typ)
-  (f: struct_field l)
+
+let typ_of_struct_field'
+  (l: struct_typ')
+  (f: struct_field' l)
 : Tot (t: typ {t << l})
 = List.Tot.assoc_mem f l;
   let y = Some?.v (List.Tot.assoc f l) in
   List.Tot.assoc_precedes f l y;
   y
+
+let typ_of_struct_field
+  (l: struct_typ)
+  (f: struct_field l)
+: Tot (t: typ {t << l})
+= typ_of_struct_field' l.fields f
 
 (** `typ_of_union_field l f` is the type of data associated with field `f` in
     `TUnion l` (i.e. a refinement of `typ`).
@@ -97,7 +113,7 @@ let rec typ_depth
 = match t with
   | TArray _ t -> 1 + typ_depth t
   | TUnion l
-  | TStruct l -> 1 + struct_typ_depth l
+  | TStruct l -> 1 + struct_typ_depth l.fields
   | _ -> 0
 and struct_typ_depth
   (l: list (string * typ))
@@ -111,10 +127,10 @@ and struct_typ_depth
     if n1 > n2 then n1 else n2
 
 let rec typ_depth_typ_of_struct_field
-  (l: struct_typ)
-  (f: struct_field l)
+  (l: struct_typ')
+  (f: struct_field' l)
 : Lemma
-  (ensures (typ_depth (typ_of_struct_field l f) <= struct_typ_depth l))
+  (ensures (typ_depth (typ_of_struct_field' l f) <= struct_typ_depth l))
   (decreases l)
 = let ((f', _) :: l') = l in
   if f = f'
@@ -185,6 +201,19 @@ let type_of_base_typ
 (** Interpretation of arrays of elements of (interpreted) type `t`. *)
 type array (length: array_length_t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
+let type_of_struct_field''
+  (l: struct_typ')
+  (type_of_typ: (
+    (t: typ { t << l } ) ->
+    Tot Type0
+  ))
+  (f: struct_field' l)
+: Tot Type0 =
+  List.Tot.assoc_mem f l;
+  let y = typ_of_struct_field' l f in
+  List.Tot.assoc_precedes f l y;
+  type_of_typ y
+
 let type_of_struct_field'
   (l: struct_typ)
   (type_of_typ: (
@@ -192,11 +221,8 @@ let type_of_struct_field'
     Tot Type0
   ))
   (f: struct_field l)
-: Tot Type0 =
-  List.Tot.assoc_mem f l;
-  let y = typ_of_struct_field l f in
-  List.Tot.assoc_precedes f l y;
-  type_of_typ y
+: Tot Type0
+= type_of_struct_field'' l.fields type_of_typ f
 
 (** Helper for the interpretation of unions.
 
@@ -324,10 +350,10 @@ let dfst_struct_field
   let (| f, _ |) = p in
   f
 
-let struct_literal (s: struct_typ) : Tot Type0 = (list (x: struct_field s & type_of_struct_field s x))
+let struct_literal (s: struct_typ) : Tot Type0 = list (x: struct_field s & type_of_struct_field s x)
 
 let struct_literal_wf (s: struct_typ) (l: struct_literal s) : Tot bool =
-  List.Tot.sortWith FStar.String.compare (List.Tot.map fst s) =
+  List.Tot.sortWith FStar.String.compare (List.Tot.map fst s.fields) =
   List.Tot.sortWith FStar.String.compare
     (List.Tot.map (dfst_struct_field s) l)
 
@@ -346,10 +372,10 @@ let fun_of_list
   match List.Tot.find phi l with
   | Some p -> let (| _, v |) = p in v
   | _ ->
-    List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map fst s);
+    List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map fst s.fields);
     List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map (dfst_struct_field s) l);
-    List.Tot.mem_memP f' (List.Tot.map fst s);
-    List.Tot.mem_count (List.Tot.map fst s) f';
+    List.Tot.mem_memP f' (List.Tot.map fst s.fields);
+    List.Tot.mem_count (List.Tot.map fst s.fields) f';
     List.Tot.mem_count (List.Tot.map (dfst_struct_field s) l) f';
     List.Tot.mem_memP f' (List.Tot.map (dfst_struct_field s) l);
     List.Tot.memP_map_elim (dfst_struct_field s) f' l;
@@ -848,7 +874,7 @@ val readable_struct_fields_cons
   (f: string)
   (q: list string)
 : Lemma
-  (requires (readable_struct_fields h p q /\ (List.Tot.mem f (List.Tot.map fst l) ==> (let f : struct_field l = f in readable h (gfield p f)))))
+  (requires (readable_struct_fields h p q /\ (List.Tot.mem f (List.Tot.map fst l.fields) ==> (let f : struct_field l = f in readable h (gfield p f)))))
   (ensures (readable_struct_fields h p (f::q)))
   [SMTPat (readable_struct_fields h p (f::q))]
 
@@ -857,7 +883,7 @@ val readable_struct_fields_readable_struct
   (h: HS.mem)
   (p: pointer (TStruct l))
 : Lemma
-  (requires (readable_struct_fields h p (normalize_term (List.Tot.map fst l))))
+  (requires (readable_struct_fields h p (normalize_term (List.Tot.map fst l.fields))))
   (ensures (readable h p))
 
 val readable_gcell
