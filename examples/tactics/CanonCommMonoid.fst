@@ -305,7 +305,7 @@ let canon_monoid_with
           // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
-          apply (quote (monoid_reflect #a #b p pc));
+          mapply (quote (monoid_reflect #a #b p pc));
           let q = quote p in
           // dump ("before unfold, p = " ^ term_to_string q);          
           unfold_topdown q;
