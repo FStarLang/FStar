@@ -137,7 +137,8 @@ private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
 let tcut (t:term) : Tac binder =
-    let tt = pack_ln (Tv_App (`__cut) (t, Q_Explicit)) in
+    let g = cur_goal () in
+    let tt = mk_e_app (`__cut) [t; g] in
     apply tt;
     intro ()
 
