@@ -99,8 +99,13 @@ let err_value_restriction t =
     fail t.pos (Fatal_ValueRestriction, (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (Print.tag_of_term t) (Print.term_to_string t)))
 
-let err_unexpected_eff t f0 f1 =
-    fail t.pos (Fatal_UnexpectedEffect, (BU.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1)))
+let err_unexpected_eff env t ty f0 f1 =
+    Errors.log_issue t.pos (Warning_ExtractionUnexpectedEffect,
+                BU.format4 "for expression %s of type %s, Expected effect %s; got effect %s"
+                        (Print.term_to_string t)
+                        (Code.string_of_mlty env.currentModule ty)
+                        (eff_to_string f0)
+                        (eff_to_string f1))
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)
@@ -833,7 +838,8 @@ and check_term_as_mlexpr' (g:env) (e0:term) (f:e_tag) (ty:mlty) : (mlexpr * mlty
     let tag = maybe_downgrade_eff g tag t in
     if eff_leq tag f
     then maybe_coerce g e t ty, ty
-    else err_unexpected_eff e0 f tag
+    else (err_unexpected_eff g e0 ty f tag;
+          maybe_coerce g e t ty, ty)
 
 and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
