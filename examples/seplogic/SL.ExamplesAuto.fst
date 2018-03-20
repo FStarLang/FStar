@@ -172,8 +172,6 @@ let rec sl (i:int) : Tac unit =
     // eventually this will use attributes,
     // but we can't currently get at them
     unfold_first_occurrence (fv_to_string fv);
-    //FStar.Tactics.split (); smt ();
-    //FStar.Tactics.split (); smt ();
     ignore (repeat (fun () -> FStar.Tactics.split(); smt())); //definedness
     norm [];
     sl (i + 1)
@@ -221,7 +219,7 @@ let rec sl (i:int) : Tac unit =
 
     //introduce another uvar for the _frame_
     let env = cur_env () in
-    let frame = uvar_env env None in
+    let frame = uvar_env env (Some (`SepLogic.Heap.memory)) in
 
     //make the term equating the fp join frame with the current memory
     let tp :term = mk_app (`eq2)
@@ -240,14 +238,14 @@ let rec sl (i:int) : Tac unit =
     canon_monoid_sl fp_refs;
     //dump ("after canon_monoid");
     trefl();
-
-    //norm_binder_type [] heq;
-    dump ("after trefl");
+    //dump ("after trefl");
 
     //this is the a ==> b thing when we did cut above
     let cut_hyp = implies_intro () in
 
     //sort of beta step
+    let fp = norm_term [] fp in  //if we don't do these norms, fast implicits don't kick in because of lambdas
+    let frame = norm_term [] frame in
     apply_lemma (mk_e_app (`frame_wp_lemma) [tm; fp; frame]);
     //dump ("after frame lemma - 1");
 
@@ -267,11 +265,6 @@ let __elim_exists (h:binder) :Tac unit
   = let t = `__elim_exists_as_forall in
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
     clear h
-
-let __elim_ref_values () :Tac unit
-  = ignore (repeat (fun () -> let h = implies_intro () in
-                           __elim_exists h;
-			   ignore (forall_intro ())))
 
 let prelude' () : Tac unit =
   //take care of some auto_squash stuff
@@ -314,9 +307,11 @@ let prelude' () : Tac unit =
   rewrite m0; clear m0;
   //dump "after rewrite";
 
-  dump "Before elim ref values";
-  __elim_ref_values ();
-  dump "After elim ref values";
+  //dump "Before elim ref values";
+  ignore (repeat (fun () -> let h = implies_intro () in
+                           __elim_exists h;
+			   ignore (forall_intro ())));
+  //dump "After elim ref values";
 
   //now we are at the small footprint style wp
   //we should full norm it, so that we can get our hands on the m0 == ..., i.e. the footprint of the command
