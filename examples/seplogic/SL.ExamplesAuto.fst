@@ -331,14 +331,14 @@ let sl_auto () : Tac unit =
    //dump "after prelude";
    sl(0)
 
-unfold let frame_wp (#a:Type) (wp:st_wp a) (post:post a) (m:memory) =
-  frame_wp wp (frame_post post) m
+unfold let frame_wp (#a:Type) (wp:st_wp a) =
+  fun post m -> frame_wp wp (frame_post post) m
 
 let swap_wp (r1 r2:ref int) =
   fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
 
 let swap (r1 r2:ref int)
-     : STATE unit (fun post m -> frame_wp (swap_wp r1 r2) post m) by sl_auto
+     : STATE unit (frame_wp (swap_wp r1 r2)) by sl_auto
   = let x = !r1 in
     let y = !r2 in
     r1 := y;
@@ -348,14 +348,14 @@ let rotate_wp (r1 r2 r3:ref int) =
   fun p m -> exists x y z. m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\ (defined m /\ p () ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y))))
 
 let rotate (r1 r2 r3:ref int)
-  : STATE unit (fun post m -> frame_wp (rotate_wp r1 r2 r3) post m) by sl_auto
+  : STATE unit (frame_wp (rotate_wp r1 r2 r3)) by sl_auto
   = swap r2 r3;
     swap r1 r2
 
 let test (r1 r2:ref int) =
   (!r1)
 
-  <: STATE int (fun p m -> frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m)) p m)
+  <: STATE int (frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m)))
 
   by sl_auto
 
@@ -365,11 +365,11 @@ let test (r1 r2:ref int) =
 let write_read (r1 r2:ref int) =
   (r1 := 2;
    !r2)
-  <: STATE int (fun p m -> frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y)))) p m)
+  <: STATE int (frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y)))))
   by sl_auto
 
 let read_write (r1 r2:ref int) =
   (let x = !r1 in
    r2 := x)
-  <: STATE unit (fun p m -> frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x)))) p m)
+  <: STATE unit (frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x)))))
   by sl_auto
