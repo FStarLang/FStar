@@ -93,6 +93,10 @@ let is_irrelevant (g:goal) : bool =
     | Some t -> true
     | _ -> false
 
+let print (msg:string) : tac<unit> =
+    tacprint msg;
+    ret ()
+
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
     ()
@@ -1380,7 +1384,7 @@ let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     ret tm)))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
-    // If no type was given, add an uvar for it too!
+    // If no type was given, add a uvar for it too!
     bind (match ty with
     | Some ty -> ret ty
     | None -> new_uvar "uvar_env.2" env (fst <| U.type_u ())) (fun typ ->
@@ -1395,13 +1399,14 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
                | g::_ -> g.opts
                | _ -> FStar.Options.peek ()
     in
-    bind (__tc env t) (fun (t, typ, guard) ->
-    bind (proc_guard "unshelve" env guard opts) (fun _ ->
-    add_goals [{ witness  = bnorm env t;
-                 goal_ty  = bnorm env typ;
-                 is_guard = false;
-                 context  = env;
-                 opts     = opts; }])))
+    match U.head_and_args t with
+    | { n = Tm_uvar (_, typ) }, _ ->
+        add_goals [{ witness  = bnorm env t;
+                     goal_ty  = bnorm env typ;
+                     is_guard = false;
+                     context  = env;
+                     opts     = opts; }]
+    | _ -> fail "not a uvar")
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
