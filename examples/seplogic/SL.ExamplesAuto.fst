@@ -223,8 +223,7 @@ let rec sl (i:int) : Tac unit =
     //dump ("after frame lemma - 1");
 
     //equality goal from frame_wp_lemma
-    //TODO: this is exactly the type of cut_hyp above, but does not work
-    smt ();
+    mapply (binder_to_term cut_hyp);
 
     FStar.Tactics.split(); smt(); //definedness
     //dump ("after frame lemma - 2");
