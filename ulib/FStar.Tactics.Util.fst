@@ -29,18 +29,17 @@ let rec zip #a #b l1 l2 = match l1, l2 with
     | x::xs, y::ys -> (x,y) :: (zip xs ys)
     | _ -> []
 
+private let rec filter_map_acc (f:'a -> Tac (option 'b)) (acc:list 'b) (l:list 'a)
+    : Tac (list 'b) =
+  match l with
+  | [] ->
+      rev acc
+  | hd :: tl ->
+      match f hd with
+      | Some hd ->
+          filter_map_acc f (hd :: acc) tl
+      | None ->
+          filter_map_acc f acc tl
+
 let filter_map (f:'a -> Tac (option 'b)) (l:list 'a) : Tac (list 'b) =
-  admit();
-  let rec filter_map_acc (acc:list 'b) (l:list 'a) : Tac (list 'b) =
-    admit();
-    match l with
-    | [] ->
-        rev acc
-    | hd :: tl ->
-        match f hd with
-        | Some hd ->
-            filter_map_acc (hd :: acc) tl
-        | None ->
-            filter_map_acc acc tl
-  in
-  filter_map_acc [] l
+  filter_map_acc f [] l
