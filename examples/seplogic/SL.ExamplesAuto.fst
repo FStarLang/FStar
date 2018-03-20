@@ -52,8 +52,7 @@ let eexists (a:Type) (t:unit -> Tac a) : Tac a =
   apply_lemma (`FStar.Classical.exists_intro); later(); norm[];
   fst (divide (ngoals()-1) t dismiss)
 
-let frame_wp_lemma (m m0 m1:memory) (a:Type) (wp:st_wp a)
-    (f_post:memory -> post a)
+let frame_wp_lemma (#a:Type) (#wp:st_wp a) (#f_post:memory -> post a) (m m0 m1:memory)
     (_ : (squash ((m0 <*> m1) == m)))
     (_ : (squash (defined m /\ wp (f_post m1) m0))) :
          (squash (frame_wp wp f_post m)) = ()
@@ -134,6 +133,10 @@ let unfold_first_occurrence (name:string) : Tac unit =
   in
   topdown_rewrite should_rewrite rewrite
 
+let __tcut (#b:Type) (a:Type) (_:squash (a ==> b)) (_:squash a)
+  :Lemma b
+  = ()
+
 let rec sl (i:int) : Tac unit =
   dump ("SL :" ^ string_of_int i);
   match peek_cmd () with
@@ -187,20 +190,25 @@ let rec sl (i:int) : Tac unit =
               [((`memory),                     Q_Implicit);
                (mk_e_app (`(<*>)) [fp;frame],  Q_Explicit);
                (tm,                            Q_Explicit)] in
-        let new_goal = mk_e_app (pack_fv' squash_qn) [tp] in
-        let heq = tcut new_goal in
+        let new_goal = tp in //mk_e_app (pack_fv' squash_qn) [tp] in
+	apply_lemma (mk_e_app (`__tcut) [new_goal]);
+        //let heq = tcut new_goal in
          dump "with new goal:";
         flip();
         dump ("before canon_monoid");
         canon_monoid_sl fp_refs;
          dump ("after canon_monoid");
         trefl();
-        norm_binder_type [] heq;
+        //norm_binder_type [] heq;
          dump ("after trefl");
-        apply_lemma (mk_e_app (`frame_wp_lemma)
-                       [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
+	 ignore (implies_intro ());
+	 apply_lemma (mk_e_app (`frame_wp_lemma) [tm; fp; frame]);
+         //apply_lemma (mk_e_app (`frame_wp_lemma)
+        //                [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
+         dump ("after frame lemma - 1");
+	 smt ();
         FStar.Tactics.split(); smt(); //definedness
-         dump ("after frame lemma");
+         dump ("after frame lemma - 2");
         sl(i + 1)
 
 let __elim_exists_as_forall
@@ -258,6 +266,27 @@ let sl_auto () : Tac unit =
    dump "after prelude";
    sl(0)
 
+[@"unfold_for_sl"]
+let swap_wp (r1 r2:ref int) (x y:int) =
+  fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
+
+let swap0 (r1 r2:ref int) (x y:int)
+     : STATE unit (fun post m -> frame_wp (swap_wp r1 r2 x y) (frame_post post) m) by sl_auto
+  =
+     (let x = !r1 in
+     let y = !r2 in
+     r1 := y;
+     r2 := x)
+
+let rotate_wp (r1 r2 r3:ref int) (x y z:int) =
+  fun p m -> m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\ (defined m /\ p () ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y))))
+
+let rotate (r1 r2 r3:ref int) (x y z:int)
+  : STATE unit (fun post m -> frame_wp (rotate_wp r1 r2 r3 x y z) (frame_post post) m) by sl_auto
+  = swap0 r2 r3 2 3;
+    swap0 r1 r2 1 3
+
+
 // let test (r1 r2:ref int) =
 //   (!r1)
 
@@ -290,22 +319,5 @@ let sl_auto () : Tac unit =
 //      r1 := y;
 //      r2 := x)
 
-[@"unfold_for_sl"]
-let swap_wp (r1 r2:ref int) (x y:int) =
-  fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
-
-let swap0 (r1 r2:ref int) (x y:int)
-     : STATE unit (fun post m -> frame_wp (swap_wp r1 r2 x y) (frame_post post) m) by sl_auto
-  =
-     (let x = !r1 in
-     let y = !r2 in
-     r1 := y;
-     r2 := x)
-
 // let call (#wp:...) (f:unit -> STATE 'a (fun :STATE unit (fun p m -> frame_wp (
 
-let rotate (r1 r2 r3:ref int)
-  : STATE unit (fun post m -> m == ((r1 |> 1) <*> ((r2 |> 2) <*> (r3 |> 3))) /\
-                         (defined m /\ post () ((r1 |> 3) <*> ((r2 |> 1) <*> (r3 |> 2))))) by sl_auto =
-  swap0 r2 r3 2 3;
-  swap0 r1 r2 1 3
