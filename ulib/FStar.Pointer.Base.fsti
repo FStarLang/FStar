@@ -1,6 +1,5 @@
 module FStar.Pointer.Base
 
-module DM = FStar.DependentMap
 module HH = FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -224,67 +223,8 @@ let type_of_struct_field'
 : Tot Type0
 = type_of_struct_field'' l.fields type_of_typ f
 
-(** Helper for the interpretation of unions.
-
-    A C union is interpreted as a dependent pair of a key and a value (which
-    depends on the key). The intent is for the key to be ghost, as it will not
-    exist at runtime (C unions are untagged).
-
-    Therefore,
-    - `gtdata_get_key` (defined below) is in `GTot`, and
-    - `gtdata_get_value` asks for the key `k` to read, and a proof that `k`
-      matches the ghost key.
-*)
-val gtdata (* ghostly-tagged data *)
-  (key: eqtype u#0)
-  (value: (key -> Tot Type0))
-: Tot Type0
-
-(** Gets the current tag (or key) of a union.
-
-    This is a ghost function, as this tag only exists at the logical level and
-    is not stored in memory.
-*)
-val gtdata_get_key
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (u: gtdata key value)
-: GTot key // important: must be Ghost, the tag is not actually stored in memory
-
-(** Gets the value of a union, provided the field to read from.
-
-    This field must match the ghost tag of the union (hence the `require`
-    clause).
-*)
-val gtdata_get_value
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (u: gtdata key value)
-  (k: key)
-: Pure (value k)
-  (requires (gtdata_get_key u == k))
-  (ensures (fun _ -> True))
-
-val gtdata_create
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (k: key)
-  (v: value k)
-: Pure (gtdata key value)
-  (requires True)
-  (ensures (fun x -> gtdata_get_key x == k /\ gtdata_get_value x k == v))
-
-val gtdata_extensionality
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (u1 u2: gtdata key value)
-: Lemma
-  (requires (
-    let k = gtdata_get_key u1 in (
-    k == gtdata_get_key u2 /\
-    gtdata_get_value u1 k == gtdata_get_value u2 k
-  )))
-  (ensures (u1 == u2))
+val struct (l: struct_typ) : Tot Type0
+val union (l: union_typ) : Tot Type0
 
 (* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ
@@ -293,9 +233,9 @@ let rec type_of_typ
 = match t with
   | TBase b -> type_of_base_typ b
   | TStruct l ->
-    DM.t (struct_field l) (type_of_struct_field' l type_of_typ)
+    struct l
   | TUnion l ->
-    gtdata (struct_field l) (type_of_struct_field' l type_of_typ)
+    union l
   | TArray length t ->
     array length (type_of_typ t)
   | TPointer t ->
@@ -318,9 +258,6 @@ let type_of_struct_field
 : Tot (struct_field l -> Tot Type0)
 = type_of_struct_field' l type_of_typ
 
-(** Interpretation of structs, as dependent maps. *)
-let struct (l: struct_typ) = DM.t (struct_field l) (type_of_struct_field l)
-
 let type_of_typ_struct
   (l: struct_typ)
 : Lemma
@@ -336,11 +273,7 @@ let type_of_typ_type_of_struct_field
   [SMTPat (type_of_typ (typ_of_struct_field l f))]
 = ()
 
-let struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f) =
-  DM.sel s f
-
-let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_struct_field l f) : Tot (struct l) =
-  DM.upd s f v
+val struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f)
 
 let dfst_struct_field
   (s: struct_typ)
@@ -382,8 +315,7 @@ let fun_of_list
     Classical.forall_intro (Classical.move_requires (List.Tot.find_none phi l));
     false_elim ()
 
-let struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
-  DM.create #(struct_field l) #(type_of_struct_field l) f
+val struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l)
 
 let struct_create
   (s: struct_typ)
@@ -393,10 +325,13 @@ let struct_create
   (ensures (fun _ -> True))
 = struct_create_fun s (fun_of_list s l)
 
-(** Interpretation of unions, as ghostly-tagged data
-    (see `gtdata` for more information).
-*)
-let union (l: struct_typ) = gtdata (struct_field l) (type_of_struct_field l)
+val struct_sel_struct_create_fun
+  (l: struct_typ)
+  (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd)))
+  (fd: struct_field l)
+: Lemma
+  (struct_sel (struct_create_fun l f) fd == f fd)
+  [SMTPat (struct_sel (struct_create_fun l f) fd)]
 
 let type_of_typ_union
   (l: union_typ)
@@ -405,23 +340,21 @@ let type_of_typ_union
   [SMTPat (type_of_typ (TUnion l))]
 = assert_norm (type_of_typ (TUnion l) == union l)
 
-let union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l) = gtdata_get_key v
+val union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l)
 
-let union_get_value
+val union_get_value
   (#l: union_typ)
   (v: union l)
   (fd: struct_field l)
 : Pure (type_of_struct_field l fd)
   (requires (union_get_key v == fd))
   (ensures (fun _ -> True))
-= gtdata_get_value v fd
 
-let union_create
+val union_create
   (l: union_typ)
   (fd: struct_field l)
   (v: type_of_struct_field l fd)
 : Tot (union l)
-= gtdata_create fd v
 
 (*** Semantics of pointers *)
 

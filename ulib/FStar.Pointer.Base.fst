@@ -217,10 +217,60 @@ let gtdata_extensionality
   (ensures (u1 == u2))
 = ()
 
+(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+let rec type_of_typ'
+  (t: typ)
+: Tot Type0
+= match t with
+  | TBase b -> type_of_base_typ b
+  | TStruct l ->
+    struct l
+  | TUnion l ->
+    union l
+  | TArray length t ->
+    array length (type_of_typ' t)
+  | TPointer t ->
+    pointer t
+  | TNPointer t ->
+    npointer t
+  | TBuffer t ->
+    buffer t
+and struct (l: struct_typ) : Tot Type0 =
+  DM.t (struct_field l) (type_of_struct_field' l (fun x -> type_of_typ' x))
+and union (l: union_typ) : Tot Type0 =
+  gtdata (struct_field l) (type_of_struct_field' l (fun x -> type_of_typ' x))
+
+let rec type_of_typ'_eq (t: typ) : Lemma (type_of_typ' t == type_of_typ t)
+  [SMTPat (type_of_typ t)]
+=
+  match t with
+  | TArray _ t' -> type_of_typ'_eq t'
+  | TPointer t' -> type_of_typ'_eq t'
+  | TNPointer t' -> type_of_typ'_eq t'
+  | TBuffer t' -> type_of_typ'_eq t'
+  | _ -> ()
+
 (** Interpretation of unions, as ghostly-tagged data
     (see `gtdata` for more information).
 *)
 let _union_get_key (#l: union_typ) (v: union l) : Tot (struct_field l) = _gtdata_get_key v
+
+let struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f) =
+  DM.sel s f
+ 
+let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_struct_field l f) : Tot (struct l) =
+  DM.upd s f v
+
+let struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
+  DM.create #(struct_field l) #(type_of_struct_field' l (fun x -> type_of_typ' x)) f
+
+let struct_sel_struct_create_fun l f fd = ()
+
+let union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l) = gtdata_get_key v
+
+let union_get_value #l v fd = gtdata_get_value v fd
+
+let union_create l fd v = gtdata_create fd v
 
 (** For any `t: typ`, `dummy_val t` provides a default value of this type.
 
@@ -725,7 +775,7 @@ let rec value_of_ovalue_of_value
     = value_of_ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
     in
     Classical.forall_intro phi;
-    DM.equal_elim #(struct_field l) #(type_of_struct_field l) v' v
+    DM.equal_elim #(struct_field l) #(type_of_struct_field' l (fun x -> type_of_typ' x)) v' v
   | TArray len t' ->
     let (v: array len (type_of_typ t')) = v in
     let ov : option (array len (otype_of_typ t')) = ovalue_of_value (TArray len t') v in

@@ -1,7 +1,6 @@
 module FStar.TaggedUnion
 
 module P = FStar.Pointer
-module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
