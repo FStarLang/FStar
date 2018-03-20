@@ -1,0 +1,73 @@
+[
+  "º\u0017=â\u001f÷Ì¥\u00127x[5•º≤",
+  [
+    [
+      "StringPrinterTest.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "7d39ebfdccb57925a13ef35b7b19af96"
+    ],
+    [
+      "StringPrinterTest.print_list_cipher_suite",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "b42ccc022edd57e77c9771deb160369d"
+    ],
+    [
+      "StringPrinterTest.test3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "81956c8af783d70a5bbc5d3408a7b201"
+    ],
+    [
+      "StringPrinterTest.print_list_cipher_suite",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "ea07a76b8ac204b413d5be5d34cdeeb3"
+    ]
+  ]
+]

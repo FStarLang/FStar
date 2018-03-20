@@ -241,7 +241,7 @@ type env =
       FStar_Pervasives_Native.tuple2
     ;
   proof_ns: proof_namespace ;
-  synth:
+  synth_hook:
     env ->
       FStar_Syntax_Syntax.typ ->
         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
@@ -308,7 +308,7 @@ let (__proj__Mkenv__item__solver : env -> solver_t) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -335,7 +335,7 @@ let (__proj__Mkenv__item__range : env -> FStar_Range.range) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -362,7 +362,7 @@ let (__proj__Mkenv__item__curmodule : env -> FStar_Ident.lident) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -389,7 +389,7 @@ let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -416,7 +416,7 @@ let (__proj__Mkenv__item__gamma_cache : env -> cached_elt FStar_Util.smap) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -444,7 +444,7 @@ let (__proj__Mkenv__item__modules :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -472,7 +472,7 @@ let (__proj__Mkenv__item__expected_typ :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -500,7 +500,7 @@ let (__proj__Mkenv__item__sigtab :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -527,7 +527,7 @@ let (__proj__Mkenv__item__is_pattern : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -554,7 +554,7 @@ let (__proj__Mkenv__item__instantiate_imp : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -581,7 +581,7 @@ let (__proj__Mkenv__item__effects : env -> effects) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -608,7 +608,7 @@ let (__proj__Mkenv__item__generalize : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -639,7 +639,7 @@ let (__proj__Mkenv__item__letrecs :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -666,7 +666,7 @@ let (__proj__Mkenv__item__top_level : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -693,7 +693,7 @@ let (__proj__Mkenv__item__check_uvars : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -720,7 +720,7 @@ let (__proj__Mkenv__item__use_eq : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -747,7 +747,7 @@ let (__proj__Mkenv__item__is_iface : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -774,7 +774,7 @@ let (__proj__Mkenv__item__admit : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -801,7 +801,7 @@ let (__proj__Mkenv__item__lax : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -828,7 +828,7 @@ let (__proj__Mkenv__item__lax_universes : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -855,7 +855,7 @@ let (__proj__Mkenv__item__failhard : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -882,7 +882,7 @@ let (__proj__Mkenv__item__nosynth : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -915,7 +915,7 @@ let (__proj__Mkenv__item__tc_term :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -948,7 +948,7 @@ let (__proj__Mkenv__item__type_of :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -976,7 +976,7 @@ let (__proj__Mkenv__item__universe_of :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1007,7 +1007,7 @@ let (__proj__Mkenv__item__check_type_of :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1034,7 +1034,7 @@ let (__proj__Mkenv__item__use_bv_sorts : env -> Prims.bool) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1067,7 +1067,7 @@ let (__proj__Mkenv__item__qtbl_name_and_index :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1094,14 +1094,14 @@ let (__proj__Mkenv__item__proof_ns : env -> proof_namespace) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
         tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
         dep_graph = __fname__dep_graph;_} -> __fname__proof_ns
   
-let (__proj__Mkenv__item__synth :
+let (__proj__Mkenv__item__synth_hook :
   env ->
     env ->
       FStar_Syntax_Syntax.typ ->
@@ -1126,12 +1126,12 @@ let (__proj__Mkenv__item__synth :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
         tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        dep_graph = __fname__dep_graph;_} -> __fname__synth
+        dep_graph = __fname__dep_graph;_} -> __fname__synth_hook
   
 let (__proj__Mkenv__item__splice :
   env ->
@@ -1156,7 +1156,7 @@ let (__proj__Mkenv__item__splice :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1184,7 +1184,7 @@ let (__proj__Mkenv__item__is_native_tactic :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1212,7 +1212,7 @@ let (__proj__Mkenv__item__identifier_info :
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1239,7 +1239,7 @@ let (__proj__Mkenv__item__tc_hooks : env -> tcenv_hooks) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1266,7 +1266,7 @@ let (__proj__Mkenv__item__dsenv : env -> FStar_Syntax_DsEnv.env) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1293,7 +1293,7 @@ let (__proj__Mkenv__item__dep_graph : env -> FStar_Parser_Dep.deps) =
         check_type_of = __fname__check_type_of;
         use_bv_sorts = __fname__use_bv_sorts;
         qtbl_name_and_index = __fname__qtbl_name_and_index;
-        proof_ns = __fname__proof_ns; synth = __fname__synth;
+        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
         splice = __fname__splice;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;
@@ -1519,7 +1519,7 @@ let (rename_env : FStar_Syntax_Syntax.subst_t -> env -> env) =
         use_bv_sorts = (uu___87_6163.use_bv_sorts);
         qtbl_name_and_index = (uu___87_6163.qtbl_name_and_index);
         proof_ns = (uu___87_6163.proof_ns);
-        synth = (uu___87_6163.synth);
+        synth_hook = (uu___87_6163.synth_hook);
         splice = (uu___87_6163.splice);
         is_native_tactic = (uu___87_6163.is_native_tactic);
         identifier_info = (uu___87_6163.identifier_info);
@@ -1565,7 +1565,7 @@ let (set_tc_hooks : env -> tcenv_hooks -> env) =
         use_bv_sorts = (uu___88_6182.use_bv_sorts);
         qtbl_name_and_index = (uu___88_6182.qtbl_name_and_index);
         proof_ns = (uu___88_6182.proof_ns);
-        synth = (uu___88_6182.synth);
+        synth_hook = (uu___88_6182.synth_hook);
         splice = (uu___88_6182.splice);
         is_native_tactic = (uu___88_6182.is_native_tactic);
         identifier_info = (uu___88_6182.identifier_info);
@@ -1608,7 +1608,7 @@ let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
         use_bv_sorts = (uu___89_6189.use_bv_sorts);
         qtbl_name_and_index = (uu___89_6189.qtbl_name_and_index);
         proof_ns = (uu___89_6189.proof_ns);
-        synth = (uu___89_6189.synth);
+        synth_hook = (uu___89_6189.synth_hook);
         splice = (uu___89_6189.splice);
         is_native_tactic = (uu___89_6189.is_native_tactic);
         identifier_info = (uu___89_6189.identifier_info);
@@ -1713,7 +1713,7 @@ let (initial_env :
                   use_bv_sorts = false;
                   qtbl_name_and_index = uu____6331;
                   proof_ns = uu____6359;
-                  synth =
+                  synth_hook =
                     (fun e  ->
                        fun g  ->
                          fun tau  -> failwith "no synthesizer available");
@@ -1831,7 +1831,7 @@ let (push_stack : env -> env) =
        use_bv_sorts = (uu___90_7068.use_bv_sorts);
        qtbl_name_and_index = uu____7075;
        proof_ns = (uu___90_7068.proof_ns);
-       synth = (uu___90_7068.synth);
+       synth_hook = (uu___90_7068.synth_hook);
        splice = (uu___90_7068.splice);
        is_native_tactic = (uu___90_7068.is_native_tactic);
        identifier_info = uu____7157;
@@ -1905,7 +1905,7 @@ let (incr_query_index : env -> env) =
                  qtbl_name_and_index =
                    (tbl, (FStar_Pervasives_Native.Some (l, next)));
                  proof_ns = (uu___91_7360.proof_ns);
-                 synth = (uu___91_7360.synth);
+                 synth_hook = (uu___91_7360.synth_hook);
                  splice = (uu___91_7360.splice);
                  is_native_tactic = (uu___91_7360.is_native_tactic);
                  identifier_info = (uu___91_7360.identifier_info);
@@ -1949,7 +1949,7 @@ let (incr_query_index : env -> env) =
                  qtbl_name_and_index =
                    (tbl, (FStar_Pervasives_Native.Some (l, next)));
                  proof_ns = (uu___92_7382.proof_ns);
-                 synth = (uu___92_7382.synth);
+                 synth_hook = (uu___92_7382.synth_hook);
                  splice = (uu___92_7382.splice);
                  is_native_tactic = (uu___92_7382.is_native_tactic);
                  identifier_info = (uu___92_7382.identifier_info);
@@ -1999,7 +1999,7 @@ let (set_range : env -> FStar_Range.range -> env) =
            use_bv_sorts = (uu___93_7408.use_bv_sorts);
            qtbl_name_and_index = (uu___93_7408.qtbl_name_and_index);
            proof_ns = (uu___93_7408.proof_ns);
-           synth = (uu___93_7408.synth);
+           synth_hook = (uu___93_7408.synth_hook);
            splice = (uu___93_7408.splice);
            is_native_tactic = (uu___93_7408.is_native_tactic);
            identifier_info = (uu___93_7408.identifier_info);
@@ -2084,7 +2084,7 @@ let (set_current_module : env -> FStar_Ident.lident -> env) =
         use_bv_sorts = (uu___94_7621.use_bv_sorts);
         qtbl_name_and_index = (uu___94_7621.qtbl_name_and_index);
         proof_ns = (uu___94_7621.proof_ns);
-        synth = (uu___94_7621.synth);
+        synth_hook = (uu___94_7621.synth_hook);
         splice = (uu___94_7621.splice);
         is_native_tactic = (uu___94_7621.is_native_tactic);
         identifier_info = (uu___94_7621.identifier_info);
@@ -3661,7 +3661,7 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
             use_bv_sorts = (uu___97_12608.use_bv_sorts);
             qtbl_name_and_index = (uu___97_12608.qtbl_name_and_index);
             proof_ns = (uu___97_12608.proof_ns);
-            synth = (uu___97_12608.synth);
+            synth_hook = (uu___97_12608.synth_hook);
             splice = (uu___97_12608.splice);
             is_native_tactic = (uu___97_12608.is_native_tactic);
             identifier_info = (uu___97_12608.identifier_info);
@@ -3997,7 +3997,7 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
               use_bv_sorts = (uu___99_13477.use_bv_sorts);
               qtbl_name_and_index = (uu___99_13477.qtbl_name_and_index);
               proof_ns = (uu___99_13477.proof_ns);
-              synth = (uu___99_13477.synth);
+              synth_hook = (uu___99_13477.synth_hook);
               splice = (uu___99_13477.splice);
               is_native_tactic = (uu___99_13477.is_native_tactic);
               identifier_info = (uu___99_13477.identifier_info);
@@ -4282,7 +4282,7 @@ let (push_in_gamma : env -> binding -> env) =
          use_bv_sorts = (uu___101_13967.use_bv_sorts);
          qtbl_name_and_index = (uu___101_13967.qtbl_name_and_index);
          proof_ns = (uu___101_13967.proof_ns);
-         synth = (uu___101_13967.synth);
+         synth_hook = (uu___101_13967.synth_hook);
          splice = (uu___101_13967.splice);
          is_native_tactic = (uu___101_13967.is_native_tactic);
          identifier_info = (uu___101_13967.identifier_info);
@@ -4346,7 +4346,7 @@ let (push_local_binding : env -> binding -> env) =
         use_bv_sorts = (uu___102_13998.use_bv_sorts);
         qtbl_name_and_index = (uu___102_13998.qtbl_name_and_index);
         proof_ns = (uu___102_13998.proof_ns);
-        synth = (uu___102_13998.synth);
+        synth_hook = (uu___102_13998.synth_hook);
         splice = (uu___102_13998.splice);
         is_native_tactic = (uu___102_13998.is_native_tactic);
         identifier_info = (uu___102_13998.identifier_info);
@@ -4398,7 +4398,7 @@ let (pop_bv :
                use_bv_sorts = (uu___103_14029.use_bv_sorts);
                qtbl_name_and_index = (uu___103_14029.qtbl_name_and_index);
                proof_ns = (uu___103_14029.proof_ns);
-               synth = (uu___103_14029.synth);
+               synth_hook = (uu___103_14029.synth_hook);
                splice = (uu___103_14029.splice);
                is_native_tactic = (uu___103_14029.is_native_tactic);
                identifier_info = (uu___103_14029.identifier_info);
@@ -4481,7 +4481,7 @@ let (push_module : env -> FStar_Syntax_Syntax.modul -> env) =
          use_bv_sorts = (uu___105_14116.use_bv_sorts);
          qtbl_name_and_index = (uu___105_14116.qtbl_name_and_index);
          proof_ns = (uu___105_14116.proof_ns);
-         synth = (uu___105_14116.synth);
+         synth_hook = (uu___105_14116.synth_hook);
          splice = (uu___105_14116.splice);
          is_native_tactic = (uu___105_14116.is_native_tactic);
          identifier_info = (uu___105_14116.identifier_info);
@@ -4550,7 +4550,7 @@ let (set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env) =
         use_bv_sorts = (uu___106_14189.use_bv_sorts);
         qtbl_name_and_index = (uu___106_14189.qtbl_name_and_index);
         proof_ns = (uu___106_14189.proof_ns);
-        synth = (uu___106_14189.synth);
+        synth_hook = (uu___106_14189.synth_hook);
         splice = (uu___106_14189.splice);
         is_native_tactic = (uu___106_14189.is_native_tactic);
         identifier_info = (uu___106_14189.identifier_info);
@@ -4604,7 +4604,7 @@ let (clear_expected_typ :
         use_bv_sorts = (uu___107_14219.use_bv_sorts);
         qtbl_name_and_index = (uu___107_14219.qtbl_name_and_index);
         proof_ns = (uu___107_14219.proof_ns);
-        synth = (uu___107_14219.synth);
+        synth_hook = (uu___107_14219.synth_hook);
         splice = (uu___107_14219.splice);
         is_native_tactic = (uu___107_14219.is_native_tactic);
         identifier_info = (uu___107_14219.identifier_info);
@@ -4664,7 +4664,7 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
          use_bv_sorts = (uu___108_14258.use_bv_sorts);
          qtbl_name_and_index = (uu___108_14258.qtbl_name_and_index);
          proof_ns = (uu___108_14258.proof_ns);
-         synth = (uu___108_14258.synth);
+         synth_hook = (uu___108_14258.synth_hook);
          splice = (uu___108_14258.splice);
          is_native_tactic = (uu___108_14258.is_native_tactic);
          identifier_info = (uu___108_14258.identifier_info);
@@ -4928,7 +4928,7 @@ let (cons_proof_ns : Prims.bool -> env -> name_prefix -> env) =
           use_bv_sorts = (uu___109_15021.use_bv_sorts);
           qtbl_name_and_index = (uu___109_15021.qtbl_name_and_index);
           proof_ns = ((path, b) :: (e.proof_ns));
-          synth = (uu___109_15021.synth);
+          synth_hook = (uu___109_15021.synth_hook);
           splice = (uu___109_15021.splice);
           is_native_tactic = (uu___109_15021.is_native_tactic);
           identifier_info = (uu___109_15021.identifier_info);
@@ -4976,7 +4976,7 @@ let (set_proof_ns : proof_namespace -> env -> env) =
         use_bv_sorts = (uu___110_15047.use_bv_sorts);
         qtbl_name_and_index = (uu___110_15047.qtbl_name_and_index);
         proof_ns = ns;
-        synth = (uu___110_15047.synth);
+        synth_hook = (uu___110_15047.synth_hook);
         splice = (uu___110_15047.splice);
         is_native_tactic = (uu___110_15047.is_native_tactic);
         identifier_info = (uu___110_15047.identifier_info);
@@ -5075,7 +5075,7 @@ let (mk_copy : env -> env) =
       use_bv_sorts = (uu___111_15192.use_bv_sorts);
       qtbl_name_and_index = (uu___111_15192.qtbl_name_and_index);
       proof_ns = (uu___111_15192.proof_ns);
-      synth = (uu___111_15192.synth);
+      synth_hook = (uu___111_15192.synth_hook);
       splice = (uu___111_15192.splice);
       is_native_tactic = (uu___111_15192.is_native_tactic);
       identifier_info = (uu___111_15192.identifier_info);

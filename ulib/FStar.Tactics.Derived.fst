@@ -139,7 +139,7 @@ private let __cut a b f x = f x
 
 let tcut (t:term) : Tac binder =
     let tt = pack_ln (Tv_App (`__cut) (t, Q_Explicit)) in
-    apply tt;
+    exact_n 3 tt;
     intro ()
 
 let pose (t:term) : Tac binder =
@@ -353,3 +353,7 @@ let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
     let y = t2 x in
     trefl ();
     y
+
+(* Some syntax utility functions *)
+let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
+let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
