@@ -166,6 +166,26 @@ let sort : permute unit =
 let sortWith (#b:Type) (f:nat -> nat -> int) : permute b =
   (fun a vm -> List.Tot.sortWith #nat f)
 
+(*
+let rec bubble_sort_with_aux1 (#a:Type) (f:(a -> a -> Tot int)) (xs:list a) :
+    Pure (list a) (requires True)
+                  (ensures (fun zs -> length xs == length zs))
+                  (decreases (length xs)) =
+  match xs with
+  | [] | [_] -> xs
+  | x1 :: x2 :: xs' ->
+      if f x1 x2 > 0 then x2 :: bubble_sort_with_aux1 f (x1::xs')
+                     else x1 :: bubble_sort_with_aux1 f (x2::xs')
+
+let rec bubble_sort_with_aux2 (#a:Type) (n:nat) (f:(a -> a -> Tot int))
+          (xs:(list a){n <= length xs}) : Tot (list a)
+              (decreases (length xs - n <: nat)) =
+  if n = length xs then xs
+  else bubble_sort_with_aux2 (n+1) f (bubble_sort_with_aux1 f xs)
+
+let bubble_sort_with (#a:Type) = bubble_sort_with_aux2 #a 0
+*)
+
 let sort_via_swaps (#a:Type) (vm : vmap a unit) (xs:list var) :
     Lemma (exists ss. sort a vm xs == apply_swaps xs ss) =
   List.Tot.Properties.sortWith_permutation #nat (compare_of_bool (<)) xs;
