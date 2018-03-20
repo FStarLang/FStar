@@ -216,14 +216,16 @@ let rec sl (i:int) : Tac unit =
     //dump ("after trefl");
 
     //this is the a ==> b thing when we did cut above
-    ignore (implies_intro ());
+    let cut_hyp = implies_intro () in
 
     //sort of beta step
     apply_lemma (mk_e_app (`frame_wp_lemma) [tm; fp; frame]);
     //dump ("after frame lemma - 1");
 
     //equality goal from frame_wp_lemma
+    //TODO: this is exactly the type of cut_hyp above, but does not work
     smt ();
+
     FStar.Tactics.split(); smt(); //definedness
     //dump ("after frame lemma - 2");
     sl(i + 1)
