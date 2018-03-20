@@ -283,8 +283,8 @@ let rotate_wp (r1 r2 r3:ref int) (x y z:int) =
 
 let rotate (r1 r2 r3:ref int) (x y z:int)
   : STATE unit (fun post m -> frame_wp (rotate_wp r1 r2 r3 x y z) (frame_post post) m) by sl_auto
-  = swap0 r2 r3 2 3;
-    swap0 r1 r2 1 3
+  = swap0 r2 r3 y z;
+    swap0 r1 r2 x z
 
 
 // let test (r1 r2:ref int) =
