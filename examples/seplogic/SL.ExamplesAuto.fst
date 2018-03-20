@@ -113,6 +113,8 @@ let peek_cmd () : Tac cmd =
        then Bind
        else if inspect_fv fv = framepost_qn
        then FramePost
+       else if inspect_fv fv = exists_qn  //if it is exists x. then we can't unfold, so return None
+       then Unknown None
        else Unknown (Some fv)
       | _ -> Unknown None)
    else fail "Unrecognized command: not a squash"
@@ -137,6 +139,20 @@ let __tcut (#b:Type) (a:Type) (_:squash (a ==> b)) (_:squash a)
   :Lemma b
   = ()
 
+//in procedure calls, the callee wp might involve some exists x y. sort of stuff, if so solve them by trefl
+//initial call set use_trefl to false
+//return t_refl if we did some something, so that the caller can make progress on rest of the VC
+let rec solve_procedure_ref_value_existentials (use_trefl:bool) :Tac bool =
+  let g = cur_goal () in
+  match term_as_formula g with
+  | Exists x t ->
+    let w = uvar_env (cur_env ()) (Some (inspect_bv x).bv_sort) in
+    witness w;
+    solve_procedure_ref_value_existentials true
+  | _ ->
+   if use_trefl then begin FStar.Tactics.split (); trefl (); FStar.Tactics.split (); smt (); true end
+   else false
+
 let rec sl (i:int) : Tac unit =
   dump ("SL :" ^ string_of_int i);
 
@@ -144,7 +160,12 @@ let rec sl (i:int) : Tac unit =
   //this will solve it in the tactic itself rather than farming it out to smt
   norm [Prims.simplify];
   match peek_cmd () with
-  | Unknown None -> smt()
+  | Unknown None ->
+    //either we are done
+    //or we are stuck at some existential in procedure calls
+    let cont = solve_procedure_ref_value_existentials false in
+    if cont then sl (i + 1)
+    else smt ()
   | Unknown (Some fv) ->
     //so here we are unfolding something like swap_wp below
 
@@ -247,6 +268,11 @@ let __elim_exists (h:binder) :Tac unit
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
     clear h
 
+let __elim_ref_values () :Tac unit
+  = ignore (repeat (fun () -> let h = implies_intro () in
+                           __elim_exists h;
+			   ignore (forall_intro ())))
+
 let prelude' () : Tac unit =
   //take care of some auto_squash stuff
   //dump "start";
@@ -272,6 +298,8 @@ let prelude' () : Tac unit =
   __elim_exists h;
   let m1 = forall_intro_as "m1" in
 
+  //the goal might start with exists x y. to quantify over the ref values
+
   //now the goal looks something like (defined m0 * m1 /\ (m == m0 * m1 /\ (...)))
   //do couple of implies_intro and and_elim to get these conjections
   let h = implies_intro () in and_elim (binder_to_term h); clear h;
@@ -285,6 +313,10 @@ let prelude' () : Tac unit =
   //dump "before rewrite";
   rewrite m0; clear m0;
   //dump "after rewrite";
+
+  dump "Before elim ref values";
+  __elim_ref_values ();
+  dump "After elim ref values";
 
   //now we are at the small footprint style wp
   //we should full norm it, so that we can get our hands on the m0 == ..., i.e. the footprint of the command
@@ -307,42 +339,42 @@ let sl_auto () : Tac unit =
 unfold let frame_wp (#a:Type) (wp:st_wp a) (post:post a) (m:memory) =
   frame_wp wp (frame_post post) m
 
-let swap_wp (r1 r2:ref int) (x y:int) =
-  fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
+let swap_wp (r1 r2:ref int) =
+  fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
 
-let swap (r1 r2:ref int) (x y:int)
-     : STATE unit (fun post m -> frame_wp (swap_wp r1 r2 x y) post m) by sl_auto
+let swap (r1 r2:ref int)
+     : STATE unit (fun post m -> frame_wp (swap_wp r1 r2) post m) by sl_auto
   = let x = !r1 in
     let y = !r2 in
     r1 := y;
     r2 := x
 
-let rotate_wp (r1 r2 r3:ref int) (x y z:int) =
-  fun p m -> m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\ (defined m /\ p () ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y))))
+let rotate_wp (r1 r2 r3:ref int) =
+  fun p m -> exists x y z. m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\ (defined m /\ p () ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y))))
 
-let rotate (r1 r2 r3:ref int) (x y z:int)
-  : STATE unit (fun post m -> frame_wp (rotate_wp r1 r2 r3 x y z) post m) by sl_auto
-  = swap r2 r3 y z;
-    swap r1 r2 x z
+let rotate (r1 r2 r3:ref int)
+  : STATE unit (fun post m -> frame_wp (rotate_wp r1 r2 r3) post m) by sl_auto
+  = swap r2 r3;
+    swap r1 r2
 
-let test (r1 r2:ref int) (x y:int) =
+let test (r1 r2:ref int) =
   (!r1)
 
-  <: STATE int (fun p m -> frame_wp (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m)) p m)
+  <: STATE int (fun p m -> frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m)) p m)
 
   by sl_auto
 
 (*
  * two commands
  *)
-let write_read (r1 r2:ref int) (x y:int) =
+let write_read (r1 r2:ref int) =
   (r1 := 2;
    !r2)
-  <: STATE int (fun p m -> frame_wp (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y)))) p m)
+  <: STATE int (fun p m -> frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y)))) p m)
   by sl_auto
 
-let read_write (r1 r2:ref int) (x y:int) =
+let read_write (r1 r2:ref int) =
   (let x = !r1 in
    r2 := x)
-  <: STATE unit (fun p m -> frame_wp (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x)))) p m)
+  <: STATE unit (fun p m -> frame_wp (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x)))) p m)
   by sl_auto
