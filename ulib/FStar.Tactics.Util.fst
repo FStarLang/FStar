@@ -1,6 +1,7 @@
 module FStar.Tactics.Util
 
 open FStar.Tactics.Effect
+open FStar.List.Tot
 
 (* Tac list functions, since there's no effect polymorphism *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
@@ -27,3 +28,18 @@ val zip : (#a:Type) -> (#b:Type) -> list a -> list b -> Tac (list (a * b))
 let rec zip #a #b l1 l2 = match l1, l2 with
     | x::xs, y::ys -> (x,y) :: (zip xs ys)
     | _ -> []
+
+private let rec filter_map_acc (f:'a -> Tac (option 'b)) (acc:list 'b) (l:list 'a)
+    : Tac (list 'b) =
+  match l with
+  | [] ->
+      rev acc
+  | hd :: tl ->
+      match f hd with
+      | Some hd ->
+          filter_map_acc f (hd :: acc) tl
+      | None ->
+          filter_map_acc f acc tl
+
+let filter_map (f:'a -> Tac (option 'b)) (l:list 'a) : Tac (list 'b) =
+  filter_map_acc f [] l

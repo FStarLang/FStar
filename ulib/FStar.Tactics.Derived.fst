@@ -139,7 +139,7 @@ private let __cut a b f x = f x
 
 let tcut (t:term) : Tac binder =
     let tt = pack_ln (Tv_App (`__cut) (t, Q_Explicit)) in
-    apply tt;
+    exact_n 3 tt;
     intro ()
 
 let pose (t:term) : Tac binder =

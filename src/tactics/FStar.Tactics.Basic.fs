@@ -1395,13 +1395,14 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
                | g::_ -> g.opts
                | _ -> FStar.Options.peek ()
     in
-    bind (__tc env t) (fun (t, typ, guard) ->
-    bind (proc_guard "unshelve" env guard opts) (fun _ ->
-    add_goals [{ witness  = bnorm env t;
-                 goal_ty  = bnorm env typ;
-                 is_guard = false;
-                 context  = env;
-                 opts     = opts; }])))
+    match U.head_and_args t with
+    | { n = Tm_uvar (_, typ) }, _ ->
+        add_goals [{ witness  = bnorm env t;
+                     goal_ty  = bnorm env typ;
+                     is_guard = false;
+                     context  = env;
+                     opts     = opts; }]
+    | _ -> fail "not a uvar")
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
