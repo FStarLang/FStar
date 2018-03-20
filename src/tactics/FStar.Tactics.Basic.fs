@@ -1384,7 +1384,7 @@ let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     ret tm)))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
-    // If no type was given, add an uvar for it too!
+    // If no type was given, add a uvar for it too!
     bind (match ty with
     | Some ty -> ret ty
     | None -> new_uvar "uvar_env.2" env (fst <| U.type_u ())) (fun typ ->

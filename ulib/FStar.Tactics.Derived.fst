@@ -54,7 +54,6 @@ let exact_args (qs : list aqualv) (t : term) : Tac unit =
                         else ()) (L.rev uvs)
     )
 
-
 let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
