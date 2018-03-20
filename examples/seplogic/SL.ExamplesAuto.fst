@@ -139,14 +139,22 @@ let __tcut (#b:Type) (a:Type) (_:squash (a ==> b)) (_:squash a)
 
 let rec sl (i:int) : Tac unit =
   dump ("SL :" ^ string_of_int i);
+
+  //post procedure call, we sometimes have a m == m kind of expression in the wp
+  //this will solve it in the tactic itself rather than farming it out to smt
+  norm [Prims.simplify];
   match peek_cmd () with
   | Unknown None -> smt()
   | Unknown (Some fv) ->
+    //so here we are unfolding something like swap_wp below
+
     // eventually this will use attributes,
     // but we can't currently get at them
     unfold_first_occurrence (fv_to_string fv);
+    //FStar.Tactics.split (); smt ();
+    //FStar.Tactics.split (); smt ();
     ignore (repeat (fun () -> FStar.Tactics.split(); smt())); //definedness
-    norm[];
+    norm [];
     sl (i + 1)
 
   | Bind ->
@@ -213,7 +221,7 @@ let rec sl (i:int) : Tac unit =
     trefl();
 
     //norm_binder_type [] heq;
-    //dump ("after trefl");
+    dump ("after trefl");
 
     //this is the a ==> b thing when we did cut above
     let cut_hyp = implies_intro () in
@@ -299,13 +307,6 @@ let sl_auto () : Tac unit =
 let swap_wp (r1 r2:ref int) (x y:int) =
   fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
 
-
-(*
- * We can improve upon this style
- *    I think we can require to do the proofs on small footprint style procedures
- *    and then write another wrapper whose proof can be done using a similar or a new tactic
- *    This other tactic would just pass the requires frame to the small footprint style procedure
- *)
 let swap (r1 r2:ref int) (x y:int)
      : STATE unit (fun post m -> frame_wp (swap_wp r1 r2 x y) (frame_post post) m) by sl_auto
   = let x = !r1 in
