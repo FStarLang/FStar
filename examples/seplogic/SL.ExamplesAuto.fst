@@ -173,43 +173,60 @@ let rec sl (i:int) : Tac unit =
     sl (i + 1)
 
   | Frame ta twp tpost tm ->
-        let fp_refs = footprint_of twp in
-        dump ("fp_refs="^ FStar.String.concat ","
-           (List.Tot.map term_to_string fp_refs));
-        let fp = FStar.Tactics.Util.fold_left
-                   (fun a t -> if term_eq a (`emp) then t
-                               else mk_e_app (`( <*> )) [a;t])
-                   (`emp)
-                   (FStar.Tactics.Util.map
-                     (fun t -> let u = fresh_uvar (Some (`int)) in
-                               mk_e_app (`( |> )) [t; u]) fp_refs) in
-         dump ("m0=" ^ term_to_string fp);
-        let env = cur_env () in
-        let frame = uvar_env env None in
-        let tp : term = mk_app (`eq2)
-              [((`memory),                     Q_Implicit);
-               (mk_e_app (`(<*>)) [fp;frame],  Q_Explicit);
-               (tm,                            Q_Explicit)] in
-        let new_goal = tp in //mk_e_app (pack_fv' squash_qn) [tp] in
-	apply_lemma (mk_e_app (`__tcut) [new_goal]);
-        //let heq = tcut new_goal in
-         dump "with new goal:";
-        flip();
-        dump ("before canon_monoid");
-        canon_monoid_sl fp_refs;
-         dump ("after canon_monoid");
-        trefl();
-        //norm_binder_type [] heq;
-         dump ("after trefl");
-	 ignore (implies_intro ());
-	 apply_lemma (mk_e_app (`frame_wp_lemma) [tm; fp; frame]);
-         //apply_lemma (mk_e_app (`frame_wp_lemma)
-        //                [tm; fp; frame; ta; twp; tpost; binder_to_term heq]);
-         dump ("after frame lemma - 1");
-	 smt ();
-        FStar.Tactics.split(); smt(); //definedness
-         dump ("after frame lemma - 2");
-        sl(i + 1)
+    //we are at frame_wp, real work starts
+
+    //compute the footprint from the arg (e.g. read_wp r1, swap_wp r1 r2, etc.)
+    let fp_refs = footprint_of twp in
+    //dump ("fp_refs="^ FStar.String.concat "," (List.Tot.map term_to_string fp_refs));
+
+    //build the footprint memory expression, uvars for ref values, and join then
+    let fp = FStar.Tactics.Util.fold_left
+               (fun a t -> if term_eq a (`emp) then t
+                        else mk_e_app (`( <*> )) [a;t])
+               (`emp)
+               (FStar.Tactics.Util.map
+                 (fun t -> let u = fresh_uvar (Some (`int)) in
+                        mk_e_app (`( |> )) [t; u]) fp_refs)
+    in
+    //dump ("m0=" ^ term_to_string fp);
+
+    //introduce another uvar for the _frame_
+    let env = cur_env () in
+    let frame = uvar_env env None in
+
+    //make the term equating the fp join frame with the current memory
+    let tp :term = mk_app (`eq2)
+                   [((`memory),                     Q_Implicit);
+                    (mk_e_app (`(<*>)) [fp;frame],  Q_Explicit);
+                    (tm,                            Q_Explicit)] in
+
+    //cut
+    apply_lemma (mk_e_app (`__tcut) [tp]);
+    //dump "with new goal:";
+
+    //flip so that the current goal is the equality of memory expressions
+    flip();
+    
+    //dump ("before canon_monoid");
+    canon_monoid_sl fp_refs;
+    //dump ("after canon_monoid");
+    trefl();
+
+    //norm_binder_type [] heq;
+    //dump ("after trefl");
+
+    //this is the a ==> b thing when we did cut above
+    ignore (implies_intro ());
+
+    //sort of beta step
+    apply_lemma (mk_e_app (`frame_wp_lemma) [tm; fp; frame]);
+    //dump ("after frame lemma - 1");
+
+    //equality goal from frame_wp_lemma
+    smt ();
+    FStar.Tactics.split(); smt(); //definedness
+    //dump ("after frame lemma - 2");
+    sl(i + 1)
 
 let __elim_exists_as_forall
   (#a:Type) (#p:a -> Type) (#phi:Type) (_:(exists x. p x)) (_:squash (forall (x:a). p x ==> phi))
@@ -221,103 +238,106 @@ let __elim_exists (h:binder) :Tac unit
     apply_lemma (mk_e_app t [pack (Tv_Var (bv_of_binder h))]);
     clear h
 
-let rec intro_annotated_wp () :Tac binder
-  = let h = implies_intro () in
-    or_else (fun () -> __elim_exists h; intro_annotated_wp ())
-            (fun () -> h)
-  
 let prelude' () : Tac unit =
-   dump "start";
-   norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
-   mapply (`FStar.Squash.return_squash);
-   let post = forall_intro_as "post" in
-   let m = forall_intro_as "m" in
-   unfold_first_occurrence (%`frame_wp);
-   unfold_first_occurrence (%`frame_post);
-   norm [];
-   let h = implies_intro () in
-   __elim_exists h;
-   let m0 = forall_intro_as "m0" in
-   let h = implies_intro () in
-   __elim_exists h;
-   let m1 = forall_intro_as "m1" in
-   //ignore (implies_intro ());
-   
-   let wp_annot = intro_annotated_wp () in
-   and_elim (pack (Tv_Var (fst (inspect_binder wp_annot))));
-   clear wp_annot;
-   let hm0 = implies_intro() in
-   and_elim (binder_to_term hm0);
-   clear hm0;
-   ignore (implies_intro ());
-   let hm0 = implies_intro () in
-   dump "before rewrite";
-   rewrite hm0; clear hm0;
-   dump "after rewrite";
-   let user_annot = implies_intro() in
-   norm_binder_type [primops; iota; delta; zeta] user_annot;
-   and_elim (binder_to_term user_annot);
-   clear user_annot;
-   let h = implies_intro () in rewrite h; clear h;
-   ignore (implies_intro ())
+  //take care of some auto_squash stuff
+  //dump "start";
+  norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
+  mapply (`FStar.Squash.return_squash);
+
+  //forall post m. 
+  let post = forall_intro_as "post" in
+  let m = forall_intro_as "m" in
+
+  //wps are written in the style frame_wp (<small footprint wp> (frame_post post) ...
+  //unfold frame_wp and frame_post in the annotated wp
+  unfold_first_occurrence (%`frame_wp);
+  unfold_first_occurrence (%`frame_post);
+  norm [];
+
+  //unfolding frame_wp introduces two existentials m0 and m1 for frames
+  //introduce them in the context
+  let h = implies_intro () in
+  __elim_exists h;
+  let m0 = forall_intro_as "m0" in
+  let h = implies_intro () in
+  __elim_exists h;
+  let m1 = forall_intro_as "m1" in
+
+  //now the goal looks something like (defined m0 * m1 /\ (m == m0 * m1 /\ (...)))
+  //do couple of implies_intro and and_elim to get these conjections
+  let h = implies_intro () in and_elim (binder_to_term h); clear h;
+  let h = implies_intro() in and_elim (binder_to_term h); clear h;
+
+  //defined m0 * m1
+  ignore (implies_intro ());
+
+  //this is the m = ..., introduced by the frame_wp
+  let m0 = implies_intro () in
+  //dump "before rewrite";
+  rewrite m0; clear m0;
+  //dump "after rewrite";
+
+  //now we are at the small footprint style wp
+  //we should full norm it, so that we can get our hands on the m0 == ..., i.e. the footprint of the command
+  let user_annot = implies_intro() in
+  norm_binder_type [primops; iota; delta; zeta] user_annot;
+  and_elim (binder_to_term user_annot);
+  clear user_annot;
+
+  //the first conjunct there is the m0 = ..., so inline it
+  let h = implies_intro () in rewrite h; clear h;
+
+  //push rest of the lhs implicatio in the context
+  ignore (implies_intro ())
 
 let sl_auto () : Tac unit =
    prelude'();
-   dump "after prelude";
+   //dump "after prelude";
    sl(0)
 
-[@"unfold_for_sl"]
 let swap_wp (r1 r2:ref int) (x y:int) =
   fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
 
-let swap0 (r1 r2:ref int) (x y:int)
+
+(*
+ * We can improve upon this style
+ *    I think we can require to do the proofs on small footprint style procedures
+ *    and then write another wrapper whose proof can be done using a similar or a new tactic
+ *    This other tactic would just pass the requires frame to the small footprint style procedure
+ *)
+let swap (r1 r2:ref int) (x y:int)
      : STATE unit (fun post m -> frame_wp (swap_wp r1 r2 x y) (frame_post post) m) by sl_auto
-  =
-     (let x = !r1 in
-     let y = !r2 in
-     r1 := y;
-     r2 := x)
+  = let x = !r1 in
+    let y = !r2 in
+    r1 := y;
+    r2 := x
 
 let rotate_wp (r1 r2 r3:ref int) (x y z:int) =
   fun p m -> m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\ (defined m /\ p () ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y))))
 
 let rotate (r1 r2 r3:ref int) (x y z:int)
   : STATE unit (fun post m -> frame_wp (rotate_wp r1 r2 r3 x y z) (frame_post post) m) by sl_auto
-  = swap0 r2 r3 y z;
-    swap0 r1 r2 x z
+  = swap r2 r3 y z;
+    swap r1 r2 x z
 
+let test (r1 r2:ref int) (x y:int) =
+  (!r1)
 
-// let test (r1 r2:ref int) =
-//   (!r1)
+  <: STATE int (fun p m -> frame_wp (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m)) (frame_post p) m)
 
-//   <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m))
+  by sl_auto
 
-//   by sl_auto
+(*
+ * two commands
+ *)
+let write_read (r1 r2:ref int) (x y:int) =
+  (r1 := 2;
+   !r2)
+  <: STATE int (fun p m -> frame_wp (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y)))) (frame_post p) m)
+  by sl_auto
 
-// (*
-// //  * two commands
-// //  *)
-// let write_read (r1 r2:ref int) =
-//   (r1 := 2;
-//    !r2)
-//   <: STATE int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
-//   by sl_auto
-
-// let read_write (r1 r2:ref int) =
-//   (let x = !r1 in
-//    r2 := x)
-//   <: STATE unit (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
-//   by sl_auto
-
-// (*
-// //  * four commands
-// //  *)
-// let swap (r1 r2:ref int)
-//      : STATE unit (fun post m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x)))) by sl_auto
-//   = (let x = !r1 in
-//      let y = !r2 in
-//      r1 := y;
-//      r2 := x)
-
-// let call (#wp:...) (f:unit -> STATE 'a (fun :STATE unit (fun p m -> frame_wp (
-
+let read_write (r1 r2:ref int) (x y:int) =
+  (let x = !r1 in
+   r2 := x)
+  <: STATE unit (fun p m -> frame_wp (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x)))) (frame_post p) m)
+  by sl_auto
