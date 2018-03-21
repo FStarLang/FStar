@@ -962,26 +962,35 @@ and p_noSeqTerm' ps pb e = match e.tm with
       paren_if ps (
         group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term false pb e)
       )
-  | Let(q, (a0, lb0)::attr_letbindings, e) ->
-    let let_first =
-        p_attrs_opt a0 ^/^
-        group (str "let" ^/^
-               p_letqualifier q ^/^
-               p_letbinding lb0)
+  | Let(q, lbs, e) ->
+    (* We wish to print let-bindings as follows.
+     *
+     * [@ attribute ]
+     * let x = foo
+     * and x =
+     *   too long to fit on one line
+     * in
+     * ... *)
+    let p_lb q (a, (pat, e)) =
+      let attrs = p_attrs_opt a in
+      let doc_let_or_and = match q with
+        | Some Rec -> group (str "let" ^/^ str "rec")
+        | Some NoLetQualifier -> str "let"
+        | _ -> str "and"
+      in
+      let doc_pat = p_letlhs (pat, e) in
+      let doc_expr = p_term false false e in
+      prefix 2 1 (surround 2 1 doc_let_or_and doc_pat equals) doc_expr
     in
-    let let_rest =
-        match attr_letbindings with
-        | [] -> empty
-        | _ ->
-          group (precede_break_separate_map
-                    empty
-                    empty
-                    p_attr_letbinding
-                    attr_letbindings)
-    in paren_if ps (let_first ^/^
-       let_rest  ^/^
-       str "in"  ^/^
-       p_term false pb e)
+    let lbs_docs = List.mapi (fun i lb ->
+      if i = 0 then
+        group (p_lb (Some q) lb)
+      else
+        group (p_lb None lb)
+    ) lbs @ [ str "in" ] in
+    let lbs_doc = group (separate break1 lbs_docs) in
+    paren_if ps (group (lbs_doc ^/^ p_term false pb e))
+
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
@@ -997,10 +1006,6 @@ and p_attrs_opt = function
   | None -> empty
   | Some terms ->
     group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
-
-and p_attr_letbinding (a, (pat, e)) =
-  let pat_doc = p_letlhs (pat, e) in
-  (prefix2 (p_attrs_opt a ^/^ (group (str "and " ^/^ pat_doc ^/^ equals))) (p_term false false e))
 
 and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 
