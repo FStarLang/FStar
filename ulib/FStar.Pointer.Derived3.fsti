@@ -3,7 +3,6 @@ include FStar.Pointer.Base
 include FStar.Pointer.Derived1
 // include FStar.Pointer.Derived2 // useless here
 
-module DM = FStar.DependentMap
 module HH = FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST

@@ -1,18 +1,22 @@
 module Test
 open FStar.Pointer
 
-let nested_st: struct_typ =
-[
-  ("X", TBase TUInt32);
-  ("Y", TArray 5ul (TBase TUInt32))
-]
-
+let nested_st: struct_typ = {
+  name = "nested_st";
+  fields = [
+    ("X", TBase TUInt32);
+    ("Y", TArray 5ul (TBase TUInt32))
+  ]
+}
 
 let ty: typ =
-  TStruct [
-    ("A", TStruct nested_st);
-    ("B", TArray 3ul (TBase TUInt64))
-  ]
+  TStruct ({
+    name = "ty";
+    fields = [
+      ("A", TStruct nested_st);
+      ("B", TArray 3ul (TBase TUInt64))
+    ]
+  })
 
 val f : unit -> FStar.HyperStack.ST.Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
 

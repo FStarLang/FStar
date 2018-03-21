@@ -1,6 +1,5 @@
 module FStar.BufferNG
 module HH = FStar.HyperStack
-module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module P = FStar.Pointer
@@ -16,7 +15,7 @@ let rec supported
 : Tot bool
 = match t with
   | P.TBase _ -> true
-  | P.TStruct l -> struct_typ_supported l
+  | P.TStruct l -> struct_typ_supported l.P.fields
   | _ -> false
 
 and struct_typ_supported

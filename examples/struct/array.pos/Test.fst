@@ -5,10 +5,13 @@ module HST = FStar.HyperStack.ST
 
 #set-options "--initial_fuel 3"
 
-let struct : S.struct_typ = [
-  ("I", S.TBase S.TInt);
-  ("B", S.TBase S.TBool);
-]
+let struct : S.struct_typ = {
+  S.name = "struc";
+  S.fields = [
+    ("I", S.TBase S.TInt);
+    ("B", S.TBase S.TBool);
+  ]
+}
 
 #reset-options "--initial_fuel 2"
 

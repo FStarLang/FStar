@@ -3,19 +3,26 @@ module Test
 module S  = FStar.Pointer
 module HST = FStar.HyperStack.ST
 
-let point_struct : S.struct_typ = [
- "X", S.TBase S.TInt;
- "Y", S.TBase S.TInt;
-]
+let point_struct : S.struct_typ = {
+  S.name = "point";
+  S.fields = [
+    "X", S.TBase S.TInt;
+    "Y", S.TBase S.TInt;
+  ]
+}
 
 let point_t = S.TStruct point_struct
 
 let point = S.pointer point_t
 
-let colored_object_struct (t: S.typ) : Tot S.struct_typ = [
-  "Carrier", t;
-  "Color", S.TBase S.TBool;
-]
+// FIXME: how to make the struct name depend on the type parameter?
+let colored_object_struct (t: S.typ) : Tot S.struct_typ = {
+  S.name = "colored";
+  S.fields = [
+    "Carrier", t;
+    "Color", S.TBase S.TBool;
+  ]
+}
 
 let colored_object_t (t: S.typ) : Tot S.typ =
   S.TStruct (colored_object_struct t)
