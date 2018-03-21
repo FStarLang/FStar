@@ -85,10 +85,3 @@ let frame_write_wp (#a:Type) (r:ref a) (v:a) : st_wp unit =
 assume
 val ( := ) (#a:Type) (r:ref a) (v:a)
   :STATE unit (frame_write_wp r v)
-
-let alloc_wp (#a:Type) (v:a) : st_wp (ref a) =
-  (fun post m0 -> m0 == emp /\ (forall r m1 . m1 == (r |> v) ==> post r m1))
-  
-assume
-val alloc (#a:Type) (v:a)
-  :STATE (ref a) (alloc_wp v)

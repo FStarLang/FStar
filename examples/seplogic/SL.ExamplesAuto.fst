@@ -150,7 +150,7 @@ let rec solve_procedure_ref_value_existentials (use_trefl:bool) :Tac bool =
     witness w;
     solve_procedure_ref_value_existentials true
   | _ ->
-   if use_trefl then begin FStar.Tactics.split (); trefl (); FStar.Tactics.split (); smt (); true end
+   if use_trefl then begin FStar.Tactics.split (); trefl (); true end
    else false
 
 let rec sl (i:int) : Tac unit =
@@ -336,42 +336,31 @@ unfold let frame_wp (#a:Type) (wp:st_wp a) =
 
 effect ST (a:Type) (wp:st_wp a) = STATE a (frame_wp wp)
 
-let swap_wp (r1 r2:ref int) =
-  fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> y) <*> (r2 |> x)))
+let swap_wp (r1 r2:ref int) = fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p () (r1 |> y <*> r2 |> x)
 
-let swap (r1 r2:ref int)
-     : ST unit (swap_wp r1 r2) by sl_auto
+let swap (r1 r2:ref int) :ST unit (swap_wp r1 r2) by sl_auto
   = let x = !r1 in
     let y = !r2 in
     r1 := y;
     r2 := x
 
-let rotate_wp (r1 r2 r3:ref int) =
-  fun p m -> exists x y z. m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\ (defined m /\ p () ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y))))
+let rotate_wp (r1 r2 r3:ref int)
+  = fun p m -> exists x y z. m == (r1 |> x <*> r2 |> y <*> r3 |> z) /\ p () (r1 |> z <*> r2 |> x <*> r3 |> y)
 
-let rotate (r1 r2 r3:ref int)
-  : ST unit (rotate_wp r1 r2 r3) by sl_auto
+let rotate (r1 r2 r3:ref int) :ST unit (rotate_wp r1 r2 r3) by sl_auto
   = swap r2 r3;
     swap r1 r2
 
-let test (r1 r2:ref int) =
-  (!r1)
-
-  <: ST int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p x m))
-
-  by sl_auto
+let test (r1 r2:ref int) :ST int (fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p x m) by sl_auto
+  = !r1
 
 (*
  * two commands
  *)
-let write_read (r1 r2:ref int) =
-  (r1 := 2;
-   !r2)
-  <: ST int (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
-  by sl_auto
+let write_read (r1 r2:ref int) :ST int (fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p y (r1 |> 2 <*> r2 |> y)) by sl_auto
+  = r1 := 2;
+    !r2
 
-let read_write (r1 r2:ref int) =
-  (let x = !r1 in
-   r2 := x)
-  <: ST unit (fun p m -> exists x y. m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p () ((r1 |> x) <*> (r2 |> x))))
-  by sl_auto
+let read_write (r1 r2:ref int) :ST unit (fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p () (r1 |> x <*> r2 |> x)) by sl_auto
+  = let x = !r1 in
+    r2 := x
