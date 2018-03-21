@@ -308,6 +308,9 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
       then text "obj"
       else text "Obj.t"
 
+    | MLTY_Erased ->
+      text "unit"
+
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
 

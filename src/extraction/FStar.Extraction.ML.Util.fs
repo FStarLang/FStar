@@ -107,7 +107,8 @@ let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
     | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)
     | MLTY_Named(args, path) -> MLTY_Named(List.map (subst_aux subst) args, path)
     | MLTY_Tuple ts -> MLTY_Tuple(List.map (subst_aux subst) ts)
-    | MLTY_Top -> MLTY_Top
+    | MLTY_Top
+    | MLTY_Erased -> t
 
 let try_subst ((formals, t):mltyscheme) (args:list<mlty>) : option<mlty> =
     if List.length formals <> List.length args

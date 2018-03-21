@@ -122,6 +122,7 @@ type mlty =
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
 | MLTY_Top
+| MLTY_Erased //a type that extracts to unit
 
 type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
 
@@ -161,6 +162,7 @@ type meta =
   | CPrologue of string
   | CEpilogue of string
   | CConst of string
+  | Erased
 
 // rename
 type metadata = list<meta>

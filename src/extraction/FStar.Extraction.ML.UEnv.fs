@@ -248,7 +248,8 @@ let rec mltyFvars (t: mlty) : list<mlident>  =
     | MLTY_Fun (t1, f, t2) -> List.append (mltyFvars t1) (mltyFvars t2)
     | MLTY_Named(args, path) -> List.collect mltyFvars args
     | MLTY_Tuple ts -> List.collect mltyFvars ts
-    | MLTY_Top -> []
+    | MLTY_Top
+    | MLTY_Erased -> []
 
 let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
     match la with
