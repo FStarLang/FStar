@@ -528,10 +528,7 @@ let rec find_map l f =
      | None -> find_map tl f
      | y -> y
 
-(** This is equivalent to [try Some (BatList.find f l) with ...], but it doesn't
-    use exceptions (this is useful when compiling with js_of_ocaml, as exceptions
-    are slow in Javascript). *)
-let rec try_find f l = match l with | [] -> None | h :: t -> if f h then Some h else try_find f t
+let try_find f l = try Some (List.find f l) with Not_found -> None
 
 let try_find_index f l =
   let rec aux i = function

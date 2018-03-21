@@ -45,10 +45,7 @@ let filter = BatList.filter
 let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
 let for_all = BatList.for_all
 let forall2 = BatList.for_all2
-(** This is equivalent to [try Some (BatList.find f l) with ...], but it doesn't
-    use exceptions (this is useful when compiling with js_of_ocaml, as exceptions
-    are slow in Javascript). *)
-let rec tryFind f l = match l with | [] -> None | h :: t -> if f h then Some h else tryFind f t
+let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
 let tryFindT = tryFind
 let find = tryFind
 let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found -> None
