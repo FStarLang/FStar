@@ -282,7 +282,7 @@ let unfold_topdown (t:term) =
 let canon_monoid_aux
     (b:Type) (tb:term) (f:term->Tac b) (def:b) (p:permute b) (tp:term)
     (pc:permute_correct p) (tpc:term) (#a:Type) (ta:term)
-    (funquote:term->Tac a) (fquote:a->Tac term) (m:cm a) (tmult:term) :
+    (funquote:term->Tac a) (fquote:a->Tac term) (m:cm a) (tm:term) (tmult:term) :
     Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
@@ -295,8 +295,17 @@ let canon_monoid_aux
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
           // dump ("vm =" ^ term_to_string (quote vm));
-          change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
+          // change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           // TODO: quasi-quotes would help at least for splicing in the vm r1 r2
+          let tvm = quote vm in
+          let tr1 = quote r1 in
+          let tr2 = quote r2 in
+          let tp:term = mk_app (`eq2)
+            [(ta,                                                    Q_Implicit);
+             (mk_app (`mdenote) [(ta,Q_Implicit); (tb,Q_Implicit);
+                 (tm,Q_Explicit);(tvm,Q_Explicit);(tr1,Q_Explicit)], Q_Explicit);
+             (mk_app (`mdenote) [(ta,Q_Implicit); (tb,Q_Implicit);
+                 (tm,Q_Explicit);(tvm,Q_Explicit);(tr2,Q_Explicit)], Q_Explicit)] in
           // dump ("before =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (mdenote m vm r1 == mdenote m vm r2))));
           // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
@@ -339,7 +348,7 @@ let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
   canon_monoid_aux b (quote b) f def p (quote p) pc (quote pc) #a
-    (quote a) (unquote #a) (fun (x:a) -> quote x) m (quote (CM?.mult m))
+    (quote a) (unquote #a) (fun (x:a) -> quote x) m (quote m) (quote (CM?.mult m))
 
 let canon_monoid (#a:Type) (cm:cm a) =
   canon_monoid_with unit (fun _ -> ()) ()
