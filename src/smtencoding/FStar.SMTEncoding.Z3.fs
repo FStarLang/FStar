@@ -149,8 +149,7 @@ let new_z3proc id =
    BU.start_process false id ((Options.z3_exe())) (ini_params()) cond
 
 type bgproc = {
-    grab:unit -> proc;
-    release:unit -> unit;
+    ask: string -> string;
     refresh:unit -> unit;
     restart:unit -> unit
 }
@@ -238,6 +237,10 @@ let bg_z3_proc =
     let x : list<unit> = [] in
     let grab () = BU.monitor_enter x; z3proc () in
     let release () = BU.monitor_exit(x) in
+    let ask input =
+        let proc = grab() in
+        let stdout = BU.ask_process proc input in
+        release (); stdout in
     let refresh () =
         let proc = grab() in
         BU.kill_process proc;
@@ -250,10 +253,12 @@ let bg_z3_proc =
         the_z3proc := None;
         the_z3proc := Some (new_proc ());
         BU.monitor_exit() in
-    {grab=grab;
-     release=release;
-     refresh=refresh;
-     restart=restart}
+    BU.mk_ref ({ask=ask;
+                refresh=refresh;
+                restart=restart})
+
+let set_bg_z3_proc bgp =
+    bg_z3_proc := bgp
 
 let at_log_file () =
   if Options.log_queries()
@@ -375,7 +380,7 @@ let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_la
       | ["sat"]     -> SAT     (labels, reason_unknown)
       | ["unknown"] -> UNKNOWN (labels, reason_unknown)
       | ["timeout"] -> TIMEOUT (labels, reason_unknown)
-      | ["killed"]  -> bg_z3_proc.restart(); KILLED
+      | ["killed"]  -> (!bg_z3_proc).restart(); KILLED
       | _ ->
         failwith (format1 "Unexpected output from Z3: got output result: %s\n"
                           (String.concat "\n" smt_output.smt_result))
@@ -390,9 +395,7 @@ let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_la
     if fresh then
       BU.launch_process false (tid()) ((Options.z3_exe())) (ini_params()) input cond
     else
-      let proc = bg_z3_proc.grab() in
-      let stdout = BU.ask_process proc input in
-      bg_z3_proc.release(); stdout
+      (!bg_z3_proc).ask input
   in
   parse (BU.trim_string stdout)
 
@@ -430,7 +433,7 @@ let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : 
   let status, statistics =
     try doZ3Exe r fresh input label_messages
     with _ when not (Options.trace_error()) ->
-         bg_z3_proc.refresh();
+         (!bg_z3_proc).refresh();
          UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
   in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
@@ -539,7 +542,7 @@ let giveZ3 decls =
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
     if (Options.n_cores() < 2) then
-        bg_z3_proc.refresh();
+        (!bg_z3_proc).refresh();
         bg_scope := List.flatten (List.rev !fresh_scope)
 
 let mk_input theory =
