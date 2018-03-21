@@ -971,7 +971,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
      *   too long to fit on one line
      * in
      * ... *)
-    let p_lb q (a, (pat, e)) =
+    let p_lb q (a, (pat, e)) is_last =
       let attrs = p_attrs_opt a in
       let doc_let_or_and = match q with
         | Some Rec -> group (str "let" ^/^ str "rec")
@@ -980,16 +980,21 @@ and p_noSeqTerm' ps pb e = match e.tm with
       in
       let doc_pat = p_letlhs (pat, e) in
       let doc_expr = p_term false false e in
-      prefix 2 1 (surround 2 1 doc_let_or_and doc_pat equals) doc_expr
+      attrs ^^
+      (if is_last then
+        group (surround 2 1 (surround 2 1 doc_let_or_and doc_pat equals) doc_expr (str "in"))
+      else
+        group (prefix 2 1 (surround 2 1 doc_let_or_and doc_pat equals) doc_expr))
     in
+    let l = List.length lbs in
     let lbs_docs = List.mapi (fun i lb ->
       if i = 0 then
-        group (p_lb (Some q) lb)
+        group (p_lb (Some q) lb (i = l - 1))
       else
-        group (p_lb None lb)
-    ) lbs @ [ str "in" ] in
+        group (p_lb None lb (i = l - 1))
+    ) lbs in
     let lbs_doc = group (separate break1 lbs_docs) in
-    paren_if ps (group (lbs_doc ^/^ p_term false pb e))
+    paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
@@ -1005,7 +1010,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
 and p_attrs_opt = function
   | None -> empty
   | Some terms ->
-    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
+    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]") ^^ break1
 
 and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 
