@@ -1,5 +1,5 @@
 [
-  "y\u0007®©‘'cÅç~OªV.Ž,",
+  "&4U;ú\u0005\u007fç¼§æ†%ô=À",
   [
     [
       "Sequences.unrefine_eq_lem",
@@ -12,48 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "5ba5ca3574488f785d1590950fec7af6"
-    ],
-    [
-      "Sequences.prune_for_seq",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "6bb817bcf689431e49a074de366db953"
-    ],
-    [
-      "Sequences.try_unref_eq",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "c379e825638190dead0babe2394b756c"
-    ],
-    [
-      "Sequences.sequence_pruning",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
-      ],
-      0,
-      "0ba23500bb5e394620223cdc17a4ff28"
+      "c81c850ac351cb1dad9527efab49cdfc"
     ],
     [
       "Sequences.test",
@@ -75,7 +34,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "645c0699dd4743d8be9225a08e8e9814"
+      "d76e32d899ec81a9c9f52ad06b693058"
     ],
     [
       "Sequences.test",
@@ -95,7 +54,7 @@
         "unit_typing"
       ],
       0,
-      "b3f3525e4d40f01cad8cb9a060cddd28"
+      "9a847998f77efc3cb4e8efa1acdcc5cb"
     ],
     [
       "Sequences.test",
@@ -115,7 +74,7 @@
         "unit_typing"
       ],
       0,
-      "cbff63e3cb812d2152f724f024ceacaa"
+      "8e25e9e4323174a4bd072864c8dafce8"
     ],
     [
       "Sequences.test",
@@ -148,7 +107,7 @@
         "unit_typing"
       ],
       0,
-      "314cdf377d46fd4f3d91a53e663c5f2e"
+      "4b98663f7811187142e2586f7ac2e7a8"
     ]
   ]
 ]

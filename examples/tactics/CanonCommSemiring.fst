@@ -48,13 +48,19 @@ type cr (a:Type) =
   | CR :
     cm_add:cm a ->
     cm_mult:cm a ->
-    distribute_left:distribute_left_lemma a cm_add cm_mult ->
-    distribute_right:distribute_right_lemma a cm_add cm_mult ->
+    distribute:distribute_left_lemma a cm_add cm_mult ->
     cr a
+
+let distribute_right (#a:Type) (r:cr a) : distribute_right_lemma a r.cm_add r.cm_mult =
+  fun x y z ->
+    CM?.commutativity r.cm_add (cm_op r.cm_add x y) z;
+    CM?.commutativity r.cm_add x z;
+    CM?.commutativity r.cm_add y z;
+    r.distribute z x y
 
 [@canon_attr]
 let int_cr : cr int =
-  CR int_plus_cm int_multiply_cm (fun x y z -> ()) (fun x y z -> ())
+  CR int_plus_cm int_multiply_cm (fun x y z -> ())
 
 (***** Expression syntax *)
 
@@ -125,13 +131,13 @@ let rec multiply_sums_correct (#a #b:Type) (r:cr a) (vm:vmap a b) (x y:sum_of_pr
     (
       multiply_sums_correct r vm s1 y;
       multiply_sums_correct r vm s2 y;
-      r.distribute_right (sum_denote r vm s1) (sum_denote r vm s2) (sum_denote r vm y)
+      distribute_right r (sum_denote r vm s1) (sum_denote r vm s2) (sum_denote r vm y)
     )
   | (_, Sum s1 s2) ->
     (
       multiply_sums_correct r vm x s1;
       multiply_sums_correct r vm x s2;
-      r.distribute_left (sum_denote r vm x) (sum_denote r vm s1) (sum_denote r vm s2)
+      r.distribute (sum_denote r vm x) (sum_denote r vm s1) (sum_denote r vm s2)
     )
 
 let rec exp_to_sum_correct (#a #b:Type) (r:cr a) (vm:vmap a b) (e:exp) : Lemma

@@ -108,9 +108,9 @@ let __unembed_string (w:bool) (t0:term) : option<string> =
 let unembed_string      t = __unembed_string true  t
 let unembed_string_safe t = __unembed_string false t
 
-let embed_pair (embed_a:embedder<'a>) (t_a:term)
-               (embed_b:embedder<'b>) (t_b:term)
-               (rng:range) (x:('a * 'b)) : term =
+let embed_tuple2 (embed_a:embedder<'a>) (t_a:term)
+                 (embed_b:embedder<'b>) (t_b:term)
+                 (rng:range) (x:('a * 'b)) : term =
     S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple2) [U_zero;U_zero])
                 [S.iarg t_a;
                  S.iarg t_b;
@@ -119,12 +119,10 @@ let embed_pair (embed_a:embedder<'a>) (t_a:term)
                 None
                 rng
 
-let embed_tuple2 = embed_pair
-
-let __unembed_pair (w:bool)
-                   (unembed_a:unembedder<'a>)
-                   (unembed_b:unembedder<'b>)
-                   (t0:term) : option<('a * 'b)> =
+let __unembed_tuple2 (w:bool)
+                     (unembed_a:unembedder<'a>)
+                     (unembed_b:unembedder<'b>)
+                     (t0:term) : option<('a * 'b)> =
     let t = U.unmeta_safe t0 in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
@@ -137,11 +135,9 @@ let __unembed_pair (w:bool)
         Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
         None
 
-let unembed_pair      ul ur t = __unembed_pair true  ul ur t
-let unembed_pair_safe ul ur t = __unembed_pair false ul ur t
-
-let unembed_tuple2 = unembed_pair
-let unembed_tuple2_safe = unembed_pair_safe
+(* Need eta expansion for F# *)
+let unembed_tuple2        ul ur t = __unembed_tuple2 true  ul ur t
+let unembed_tuple2_safe   ul ur t = __unembed_tuple2 false ul ur t
 
 let embed_option (embed_a:embedder<'a>) (typ:term) (rng:range) (o:option<'a>) : term =
     match o with

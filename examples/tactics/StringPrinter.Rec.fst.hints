@@ -17,21 +17,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "12124b98f1c404ee6e7fd2aa0a4f1829"
-    ],
-    [
-      "StringPrinter.Rec.mk_do_while_body",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
-        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "95dc20e66cc8bae3859a36514a6e3622"
+      "8dc0216a399f4f3f3a032eff4db8bbf8"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -40,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "656a369b8e9184d248f68ff0b6021a59"
+      "45d1cb87cffe3b3a19f30ea0cc43e211"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -57,7 +43,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "8977d316b6d3ee2bcf9909716646426b"
+      "88cbbe8940de65366d3315e698d714fe"
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -103,7 +89,7 @@
         "unit_typing"
       ],
       0,
-      "4afe9e6ab87ec4cf99ba50cd64b88ed9"
+      "37c761c5a6639a9ebfe3f5ef32e61d80"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -132,23 +118,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "cafef2e74d63c950bbc17b23bc77cfcb"
-    ],
-    [
-      "StringPrinter.Rec.mk_do_while",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
-        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
-        "disc_equation_FStar.Reflection.Data.Tv_FVar",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "72f2db151399b5d2955c87fa90e3a6e3"
+      "ea34d2e88ca7a56a71de6defbbe3b909"
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -166,21 +136,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "ca1cc0694f92180e4a551bed3011b5c5"
-    ],
-    [
-      "StringPrinter.Rec.mk_do_while_body",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
-        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "0a401d1673b4c7e6c6441d07029e40b8"
+      "4c416bc3a61739f3d5119f4c4c934eed"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -189,7 +145,7 @@
       1,
       [ "@query" ],
       0,
-      "629ceb98d3bcc93c77479f970138ce8b"
+      "8c268445f182a51e9eaec0d26d7d5e15"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -206,7 +162,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "90a62c4fd4d812446b2e150b3fc016e0"
+      "c3c1559b0e49ec251f4a27678a30e649"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -235,23 +191,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "6d749ca59d78fca3cca98a7a40690559"
-    ],
-    [
-      "StringPrinter.Rec.mk_do_while",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
-        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
-        "disc_equation_FStar.Reflection.Data.Tv_FVar",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "8ba3cec57d4fbfb909572045a60c93f3"
+      "685fa04ca9c518bbd616bef3fbd07d51"
     ]
   ]
 ]

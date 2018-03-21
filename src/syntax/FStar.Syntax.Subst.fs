@@ -381,10 +381,11 @@ let push_subst s t =
     | Tm_meta(t0, Meta_monadic_lift (m1, m2, t)) ->
         mk (Tm_meta(subst' s t0, Meta_monadic_lift (m1, m2, subst' s t)))
 
-    | Tm_meta(t0, Meta_quoted (t1, qi)) ->
-        if qi.qopen
-        then mk (Tm_meta(subst' s t0, Meta_quoted (subst' s t1, qi)))
-        else mk (Tm_meta(subst' s t0, Meta_quoted (t1, qi)))
+    | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static ->  mk (Tm_quoted (tm, qi))
+        | Quote_dynamic -> mk (Tm_quoted (subst' s tm, qi))
+        end
 
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))

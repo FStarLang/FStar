@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-      "5f5022ded01da1dd71954ae6cdb70efa"
+      "69659c46636a653e055394bcb4919e8f"
     ],
     [
       "Test.callee",
@@ -68,6 +68,7 @@
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TInt",
         "constructor_distinct_Prims.Cons",
+        "data_typing_intro_FStar.Pointer.Base.TBase@tok",
         "equality_tok_FStar.Pointer.Base.TInt@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pointer.Base.equal_values",
@@ -94,7 +95,7 @@
         "lemma_FStar.Pointer.Base.modifies_pointer_elim",
         "lemma_FStar.Pointer.Base.readable_gfield",
         "lemma_FStar.Pointer.Base.readable_live",
-        "lemma_FStar.Pointer.loc_disjoint_gfield_r",
+        "lemma_FStar.Pointer.Derived1.loc_disjoint_gfield_r",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Some_v",
@@ -106,19 +107,18 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_b52713f2b4b5a365f2b89ba5a3ee8f0e",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_48bd6a1accc060710da75c015ab8519d",
         "refinement_interpretation_Test_Tm_refine_abc25e0ebc5f7440fde89b32fc79589b",
+        "refinement_interpretation_Test_Tm_refine_f00485333d81111b9a0cd39796367126",
         "string_typing", "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.typ_of_struct_field"
+        "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "50f200e4b4165bef0eeea533e2d9bb1a"
+      "51e2adf0809b6d263698fd2417cbe854"
     ],
     [
       "Test.caller",
@@ -291,7 +291,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "535e3096bd7fca21af9d2d13464c8ced"
+      "3bae1cdac7a451c4fc79216e51da1eef"
     ]
   ]
 ]

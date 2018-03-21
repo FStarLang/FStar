@@ -90,8 +90,13 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
+type quote_kind =
+  | Quote_static
+  | Quote_dynamic
+
+///[@ PpxDerivingShow ]
 type quoteinfo     = {
-    qopen : bool;       // True if the quotation is open, and should be substituted
+    qkind : quote_kind;
  }
 
 ///[@ PpxDerivingShow ]
@@ -136,6 +141,7 @@ type term' =
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
+  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -194,7 +200,6 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
@@ -254,10 +259,10 @@ and residual_comp = {
 }
 
 and lazyinfo = {
-    blob : dyn;
-    kind : lazy_kind;
-    typ : typ;
-    rng : Range.range;
+    blob  : dyn;
+    lkind : lazy_kind;
+    typ   : typ;
+    rng   : Range.range;
  }
 
 and attribute = term

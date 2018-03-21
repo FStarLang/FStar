@@ -2044,10 +2044,10 @@ in
       ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
 | QUOTE tmEqWith_appTerm_
     {let (_1, e) = ((), $2) in
-      ( mk_term (Quote (e, true)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un )}
 | BACKTICK tmEqWith_appTerm_
     {let (_1, e) = ((), $2) in
-      ( mk_term (Quote (e, false)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_appTerm_
     {let e = $1 in
       ( e )}
@@ -2112,10 +2112,10 @@ in
       ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
 | QUOTE tmEqWith_tmRefinement_
     {let (_1, e) = ((), $2) in
-      ( mk_term (Quote (e, true)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un )}
 | BACKTICK tmEqWith_tmRefinement_
     {let (_1, e) = ((), $2) in
-      ( mk_term (Quote (e, false)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_tmRefinement_
     {let e = $1 in
       ( e )}

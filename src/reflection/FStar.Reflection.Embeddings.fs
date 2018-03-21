@@ -38,8 +38,8 @@ let embed_binder (rng:Range.range) (b:binder) : term =
     U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
 
 let embed_term (rng:Range.range) (t:term) : term =
-    let qi = { qopen = false } in
-    S.mk (Tm_meta (tun, Meta_quoted (t, qi))) None rng
+    let qi = { qkind = Quote_static } in
+    S.mk (Tm_quoted (t, qi)) None rng
 
 let embed_aqualv (rng:Range.range) (q : aqualv) : term =
     let r =
@@ -90,8 +90,8 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
                     None rng
 
 
-let embed_branch rng br = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term rng br
-let embed_argv   rng aq = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
+let embed_branch rng br = embed_tuple2 embed_pattern fstar_refl_pattern embed_term S.t_term rng br
+let embed_argv   rng aq = embed_tuple2 embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
 
 let embed_term_view (rng:Range.range) (t:term_view) : term =
     match t with
@@ -241,7 +241,7 @@ let rec embed_exp (rng:Range.range) (e:exp) : term =
 
 let unembed_bv (t:term) : option<bv> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_bv ->
+    | Tm_lazy i when i.lkind = Lazy_bv ->
         Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (Print.term_to_string t)));
@@ -249,7 +249,7 @@ let unembed_bv (t:term) : option<bv> =
 
 let unembed_binder (t:term) : option<binder> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_binder ->
+    | Tm_lazy i when i.lkind = Lazy_binder ->
         Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
@@ -258,7 +258,7 @@ let unembed_binder (t:term) : option<binder> =
 let rec unembed_term (t:term) : option<term> =
     let t = U.unmeta_safe t in
     match t.n with
-    | Tm_meta ({n = _}, Meta_quoted (qt, qi)) -> Some qt
+    | Tm_quoted (tm, qi) -> Some tm
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term: %s" (Print.term_to_string t)));
         None
@@ -277,7 +277,7 @@ let unembed_binders t = unembed_list unembed_binder t
 
 let unembed_fv (t:term) : option<fv> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_fvar ->
+    | Tm_lazy i when i.lkind = Lazy_fvar ->
         Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
@@ -285,7 +285,7 @@ let unembed_fv (t:term) : option<fv> =
 
 let unembed_comp (t:term) : option<comp> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_comp ->
+    | Tm_lazy i when i.lkind = Lazy_comp ->
         Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
@@ -293,7 +293,7 @@ let unembed_comp (t:term) : option<comp> =
 
 let unembed_env (t:term) : option<Env.env> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_env ->
+    | Tm_lazy i when i.lkind = Lazy_env ->
         Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
@@ -354,8 +354,8 @@ let rec unembed_pattern (t : term) : option<pattern> =
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
         None
 
-let unembed_branch = unembed_pair unembed_pattern unembed_term
-let unembed_argv = unembed_pair unembed_term unembed_aqualv
+let unembed_branch = unembed_tuple2 unembed_pattern unembed_term
+let unembed_argv = unembed_tuple2 unembed_term unembed_aqualv
 
 let unembed_term_view (t:term) : option<term_view> =
     let hd, args = U.head_and_args t in
@@ -504,7 +504,7 @@ let unembed_order (t:term) : option<order> =
 
 let unembed_sigelt (t:term) : option<sigelt> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_sigelt ->
+    | Tm_lazy i when i.lkind = Lazy_sigelt ->
         Some (undyn i.blob)
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (Print.term_to_string t)));
@@ -539,8 +539,8 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
 (* ------------------------------------- UNFOLDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
-let embed_binder_view   = embed_pair embed_bv fstar_refl_bv_view embed_aqualv fstar_refl_aqualv
-let unembed_binder_view = unembed_pair unembed_bv unembed_aqualv
+let embed_binder_view   = embed_tuple2 embed_bv fstar_refl_bv_view embed_aqualv fstar_refl_aqualv
+let unembed_binder_view = unembed_tuple2 unembed_bv unembed_aqualv
 
 
 (* Note that most of these are never needed during normalization, since
