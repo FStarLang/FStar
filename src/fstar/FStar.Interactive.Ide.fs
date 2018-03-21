@@ -1379,12 +1379,15 @@ let js_repl_eval_str st query_str =
 let js_repl_init_opts () =
   let res, fnames = Options.parse_cmd_line () in
   match fnames with
-  | _ :: _ -> failwith "repl_init: Unexpected: file names in option list"
   | [] ->
-     match res with
-     | Getopt.Help -> failwith "repl_init: --help unexpected"
-     | Getopt.Error msg -> failwith ("repl_init: " ^ msg)
-     | Getopt.Success -> () (* FIXME could do more validation here *)
+    failwith "repl_init: No file name given in --ide invocation"
+  | h :: _ :: _ ->
+    failwith "repl_init: Too many file names given in --ide invocation"
+  | _ ->
+    match res with
+    | Getopt.Help -> failwith "repl_init: --help unexpected"
+    | Getopt.Error msg -> failwith ("repl_init: " ^ msg)
+    | Getopt.Success -> () (* FIXME could do more validation here *)
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
