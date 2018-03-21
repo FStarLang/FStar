@@ -74,7 +74,7 @@ let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
 
 let unembed_proofstate (t:term) : option<proofstate> =
     match (SS.compress t).n with
-    | Tm_lazy i when i.kind = Lazy_proofstate ->
+    | Tm_lazy i when i.lkind = Lazy_proofstate ->
         Some <| FStar.Dyn.undyn i.blob
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));

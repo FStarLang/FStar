@@ -589,12 +589,13 @@ let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
   let goal_pat = PApp (PQn goal_qn) (PVar varname) in
 
   let typ = type_of_binder binder in
-  admit(); // VC
   match interp_pattern hyp_pat typ with
   | Success [(_, hyp_typ)] -> ABKHyp, hyp_typ
+  | Success _ -> fail "classifiy_abspat_binder: impossible (1)"
   | Failure _ ->
     match interp_pattern goal_pat typ with
     | Success [(_, goal_typ)] -> ABKGoal, goal_typ
+    | Success _ -> fail "classifiy_abspat_binder: impossible (2)"
     | Failure _ -> ABKVar typ, typ
 
 (** Split an abstraction `tm` into a list of binders and a body. **)

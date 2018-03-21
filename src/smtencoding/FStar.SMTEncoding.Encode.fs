@@ -757,7 +757,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         then Term.mk_Term_unit, []
         else encode_term t env
 
-      | Tm_meta({n = _}, Meta_quoted (qt, _)) ->
+      | Tm_quoted (qt, _) ->
         // Inspect the term and encode its view, recursively.
         // Quoted terms are, in a way, simply an optimization.
         // They should be equivalent to a fully spelled out view.

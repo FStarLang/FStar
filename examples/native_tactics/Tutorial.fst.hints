@@ -12,31 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8c8c7a5cbcdc15902210f3f8d264feef"
-    ],
-    [
-      "Tutorial.is_conj",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "fde1e4a6d2d08d9dafd0c42819123283"
-    ],
-    [
-      "Tutorial.split_all",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "1a64090894753e7e7a1818aefa7cb7dc"
+      "983820f760ff483da1b4733ada0fed28"
     ],
     [
       "Tutorial.ex3'",
@@ -49,7 +25,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f97245a1ba079a809c5eadcb08d9cdea"
+      "67ab3f3ba1ffb9e16eddb71e206fb7eb"
     ],
     [
       "Tutorial.ex4",
@@ -62,7 +38,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2345129a494c8675d9f2f3a3ddb9dd0b"
+      "a7507098952eb32d383141d775a01c6b"
     ],
     [
       "Tutorial.ex4",
@@ -75,7 +51,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "70be7ccd849dcdc7e94b660c6eb1f14c"
+      "e2505079d1ad6a2a52b165cdbb79540e"
     ]
   ]
 ]

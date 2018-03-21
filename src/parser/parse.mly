@@ -700,9 +700,9 @@ tmEqWith(X):
   | MINUS e=tmEqWith(X)
       { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
   | QUOTE e=tmEqWith(X)
-      { mk_term (Quote (e, true)) (rhs2 parseState 1 3) Un }
+      { mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un }
   | BACKTICK e=tmEqWith(X)
-      { mk_term (Quote (e, false)) (rhs2 parseState 1 3) Un }
+      { mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un }
   | e=tmNoEqWith(X)
       { e }
 

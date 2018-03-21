@@ -1281,8 +1281,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) top.range
       end
 
-    | Quote (e, qopen) ->
-      mk <| Tm_meta (tun, Meta_quoted (desugar_term env e, { qopen = qopen }))
+    | Quote (e, qi) ->
+      let qi = match qi with
+               | Static  -> { qkind = Quote_static }
+               | Dynamic -> { qkind = Quote_dynamic }
+      in
+      mk <| Tm_quoted (desugar_term env e, qi)
 
     | _ when (top.level=Formula) -> desugar_formula env top
 

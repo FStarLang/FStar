@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "9fc0c0b66d037e0ec43ee1cbe040749d"
+      "8ea8725ceebafa05b8a1e5b040308e22"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "da21083e7ddadcf80ab50f6819aab80f"
+      "79d6af7cce9b0796e0e123a5b197c125"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___1",
@@ -36,7 +36,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "161d2699d2ed58b76342982fe1a328d1"
+      "a3949b0aa3075c001666f34c347eb46a"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___0",
@@ -50,7 +50,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "9b0083e9ce91145a50f1dabda3a199cd"
+      "982c04f108cba7d90f0351c75789c2de"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___1",
@@ -64,7 +64,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "0c9ed47673a44b6050ef1b6b91ff47d9"
+      "481d7e61893d031a4fbc796b6476cb84"
     ],
     [
       "StringPrinter.RecC.do_while_sz_inv",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "fe13d21fc6b8bd6ebb4ba15e86a4ddd5"
+      "15a936b9f58f9718210c9c7464c609f7"
     ],
     [
       "StringPrinter.RecC.do_while_sz_body",
@@ -176,7 +176,7 @@
         "unit_typing"
       ],
       0,
-      "4a5461113ca34532e1c85745362ffdbd"
+      "027ef52b227b449a4b58d7db64a8e8b9"
     ],
     [
       "StringPrinter.RecC.do_while_sz",
@@ -243,7 +243,7 @@
         "typing_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "dcf9bef057a7e6e950fd0ba0219e4471"
+      "270f97fa96fa22b76837bdae9074cf0c"
     ],
     [
       "StringPrinter.RecC.do_while_st_inv",
@@ -289,7 +289,7 @@
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_res"
       ],
       0,
-      "29f43262d77e0f812a441968632e4d89"
+      "c64e08069db8e4efa139797aae19dc2c"
     ],
     [
       "StringPrinter.RecC.do_while_st_body",
@@ -492,7 +492,7 @@
         "unit_typing"
       ],
       0,
-      "21156edc78dfd3efe70c83e09d71055b"
+      "eb582b0f9b55a16e5fde3dde70fc5f84"
     ],
     [
       "StringPrinter.RecC.do_while_st",
@@ -645,7 +645,7 @@
         "unit_typing"
       ],
       0,
-      "b335b24c55332ea43ce50ad98ef30e0e"
+      "0722d190067827eb06d0965acbcf58cc"
     ],
     [
       "StringPrinter.RecC.compile_do_while",
@@ -669,31 +669,7 @@
         "unit_typing"
       ],
       0,
-      "c6a2144d705b35a4386514fbc3b4e170"
-    ],
-    [
-      "StringPrinter.RecC.mk_sz",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "5290a7202f702e630ae479052ea0958b"
-    ],
-    [
-      "StringPrinter.RecC.mk_st",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "5965885f1ebc47208a2e2da0a72b9a4b"
+      "379e25c5e1c50c93dc50e67dcc74458f"
     ],
     [
       "StringPrinter.RecC.do_while_sz_interm",
@@ -702,7 +678,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "ccfd59996410fb370a2b0999356468a5"
+      "80b7140a4e92c7be2afd4f09a51f286a"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___0",
@@ -716,7 +692,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "64b98e8ce79ae77a2619d631730424e3"
+      "ee12e355501c7bd985857d9296d4fe86"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___1",
@@ -730,7 +706,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "eae908581e0afdc8f2b6444a25397ad4"
+      "3cb48c150f5bb88e5893ecab99b3ac21"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___0",
@@ -744,7 +720,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "8cf0693a519cacd46290441a53d42097"
+      "c694942aaa098ff600776f7fda0bd27e"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___1",
@@ -758,7 +734,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "bf2a7c74631008aadf5896a069b71654"
+      "118c82b52d850a88b62957c4540366a2"
     ],
     [
       "StringPrinter.RecC.do_while_sz_inv",
@@ -767,7 +743,7 @@
       1,
       [ "@query" ],
       0,
-      "b135333104ba368c9ef4eda28e021601"
+      "04e061fbd70549e394fae4b06d2e4338"
     ],
     [
       "StringPrinter.RecC.do_while_sz_body",
@@ -875,7 +851,7 @@
         "unit_typing"
       ],
       0,
-      "e1154a55da44e361de8235f19102330a"
+      "6c379aced59236eddc684253f469e1fa"
     ],
     [
       "StringPrinter.RecC.do_while_sz",
@@ -942,7 +918,7 @@
         "typing_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "d52cb88c3301e5275f87438a5cfb8dc3"
+      "cd448ab98a0371542c4a0e484dcea06e"
     ],
     [
       "StringPrinter.RecC.do_while_st_inv",
@@ -988,7 +964,7 @@
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_res"
       ],
       0,
-      "37b90b47b65593ced7eec6f4708e9d43"
+      "072b04d0b40e22453739cec02f6e81b2"
     ],
     [
       "StringPrinter.RecC.do_while_st",
@@ -1141,7 +1117,7 @@
         "unit_typing"
       ],
       0,
-      "b636e437577739dbc4ff7ab4f51ac80f"
+      "87293fa34dc8e704b86b77b371a68660"
     ],
     [
       "StringPrinter.RecC.compile_do_while",
@@ -1165,31 +1141,7 @@
         "unit_typing"
       ],
       0,
-      "c4dc0e6ed5820a8407bcbc8792a8aecb"
-    ],
-    [
-      "StringPrinter.RecC.mk_sz",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "ee33d792065da4f902baf0e4caadb47c"
-    ],
-    [
-      "StringPrinter.RecC.mk_st",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "602ca507c911caa8c850c65435297b1f"
+      "e7c0a17c5a606c99f28bd8dc22489fe9"
     ]
   ]
 ]

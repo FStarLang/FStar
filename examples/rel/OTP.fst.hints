@@ -96,30 +96,6 @@
       "9940f942c54aaf0b0f4fb64faa45f505"
     ],
     [
-      "OTP.otp",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Pervasives.Native.None@tok",
-        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.DM4F.OTP.Heap.elem",
-        "function_token_typing_FStar.DM4F.OTP.Heap.id",
-        "kinding_FStar.Pervasives.Native.option@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.DM4F.OTP.Heap_Tm_refine_a345258ed5886f51f9223507d868c355",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.DM4F.OTP.Heap.incr"
-      ],
-      0,
-      "fdaa61f52f3616fd9d74e184d621204b"
-    ],
-    [
       "OTP.xor_prop",
       1,
       2,
@@ -135,7 +111,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1a7332b9adba03a1784cf9a476022c5c"
+      "cc62afdab81fdca90faa37034df12c82"
     ],
     [
       "OTP.xor_prop",
@@ -144,7 +120,7 @@
       1,
       [ "@query" ],
       0,
-      "6cc4d069c3a6fe1bccc40ae0c9ef2e8d"
+      "38e3de18a4fdf3e2041a31db8340d410"
     ],
     [
       "OTP.xor_prop",
@@ -178,11 +154,26 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "6fe4175bc271b55cff9b97e3837758de"
+      "dc24f9c6975eff588b80e622280d7569"
     ],
     [
       "OTP.otp_secure",
       1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
+        "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
+        "equation_FStar.DM4F.OTP.Heap.elem",
+        "function_token_typing_Prims.bool",
+        "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
+      ],
+      0,
+      "55d875e87f5016afd369e9bf4b44851a"
+    ],
+    [
+      "OTP.otp_secure",
+      2,
       2,
       1,
       [
@@ -194,21 +185,6 @@
       ],
       0,
       "7b5118fd27a7207bc3eda8a4aff3c01d"
-    ],
-    [
-      "OTP.otp_secure",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
-        "assumption_Prims.HasEq_bool", "equation_FStar.BitVector.bv_t",
-        "equation_FStar.DM4F.OTP.Heap.elem",
-        "function_token_typing_Prims.bool",
-        "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
-      ],
-      0,
-      "4e363fef29eb254fbd40220fe6ecb1d3"
     ],
     [
       "OTP.otp_secure",
@@ -295,7 +271,7 @@
         "typing_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40", "unit_typing"
       ],
       0,
-      "9ee84c89ab554132e28c4eeb19910808"
+      "80b4e556a0048d754728ae17817e8097"
     ],
     [
       "OTP.one_time_pad",
@@ -323,7 +299,7 @@
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "f0e4b8edcad5b2cee6e26397111b8e0d"
+      "3c6e51cec6c5c9fab927c05075cdc255"
     ],
     [
       "OTP.op_Hat_Hat",
@@ -335,7 +311,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "e7b85fa4564e69178ade88c8314c16f2"
+      "30e3c7d0becaf576a0234244edf5f407"
     ],
     [
       "OTP.xor_idempotent",
@@ -353,7 +329,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "6c37edf3482a5fe00b34721a4444a0d4"
+      "63c42ecc37e3064415b34d58286a3d4c"
     ],
     [
       "OTP.bij",
@@ -384,31 +360,7 @@
         "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "6dd89fe0b642c69491381de1f4140572"
-    ],
-    [
-      "OTP.otp",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Pervasives.Native.None@tok",
-        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.DM4F.OTP.Heap.elem",
-        "function_token_typing_FStar.DM4F.OTP.Heap.id",
-        "kinding_FStar.Pervasives.Native.option@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.DM4F.OTP.Heap_Tm_refine_a345258ed5886f51f9223507d868c355",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.DM4F.OTP.Heap.incr"
-      ],
-      0,
-      "c79f25e0c0943cdf7a9d0e97e22755b7"
+      "d89a7e4f12789f34cf963baf68662197"
     ],
     [
       "OTP.xor_prop",
@@ -426,7 +378,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "effd6fb39ceb9b86a372796842ddcc5c"
+      "cbcd346a7dadf59db8b824c88b8dde1b"
     ],
     [
       "OTP.otp_secure",
@@ -445,7 +397,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8169bc563aab9c48efe8980d8804eaf5"
+      "1ce8714034ad2a7194ac5aad45ccb419"
     ],
     [
       "OTP.one_time_pad",
@@ -473,7 +425,7 @@
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "e9f17110bfff2912ec544d9c4324d8c8"
+      "d289ffce7b8d24b5f9f026d65a64b05b"
     ]
   ]
 ]
