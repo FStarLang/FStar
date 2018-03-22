@@ -58,3 +58,6 @@ let _ = assert_by_tactic True
                        let tm = `(match (`@y) with | 4 -> 1 + (`@y) | _ -> 99) in
                        print ("tm = " ^ term_to_string tm);
                        let _ = tc tm in ())
+
+// This one can extract, basically to mk_e_app (plus, [1; t])
+let f (t : term) = `(1 + (`#t))
