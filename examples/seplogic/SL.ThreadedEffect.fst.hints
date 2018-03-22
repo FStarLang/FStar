@@ -1,0 +1,143 @@
+[
+  "\u001bƒf0ð†y=¶éà\u001e\f!ã—",
+  [
+    [
+      "SL.ThreadedEffect.frame_post",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_SL.ThreadedHeap.lemma_sep_defined_disjoint_heaps" ],
+      0,
+      "b5e854557c7d7da19792b56da43e885a"
+    ],
+    [
+      "SL.ThreadedEffect.write_wp",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_SL.ThreadedHeap.lemma_hcontains_mcontains",
+        "lemma_SL.ThreadedHeap.lemma_points_to_mcontains"
+      ],
+      0,
+      "a36ef9acf7e616fb71892484d3e9cfda"
+    ],
+    [
+      "SL.ThreadedEffect.dealloc_wp",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_SL.ThreadedHeap.lemma_hcontains_mcontains",
+        "lemma_SL.ThreadedHeap.lemma_points_to_mcontains"
+      ],
+      0,
+      "02047115613d3115d92ba023da1ea9d8"
+    ],
+    [
+      "SL.ThreadedEffect.fork_wp",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_SL.ThreadedHeap.lemma_free_points_to" ],
+      0,
+      "f52e38b4aa4b6ef33b522a1c05b43ace"
+    ],
+    [
+      "SL.ThreadedEffect.frame_fork_wp",
+      1,
+      2,
+      1,
+      [ "@query", "equation_SL.ThreadedEffect.st_stronger" ],
+      0,
+      "9abef502f89d12a6080bebbf672a83d0"
+    ],
+    [
+      "SL.ThreadedEffect.fork",
+      1,
+      2,
+      1,
+      [ "@query", "equation_SL.ThreadedEffect.st_stronger" ],
+      0,
+      "aa1c4f50b573b9acfb670f2f70f0b9b4"
+    ],
+    [
+      "SL.ThreadedEffect.join_wp",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_SL.ThreadedHeap.lemma_points_to_locked_by" ],
+      0,
+      "e715f2a95a8f54b6b0472d00903279c5"
+    ],
+    [
+      "SL.ThreadedEffect.frame_post",
+      2,
+      2,
+      1,
+      [ "@query", "lemma_SL.ThreadedHeap.lemma_sep_defined_disjoint_heaps" ],
+      0,
+      "531547f9104a0f2f20416cd95ad558c7"
+    ],
+    [
+      "SL.ThreadedEffect.write_wp",
+      2,
+      2,
+      1,
+      [
+        "@query", "lemma_SL.ThreadedHeap.lemma_hcontains_mcontains",
+        "lemma_SL.ThreadedHeap.lemma_points_to_mcontains"
+      ],
+      0,
+      "de66d8223f3a8e11cde188ec21870502"
+    ],
+    [
+      "SL.ThreadedEffect.dealloc_wp",
+      2,
+      2,
+      1,
+      [
+        "@query", "lemma_SL.ThreadedHeap.lemma_hcontains_mcontains",
+        "lemma_SL.ThreadedHeap.lemma_points_to_mcontains"
+      ],
+      0,
+      "5ee94c80257bff44d95535f8d2e5bf6f"
+    ],
+    [
+      "SL.ThreadedEffect.fork_wp",
+      2,
+      2,
+      1,
+      [ "@query", "lemma_SL.ThreadedHeap.lemma_free_points_to" ],
+      0,
+      "d1738f0cdf2c6ef11fac21273c6e9f23"
+    ],
+    [
+      "SL.ThreadedEffect.frame_fork_wp",
+      2,
+      2,
+      1,
+      [ "@query", "equation_SL.ThreadedEffect.st_stronger" ],
+      0,
+      "84687c65da895c0245303503ec02c8f9"
+    ],
+    [
+      "SL.ThreadedEffect.fork",
+      2,
+      2,
+      1,
+      [ "@query", "equation_SL.ThreadedEffect.st_stronger" ],
+      0,
+      "dcd46b6ad3bb72ff05c27bcbf03572ab"
+    ],
+    [
+      "SL.ThreadedEffect.join_wp",
+      2,
+      2,
+      1,
+      [ "@query", "lemma_SL.ThreadedHeap.lemma_points_to_locked_by" ],
+      0,
+      "2c602aea7152e88642302fa71a7be89a"
+    ]
+  ]
+]
