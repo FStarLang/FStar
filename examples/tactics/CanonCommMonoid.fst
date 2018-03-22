@@ -221,21 +221,21 @@ let rec where_aux (n:nat) (x:term) (xs:list term) :
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
-let rec reification_aux (#a #b:Type) (funquote:term->Tac a) (ts:list term)
+let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
     (vm:vmap a b) (f:term->Tac b)
     (mult unit t : term) : Tac (exp * list term * vmap a b) =
   let hd, tl = collect_app_ref t in
   let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp * list term * vmap a b) =
     match where t ts with
     | Some v -> (Var v, ts, vm)
-    | None -> let vfresh = length ts in let z = funquote t in
+    | None -> let vfresh = length ts in let z = unquotea t in
               (Var vfresh, ts @ [t], update vfresh z (f t) vm)
   in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
-    then (let (e1,ts,vm) = reification_aux funquote ts vm f mult unit t1 in
-          let (e2,ts,vm) = reification_aux funquote ts vm f mult unit t2 in
+    then (let (e1,ts,vm) = reification_aux unquotea ts vm f mult unit t1 in
+          let (e2,ts,vm) = reification_aux unquotea ts vm f mult unit t2 in
           (Mult e1 e2, ts, vm))
     else fvar t ts vm
   | _, _ ->
@@ -245,18 +245,18 @@ let rec reification_aux (#a #b:Type) (funquote:term->Tac a) (ts:list term)
 
 // TODO: could guarantee same-length lists
 let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
-    (funquote:term->Tac a) (fquote:a -> Tac term) (m:cm a) (tmult:term)
+    (unquotea:term->Tac a) (quotea:a -> Tac term) (m:cm a) (tmult:term)
     (ts:list term) :
     Tac (list exp * vmap a b) =
   let tmult:term = norm_term [delta] tmult in
   // let x = fresh_binder ta in
   // let y = fresh_binder ta in
   // let mult:term = pack (Tv_Abs (x, pack (Tv_Abs (y,
-  //   (fquote (CM?.mult m (unquote (pack (Tv_Var (bv_of_binder x))))
+  //   (quotea (CM?.mult m (unquote (pack (Tv_Var (bv_of_binder x))))
   //                       (unquote (pack (Tv_Var (bv_of_binder y)))))))))) in
     // (quote (CM?.mult m))
-    // (``(fun (x y:a) -> (`@(fquote (CM?.mult m x y)))))
-  let tunit:term = norm_term [delta] (fquote (CM?.unit m)) in
+    // (``(fun (x y:a) -> (`@(quotea (CM?.mult m x y)))))
+  let tunit:term = norm_term [delta] (quotea (CM?.unit m)) in
   let ts   = Tactics.Util.map (norm_term [delta]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
@@ -264,7 +264,7 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
   let (es,_, vm) =
     Tactics.Util.fold_left
       (fun (es,vs,vm) t ->
-        let (e,vs,vm) = reification_aux funquote vs vm f tmult tunit t
+        let (e,vs,vm) = reification_aux unquotea vs vm f tmult tunit t
         in (e::es,vs,vm))
       ([],[], const (CM?.unit m) def) ts
   in (List.rev es,vm)
@@ -279,10 +279,46 @@ let unfold_topdown (t:term) =
   in
   topdown_rewrite should_rewrite rewrite
 
+let rec quote_list (#a:Type) (ta:term) (quotea:a->Tac term) (xs:list a) : 
+    Tac term =
+  match xs with
+  | [] -> mk_app (`Nil) [(ta, Q_Implicit)]
+  | x::xs' -> mk_app (`Cons) [(ta, Q_Implicit);
+                              (quotea x, Q_Explicit);
+                              (quote_list ta quotea xs', Q_Explicit)]
+
+let quote_vm (#a #b:Type) (ta tb: term)
+    (quotea:a->Tac term) (quoteb:b->Tac term) (vm:vmap a b) : Tac term =
+  let quote_pair (p:a*b) : Tac term =
+    mk_app (`Mktuple2) [(ta, Q_Implicit); (tb, Q_Implicit);
+           (quotea (fst p), Q_Explicit); (quoteb (snd p), Q_Explicit)] in
+  let t_a_star_b = mk_e_app (`tuple2) [ta;tb] in
+  let quote_map_entry (p:(nat*(a*b))) : Tac term =
+    mk_app (`Mktuple2) [(`nat, Q_Implicit); (t_a_star_b, Q_Implicit);
+      (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
+      (quote_pair (snd p), Q_Explicit)] in
+  let tyentry = mk_e_app (`tuple2) [(`nat); t_a_star_b] in
+  let tlist = quote_list tyentry quote_map_entry (fst vm) in
+  dump (term_to_string (tc tlist));
+  let tpair = quote_pair (snd vm) in
+               // list (var * (a*b)) * (a * b)
+  dump (term_to_string (tc tpair));
+  let tylist = mk_e_app (`list) [tyentry] in
+  dump (term_to_string (tc tylist));
+  mk_app (`Mktuple2) [(tylist, Q_Implicit); (t_a_star_b, Q_Implicit);
+                      (tlist, Q_Explicit); (tpair, Q_Explicit)]
+
+let rec quote_exp (e:exp) : Tac term =
+  match e with
+  | Unit -> `Unit
+  | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x))]
+  | Mult e1 e2 -> mk_e_app (`Mult) [quote_exp e1; quote_exp e2]
+
 let canon_monoid_aux
-    (b:Type) (tb:term) (f:term->Tac b) (def:b) (p:permute b) (tp:term)
+    (b:Type) (tb:term) (quoteb:b->Tac term)
+    (f:term->Tac b) (def:b) (p:permute b) (tp:term)
     (pc:permute_correct p) (tpc:term) (#a:Type) (ta:term)
-    (funquote:term->Tac a) (fquote:a->Tac term) (m:cm a) (tm:term) (tmult:term) :
+    (unquotea:term->Tac a) (quotea:a->Tac term) (m:cm a) (tm:term) (tmult:term) :
     Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
@@ -290,22 +326,23 @@ let canon_monoid_aux
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
       if term_eq t ta then
-        match reification b f def funquote fquote m tmult [t1;t2] with
+        match reification b f def unquotea quotea m tmult [t1;t2] with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
           // dump ("vm =" ^ term_to_string (quote vm));
           // change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           // TODO: quasi-quotes would help at least for splicing in the vm r1 r2
-          let tvm = quote vm in
-          let tr1 = quote r1 in
-          let tr2 = quote r2 in
-          let tp:term = mk_app (`eq2)
-            [(ta,                                                    Q_Implicit);
+          let tvm = quote_vm ta tb quotea quoteb vm in
+          let tr1 = quote_exp r1 in
+          let tr2 = quote_exp r2 in
+          let teq:term = mk_app (`eq2)
+            [(ta,                                                      Q_Implicit);
              (mk_app (`mdenote) [(ta,Q_Implicit); (tb,Q_Implicit);
-                 (tm,Q_Explicit);(tvm,Q_Explicit);(tr1,Q_Explicit)], Q_Explicit);
+                 (tm,Q_Explicit); (tvm,Q_Explicit); (tr1,Q_Explicit)], Q_Explicit);
              (mk_app (`mdenote) [(ta,Q_Implicit); (tb,Q_Implicit);
-                 (tm,Q_Explicit);(tvm,Q_Explicit);(tr2,Q_Explicit)], Q_Explicit)] in
+                 (tm,Q_Explicit); (tvm,Q_Explicit); (tr2,Q_Explicit)], Q_Explicit)] in
+          change_sq teq;
           // dump ("before =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (mdenote m vm r1 == mdenote m vm r2))));
           // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
@@ -347,7 +384,8 @@ let canon_monoid_aux
 let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
-  canon_monoid_aux b (quote b) f def p (quote p) pc (quote pc) #a
+  canon_monoid_aux b (quote b) (fun (x:b) -> quote x)
+    f def p (quote p) pc (quote pc) #a
     (quote a) (unquote #a) (fun (x:a) -> quote x) m (quote m) (quote (CM?.mult m))
 
 let canon_monoid (#a:Type) (cm:cm a) =
