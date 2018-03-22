@@ -279,7 +279,7 @@ let unfold_topdown (t:term) =
   in
   topdown_rewrite should_rewrite rewrite
 
-let rec quote_list (#a:Type) (ta:term) (quotea:a->Tac term) (xs:list a) : 
+let rec quote_list (#a:Type) (ta:term) (quotea:a->Tac term) (xs:list a) :
     Tac term =
   match xs with
   | [] -> mk_app (`Nil) [(ta, Q_Implicit)]
@@ -319,11 +319,9 @@ CanonCommMonoid.fst(323,8-323,12): (Warning 238) Plugin CanonCommMonoid.canon_mo
 
 [@plugin]
 let canon_monoid_aux
-    (b:Type) (tb:term) (quoteb:b->Tac term)
-    (f:term->Tac b) (def:b) (p:permute b) (tp:term)
-    (pc:permute_correct p) (tpc:term) (a:Type) (ta:term)
-    (unquotea:term->Tac a) (quotea:a->Tac term)
-    (tm:term) (tmult tunit:term) (munit:a) :
+    (a b:Type) (ta:term) (unquotea:term->Tac a) (quotea:a->Tac term)
+    (tm:term) (tmult tunit:term) (munit:a)
+    (tb:term) (quoteb:b->Tac term) (f:term->Tac b) (def:b) (tp:term) (tpc:term) :
     Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
@@ -362,7 +360,6 @@ let canon_monoid_aux
           unfold_topdown tp;
           // dump ("after unfold");
           norm [delta_only [// term_to_string tp;
-                            "CanonCommMonoid.sort"; // needed after eta expansion
                             "CanonCommMonoid.canon";
                             "CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
@@ -395,10 +392,10 @@ let canon_monoid_aux
 let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
-  canon_monoid_aux b (quote b) (fun (x:b) -> quote x)
-    f def p (quote p) pc (quote pc) a
+  canon_monoid_aux a b
     (quote a) (unquote #a) (fun (x:a) -> quote x)
     (quote m) (quote (CM?.mult m)) (quote (CM?.unit m)) (CM?.unit m)
+    (quote b) (fun (x:b) -> quote x) f def (quote p) (quote pc)
 
 let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
   canon_monoid_with unit (fun _ -> ()) ()
@@ -419,18 +416,18 @@ let unquote_int (t:term) : Tac int =
 
 // this doesn't really work
 let canon_monoid_int_native_broken () : Tac unit =
-  canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
-    (fun a -> sort a) (`(fun a -> sort a))
-    (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
-    int (`int) unquote_int quote_int
+  canon_monoid_aux int unit
+    (`int) unquote_int quote_int
     (`int_plus_cm) (`(+)) (`0) 0
+    (`unit) (fun () -> (`())) (fun _ -> ()) ()
+    (`sort) (`(fun #int -> sort_correct #int))
 
 let canon_monoid_int_native () : Tac unit =
-  canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
-    (fun a -> sort a) (`(fun a -> sort a))
-    (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
-    int (`int) (unquote #int)  (fun (x:int) -> quote x)
+  canon_monoid_aux int unit
+    (`int) (unquote #int)  (fun (x:int) -> quote x)
     (`int_plus_cm) (`(+)) (`0) 0
+    (`unit) (fun () -> (`())) (fun _ -> ()) ()
+    (`sort) (`(fun #int -> sort_correct #int))
 
 let lem0_native (a b c d : int) : unit =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
