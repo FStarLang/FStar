@@ -30,6 +30,8 @@ let pointsto_qn = ["SL"; "Heap"; "op_Bar_Greater"]
 let ref_qn = ["SL"; "Heap"; "ref"]
 let ite_wp_qn = ["SL"; "Effect"; "st_ite_wp"]
 let if_then_else_wp_qn = ["SL"; "Effect"; "st_if_then_else"]
+let close_wp_qn = ["SL"; "Effect"; "st_close_wp"]
+let assume_p_qn = ["SL"; "Effect"; "st_assume_p"]
 
 let footprint_of (t:term) : Tac (list term) =
   let hd, tl = collect_app t in
@@ -70,6 +72,16 @@ let if_then_else_wp_lemma (#a:Type) (#b:Type) (#then_wp:st_wp a) (#else_wp:st_wp
   :Lemma (st_if_then_else a b then_wp else_wp post m)
   = ()
 
+let close_wp_lemma (#a:Type) (#b:Type) (#wp:(b -> GTot (st_wp a))) (#post:post a) (#m:memory)
+  (_:squash (forall b. wp b post m))
+  :Lemma (st_close_wp a b wp post m)
+  = ()
+
+let assume_p_lemma (#a:Type) (#p:Type) (#wp:st_wp a) (#post:post a) (#m:memory)
+  (_:squash (p ==> wp post m))
+  :Lemma (st_assume_p a p wp post m)
+  = ()
+
 let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   let hd, tl = collect_app t in
   // dump (term_to_string hd);
@@ -100,6 +112,8 @@ type cmd =
   | Bind      : cmd
   | Ite       : cmd
   | IfThenElse: cmd
+  | Close     : cmd
+  | Assume    : cmd
   | FramePost : cmd
   | Unknown   : option fv ->cmd
 
@@ -130,9 +144,15 @@ let peek_cmd () : Tac cmd =
        then Ite
        else if inspect_fv fv = if_then_else_wp_qn
        then IfThenElse
+       else if inspect_fv fv = close_wp_qn
+       then Close
+       else if inspect_fv fv = assume_p_qn
+       then Assume
        else if inspect_fv fv = framepost_qn
        then FramePost
        else if inspect_fv fv = exists_qn  //if it is exists x. then we can't unfold, so return None
+       then Unknown None
+       else if inspect_fv fv = false_qn  //AR: TODO: this is quite hacky, we need a better way
        then Unknown None
        else Unknown (Some fv)
       | _ -> Unknown None)
@@ -184,7 +204,7 @@ let rec sl (i:int) : Tac unit =
     //or we are stuck at some existential in procedure calls
     let cont = solve_procedure_ref_value_existentials false in
     if cont then sl (i + 1)
-    else begin dump "Tactic finished"; smt () end
+    else begin dump "SLAuto tactic finished"; smt () end
   | Unknown (Some fv) ->
     //so here we are unfolding something like swap_wp below
 
@@ -207,7 +227,23 @@ let rec sl (i:int) : Tac unit =
   | IfThenElse ->
     apply_lemma (`if_then_else_wp_lemma);
     //we now have 2 goals
-    fail "IFTHENELSE"
+
+    let f () :Tac unit =
+      ignore (implies_intro ());
+      sl (i + 1)
+    in
+
+    ignore (divide 1 f f)
+
+  | Close ->
+    apply_lemma (`close_wp_lemma);
+    ignore (forall_intros ());
+    sl (i + 1)
+
+  | Assume ->
+    apply_lemma (`assume_p_lemma);
+    ignore (implies_intro ());
+    sl (i + 1)
 
   | Read ->
     unfold_first_occurrence (%`read_wp);
@@ -391,10 +427,18 @@ let read_write (r1 r2:ref int) :ST unit (fun p m -> exists x y. m == (r1 |> x <*
   = let x = !r1 in
     r2 := x
 
+
 let cond_test (r:ref int) (b:bool) :ST unit (fun p m -> exists x. m == r |> x /\ ((b   ==> p () (r |> 1)) /\
                                                                       (~ b ==> p () (r |> 2))))
   by (fun () -> prelude' ();
-             sl 0;
-             dump "A"; admit_all ())
+             sl 0)
 
   = if b then r := 1 else r := 2
+
+let rotate_left_or_right (r1 r2 r3:ref int) (b:bool)
+  :ST unit (fun p m -> exists x y z. m == (r1 |> x <*> r2 |> y <*> r3 |> z) /\
+                             ((b   ==> p () (r1 |> z <*> r2 |> x <*> r3 |> y)) /\
+			      (~ b ==> p () (r1 |> y <*> r2 |> z <*> r3 |> x))))
+  by sl_auto
+
+  = if b then rotate r1 r2 r3 else rotate r3 r2 r1
