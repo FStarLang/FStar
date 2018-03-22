@@ -78,10 +78,6 @@ type quote_kind =
   | Quote_static
   | Quote_dynamic
 
-type quoteinfo = {
-    qkind : quote_kind;
-}
-
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
@@ -140,6 +136,11 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbdef  :term;            //e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list <(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -247,6 +248,10 @@ and lazyinfo = {
     typ   : typ;
     rng   : Range.range;
  }
+
+
+val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
+val lookup_aq : bv -> antiquotations -> option<(bool * term)>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>

@@ -304,12 +304,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  // static quoted terms are of type `term` ...
-  | Tm_quoted (_, { qkind = Quote_static }) ->
+  // completely staticly quoted terms are of type `term` ...
+  | Tm_quoted (_, { qkind = Quote_static; antiquotes = aqs })
+              when List.for_all (fun (_, b, _) -> not b) aqs ->
     value_check_expected_typ env top (Inl S.t_term) Rel.trivial_guard
 
-  // ... but dynamic ones are in the TAC effect
-  | Tm_quoted (_, { qkind = Quote_dynamic }) ->
+  // ... but other ones are in the TAC effect
+  | Tm_quoted _ ->
     let c = mk_Comp ({ comp_univs = [U_zero];
                        effect_name = Const.effect_Tac_lid;
                        result_typ = S.t_term;
