@@ -251,6 +251,7 @@ and lazyinfo = {
 
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
+val lookup_aq : bv -> antiquotations -> option<(bool * term)>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>

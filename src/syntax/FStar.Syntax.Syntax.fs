@@ -267,10 +267,6 @@ and lazyinfo = {
 
 and attribute = term
 
-let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
-    { qi with antiquotes = aq }
-
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
 
@@ -458,6 +454,17 @@ let range_of_lbname (l:lbname) = match l with
     | Inr fv -> range_of_lid fv.fv_name.v
 let range_of_bv x = x.ppname.idRange
 let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
+
+
+(* Helpers *)
+let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
+    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    { qi with antiquotes = aq }
+
+let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
+    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
+    | Some (_, b, e) -> Some (b, e)
+    | None -> None
 
 (*********************************************************************************)
 (* Syntax builders *)
