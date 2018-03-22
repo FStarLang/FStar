@@ -497,7 +497,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
       ( noshort,
         "cache_checked_modules",
         Const (mk_bool true),
-        "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
+        "Write a '.checked' file for each module after verification");
 
       ( noshort,
         "cache_dir",

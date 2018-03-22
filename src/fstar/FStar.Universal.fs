@@ -235,7 +235,7 @@ let load_module_from_cache
             | Inr res -> Some res
           else
             match FStar.Options.find_file (FStar.Util.basename cache_file) with
-            | None -> fail "Absent"
+            | None -> invalidate_cache (); None
             | Some alt_cache_file ->
               match load env fn alt_cache_file with
               | Inl msg -> fail msg
@@ -245,7 +245,6 @@ let load_module_from_cache
                 if Options.should_verify_file fn
                 then FStar.Util.copy_file alt_cache_file cache_file;
                 Some res
-
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
@@ -295,11 +294,11 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, tcmod_iface_opt, mii, env
   in
-  if Options.cache_checked_modules ()
-  then match load_module_from_cache env fn with
+  match load_module_from_cache env fn with
        | None ->
          let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
          if FStar.Errors.get_err_count() = 0
+         && Options.cache_checked_modules ()
          && (Options.lax()  //we'll write out a .checked.lax file
              || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
          //but we will not write out a .checked file for an unverified dependence
@@ -327,10 +326,6 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
              FStar.TypeChecker.Tc.load_checked_module env tcmod
          in
          (tcmod,0), env, extend_delta_env delta delta_env
-  else let env = apply_delta_env env delta in
-       let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
-       let tcmod = if is_some tcmod_iface_opt then (tcmod_iface_opt |> must, snd tcmod) else tcmod in  //AR: TODO: does it matter what we return here?
-       tcmod, env, None
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
