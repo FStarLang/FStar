@@ -1005,6 +1005,10 @@ and p_noSeqTerm' ps pb e = match e.tm with
     group (str "`" ^^ p_noSeqTerm ps pb e)
   | VQuote e ->
     group (str "%`" ^^ p_noSeqTerm ps pb e)
+  | Antiquote (false, e) ->
+    group (str "`#" ^^ p_noSeqTerm ps pb e)
+  | Antiquote (true, e) ->
+    group (str "`@" ^^ p_noSeqTerm ps pb e)
   | _ -> p_typ ps pb e
 
 and p_attrs_opt = function
@@ -1327,7 +1331,8 @@ and p_projectionLHS e = match e.tm with
   | Ensures _   (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
   | Quote _     (* p_noSeqTerm *)
-  | VQuote _     (* p_noSeqTerm *)
+  | VQuote _    (* p_noSeqTerm *)
+  | Antiquote _ (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
 
 and p_constant = function

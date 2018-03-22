@@ -32,6 +32,8 @@ open FStar.String
 %token ASSUME
 %token ATTRIBUTES
 %token BACKTICK
+%token BACKTICK_AT
+%token BACKTICK_HASH
 %token BANG_LBRACE
 %token BAR
 %token BAR_RBRACK
@@ -183,7 +185,7 @@ open FStar.String
 %right OPINFIX1
 %left MINUS OPINFIX2 QUOTE
 %left OPINFIX3
-%left BACKTICK
+%left BACKTICK BACKTICK_AT BACKTICK_HASH
 %right OPINFIX4
 %type <inputFragment> inputFragment
 %type <ident> lident
@@ -2048,6 +2050,12 @@ in
 | BACKTICK tmEqWith_appTerm_
     {let (_1, e) = ((), $2) in
       ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
+| BACKTICK_AT atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un )}
+| BACKTICK_HASH atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_appTerm_
     {let e = $1 in
       ( e )}
@@ -2116,6 +2124,12 @@ in
 | BACKTICK tmEqWith_tmRefinement_
     {let (_1, e) = ((), $2) in
       ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
+| BACKTICK_AT atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un )}
+| BACKTICK_HASH atomicTerm
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_tmRefinement_
     {let e = $1 in
       ( e )}

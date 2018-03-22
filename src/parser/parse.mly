@@ -68,7 +68,7 @@ open FStar_String
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
-%token MINUS COLON_EQUALS QUOTE
+%token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
 %token PERC_BACKTICK
 
@@ -94,7 +94,7 @@ open FStar_String
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
-%left     BACKTICK
+%left     BACKTICK BACKTICK_AT BACKTICK_HASH
 %right    OPINFIX4
 
 %start inputFragment
@@ -703,6 +703,10 @@ tmEqWith(X):
       { mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un }
   | BACKTICK e=tmEqWith(X)
       { mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un }
+  | BACKTICK_AT e=atomicTerm
+      { mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un }
+  | BACKTICK_HASH e=atomicTerm
+      { mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un }
   | e=tmNoEqWith(X)
       { e }
 
