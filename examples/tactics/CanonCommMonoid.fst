@@ -301,7 +301,6 @@ let quote_vm (#a #b:Type) (ta tb: term)
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
   dump (term_to_string (tc tlist));
   let tpair = quote_pair (snd vm) in
-               // list (var * (a*b)) * (a * b)
   dump (term_to_string (tc tpair));
   let tylist = mk_e_app (`list) [tyentry] in
   dump (term_to_string (tc tylist));
@@ -395,13 +394,23 @@ let canon_monoid_with
 
 let canon_monoid (#a:Type) (cm:cm a) =
   canon_monoid_with unit (fun _ -> ()) ()
-    (fun a -> sort a) (fun #a -> sort_correct #a) #a cm
+    sort (fun #a -> sort_correct #a) #a cm
 
 (***** Examples *)
 
 let lem0 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid int_plus_cm; trefl())
+
+let canon_monoid_int_native () : Tac unit =
+  canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
+    sort (`sort) (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
+    #int (`int) (unquote #int) (fun (x:int) -> quote x) int_plus_cm (`int_plus_cm)
+    (`(+))
+
+let lem0_native (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> canon_monoid_int_native(); trefl())
 
 (* Trying to enable computation with constants beyond unit.
    It might be enough to move all them to the end of the list by
