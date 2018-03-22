@@ -37,9 +37,11 @@ let embed_bv (rng:Range.range) (bv:bv) : term =
 let embed_binder (rng:Range.range) (b:binder) : term =
     U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
 
-let embed_term (rng:Range.range) (t:term) : term =
-    let qi = { qkind = Quote_static; antiquotes = [] } in
+let embed_term_aq (aq:antiquotations) (rng:Range.range) (t:term) : term =
+    let qi = { qkind = Quote_static; antiquotes = aq } in
     S.mk (Tm_quoted (t, qi)) None rng
+
+let embed_term rng t = embed_term_aq [] rng t
 
 let embed_aqualv (rng:Range.range) (q : aqualv) : term =
     let r =
@@ -90,10 +92,13 @@ let rec embed_pattern (rng:Range.range) (p : pattern) : term =
                     None rng
 
 
-let embed_branch rng br = embed_tuple2 embed_pattern fstar_refl_pattern embed_term S.t_term rng br
-let embed_argv   rng aq = embed_tuple2 embed_term S.t_term embed_aqualv fstar_refl_aqualv rng aq
+let embed_branch_aq aqs rng br = embed_tuple2 embed_pattern fstar_refl_pattern (embed_term_aq aqs) S.t_term rng br
+let embed_argv_aq   aqs rng aq = embed_tuple2 (embed_term_aq aqs) S.t_term embed_aqualv fstar_refl_aqualv rng aq
 
-let embed_term_view (rng:Range.range) (t:term_view) : term =
+let embed_branch rng br = embed_branch_aq [] rng br
+let embed_argv   rng aq = embed_argv_aq [] rng aq
+
+let embed_term_view_aq (aq:antiquotations) (rng:Range.range) (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
         S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed_fv rng fv)]
@@ -108,11 +113,11 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
                     None rng
 
     | Tv_App (hd, a) ->
-        S.mk_Tm_app ref_Tv_App.t [S.as_arg (embed_term rng hd); S.as_arg (embed_argv rng a)]
+        S.mk_Tm_app ref_Tv_App.t [S.as_arg (embed_term_aq aq rng hd); S.as_arg (embed_argv_aq aq rng a)]
                     None rng
 
     | Tv_Abs (b, t) ->
-        S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed_binder rng b); S.as_arg (embed_term_aq aq rng t)]
                     None rng
 
     | Tv_Arrow (b, c) ->
@@ -124,7 +129,7 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
                     None rng
 
     | Tv_Refine (bv, t) ->
-        S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed_bv rng bv); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed_bv rng bv); S.as_arg (embed_term_aq aq rng t)]
                     None rng
 
     | Tv_Const c ->
@@ -132,36 +137,39 @@ let embed_term_view (rng:Range.range) (t:term_view) : term =
                     None rng
 
     | Tv_Uvar (u, t) ->
-        S.mk_Tm_app ref_Tv_Uvar.t [S.as_arg (embed_int rng u); S.as_arg (embed_term rng t)]
+        S.mk_Tm_app ref_Tv_Uvar.t [S.as_arg (embed_int rng u); S.as_arg (embed_term_aq aq rng t)]
                     None rng
 
     | Tv_Let (r, b, t1, t2) ->
         S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed_bool rng r);
                                   S.as_arg (embed_bv rng b);
-                                  S.as_arg (embed_term rng t1);
-                                  S.as_arg (embed_term rng t2)]
+                                  S.as_arg (embed_term_aq aq rng t1);
+                                  S.as_arg (embed_term_aq aq rng t2)]
                     None rng
 
     | Tv_Match (t, brs) ->
-        S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed_term rng t); S.as_arg (embed_list embed_branch fstar_refl_branch rng brs)]
+        S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed_term_aq aq rng t);
+                                    S.as_arg (embed_list (embed_branch_aq aq) fstar_refl_branch rng brs)]
                     None rng
 
     | Tv_AscribedT (e, t, tacopt) ->
         S.mk_Tm_app ref_Tv_AscT.t
-                    [S.as_arg (embed_term rng e);
-                     S.as_arg (embed_term rng t);
-                     S.as_arg (embed_option embed_term fstar_refl_term rng tacopt)]
+                    [S.as_arg (embed_term_aq aq rng e);
+                     S.as_arg (embed_term_aq aq rng t);
+                     S.as_arg (embed_option (embed_term_aq aq) fstar_refl_term rng tacopt)]
                     None rng
 
     | Tv_AscribedC (e, c, tacopt) ->
         S.mk_Tm_app ref_Tv_AscC.t
-                    [S.as_arg (embed_term rng e);
+                    [S.as_arg (embed_term_aq aq rng e);
                      S.as_arg (embed_comp rng c);
-                     S.as_arg (embed_option embed_term fstar_refl_term rng tacopt)]
+                     S.as_arg (embed_option (embed_term_aq aq) fstar_refl_term rng tacopt)]
                     None rng
 
     | Tv_Unknown ->
         { ref_Tv_Unknown.t with pos = rng }
+
+let embed_term_view rng t = embed_term_view_aq [] rng t
 
 let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
     S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed_string rng bvv.bv_ppname);
