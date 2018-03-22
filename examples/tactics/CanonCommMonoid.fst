@@ -313,11 +313,17 @@ let rec quote_exp (e:exp) : Tac term =
   | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x))]
   | Mult e1 e2 -> mk_e_app (`Mult) [quote_exp e1; quote_exp e2]
 
+(*
+CanonCommMonoid.fst(323,8-323,12): (Warning 238) Plugin CanonCommMonoid.canon_monoid_aux will not run natively because Embedding not defined for type uu___11395:b -> FStar.Tactics.Effect.Tac FStar.Reflection.Types.term.
+*)
+
+[@plugin]
 let canon_monoid_aux
     (b:Type) (tb:term) (quoteb:b->Tac term)
     (f:term->Tac b) (def:b) (p:permute b) (tp:term)
     (pc:permute_correct p) (tpc:term) (a:Type) (ta:term)
-    (unquotea:term->Tac a) (quotea:a->Tac term) (tm:term) (tmult tunit:term) (munit:a) :
+    (unquotea:term->Tac a) (quotea:a->Tac term)
+    (tm:term) (tmult tunit:term) (munit:a) :
     Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
