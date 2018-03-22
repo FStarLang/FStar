@@ -481,14 +481,17 @@ let separate_map_with_comments prefix sep f xs extract_range =
 (* ****************************************************************************)
 
 let rec p_decl d =
-    group(
-        optional p_fsdoc d.doc ^^ p_attributes d.attrs ^^ p_qualifiers d.quals ^^
-        (if d.quals = [] then empty else break1) ^^ p_rawDecl d)
+    optional p_fsdoc d.doc ^^
+    p_attributes d.attrs ^^
+    p_qualifiers d.quals ^^
+    p_rawDecl d
 
 and p_attributes attrs =
-  soft_surround_map_or_flow 0 2 empty
-                        (lbracket ^^ str "@") space (rbracket ^^ hardline)
-                        p_atomicTerm attrs
+    match attrs with
+    | [] -> empty
+    | _ -> flow empty [(lbracket ^^ str "@ ");
+                       (align (flow break1 (List.map p_atomicTerm attrs)));
+                       rbracket] ^^ hardline
 
 and p_fsdoc (doc, kwd_args) =
   let kwd_args_doc =
@@ -600,7 +603,7 @@ and p_typeDecl = function
     in
     (* Beware of side effects with comments printing *)
     let datacon_doc () =
-      group (separate_map break1 p_constructorBranchAndComments ct_decls)
+        separate_map hardline p_constructorBranchAndComments ct_decls
     in
     p_typeDeclPrefix lid bs typ_opt (fun () -> prefix2 equals (datacon_doc ()))
 
@@ -711,7 +714,9 @@ and p_qualifier = function
   | Logic -> str "logic"
 
 and p_qualifiers qs =
-  group (separate_map break1 p_qualifier qs)
+  match qs with
+  | [] -> empty
+  | _ -> flow break1 (List.map p_qualifier qs) ^/^ hardline
 
 (* Skipping focus since it cannot be recoverred at printing *)
 
