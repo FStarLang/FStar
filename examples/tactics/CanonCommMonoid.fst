@@ -244,18 +244,11 @@ let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
     else fvar t ts vm
 
 // TODO: could guarantee same-length lists
-let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
+let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
     Tac (list exp * vmap a b) =
   let tmult:term = norm_term [delta] tmult in
-  // let x = fresh_binder ta in
-  // let y = fresh_binder ta in
-  // let mult:term = pack (Tv_Abs (x, pack (Tv_Abs (y,
-  //   (quotea (CM?.mult m (unquote (pack (Tv_Var (bv_of_binder x))))
-  //                       (unquote (pack (Tv_Var (bv_of_binder y)))))))))) in
-    // (quote (CM?.mult m))
-    // (``(fun (x y:a) -> (`@(quotea (CM?.mult m x y)))))
   let tunit:term = norm_term [delta] tunit in
   let ts   = Tactics.Util.map (norm_term [delta]) ts in
   // dump ("mult = " ^ term_to_string mult ^
@@ -269,12 +262,20 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
       ([],[], const munit def) ts
   in (List.rev es,vm)
 
-let unfold_topdown (t:term) =
+val term_mem: term -> list term -> Tot bool
+let rec term_mem x = function
+  | [] -> false
+  | hd::tl -> if term_eq hd x then true else term_mem x tl
+
+let unfold_topdown (ts:list term) =
   let should_rewrite (s:term) : Tac (bool * int) =
-      (term_eq t s, 0)
+      (term_mem s ts, 0)
   in
   let rewrite () : Tac unit =
-    norm [delta];
+    dump "before delta";
+    compute();
+    // norm [delta];
+    dump "after delta";
     trefl()
   in
   topdown_rewrite should_rewrite rewrite
@@ -356,9 +357,11 @@ let canon_monoid_aux
                                             (tb, Q_Implicit);
                                             (tp, Q_Explicit);
                                             (tpc, Q_Explicit)]);
-          // dump ("before unfold, p = " ^ term_to_string q);
-          unfold_topdown tp;
-          // dump ("after unfold");
+          dump ("before unfold, tp = " ^ term_to_string tp);
+          unfold_topdown [(`canon); (`xsdenote); tp];
+          dump ("after unfold");
+          // would like to do only this norm [primops] but ...
+          // for now having to do all this mess
           norm [delta_only [// term_to_string tp;
                             "CanonCommMonoid.canon";
                             "CanonCommMonoid.xsdenote";
@@ -461,11 +464,6 @@ let lem1 (a b c d : int) =
 
 (* Trying to only bring some constants to the front,
    as Nik said would be useful for separation logic *)
-
-val term_mem: term -> list term -> Tot bool
-let rec term_mem x = function
-  | [] -> false
-  | hd::tl -> if term_eq hd x then true else term_mem x tl
 
 // remember if something is a constant or not
 let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
