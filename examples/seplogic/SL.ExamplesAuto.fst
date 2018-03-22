@@ -28,6 +28,8 @@ let bind_wp_qn = ["SL" ; "Effect" ; "bind_wp"]
 let framepost_qn = ["SL" ; "Effect" ; "frame_post"]
 let pointsto_qn = ["SL"; "Heap"; "op_Bar_Greater"]
 let ref_qn = ["SL"; "Heap"; "ref"]
+let ite_wp_qn = ["SL"; "Effect"; "st_ite_wp"]
+let if_then_else_wp_qn = ["SL"; "Effect"; "st_if_then_else"]
 
 let footprint_of (t:term) : Tac (list term) =
   let hd, tl = collect_app t in
@@ -57,6 +59,17 @@ let frame_wp_lemma (#a:Type) (#wp:st_wp a) (#f_post:memory -> post a) (m m0 m1:m
     (_ : (squash (defined m /\ wp (f_post m1) m0))) :
          (squash (frame_wp wp f_post m)) = ()
 
+let ite_wp_lemma (#a:Type) (#wp:st_wp a) (#post:post a) (#m:memory)
+  (_:squash (wp post m))
+  :Lemma (st_ite_wp a wp post m)
+  = ()
+
+let if_then_else_wp_lemma (#a:Type) (#b:Type) (#then_wp:st_wp a) (#else_wp:st_wp a) (#post:post a) (#m:memory)
+  (_:squash (b   ==> then_wp post m))
+  (_:squash (~ b ==> else_wp post m))
+  :Lemma (st_if_then_else a b then_wp else_wp post m)
+  = ()
+
 let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   let hd, tl = collect_app t in
   // dump (term_to_string hd);
@@ -85,6 +98,8 @@ type cmd =
   | Read      : cmd
   | Write     : cmd
   | Bind      : cmd
+  | Ite       : cmd
+  | IfThenElse: cmd
   | FramePost : cmd
   | Unknown   : option fv ->cmd
 
@@ -111,6 +126,10 @@ let peek_cmd () : Tac cmd =
        then Write
        else if inspect_fv fv = bind_wp_qn
        then Bind
+       else if inspect_fv fv = ite_wp_qn
+       then Ite
+       else if inspect_fv fv = if_then_else_wp_qn
+       then IfThenElse
        else if inspect_fv fv = framepost_qn
        then FramePost
        else if inspect_fv fv = exists_qn  //if it is exists x. then we can't unfold, so return None
@@ -154,7 +173,7 @@ let rec solve_procedure_ref_value_existentials (use_trefl:bool) :Tac bool =
    else false
 
 let rec sl (i:int) : Tac unit =
-  dump ("SL :" ^ string_of_int i);
+  //dump ("SL :" ^ string_of_int i);
 
   //post procedure call, we sometimes have a m == m kind of expression in the wp
   //this will solve it in the tactic itself rather than farming it out to smt
@@ -165,7 +184,7 @@ let rec sl (i:int) : Tac unit =
     //or we are stuck at some existential in procedure calls
     let cont = solve_procedure_ref_value_existentials false in
     if cont then sl (i + 1)
-    else smt ()
+    else begin dump "Tactic finished"; smt () end
   | Unknown (Some fv) ->
     //so here we are unfolding something like swap_wp below
 
@@ -180,6 +199,15 @@ let rec sl (i:int) : Tac unit =
     unfold_first_occurrence (%`bind_wp);
     norm[];
     sl (i + 1)
+
+  | Ite ->
+    apply_lemma (`ite_wp_lemma);
+    sl (i + 1)
+
+  | IfThenElse ->
+    apply_lemma (`if_then_else_wp_lemma);
+    //we now have 2 goals
+    fail "IFTHENELSE"
 
   | Read ->
     unfold_first_occurrence (%`read_wp);
@@ -331,10 +359,8 @@ let sl_auto () : Tac unit =
    //dump "after prelude";
    sl(0)
 
-unfold let frame_wp (#a:Type) (wp:st_wp a) =
-  fun post m -> frame_wp wp (frame_post post) m
+effect ST (a:Type) (wp:st_wp a) = STATE a (fun post m -> frame_wp wp (frame_post post) m)
 
-effect ST (a:Type) (wp:st_wp a) = STATE a (frame_wp wp)
 
 let swap_wp (r1 r2:ref int) = fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p () (r1 |> y <*> r2 |> x)
 
@@ -364,3 +390,11 @@ let write_read (r1 r2:ref int) :ST int (fun p m -> exists x y. m == (r1 |> x <*>
 let read_write (r1 r2:ref int) :ST unit (fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p () (r1 |> x <*> r2 |> x)) by sl_auto
   = let x = !r1 in
     r2 := x
+
+let cond_test (r:ref int) (b:bool) :ST unit (fun p m -> exists x. m == r |> x /\ ((b   ==> p () (r |> 1)) /\
+                                                                      (~ b ==> p () (r |> 2))))
+  by (fun () -> prelude' ();
+             sl 0;
+             dump "A"; admit_all ())
+
+  = if b then r := 1 else r := 2
