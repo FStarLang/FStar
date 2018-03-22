@@ -362,9 +362,14 @@ let canon_monoid_aux
                             "CanonCommMonoid.flatten";
                             "CanonCommMonoid.select";
                             "CanonCommMonoid.select_extra";
+                            "CanonCommMonoid.quote_list";
+                            "CanonCommMonoid.quote_vm";
+                            "CanonCommMonoid.quote_exp";
                             "FStar.List.Tot.Base.assoc";
                             "FStar.Pervasives.Native.fst";
+                            "FStar.Pervasives.Native.snd";
                             "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+                            "FStar.Pervasives.Native.__proj__Mktuple2__item___2";
                             "FStar.List.Tot.Base.op_At";
                             "FStar.List.Tot.Base.append";
             (* TODO: the rest is a super brittle stop-gap, know thy instances *)
