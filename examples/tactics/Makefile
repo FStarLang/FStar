@@ -86,3 +86,9 @@ stringprinter: \
 	StringPrinter.Rec.uver \
 	stringprintertest-ver \
 	stringprintertest
+
+canon-native:
+	$(FSTAR) --cache_checked_modules --codegen Plugin --extract 'CanonCommMonoid CanonCommSwaps' CanonCommMonoid.fst
+	rm -f ./CanonCommMonoid.cmxs
+	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommMonoid.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml
+	$(FSTAR) --load CanonCommMonoid CanonCommMonoid.fst

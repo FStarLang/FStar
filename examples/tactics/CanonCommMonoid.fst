@@ -181,7 +181,7 @@ let sortWith_via_swaps (#a #b:Type) (f:nat -> nat -> int)
 
 let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
-  permute_via_swaps_correct #unit sort (fun #a -> sort_via_swaps) m vm xs
+  permute_via_swaps_correct #unit (fun a -> sort a) (fun #a -> sort_via_swaps) m vm xs
 
 let rec sortWith_correct_aux (#a #b:Type) (f:nat -> nat -> int) (m:cm a)
     (vm:vmap a b) (xs:list var) :
@@ -356,6 +356,7 @@ let canon_monoid_aux
           unfold_topdown tp;
           // dump ("after unfold");
           norm [delta_only [// term_to_string tp;
+                            "CanonCommMonoid.sort"; // needed after eta expansion
                             "CanonCommMonoid.canon";
                             "CanonCommMonoid.xsdenote";
                             "CanonCommMonoid.flatten";
@@ -393,9 +394,9 @@ let canon_monoid_with
     (quote a) (unquote #a) (fun (x:a) -> quote x)
     (quote m) (quote (CM?.mult m)) (quote (CM?.unit m)) (CM?.unit m)
 
-let canon_monoid (#a:Type) (cm:cm a) =
+let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
   canon_monoid_with unit (fun _ -> ()) ()
-    sort (fun #a -> sort_correct #a) #a cm
+    (fun a -> sort a) (fun #a -> sort_correct #a) #a cm
 
 (***** Examples *)
 
@@ -413,17 +414,19 @@ let unquote_int (t:term) : Tac int =
 // this doesn't really work
 let canon_monoid_int_native_broken () : Tac unit =
   canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
-    sort (`sort) (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
+    (fun a -> sort a) (`(fun a -> sort a))
+    (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
     int (`int) unquote_int quote_int
     (`int_plus_cm) (`(+)) (`0) 0
 
 let canon_monoid_int_native () : Tac unit =
   canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
-    sort (`sort) (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
+    (fun a -> sort a) (`(fun a -> sort a))
+    (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
     int (`int) (unquote #int)  (fun (x:int) -> quote x)
     (`int_plus_cm) (`(+)) (`0) 0
 
-let lem0_native (a b c d : int) =
+let lem0_native (a b c d : int) : unit =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid_int_native(); trefl())
 
@@ -435,7 +438,7 @@ let lem0_native (a b c d : int) =
 let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
 
 // sort things and put the constants last
-let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+let const_compare (#a:Type) (vm:vmap a bool) (x y:var) : int =
   match select_extra x vm, select_extra y vm with
   | false, false | true, true -> compare_of_bool (<) x y
   | false, true -> 1
@@ -444,7 +447,7 @@ let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (const_compare vm) xs
 
-let canon_monoid_const (#a:Type) (m:cm a) =
+let canon_monoid_const (#a:Type) (m:cm a) : Tac unit =
   canon_monoid_with bool is_const false
     (fun a -> const_last a)
     (fun #a m vm -> sortWith_correct #bool (const_compare vm) #a m vm) #a m
@@ -476,8 +479,8 @@ let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (special_compare vm) xs
 
-let canon_monoid_special (ts:list term) =
-  canon_monoid_with bool (is_special ts) false special_first
+let canon_monoid_special (ts:list term) : cm int -> Tac unit =
+  canon_monoid_with bool (is_special ts) false (fun a -> special_first a)
     (fun #a m vm -> sortWith_correct #bool (special_compare vm) #a m vm) #int
 
 let lem2 (a b c d : int) =
