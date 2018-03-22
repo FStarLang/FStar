@@ -245,7 +245,7 @@ let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
 
 // TODO: could guarantee same-length lists
 let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
-    (unquotea:term->Tac a) (quotea:a -> Tac term) (m:cm a) (tmult:term)
+    (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
     Tac (list exp * vmap a b) =
   let tmult:term = norm_term [delta] tmult in
@@ -256,7 +256,7 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
   //                       (unquote (pack (Tv_Var (bv_of_binder y)))))))))) in
     // (quote (CM?.mult m))
     // (``(fun (x y:a) -> (`@(quotea (CM?.mult m x y)))))
-  let tunit:term = norm_term [delta] (quotea (CM?.unit m)) in
+  let tunit:term = norm_term [delta] tunit in
   let ts   = Tactics.Util.map (norm_term [delta]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
@@ -266,7 +266,7 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (*ta:term*)
       (fun (es,vs,vm) t ->
         let (e,vs,vm) = reification_aux unquotea vs vm f tmult tunit t
         in (e::es,vs,vm))
-      ([],[], const (CM?.unit m) def) ts
+      ([],[], const munit def) ts
   in (List.rev es,vm)
 
 let unfold_topdown (t:term) =
@@ -316,8 +316,8 @@ let rec quote_exp (e:exp) : Tac term =
 let canon_monoid_aux
     (b:Type) (tb:term) (quoteb:b->Tac term)
     (f:term->Tac b) (def:b) (p:permute b) (tp:term)
-    (pc:permute_correct p) (tpc:term) (#a:Type) (ta:term)
-    (unquotea:term->Tac a) (quotea:a->Tac term) (m:cm a) (tm:term) (tmult:term) :
+    (pc:permute_correct p) (tpc:term) (a:Type) (ta:term)
+    (unquotea:term->Tac a) (quotea:a->Tac term) (tm:term) (tmult tunit:term) (munit:a) :
     Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
@@ -325,7 +325,7 @@ let canon_monoid_aux
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
       if term_eq t ta then
-        match reification b f def unquotea quotea m tmult [t1;t2] with
+        match reification b f def unquotea quotea tmult tunit munit [t1;t2] with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
@@ -389,8 +389,9 @@ let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
   canon_monoid_aux b (quote b) (fun (x:b) -> quote x)
-    f def p (quote p) pc (quote pc) #a
-    (quote a) (unquote #a) (fun (x:a) -> quote x) m (quote m) (quote (CM?.mult m))
+    f def p (quote p) pc (quote pc) a
+    (quote a) (unquote #a) (fun (x:a) -> quote x)
+    (quote m) (quote (CM?.mult m)) (quote (CM?.unit m)) (CM?.unit m)
 
 let canon_monoid (#a:Type) (cm:cm a) =
   canon_monoid_with unit (fun _ -> ()) ()
@@ -399,14 +400,28 @@ let canon_monoid (#a:Type) (cm:cm a) =
 (***** Examples *)
 
 let lem0 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; trefl())
+  assert (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  by (fun _ -> canon_monoid int_plus_cm; trefl())
+
+// even for ints, quoting and unquoting is only easy for values; not enough!
+let quote_int (i:int) : Tac term = pack (Tv_Const (C_Int i))
+let unquote_int (t:term) : Tac int =
+  match inspect t with
+  | Tv_Const (C_Int i) -> i
+  | _ -> fail "not an int value"
+
+// this doesn't really work
+let canon_monoid_int_native_broken () : Tac unit =
+  canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
+    sort (`sort) (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
+    int (`int) unquote_int quote_int
+    (`int_plus_cm) (`(+)) (`0) 0
 
 let canon_monoid_int_native () : Tac unit =
   canon_monoid_aux unit (`unit) (fun () -> (`())) (fun _ -> ()) ()
     sort (`sort) (fun #int -> sort_correct #int) (`(fun #int -> sort_correct #int))
-    #int (`int) (unquote #int) (fun (x:int) -> quote x) int_plus_cm (`int_plus_cm)
-    (`(+))
+    int (`int) (unquote #int)  (fun (x:int) -> quote x)
+    (`int_plus_cm) (`(+)) (`0) 0
 
 let lem0_native (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
@@ -435,8 +450,8 @@ let canon_monoid_const (#a:Type) (m:cm a) =
     (fun #a m vm -> sortWith_correct #bool (const_compare vm) #a m vm) #a m
 
 let lem1 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_const int_plus_cm; trefl())
+  assert (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  by (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
 (* Trying to only bring some constants to the front,
    as Nik said would be useful for separation logic *)
