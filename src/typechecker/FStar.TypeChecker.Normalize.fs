@@ -445,8 +445,10 @@ let rec closure_as_term cfg (env:env) t =
 
            | Tm_quoted (t', qi) ->
              begin match qi.qkind with
-             | Quote_static  -> mk (Tm_quoted(t', qi)) t.pos
              | Quote_dynamic -> mk (Tm_quoted(closure_as_term_delayed cfg env t', qi)) t.pos
+             | Quote_static  ->
+                let qi = S.on_antiquoted (closure_as_term_delayed cfg env) qi in
+                mk (Tm_quoted(t', qi)) t.pos
              end
 
            | Tm_meta(t', Meta_pattern args) ->
@@ -1038,12 +1040,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_quoted (qt, qi) ->
-            let qt = match qi.qkind with
-                     | Quote_static  -> qt
-                     | Quote_dynamic -> closure_as_term cfg env qt
-            in
-            let t = { t with n = Tm_quoted (qt, qi) } in
+          | Tm_quoted _ ->
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -2555,6 +2552,7 @@ let rec elim_delayed_subst_term (t:term) : term =
       mk (Tm_uvar(uv, elim_delayed_subst_term t))
 
     | Tm_quoted (tm, qi) ->
+      let qi = S.on_antiquoted elim_delayed_subst_term qi in
       mk (Tm_quoted (elim_delayed_subst_term tm, qi))
 
     | Tm_meta(t, md) ->
