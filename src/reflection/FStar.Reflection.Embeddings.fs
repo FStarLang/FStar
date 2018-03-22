@@ -38,7 +38,7 @@ let embed_binder (rng:Range.range) (b:binder) : term =
     U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
 
 let embed_term (rng:Range.range) (t:term) : term =
-    let qi = { qkind = Quote_static } in
+    let qi = { qkind = Quote_static; antiquotes = [] } in
     S.mk (Tm_quoted (t, qi)) None rng
 
 let embed_aqualv (rng:Range.range) (q : aqualv) : term =
@@ -255,10 +255,25 @@ let unembed_binder (t:term) : option<binder> =
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
         None
 
+let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
+    match l with
+    | [] -> Some []
+    | x::xs ->
+        BU.bind_opt (f x) (fun x ->
+        BU.bind_opt (mapM_opt f xs) (fun xs ->
+        Some (x :: xs)))
+
 let rec unembed_term (t:term) : option<term> =
     let t = U.unmeta_safe t in
     match t.n with
-    | Tm_quoted (tm, qi) -> Some tm
+    | Tm_quoted (tm, qi) ->
+        let aqs = mapM_opt (fun (bv, b, e) ->
+                                if b
+                                then Some (NT (bv, e))
+                                else BU.bind_opt (unembed_term e) (fun e -> Some (NT (bv, e))))
+                           qi.antiquotes in
+        BU.bind_opt aqs (fun s ->
+        Some (SS.subst s tm))
     | _ ->
         Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term: %s" (Print.term_to_string t)));
         None
