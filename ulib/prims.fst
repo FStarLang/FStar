@@ -332,7 +332,7 @@ val cut : p:prop -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
 // TODO: drop b2p? ... can only do if we make refinements require prop
-//                     post defining squash
+//                     post defining squash and prop
 type nat = i:int{b2p (i >= 0)}
 type pos = i:int{b2p (i > 0)}
 type nonzero = i:int{b2p (i<>0)}

@@ -220,7 +220,7 @@ let allow_inversion (a:Type)
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
-  (ensures (forall (x:option a). b2p (None? x) \/ b2p (Some? x))) // TODO: drop b2p
+  (ensures (forall (x:option a). None? x \/ Some? x))
   [SMTPat (option a)]
 let invertOption a = allow_inversion (option a)
 
