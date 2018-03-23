@@ -48,18 +48,21 @@ type equals (#a:Type) (x:a) : a -> Type =
   | Refl : equals x x
 
 // need to define these first to break circularities
-// they are treated by the SMT encoding the same way as t_Forall and eq2
-abstract private let t_Forall (#a:Type) (p:a -> GTot Type0) = _:unit{x:a -> GTot (p x)}
-abstract private let t_eq2 (#a:Type) (x:a) (y:a) = _:unit{equals x y}
+// they are treated by the SMT encoding the same way as l_Forall and eq2
+abstract private let t_Forall (#a:Type) (p:a -> GTot Type0) =
+  _:unit{x:a -> GTot (p x)}
+abstract private let t_eq2 (#a:Type) (x y:a) = _:unit{equals x y}
 
-abstract let is_prop (a:Type0) : Type0 = t_Forall #a (fun x -> t_Forall #a (fun y -> t_eq2 x y))
+abstract let is_prop (a:Type0) =
+  t_Forall #a (fun x -> t_Forall #a (fun y -> t_eq2 x y))
 
 (* The type of squashed types *)
 let prop = a:Type0{is_prop a}
 
 (* A coercion down to universe 0 *)
 [@ "tac_opaque"]
-type squash (p:Type) : prop = x:unit{p}
+assume val squash : Type -> prop
+// let squash (p:Type) : prop = x:unit{p} TODO
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
@@ -97,8 +100,8 @@ type eq3 (#a #b:Type) (x:a) (y:b) : prop = squash (h_equals x y)
 
 unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
-(* bool-to-type coercion *)
-type b2t (b:bool) = (b == true)
+(* bool-to-prop coercion *)
+type b2p (b:bool) = (b == true)
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =
@@ -163,8 +166,8 @@ assume new type string : Type0
 assume HasEq_string: hasEq string
 
 (* PURE effect *)
-let pure_pre = Type0
-let pure_post' (a:Type) (pre:Type) = (_:a{pre}) -> GTot Type0 // c.f. #57
+let pure_pre = prop
+let pure_post' (a:Type) (pre:prop) = (_:a{pre}) -> GTot prop // c.f. #57
 let pure_post  (a:Type) = pure_post' a True
 let pure_wp    (a:Type) = pure_post a -> GTot pure_pre
 
@@ -228,7 +231,7 @@ sub_effect
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
 (* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
-effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
+effect Ghost (a:Type) (pre:prop) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
 assume new type int : Type0
@@ -260,6 +263,7 @@ assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
+noeq // TODO
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
@@ -269,7 +273,7 @@ abstract type pattern :Type0 = unit
 irreducible let smt_pat (#a:Type) (x:a) : pattern = ()
 irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
 
-assume type decreases : #a:Type -> a -> Type0
+assume type decreases : #a:Type -> a -> prop // TODO?
 
 (*
    Lemma is desugared specially. The valid forms are:
@@ -291,7 +295,7 @@ assume type decreases : #a:Type -> a -> Type0
    precondition for the *well-formedness* of the postcondition.
    C.f. #57.
 *)
-effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
+effect Lemma (a:Type) (pre:prop) (post:(_:unit{pre}) (* TODO *) -> prop) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
@@ -308,23 +312,23 @@ type lex_t =
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
-assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
+assume val _assume : p:prop -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
-assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
+assume val admitP  : p:prop -> Pure unit True (fun x -> p)
+val _assert : p:prop -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
 
 // Can be used to mark a query for a separate SMT invocation
-abstract let spinoff (p:Type) : Type = p
+abstract let spinoff (p:prop) : prop = p
 
 // Logically equivalent to assert, but spins off separate query
-val assert_spinoff : (p:Type) -> Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
+val assert_spinoff : (p:prop) -> Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
 let assert_spinoff p = ()
 
-val cut : p:Type -> Pure unit (requires p) (fun x -> p)
+val cut : p:prop -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
 type nat = i:int{i >= 0}
@@ -338,10 +342,11 @@ type nonzero = i:int{i<>0}
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : int -> nonzero -> Tot int
 
-let rec pow2 (x:nat) : Tot pos =
-  match x with
-  | 0  -> 1
-  | _  -> 2 `op_Multiply` (pow2 (x-1))
+// TODO
+// let rec pow2 (x:nat) : Tot pos =
+//   match x with
+//   | 0  -> 1
+//   | _  -> 2 `op_Multiply` (pow2 (x-1))
 
 let min x y = if x <= y then x else y
 
@@ -384,10 +389,10 @@ abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
-abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+abstract val assert_norm : p:prop -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
 
-irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
+irreducible let labeled (r:range) (msg:string) (b:prop) : prop = b
 
 (*
  * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
