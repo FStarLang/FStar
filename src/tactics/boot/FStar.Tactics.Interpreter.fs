@@ -218,6 +218,51 @@ let mk_tactic_interpretation_6 (reflect:bool)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let mk_tactic_interpretation_13 (reflect:bool)
+                                (t:'t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
+                                (unembed_t1: unembedder<'t1>)
+                                (unembed_t2: unembedder<'t2>)
+                                (unembed_t3: unembedder<'t3>)
+                                (unembed_t4: unembedder<'t4>)
+                                (unembed_t5: unembedder<'t5>)
+                                (unembed_t6: unembedder<'t6>)
+                                (unembed_t7: unembedder<'t7>)
+                                (unembed_t8: unembedder<'t8>)
+                                (unembed_t9: unembedder<'t9>)
+                                (unembed_t10: unembedder<'t10>)
+                                (unembed_t11: unembedder<'t11>)
+                                (unembed_t12: unembedder<'t12>)
+                                (unembed_t13: unembedder<'t13>)
+                                (embed_r:embedder<'r>) (t_r:typ)
+                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (embedded_state, _)] ->
+    BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    log ps (fun () ->
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state));
+
+    BU.bind_opt (unembed_t1 a1) (fun  a1 ->
+    BU.bind_opt (unembed_t2 a2) (fun  a2 ->
+    BU.bind_opt (unembed_t3 a3) (fun  a3 ->
+    BU.bind_opt (unembed_t4 a4) (fun  a4 ->
+    BU.bind_opt (unembed_t5 a5) (fun  a5 ->
+    BU.bind_opt (unembed_t6 a6) (fun  a6 ->
+    BU.bind_opt (unembed_t7 a7) (fun  a7 ->
+    BU.bind_opt (unembed_t8 a8) (fun  a8 ->
+    BU.bind_opt (unembed_t9 a9) (fun  a9 ->
+    BU.bind_opt (unembed_t10 a10) (fun a10 ->
+    BU.bind_opt (unembed_t11 a11) (fun a11 ->
+    BU.bind_opt (unembed_t12 a12) (fun a12 ->
+    BU.bind_opt (unembed_t13 a13) (fun a13 ->
+    let res = run (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
+    Some (E.embed_result embed_r t_r (N.psc_range psc) res)))))))))))))))
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
+
 let step_from_native_step (s: native_primitive_step): N.primitive_step =
     { N.name=s.name;
       N.arity=s.arity;

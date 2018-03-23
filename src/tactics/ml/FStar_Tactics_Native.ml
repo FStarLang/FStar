@@ -107,3 +107,24 @@ let from_tactic_6 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g __tac): ('a -> 'b -
                                 BU.print_string "In compiled code (6)\n";
                                 interpret_tactic ps (t x y z w v u)) |> mk_tac
 
+
+let from_tactic_13 (t:'t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r __tac):
+                     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r tac)
+                    =
+    fun (a1: 't1) ->
+    fun (a2: 't2) ->
+    fun (a3: 't3) ->
+    fun (a4: 't4) ->
+    fun (a5: 't5) ->
+    fun (a6: 't6) ->
+    fun (a7: 't7) ->
+    fun (a8: 't8) ->
+    fun (a9: 't9) ->
+    fun (a10: 't10) ->
+    fun (a11: 't11) ->
+    fun (a12: 't12) ->
+    fun (a13: 't13) ->
+    (fun (ps: proofstate) ->
+       BU.print_string "In compiled code (13)\n";
+       interpret_tactic ps (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13)) |> mk_tac
+
