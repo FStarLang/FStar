@@ -43,9 +43,23 @@ type c_True =
 assume new type unit : Type0
 assume HasEq_unit: hasEq unit
 
+(* The usual equality defined as an inductive type *)
+type equals (#a:Type) (x:a) : a -> Type =
+  | Refl : equals x x
+
+// need to define these first to break circularities
+// they are treated by the SMT encoding the same way as t_Forall and eq2
+abstract private let t_Forall (#a:Type) (p:a -> GTot Type0) = _:unit{x:a -> GTot (p x)}
+abstract private let t_eq2 (#a:Type) (x:a) (y:a) = _:unit{equals x y}
+
+abstract let is_prop (a:Type0) : Type0 = t_Forall #a (fun x -> t_Forall #a (fun y -> t_eq2 x y))
+
+(* The type of squashed types *)
+let prop = a:Type0{is_prop a}
+
 (* A coercion down to universe 0 *)
 [@ "tac_opaque"]
-type squash (p:Type) : Type0 = x:unit{p}
+type squash (p:Type) : prop = x:unit{p}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
@@ -61,13 +75,9 @@ private let auto_squash (p:Type) = squash p
  * Squashed versions of truth and falsehood
  *)
 [@ "tac_opaque"]
-let l_True = squash c_True
+let l_True : prop = squash c_True
 [@ "tac_opaque"]
-let l_False = squash c_False
-
-(* The usual equality defined as an inductive type *)
-type equals (#a:Type) (x:a) : a -> Type =
-  | Refl : equals x x
+let l_False : prop = squash c_False
 
 (* infix binary '==';
    proof irrelevant, heterogeneous equality in Type#0
@@ -75,7 +85,7 @@ type equals (#a:Type) (x:a) : a -> Type =
 //TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
 [@ "tac_opaque"]
-type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
+type eq2 (#a:Type) (x y:a) : prop = squash (equals x y)
 
 (* Heterogeneous equality *)
 type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
@@ -83,7 +93,7 @@ type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
 
 (* A proof-irrelevant version of h_equals *)
 [@ "tac_opaque"]
-type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
+type eq3 (#a #b:Type) (x:a) (y:b) : prop = squash (h_equals x y)
 
 unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
@@ -94,44 +104,41 @@ type b2t (b:bool) = (b == true)
 type c_and  (p:Type) (q:Type) =
   | And   : p -> q -> c_and p q
 
-(* '/\'  : specialized to Type#0 *)
+(* '/\'  : specialized to prop *)
 [@ "tac_opaque"]
-type l_and (p:Type0) (q:Type0) = squash (c_and p q)
+type l_and (p q:prop) : prop = squash (c_and p q)
 
 (* constructive disjunction *)
 type c_or   (p:Type) (q:Type) =
   | Left  : p -> c_or p q
   | Right : q -> c_or p q
 
-(* '\/'  : specialized to Type#0 *)
+(* '\/'  : specialized to prop *)
 [@ "tac_opaque"]
-type l_or (p:Type0) (q:Type0) = squash (c_or p q)
+type l_or (p q:prop) : prop = squash (c_or p q)
 
-(* '==>' : specialized to Type#0 *)
+(* '==>' : specialized to prop *)
 [@ "tac_opaque"]
-type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
+type l_imp (p q:prop) : prop = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
 				         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
-type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
+type l_iff (p:prop) (q:prop) : prop = (p ==> q) /\ (q ==> p)
 
 (* prefix unary '~' *)
-type l_not (p:Type) = l_imp p False
+type l_not (p:prop) : prop = l_imp p False
 
-unfold type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
+unfold type l_ITE (p q r:prop) : prop = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
-assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
+assume type precedes : #a:Type -> #b:Type -> a -> b -> prop
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
-assume type has_type : #a:Type -> a -> Type -> Type0
-  
+assume type has_type : #a:Type -> a -> Type -> prop
+
 (* forall (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
-type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
-
-(* The type of squashed types *)
-type prop = a:Type0{ forall (x:a). x === () }
+type l_Forall (#a:Type) (p:a -> GTot prop) : prop = squash (x:a -> GTot (p x))
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 unopteq type dtuple2 (a:Type)

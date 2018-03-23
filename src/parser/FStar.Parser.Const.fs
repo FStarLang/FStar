@@ -85,6 +85,7 @@ let iff_lid    = pconst "l_iff"
 let ite_lid    = pconst "l_ITE"
 let exists_lid = pconst "l_Exists"
 let forall_lid = pconst "l_Forall"
+let t_forall_lid = pconst "t_Forall"
 let haseq_lid  = pconst "hasEq"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let admit_lid  = pconst "admit"
@@ -100,6 +101,7 @@ let dtuple2_lid  = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
+let t_eq2_lid  = pconst  "t_eq2"
 let eq3_lid    = pconst  "eq3"
 let c_eq2_lid  = pconst "equals"
 let c_eq3_lid  = pconst "h_equals"
