@@ -224,7 +224,6 @@ val invertOption : a:Type -> Lemma
   [SMTPat (option a)]
 let invertOption a = allow_inversion (option a)
 
-noeq // TODO
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
@@ -238,7 +237,6 @@ val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?
 let dsnd #a #b t = Mkdtuple2?._2 t
 
 (* Concrete syntax (x:a & y:b x & c x y) *)
-noeq // TODO
 unopteq type dtuple3 (a:Type)
              (b:(a -> GTot Type))
              (c:(x:a -> b x -> GTot Type)) =
@@ -248,7 +246,6 @@ unopteq type dtuple3 (a:Type)
              -> dtuple3 a b c
 
 (* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *)
-noeq // TODO
 unopteq type dtuple4 (a:Type)
              (b:(x:a -> GTot Type))
              (c:(x:a -> b x -> GTot Type))
@@ -274,7 +271,6 @@ let rec false_elim (#a:Type) (u:unit{False}) : Tot a = false_elim ()
  * desugared but not type-checked; using the constructors of a data type
  * guarantees a minimal amount of typo-checking.
  * *)
-noeq // TODO
 type __internal_ocaml_attributes =
   | PpxDerivingShow
     (* Generate [@@ deriving show ] on the resulting OCaml type *)

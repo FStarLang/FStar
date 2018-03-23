@@ -264,7 +264,6 @@ assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
-noeq // TODO
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
@@ -332,8 +331,8 @@ let assert_spinoff p = ()
 val cut : p:prop -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
-// TODO: drop b2p ... can only do if we make refinements require prop
-//                    post defining squash
+// TODO: drop b2p? ... can only do if we make refinements require prop
+//                     post defining squash
 type nat = i:int{b2p (i >= 0)}
 type pos = i:int{b2p (i > 0)}
 type nonzero = i:int{b2p (i<>0)}
