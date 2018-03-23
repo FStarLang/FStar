@@ -4,17 +4,17 @@ module FStar.Squash
    squash things; for this one it doesn't seem to harm importing this
    file (exposing the implementation); it probably doesn't help either *)
 
-let return_squash (#a:Type) x = ()
+let return_squash (#a:Type) x = admit() // TODO
 
 let bind_squash (#a:Type) (#b:Type) f g = admit()
 
 let push_squash (#a:Type) (#b:(a->Type)) f = admit()
 
-let get_proof (p:Type) = ()
+let get_proof (p:Type) = admit() // TODO
 
-let give_proof (#p:Type) _ = ()
+let give_proof (#p:Type) _ = admit() // TODO
 
-let proof_irrelevance (p:Type) x y = ()
+let proof_irrelevance (p:Type) x y = admit() // TODO
 
 let squash_double_arrow #a #p f =
     bind_squash f push_squash

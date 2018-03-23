@@ -14,10 +14,10 @@ val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot (squash b)) ->
 (* With a special ``push'' operation *)
 val push_squash : #a:Type -> #b:(a -> Type) -> (x:a -> Tot (squash (b x))) -> Tot (squash (x:a -> Tot (b x)))
 
-val get_proof : p:Type ->
+val get_proof : p:prop ->
   Pure (squash p) (requires p) (ensures (fun _ -> True))
 
-val give_proof : #p:Type -> squash p ->
+val give_proof : #p:prop -> squash p ->
   Pure unit (requires True) (ensures (fun _ -> p))
 
 val proof_irrelevance : p:Type -> x:squash p ->
