@@ -20,16 +20,9 @@ assume new type attribute : Type0
 (* An attribute indicating that some effect must be processed by dmff *)
 assume val cps : attribute
 
-(* A predicate to express when a type supports decidable equality
-   The type-checker emits axioms for hasEq for each inductive type *)
-assume type hasEq: Type -> GTot Type0
-
-type eqtype = a:Type{hasEq a}
-
 (* bool is a two element type with elements {'true', 'false'}
     we assume it is primitive, for convenient interop with other languages *)
 assume new type bool : Type0
-assume HasEq_bool: hasEq bool
 
 (* False is the empty inductive type *)
 type c_False =
@@ -41,10 +34,9 @@ type c_True =
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
 assume new type unit : Type0
-assume HasEq_unit: hasEq unit
 
 (* The usual equality defined as an inductive type *)
-type equals (#a:Type) (x:a) : a -> Type =
+noeq type equals (#a:Type) (x:a) : a -> Type =
   | Refl : equals x x
 
 // need to define these first to break circularities
@@ -73,6 +65,15 @@ assume val squash : Type -> prop
    It's marked `private` so that users cannot write it themselves.
 *)   
 private let auto_squash (p:Type) = squash p
+
+(* A predicate to express when a type supports decidable equality
+   The type-checker emits axioms for hasEq for each inductive type *)
+assume type hasEq: Type -> Tot prop
+
+type eqtype = a:Type{hasEq a}
+
+assume HasEq_bool: hasEq bool
+assume HasEq_unit: hasEq unit
 
 (*
  * Squashed versions of truth and falsehood
