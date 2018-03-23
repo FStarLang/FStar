@@ -214,20 +214,22 @@ type cfg = {
     tcenv: Env.env;
     debug: debug_switches;
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-    primitive_steps:BU.psmap<primitive_step>;
+    primitive_steps:BU.smap<primitive_step>;
+    // ^ This table is typically small (~72 entries) and heavily used, making a mutable map much more efficient
     strong : bool;                       // under a binder
     memoize_lazy : bool;
     normalize_pure_lets: bool;
 }
 
-let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psmap<primitive_step> =
-    List.fold_right (fun p m -> BU.psmap_add m (I.text_of_lid p.name) p) l m
+let add_steps (m : BU.smap<primitive_step>) (l : list<primitive_step>) : BU.smap<primitive_step> =
+    List.iter (fun p -> BU.smap_add m (I.text_of_lid p.name) p) l;
+    m
 
-let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
-    add_steps (BU.psmap_empty ()) l
+let prim_from_list (l : list<primitive_step>) : BU.smap<primitive_step> =
+    add_steps (BU.smap_create 101) l
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+    BU.smap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
 
 type branches = list<(pat * option<term> * term)>
 
@@ -680,7 +682,7 @@ let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 (*******************************************************************)
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
-let built_in_primitive_steps : BU.psmap<primitive_step> =
+let built_in_primitive_steps : BU.smap<primitive_step> =
     let arg_as_int    (a:arg) = fst a |> EMB.try_unembed EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> EMB.try_unembed EMB.e_bool in
     let arg_as_char   (a:arg) = fst a |> EMB.try_unembed EMB.e_char in
@@ -909,7 +911,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 
-let equality_ops : BU.psmap<primitive_step> =
+let equality_ops : BU.smap<primitive_step> =
     let interp_prop (psc:psc) (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
@@ -2653,7 +2655,7 @@ let config' psteps s e =
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
      delta_level=d;
-     primitive_steps= add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
+     primitive_steps= add_steps (BU.smap_copy built_in_primitive_steps) (retrieve_plugins () @ psteps);
      strong=false;
      memoize_lazy=true;
      normalize_pure_lets=
