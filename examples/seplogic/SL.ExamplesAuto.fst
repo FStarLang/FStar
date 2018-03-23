@@ -13,7 +13,7 @@ open FStar.List
 #reset-options "--use_two_phase_tc false --__temp_fast_implicits"
 
 let memory_cm : cm memory =
-  CM emp (<*>) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())
+  CM emp (<*>) (fun x -> lemma_sep_comm emp x; lemma_sep_unit x) (fun x y z -> ()) (fun x y -> ())
 
 // Fails when called
 // (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
@@ -402,8 +402,7 @@ let swap_wp (r1 r2:ref int) = fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) 
 
 let swap (r1 r2:ref int) :ST unit (swap_wp r1 r2) by sl_auto
   = let x = !r1 in
-    let y = !r2 in
-    r1 := y;
+    r1 :=!r2;
     r2 := x
 
 let rotate_wp (r1 r2 r3:ref int)
@@ -424,14 +423,11 @@ let write_read (r1 r2:ref int) :ST int (fun p m -> exists x y. m == (r1 |> x <*>
     !r2
 
 let read_write (r1 r2:ref int) :ST unit (fun p m -> exists x y. m == (r1 |> x <*> r2 |> y) /\ p () (r1 |> x <*> r2 |> x)) by sl_auto
-  = let x = !r1 in
-    r2 := x
-
+  = r2 := !r1
 
 let cond_test (r:ref int) (b:bool) :ST unit (fun p m -> exists x. m == r |> x /\ ((b   ==> p () (r |> 1)) /\
                                                                       (~ b ==> p () (r |> 2))))
-  by (fun () -> prelude' ();
-             sl 0)
+  by sl_auto
 
   = if b then r := 1 else r := 2
 
