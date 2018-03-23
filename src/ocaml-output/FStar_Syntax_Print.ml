@@ -877,7 +877,7 @@ and (args_to_string : FStar_Syntax_Syntax.args -> Prims.string) =
       if uu____1904 then args else filter_imp args  in
     let uu____1908 =
       FStar_All.pipe_right args1 (FStar_List.map arg_to_string)  in
-    FStar_All.pipe_right uu____1908 (FStar_String.concat " ")
+    FStar_All.pipe_right uu____1908 (FStar_String.concat "; ")
 
 and (comp_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
