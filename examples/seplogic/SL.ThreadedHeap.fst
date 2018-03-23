@@ -4,7 +4,7 @@ private noeq type heap_rec = {
   next_addr : nat;
   next_tid  : nat;
   hdomain   : addrs;
-  memory    : nat -> Tot (option (a:Type0 & a * (option nat)))   //(option nat) denotes locking by a thread
+  memory    : nat -> Tot (option ((a:Type0 & a) * (option nat)))   //(option nat) denotes locking by a thread
 }
 
 let heap = h:heap_rec
@@ -22,7 +22,7 @@ private let equal_heaps (h0 h1:heap) =
   
 private noeq type memory_rec = {
   domain   : addrs; 
-  contents : nat -> Tot (option (a:Type0 & a * (option nat)))
+  contents : nat -> Tot (option ((a:Type0 & a) * (option nat)))
 }
 
 let memory = m:(option memory_rec)
@@ -68,8 +68,8 @@ let join h0 h1 =
 
 let ( |> ) #a r x = 
   let domain = OS.singleton r in
-  let contents : nat -> Tot (option (a:Type0 & a * option nat)) = 
-    (fun r' -> if r = r' then Some (| a , (x , None) |) else None) in
+  let contents : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
+    (fun r' -> if r = r' then Some ((| a , x |) , None) else None) in
   Some ({ domain = domain; contents = contents })
 
 let ( <*> ) m0 m1 = 
@@ -100,19 +100,19 @@ let split_heap m0 m1 h =
 
 let hcontains #a h r = 
   let _ = () in 
-  exists x . h.memory r == Some (| a , (x , None) |)
+  exists x . h.memory r == Some ((| a , x |) , None)
 
 let mcontains #a m r = 
   match m with
-  | Some m' -> exists x . m'.contents r == Some (| a , (x , None) |)
+  | Some m' -> exists x . m'.contents r == Some ((| a , x |) , None)
   | None    -> False
 
 let sel #a h r =
-  let Some (| _ , (x , None) |) = h.memory r in
+  let Some ((| _ , x |) , None) = h.memory r in
   x
 
 let upd' (#a:Type0) (h:heap) (r:ref a) (x:a) =
-  { h with memory = (fun r' -> if r = r' then Some (| a, (x , None) |) else h.memory r') }
+  { h with memory = (fun r' -> if r = r' then Some ((| a , x |) , None) else h.memory r') }
 
 let upd #a h r x = upd' h r x
 
@@ -124,7 +124,7 @@ let alloc #a h0 x =
   let next_addr = h0.next_addr + 1 in
   let next_tid = h0.next_tid + 1 in
   let domain = OS.union h0.hdomain (OS.singleton r) in
-  let memory = (fun r' -> if r = r' then Some (| a , (x , None) |) else h0.memory r') in
+  let memory = (fun r' -> if r = r' then Some ((| a , x |) , None) else h0.memory r') in
   let h1 = { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory } in
   (r, h1)
 
@@ -144,7 +144,7 @@ let addr_to_ref m r =
   match m with
   | Some m' ->
     match m'.contents r with
-    | Some v -> (| dfst v, r |)
+    | Some v -> (| dfst (fst v), r |)
 
 let restrict_memory rs m = 
   match m with 
@@ -406,35 +406,35 @@ let lemma_fresh_or_old_upd #a r x h0 =
 
 let tid fp post = nat
 
-let in_fp (r:nat) (fp:footprint) = r = fp      //one-reference in-out footprint for now
+let fp_free fp m = 
+  let (Some m') = m in 
+  (forall r . {:pattern (r `in_fp` fp)} (  r `in_fp` fp  ==> Some? (m'.contents r) /\ 
+                                                             (let (Some (_ , t)) = m'.contents r in t = None)) /\
+                                        (~(r `in_fp` fp) ==> m'.contents r == None))
 
-let free fp h = 
-  let _ = () in 
-  forall r . r `in_fp` fp ==> (exists a x . h.memory r == Some (| a , (x , None) |))
-
-let locked_by #fp #post t h = 
-  let _ = () in 
-  forall r . r `in_fp` fp ==> (exists a x . h.memory r == Some (| a , (x , Some t) |))
+let fp_locked_by #fp #post t m = 
+  let (Some m') = m in 
+  (forall r . {:pattern (r `in_fp` fp)} (  r `in_fp` fp  ==> Some? (m'.contents r) /\ 
+                                                             (let (Some (_ , t')) = m'.contents r in t' = Some t)) /\
+                                        (~(r `in_fp` fp) ==> m'.contents r == None))
 
 let points_to_locked_by #fp #post #a r x t = 
   let domain = OS.singleton r in
-  let contents : nat -> Tot (option (a:Type0 & a * option nat)) = 
-    (fun r' -> if r = r' then Some (| a , (x , Some t) |) else None) in
+  let contents : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
+    (fun r' -> if r = r' then Some ((| a , x |) , Some t) else None) in
   Some ({ domain = domain; contents = contents })
-
 
 let alloc_tid fp post h0 = 
   let t = h0.next_tid in
   let next_addr = h0.next_addr in
   let next_tid = h0.next_tid + 1 in
   let domain = h0.hdomain in 
-  let memory : nat -> Tot (option (a:Type0 & a * (option nat))) = 
+  let memory : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
     (fun r -> 
        if not (r `in_fp` fp)
-       then h0.memory r
+       then None
        else (match (h0.memory r) with 
-             | None -> None
-             | Some (| a , (x , _)|) -> Some (| a , (x , Some t)|))) in
+              | Some ((| a , x |) , _) -> Some ((| a , x |) , Some t))) in
   let h1 = { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory } in
   (t,h1)
 
@@ -442,22 +442,20 @@ let dealloc_tid #fp #post t h0 =
   let next_addr = h0.next_addr in
   let next_tid = h0.next_tid in 
   let domain = h0.hdomain in 
-  let memory : nat -> Tot (option (a:Type0 & a * (option nat))) = 
+  let memory : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
     (fun r -> 
        if not (r `in_fp` fp)
-       then h0.memory r
+       then None
        else (match (h0.memory r) with
-             | None -> None
-             | Some (| a , (x , _)|) -> Some (| a , (x , None)|))) in
-   { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory }
+             | Some ((| a , x |) , _) -> Some ((| a , x |) , None))) in
+  { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory }
 
-let lemma_free_points_to #a r x h = ()
+let lemma_points_to_locked_by_defined #post #a r x t = ()
 
-let lemma_points_to_locked_by #a r x #post t h = ()
+let lemma_points_to_fp_free #a r x m = ()
 
-let lemma_alloc_tid_points_to_locked_by #post #a r x h0 = 
-  let (t,h1) = alloc_tid (addr_of r) post h0 in
-  assert (equal_memories (heap_memory h1) (points_to_locked_by r x t))
+let lemma_points_to_locked_by #post #a r x t m = ()
 
-let lemma_dealloc_tid_points_to #post #a r x t h = 
-  assert (equal_memories (heap_memory (dealloc_tid t h)) (r |> x))
+let lemma_fp_free_fp_locked_by #fp #post h0 = ()
+
+let lemma_fp_locked_by_fp_free #fp #post t h0 = ()

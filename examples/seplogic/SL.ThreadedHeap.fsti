@@ -303,60 +303,66 @@ val lemma_fresh_or_old_upd (#a:Type0) (r:ref a) (x:a) (h0:heap)
 
 (* threads *)
 
-let footprint = nat                     //one-reference in-out footprint for now
+let footprint = addrs
+let in_fp (r:nat) (fp:footprint) = OS.mem r fp
 
 val tid : fp:footprint
        -> post:(heap -> Type0)
        -> Type0
 
-val free : fp:footprint
-        -> h:heap
-        -> Type0
+val fp_free : fp:footprint
+           -> m:memory{defined m}
+           -> Type0
 
-val locked_by : #fp:footprint
-             -> #post:(heap -> Type0)
-             -> t:tid fp post
-             -> h:heap
-             -> Type0
+val fp_locked_by : #fp:footprint
+                -> #post:(heap -> Type0)
+                -> t:tid fp post
+                -> m:memory{defined m}
+                -> Type0
 
 val points_to_locked_by : #fp:footprint
                        -> #post:(heap -> Type0)
                        -> #a:Type0
-                       -> r:ref a{(addr_of r) = fp}
+                       -> r:ref a{in_fp (addr_of r) fp}
                        -> x:a 
                        -> t:tid fp post                    
                        -> Tot memory
 
 val alloc_tid : fp:footprint                       
              -> post:(heap -> Type0)
-             -> h:heap{free fp h}
+             -> h:heap{fp_free fp (heap_memory h)}
              -> (tid fp post) * heap
              
 val dealloc_tid : #fp:footprint
                -> #post:(heap -> Type0)
                -> t:tid fp post
-               -> h:heap{locked_by t h}
+               -> h:heap{fp_locked_by t (heap_memory h)}
                -> heap
 
-val lemma_free_points_to (#a:Type0) (r:ref a) (x:a) (h:heap)
-  : Lemma (requires (heap_memory h == (r |> x)))
-          (ensures  (free (addr_of r) h))
-          [SMTPat (free (addr_of r) h);
+val lemma_points_to_locked_by_defined (#post:heap -> Type0) (#a:Type0) (r:ref a) (x:a) (t:tid (OS.singleton (addr_of r)) post)
+  : Lemma (defined (points_to_locked_by r x t))
+          [SMTPat (defined (points_to_locked_by r x t))]
+
+val lemma_points_to_fp_free (#a:Type0) (r:ref a) (x:a) (m:memory)
+  : Lemma (requires (m == (r |> x)))
+          (ensures  (fp_free (OS.singleton (addr_of r)) m))
+          [SMTPat (fp_free (OS.singleton (addr_of r)) m);
            SMTPat (r |> x)]
 
-val lemma_points_to_locked_by (#a:Type0) (r:ref a) (x:a) (#post:heap -> Type0) 
-                              (t:tid (addr_of r) post) (h:heap)
-  : Lemma (requires (heap_memory h == points_to_locked_by r x t))
-          (ensures  (locked_by t h))
+val lemma_points_to_locked_by (#post:heap -> Type0) (#a:Type0) (r:ref a) (x:a) (t:tid (OS.singleton (addr_of r)) post) (m:memory)
+  : Lemma (requires (m == points_to_locked_by r x t))
+          (ensures  (fp_locked_by t m))
           [SMTPat (points_to_locked_by r x t);
-           SMTPat (locked_by t h)]
+           SMTPat (fp_locked_by t m)]
 
-val lemma_alloc_tid_points_to_locked_by (#post:heap -> Type0) (#a:Type0) (r:ref a) (x:a) (h0:heap)
-  : Lemma (requires (heap_memory h0 == (r |> x)))
-          (ensures  (let (t,h1) = alloc_tid (addr_of r) post h0 in
-                     heap_memory h1 == points_to_locked_by r x t))
+val lemma_fp_free_fp_locked_by (#fp:footprint) (#post:heap -> Type0) (h0:heap)
+  : Lemma (requires (fp_free fp (heap_memory h0)))
+          (ensures  (let (t,h1) = alloc_tid fp post h0 in
+                     fp_locked_by t (heap_memory h1)))
+          [SMTPat (alloc_tid fp post h0)]
 
-val lemma_dealloc_tid_points_to (#post:heap -> Type0) (#a:Type0) (r:ref a) (x:a) 
-                                (t:tid (addr_of r) post) (h:heap) 
-  : Lemma (requires (heap_memory h == points_to_locked_by r x t))
-          (ensures  (heap_memory (dealloc_tid t h) == (r |> x)))
+val lemma_fp_locked_by_fp_free (#fp:footprint) (#post:heap -> Type0) (t:tid fp post) (h0:heap)
+  : Lemma (requires (fp_locked_by t (heap_memory h0)))
+          (ensures  (let h1 = dealloc_tid t h0 in
+                     fp_free fp (heap_memory h1)))
+          [SMTPat (dealloc_tid t h0)]

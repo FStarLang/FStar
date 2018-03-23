@@ -143,52 +143,52 @@ For our WP-style presentation, we do not allow any sort of interference between 
 
 *)
 
-let fork_wp (#a:Type0) (#r:ref a)                                     //one-reference in-out footprint for now
-            (#pre:heap -> Type0) (#post:heap -> Type0)
+let fork_wp (#a:Type0) (#r:ref a)
+            (#fp:footprint) (#pre:heap -> Type0) (#post:heap -> Type0)
             (f:unit -> STATE unit (fun p h0 -> 
-                                     (exists x . heap_memory h0 == (r |> x)) /\ pre h0 /\ 
-                                     (forall h1 . (exists y . heap_memory h1 == (r |> y)) /\ post h1 ==> p () h1))) 
-          : st_wp (tid (addr_of r) post) = 
+                                     fp_free fp (heap_memory h0) /\ pre h0 /\ 
+                                     (forall h1 . (fp_free fp (heap_memory h1) /\ post h1) ==> p () h1))) 
+          : st_wp (tid fp post) = 
   fun p h0 -> 
-    (exists x . heap_memory h0 == (r |> x)) /\ pre h0 /\ 
-    (let (t,h1) = alloc_tid (addr_of r) post h0 in 
-     forall h1 . (exists y . heap_memory h1 == points_to_locked_by r y t) ==> p t h1)
+    fp_free fp (heap_memory h0) /\ pre h0 /\ 
+    (let (t,h1) = alloc_tid fp post h0 in 
+     p t h1)
 
 unfold
 let frame_fork_wp (#a:Type0) (#r:ref a)
-                  (#pre:heap -> Type0) (#post:heap -> Type0)
+                  (#fp:footprint) (#pre:heap -> Type0) (#post:heap -> Type0)
                   (f:unit -> STATE unit (fun p h0 -> 
-                                           (exists x . heap_memory h0 == (r |> x)) /\ pre h0 /\ 
-                                           (forall h1 . (exists y . heap_memory h1 == (r |> y)) /\ post h1 ==> p () h1))) 
-                : st_wp (tid (addr_of r) post) =
+                                           fp_free fp (heap_memory h0) /\ pre h0 /\ 
+                                           (forall h1 . (fp_free fp (heap_memory h1) /\ post h1) ==> p () h1))) 
+                : st_wp (tid fp post) =
   fun p h0 -> 
-    frame_wp (fork_wp #a #r #pre #post f) (frame_post p) h0
+    frame_wp (fork_wp #a #r #fp #pre #post f) (frame_post p) h0
 
 assume
 val fork (#a:Type0) (#r:ref a)
-         (#pre:heap -> Type0) (#post:heap -> Type0)
+         (#fp:footprint) (#pre:heap -> Type0) (#post:heap -> Type0)
          (f:unit -> STATE unit (fun p h0 -> 
-                                  (exists x . heap_memory h0 == (r |> x)) /\ pre h0 /\ 
-                                  (forall h1 . (exists y . heap_memory h1 == (r |> y)) /\ post h1 ==> p () h1))) 
-       : STATE (tid (addr_of r) post) (frame_fork_wp #a #r #pre #post f)
+                                  fp_free fp (heap_memory h0) /\ pre h0 /\ 
+                                  (forall h1 . (fp_free fp (heap_memory h1) /\ post h1) ==> p () h1))) 
+       : STATE (tid fp post) (frame_fork_wp #a #r #fp #pre #post f)
 
-let join_wp (#a:Type0) (#r:ref a)                                     //one-reference in-out footprint for now
-            (#post:heap -> Type0)
-            (t:tid (addr_of r) post) : st_wp unit =
+let join_wp (#a:Type0) (#r:ref a)
+            (#fp:footprint) (#post:heap -> Type0)
+            (t:tid fp post) : st_wp unit =
   fun p h0 -> 
-    (exists y . heap_memory h0 == points_to_locked_by r y t) /\
+    addrs_in (heap_memory h0) = fp /\ fp_locked_by t (heap_memory h0) /\ 
     (let h1 = dealloc_tid t h0 in
      post h1 ==> p () h1)
 
 let frame_join_wp (#a:Type0) (#r:ref a)
-                  (#post:heap -> Type0)
-                  (t:tid (addr_of r) post) 
+                  (#fp:footprint) (#post:heap -> Type0)
+                  (t:tid fp post) 
                 : st_wp unit =
   fun p h0 -> 
-    frame_wp (join_wp #a #r #post t) (frame_post p) h0
+    frame_wp (join_wp #a #r #fp #post t) (frame_post p) h0
 
 assume
 val join (#a:Type0) (#r:ref a)                               
-         (#post:heap -> Type0)
-         (t:tid (addr_of r) post)
-       : STATE unit (frame_join_wp #a #r #post t)
+         (#fp:footprint) (#post:heap -> Type0)
+         (t:tid fp post)
+       : STATE unit (frame_join_wp #a #r #fp #post t)
