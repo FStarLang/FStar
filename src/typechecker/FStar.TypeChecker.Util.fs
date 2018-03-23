@@ -1088,17 +1088,17 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
     | None -> raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
 
-let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
-    let is_type t =
+let maybe_coerce_bool_to_prop env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+    let is_prop t =
         let t = N.unfold_whnf env t in
         match (SS.compress t).n with
-        | Tm_type _ -> true
+        | Tm_fvar fv -> S.fv_eq_lid fv C.prop_lid
         | _ -> false
     in
     match (U.unrefine lc.res_typ).n with
     | Tm_fvar fv
         when S.fv_eq_lid fv C.bool_lid
-          && is_type t ->
+          && is_prop t ->
       let _ = Env.lookup_lid env C.b2p_lid in  //check that we have Prims.b2p in the context
       let b2p = S.fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_defined_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in

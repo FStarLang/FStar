@@ -91,6 +91,7 @@ let b2p_lid    = pconst "b2p" (* coercion from boolean to prop *)
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
+let prop_lid   = pconst "prop"
 
 (* Constructive variants *)
 let c_true_lid   = pconst "c_True"
