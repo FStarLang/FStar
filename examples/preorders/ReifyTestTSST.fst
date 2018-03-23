@@ -56,7 +56,7 @@ let tsst_wp   (state:Type) (a:Type) = tsst_post (state) a -> Tot (tsst_pre (stat
 let state = nat
 
 val state_rel : rel:preorder state
-let state_rel (s0:state) (s1:state) = b2t (s0 <= s1)
+let state_rel (s0:state) (s1:state) = b2p (s0 <= s1)
 
 
 (* A WP-style timestamped preorder-indexed state monad. *)

@@ -15,7 +15,7 @@ assume val utf8: s:string  -> Tot bytes
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-     b2t (equalBytes (utf8 s0) (utf8 s1)) ==> s0==s1
+     b2p (equalBytes (utf8 s0) (utf8 s1)) ==> s0==s1
 // END: UTF8Inj
 
 type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)

@@ -349,7 +349,7 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 //17-01-05 the simpler variant, with an historic name; consider using uniform names below. 
 type log_t (i:rid) (a:Type) = m_rref i (seq a) grows
 
-let increases (x:int) (y:int) = b2t (x <= y)
+let increases (x:int) (y:int) = b2p (x <= y)
 
 let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
     : mem -> GTot Type0

@@ -228,7 +228,7 @@ val mainLoopSubArray :
 let mainLoopSubArray n ch u =
   let acc =  rallocateVector word 4 w0 in
   let dummy : lref nat = ralloc 0 in
-  (*assert (b2t (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
+  (*assert (b2p (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
   memAssert (fun m -> ~ (refIsLive dummy (mtail m)));
   memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
   memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refIsLive r (mtail m)) );

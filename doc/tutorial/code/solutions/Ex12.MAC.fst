@@ -29,7 +29,7 @@ let pred_to_dec_ghost (#a:Type) (p:a -> Tot Type0)
 (* And the converse (which is actually not used here) *)
 let dec_ghost_to_pred (#a:Type) (p:a -> GTot bool)
   : a -> Tot Type0
-= fun x -> b2t (p x)
+= fun x -> b2p (p x)
 
 
 (* ---- specification *)

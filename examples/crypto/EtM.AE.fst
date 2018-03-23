@@ -288,7 +288,7 @@ let decrypt (k:key) (c:cipher)
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\
     invariant h1 k /\
-    (b2t Ideal.uf_cma /\ Some? res ==>
+    (b2p Ideal.uf_cma /\ Some? res ==>
      Seq.mem (Some?.v res, c) (get_log h0 k)))) =
   let c, tag = c in
   let h0 = FStar.HyperStack.ST.get () in

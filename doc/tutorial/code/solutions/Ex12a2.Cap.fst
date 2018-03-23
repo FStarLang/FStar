@@ -14,7 +14,7 @@ module MAC = Ex12.MAC
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-     b2t (equalBytes (utf8 s0) (utf8 s1)) ==> s0==s1
+     b2p (equalBytes (utf8 s0) (utf8 s1)) ==> s0==s1
 
 type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 

@@ -7968,28 +7968,28 @@ and (encode_sigelt' :
           (match uu____22222 with
            | (env1,decls) -> ((FStar_List.flatten decls), env1))
       | FStar_Syntax_Syntax.Sig_let
-          ((uu____22306,{ FStar_Syntax_Syntax.lbname = FStar_Util.Inr b2t1;
+          ((uu____22306,{ FStar_Syntax_Syntax.lbname = FStar_Util.Inr b2p1;
                           FStar_Syntax_Syntax.lbunivs = uu____22308;
                           FStar_Syntax_Syntax.lbtyp = uu____22309;
                           FStar_Syntax_Syntax.lbeff = uu____22310;
                           FStar_Syntax_Syntax.lbdef = uu____22311;
                           FStar_Syntax_Syntax.lbattrs = uu____22312;
                           FStar_Syntax_Syntax.lbpos = uu____22313;_}::[]),uu____22314)
-          when FStar_Syntax_Syntax.fv_eq_lid b2t1 FStar_Parser_Const.b2t_lid
+          when FStar_Syntax_Syntax.fv_eq_lid b2p1 FStar_Parser_Const.b2p_lid
           ->
           let uu____22337 =
             new_term_constant_and_tok_from_lid env
-              (b2t1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+              (b2p1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
               (Prims.parse_int "1")
              in
           (match uu____22337 with
            | (tname,ttok,env1) ->
                let xx = ("x", FStar_SMTEncoding_Term.Term_sort)  in
                let x = FStar_SMTEncoding_Util.mkFreeV xx  in
-               let b2t_x = FStar_SMTEncoding_Util.mkApp ("Prims.b2t", [x])
+               let b2p_x = FStar_SMTEncoding_Util.mkApp ("Prims.b2p", [x])
                   in
-               let valid_b2t_x =
-                 FStar_SMTEncoding_Util.mkApp ("Valid", [b2t_x])  in
+               let valid_b2p_x =
+                 FStar_SMTEncoding_Util.mkApp ("Valid", [b2p_x])  in
                let decls =
                  let uu____22366 =
                    let uu____22369 =
@@ -8004,12 +8004,12 @@ and (encode_sigelt' :
                                        FStar_SMTEncoding_Term.boxBoolFun),
                                      [x])
                                   in
-                               (valid_b2t_x, uu____22395)  in
+                               (valid_b2p_x, uu____22395)  in
                              FStar_SMTEncoding_Util.mkEq uu____22390  in
-                           ([[b2t_x]], [xx], uu____22389)  in
+                           ([[b2p_x]], [xx], uu____22389)  in
                          FStar_SMTEncoding_Util.mkForall uu____22378  in
                        (uu____22377,
-                         (FStar_Pervasives_Native.Some "b2t def"), "b2t_def")
+                         (FStar_Pervasives_Native.Some "b2p def"), "b2p_def")
                         in
                      FStar_SMTEncoding_Util.mkAssume uu____22370  in
                    [uu____22369]  in

@@ -91,5 +91,5 @@ val hcreate :  #a:Type -> len:nat -> init:a
    For short arrays, such as the MD5 checksum (4 words), it might not be too inefficient*)
 val to_seq :  #a:Type  -> r:(sstarray a)
   -> PureMem (seq a)
-        (requires (fun m -> b2t (refIsLive (reveal (asRef r)) m)))
+        (requires (fun m -> b2p (refIsLive (reveal (asRef r)) m)))
         (ensures (fun m v-> (refIsLive (reveal (asRef r)) m) /\ v = (lookupRef (reveal (asRef r)) m)))

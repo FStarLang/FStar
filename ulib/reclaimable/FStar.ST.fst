@@ -21,7 +21,7 @@ type ref (a:Type) = Heap.ref a
 
 // this intentionally does not preclude h' extending h with fresh refs
 type modifies (mods:set aref) (h:heap) (h':heap) =
-    b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
+    b2p (Heap.equal h' (concat h' (restrict h (complement mods))))
 
 let st_pre = st_pre_h heap
 let st_post a = st_post_h heap a

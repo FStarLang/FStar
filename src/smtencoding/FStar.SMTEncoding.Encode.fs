@@ -2408,17 +2408,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=BU.Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
-       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
+     | Sig_let((_, [{lbname=BU.Inr b2p}]), _) when S.fv_eq_lid b2p Const.b2p_lid ->
+       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2p.fv_name.v 1 in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
-       let b2t_x = mkApp("Prims.b2t", [x]) in
-       let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
+       let b2p_x = mkApp("Prims.b2p", [x]) in
+       let valid_b2p_x = mkApp("Valid", [b2p_x]) in //NS: Explicitly avoid the Vaild(b2p t) inlining
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
-                    Util.mkAssume(mkForall([[b2t_x]], [xx],
-                                           mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
-                                Some "b2t def",
-                                "b2t_def")] in
+                    Util.mkAssume(mkForall([[b2p_x]], [xx],
+                                           mkEq(valid_b2p_x, mkApp(snd boxBoolFun, [x]))),
+                                Some "b2p def",
+                                "b2p_def")] in
        decls, env
 
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->

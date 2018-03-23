@@ -333,7 +333,7 @@ let fscalar res b s =
   let tmp = create (U128.of_string "0") (U32.mul 2ul nlength-|1ul) in
   Curve.Fscalar.scalar' tmp b s; 
   let h = HST.get() in
-  (* admitP(b2t(satisfies_modulo_constraints h tmp));   *)
+  (* admitP(b2p(satisfies_modulo_constraints h tmp));   *)
   modulo res tmp;
   let h1 = HST.get() in
   admitP(True /\ (valueOf h1 res = (v s +* valueOf h0 b)));

@@ -392,7 +392,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
     | Tm_app({n=Tm_fvar fv}, [(e, _)])
       when not (Options.print_implicits())
-           && S.fv_eq_lid fv C.b2t_lid ->
+           && S.fv_eq_lid fv C.b2p_lid ->
       resugar_term' env e
 
     | Tm_app(e, args) ->

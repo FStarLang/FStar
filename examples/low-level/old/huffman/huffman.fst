@@ -78,20 +78,20 @@ let live_node_after_ralloc_lemma r v n m = admit ()
 
 (* projectors *)
 assume val read_frequency: n:located node -> PureMem (lref int)
-                                             (fun sm0 -> b2t (live_located n sm0))
-                                             (fun sm0 r -> b2t (r = (greveal n).frequency))
+                                             (fun sm0 -> b2p (live_located n sm0))
+                                             (fun sm0 r -> b2p (r = (greveal n).frequency))
 assume val read_zero_child: n:located node -> PureMem (located node)
-                                              (fun sm0 -> b2t (live_located n sm0))
-                                              (fun sm0 r -> b2t (r = (greveal n).zero_child))
+                                              (fun sm0 -> b2p (live_located n sm0))
+                                              (fun sm0 r -> b2p (r = (greveal n).zero_child))
 assume val read_one_child: n:located node -> PureMem (located node)
-                                             (fun sm0 -> b2t (live_located n sm0))
-                                             (fun sm0 r -> b2t (r = (greveal n).one_child))
+                                             (fun sm0 -> b2p (live_located n sm0))
+                                             (fun sm0 r -> b2p (r = (greveal n).one_child))
 assume val read_symbol: n:located node -> PureMem symbol_t
-                                          (fun sm0 -> b2t (live_located n sm0))
-                                          (fun sm0 r -> b2t (r = (greveal n).symbol))
+                                          (fun sm0 -> b2p (live_located n sm0))
+                                          (fun sm0 r -> b2p (r = (greveal n).symbol))
 assume val read_code: n:located node -> PureMem (lref string)
-                                        (fun sm0 -> b2t (live_located n sm0))
-                                        (fun sm0 r -> b2t (r = (greveal n).code))
+                                        (fun sm0 -> b2p (live_located n sm0))
+                                        (fun sm0 r -> b2p (r = (greveal n).code))
 
 (* mk *)
 assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t -> c:lref string
@@ -107,13 +107,13 @@ assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t
                                      live_node r sm0)
 
 assume val mk_null_node: unit -> PureMem (located node)
-                                 (fun sm0 -> b2t (isNonEmpty (st sm0)))
+                                 (fun sm0 -> b2p (isNonEmpty (st sm0)))
                                  (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topRegionId sm0) /\
                                                live_node r sm0 /\
                                                lookupRef (greveal r).frequency sm0 = -1)
 
 val is_null: n:located node -> PureMem bool
-                               (fun sm0 -> b2t (live_node n sm0))
+                               (fun sm0 -> b2p (live_node n sm0))
                                (fun sm0 r -> live_node n sm0 /\
                                              (r = (lookupRef (greveal n).frequency sm0 = -1)))
 let is_null n = memread (read_frequency n) = -1
@@ -150,16 +150,16 @@ let rec live_list_after_ralloc_lemma r v l m = match l with
 val live_node_list: l:node_list -> sm:smem -> GTot bool
 let live_node_list l sm = refIsLive l sm && live_list (lookupRef l sm) sm
 
-val new_list: unit -> Mem node_list (fun m0 -> True) (fun m0 r m1 -> b2t (live_node_list r m1)) (hide (Set.empty))
+val new_list: unit -> Mem node_list (fun m0 -> True) (fun m0 r m1 -> b2p (live_node_list r m1)) (hide (Set.empty))
 let new_list _ = halloc []
 
 val is_empty: l:node_list -> PureMem bool
-                             (fun m0 -> b2t (live_node_list l m0))
+                             (fun m0 -> b2p (live_node_list l m0))
                              (fun m0 r -> live_node_list l m0 /\ r = (lookupRef l m0 =  []))
 let is_empty l = (memread l = [])
 
 val is_singleton: l:node_list -> PureMem bool
-                                 (fun m0 -> b2t (live_node_list l m0))
+                                 (fun m0 -> b2p (live_node_list l m0))
                                  (fun m0 r -> live_node_list l m0 /\ r = (Cons? (lookupRef l m0) &&
                                                                           Cons.tl (lookupRef l m0) = []))
 let is_singleton l = match (memread l) with
@@ -183,7 +183,7 @@ let pop_two l = match (memread l) with
     memwrite l tl;
     hd, hd'
 
-val contents: l:node_list -> PureMem (list (located node)) (fun m0 -> b2t (live_node_list l m0))
+val contents: l:node_list -> PureMem (list (located node)) (fun m0 -> b2p (live_node_list l m0))
                                                            (fun m0 r -> live_node_list l m0 /\
                                                                         r = lookupRef l m0)
 let contents l = memread l                                                                        
@@ -375,7 +375,7 @@ val compute_histogram: sstream: sstarray symbol_t -> histogram: sstarray node
                                       liveArr sm0 sstream /\ live_histogram histogram sm0    /\
                                       glength histogram sm0 = symbol_value_bound             /\
                                       i <= glength sstream sm0)
-                          (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
+                          (fun sm0 r sm1 -> b2p (isNonEmpty (st sm1)))
 let rec compute_histogram sstream histogram i =
   if i = FStar.Regions.RSTArray.length sstream then ()
   else
@@ -390,7 +390,7 @@ let rec compute_histogram sstream histogram i =
 val build_huffman_tree: histogram: sstarray node
                         -> FStar.Regions.RST node
                            (fun sm0 -> isNonEmpty (st sm0) /\ live_histogram histogram sm0)
-                           (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
+                           (fun sm0 r sm1 -> b2p (isNonEmpty (st sm1)))
 let build_huffman_tree histogram =
   admit ()
                                    

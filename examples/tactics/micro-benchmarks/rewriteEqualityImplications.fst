@@ -15,7 +15,7 @@ unfold let good_2 (x:int) = True
 let test_5 () = assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ good_2 x) //proven by tactic
 
 unfold let good_3 (x:int) = true
-let test_6 () = assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ good_3 x) //b2t true, goes to SMT (fix)
+let test_6 () = assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ good_3 x) //b2p true, goes to SMT (fix)
 
 let test_7 =
   let x = 10 in

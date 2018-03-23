@@ -163,7 +163,7 @@ let rec blit_aux #a s s_idx t t_idx len ctr =
     begin 
       upd t (t_idx +^ ctr) (index s (s_idx +^ ctr));
       let h = SST.get() in
-      cut (b2t(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (as_ref t) (sel h t))));
+      cut (b2p(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (as_ref t) (sel h t))));
       cut (Map.equal (heaps h) (heaps (StackHeap.upd h0 t (sel h t))));
       cut (sel h t = Seq.upd (sel h0 t) (v t_idx+v ctr) (Seq.index (sel h0 s) (v s_idx+v ctr)));
       cut (forall (i:nat). i < v ctr+1 ==> Seq.index (sel h0 s) (v s_idx+i) = Seq.index (sel h t) (v t_idx+i));

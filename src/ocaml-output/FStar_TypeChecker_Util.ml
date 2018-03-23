@@ -2681,11 +2681,11 @@ let (maybe_coerce_bool_to_type :
               ->
               let uu____6261 =
                 FStar_TypeChecker_Env.lookup_lid env
-                  FStar_Parser_Const.b2t_lid
+                  FStar_Parser_Const.b2p_lid
                  in
-              let b2t1 =
+              let b2p1 =
                 FStar_Syntax_Syntax.fvar
-                  (FStar_Ident.set_lid_range FStar_Parser_Const.b2t_lid
+                  (FStar_Ident.set_lid_range FStar_Parser_Const.b2p_lid
                      e.FStar_Syntax_Syntax.pos)
                   (FStar_Syntax_Syntax.Delta_defined_at_level
                      (Prims.parse_int "1")) FStar_Pervasives_Native.None
@@ -2708,7 +2708,7 @@ let (maybe_coerce_bool_to_type :
                   let uu____6285 =
                     let uu____6286 = FStar_Syntax_Syntax.as_arg e  in
                     [uu____6286]  in
-                  FStar_Syntax_Syntax.mk_Tm_app b2t1 uu____6285  in
+                  FStar_Syntax_Syntax.mk_Tm_app b2p1 uu____6285  in
                 uu____6284 FStar_Pervasives_Native.None
                   e.FStar_Syntax_Syntax.pos
                  in
@@ -4365,13 +4365,13 @@ let (short_circuit :
         | (fst1,uu____10690)::[] -> f fst1
         | uu____10707 -> failwith "Unexpexted args to binary operator"  in
       let op_and_e e =
-        let uu____10712 = FStar_Syntax_Util.b2t e  in
+        let uu____10712 = FStar_Syntax_Util.b2p e  in
         FStar_All.pipe_right uu____10712
           (fun _0_44  -> FStar_TypeChecker_Common.NonTrivial _0_44)
          in
       let op_or_e e =
         let uu____10721 =
-          let uu____10724 = FStar_Syntax_Util.b2t e  in
+          let uu____10724 = FStar_Syntax_Util.b2p e  in
           FStar_Syntax_Util.mk_neg uu____10724  in
         FStar_All.pipe_right uu____10721
           (fun _0_45  -> FStar_TypeChecker_Common.NonTrivial _0_45)
@@ -5044,7 +5044,7 @@ let (mk_discriminator_and_indexed_projectors :
                                     in
                                  uu____11921 FStar_Pervasives_Native.None p
                                   in
-                               FStar_Syntax_Util.b2t uu____11920  in
+                               FStar_Syntax_Util.b2p uu____11920  in
                              FStar_Syntax_Util.refine x uu____11919  in
                            let uu____11928 =
                              let uu___126_11929 = projectee arg_typ  in

@@ -48,13 +48,13 @@ assume val ralloc:  #a:Type -> init:a -> RST (lref a)
 (* Read from the top-most region. This is the [!] ML operator. *)
 assume val memread:  #a:Type -> r:lref a ->
   RST a
-    (fun m -> b2t (refIsLive r m))
+    (fun m -> b2p (refIsLive r m))
     (fun m0 a m1 -> m0=m1 /\ refIsLive r m0 /\ lookupRef r m0 = a)
 
 (* Write in the top-most region. This is the [:=] ML operator. *)
 assume val memwrite:  #a:Type -> r:lref a -> v:a ->
   RST unit
-    (fun m -> b2t (refIsLive r m))
+    (fun m -> b2p (refIsLive r m))
     (fun m0 _ m1 -> refIsLive r m1
                /\ writeMemAux r m0 v =  m1)
 

@@ -2088,21 +2088,21 @@ let (mk_Valid : term -> term) =
     match t.tm with
     | App
         (Var
-         "Prims.b2t",{
+         "Prims.b2p",{
                        tm = App
                          (Var "Prims.op_Equality",uu____6052::t1::t2::[]);
                        freevars = uu____6055; rng = uu____6056;_}::[])
         -> mkEq (t1, t2) t.rng
     | App
         (Var
-         "Prims.b2t",{
+         "Prims.b2p",{
                        tm = App
                          (Var "Prims.op_disEquality",uu____6069::t1::t2::[]);
                        freevars = uu____6072; rng = uu____6073;_}::[])
         -> let uu____6086 = mkEq (t1, t2) norng  in mkNot uu____6086 t.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "Prims.op_LessThanOrEqual",t1::t2::[]);
+         "Prims.b2p",{ tm = App (Var "Prims.op_LessThanOrEqual",t1::t2::[]);
                        freevars = uu____6089; rng = uu____6090;_}::[])
         ->
         let uu____6103 =
@@ -2111,7 +2111,7 @@ let (mk_Valid : term -> term) =
         mkLTE uu____6103 t.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "Prims.op_LessThan",t1::t2::[]);
+         "Prims.b2p",{ tm = App (Var "Prims.op_LessThan",t1::t2::[]);
                        freevars = uu____6112; rng = uu____6113;_}::[])
         ->
         let uu____6126 =
@@ -2120,7 +2120,7 @@ let (mk_Valid : term -> term) =
         mkLT uu____6126 t.rng
     | App
         (Var
-         "Prims.b2t",{
+         "Prims.b2p",{
                        tm = App
                          (Var "Prims.op_GreaterThanOrEqual",t1::t2::[]);
                        freevars = uu____6135; rng = uu____6136;_}::[])
@@ -2131,7 +2131,7 @@ let (mk_Valid : term -> term) =
         mkGTE uu____6149 t.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "Prims.op_GreaterThan",t1::t2::[]);
+         "Prims.b2p",{ tm = App (Var "Prims.op_GreaterThan",t1::t2::[]);
                        freevars = uu____6158; rng = uu____6159;_}::[])
         ->
         let uu____6172 =
@@ -2140,7 +2140,7 @@ let (mk_Valid : term -> term) =
         mkGT uu____6172 t.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "Prims.op_AmpAmp",t1::t2::[]);
+         "Prims.b2p",{ tm = App (Var "Prims.op_AmpAmp",t1::t2::[]);
                        freevars = uu____6181; rng = uu____6182;_}::[])
         ->
         let uu____6195 =
@@ -2149,7 +2149,7 @@ let (mk_Valid : term -> term) =
         mkAnd uu____6195 t.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "Prims.op_BarBar",t1::t2::[]);
+         "Prims.b2p",{ tm = App (Var "Prims.op_BarBar",t1::t2::[]);
                        freevars = uu____6204; rng = uu____6205;_}::[])
         ->
         let uu____6218 =
@@ -2158,12 +2158,12 @@ let (mk_Valid : term -> term) =
         mkOr uu____6218 t.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "Prims.op_Negation",t1::[]);
+         "Prims.b2p",{ tm = App (Var "Prims.op_Negation",t1::[]);
                        freevars = uu____6226; rng = uu____6227;_}::[])
         -> let uu____6240 = unboxBool t1  in mkNot uu____6240 t1.rng
     | App
         (Var
-         "Prims.b2t",{ tm = App (Var "FStar.BV.bvult",t0::t1::t2::[]);
+         "Prims.b2p",{ tm = App (Var "FStar.BV.bvult",t0::t1::t2::[]);
                        freevars = uu____6244; rng = uu____6245;_}::[])
         when
         let uu____6258 = getBoxedInteger t0  in FStar_Util.is_some uu____6258
@@ -2196,7 +2196,7 @@ let (mk_Valid : term -> term) =
           let uu____6311 = unboxBitVec sz t1  in
           let uu____6312 = unboxBitVec sz t2  in (uu____6311, uu____6312)  in
         mkBvUlt uu____6306 t.rng
-    | App (Var "Prims.b2t",t1::[]) ->
+    | App (Var "Prims.b2p",t1::[]) ->
         let uu___54_6316 = unboxBool t1  in
         {
           tm = (uu___54_6316.tm);

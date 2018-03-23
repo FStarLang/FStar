@@ -112,7 +112,7 @@ let quants = [
 ]
 type exp = term
 
-let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
+let is_b2p (t:typ)   = is_prim_op [C.b2p_lid] t
 let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
 let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 

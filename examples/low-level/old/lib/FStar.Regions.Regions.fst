@@ -451,7 +451,7 @@ val canModifyWrite : #a:Type -> r:lref a -> v:a -> m:smem
 let canModifyWrite r v m = ()
 
 
-type mStackNonEmpty (m:smem) = b2t (Stack.isNonEmpty (st m))
+type mStackNonEmpty (m:smem) = b2p (Stack.isNonEmpty (st m))
 
 type allocatedInRegion (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)  =
   not (FStar.Regions.Heap.contains h0 r) /\ FStar.Regions.Heap.contains h1 r /\  h1 == upd h0 r init

@@ -252,12 +252,12 @@ let decrypt (k:key) (c:cipher)
   (requires (fun h0 ->
     let log = log k h0 in
     invariant k h0 /\
-    (b2t ind_cpa_rest_adv ==> (exists p. Seq.mem (Entry p c) log))))
+    (b2p ind_cpa_rest_adv ==> (exists p. Seq.mem (Entry p c) log))))
   (ensures  (fun h0 res h1 ->
     let log = log k h1 in
     modifies_none h0 h1 /\
     invariant k h1 /\
-    (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log))) =
+    (b2p ind_cpa_rest_adv ==> Seq.mem (Entry res c) log))) =
   let Key raw_key log = k in
   let iv,c' = split c ivsize in
   let raw_plain = CC.block_dec CC.AES_128_CBC raw_key iv c' in

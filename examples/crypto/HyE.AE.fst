@@ -83,7 +83,7 @@ val decrypt: k:key -> c:cipher -> ST (option msg)
     ))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t int_ctxt /\ Some? res) ==> mem (Some?.v res,c) (sel h0 (key_log k))
+    ( (b2p int_ctxt /\ Some? res) ==> mem (Some?.v res,c) (sel h0 (key_log k))
     )
   )
   )

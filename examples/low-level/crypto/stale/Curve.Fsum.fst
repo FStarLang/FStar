@@ -48,7 +48,7 @@ let fsum_index_aux a b ctr =
   let ai = index a ctr in 
   let bi = index b ctr in 
   assert(U32.v ctr < norm_length); 
-  assert(b2t(v (get h0 a (U32.v ctr)) + v (get h0 b (U32.v ctr)) < pow2 platform_size)); 
+  assert(b2p(v (get h0 a (U32.v ctr)) + v (get h0 b (U32.v ctr)) < pow2 platform_size)); 
   let z = add ai bi in 
   upd a ctr z; 
   let h1 = HST.get() in

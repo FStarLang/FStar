@@ -30,7 +30,7 @@ type range = _rng * _rng
 
 type nat       = int
 type pos       = int
-type 'd b2t    = unit
+type 'd b2p    = unit
 
 type 'a squash = unit
 

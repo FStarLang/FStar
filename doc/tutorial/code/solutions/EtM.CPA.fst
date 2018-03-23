@@ -99,7 +99,7 @@ val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
     Map.contains h0.h k.region /\
     (let log0 = sel h0 k.log in
-      (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0 )
+      (b2p ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0 )
     )
   ))
 // END: EtMCPADecryptRequires
@@ -107,7 +107,7 @@ val decrypt: k:key -> c:cipher -> ST msg
      requires a stronger precondition *)
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (sel h0 k.log)
+    ( (b2p ind_cpa_rest_adv) ==> mem (res,c) (sel h0 k.log)
      (* (let log0 = sel h0 k.log in *)
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
      (*  Some? found /\ fst (Some.v found) = res) *)

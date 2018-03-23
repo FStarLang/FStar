@@ -119,7 +119,7 @@ noeq type entry (rand:randomness) =
 type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (index s i) = i}
 
 (* counter increases monotonically *)
-let counter_pre :preorder nat = fun (n1:nat) (n2:nat) -> b2t (n1 <= n2)
+let counter_pre :preorder nat = fun (n1:nat) (n2:nat) -> b2p (n1 <= n2)
 
 let is_prefix_of (#a:Type) (s1:seq a) (s2:seq a) :Type0
   = length s1 <= length s2 /\

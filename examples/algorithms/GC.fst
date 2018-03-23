@@ -56,7 +56,7 @@ noeq type gc_state = {
 }
 
 type ptr_lifts gc_state (ptr:mem_addr) : Type =
-  b2t (valid (gc_state.to_abs ptr))
+  b2p (valid (gc_state.to_abs ptr))
 
 type ptr_lifts_to gc_state (ptr:mem_addr) (abs:abs_node) : Type =
   valid abs

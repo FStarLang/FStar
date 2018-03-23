@@ -26,5 +26,5 @@ val evenb3: i:int{i>0} -> Tot bool
 let evenb3 i = (i % 2) = 0
 
 val test_filter3 : unit -> Lemma
-      (ensures (b2t (filter evenb3 [1;2;3;4] = [2;4])))
+      (ensures (b2p (filter evenb3 [1;2;3;4] = [2;4])))
 let test_filter3 () = ()

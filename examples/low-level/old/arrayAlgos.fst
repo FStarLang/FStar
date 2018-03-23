@@ -35,7 +35,7 @@ let lookupRefR2 (a:Type) m r = lookupRef r m
 
 val elookupRef : #a:Type -> m:smem -> r:(erased (lref a)){(refIsLive (reveal r) m)} ->
   Tot (erased a)
-let elookupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2t (refIsLive r m)) (lookupRefR2 a m)) v
+let elookupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2p (refIsLive r m)) (lookupRefR2 a m)) v
 
 
 val esel : #a:Type -> m:smem -> v:(sstarray a){refIsLive (reveal (asRef v)) m} -> Tot (erased (seq a))
@@ -44,7 +44,7 @@ let esel (#a:Type) m v = elookupRef m (asRef v)
 val eelookupRef : #a:Type -> m:(erased smem) -> r:(erased (lref a)){(refIsLive (reveal r) (reveal m))} ->
   Tot (erased a)
 let eelookupRef  (#a:Type) m v =
-  (elift2_p #smem #(lref a) #(fun m r -> b2t (refIsLive r m)) #a (lookupRefR2)) m v
+  (elift2_p #smem #(lref a) #(fun m r -> b2p (refIsLive r m)) #a (lookupRefR2)) m v
 
 val eesel : #a:Type -> m:(erased smem)
 -> v:(sstarray a){refIsLive (reveal (asRef v)) (reveal m)} -> Tot (erased (seq a))
@@ -84,16 +84,16 @@ val eeseln : #a:Type -> n:nat -> m:(erased smem)
                           (ensures (fun rs -> Seq.length (reveal rs) = n))
 let eeseln (#a:Type) n m v =
   let s = eesel m v in
-  admitP (b2t (Seq.length (reveal s)=n)); s
+  admitP (b2p (Seq.length (reveal s)=n)); s
 
 (elift2_wp #smem #(lref (seq a)) #(seq a)
   #(fun m r -> refIsLive r m
         /\  Seq.length (lookupRef r m) = n
           )
   #(fun m r rs ->
-        b2t (Seq.length rs = n)
+        b2p (Seq.length rs = n)
           )
-  (lookupRefR #(seq a) #(fun (s:seq a) -> b2t (Seq.length s = n))) ) m (asRef v)
+  (lookupRefR #(seq a) #(fun (s:seq a) -> b2p (Seq.length s = n))) ) m (asRef v)
 
 *)
 

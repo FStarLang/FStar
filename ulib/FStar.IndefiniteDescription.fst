@@ -39,5 +39,5 @@ val stronger_markovs_principle : p:(nat -> GTot bool) -> Ghost nat
   (requires (~(forall (n:nat). ~(p n))))
   (ensures (fun n -> p n))
 let stronger_markovs_principle p =
-  match indefinite_description _ (fun n -> b2t (p n)) with
+  match indefinite_description _ (fun n -> b2p (p n)) with
   | Mkdtuple2 n p -> give_witness p; n

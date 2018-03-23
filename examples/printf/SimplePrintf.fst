@@ -91,7 +91,7 @@ let parse_format_string (s:string) : option (list dir) =
 let valid_format_string = s:string{Some? (parse_format_string s)}
 
 let sprintf
-    (s:string{normalize_term (b2t (Some? (parse_format_string s)))})
+    (s:string{normalize_term (b2p (Some? (parse_format_string s)))})
     : normalize_term (dir_type (Some?.v (parse_format_string s)))
     = string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 

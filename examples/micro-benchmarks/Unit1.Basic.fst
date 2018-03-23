@@ -72,12 +72,12 @@ let pure_id_annot x = x
 val ml_id_annot : 'a -> ML 'a
 let ml_id_annot x = x
 
-val tabs_id_pure_annot_eq : a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
+val tabs_id_pure_annot_eq : a:eqtype -> x:a -> Pure a True (fun y -> b2p (y=x))
 let tabs_id_pure_annot_eq a x = x
 
 let tabs_id (a:Type) (x:'a) = x
 
-val id_pure_annot_eq : #a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
+val id_pure_annot_eq : #a:eqtype -> x:a -> Pure a True (fun y -> b2p (y=x))
 let id_pure_annot_eq #a x = x
 
 val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> V? y /\ h0==h1 /\ x=(V?.v y))
@@ -100,16 +100,16 @@ val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
 val dup_pure_eq: #a:eqtype -> x:a -> Pure (a * a) True
-                              (fun y -> b2t (Mktuple2?._1 y=Mktuple2?._2 y))
+                              (fun y -> b2p (Mktuple2?._1 y=Mktuple2?._2 y))
 let dup_pure_eq #a x = (x,x)
 
 (* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)
-assume val get_0: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2t (i=0))
-assume val get_1: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2t (i=1))
-val get_false: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b2t (b=false))
+assume val get_0: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2p (i=0))
+assume val get_1: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2p (i=1))
+val get_false: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b2p (b=false))
 let get_false u = get_0 () > get_1 ()
 
-val get_false_ANF: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b2t (b=false))
+val get_false_ANF: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b2p (b=false))
 let get_false_ANF u =
   let x = get_0 () in
   let y = get_1 () in

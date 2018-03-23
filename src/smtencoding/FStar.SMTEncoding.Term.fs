@@ -832,22 +832,22 @@ let getBoxedInteger (t:term) =
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng
 let mk_Valid t        = match t.tm with
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Equality", [_; t1; t2])}]) -> mkEq (t1, t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_disEquality", [_; t1; t2])}]) -> mkNot (mkEq (t1, t2) norng) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThanOrEqual", [t1; t2])}]) -> mkLTE (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThan", [t1; t2])}]) -> mkLT (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThanOrEqual", [t1; t2])}]) -> mkGTE (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThan", [t1; t2])}]) -> mkGT (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_Equality", [_; t1; t2])}]) -> mkEq (t1, t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_disEquality", [_; t1; t2])}]) -> mkNot (mkEq (t1, t2) norng) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_LessThanOrEqual", [t1; t2])}]) -> mkLTE (unboxInt t1, unboxInt t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_LessThan", [t1; t2])}]) -> mkLT (unboxInt t1, unboxInt t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_GreaterThanOrEqual", [t1; t2])}]) -> mkGTE (unboxInt t1, unboxInt t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_GreaterThan", [t1; t2])}]) -> mkGT (unboxInt t1, unboxInt t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
+    | App(Var "Prims.b2p", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
     | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
             when (FStar.Util.is_some (getBoxedInteger t0))->
-        // sometimes b2t gets needlessly normalized...
+        // sometimes b2p gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
-    | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
+    | App(Var "Prims.b2p", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng

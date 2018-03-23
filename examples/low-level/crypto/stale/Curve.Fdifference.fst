@@ -48,7 +48,7 @@ let fdifference_aux_1 a b ctr =
   let ai = index a i in 
   let bi = index b i in 
   assert(U32.v i >= U32.v ctr /\ U32.v i < norm_length); 
-  cut(b2t(v (get h0 b (U32.v i)) >= v (get h0 a (U32.v i)))); 
+  cut(b2p(v (get h0 b (U32.v i)) >= v (get h0 a (U32.v i)))); 
   let z = bi -^ ai in 
   upd a i z;
   let h1 = HST.get() in

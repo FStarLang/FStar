@@ -57,4 +57,4 @@ let mk_counter2 _ =
     let rx = ST.read x in
     ST.write x (rx + 1);
     2 * rx in
-  Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
+  Evens (fun h -> b2p(contains h r)) (Set.singleton (Ref x)) evens

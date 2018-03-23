@@ -2021,7 +2021,7 @@ and maybe_simplify_aux cfg env stack tm =
                    | _ -> tm
              end
            | _ -> tm
-      else if S.fv_eq_lid fv PC.b2t_lid
+      else if S.fv_eq_lid fv PC.b2p_lid
       then match args with
            | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
            | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false

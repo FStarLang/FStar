@@ -123,7 +123,7 @@ let rec fsum_index a a_idx b b_idx len ctr =
     let ai = index a (i+|a_idx) in 
     let bi = index b (i+|b_idx) in 
     assert(U32.v i >= U32.v ctr /\ U32.v i < U32.v len); 
-    cut(b2t(v (get h0 a (U32.v i+U32.v a_idx)) + v (get h0 b (U32.v i+U32.v b_idx)) < pow2 platform_wide));
+    cut(b2p(v (get h0 a (U32.v i+U32.v a_idx)) + v (get h0 b (U32.v i+U32.v b_idx)) < pow2 platform_wide));
     let z = ai +^ bi in
     upd a (a_idx+|i) z; 
     let h1 = HST.get() in

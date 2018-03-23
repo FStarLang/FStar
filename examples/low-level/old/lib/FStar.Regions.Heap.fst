@@ -49,7 +49,7 @@ assume RestrictIn:    forall (a:Type) (h:heap) (r:set aref) (a:lref a).     {:pa
                       contains (restrict h r) a == (mem (Ref a) r && contains h a)
 
 assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:lref a).       {:pattern sel (concat h1 h2) a}
-                      if b2t (contains h2 a) then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a == sel h1 a
+                      if b2p (contains h2 a) then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a == sel h1 a
 
 assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:lref a).       {:pattern contains (concat h1 h2) a}
                       contains (concat h1 h2) a == (contains h1 a || contains h2 a)
@@ -58,7 +58,7 @@ type On (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 opaque type fresh (lrefs:set aref) (h0:heap) (h1:heap) =
   (forall (a:Type) (a:lref a).{:pattern (contains h0 a)} mem (Ref a) lrefs ==> not(contains h0 a) /\ contains h1 a)
 opaque type modifies (mods:set aref) (h:heap) (h':heap) =
-    b2t (equal h' (concat h' (restrict h (complement mods))))
+    b2p (equal h' (concat h' (restrict h (complement mods))))
 
 type modset = erased (set aref)
 

@@ -15,8 +15,8 @@ let t2b = function
   | A -> Seq.create 1 1uy
   | B -> Seq.create 1 2uy
 
-val b2t : pinverse Seq.equal t2b
-let b2t b = match Seq.index b 0 with
+val b2p : pinverse Seq.equal t2b
+let b2p b = match Seq.index b 0 with
   | 1uy -> Some A
   | 2uy -> Some B
   | _ -> None

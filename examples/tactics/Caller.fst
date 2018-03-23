@@ -10,6 +10,6 @@ assume val ax : tau:(unit -> Tac unit) ->
 
 (* No tactic should run before this line *)
 
-(* Will call tau to discharge the `b2t (3 > 0)` goal. *)
+(* Will call tau to discharge the `b2p (3 > 0)` goal. *)
 let f () : int =
     ax (fun () -> print "Hello!"; trivial ()) 3

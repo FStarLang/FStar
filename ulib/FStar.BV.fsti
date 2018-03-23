@@ -8,7 +8,7 @@ val bv_t: (n : nat) -> t:Type0{hasEq t}
 // let max_int (n:nat) : Tot int = pow2 n - 1
 // let min_int (n:nat) : Tot int = 0
 // let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
-// let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
+// let size (x:int) (n:nat) : Tot Type0 = b2p(fits x n)
 // type uint_t' (n:nat) = x:int{size x n}
 
 val bv_uext: #n:pos -> #m:pos -> a:bv_t n -> Tot (normalize (bv_t (m+n)))

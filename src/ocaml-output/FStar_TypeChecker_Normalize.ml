@@ -6723,7 +6723,7 @@ and (maybe_simplify_aux :
                                         else
                                           (let uu____17489 =
                                              FStar_Syntax_Syntax.fv_eq_lid fv
-                                               FStar_Parser_Const.b2t_lid
+                                               FStar_Parser_Const.b2p_lid
                                               in
                                            if uu____17489
                                            then
@@ -7057,7 +7057,7 @@ and (maybe_simplify_aux :
                                         else
                                           (let uu____19363 =
                                              FStar_Syntax_Syntax.fv_eq_lid fv
-                                               FStar_Parser_Const.b2t_lid
+                                               FStar_Parser_Const.b2p_lid
                                               in
                                            if uu____19363
                                            then

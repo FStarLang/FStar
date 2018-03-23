@@ -37,7 +37,7 @@ assume type Eq2 : #a:Type -> #b:Type -> a -> b -> Type0
 assume new type bool : Type0
 
 (* bool-to-type coercion *)
-opaque type b2t (b:bool) = (b == true)
+opaque type b2p (b:bool) = (b == true)
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =

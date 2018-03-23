@@ -14,8 +14,8 @@ type msg (l:nat) = lbytes l
 // BEGIN: FormatAppend
 val append_inj_lemma: b1:message -> b2:message
                    -> c1:message -> c2:message
-                   -> Lemma (requires (length b1==length c1 /\ b2t (Seq.eq (b1 @| b2) (c1 @| c2))))
-                            (ensures (b2t (Seq.eq b1 c1) /\ b2t (Seq.eq b2 c2)))
+                   -> Lemma (requires (length b1==length c1 /\ b2p (Seq.eq (b1 @| b2) (c1 @| c2))))
+                            (ensures (b2p (Seq.eq b1 c1) /\ b2p (Seq.eq b2 c2)))
                             [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
 // END: FormatAppend
 let append_inj_lemma b1 b2 c1 c2 =
@@ -45,13 +45,13 @@ let iutf8 m = Platform.Bytes.iutf8 m*)
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    b2t (Seq.eq (utf8 s0) (utf8 s1)) ==> s0==s1
+    b2p (Seq.eq (utf8 s0) (utf8 s1)) ==> s0==s1
 
 val uint16_to_bytes: u:uint16{repr_bytes u <= 2} -> Tot (msg 2)
 
 let uint16_to_bytes u = bytes_of_int 2 u
 
-assume UINT16_inj: forall s0 s1. b2t (Seq.eq (uint16_to_bytes s0) (uint16_to_bytes s1)) ==> s0==s1
+assume UINT16_inj: forall s0 s1. b2p (Seq.eq (uint16_to_bytes s0) (uint16_to_bytes s1)) ==> s0==s1
 
 type string16 = s:string{uInt16 (length (utf8 s))} (* up to 65K *)
 
@@ -94,13 +94,13 @@ val req_resp_distinct:
 
 val req_injective:
   s0:string -> s1:string ->
-  Lemma (requires (b2t (Seq.eq (request s0) (request s1))))
+  Lemma (requires (b2p (Seq.eq (request s0) (request s1))))
         (ensures  (s0==s1))
         (*[SMTPat (request s0); SMTPat (request s1)]*)
 
 val resp_injective:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
-  Lemma (requires (b2t (Seq.eq (response s0 t0) (response s1 t1))))
+  Lemma (requires (b2p (Seq.eq (response s0 t0) (response s1 t1))))
         (ensures  (s0==s1 /\ t0==t1))
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
 // END: FormatLemmas

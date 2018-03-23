@@ -116,8 +116,8 @@ let (quants :
   [(FStar_Parser_Const.forall_lid, "forall");
   (FStar_Parser_Const.exists_lid, "exists")] 
 type exp = FStar_Syntax_Syntax.term[@@deriving show]
-let (is_b2t : FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun t  -> is_prim_op [FStar_Parser_Const.b2t_lid] t 
+let (is_b2p : FStar_Syntax_Syntax.typ -> Prims.bool) =
+  fun t  -> is_prim_op [FStar_Parser_Const.b2p_lid] t 
 let (is_quant : FStar_Syntax_Syntax.typ -> Prims.bool) =
   fun t  ->
     is_prim_op (FStar_Pervasives_Native.fst (FStar_List.split quants)) t

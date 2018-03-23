@@ -24,7 +24,7 @@ let get_y p = Finite.y p
 (* Definition of an affine point on the curve *)
 val on_curve: affine_point -> Tot bool
 let on_curve p = (Inf? p || (Finite? p && (let x, y = get_x p, get_y p in (y ^^ 2) = ((x ^^ 3) ^+ (a ^* x) ^+ b))))
-type curvePoint (p:affine_point) = b2t(on_curve p)
+type curvePoint (p:affine_point) = b2p(on_curve p)
 
 (* Type of points on the curve *)
 type celem = p:affine_point{curvePoint p}

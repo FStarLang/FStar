@@ -321,7 +321,7 @@ assume  val formula_4: h:heap -> n:bytes -> ctr:nat{ctr<=bytes_length} -> Tot (z
 
 #reset-options
 
-type distinct2 (n:bytes) (p:point) = (* b2t(not(FStar.TSet.mem (Ref (getRef n)) (refs p))) *) True
+type distinct2 (n:bytes) (p:point) = (* b2p(not(FStar.TSet.mem (Ref (getRef n)) (refs p))) *) True
 
 #reset-options
 

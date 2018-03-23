@@ -350,7 +350,7 @@ val lemma_not_solveable_cons:  x:nat -> t:term -> tl:eqns -> Lemma
 let lemma_not_solveable_cons x t tl = ()
 
 val unify_correct_aux: l:list subst -> e:eqns -> Pure (list subst)
- (requires (b2t (lsubst_eqns l e = e)))
+ (requires (b2p (lsubst_eqns l e = e)))
  (ensures (fun m ->
 	    match unify e l with
 	      | None -> not_solveable_eqns e

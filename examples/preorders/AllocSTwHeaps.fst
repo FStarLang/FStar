@@ -85,7 +85,7 @@ assume val ist_recall :  p:predicate FStar.Heap.heap{stable p heap_rel} ->
    to use it in point-free style in (witness) and (recall). *)
 
 let contains (#a:Type) (r:ref a) (h:FStar.Heap.heap) =
-  b2t (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Heap.contains h r))
+  b2p (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Heap.contains h r))
 
 
 val contains_lemma : #a:Type -> 

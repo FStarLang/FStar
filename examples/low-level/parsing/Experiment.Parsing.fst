@@ -11,7 +11,7 @@ assume Mod_1: forall i. i % (sizeof byte) = 0
 
 type validator = 
   b:buffer u8 -> len:UInt32.t -> Pure (result UInt32.t)
-    (requires (b2t(v len <= length (b))))
+    (requires (b2p(v len <= length (b))))
     (ensures  (fun l -> Correct? l ==> v (correct l) <= length (b)))
 
 type valid (b:buffer u8) (l:UInt32.t) (v:validator) = 
@@ -45,7 +45,7 @@ let read_length b n =
   )
 
 val vlparse: n:csize -> b:buffer u8 -> len:UInt32.t -> Pure (result UInt32.t)
-  (requires (b2t(v len <= length b)))
+  (requires (b2p(v len <= length b)))
   (ensures  (fun l -> Correct? l ==> v (correct l) <= length (b)))
 let vlparse n b len =
   if n >^ len then Error "Too short"

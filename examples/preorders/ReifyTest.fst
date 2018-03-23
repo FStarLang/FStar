@@ -22,7 +22,7 @@ val test_reify_recall : unit ->
 	                            (fun _ _ _ -> True)
 let test_reify_recall _ = 
   let h0 = ist_get () in
-  let m = alloc #nat (fun n m -> b2t (n <= m)) 0 in 
+  let m = alloc #nat (fun n m -> b2p (n <= m)) 0 in 
 
   assume (stable_on_heap m (fun h -> contains m h /\ sel h m > 0));  //temporary, until we chase down the mysterious reason why F* does not accept it
 

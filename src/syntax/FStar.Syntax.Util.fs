@@ -991,7 +991,7 @@ let tor     = fvar_const PC.or_lid
 let timp    = fvar PC.imp_lid (Delta_defined_at_level 1) None
 let tiff    = fvar PC.iff_lid (Delta_defined_at_level 2) None
 let t_bool  = fvar_const PC.bool_lid
-let b2t_v   = fvar_const PC.b2t_lid
+let b2p_v   = fvar_const PC.b2p_lid
 let t_not   = fvar_const PC.not_lid
 // These are `True` and `False`, not the booleans
 let t_false = fvar_const PC.false_lid
@@ -1014,7 +1014,7 @@ let mk_disj_l phi = match phi with
     | hd::tl -> List.fold_right mk_disj tl hd
 let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
-let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
+let b2p e = mk (Tm_app(b2p_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
 let teq = fvar_const PC.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
@@ -1161,7 +1161,7 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.false_lid
         || Syntax.fv_eq_lid fv PC.eq2_lid
         || Syntax.fv_eq_lid fv PC.eq3_lid
-        || Syntax.fv_eq_lid fv PC.b2t_lid
+        || Syntax.fv_eq_lid fv PC.b2p_lid
         //these are an uninterpreted predicates
         //which we are better off treating as sub-singleton
         || Syntax.fv_eq_lid fv PC.haseq_lid

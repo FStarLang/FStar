@@ -111,7 +111,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some t' ->
-     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
+     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t' in //add a b2p coercion is e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
      if debug env Options.High
@@ -134,7 +134,7 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Rel.trivial_guard
    | Some t ->
-     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t in //Add a b2t coercion if e:bool and t=Type
+     let e, lc = TcUtil.maybe_coerce_bool_to_type env e lc t in //Add a b2p coercion if e:bool and t=Type
      TcUtil.weaken_result_typ env e lc t
 
 (************************************************************************************************************)

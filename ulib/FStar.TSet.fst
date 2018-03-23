@@ -108,14 +108,14 @@ let lemma_equal_elim  #a s1 s2 = PredicateExtensionality.predicateExtensionality
 let lemma_equal_refl  #a s1 s2 = ()
 
 abstract let tset_of_set (#a:eqtype) (s:Set.set a) :set a =
-  fun (x:a) -> squash (b2t (Set.mem x s))
+  fun (x:a) -> squash (b2p (Set.mem x s))
 
 private let lemma_mem_tset_of_set_l (#a:eqtype) (s:Set.set a) (x:a)
   :Lemma (requires True)
          (ensures (mem x (tset_of_set s) ==> Set.mem x s))
   = if FStar.StrongExcludedMiddle.strong_excluded_middle (mem x (tset_of_set s)) then
       let t1 = mem x (tset_of_set s) in
-      let t2 = b2t (Set.mem x s) in
+      let t2 = b2p (Set.mem x s) in
       let u:(squash t1) = FStar.Squash.get_proof t1 in
       let u:(squash (squash t2)) = u in
       let u:squash t2 = FStar.Squash.join_squash u in
@@ -126,8 +126,8 @@ private let lemma_mem_tset_of_set_r (#a:eqtype) (s:Set.set a) (x:a)
   :Lemma (requires True)
          (ensures (Set.mem x s ==> mem x (tset_of_set s)))
   = if Set.mem x s then
-      let u:squash (b2t (Set.mem x s)) = () in
-      let _ = assert (mem x (tset_of_set s) == squash (b2t (Set.mem x s))) in
+      let u:squash (b2p (Set.mem x s)) = () in
+      let _ = assert (mem x (tset_of_set s) == squash (b2p (Set.mem x s))) in
       FStar.Squash.give_proof u
     else ()
 

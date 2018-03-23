@@ -29,7 +29,7 @@ let rec find (#a:Type) (s:S.seq a) (p:a -> bool) (i:nat{i < S.length s})
 
 let rec pigeonhole (#n:nat) (s:S.seq (fin n))
   : Pure (in_ s * in_ s)
-    (requires (b2t (S.length s = n + 1)))
+    (requires (b2p (S.length s = n + 1)))
     (ensures (fun (i1, i2) -> i1 < i2 /\ S.index s i1 = S.index s i2))
     (decreases n)
 =

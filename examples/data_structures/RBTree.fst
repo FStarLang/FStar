@@ -50,13 +50,13 @@ let rec black_height t = match t with
       | _, _ -> None
 
 (* returns the minimum element in a T tree (E tree has no element) *)
-val min_elt: t:rbtree' -> Pure nat (requires (b2t (T? t))) (ensures (fun r -> True))
+val min_elt: t:rbtree' -> Pure nat (requires (b2p (T? t))) (ensures (fun r -> True))
 let rec min_elt (T _ a x _) = match a with
   | E -> x
   | _ -> min_elt a
 
 (* returns the maximum element in a T tree *)
-val max_elt: t:rbtree' -> Pure nat (requires (b2t (T? t))) (ensures (fun r -> True))
+val max_elt: t:rbtree' -> Pure nat (requires (b2p (T? t))) (ensures (fun r -> True))
 let rec max_elt (T _ _ x b) = match b with
   | E -> x
   | _ -> max_elt b

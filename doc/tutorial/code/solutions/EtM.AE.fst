@@ -111,7 +111,7 @@ abstract val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\
     invariant h1 k /\
-      ( (b2t Ideal.uf_cma /\ Some? res) ==>
+      ( (b2p Ideal.uf_cma /\ Some? res) ==>
         (Some? (seq_find (fun (_,c') -> c = c') (get_log h0 k)))
 
    (* CH*MK: If we wanted to also prove correctness of the EtM.AE

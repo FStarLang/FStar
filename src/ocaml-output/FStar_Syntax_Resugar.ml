@@ -682,7 +682,7 @@ let rec (resugar_term' :
           when
           (let uu____1598 = FStar_Options.print_implicits ()  in
            Prims.op_Negation uu____1598) &&
-            (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2t_lid)
+            (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2p_lid)
           -> resugar_term' env e
       | FStar_Syntax_Syntax.Tm_app (e,args) ->
           let rec last1 uu___68_1640 =

@@ -55,7 +55,7 @@ type range = _rng * _rng
 
 type nat       = int
 type pos       = int
-type 'd b2t    = B2t of unit
+type 'd b2p    = B2t of unit
 
 type 'a squash = Squash of unit
 

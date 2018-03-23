@@ -19,7 +19,7 @@ module Prims
   type 'a list   = 'a list'
   type 'a option = 'a Microsoft.FSharp.Core.option
   type nat = int
-  type 'dummy b2t = Dummy_b2t of unit
+  type 'dummy b2p = Dummy_b2p of unit
   type ('a,'b) l__HashMultiMap = ('a, 'b) Microsoft.FSharp.Collections.HashMultiMap
   type (' p, ' q) l_or =
   | Left of ' p

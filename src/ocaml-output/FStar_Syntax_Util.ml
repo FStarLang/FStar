@@ -2010,8 +2010,8 @@ let (tiff : FStar_Syntax_Syntax.term) =
   
 let (t_bool : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.bool_lid 
-let (b2t_v : FStar_Syntax_Syntax.term) =
-  fvar_const FStar_Parser_Const.b2t_lid 
+let (b2p_v : FStar_Syntax_Syntax.term) =
+  fvar_const FStar_Parser_Const.b2p_lid 
 let (t_not : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.not_lid 
 let (t_false : FStar_Syntax_Syntax.term) =
@@ -2128,7 +2128,7 @@ let (mk_iff :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   = fun phi1  -> fun phi2  -> mk_binop tiff phi1 phi2 
-let (b2t :
+let (b2p :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
@@ -2139,7 +2139,7 @@ let (b2t :
           let uu____5509 =
             let uu____5512 = FStar_Syntax_Syntax.as_arg e  in [uu____5512]
              in
-          (b2t_v, uu____5509)  in
+          (b2p_v, uu____5509)  in
         FStar_Syntax_Syntax.Tm_app uu____5494  in
       FStar_Syntax_Syntax.mk uu____5493  in
     uu____5490 FStar_Pervasives_Native.None e.FStar_Syntax_Syntax.pos
@@ -2651,7 +2651,7 @@ let (is_sub_singleton : FStar_Syntax_Syntax.term -> Prims.bool) =
                       FStar_Parser_Const.eq3_lid))
                   ||
                   (FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.b2t_lid))
+                     FStar_Parser_Const.b2p_lid))
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.haseq_lid))

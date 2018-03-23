@@ -340,7 +340,7 @@ For instance, if we uncomment the `write` we get the following error message:
 <!-- fstar.exe code/exercises/Ex01a.fst -->
 ``` {language=""}
 .\Ex01a.fst(40,10-40,16): Subtyping check failed; 
-expected type (f:Ex01a.filename{(Prims.b2t (Ex01a.canWrite f))}); 
+expected type (f:Ex01a.filename{(Prims.b2p (Ex01a.canWrite f))}); 
 got type Ex01a.filename
 ```
 <!-- CH: It would be nice if at some point such error messages were
@@ -1032,7 +1032,7 @@ In its primitive form, `phi` is in fact a type, a predicate on the value
 the covers, we implicitly coerce the boolean to a type, by adding the
 coercion
 
-    b2t (b:bool) : Type = (b == true)
+    b2p (b:bool) : Type = (b == true)
 
 The type '`==`' is the type constructor for the homogeneous equality
 predicate; it is different from '`=`', which is a boolean function
@@ -1068,7 +1068,7 @@ is well-formed:
 
 It is a shorthand for the following, more elaborate form:
 
-    b2t(canRead e) /\ forall x. b2t(canWrite x) ==> b2t(canRead x)
+    b2p(canRead e) /\ forall x. b2p(canWrite x) ==> b2p(canRead x)
 
 On the other hand, the following formula is not well-formed; F\* will
 reject it:
@@ -4647,7 +4647,7 @@ let mk_counter_2 _ =
     let rx = ST.read x in
     ST.write x (rx + 1);
     2 * rx in
-  Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
+  Evens (fun h -> b2p(contains h r)) (Set.singleton (Ref x)) evens
 ```
 
 ~Exercise
@@ -4666,7 +4666,7 @@ let mk_counter_2 _ =
     let rx = ST.read x in
     ST.write x (rx + 1);
     2 * rx in
-  Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
+  Evens (fun h -> b2p(contains h r)) (Set.singleton (Ref x)) evens
 ~~
 
 ~

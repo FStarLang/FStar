@@ -1099,10 +1099,10 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     | Tm_fvar fv
         when S.fv_eq_lid fv C.bool_lid
           && is_type t ->
-      let _ = Env.lookup_lid env C.b2t_lid in  //check that we have Prims.b2t in the context
-      let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_defined_at_level 1) None in
+      let _ = Env.lookup_lid env C.b2p_lid in  //check that we have Prims.b2p in the context
+      let b2p = S.fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_defined_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
-      let e = mk_Tm_app b2t [S.as_arg e] None e.pos in
+      let e = mk_Tm_app b2p [S.as_arg e] None e.pos in
       e, lc
     | _ ->
       e, lc
@@ -1634,8 +1634,8 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
         | [(fst, _)] -> f fst
         | _ -> failwith "Unexpexted args to binary operator" in
 
-    let op_and_e e = U.b2t e   |> NonTrivial in
-    let op_or_e e  = U.mk_neg (U.b2t e) |> NonTrivial in
+    let op_and_e e = U.b2p e   |> NonTrivial in
+    let op_or_e e  = U.mk_neg (U.b2p e) |> NonTrivial in
     let op_and_t t = t |> NonTrivial in
     let op_or_t t  = t |> U.mk_neg |> NonTrivial in
     let op_imp_t t = t |> NonTrivial in
@@ -1914,7 +1914,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
              let x = S.new_bv (Some p) arg_typ in
              let sort =
                  let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
-                 U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
+                 U.refine x (U.b2p (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})
     in

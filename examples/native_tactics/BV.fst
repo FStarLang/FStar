@@ -72,7 +72,7 @@ val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
 let eq_to_bv #n #x #y pf = int2bv_lemma_2 #n x y
 
 val lt_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
-              (b2t (bvult #n (int2bv #n x) (int2bv #n y))) -> Lemma (x < y)
+              (b2p (bvult #n (int2bv #n x) (int2bv #n y))) -> Lemma (x < y)
 let lt_to_bv #n #x #y pf = int2bv_lemma_ult_2 #n x y
 
 (* Creates two fresh variables and two equations of the form int2bv
@@ -90,7 +90,7 @@ val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
 val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
-          squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) ->
+          squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2p (bvult #n z w)) ->
           Lemma (x < y)
 let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = int2bv_lemma_ult_2 x y
 

@@ -21,7 +21,7 @@ type factorialGuardLC (n:nat) (li : lref nat) (m:smem) =
   (refIsLive li m) && (not ((lookupRef li m) = n))
 
 val factorialGuard :  n:nat -> li:(lref nat)  -> unit
-  -> whileGuard (fun m -> b2t (refIsLive li m))
+  -> whileGuard (fun m -> b2p (refIsLive li m))
                 (factorialGuardLC n li)
 let factorialGuard n li u = not (memread li = n)
 (* the guard of a while loop is not supposed to change the memory*)

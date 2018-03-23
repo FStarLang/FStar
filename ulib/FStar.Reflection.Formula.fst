@@ -59,7 +59,7 @@ let term_as_formula' (t:term) : Tac formula =
 
     // TODO: l_Forall
     // ...or should we just try to drop all squashes?
-    // TODO: b2t at this point ?
+    // TODO: b2p at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
         match inspect_ln h, ts@[t] with

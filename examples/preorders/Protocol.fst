@@ -81,7 +81,7 @@ type counter_t (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)
 
 (* counter increases monotonically *)
 let counter_rel (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)) :relation (counter_t es_ref)
-  = fun n1 n2 -> b2t (n1 <= n2)
+  = fun n1 n2 -> b2p (n1 <= n2)
 
 let counter_pre (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)) :preorder (counter_t es_ref)
   = counter_rel es_ref

@@ -748,18 +748,18 @@ Kind_type))
 
 ; </end encoding Prims.Eq2>
 
-; encoding sigelt Prims.b2t
+; encoding sigelt Prims.b2p
 
-; <Start encoding Prims.b2t>
-(declare-fun Prims.b2t (Term) Type)
-;;;;;;;;;;;;;;;;b2t def
+; <Start encoding Prims.b2p>
+(declare-fun Prims.b2p (Term) Type)
+;;;;;;;;;;;;;;;;b2p def
 (assert (forall ((@x0 Term))
- (! (= (Valid (Prims.b2t @x0))
+ (! (= (Valid (Prims.b2p @x0))
 (BoxBool_proj_0 @x0))
   
-:pattern ((Valid (Prims.b2t @x0))))))
+:pattern ((Valid (Prims.b2p @x0))))))
 
-; </end encoding Prims.b2t>
+; </end encoding Prims.b2p>
 
 ; encoding sigelt Prims.True, Prims.T
 
@@ -25332,7 +25332,7 @@ Kind_type))
 (= (ApplyTE (Typ_lam_2167 @x1
 @a2)
 @x0)
-(Prims.l_not (Prims.b2t (Prims.op_Equality @a2
+(Prims.l_not (Prims.b2p (Prims.op_Equality @a2
 @x0
 @x1)))))
   

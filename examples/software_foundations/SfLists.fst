@@ -126,12 +126,12 @@ let rec rev_length l =
   | Cons h t -> length_snoc h (rev t); rev_length t
 
 val foo1 : n:int -> l : ilist -> Pure unit
-      (requires (b2t (repeat n 0 = l)))
+      (requires (b2p (repeat n 0 = l)))
       (ensures (fun r -> length l = 0))
 let foo1 n l = ()
 
 val foo2 : n : nat -> m : nat -> l : ilist -> Pure unit
-      (requires (b2t (repeat n m = l)))
+      (requires (b2p (repeat n m = l)))
       (ensures (fun r -> length l = m))
 let rec foo2 n m l =
   match m with
@@ -139,7 +139,7 @@ let rec foo2 n m l =
   | _ -> foo2 n (m-1) (repeat n (m-1))
 
 val foo3 : l : ilist -> n : int -> m : nat -> Pure unit
-      (requires (b2t (length l = m)))
+      (requires (b2p (length l = m)))
       (ensures (fun r -> (length (snoc l n) = m+1)))
 let rec foo3 l n m =
   match l with
@@ -147,7 +147,7 @@ let rec foo3 l n m =
   | Cons h t -> foo3 t n (length t)
 
 val foo4 : n : int -> l1 : ilist -> l2 : ilist -> Pure unit
-      (requires (b2t (snoc l1 n = l2)))
+      (requires (b2p (snoc l1 n = l2)))
       (ensures (fun r -> 0 < length l2))
 let foo4 n l1 l2 = ()
 

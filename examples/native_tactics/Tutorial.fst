@@ -126,7 +126,7 @@ after `split`, we'd see:
 ```
 TAC>> State dump (After split):
 TAC>> ACTIVE goals (2):
-TAC>> (x:Prims.nat) |- uu___unification_ 62 x : Prims.squash (Prims.b2t (x + x >= 0))
+TAC>> (x:Prims.nat) |- uu___unification_ 62 x : Prims.squash (Prims.b2p (x + x >= 0))
 TAC>> (x:Prims.nat) |- uu___unification_ 76 x : Prims.squash (FStar.List.Tot.Base.length (Prims.Cons 4 (Prims.Cons 5 (Prims.Cons 1 Prims.Nil))) == 3
   )
 TAC>> SMT goals (0):

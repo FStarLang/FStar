@@ -46,7 +46,7 @@ let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
 
 let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
-let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
+let size (x:int) (n:nat) : Tot Type0 = b2p(fits x n)
 
 (* Machine integer type *)
 type uint_t (n:nat) = x:int{size x n}
@@ -70,22 +70,22 @@ let ones n = max_int n
 
 (* Increment and decrement *)
 val incr: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a < max_int n))) (ensures (fun _ -> True))
+  (requires (b2p (a < max_int n))) (ensures (fun _ -> True))
 let incr #n a =
   a + 1
 val decr: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
+  (requires (b2p (a > min_int n))) (ensures (fun _ -> True))
 let decr #n a =
   a - 1
 
 abstract val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a < max_int n)))
+  (requires (b2p (a < max_int n)))
   (ensures (fun b -> a + 1 = b))
 let incr_underspec #n a =
   if a < max_int n then a + 1 else 0
 
 abstract val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a > min_int n)))
+  (requires (b2p (a > min_int n)))
   (ensures (fun b -> a - 1 = b))
 let decr_underspec #n a =
   if a > min_int n then a - 1 else 0
