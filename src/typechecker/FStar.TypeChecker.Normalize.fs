@@ -1852,7 +1852,7 @@ and maybe_simplify_aux cfg env stack tm =
                     begin match is_applied_maybe_squashed bs phi with
                     // Case 3)
                     | Some bv ->
-                        let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
+                        let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.kprop)) in
                         Some (SS.subst [NT (bv, ftrue)] q)
                     | None ->
                         None
@@ -1861,7 +1861,7 @@ and maybe_simplify_aux cfg env stack tm =
                     begin match is_applied_maybe_squashed bs p with
                     // Case 4)
                     | Some bv ->
-                        let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
+                        let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.kprop)) in
                         Some (SS.subst [NT (bv, ffalse)] q)
                     | _ ->
                         None

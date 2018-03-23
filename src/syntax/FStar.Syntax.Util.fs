@@ -963,6 +963,8 @@ let is_builtin_tactic md =
 let ktype  : term = mk (Tm_type(U_unknown)) None dummyRange
 let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
+let kprop : term = fv_to_tm (lid_as_fv PC.prop_lid Delta_constant None)
+
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in

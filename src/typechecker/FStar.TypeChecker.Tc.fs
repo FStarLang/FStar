@@ -223,7 +223,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.bind_wp expected_k in
 
   let if_then_else =
-    let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let p = S.new_bv (Some (range_of_lid ed.mname)) U.kprop in
     let expected_k = U.arrow [S.mk_binder a; S.mk_binder p;
                                  S.null_binder wp_a;
                                  S.null_binder wp_a]
@@ -253,14 +253,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
   let assert_p =
     let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder (U.type_u() |> fst);
+                                 S.null_binder U.kprop;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
     check_and_gen' env ed.assert_p expected_k in
 
   let assume_p =
     let expected_k = U.arrow [S.mk_binder a;
-                                 S.null_binder (U.type_u() |> fst);
+                                 S.null_binder U.kprop;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
     check_and_gen' env ed.assume_p expected_k in

@@ -78,16 +78,17 @@ let gen_wps_for_free
   end;
 
   (* Consider the predicate transformer st_wp:
-   *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
-   *   let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
-   *   let st_wp_h   (heap:Type) (a:Type) = heap -> st_post_h heap a -> GTot Type0
+   *   let st_pre_h  (heap:Type)          = heap -> GTot prop
+   *   let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot prop
+   *   let st_wp_h   (heap:Type) (a:Type) = heap -> st_post_h heap a -> GTot prop
    * after reduction we get:
-   *   let st_wp_h (heap: Type) (a: Type) = heap -> (a -> heap -> GTot Type0) -> GTot Type0
+   *   let st_wp_h (heap: Type) (a: Type) = heap -> (a -> heap -> GTot prop) -> GTot prop
    * we want:
-   *   type st2_gctx (heap: Type) (a:Type) (t:Type) = heap -> (a -> heap -> GTot Type0) -> GTot t
+   *   type st2_gctx (heap: Type) (a:Type) (t:Type) = heap -> (a -> heap -> GTot prop) -> GTot t
    * we thus generate macros parameterized over [e] that build the right
    * context. [gamma] is the series of binders the precede the return type of
    * the context. *)
+   // CH: TODO: should this check that things end in `prop`?
   let rec collect_binders (t : term) =
     match (U.unascribe <| compress t).n with
     | Tm_arrow (bs, comp) ->
@@ -272,13 +273,13 @@ let gen_wps_for_free
       c
   in
 
-  (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
+  (* val st2_if_then_else : heap:Type -> a:Type -> c:prop ->
                             st2_wp heap a -> st2_wp heap a ->
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
-    let c = S.gen_bv "c" None U.ktype in
+    let c = S.gen_bv "c" None U.kprop in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
       let l_ite = fvar PC.ite_lid (S.Delta_defined_at_level 2) None in
       U.ascribe (
@@ -291,11 +292,11 @@ let gen_wps_for_free
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
 
-  (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
+  (* val st2_assert_p : heap:Type ->a:Type -> q:prop -> st2_wp heap a ->
                        Tot (st2_wp heap a)
     let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
   let wp_assert =
-    let q = S.gen_bv "q" None U.ktype in
+    let q = S.gen_bv "q" None U.kprop in
     let wp = S.gen_bv "wp" None wp_a in
     let l_and = fvar PC.and_lid (S.Delta_defined_at_level 1) None in
     let body =
@@ -309,11 +310,11 @@ let gen_wps_for_free
   let wp_assert = register env (mk_lid "wp_assert") wp_assert in
   let wp_assert = mk_generic_app wp_assert in
 
-  (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
+  (* val st2_assume_p : heap:Type ->a:Type -> q:prop -> st2_wp heap a ->
                        Tot (st2_wp heap a)
     let st2_assume_p heap a q wp = st2_app (st2_pure (l_imp q)) wp *)
   let wp_assume =
-    let q = S.gen_bv "q" None U.ktype in
+    let q = S.gen_bv "q" None U.kprop in
     let wp = S.gen_bv "wp" None wp_a in
     let l_imp = fvar PC.imp_lid (S.Delta_defined_at_level 1) None in
     let body =
@@ -552,13 +553,13 @@ exception Not_found
 // ... the _ and * transformations from the definition language to F* ---------
 
 let double_star typ =
-    let star_once typ = U.arrow [S.mk_binder <| S.new_bv None typ] (S.mk_Total U.ktype0) in
+    let star_once typ = U.arrow [S.mk_binder <| S.new_bv None typ] (S.mk_Total U.kprop) in
     star_once <| typ |> star_once
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
     [S.null_bv (star_type' env a), S.as_implicit false],
-    mk_Total U.ktype0
+    mk_Total U.kprop
   ))
 
 // The *-transformation for types, purely syntactic. Has been enriched with the
@@ -591,7 +592,7 @@ and star_type' env t =
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
               mk (Tm_arrow (
                 binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
-                mk_Total U.ktype0))
+                mk_Total U.kprop))
       end
 
   | Tm_app (head, args) ->
@@ -801,7 +802,7 @@ let mk_return env (t: typ) (e: term) =
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
   let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
-  U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0))
+  U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.kprop))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
 
@@ -1199,9 +1200,9 @@ and mk_match env e0 branches f =
     let s_e =
       U.abs [ S.mk_binder p ]
             (mk (Tm_match (s_e0, s_branches)))
-            (Some (U.residual_tot U.ktype0))
+            (Some (U.residual_tot U.kprop))
     in
-    let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
+    let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.kprop) in
     M t1,
     mk (Tm_ascribed (s_e, (Inl t1_star, None), None)) ,
     mk (Tm_match (u_e0, u_branches))
@@ -1253,11 +1254,11 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       // e2* p
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
-      let s_e2 = U.abs x_binders s_e2 (Some (U.residual_tot U.ktype0)) in
+      let s_e2 = U.abs x_binders s_e2 (Some (U.residual_tot U.kprop)) in
       // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
-      U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0)),
+      U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.kprop)),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 

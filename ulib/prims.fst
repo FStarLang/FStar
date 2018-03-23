@@ -53,7 +53,7 @@ let prop = a:Type0{is_prop a}
 
 (* A coercion down to universe 0 *)
 [@ "tac_opaque"]
-assume val squash : Type -> prop
+assume val squash : Type -> Tot prop
 // let squash (p:Type) : prop = x:unit{p} TODO
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
@@ -135,10 +135,10 @@ type l_not (p:prop) : prop = l_imp p False
 unfold type l_ITE (p q r:prop) : prop = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
-assume type precedes : #a:Type -> #b:Type -> a -> b -> prop
+assume type precedes : #a:Type -> #b:Type -> a -> b -> Tot prop
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
-assume type has_type : #a:Type -> a -> Type -> prop
+assume type has_type : #a:Type -> a -> Type -> Tot prop
 
 (* forall (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
@@ -172,7 +172,7 @@ let pure_post' (a:Type) (pre:prop) = (_:a{pre}) -> GTot prop // c.f. #57
 let pure_post  (a:Type) = pure_post' a True
 let pure_wp    (a:Type) = pure_post a -> GTot pure_pre
 
-assume type guard_free: Type0 -> Type0
+assume type guard_free: prop -> Tot prop
 
 unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
      forall (return_val:a). return_val==x ==> p return_val
@@ -181,7 +181,7 @@ unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
 	wp1 (fun (bind_result_1:a) -> wp2 bind_result_1 p)
-unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
+unfold let pure_if_then_else (a:Type) (p:prop) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 
 unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
@@ -193,8 +193,8 @@ unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
         forall (p:pure_post a). wp1 p ==> wp2 p
 
 unfold let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
-unfold let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
-unfold let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
+unfold let pure_assert_p (a:Type) (q:prop) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
+unfold let pure_assume_p (a:Type) (q:prop) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
 unfold let pure_null_wp  (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
 unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (trivial_result:a) -> True)
 
@@ -273,7 +273,7 @@ abstract type pattern :Type0 = unit
 irreducible let smt_pat (#a:Type) (x:a) : pattern = ()
 irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
 
-assume type decreases : #a:Type -> a -> prop // TODO?
+assume type decreases : #a:Type -> a -> Tot prop
 
 (*
    Lemma is desugared specially. The valid forms are:
@@ -295,7 +295,7 @@ assume type decreases : #a:Type -> a -> prop // TODO?
    precondition for the *well-formedness* of the postcondition.
    C.f. #57.
 *)
-effect Lemma (a:Type) (pre:prop) (post:(_:unit{pre}) (* TODO squash? *) -> prop) (pats:list pattern) =
+effect Lemma (a:Type) (pre:prop) (post:(_:unit{pre}) (* TODO squash? *) -> Tot prop) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",

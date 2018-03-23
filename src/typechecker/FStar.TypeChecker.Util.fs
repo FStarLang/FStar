@@ -1099,9 +1099,8 @@ let maybe_coerce_bool_to_prop env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         when S.fv_eq_lid fv C.bool_lid
           && is_prop t ->
       let _ = Env.lookup_lid env C.b2p_lid in  //check that we have Prims.b2p in the context
-      let b2p = S.fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_defined_at_level 1) None in
-      let prop = (S.fv_to_tm (S.lid_as_fv (C.prop_lid) S.Delta_constant None)) in
-      let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total prop) in
+      let b2p = fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_defined_at_level 1) None in
+      let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total U.kprop) in
       let e = mk_Tm_app b2p [S.as_arg e] None e.pos in
       e, lc
     | _ ->
