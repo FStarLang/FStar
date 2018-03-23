@@ -1347,7 +1347,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "92ccf0eaa18698fb37e40ee7b5a369b7"
+      "316a0a728cd21695c03e8cc843f194fa"
     ],
     [
       "FStar.OrdSet.lemma_as_set_disjoint",
@@ -1388,7 +1388,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "bfc066b3abb8bfeea4cdcda169de5c99"
+      "65a852bc95c6b1bf8f356e40300043e1"
     ],
     [
       "FStar.OrdSet.lemma_as_set_mem",
@@ -1428,7 +1428,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "e865ce4bb2441098fb92e4cf295e88fd"
+      "586c85be82a466522f34d2c73a756d9f"
     ],
     [
       "FStar.OrdSet.sorted",
@@ -1651,7 +1651,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "0d34ee6a8e2731c681ff14b229342eae"
+      "f182c3b53a96c9fc85c2861375145509"
     ]
   ]
 ]
