@@ -101,7 +101,7 @@ type eq3 (#a #b:Type) (x:a) (y:b) : prop = squash (h_equals x y)
 unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool-to-prop coercion *)
-type b2p (b:bool) = (b == true)
+type b2p (b:bool) : prop = (b == true)
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =
@@ -295,7 +295,7 @@ assume type decreases : #a:Type -> a -> prop // TODO?
    precondition for the *well-formedness* of the postcondition.
    C.f. #57.
 *)
-effect Lemma (a:Type) (pre:prop) (post:(_:unit{pre}) (* TODO *) -> prop) (pats:list pattern) =
+effect Lemma (a:Type) (pre:prop) (post:(_:unit{pre}) (* TODO squash? *) -> prop) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
@@ -331,9 +331,11 @@ let assert_spinoff p = ()
 val cut : p:prop -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
-type nat = i:int{i >= 0}
-type pos = i:int{i > 0}
-type nonzero = i:int{i<>0}
+// TODO: drop b2p ... can only do if we make refinements require prop
+//                    post defining squash
+type nat = i:int{b2p (i >= 0)}
+type pos = i:int{b2p (i > 0)}
+type nonzero = i:int{b2p (i<>0)}
 
 (*    Arbitrary precision ints are compiled to zarith (big_ints)       *)
 (*    in OCaml and to .NET BigInteger in F#. Both these operations are *)
@@ -342,11 +344,10 @@ type nonzero = i:int{i<>0}
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : int -> nonzero -> Tot int
 
-// TODO
-// let rec pow2 (x:nat) : Tot pos =
-//   match x with
-//   | 0  -> 1
-//   | _  -> 2 `op_Multiply` (pow2 (x-1))
+let rec pow2 (x:nat) : Tot pos =
+  match x with
+  | 0  -> 1
+  | _  -> 2 `op_Multiply` (pow2 (x-1))
 
 let min x y = if x <= y then x else y
 
