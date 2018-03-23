@@ -3,7 +3,7 @@ include ../Makefile.include
 
 all:uall
 
-uall: deep example shallow
+uall: deep examples shallow
 
 deep: FStar.SL.Monotonic.Heap.uver FStar.SL.Heap.uver Lang.uver SL.Tactics.uver
 
