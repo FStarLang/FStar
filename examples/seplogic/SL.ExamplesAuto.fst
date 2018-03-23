@@ -204,7 +204,7 @@ let rec sl (i:int) : Tac unit =
     //or we are stuck at some existential in procedure calls
     let cont = solve_procedure_ref_value_existentials false in
     if cont then sl (i + 1)
-    else begin dump "SLAuto tactic finished"; smt () end
+    else smt ()
   | Unknown (Some fv) ->
     //so here we are unfolding something like swap_wp below
 
