@@ -155,7 +155,7 @@ and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list <(bv * bool * term)>
+and antiquotations = list<(bv * bool * term)>
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
