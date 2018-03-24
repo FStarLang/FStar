@@ -69,6 +69,10 @@ let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
             | Success (a, q)  -> run (t2 a) q
             | Failed (msg, q) -> Failed (msg, q))
 
+(* get : get the current proof state *)
+let get : tac<proofstate> =
+    mk_tac (fun p -> Success (p, p))
+
 let idtac : tac<unit> = ret ()
 
 let goal_to_string (g:goal) =
@@ -96,6 +100,13 @@ let is_irrelevant (g:goal) : bool =
 let print (msg:string) : tac<unit> =
     tacprint msg;
     ret ()
+
+let debug (msg:string) : tac<unit> =
+    bind get (fun ps ->
+    if Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)
+    then tacprint msg
+    else ();
+    ret ())
 
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
@@ -156,10 +167,6 @@ let print_proof_state (msg:string) : tac<unit> =
                    let subst = N.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
-
-(* get : get the current proof state *)
-let get : tac<proofstate> =
-    mk_tac (fun p -> Success (p, p))
 
 let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
 let rec log ps f : unit =
