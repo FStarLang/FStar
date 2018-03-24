@@ -56,6 +56,7 @@ val last: list 'a -> ML 'a
 let rec last = function
   | [hd] -> hd
   | _::tl -> last tl
+  | _ -> failwith "last of empty list"
 
 (** [init l] returns [l] without its last element. Requires, at
 type-checking time, that [l] be nonempty. Named as in: Haskell
@@ -64,6 +65,7 @@ val init: list 'a -> ML (list 'a)
 let rec init = function
   | [_] -> []
   | hd::tl -> hd::(init tl)
+  | _ -> failwith "init of empty list"
 
 (** [nth l n] returns the [n]-th element in list [l] (with the first
 element being the 0-th) if [l] is long enough, or raises an exception
