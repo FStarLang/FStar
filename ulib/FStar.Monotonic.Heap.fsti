@@ -10,7 +10,7 @@ let tset = TSet.set
 
 val heap :Type u#1
 
-val equal: heap -> heap -> Type0
+val equal: heap -> heap -> prop
 
 val equal_extensional (h1:heap) (h2:heap)
   :Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
@@ -28,11 +28,11 @@ val compare_addrs:
   #a:Type0 -> #b:Type0 -> #rel1:preorder a -> #rel2:preorder b ->
   r1:mref a rel1 -> r2:mref b rel2 -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 
-val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Type0
+logic val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> prop
 
-val addr_unused_in: nat -> heap -> Type0
+val addr_unused_in: nat -> heap -> prop
 
-val unused_in: #a:Type0 -> #rel:preorder a -> mref a rel -> heap -> Type0
+val unused_in: #a:Type0 -> #rel:preorder a -> mref a rel -> heap -> prop
 
 let fresh (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) =
   r `unused_in` h0 /\ h1 `contains` r
@@ -70,7 +70,7 @@ let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
 
 let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 h1
 
-let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
+let equal_dom (h1:heap) (h2:heap) :GTot prop =
   (forall (a:Type0) (rel:preorder a) (r:mref a rel). h1 `contains` r <==> h2 `contains` r) /\
   (forall (a:Type0) (rel:preorder a) (r:mref a rel). r `unused_in` h1 <==> r `unused_in` h2)
 
@@ -260,7 +260,7 @@ val addr_of_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (ad
 val aref_is_mm: aref -> GTot bool
 val is_mm_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (is_mm r == aref_is_mm (aref_of r))
 [SMTPat (aref_is_mm (aref_of r))]
-val aref_unused_in: aref -> heap -> Type0
+val aref_unused_in: aref -> heap -> prop
 val unused_in_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> h: heap -> Lemma (unused_in r h <==> aref_unused_in (aref_of r) h)
 [SMTPat (aref_unused_in (aref_of r) h)]
 val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:heap -> x:mref a rel -> y:aref -> Lemma
@@ -268,7 +268,7 @@ val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:heap -> x:mref a r
   (ensures  (addr_of x <> addr_of_aref y))
 
 (* Elimination rule *)
-val aref_live_at: h: heap -> a: aref -> t: Type0 -> rel: preorder t -> GTot Type0
+val aref_live_at: h: heap -> a: aref -> t: Type0 -> rel: preorder t -> GTot prop
 val gref_of: a: aref -> t: Type0 -> rel: preorder t -> Ghost (mref t rel) (requires (exists h . aref_live_at h a t rel)) (ensures (fun _ -> True))
 val ref_of: h: heap -> a: aref -> t: Type0 -> rel: preorder t -> Pure (mref t rel) (requires (aref_live_at h a t rel)) (ensures (fun x -> aref_live_at h a t rel /\ addr_of (gref_of a t rel) == addr_of x /\ is_mm x == aref_is_mm a))
 val aref_live_at_aref_of

@@ -47,7 +47,10 @@ let addr_unused_in n h = None? (h.memory n)
 let unused_in #a #rel r h = addr_unused_in (addr_of r) h
 
 let sel_tot #a #rel h r =
-  let Some (| _, _, _, x |) = h.memory r.addr in
+  let Some (| b, _, _, x |) = h.memory r.addr in
+  assert(h `contains` r);
+  assert(Some? (h.memory r.addr));
+  assume(b===a); // CH: TODO very strange
   x
 
 let sel #a #rel h r =

@@ -19,11 +19,11 @@ module FStar.TSet
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 abstract type set (a:Type) = a -> Tot prop
-abstract type equal (#a:Type) (s1:set a) (s2:set a) = forall x. s1 x <==> s2 x
+abstract type equal (#a:Type) (s1:set a) (s2:set a) : prop = forall x. s1 x <==> s2 x
 
 (* destructors *)
 
-abstract val mem : 'a -> set 'a -> Tot Type0
+abstract val mem : 'a -> set 'a -> Tot prop
 let mem x s = s x
 
 (* constructors *)
@@ -40,7 +40,7 @@ let intersect s1 s2 = fun x -> s1 x /\ s2 x
 let complement s    = fun x -> ~ (s x)
 
 (* ops *)
-type subset (#a:Type) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
+type subset (#a:Type) (s1:set a) (s2:set a) : prop = forall x. mem x s1 ==> mem x s2
 
 (* Properties *)
 abstract val mem_empty: #a:Type -> x:a -> Lemma
@@ -79,7 +79,7 @@ abstract val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
    [SMTPat (subset s1 s2)]
 
 let mem_empty      #a x       = ()
-let mem_singleton  #a x y     = ()
+let mem_singleton  #a x y     = admit() // TODO
 let mem_union      #a x s1 s2 = ()
 let mem_intersect  #a x s1 s2 = ()
 let mem_complement #a x s     = ()
@@ -126,7 +126,7 @@ private let lemma_mem_tset_of_set_r (#a:eqtype) (s:Set.set a) (x:a)
   :Lemma (requires True)
          (ensures (Set.mem x s ==> mem x (tset_of_set s)))
   = if Set.mem x s then
-      let u:squash (b2p (Set.mem x s)) = () in
+      let u:squash (b2p (Set.mem x s)) = admit() in // TODO
       let _ = assert (mem x (tset_of_set s) == squash (b2p (Set.mem x s))) in
       FStar.Squash.give_proof u
     else ()
@@ -138,10 +138,10 @@ let lemma_mem_tset_of_set (#a:eqtype) (s:Set.set a) (x:a)
   = lemma_mem_tset_of_set_l #a s x; lemma_mem_tset_of_set_r #a s x
 
 abstract
-let filter (#a:Type) (f:a -> Type0) (s:set a) : set a =
+let filter (#a:Type) (f:a -> prop) (s:set a) : set a =
   (fun (x:a) -> f x /\ s x)
 
-let lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
+let lemma_mem_filter (#a:Type) (f:(a -> prop)) (s:set a) (x:a)
   :Lemma (requires True)
          (ensures  (mem x (filter f s) <==> mem x s /\ f x))
          [SMTPat (mem x (filter f s))]

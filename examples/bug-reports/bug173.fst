@@ -165,7 +165,7 @@ let rec typing g s = match s with
   | _ -> false)
 
 (* ensures that type and value environment match *)
-type typed_heap (g : env) (h : heap) = (forall x. typing_val (h x) = g x)
+type typed_heap (g : env) (h : heap) : prop = (forall x. typing_val (h x) = g x)
 
 (* progress for well-typed expressions *)
 val progress_exp : g:env -> h:heap{typed_heap g h} ->

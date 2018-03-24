@@ -9,7 +9,7 @@ let test1 = assert (pred (test 0))
 (* this works now *)
 let test2' z = assert (pred (test z))
 
-assume val myassert: b:Type -> Pure unit (requires (b)) (ensures (fun _ -> True))
+assume val myassert: b:prop -> Pure unit (requires (b)) (ensures (fun _ -> True))
 assume val pred2: x:int -> Pure bool
     (requires (True))
     (ensures (fun y -> y))

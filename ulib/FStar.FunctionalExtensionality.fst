@@ -19,7 +19,7 @@ module FStar.FunctionalExtensionality
 
 type efun (a:Type) (b:Type) = a -> Tot b
 
-type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
+type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) : prop =
   (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
 assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
@@ -28,7 +28,7 @@ assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
 (** Ghost functional extensionality **)
 type gfun (a:Type) (b:Type) = a -> GTot b
 
-type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
+type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) : prop =
     (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
 assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).

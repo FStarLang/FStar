@@ -192,7 +192,7 @@ equality. *)
 
 (** [memP x l] holds if, and only if, [x] appears as an
 element of [l]. Similar to: List.In in Coq. *)
-let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
+let rec memP (#a: Type) (x: a) (l: list a) : Tot prop =
   match l with
   | [] -> False
   | y :: q -> x == y \/ memP x q
@@ -236,15 +236,13 @@ we define our postcondition as [mem_filter_spec f m u] below, where
 [m] is the intended [filter f l] and [u] indicates whether [a] has
 decidable equality ([None] if not). Requires, at type-checking time,
 [f] to be a pure total function. *)
-let mem_filter_spec (#a : Type) (f: (a -> Tot bool)) (m: list a) (u: option (x : unit { hasEq a } )) : Tot Type0 =
-  match u with
-  | None -> True
-  | Some z -> forall x . mem x m ==> f x
+let mem_filter_spec (#a : Type) (f: (a -> Tot bool)) (m: list a) : Tot prop =
+  forall x . (hasEq a /\ mem x m) ==> f x
 
 (** [filter f l] returns [l] with all elements [x] such that [f x]
 does not hold removed. Requires, at type-checking time, [f] to be a
 pure total function.  Named as in: OCaml, Coq *)
-val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a { forall u . mem_filter_spec f m u } )
+val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a { mem_filter_spec f m } )
 let rec filter #a f = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
@@ -256,8 +254,7 @@ val mem_filter (#a: eqtype) (f: (a -> Tot bool)) (l: list a) (x: a) : Lemma
   (requires (mem #a x (filter f l)))
   (ensures (f x))
 let mem_filter #a f l x =
-  let u : option ( u : unit { hasEq a } ) = Some () in
-  let y : (z : unit { mem_filter_spec f (filter f l) u } ) = () in
+  let y : (z : unit { mem_filter_spec f (filter f l) } ) = () in
   ()
 
 (** Postcondition on [filter f l] for types with decidable equality,
@@ -468,7 +465,7 @@ private abstract let test_sort :unit = assert (sortWith (compare_of_bool (<)) [3
 (** A l1 is a strict prefix of l2. *)
 
 let rec strict_prefix_of (#a: Type) (l1 l2: list a)
-: Pure Type0
+: Pure prop
   (requires True)
   (ensures (fun _ -> True))
   (decreases l2)
@@ -476,7 +473,7 @@ let rec strict_prefix_of (#a: Type) (l1 l2: list a)
   | [] -> False
   | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
 
-val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
+val list_unref : #a:Type -> #p:(a -> prop) -> list (x:a{p x}) -> Tot (list a)
 let rec list_unref #a #p l =
     match l with
     | [] -> []
