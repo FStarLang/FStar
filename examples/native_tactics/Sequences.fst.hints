@@ -12,48 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "c3a164b445656adc001355823760426e"
-    ],
-    [
-      "Sequences.prune_for_seq",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "19c475c131818a0726ca65b3f0e2582c"
-    ],
-    [
-      "Sequences.try_unref_eq",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "06c1b76294e18439c5b48a32f0649852"
-    ],
-    [
-      "Sequences.sequence_pruning",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
-      ],
-      0,
-      "60c71abb9786ec15f8afc87be43933f5"
+      "0bdd8f01e1bbf9c014bd93a0bb0e165e"
     ],
     [
       "Sequences.test",
@@ -75,7 +34,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "2c88398ff543122857057405e1f98f1c"
+      "fd5d4d54fff03537707970b58a18f2cd"
     ],
     [
       "Sequences.test",
@@ -95,7 +54,7 @@
         "unit_typing"
       ],
       0,
-      "bd6afdb41ac16bb709c1388f07d0b3b0"
+      "37c3196a0eba1912ff41940df17f642b"
     ],
     [
       "Sequences.test",
@@ -115,7 +74,7 @@
         "unit_typing"
       ],
       0,
-      "89105100d273652fbdd6b94f08406978"
+      "ce7e4b78dada13b9385adb5f28bcd00f"
     ],
     [
       "Sequences.test",
@@ -148,7 +107,7 @@
         "unit_typing"
       ],
       0,
-      "705e6ecef23e359641e99cedb7af704f"
+      "fd1c7bf9e51a27e266d14f4494f7b4f7"
     ]
   ]
 ]

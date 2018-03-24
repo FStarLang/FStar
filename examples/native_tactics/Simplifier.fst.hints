@@ -2,18 +2,6 @@
   "c\u0001ï„µN÷¾VœFàÆ‹Ïv",
   [
     [
-      "Simplifier.goal_is_true",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "bddeb2588f5e4cf4c349fc3f130f051b"
-    ],
-    [
       "Simplifier.test1",
       1,
       2,
@@ -28,7 +16,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "7fc440a87e8a9405801a8dc9fbdff833"
+      "39aba597eba42d790d3325c8fd2c1d18"
     ],
     [
       "Simplifier.test2",
@@ -45,7 +33,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "7b3565827a4b3f04a080b8973f472b31"
+      "b2539d900c9774d863a16923b8c15772"
     ]
   ]
 ]

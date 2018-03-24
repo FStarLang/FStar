@@ -1,6 +1,6 @@
 module FStar.Pointer.Base
 
-module DM = FStar.DependentMap
+module HH = FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 open FStar.HyperStack.ST // for := , !
@@ -50,19 +50,28 @@ type typ =
 | TBuffer:
   (t: typ) ->
   typ
-and struct_typ = (l: list (string * typ) {
+and struct_typ' = (l: list (string * typ) {
   Cons? l /\ // C11, 6.2.5 al. 20: structs and unions must have at least one field
   List.Tot.noRepeats (List.Tot.map fst l)
 })
+and struct_typ = {
+  name: string;
+  fields: struct_typ' ;
+}
 and union_typ = struct_typ
 
 (** `struct_field l` is the type of fields of `TStruct l`
     (i.e. a refinement of `string`).
 *)
+let struct_field'
+  (l: struct_typ')
+: Tot eqtype
+= (s: string { List.Tot.mem s (List.Tot.map fst l) } )
+
 let struct_field
   (l: struct_typ)
 : Tot eqtype
-= (s: string { List.Tot.mem s (List.Tot.map fst l) } )
+= struct_field' l.fields
 
 (** `union_field l` is the type of fields of `TUnion l`
     (i.e. a refinement of `string`).
@@ -72,14 +81,21 @@ let union_field = struct_field
 (** `typ_of_struct_field l f` is the type of data associated with field `f` in
     `TStruct l` (i.e. a refinement of `typ`).
 *)
-let typ_of_struct_field
-  (l: struct_typ)
-  (f: struct_field l)
+
+let typ_of_struct_field'
+  (l: struct_typ')
+  (f: struct_field' l)
 : Tot (t: typ {t << l})
 = List.Tot.assoc_mem f l;
   let y = Some?.v (List.Tot.assoc f l) in
   List.Tot.assoc_precedes f l y;
   y
+
+let typ_of_struct_field
+  (l: struct_typ)
+  (f: struct_field l)
+: Tot (t: typ {t << l})
+= typ_of_struct_field' l.fields f
 
 (** `typ_of_union_field l f` is the type of data associated with field `f` in
     `TUnion l` (i.e. a refinement of `typ`).
@@ -96,7 +112,7 @@ let rec typ_depth
 = match t with
   | TArray _ t -> 1 + typ_depth t
   | TUnion l
-  | TStruct l -> 1 + struct_typ_depth l
+  | TStruct l -> 1 + struct_typ_depth l.fields
   | _ -> 0
 and struct_typ_depth
   (l: list (string * typ))
@@ -110,10 +126,10 @@ and struct_typ_depth
     if n1 > n2 then n1 else n2
 
 let rec typ_depth_typ_of_struct_field
-  (l: struct_typ)
-  (f: struct_field l)
+  (l: struct_typ')
+  (f: struct_field' l)
 : Lemma
-  (ensures (typ_depth (typ_of_struct_field l f) <= struct_typ_depth l))
+  (ensures (typ_depth (typ_of_struct_field' l f) <= struct_typ_depth l))
   (decreases l)
 = let ((f', _) :: l') = l in
   if f = f'
@@ -184,6 +200,19 @@ let type_of_base_typ
 (** Interpretation of arrays of elements of (interpreted) type `t`. *)
 type array (length: array_length_t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
+let type_of_struct_field''
+  (l: struct_typ')
+  (type_of_typ: (
+    (t: typ { t << l } ) ->
+    Tot Type0
+  ))
+  (f: struct_field' l)
+: Tot Type0 =
+  List.Tot.assoc_mem f l;
+  let y = typ_of_struct_field' l f in
+  List.Tot.assoc_precedes f l y;
+  type_of_typ y
+
 let type_of_struct_field'
   (l: struct_typ)
   (type_of_typ: (
@@ -191,73 +220,11 @@ let type_of_struct_field'
     Tot Type0
   ))
   (f: struct_field l)
-: Tot Type0 =
-  List.Tot.assoc_mem f l;
-  let y = typ_of_struct_field l f in
-  List.Tot.assoc_precedes f l y;
-  type_of_typ y
-
-(** Helper for the interpretation of unions.
-
-    A C union is interpreted as a dependent pair of a key and a value (which
-    depends on the key). The intent is for the key to be ghost, as it will not
-    exist at runtime (C unions are untagged).
-
-    Therefore,
-    - `gtdata_get_key` (defined below) is in `GTot`, and
-    - `gtdata_get_value` asks for the key `k` to read, and a proof that `k`
-      matches the ghost key.
-*)
-val gtdata (* ghostly-tagged data *)
-  (key: eqtype u#0)
-  (value: (key -> Tot Type0))
 : Tot Type0
+= type_of_struct_field'' l.fields type_of_typ f
 
-(** Gets the current tag (or key) of a union.
-
-    This is a ghost function, as this tag only exists at the logical level and
-    is not stored in memory.
-*)
-val gtdata_get_key
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (u: gtdata key value)
-: GTot key // important: must be Ghost, the tag is not actually stored in memory
-
-(** Gets the value of a union, provided the field to read from.
-
-    This field must match the ghost tag of the union (hence the `require`
-    clause).
-*)
-val gtdata_get_value
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (u: gtdata key value)
-  (k: key)
-: Pure (value k)
-  (requires (gtdata_get_key u == k))
-  (ensures (fun _ -> True))
-
-val gtdata_create
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (k: key)
-  (v: value k)
-: Pure (gtdata key value)
-  (requires True)
-  (ensures (fun x -> gtdata_get_key x == k /\ gtdata_get_value x k == v))
-
-val gtdata_extensionality
-  (#key: eqtype)
-  (#value: (key -> Tot Type0))
-  (u1 u2: gtdata key value)
-: Lemma
-  (requires (
-    let k = gtdata_get_key u1 in (
-    k == gtdata_get_key u2 /\
-    gtdata_get_value u1 k == gtdata_get_value u2 k
-  )))
-  (ensures (u1 == u2))
+val struct (l: struct_typ) : Tot Type0
+val union (l: union_typ) : Tot Type0
 
 (* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ
@@ -266,9 +233,9 @@ let rec type_of_typ
 = match t with
   | TBase b -> type_of_base_typ b
   | TStruct l ->
-    DM.t (struct_field l) (type_of_struct_field' l type_of_typ)
+    struct l
   | TUnion l ->
-    gtdata (struct_field l) (type_of_struct_field' l type_of_typ)
+    union l
   | TArray length t ->
     array length (type_of_typ t)
   | TPointer t ->
@@ -291,9 +258,6 @@ let type_of_struct_field
 : Tot (struct_field l -> Tot Type0)
 = type_of_struct_field' l type_of_typ
 
-(** Interpretation of structs, as dependent maps. *)
-let struct (l: struct_typ) = DM.t (struct_field l) (type_of_struct_field l)
-
 let type_of_typ_struct
   (l: struct_typ)
 : Lemma
@@ -309,11 +273,7 @@ let type_of_typ_type_of_struct_field
   [SMTPat (type_of_typ (typ_of_struct_field l f))]
 = ()
 
-let struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f) =
-  DM.sel s f
-
-let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_struct_field l f) : Tot (struct l) =
-  DM.upd s f v
+val struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f)
 
 let dfst_struct_field
   (s: struct_typ)
@@ -323,10 +283,10 @@ let dfst_struct_field
   let (| f, _ |) = p in
   f
 
-let struct_literal (s: struct_typ) : Tot Type0 = (list (x: struct_field s & type_of_struct_field s x))
+let struct_literal (s: struct_typ) : Tot Type0 = list (x: struct_field s & type_of_struct_field s x)
 
 let struct_literal_wf (s: struct_typ) (l: struct_literal s) : Tot bool =
-  List.Tot.sortWith FStar.String.compare (List.Tot.map fst s) =
+  List.Tot.sortWith FStar.String.compare (List.Tot.map fst s.fields) =
   List.Tot.sortWith FStar.String.compare
     (List.Tot.map (dfst_struct_field s) l)
 
@@ -345,18 +305,17 @@ let fun_of_list
   match List.Tot.find phi l with
   | Some p -> let (| _, v |) = p in v
   | _ ->
-    List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map fst s);
+    List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map fst s.fields);
     List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map (dfst_struct_field s) l);
-    List.Tot.mem_memP f' (List.Tot.map fst s);
-    List.Tot.mem_count (List.Tot.map fst s) f';
+    List.Tot.mem_memP f' (List.Tot.map fst s.fields);
+    List.Tot.mem_count (List.Tot.map fst s.fields) f';
     List.Tot.mem_count (List.Tot.map (dfst_struct_field s) l) f';
     List.Tot.mem_memP f' (List.Tot.map (dfst_struct_field s) l);
     List.Tot.memP_map_elim (dfst_struct_field s) f' l;
     Classical.forall_intro (Classical.move_requires (List.Tot.find_none phi l));
     false_elim ()
 
-let struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
-  DM.create #(struct_field l) #(type_of_struct_field l) f
+val struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l)
 
 let struct_create
   (s: struct_typ)
@@ -366,10 +325,13 @@ let struct_create
   (ensures (fun _ -> True))
 = struct_create_fun s (fun_of_list s l)
 
-(** Interpretation of unions, as ghostly-tagged data
-    (see `gtdata` for more information).
-*)
-let union (l: struct_typ) = gtdata (struct_field l) (type_of_struct_field l)
+val struct_sel_struct_create_fun
+  (l: struct_typ)
+  (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd)))
+  (fd: struct_field l)
+: Lemma
+  (struct_sel (struct_create_fun l f) fd == f fd)
+  [SMTPat (struct_sel (struct_create_fun l f) fd)]
 
 let type_of_typ_union
   (l: union_typ)
@@ -378,23 +340,21 @@ let type_of_typ_union
   [SMTPat (type_of_typ (TUnion l))]
 = assert_norm (type_of_typ (TUnion l) == union l)
 
-let union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l) = gtdata_get_key v
+val union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l)
 
-let union_get_value
+val union_get_value
   (#l: union_typ)
   (v: union l)
   (fd: struct_field l)
 : Pure (type_of_struct_field l fd)
   (requires (union_get_key v == fd))
   (ensures (fun _ -> True))
-= gtdata_get_value v fd
 
-let union_create
+val union_create
   (l: union_typ)
   (fd: struct_field l)
   (v: type_of_struct_field l fd)
 : Tot (union l)
-= gtdata_create fd v
 
 (*** Semantics of pointers *)
 
@@ -847,7 +807,7 @@ val readable_struct_fields_cons
   (f: string)
   (q: list string)
 : Lemma
-  (requires (readable_struct_fields h p q /\ (List.Tot.mem f (List.Tot.map fst l) ==> (let f : struct_field l = f in readable h (gfield p f)))))
+  (requires (readable_struct_fields h p q /\ (List.Tot.mem f (List.Tot.map fst l.fields) ==> (let f : struct_field l = f in readable h (gfield p f)))))
   (ensures (readable_struct_fields h p (f::q)))
   [SMTPat (readable_struct_fields h p (f::q))]
 
@@ -856,7 +816,7 @@ val readable_struct_fields_readable_struct
   (h: HS.mem)
   (p: pointer (TStruct l))
 : Lemma
-  (requires (readable_struct_fields h p (normalize_term (List.Tot.map fst l))))
+  (requires (readable_struct_fields h p (normalize_term (List.Tot.map fst l.fields))))
   (ensures (readable h p))
 
 val readable_gcell
@@ -1050,6 +1010,38 @@ val buffer_live_gbuffer_of_array_pointer
   (ensures (buffer_live h (gbuffer_of_array_pointer p) <==> live h p))
   [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
 
+val buffer_unused_in
+  (#t: typ)
+  (b: buffer t)
+  (h: HS.mem)
+: GTot Type0
+
+val buffer_live_not_unused_in
+  (#t: typ)
+  (b: buffer t)
+  (h: HS.mem)
+: Lemma
+  ((buffer_live h b /\ buffer_unused_in b h) ==> False)
+
+
+val buffer_unused_in_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+  (h: HS.mem)
+: Lemma
+  (ensures (buffer_unused_in (gsingleton_buffer_of_pointer p) h <==> unused_in p h ))
+  [SMTPat (buffer_unused_in (gsingleton_buffer_of_pointer p) h)]
+
+val buffer_unused_in_gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: pointer (TArray length t))
+  (h: HS.mem)
+: Lemma
+  (requires True)
+  (ensures (buffer_unused_in (gbuffer_of_array_pointer p) h <==> unused_in p h))
+  [SMTPat (buffer_unused_in (gbuffer_of_array_pointer p) h)]
+
 val frameOf_buffer
   (#t: typ)
   (b: buffer t)
@@ -1069,6 +1061,18 @@ val frameOf_buffer_gbuffer_of_array_pointer
 : Lemma
   (ensures (frameOf_buffer (gbuffer_of_array_pointer p) == frameOf p))
   [SMTPat (frameOf_buffer (gbuffer_of_array_pointer p))]
+
+val live_region_frameOf_buffer
+  (#value: typ)
+  (h: HS.mem)
+  (p: buffer value)
+: Lemma
+  (requires (buffer_live h p))
+  (ensures (HS.live_region h (frameOf_buffer p)))
+  [SMTPatOr [
+    [SMTPat (HS.live_region h (frameOf_buffer p))];
+    [SMTPat (buffer_live h p)]
+  ]]
 
 val buffer_as_addr
   (#t: typ)
@@ -1173,6 +1177,17 @@ val buffer_live_gsub_buffer_intro
   (requires (buffer_live h b /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_live h (gsub_buffer b i len)))
   [SMTPat (buffer_live h (gsub_buffer b i len))]
+
+val buffer_unused_in_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ (buffer_unused_in (gsub_buffer b i len) h <==> buffer_unused_in b h)))
+  [SMTPat (buffer_unused_in (gsub_buffer b i len) h)]
 
 val gsub_buffer_gsub_buffer
   (#a: typ)
@@ -1480,21 +1495,24 @@ val buffer_readable_intro
   (ensures (buffer_readable h b))
 //  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
 
+val buffer_readable_elim
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: Lemma
+  (requires (
+    buffer_readable h b
+  ))
+  (ensures (
+    buffer_live h b /\ (
+     forall (i: UInt32.t) .
+     UInt32.v i < UInt32.v (buffer_length b) ==>
+     readable h (gpointer_of_buffer_cell b i)
+  )))
+
 
 (*** The modifies clause *)
 
-(** Sets of pointers. The set tracks not only the set of pointers, but
-also the corresponding set of addresses (which cannot be constructed
-by set comprehension, since it must be computational.)
-
-In practice, we assume that all pointers in a set should be of the
-same region, because that is how the modifies clause will be
-defined. However, we do not need to enforce this constraint.
-
-We could also completely remove this "assumption" and explicitly track
-the regions and addresses within those regions. But this way would
-actually defeat the practical purpose of regions.
-*)
 val loc : Type u#0
 
 val loc_none: loc
@@ -1503,22 +1521,13 @@ val loc_union
   (s1 s2: loc)
 : GTot loc
 
-(** NOTE: intersection cannot be easily defined, indeed consider two
-different (not necessarily disjoint) pointers p1, p2 coming from the
-same root address, intersect (singleton p1) (singleton p2) will be
-empty whereas intersect (singleton (as_addr p1)) (singleton (as_addr
-p2)) will not.
-
-However, if the pointer type had decidable equality, then it should work, by
-recording, for each address, the computational set of pointers in the
-global set of pointers, that have that address; and so the set of
-addresses will be computed as: every address whose corresponding set of
-pointers is nonempty.
-
-Anyway, it seems that we will not need intersection for use with the
-modifies clauses.
-
-*)
+(** The following is useful to make Z3 cut matching loops with
+modifies_trans and modifies_refl *)
+val loc_union_idem
+  (s: loc)
+: Lemma
+  (loc_union s s == s)
+  [SMTPat (loc_union s s)]
 
 val loc_pointer
   (#t: typ)
@@ -1807,6 +1816,27 @@ val live_unused_in_disjoint
     [SMTPat (live h p1); SMTPat (unused_in p2 h)];
   ]]
 
+val pointer_live_reference_unused_in_disjoint
+  (#value1: typ)
+  (#value2: Type0)
+  (h: HS.mem)
+  (p1: pointer value1)
+  (p2: HS.reference value2)
+: Lemma
+  (requires (live h p1 /\ HS.unused_in p2 h))
+  (ensures (loc_disjoint (loc_pointer p1) (loc_addresses (HS.frameOf p2) (Set.singleton (HS.as_addr p2)))))
+  [SMTPat (live h p1); SMTPat (HS.unused_in p2 h)]
+
+val reference_live_pointer_unused_in_disjoint
+  (#value1: Type0)
+  (#value2: typ)
+  (h: HS.mem)
+  (p1: HS.reference value1)
+  (p2: pointer value2)
+: Lemma
+  (requires (HS.contains h p1 /\ unused_in p2 h))
+  (ensures (loc_disjoint (loc_addresses (HS.frameOf p1) (Set.singleton (HS.as_addr p1))) (loc_pointer p2)))
+  [SMTPat (HS.contains h p1); SMTPat (unused_in p2 h)]
 
 val loc_disjoint_gsub_buffer
   (#t: typ)
@@ -1887,6 +1917,16 @@ val loc_disjoint_pointer_addresses
   (ensures (loc_disjoint (loc_pointer p) (loc_addresses r n)))
   [SMTPat (loc_disjoint (loc_pointer p) (loc_addresses r n))]
 
+val loc_disjoint_buffer_addresses
+  (#t: typ)
+  (p: buffer t)
+  (r: HH.rid)
+  (n: Set.set nat)
+: Lemma
+  (requires (r <> frameOf_buffer p \/ (~ (Set.mem (buffer_as_addr p) n))))
+  (ensures (loc_disjoint (loc_buffer p) (loc_addresses r n)))
+  [SMTPat (loc_disjoint (loc_buffer p) (loc_addresses r n))]
+  
 val loc_disjoint_regions
   (rs1 rs2: Set.set HS.rid)
 : Lemma
@@ -1940,7 +1980,7 @@ val modifies_buffer_elim
   (requires (
     loc_disjoint (loc_buffer b) p /\
     buffer_live h b /\
-    UInt32.v (buffer_length b) > 0 /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
+    (UInt32.v (buffer_length b) == 0 ==> buffer_live h' b) /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
     modifies p h h'
   ))
   (ensures (
@@ -2078,7 +2118,7 @@ val field
  (#l: struct_typ)
  (p: pointer (TStruct l))
  (fd: struct_field l)
-: HST.ST (pointer (typ_of_struct_field l fd))
+: HST.Stack (pointer (typ_of_struct_field l fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
 
@@ -2086,7 +2126,7 @@ val ufield
  (#l: union_typ)
  (p: pointer (TUnion l))
  (fd: struct_field l)
-: HST.ST (pointer (typ_of_struct_field l fd))
+: HST.Stack (pointer (typ_of_struct_field l fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gufield p fd))
 
@@ -2095,21 +2135,21 @@ val cell
  (#value: typ)
  (p: pointer (TArray length value))
  (i: UInt32.t)
-: HST.ST (pointer value)
+: HST.Stack (pointer value)
   (requires (fun h -> UInt32.v i < UInt32.v length /\ live h p))
   (ensures (fun h0 p' h1 -> UInt32.v i < UInt32.v length /\ h0 == h1 /\ p' == gcell p i))
 
 val read
  (#value: typ)
  (p: pointer value)
-: HST.ST (type_of_typ value)
+: HST.Stack (type_of_typ value)
   (requires (fun h -> readable h p))
   (ensures (fun h0 v h1 -> readable h0 p /\ h0 == h1 /\ v == gread h0 p))
 
 val is_null
   (#t: typ)
   (p: npointer t)
-: HST.ST bool
+: HST.Stack bool
   (requires (fun h -> nlive h p))
   (ensures (fun h b h' -> h' == h /\ b == g_is_null p))
 
@@ -2136,7 +2176,7 @@ val write_union_field
 
 val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_frame h0 h1))
-  (ensures  (modifies_0 h0 h1))
+  (ensures  (modifies loc_none h0 h1))
   [SMTPat (HS.fresh_frame h0 h1)]
 
 val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
@@ -2149,6 +2189,23 @@ val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
     [SMTPat (live h1 b); SMTPat (HS.popped h0 h1)];
     [SMTPat (readable h1 b); SMTPat (HS.popped h0 h1)];    
     [SMTPat (gread h1 b); SMTPat (HS.popped h0 h1)];    
+  ]]
+
+val no_upd_popped_buffer: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:buffer t -> Lemma
+  (requires (buffer_live h0 b /\ frameOf_buffer b <> h0.HS.tip /\ HS.popped h0 h1))
+  (ensures  (
+    buffer_live h1 b /\ (
+    buffer_readable h0 b ==> (
+    buffer_readable h1 b /\
+    buffer_as_seq h1 b == buffer_as_seq h0 b
+  ))))
+  [SMTPatOr [
+    [SMTPat (buffer_live h0 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (buffer_readable h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (buffer_as_seq h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (buffer_live h1 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (buffer_readable h1 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (buffer_as_seq h1 b); SMTPat (HS.popped h0 h1)];    
   ]]
 
 val modifies_fresh_frame_popped
@@ -2166,6 +2223,7 @@ val modifies_fresh_frame_popped
     modifies s h0 h3 /\
     h3.HS.tip == h0.HS.tip
   ))
+  [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
 val modifies_only_live_regions
   (rs: Set.set HS.rid)
@@ -2207,7 +2265,7 @@ val modifies_1_readable_struct
     [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h p)];
     [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
-    [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
+//    [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))]; // this pattern is incomplete
     [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gfield p f)];
 ]]
 
@@ -2224,38 +2282,89 @@ val modifies_1_readable_array
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h p)];
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
-    [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
+//    [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))]; // this pattern is incomplete
     [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gcell p i)];
   ]]
 
-(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
+(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)		
+val read_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  (i: UInt32.t)		
+: HST.Stack (type_of_typ t)		
+  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ readable h (gpointer_of_buffer_cell b i)))		
+  (ensures (fun h v h' -> UInt32.v i < UInt32.v (buffer_length b) /\ h' == h /\ v == Seq.index (buffer_as_seq h b) (UInt32.v i)))		
+		
+(* buffer write: needs clearer "modifies" clauses *)		
+		
+val write_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  (i: UInt32.t)		
+  (v: type_of_typ t)		
+: HST.Stack unit		
+  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ buffer_live h b))		
+  (ensures (fun h _ h' ->		
+    UInt32.v i < UInt32.v (buffer_length b) /\		
+    modifies_1 (gpointer_of_buffer_cell b i) h h' /\		
+    buffer_live h' b /\		
+    readable h' (gpointer_of_buffer_cell b i) /\		
+    Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\		
+    (buffer_readable h b ==> buffer_readable h' b)		
+  ))		
+  
+(* unused_in, cont'd *)
 
-val read_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-: HST.Stack (type_of_typ t)
-  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ readable h (gpointer_of_buffer_cell b i)))
-  (ensures (fun h v h' -> UInt32.v i < UInt32.v (buffer_length b) /\ h' == h /\ v == Seq.index (buffer_as_seq h b) (UInt32.v i)))
+val buffer_live_unused_in_disjoint
+  (#t1 #t2: typ)
+  (h: HS.mem)
+  (b1: buffer t1)
+  (b2: buffer t2)
+: Lemma
+  (requires (buffer_live h b1 /\ buffer_unused_in b2 h))
+  (ensures (loc_disjoint (loc_buffer b1) (loc_buffer b2)))
+  [SMTPat (buffer_live h b1); SMTPat (buffer_unused_in b2 h)]
 
-(* buffer write: needs clearer "modifies" clauses *)
+val pointer_live_buffer_unused_in_disjoint
+  (#t1 #t2: typ)
+  (h: HS.mem)
+  (b1: pointer t1)
+  (b2: buffer t2)
+: Lemma
+  (requires (live h b1 /\ buffer_unused_in b2 h))
+  (ensures (loc_disjoint (loc_pointer b1) (loc_buffer b2)))
+  [SMTPat (live h b1); SMTPat (buffer_unused_in b2 h)]
 
-val write_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-  (v: type_of_typ t)
-: HST.Stack unit
-  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ buffer_live h b))
-  (ensures (fun h _ h' ->
-    UInt32.v i < UInt32.v (buffer_length b) /\
-    modifies_1 (gpointer_of_buffer_cell b i) h h' /\
-    buffer_live h' b /\
-    readable h' (gpointer_of_buffer_cell b i) /\
-    Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\
-    (buffer_readable h b ==> buffer_readable h' b)
-  ))
+val buffer_live_pointer_unused_in_disjoint
+  (#t1 #t2: typ)
+  (h: HS.mem)
+  (b1: buffer t1)
+  (b2: pointer t2)
+: Lemma
+  (requires (buffer_live h b1 /\ unused_in b2 h))
+  (ensures (loc_disjoint (loc_buffer b1) (loc_pointer b2)))
+  [SMTPat (buffer_live h b1); SMTPat (unused_in b2 h)]
 
+val reference_live_buffer_unused_in_disjoint
+  (#t1: Type0)
+  (#t2: typ)
+  (h: HS.mem)
+  (b1: HS.reference t1)
+  (b2: buffer t2)
+: Lemma
+  (requires (HS.contains h b1 /\ buffer_unused_in b2 h))
+  (ensures (loc_disjoint (loc_addresses (HS.frameOf b1) (Set.singleton (HS.as_addr b1))) (loc_buffer b2)))
+  [SMTPat (HS.contains h b1); SMTPat (buffer_unused_in b2 h)]
+
+val buffer_live_reference_unused_in_disjoint
+  (#t1: typ)
+  (#t2: Type0)
+  (h: HS.mem)
+  (b1: buffer t1)
+  (b2: HS.reference t2)
+: Lemma
+  (requires (buffer_live h b1 /\ HS.unused_in b2 h))
+  (ensures (loc_disjoint (loc_buffer b1) (loc_addresses (HS.frameOf b2) (Set.singleton (HS.as_addr b2)))))
 
 (* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
 

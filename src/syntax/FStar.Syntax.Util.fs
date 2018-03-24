@@ -104,9 +104,6 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
-        // Do not remove these
-        | Tm_meta(_, Meta_quoted _) -> e
-
         | Tm_meta(e, _)
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
@@ -117,8 +114,7 @@ let rec unmeta_safe e =
         | Tm_meta(e', m) ->
             begin match m with
             | Meta_monadic _
-            | Meta_monadic_lift _
-            | Meta_quoted _ ->
+            | Meta_monadic_lift _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
             end
@@ -274,8 +270,6 @@ let is_tot_or_gtot_lcomp c = lid_equals c.eff_name PC.effect_Tot_lid
                              || lid_equals c.eff_name PC.effect_GTot_lid
                              || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tac_lcomp c = lid_equals c.eff_name PC.effect_Tac_lid
-
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
@@ -283,9 +277,6 @@ let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIA
 let is_tot_or_gtot_comp c =
     is_total_comp c
     || lid_equals PC.effect_GTot_lid (comp_effect_name c)
-
-let is_tac_comp c =
-    lid_equals PC.effect_Tac_lid (comp_effect_name c)
 
 let is_pure_effect l =
      lid_equals l PC.effect_Tot_lid
@@ -425,7 +416,7 @@ let rec ascribe t k = match t.n with
   | Tm_ascribed (t', _, _) -> ascribe t' k
   | _ -> mk (Tm_ascribed(t, k, None)) None t.pos
 
-let unfold_lazy i = must !lazy_chooser i.kind i
+let unfold_lazy i = must !lazy_chooser i.lkind i
 
 let rec unlazy t =
     match (compress t).n with
@@ -435,10 +426,10 @@ let rec unlazy t =
 let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
     let rng = (match r with | Some r -> r | None -> dummyRange) in
     let i = {
-        kind = k;
-        blob = mkdyn t;
-        typ = typ;
-        rng = rng;
+        lkind = k;
+        blob  = mkdyn t;
+        typ   = typ;
+        rng   = rng;
       } in
     mk (Tm_lazy i) None rng
 
@@ -499,11 +490,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Unknown, _
       | _, Unknown -> Unknown
     in
-    let notq t =
-        match t.n with
-        | Tm_meta (_, Meta_quoted _) -> false
-        | _ -> true
-    in
     let equal_data f1 args1 f2 args2 =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
@@ -515,7 +501,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
-    match (compress t1).n, (compress t2).n with
+    match (unmeta t1).n, (unmeta t2).n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->
@@ -568,14 +554,10 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
 
-    | Tm_meta(t1', _), _ when notq t1 ->
-      eq_tm t1' t2
-
-    | _, Tm_meta(t2', _) when notq t2 ->
-      eq_tm t1 t2'
-
-    | Tm_meta (_, Meta_quoted (t1, _)), Tm_meta (_, Meta_quoted (t2, _)) ->
-      eq_tm t1 t2
+    | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
+      if q1 = q2
+      then eq_tm t1 t2
+      else Unknown
 
     | _ -> Unknown
 
@@ -1440,6 +1422,7 @@ let rec delta_qualifier t =
         | Tm_uvar _
         | Tm_unknown -> Delta_equational
         | Tm_type _
+        | Tm_quoted _
         | Tm_constant _
         | Tm_arrow _ -> Delta_constant
         | Tm_uinst(t, _)
@@ -1588,6 +1571,10 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
      * they are indeed the same uvar *)
     check "uvar" (u1 = u2)
 
+  | Tm_quoted (qt1, qi1), Tm_quoted (qt2, qi2) ->
+    (check "tm_quoted qi"      (qi1 = qi2)) &&
+    (check "tm_quoted payload" (term_eq_dbg dbg qt1 qt2))
+
   | Tm_meta (t1, m1), Tm_meta (t2, m2) ->
     begin match m1, m2 with
     | Meta_monadic (n1, ty1), Meta_monadic (n2, ty2) ->
@@ -1598,10 +1585,6 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
         (check "meta_monadic_lift src"   (lid_equals s1 s2)) &&
         (check "meta_monadic_lift tgt"   (lid_equals t1 t2)) &&
         (check "meta_monadic_lift type"  (term_eq_dbg dbg ty1 ty2))
-
-    | Meta_quoted (qt1, qi1), Meta_quoted (qt2, qi2) ->
-        (check "meta_quoted dyn"  (qi1 = qi2)) &&
-        (check "meta_quoted payload"  (term_eq_dbg dbg qt1 qt2))
 
     | _ -> fail "metas"
     end

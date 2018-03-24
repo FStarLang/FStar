@@ -48,13 +48,13 @@ let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b =
 let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) : vmap a b =
   (x, (xa, xb))::fst vm, snd vm
 
-let rec mdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : a =
+let rec mdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (e:exp) : Tot a =
   match e with
   | Unit -> CM?.unit m
   | Var x -> select x vm
   | Mult e1 e2 -> CM?.mult m (mdenote m vm e1) (mdenote m vm e2)
 
-let rec xsdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) : a =
+let rec xsdenote (#a #b:Type) (m:cm a) (vm:vmap a b) (xs:list var) : Tot a =
   match xs with
   | [] -> CM?.unit m
   | [x] -> select x vm
@@ -275,6 +275,16 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type) (m:cm a) (ts:list ter
       ([],[], const (CM?.unit m) def) ts
   in (List.rev es,vm)
 
+let unfold_topdown (t:term) = 
+  let should_rewrite (s:term) : Tac (bool * int) =
+      (term_eq t s, 0)
+  in
+  let rewrite () : Tac unit = 
+    norm [delta];
+    trefl()
+  in
+  topdown_rewrite should_rewrite rewrite
+
 let canon_monoid_with
     (b:Type) (f:term->Tac b) (def:b) (p:permute b) (pc:permute_correct p)
     (#a:Type) (m:cm a) : Tac unit =
@@ -288,7 +298,7 @@ let canon_monoid_with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
-          // dump ("vm =" ^ term_to_string (quote vm));
+          //dump ("vm =" ^ term_to_string (quote vm));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           // dump ("before =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (mdenote m vm r1 == mdenote m vm r2))));
@@ -296,8 +306,9 @@ let canon_monoid_with
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
           mapply (quote (monoid_reflect #a #b p pc));
-          // dump ("after apply");
-          unfold_def (quote p);
+          let q = quote p in
+          // dump ("before unfold, p = " ^ term_to_string q);          
+          unfold_topdown q;
           // dump ("after unfold");
           norm [delta_only [// term_to_string (quote p);
                             "CanonCommMonoid.canon";

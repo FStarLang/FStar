@@ -443,6 +443,14 @@ let rec closure_as_term cfg (env:env) t =
                              (annot, tacopt),
                              lopt)) t.pos
 
+           | Tm_quoted (t', qi) ->
+             begin match qi.qkind with
+             | Quote_dynamic -> mk (Tm_quoted(closure_as_term_delayed cfg env t', qi)) t.pos
+             | Quote_static  ->
+                let qi = S.on_antiquoted (closure_as_term_delayed cfg env) qi in
+                mk (Tm_quoted(t', qi)) t.pos
+             end
+
            | Tm_meta(t', Meta_pattern args) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t',
                          Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
@@ -452,11 +460,6 @@ let rec closure_as_term cfg (env:env) t =
 
            | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
                  mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
-
-           | Tm_meta(t', Meta_quoted (t'', qi)) ->
-             if qi.qopen
-             then mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(closure_as_term_delayed cfg env t'', qi))) t.pos
-             else mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_quoted(t'', qi))) t.pos
 
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
@@ -1037,13 +1040,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_meta (t0, Meta_quoted (t1, qi)) ->
-            let t0 = closure_as_term cfg env t0 in
-            let t1 = if qi.qopen
-                     then closure_as_term cfg env t1
-                     else t1
-            in
-            let t = { t with n = Tm_meta (t0, Meta_quoted (t1, qi)) } in
+          | Tm_quoted _ ->
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -1387,9 +1384,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
               | Meta_monadic_lift (m, m', t) ->
                 reduce_impure_comp cfg env stack head (Inr (m, m')) t
-
-              | Meta_quoted (qt, inf) ->
-                rebuild cfg env stack t
 
               | _ ->
                 if cfg.steps.unmeta
@@ -1793,10 +1787,9 @@ and maybe_simplify_aux cfg env stack tm =
     else
     let w t = {t with pos=tm.pos} in
     let simp_t t =
-        match t.n with
-        | Tm_meta ({n = Tm_fvar fv}, _) // catch annotated subformulae too
+        // catch annotated subformulae too
+        match (U.unmeta t).n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
-        | Tm_meta ({n = Tm_fvar fv}, _)
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None
     in
@@ -2557,6 +2550,10 @@ let rec elim_delayed_subst_term (t:term) : term =
 
     | Tm_uvar(uv, t) ->
       mk (Tm_uvar(uv, elim_delayed_subst_term t))
+
+    | Tm_quoted (tm, qi) ->
+      let qi = S.on_antiquoted elim_delayed_subst_term qi in
+      mk (Tm_quoted (elim_delayed_subst_term tm, qi))
 
     | Tm_meta(t, md) ->
       mk (Tm_meta(elim_delayed_subst_term t, elim_delayed_subst_meta md))

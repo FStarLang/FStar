@@ -20,6 +20,7 @@ all:	Apply.uver		\
 	VC.uver			\
 	Div.uver		\
 	Change.uver		\
+	Antiquote.uver		\
 	Tutorial.uver		\
 	Fresh.uver		\
 	SolveThen.uver		\

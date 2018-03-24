@@ -90,9 +90,9 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
-type quoteinfo     = {
-    qopen : bool;       // True if the quotation is open, and should be substituted
- }
+type quote_kind =
+  | Quote_static
+  | Quote_dynamic
 
 ///[@ PpxDerivingShow ]
 type delta_depth =
@@ -136,6 +136,7 @@ type term' =
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
+  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -153,6 +154,11 @@ and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
     lbdef  :term;            //e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list<(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -194,7 +200,6 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
@@ -254,10 +259,10 @@ and residual_comp = {
 }
 
 and lazyinfo = {
-    blob : dyn;
-    kind : lazy_kind;
-    typ : typ;
-    rng : Range.range;
+    blob  : dyn;
+    lkind : lazy_kind;
+    typ   : typ;
+    rng   : Range.range;
  }
 
 and attribute = term
@@ -449,6 +454,17 @@ let range_of_lbname (l:lbname) = match l with
     | Inr fv -> range_of_lid fv.fv_name.v
 let range_of_bv x = x.ppname.idRange
 let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
+
+
+(* Helpers *)
+let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
+    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    { qi with antiquotes = aq }
+
+let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
+    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
+    | Some (_, b, e) -> Some (b, e)
+    | None -> None
 
 (*********************************************************************************)
 (* Syntax builders *)

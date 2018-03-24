@@ -3,10 +3,13 @@ module Test
 module S  = FStar.Pointer
 module HST = FStar.HyperStack.ST
 
-let struct : S.struct_typ = [
-  ("I", S.TBase S.TInt);
-  ("B", S.TBase S.TBool);
-]
+let struct : S.struct_typ = {
+  S.name = "struc";
+  S.fields = [
+    ("I", S.TBase S.TInt);
+    ("B", S.TBase S.TBool);
+  ]
+}
 
 let struct_t = S.TStruct struct
 
@@ -26,10 +29,13 @@ let callee
 = S.write (S.field pto "I") (S.read (S.field pfrom "I") + 1);
   S.read (S.field pfrom "I")
 
-let more_struct : S.struct_typ = [
-  ("Less", struct_t);
-  ("ThisMore", S.TBase S.TUnit);
-]
+let more_struct : S.struct_typ = {
+  S.name = "more_struct";
+  S.fields = [
+    ("Less", struct_t);
+    ("ThisMore", S.TBase S.TUnit);
+  ]
+}
 
 let more_struct_t = S.TStruct more_struct
 

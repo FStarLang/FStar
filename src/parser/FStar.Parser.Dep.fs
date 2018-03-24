@@ -654,7 +654,8 @@ let collect_one
         collect_term t
     | VQuote t ->
         collect_term t
-    | Quote _ -> ()
+    | Quote _
+    | Antiquote _ -> ()
     | Attributes cattributes  ->
         List.iter collect_term cattributes
 

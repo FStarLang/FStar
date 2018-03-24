@@ -32,6 +32,7 @@ open FStar.SMTEncoding.Util
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
+module Print = FStar.Syntax.Print
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -497,6 +498,14 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
 let solve use_env_msg tcenv q : unit =
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    if Options.no_smt ()
+    then
+        FStar.TypeChecker.Err.add_errors
+                 tcenv
+                 [(Errors.Error_NoSMTButNeeded,
+                    BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
+                        tcenv.range)]
+    else
     let tcenv = incr_query_index tcenv in
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in

@@ -211,7 +211,6 @@ let canon_point_entry () : Tac unit =
     let g = cur_goal () in
     match term_as_formula g with
     | Comp (Eq _) l r ->
-        admit (); // coverage...
         begin match run_tm (is_arith_expr l) with
         | Inr e -> (let _e = canon_point e in ())
         | Inl _ -> trefl ()

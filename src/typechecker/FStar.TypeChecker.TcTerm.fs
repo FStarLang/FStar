@@ -304,12 +304,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  // quoted terms are of type `term` ...
-  | Tm_meta ({n = _}, Meta_quoted (_, {qopen = false})) ->
+  // completely staticly quoted terms are of type `term` ...
+  | Tm_quoted (_, { qkind = Quote_static; antiquotes = aqs })
+              when List.for_all (fun (_, b, _) -> not b) aqs ->
     value_check_expected_typ env top (Inl S.t_term) Rel.trivial_guard
 
-  // ... but open quotes are in the TAC effect
-  | Tm_meta ({n = _}, Meta_quoted (_, {qopen = true})) ->
+  // ... but other ones are in the TAC effect
+  | Tm_quoted _ ->
     let c = mk_Comp ({ comp_univs = [U_zero];
                        effect_name = Const.effect_Tac_lid;
                        result_typ = S.t_term;
@@ -2399,6 +2400,7 @@ let rec universe_of_aux env e =
    | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
    //also easy, since we can quickly recompute the type
    | Tm_type u -> S.mk (Tm_type (U_succ u)) None e.pos
+   | Tm_quoted _ -> U.ktype0
    | Tm_constant sc -> tc_constant env e.pos sc
    //slightly subtle, since fv is a type-scheme; instantiate it with us
    | Tm_uinst({n=Tm_fvar fv}, us) ->
@@ -2587,6 +2589,9 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   | Tm_ascribed(_, (Inl t, _), _) -> Some t
   | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
   | Tm_uvar(_, t) -> Some t
+
+  | Tm_quoted (tm, qi) ->
+    Some (S.t_term)
 
   | Tm_meta(t, _) ->
     type_of_well_typed_term env t

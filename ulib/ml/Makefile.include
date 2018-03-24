@@ -8,6 +8,8 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
         Pointer.Base \
+	Pointer.Derived1 Pointer.Derived2 \
+        Pointer.Derived3 \
 	Pointer BufferNG Tactics.Builtins \
         TaggedUnion \
 	Reflection.Types Reflection.Basic Reflection.Data \
