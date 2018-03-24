@@ -103,6 +103,7 @@ type codegen_t =
 val codegen                     : unit    -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
+val debug_module                : string  -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
