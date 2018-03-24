@@ -1,0 +1,25 @@
+* TODO P0 Give squash a definition
+
+- couldn't add a `prop` type annotation on squash (see above), so
+  assumed squash for now
+
+<dummy>(0,0-0,0): (Error 72) Identifier not found: [Prims.Tot]
+Module Prims resolved into Prims, which does not belong to the list of
+modules in scope, namely
+
+* TODO P1 Update typing rule for refinements to require `prop`
+...  after type-checking squash / prims so that we get better errors
+and b2p has some chance of kicking in there too ... this is blocker
+for porting more examples without lots of pain
+
+CH: to be discussed, I still think we should do this, but for now
+    triggering b2p to go from bool to Type0 too
+
+* TODO P0 Still need to replace the `logic` qualifier with `prop`
+
+* TODO P0 Get rid of all the newly introduced admits in:
+** FStar.Squash.fst (4, Giving squash a definition)
+** FStar.Classical.fst (many, Giving squash a definition)
+** FStar.List.Tot.Properties (2 adjacent ones, Giving squash a definition)
+** FStar.TSet.fst (strange! 2)
+** FStar.Monotonic.Heap.fst (strange! 1 assume; WIP!)
