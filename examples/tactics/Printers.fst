@@ -128,18 +128,14 @@ type t1 =
     | E : t1 -> t1
     | F : (unit -> t1) -> t1
 
-%splice (fun () -> mk_printer (`t1))
+(* We need to provide the name of the generated definition
+ * by hand, since desugaring this module occurs entirely
+ * before running the metaprograms. *)
+%splice[t1_print] (fun () -> mk_printer (`t1))
 
-(* Haven't still done the desugaring modification the code following this
-to reoslve properly. The printer is there but using it in this module
-will fail, so add a declaration like this. *)
-let t1_print' : t1 -> string = synth_by_tactic (fun () -> exact (mk_printer_fun (`t1)))
-
-
-
-let _ = assert_norm (t1_print' (A 5 "hey") = "(Printers.A 5 \"hey\")")
-let _ = assert_norm (t1_print' (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
-let _ = assert_norm (t1_print' C = "Printers.C")
-let _ = assert_norm (t1_print' (D "test") = "(Printers.D \"test\")")
-let _ = assert_norm (t1_print' (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
-let _ = assert_norm (t1_print' (F (fun _ -> C)) = "(Printers.F ?)")
+let _ = assert_norm (t1_print (A 5 "hey") = "(Printers.A 5 \"hey\")")
+let _ = assert_norm (t1_print (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
+let _ = assert_norm (t1_print C = "Printers.C")
+let _ = assert_norm (t1_print (D "test") = "(Printers.D \"test\")")
+let _ = assert_norm (t1_print (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
+let _ = assert_norm (t1_print (F (fun _ -> C)) = "(Printers.F ?)")

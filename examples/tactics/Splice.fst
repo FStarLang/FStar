@@ -9,4 +9,6 @@ let make_x_42 () : Tac unit =
     let ses : list sigelt = [pack_sigelt sv] in
     exact (quote ses)
 
-%splice make_x_42
+%splice[x] make_x_42
+
+let _ = assert (x == 42)
