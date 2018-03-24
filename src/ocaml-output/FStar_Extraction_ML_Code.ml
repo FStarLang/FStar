@@ -339,8 +339,8 @@ let (escape_char_hex : FStar_BaseTypes.char -> Prims.string) =
 let (escape_or :
   (FStar_Char.char -> Prims.string) -> FStar_Char.char -> Prims.string) =
   fun fallback  ->
-    fun uu___61_1042  ->
-      match uu___61_1042 with
+    fun uu___63_1042  ->
+      match uu___63_1042 with
       | c when c = 92 -> "\\\\"
       | c when c = 32 -> " "
       | c when c = 8 -> "\\b"

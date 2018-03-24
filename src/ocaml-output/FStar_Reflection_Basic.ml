@@ -180,8 +180,8 @@ let rec (inspect_ln :
            in
         let brs1 =
           FStar_List.map
-            (fun uu___54_572  ->
-               match uu___54_572 with
+            (fun uu___56_572  ->
+               match uu___56_572 with
                | (pat,uu____594,t4) ->
                    let uu____612 = inspect_pat pat  in (uu____612, t4)) brs
            in
@@ -223,8 +223,8 @@ let (inspect_comp :
           then
             (let maybe_dec =
                FStar_List.tryFind
-                 (fun uu___55_705  ->
-                    match uu___55_705 with
+                 (fun uu___57_705  ->
+                    match uu___57_705 with
                     | FStar_Syntax_Syntax.DECREASES uu____706 -> true
                     | uu____709 -> false) ct.FStar_Syntax_Syntax.flags
                 in
@@ -340,8 +340,8 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
            in
         let brs1 =
           FStar_List.map
-            (fun uu___56_959  ->
-               match uu___56_959 with
+            (fun uu___58_959  ->
+               match uu___58_959 with
                | (pat,t1) ->
                    let uu____976 = pack_pat pat  in
                    (uu____976, FStar_Pervasives_Native.None, t1)) brs
@@ -478,6 +478,8 @@ let (pack_binder :
     FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.binder)
   =
   fun bv  -> fun aqv  -> let uu____1377 = pack_aqual aqv  in (bv, uu____1377) 
+let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
+  fun e  -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule 
 let (binders_of_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
   fun e  -> FStar_TypeChecker_Env.all_binders e 
@@ -485,9 +487,9 @@ let (term_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1  ->
     fun t2  ->
-      let uu____1387 = FStar_Syntax_Util.un_uinst t1  in
-      let uu____1388 = FStar_Syntax_Util.un_uinst t2  in
-      FStar_Syntax_Util.term_eq uu____1387 uu____1388
+      let uu____1394 = FStar_Syntax_Util.un_uinst t1  in
+      let uu____1395 = FStar_Syntax_Util.un_uinst t2  in
+      FStar_Syntax_Util.term_eq uu____1394 uu____1395
   
 let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 

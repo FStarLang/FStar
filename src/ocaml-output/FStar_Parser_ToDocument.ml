@@ -528,8 +528,8 @@ type associativity_level =
                                                                    show]
 let (token_to_string :
   (FStar_BaseTypes.char,Prims.string) FStar_Util.either -> Prims.string) =
-  fun uu___51_944  ->
-    match uu___51_944 with
+  fun uu___53_944  ->
+    match uu___53_944 with
     | FStar_Util.Inl c -> Prims.strcat (FStar_Util.string_of_char c) ".*"
     | FStar_Util.Inr s -> s
   
@@ -538,8 +538,8 @@ let (matches_token :
     (FStar_Char.char,Prims.string) FStar_Util.either -> Prims.bool)
   =
   fun s  ->
-    fun uu___52_961  ->
-      match uu___52_961 with
+    fun uu___54_961  ->
+      match uu___54_961 with
       | FStar_Util.Inl c ->
           let uu____970 = FStar_String.get s (Prims.parse_int "0")  in
           uu____970 = c
@@ -679,8 +679,8 @@ let (level_table :
                                                                     Prims.list)
     FStar_Pervasives_Native.tuple2 Prims.list)
   =
-  let levels_from_associativity l uu___53_1704 =
-    match uu___53_1704 with
+  let levels_from_associativity l uu___55_1704 =
+    match uu___55_1704 with
     | Left  -> (l, l, (l - (Prims.parse_int "1")))
     | Right  -> ((l - (Prims.parse_int "1")), l, l)
     | NonAssoc  ->
@@ -1236,8 +1236,8 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
         FStar_Pprint.op_Hat_Hat uu____3625 uu____3626
 
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
-  fun uu___54_3628  ->
-    match uu___54_3628 with
+  fun uu___56_3628  ->
+    match uu___56_3628 with
     | FStar_Parser_AST.SetOptions s ->
         let uu____3630 = str "#set-options"  in
         let uu____3631 =
@@ -1276,8 +1276,8 @@ and (p_fsdocTypeDeclPairs :
         FStar_Pprint.op_Hat_Hat uu____3680 uu____3681
 
 and (p_typeDecl : FStar_Parser_AST.tycon -> FStar_Pprint.document) =
-  fun uu___55_3682  ->
-    match uu___55_3682 with
+  fun uu___57_3682  ->
+    match uu___57_3682 with
     | FStar_Parser_AST.TyconAbstract (lid,bs,typ_opt) ->
         let empty' uu____3697 = FStar_Pprint.empty  in
         p_typeDeclPrefix lid bs typ_opt empty'
@@ -1515,8 +1515,8 @@ and (p_letbinding :
         prefix2 uu____4133 uu____4135
 
 and (p_newEffect : FStar_Parser_AST.effect_decl -> FStar_Pprint.document) =
-  fun uu___56_4136  ->
-    match uu___56_4136 with
+  fun uu___58_4136  ->
+    match uu___58_4136 with
     | FStar_Parser_AST.RedefineEffect (lid,bs,t) ->
         p_effectRedefinition lid bs t
     | FStar_Parser_AST.DefineEffect (lid,bs,t,eff_decls) ->
@@ -1636,8 +1636,8 @@ and (p_subEffect : FStar_Parser_AST.lift -> FStar_Pprint.document) =
     FStar_Pprint.op_Hat_Hat uu____4292 uu____4298
 
 and (p_qualifier : FStar_Parser_AST.qualifier -> FStar_Pprint.document) =
-  fun uu___57_4300  ->
-    match uu___57_4300 with
+  fun uu___59_4300  ->
+    match uu___59_4300 with
     | FStar_Parser_AST.Private  -> str "private"
     | FStar_Parser_AST.Abstract  -> str "abstract"
     | FStar_Parser_AST.Noeq  -> str "noeq"
@@ -1665,8 +1665,8 @@ and (p_qualifiers : FStar_Parser_AST.qualifiers -> FStar_Pprint.document) =
 
 and (p_letqualifier :
   FStar_Parser_AST.let_qualifier -> FStar_Pprint.document) =
-  fun uu___58_4303  ->
-    match uu___58_4303 with
+  fun uu___60_4303  ->
+    match uu___60_4303 with
     | FStar_Parser_AST.Rec  ->
         let uu____4304 = str "rec"  in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4304
@@ -1676,8 +1676,8 @@ and (p_letqualifier :
     | FStar_Parser_AST.NoLetQualifier  -> FStar_Pprint.empty
 
 and (p_aqual : FStar_Parser_AST.arg_qualifier -> FStar_Pprint.document) =
-  fun uu___59_4306  ->
-    match uu___59_4306 with
+  fun uu___61_4306  ->
+    match uu___61_4306 with
     | FStar_Parser_AST.Implicit  -> str "#"
     | FStar_Parser_AST.Equality  -> str "$"
 
@@ -2336,8 +2336,8 @@ and (p_attrs_opt :
   FStar_Parser_AST.term Prims.list FStar_Pervasives_Native.option ->
     FStar_Pprint.document)
   =
-  fun uu___60_5020  ->
-    match uu___60_5020 with
+  fun uu___62_5020  ->
+    match uu___62_5020 with
     | FStar_Pervasives_Native.None  -> FStar_Pprint.empty
     | FStar_Pervasives_Native.Some terms ->
         let uu____5032 =
@@ -2406,8 +2406,8 @@ and (p_quantifier : FStar_Parser_AST.term -> FStar_Pprint.document) =
 
 and (p_trigger :
   FStar_Parser_AST.term Prims.list Prims.list -> FStar_Pprint.document) =
-  fun uu___61_5117  ->
-    match uu___61_5117 with
+  fun uu___63_5117  ->
+    match uu___63_5117 with
     | [] -> FStar_Pprint.empty
     | pats ->
         let uu____5129 =
@@ -2495,8 +2495,8 @@ and (p_maybeWhen :
   FStar_Parser_AST.term FStar_Pervasives_Native.option ->
     FStar_Pprint.document)
   =
-  fun uu___62_5195  ->
-    match uu___62_5195 with
+  fun uu___64_5195  ->
+    match uu___64_5195 with
     | FStar_Pervasives_Native.None  -> FStar_Pprint.empty
     | FStar_Pervasives_Native.Some e ->
         let uu____5199 = str "when"  in
@@ -3235,8 +3235,8 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         soft_parens_with_nesting uu____6316
 
 and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
-  fun uu___65_6317  ->
-    match uu___65_6317 with
+  fun uu___67_6317  ->
+    match uu___67_6317 with
     | FStar_Const.Const_effect  -> str "Effect"
     | FStar_Const.Const_unit  -> str "()"
     | FStar_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
@@ -3253,12 +3253,12 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
         let uu____6333 = str "B"  in
         FStar_Pprint.op_Hat_Hat uu____6331 uu____6333
     | FStar_Const.Const_int (repr,sign_width_opt) ->
-        let signedness uu___63_6351 =
-          match uu___63_6351 with
+        let signedness uu___65_6351 =
+          match uu___65_6351 with
           | FStar_Const.Unsigned  -> str "u"
           | FStar_Const.Signed  -> FStar_Pprint.empty  in
-        let width uu___64_6355 =
-          match uu___64_6355 with
+        let width uu___66_6355 =
+          match uu___66_6355 with
           | FStar_Const.Int8  -> str "y"
           | FStar_Const.Int16  -> str "s"
           | FStar_Const.Int32  -> str "l"
