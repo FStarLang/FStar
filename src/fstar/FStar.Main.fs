@@ -210,13 +210,21 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_sigelt     -> FStar.Reflection.Embeddings.unfold_lazy_sigelt      i
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
 
-exception Exit of int
-
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder
+
+let handle_error e =
+    if FStar.Errors.handleable e then
+      FStar.Errors.err_exn e;
+    if Options.trace_error() then
+      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+    else if not (FStar.Errors.handleable e) then
+      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+    cleanup();
+    report_errors []
 
 let main () =
   try
@@ -229,17 +237,5 @@ let main () =
     cleanup ();
     exit 0
   with
-  | Exit ec ->
-    // This exception is raised by the Javascript version of Sys.exit (used when
-    // compiling with js_of_ocaml)
-    raise (Exit ec)
-  | e ->
-    if FStar.Errors.handleable e then
-      FStar.Errors.err_exn e;
-    if Options.trace_error() then
-      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-    else if not (FStar.Errors.handleable e) then
-      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-    cleanup();
-    report_errors [];
-    exit 1
+  | e -> handle_error e;
+        exit 1
