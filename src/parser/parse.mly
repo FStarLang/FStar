@@ -175,8 +175,6 @@ rawDecl:
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, lidentOrOperator) RBRACK t=atomicTerm
       { Splice (ids, t) }
-  | SPLICE t=atomicTerm
-      { Splice ([], t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect

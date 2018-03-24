@@ -777,9 +777,6 @@ let ids =
       ( xs )
 in
       ( Splice (ids, t) )}
-| SPLICE atomicTerm
-    {let (_1, t) = ((), $2) in
-      ( Splice ([], t) )}
 | EXCEPTION uident option___anonymous_1_
     {let (_1, lid, t_opt) = ((), $2, $3) in
       ( Exception(lid, t_opt) )}
