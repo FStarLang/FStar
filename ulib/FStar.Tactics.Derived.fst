@@ -27,6 +27,8 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact false t)
 
+let cur_module () : Tac (list string) =
+    moduleof (cur_env ())
 
 let focus (f : unit -> Tac 'a) : Tac 'a =
     let res, _ = divide 1 f (fun () -> ()) in

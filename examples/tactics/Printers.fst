@@ -25,7 +25,7 @@ let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
     | Tv_FVar fv ->
         if inspect_fv fv = self
         then mk_e_app f [pack (Tv_Var bv)]
-        else let f = mk ["Printers"; "print_" ^ (String.concat "_" (inspect_fv fv))] in
+        else let f = mk (cur_module () @ ["print_" ^ (String.concat "_" (inspect_fv fv))]) in
              mk_e_app f [pack (Tv_Var bv)]
     | _ ->
         mk_stringlit "?"
