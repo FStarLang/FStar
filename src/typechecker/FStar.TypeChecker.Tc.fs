@@ -1218,10 +1218,17 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let se = { se with sigel = Sig_main(e) } in
     [se], []
 
-  | Sig_splice t ->
+  | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
     let ses = env.splice env t in
+    let lids' = List.collect U.lids_of_sigelt ses in
+    List.iter (fun lid ->
+        match List.tryFind (Ident.lid_equals lid) lids' with
+        | Some _ -> ()
+        | None ->
+            raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
+    ) lids;
     [], ses
 
   | Sig_let(lbs, lids) ->

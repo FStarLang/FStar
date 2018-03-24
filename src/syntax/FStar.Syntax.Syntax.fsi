@@ -400,7 +400,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
-  | Sig_splice         of term
+  | Sig_splice         of list<lident> * term
 
 and sigelt = {
     sigel:    sigelt';

@@ -2574,13 +2574,14 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [] } in
     env, [se]
 
-  | Splice t ->
+  | Splice (ids, t) ->
     let t = desugar_term env t in
-    let se = { sigel = Sig_splice(t);
+    let se = { sigel = Sig_splice(List.map (qualify env) ids, t);
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta;
                sigattrs = [] } in
+    let env = push_sigelt env se in
     env, [se]
 
 let desugar_decls env decls =
