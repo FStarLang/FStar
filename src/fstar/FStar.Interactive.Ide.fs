@@ -147,6 +147,7 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
 and repl_stack_t = list<completed_repl_task>
 and completed_repl_task = repl_task * repl_state
 
+let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
 let repl_stack: ref<repl_stack_t> = Util.mk_ref []
 
 let pop_repl st =
@@ -332,7 +333,7 @@ let deps_and_repl_ld_tasks_of_our_file filename
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format message [our_mod_name; mods_str]));
       [] in
 
   let tasks =
@@ -774,6 +775,7 @@ let write_response qid status response =
 
 let json_of_message level js_contents =
   JsonAssoc [("kind", JsonStr "message");
+             ("query-id", json_of_opt JsonStr !repl_current_qid);
              ("level", JsonStr level);
              ("contents", js_contents)]
 
@@ -1334,7 +1336,7 @@ let run_search st search_str =
   (results, Inl st)
 
 let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
-  match q with // First handle queries that support both partial and full states…
+  match q with
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
@@ -1359,7 +1361,9 @@ let validate_query st (q: query) : query =
         | _ -> q
 
 let validate_and_run_query st query =
-  run_query st (validate_query st query).qq
+  let query = validate_query st query in
+  repl_current_qid := Some query.qid;
+  run_query st query.qq
 
 (** This is the body of the JavaScript port's main loop. **)
 let js_repl_eval st query =
