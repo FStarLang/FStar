@@ -5,14 +5,15 @@ open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Order
-open FStar.TypeChecker.Env
+module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
 
 (* Primitives *)
 val compare_bv     : bv -> bv -> order
-val lookup_typ     : FStar.TypeChecker.Env.env -> list<string> -> option<sigelt>
+val lookup_typ     : Env.env -> list<string> -> option<sigelt>
 val is_free        : bv -> term -> bool
-val binders_of_env : FStar.TypeChecker.Env.env -> binders
+val binders_of_env : Env.env -> binders
+val moduleof       : Env.env -> list<string>
 val term_eq        : term -> term -> bool
 val term_to_string : term -> string
 
