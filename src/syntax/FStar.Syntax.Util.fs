@@ -615,6 +615,7 @@ let rec non_informative t =
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
       || fv_eq_lid fv PC.erased_lid
+      || fv_eq_lid fv PC.prop_lid
     | Tm_app(head, _) -> non_informative head
     | Tm_uinst (t, _) -> non_informative t
     | Tm_arrow(_, c) ->
