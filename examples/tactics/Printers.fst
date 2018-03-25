@@ -19,7 +19,7 @@ let paren (e : term) : Tac term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
 let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
-    (* print ("self = " ^ String.concat "." self ^ "\n>>>>>> f = : " ^ term_to_string f); *)
+    (* debug ("self = " ^ String.concat "." self ^ "\n>>>>>> f = : " ^ term_to_string f); *)
     let mk n = pack (Tv_FVar (pack_fv n)) in
     match inspect (type_of_bv bv) with
     | Tv_FVar fv ->
@@ -84,21 +84,21 @@ let mk_printer_fun (dom : term) : Tac term =
 
         // Generate the match on the internal argument
         let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) branches) in
-        (* print ("m = " ^ term_to_string m); *)
+        (* debug ("m = " ^ term_to_string m); *)
 
         // Wrap it into an internal function
         let f = pack (Tv_Abs xi m) in
-        (* print ("f = " ^ term_to_string f); *)
+        (* debug ("f = " ^ term_to_string f); *)
 
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
         let xtm = pack (Tv_Var (bv_of_binder x)) in
         let b = pack (Tv_Let true ff f (mk_e_app fftm [xtm])) in
-        (* print ("b = " ^ term_to_string b); *)
+        (* debug ("b = " ^ term_to_string b); *)
 
         // Wrap it in a lambda taking the initial argument
         let tm = pack (Tv_Abs x b) in
-        (* print ("tm = " ^ term_to_string tm); *)
+        (* debug ("tm = " ^ term_to_string tm); *)
 
         tm
     | _ -> fail "type not found?"

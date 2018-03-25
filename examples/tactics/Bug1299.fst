@@ -23,6 +23,6 @@ let test : unit =
   assert_by_tactic True
     (fun () -> should_fail (fun () -> let tm = make_term () in
                                       let normalized_tm = norm_term [delta] tm in
-                                      print ("n = " ^ term_to_string normalized_tm);
+                                      debug ("n = " ^ term_to_string normalized_tm);
                                       let t = unquote #(unit -> Tac unit) normalized_tm in
                                       t ()))
