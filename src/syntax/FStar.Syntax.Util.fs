@@ -682,8 +682,11 @@ let range_of_args args r =
    args |> List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r
 
 let mk_app f args =
-  let r = range_of_args args f.pos in
-  mk (Tm_app(f, args)) None r
+  match args with
+  | [] -> f
+  | _ ->
+      let r = range_of_args args f.pos in
+      mk (Tm_app(f, args)) None r
 
 let mk_data l args =
   match args with
