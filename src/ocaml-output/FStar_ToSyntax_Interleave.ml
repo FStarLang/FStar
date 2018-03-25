@@ -317,12 +317,12 @@ let (initialize_interface :
                   uu____966
                  in
               (FStar_Errors.Fatal_InterfaceAlreadyProcessed, uu____965)  in
-            FStar_Errors.raise_error uu____960
-              (FStar_Ident.range_of_lid mname)
+            let uu____967 = FStar_Ident.range_of_lid mname  in
+            FStar_Errors.raise_error uu____960 uu____967
         | FStar_Pervasives_Native.None  ->
-            let uu____973 =
+            let uu____974 =
               FStar_Syntax_DsEnv.set_iface_decls env mname decls  in
-            ((), uu____973)
+            ((), uu____974)
   
 let (prefix_with_interface_decls :
   FStar_Parser_AST.decl ->
@@ -330,18 +330,18 @@ let (prefix_with_interface_decls :
   =
   fun impl  ->
     fun env  ->
-      let uu____990 =
-        let uu____995 = FStar_Syntax_DsEnv.current_module env  in
-        FStar_Syntax_DsEnv.iface_decls env uu____995  in
-      match uu____990 with
+      let uu____991 =
+        let uu____996 = FStar_Syntax_DsEnv.current_module env  in
+        FStar_Syntax_DsEnv.iface_decls env uu____996  in
+      match uu____991 with
       | FStar_Pervasives_Native.None  -> ([impl], env)
       | FStar_Pervasives_Native.Some iface1 ->
-          let uu____1011 = prefix_one_decl iface1 impl  in
-          (match uu____1011 with
+          let uu____1012 = prefix_one_decl iface1 impl  in
+          (match uu____1012 with
            | (iface2,impl1) ->
                let env1 =
-                 let uu____1037 = FStar_Syntax_DsEnv.current_module env  in
-                 FStar_Syntax_DsEnv.set_iface_decls env uu____1037 iface2  in
+                 let uu____1038 = FStar_Syntax_DsEnv.current_module env  in
+                 FStar_Syntax_DsEnv.set_iface_decls env uu____1038 iface2  in
                (impl1, env1))
   
 let (interleave_module :
@@ -352,49 +352,49 @@ let (interleave_module :
     fun expect_complete_modul  ->
       fun env  ->
         match a with
-        | FStar_Parser_AST.Interface uu____1059 -> (a, env)
+        | FStar_Parser_AST.Interface uu____1060 -> (a, env)
         | FStar_Parser_AST.Module (l,impls) ->
-            let uu____1074 = FStar_Syntax_DsEnv.iface_decls env l  in
-            (match uu____1074 with
+            let uu____1075 = FStar_Syntax_DsEnv.iface_decls env l  in
+            (match uu____1075 with
              | FStar_Pervasives_Native.None  -> (a, env)
              | FStar_Pervasives_Native.Some iface1 ->
-                 let uu____1090 =
+                 let uu____1091 =
                    FStar_List.fold_left
-                     (fun uu____1114  ->
+                     (fun uu____1115  ->
                         fun impl  ->
-                          match uu____1114 with
+                          match uu____1115 with
                           | (iface2,impls1) ->
-                              let uu____1142 = prefix_one_decl iface2 impl
+                              let uu____1143 = prefix_one_decl iface2 impl
                                  in
-                              (match uu____1142 with
+                              (match uu____1143 with
                                | (iface3,impls') ->
                                    (iface3,
                                      (FStar_List.append impls1 impls'))))
                      (iface1, []) impls
                     in
-                 (match uu____1090 with
+                 (match uu____1091 with
                   | (iface2,impls1) ->
-                      let uu____1191 =
-                        let uu____1200 =
+                      let uu____1192 =
+                        let uu____1201 =
                           FStar_Util.prefix_until
-                            (fun uu___62_1219  ->
-                               match uu___62_1219 with
+                            (fun uu___62_1220  ->
+                               match uu___62_1220 with
                                | {
                                    FStar_Parser_AST.d = FStar_Parser_AST.Val
-                                     uu____1220;
-                                   FStar_Parser_AST.drange = uu____1221;
-                                   FStar_Parser_AST.doc = uu____1222;
-                                   FStar_Parser_AST.quals = uu____1223;
-                                   FStar_Parser_AST.attrs = uu____1224;_} ->
+                                     uu____1221;
+                                   FStar_Parser_AST.drange = uu____1222;
+                                   FStar_Parser_AST.doc = uu____1223;
+                                   FStar_Parser_AST.quals = uu____1224;
+                                   FStar_Parser_AST.attrs = uu____1225;_} ->
                                    true
-                               | uu____1231 -> false) iface2
+                               | uu____1232 -> false) iface2
                            in
-                        match uu____1200 with
+                        match uu____1201 with
                         | FStar_Pervasives_Native.None  -> (iface2, [])
                         | FStar_Pervasives_Native.Some (lets,one_val,rest) ->
                             (lets, (one_val :: rest))
                          in
-                      (match uu____1191 with
+                      (match uu____1192 with
                        | (iface_lets,remaining_iface_vals) ->
                            let impls2 = FStar_List.append impls1 iface_lets
                               in
@@ -404,29 +404,31 @@ let (interleave_module :
                               in
                            let a1 = FStar_Parser_AST.Module (l, impls2)  in
                            (match remaining_iface_vals with
-                            | uu____1304::uu____1305 when
+                            | uu____1305::uu____1306 when
                                 expect_complete_modul ->
                                 let err =
-                                  let uu____1309 =
+                                  let uu____1310 =
                                     FStar_List.map
                                       FStar_Parser_AST.decl_to_string
                                       remaining_iface_vals
                                      in
-                                  FStar_All.pipe_right uu____1309
+                                  FStar_All.pipe_right uu____1310
                                     (FStar_String.concat "\n\t")
                                    in
-                                let uu____1314 =
-                                  let uu____1319 =
-                                    let uu____1320 =
+                                let uu____1315 =
+                                  let uu____1320 =
+                                    let uu____1321 =
                                       FStar_Ident.string_of_lid l  in
                                     FStar_Util.format2
                                       "Some interface elements were not implemented by module %s:\n\t%s"
-                                      uu____1320 err
+                                      uu____1321 err
                                      in
                                   (FStar_Errors.Fatal_InterfaceNotImplementedByModule,
-                                    uu____1319)
+                                    uu____1320)
                                    in
-                                FStar_Errors.raise_error uu____1314
-                                  (FStar_Ident.range_of_lid l)
-                            | uu____1325 -> (a1, env1)))))
+                                let uu____1322 = FStar_Ident.range_of_lid l
+                                   in
+                                FStar_Errors.raise_error uu____1315
+                                  uu____1322
+                            | uu____1327 -> (a1, env1)))))
   

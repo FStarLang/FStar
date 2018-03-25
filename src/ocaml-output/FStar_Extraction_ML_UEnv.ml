@@ -699,11 +699,12 @@ let (monad_op_name :
   fun ed  ->
     fun nm  ->
       let lid =
+        let uu____1527 = FStar_Ident.id_of_text nm  in
         FStar_Syntax_Util.mk_field_projector_name_from_ident
-          ed.FStar_Syntax_Syntax.mname (FStar_Ident.id_of_text nm)
+          ed.FStar_Syntax_Syntax.mname uu____1527
          in
-      let uu____1527 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
-      (uu____1527, lid)
+      let uu____1528 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
+      (uu____1528, lid)
   
 let (action_name :
   FStar_Syntax_Syntax.eff_decl ->
@@ -718,9 +719,11 @@ let (action_name :
          in
       let module_name = (ed.FStar_Syntax_Syntax.mname).FStar_Ident.ns  in
       let lid =
-        FStar_Ident.lid_of_ids
-          (FStar_List.append module_name [FStar_Ident.id_of_text nm])
-         in
-      let uu____1543 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
-      (uu____1543, lid)
+        let uu____1544 =
+          let uu____1547 =
+            let uu____1550 = FStar_Ident.id_of_text nm  in [uu____1550]  in
+          FStar_List.append module_name uu____1547  in
+        FStar_Ident.lid_of_ids uu____1544  in
+      let uu____1551 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
+      (uu____1551, lid)
   

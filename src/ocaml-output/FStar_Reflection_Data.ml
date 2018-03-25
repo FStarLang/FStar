@@ -503,17 +503,25 @@ let (ref_Mk_bv : refl_constant) =
   let attr =
     let uu____1140 =
       let uu____1147 = fstar_refl_data_lid "bv_view"  in
-      (uu____1147,
-        [FStar_Ident.mk_ident ("bv_ppname", FStar_Range.dummyRange);
-        FStar_Ident.mk_ident ("bv_index", FStar_Range.dummyRange);
-        FStar_Ident.mk_ident ("bv_sort", FStar_Range.dummyRange)])
-       in
+      let uu____1148 =
+        let uu____1151 =
+          FStar_Ident.mk_ident ("bv_ppname", FStar_Range.dummyRange)  in
+        let uu____1152 =
+          let uu____1155 =
+            FStar_Ident.mk_ident ("bv_index", FStar_Range.dummyRange)  in
+          let uu____1156 =
+            let uu____1159 =
+              FStar_Ident.mk_ident ("bv_sort", FStar_Range.dummyRange)  in
+            [uu____1159]  in
+          uu____1155 :: uu____1156  in
+        uu____1151 :: uu____1152  in
+      (uu____1147, uu____1148)  in
     FStar_Syntax_Syntax.Record_ctor uu____1140  in
-  let uu____1150 =
+  let uu____1162 =
     FStar_Syntax_Syntax.fvar lid FStar_Syntax_Syntax.Delta_constant
       (FStar_Pervasives_Native.Some attr)
      in
-  { lid; t = uu____1150 } 
+  { lid; t = uu____1162 } 
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit" 
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit" 
 let (ref_C_Unit : refl_constant) = fstar_refl_data_const "C_Unit" 
@@ -553,11 +561,11 @@ let (ref_E_Unit : refl_constant) = fstar_refl_data_const "Unit"
 let (ref_E_Var : refl_constant) = fstar_refl_data_const "Var" 
 let (ref_E_Mult : refl_constant) = fstar_refl_data_const "Mult" 
 let (t_exp : FStar_Syntax_Syntax.term) =
-  let uu____1151 =
+  let uu____1163 =
     FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"]
       FStar_Range.dummyRange
      in
-  FStar_Syntax_Syntax.tconst uu____1151 
+  FStar_Syntax_Syntax.tconst uu____1163 
 let (ord_Lt_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange 
 let (ord_Eq_lid : FStar_Ident.lident) =
