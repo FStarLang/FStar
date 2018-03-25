@@ -882,21 +882,27 @@ let reduce_primops cfg env stack tm =
          | Tm_fvar fv -> begin
            match find_prim_step cfg fv with
            | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
-             if List.length args < prim_step.arity
+             let l = List.length args in
+             if l < prim_step.arity
              then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
                                                      (Print.lid_to_string prim_step.name)
-                                                     (string_of_int (List.length args))
+                                                     (string_of_int l)
                                                      (string_of_int prim_step.arity));
                         tm //partial application; can't step
                   end
-             else begin log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+             else begin
+                  let args_1, args_2 = if l = prim_step.arity
+                                       then args, []
+                                       else List.splitAt prim_step.arity args
+                  in
+                  log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   let psc = {
                       psc_range = head.pos;
                       psc_subst = fun () -> if prim_step.requires_binder_substitution
                                             then mk_psc_subst cfg env
                                             else []
                   } in
-                  match prim_step.interpretation psc args with
+                  match prim_step.interpretation psc args_1 with
                   | None ->
                       log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
@@ -904,7 +910,7 @@ let reduce_primops cfg env stack tm =
                       log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
                                               (Print.term_to_string tm)
                                               (Print.term_to_string reduced));
-                      reduced
+                      U.mk_app reduced args_2
                  end
            | Some _ ->
                log_primops cfg (fun () -> BU.print1 "primop: not reducing <%s> since we're doing strong reduction\n"
