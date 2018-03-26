@@ -366,4 +366,4 @@ let upd_ref_of
   (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
   (ensures (aref_live_at h2 a t rel /\ upd h1 (ref_of h2 a t rel) x == upd h1 (gref_of a t rel) x))
   [SMTPat (upd h1 (ref_of h2 a t rel) x)]
-= ()
+= lemma_heap_equality_upd_same_addr h1 (ref_of h2 a t rel) (gref_of a t rel) x
