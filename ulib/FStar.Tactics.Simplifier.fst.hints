@@ -13,7 +13,7 @@
         "unit_typing"
       ],
       0,
-      "ef724d11ab90257ff9a5d8c869af2877"
+      "fa2c9a28ed0e464b09b51024e7d64ae3"
     ],
     [
       "FStar.Tactics.Simplifier.lem_fa_false",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "7970776cc9a21c6567becdf05fe28f2d"
+      "4c439fc79258e477c6708da6e8fb25b1"
     ],
     [
       "FStar.Tactics.Simplifier.lem_ex_true",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "6521da5aa1bea35c40f79702cb362b98"
+      "eb2ac942169a64ee885c76604fe75572"
     ],
     [
       "FStar.Tactics.Simplifier.and_cong",
@@ -45,7 +45,7 @@
         "unit_typing"
       ],
       0,
-      "d47abec3b8d443459f02a9b7f0f85373"
+      "a427dfc5a760b1c10979eb5778662f0f"
     ],
     [
       "FStar.Tactics.Simplifier.or_cong",
@@ -59,7 +59,7 @@
         "unit_typing"
       ],
       0,
-      "0eed44a6fc33dbf30cd054e830b581d6"
+      "96bdc909d91b607cc0866a8e4f13a1ea"
     ],
     [
       "FStar.Tactics.Simplifier.imp_cong",
@@ -73,7 +73,7 @@
         "unit_typing"
       ],
       0,
-      "024bac09c0f806d402aab04dafab1c27"
+      "227cf1c5782c7de7daf6562e617530e5"
     ],
     [
       "FStar.Tactics.Simplifier.neg_cong",
@@ -87,7 +87,7 @@
         "unit_typing"
       ],
       0,
-      "8f217fd470041d6f7840f5f761f85e68"
+      "8e24edfa5e794e7068e04ac28f8da2a5"
     ],
     [
       "FStar.Tactics.Simplifier.iff_cong",
@@ -101,7 +101,7 @@
         "unit_typing"
       ],
       0,
-      "ccd3ad97138d864761bbe15df1a72cc8"
+      "f412c19741c05db99e1ed73b15dd2ed1"
     ],
     [
       "FStar.Tactics.Simplifier.equiv",
@@ -115,7 +115,7 @@
         "unit_typing"
       ],
       0,
-      "9ebbf57f9c2a17e0c7010381bb70dfa4"
+      "6882a3aa541ec5401034532910e1c5ba"
     ]
   ]
 ]
