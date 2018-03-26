@@ -1,7 +1,7 @@
 open Prims
-let set_hint_correlator :
+let (set_hint_correlator :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env
+    FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env)
   =
   fun env  ->
     fun se  ->
@@ -191,7 +191,7 @@ let set_hint_correlator :
               (uu___64_98.FStar_TypeChecker_Env.dep_graph)
           }
   
-let log : FStar_TypeChecker_Env.env -> Prims.bool =
+let (log : FStar_TypeChecker_Env.env -> Prims.bool) =
   fun env  ->
     (FStar_Options.log_types ()) &&
       (let uu____141 =
@@ -199,10 +199,10 @@ let log : FStar_TypeChecker_Env.env -> Prims.bool =
          FStar_Ident.lid_equals FStar_Parser_Const.prims_lid uu____142  in
        Prims.op_Negation uu____141)
   
-let tc_check_trivial_guard :
+let (tc_check_trivial_guard :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
   =
   fun env  ->
     fun t  ->
@@ -212,10 +212,10 @@ let tc_check_trivial_guard :
         match uu____152 with
         | (t1,c,g) -> (FStar_TypeChecker_Rel.force_trivial_guard env g; t1)
   
-let recheck_debug :
+let (recheck_debug :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun s  ->
     fun env  ->
@@ -242,10 +242,10 @@ let recheck_debug :
                else ());
               t))
   
-let check_and_gen :
+let (check_and_gen :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.tscheme
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.tscheme)
   =
   fun env  ->
     fun t  ->
@@ -271,13 +271,13 @@ let check_nogen :
            in
         ([], uu____224)
   
-let monad_signature :
+let (monad_signature :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
                                   FStar_Syntax_Syntax.syntax)
-          FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun m  ->
@@ -297,9 +297,9 @@ let monad_signature :
              | uu____314 -> fail1 ())
         | uu____315 -> fail1 ()
   
-let tc_eff_decl :
+let (tc_eff_decl :
   FStar_TypeChecker_Env.env_t ->
-    FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.eff_decl
+    FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.eff_decl)
   =
   fun env0  ->
     fun ed  ->
@@ -2322,12 +2322,12 @@ let tc_eff_decl :
                                            else ());
                                           ed3))))))))
   
-let cps_and_elaborate :
+let (cps_and_elaborate :
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.eff_decl ->
       (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Syntax_Syntax.eff_decl,
         FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple3
+        FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun ed  ->
@@ -4049,12 +4049,12 @@ let tc_lex_t :
                  (FStar_Errors.Fatal_InvalidRedefinitionOfLexT, err_msg)
                  err_range)
   
-let tc_assume :
+let (tc_assume :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.formula ->
         FStar_Syntax_Syntax.qualifier Prims.list ->
-          FStar_Range.range -> FStar_Syntax_Syntax.sigelt
+          FStar_Range.range -> FStar_Syntax_Syntax.sigelt)
   =
   fun env  ->
     fun lid  ->
@@ -4087,14 +4087,14 @@ let tc_assume :
                         FStar_Syntax_Syntax.sigattrs = []
                       }))
   
-let tc_inductive :
+let (tc_inductive :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Ident.lident Prims.list ->
           (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Syntax_Syntax.sigelt
                                                    Prims.list)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun ses  ->
@@ -4214,20 +4214,20 @@ let tc_inductive :
                  ());
                 res))
   
-let z3_reset_options : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env
-  =
+let (z3_reset_options :
+  FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun en  ->
     let env =
       let uu____4757 = FStar_Options.using_facts_from ()  in
       FStar_TypeChecker_Env.set_proof_ns uu____4757 en  in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh (); env
   
-let tc_decl :
+let (tc_decl :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Syntax_Syntax.sigelt
                                                Prims.list)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun se  ->
@@ -5404,11 +5404,11 @@ let tc_decl :
                        else ());
                       ([se1], [])))))
   
-let for_export :
+let (for_export :
   FStar_Ident.lident Prims.list ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Ident.lident Prims.list)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun hidden  ->
     fun se  ->
@@ -5602,9 +5602,9 @@ let for_export :
             (uu____7386, hidden)
           else ([se], hidden)
   
-let add_sigelt_to_env :
+let (add_sigelt_to_env :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env
+    FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env)
   =
   fun env  ->
     fun se  ->
@@ -5648,12 +5648,12 @@ let add_sigelt_to_env :
           -> env
       | uu____7498 -> FStar_TypeChecker_Env.push_sigelt env se
   
-let tc_decls :
+let (tc_decls :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
       (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Syntax_Syntax.sigelt
                                                Prims.list,FStar_TypeChecker_Env.env)
-        FStar_Pervasives_Native.tuple3
+        FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun ses  ->
@@ -5811,10 +5811,10 @@ let tc_decls :
           ((FStar_List.rev_append ses1 []),
             (FStar_List.rev_append exports []), env1)
   
-let check_exports :
+let (check_exports :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
-      FStar_Syntax_Syntax.sigelt Prims.list -> Prims.unit
+      FStar_Syntax_Syntax.sigelt Prims.list -> Prims.unit)
   =
   fun env  ->
     fun modul  ->
@@ -6031,9 +6031,9 @@ let check_exports :
            in
         if uu____8381 then () else FStar_List.iter check_sigelt exports
   
-let extract_interface :
+let (extract_interface :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.modul -> FStar_Syntax_Syntax.modul
+    FStar_Syntax_Syntax.modul -> FStar_Syntax_Syntax.modul)
   =
   fun env  ->
     fun m  ->
@@ -6377,8 +6377,8 @@ let extract_interface :
         FStar_Syntax_Syntax.is_interface = true
       }
   
-let pop_context :
-  FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env =
+let (pop_context :
+  FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =
   fun env  ->
     fun msg  ->
       (let uu____9216 = FStar_Syntax_DsEnv.pop ()  in
@@ -6387,8 +6387,8 @@ let pop_context :
        (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ();
        en)
   
-let push_context :
-  FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env =
+let (push_context :
+  FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =
   fun env  ->
     fun msg  ->
       let dsenv1 = FStar_Syntax_DsEnv.push env.FStar_TypeChecker_Env.dsenv
@@ -6468,11 +6468,11 @@ let push_context :
           (uu___104_9227.FStar_TypeChecker_Env.dep_graph)
       }
   
-let tc_partial_modul :
+let (tc_partial_modul :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Syntax_Syntax.modul,FStar_Syntax_Syntax.sigelt Prims.list,
-        FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3
+        FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun modul  ->
@@ -6591,12 +6591,12 @@ let tc_partial_modul :
                  (uu___106_9288.FStar_Syntax_Syntax.is_interface)
              }), exports, env3))
   
-let tc_more_partial_modul :
+let (tc_more_partial_modul :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
       FStar_Syntax_Syntax.sigelt Prims.list ->
         (FStar_Syntax_Syntax.modul,FStar_Syntax_Syntax.sigelt Prims.list,
-          FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3
+          FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun modul  ->
@@ -6619,12 +6619,12 @@ let tc_more_partial_modul :
               }  in
             (modul1, exports, env1)
   
-let rec tc_modul :
+let rec (tc_modul :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Syntax_Syntax.modul,FStar_Syntax_Syntax.modul
                                    FStar_Pervasives_Native.option,FStar_TypeChecker_Env.env)
-        FStar_Pervasives_Native.tuple3
+        FStar_Pervasives_Native.tuple3)
   =
   fun env0  ->
     fun m  ->
@@ -6799,14 +6799,14 @@ let rec tc_modul :
                       (uu___109_9442.FStar_TypeChecker_Env.dep_graph)
                   })))
 
-and finish_partial_modul :
+and (finish_partial_modul :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.modul ->
         FStar_Syntax_Syntax.sigelt Prims.list ->
           (FStar_Syntax_Syntax.modul,FStar_Syntax_Syntax.modul
                                        FStar_Pervasives_Native.option,
-            FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3
+            FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3)
   =
   fun loading_from_cache  ->
     fun en  ->
@@ -7120,9 +7120,9 @@ and finish_partial_modul :
               else ());
              (modul, FStar_Pervasives_Native.None, env))
 
-let load_checked_module :
+let (load_checked_module :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env
+    FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)
   =
   fun en  ->
     fun m  ->
@@ -7154,12 +7154,12 @@ let load_checked_module :
         finish_partial_modul true env2 m m.FStar_Syntax_Syntax.exports  in
       match uu____9694 with | (uu____9703,uu____9704,env3) -> env3
   
-let check_module :
+let (check_module :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Syntax_Syntax.modul,FStar_Syntax_Syntax.modul
                                    FStar_Pervasives_Native.option,FStar_TypeChecker_Env.env)
-        FStar_Pervasives_Native.tuple3
+        FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun m  ->

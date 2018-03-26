@@ -4,15 +4,15 @@ type 'a embedder = FStar_Range.range -> 'a -> FStar_Syntax_Syntax.term
 type 'a unembedder =
   FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option[@@deriving
                                                                  show]
-let embed_any :
-  FStar_Range.range -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
-  fun r  -> fun t  -> t 
-let unembed_any :
+let (embed_any :
+  FStar_Range.range -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  = fun r  -> fun t  -> t 
+let (unembed_any :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
   = fun t  -> FStar_Pervasives_Native.Some t 
-let embed_unit : FStar_Range.range -> Prims.unit -> FStar_Syntax_Syntax.term
-  =
+let (embed_unit :
+  FStar_Range.range -> Prims.unit -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun u  ->
       let uu___50_46 = FStar_Syntax_Util.exp_unit  in
@@ -22,9 +22,9 @@ let embed_unit : FStar_Range.range -> Prims.unit -> FStar_Syntax_Syntax.term
         FStar_Syntax_Syntax.vars = (uu___50_46.FStar_Syntax_Syntax.vars)
       }
   
-let __unembed_unit :
+let (__unembed_unit :
   Prims.bool ->
-    FStar_Syntax_Syntax.term -> Prims.unit FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term -> Prims.unit FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -44,14 +44,14 @@ let __unembed_unit :
            else ();
            FStar_Pervasives_Native.None)
   
-let unembed_unit :
-  FStar_Syntax_Syntax.term -> Prims.unit FStar_Pervasives_Native.option =
+let (unembed_unit :
+  FStar_Syntax_Syntax.term -> Prims.unit FStar_Pervasives_Native.option) =
   fun t  -> __unembed_unit true t 
-let unembed_unit_safe :
-  FStar_Syntax_Syntax.term -> Prims.unit FStar_Pervasives_Native.option =
+let (unembed_unit_safe :
+  FStar_Syntax_Syntax.term -> Prims.unit FStar_Pervasives_Native.option) =
   fun t  -> __unembed_unit false t 
-let embed_bool : FStar_Range.range -> Prims.bool -> FStar_Syntax_Syntax.term
-  =
+let (embed_bool :
+  FStar_Range.range -> Prims.bool -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun b  ->
       let t =
@@ -65,9 +65,9 @@ let embed_bool : FStar_Range.range -> Prims.bool -> FStar_Syntax_Syntax.term
         FStar_Syntax_Syntax.vars = (uu___51_101.FStar_Syntax_Syntax.vars)
       }
   
-let __unembed_bool :
+let (__unembed_bool :
   Prims.bool ->
-    FStar_Syntax_Syntax.term -> Prims.bool FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term -> Prims.bool FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -87,14 +87,14 @@ let __unembed_bool :
            else ();
            FStar_Pervasives_Native.None)
   
-let unembed_bool :
-  FStar_Syntax_Syntax.term -> Prims.bool FStar_Pervasives_Native.option =
+let (unembed_bool :
+  FStar_Syntax_Syntax.term -> Prims.bool FStar_Pervasives_Native.option) =
   fun t  -> __unembed_bool true t 
-let unembed_bool_safe :
-  FStar_Syntax_Syntax.term -> Prims.bool FStar_Pervasives_Native.option =
+let (unembed_bool_safe :
+  FStar_Syntax_Syntax.term -> Prims.bool FStar_Pervasives_Native.option) =
   fun t  -> __unembed_bool false t 
-let embed_char :
-  FStar_Range.range -> FStar_Char.char -> FStar_Syntax_Syntax.term =
+let (embed_char :
+  FStar_Range.range -> FStar_Char.char -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun c  ->
       let t = FStar_Syntax_Util.exp_char c  in
@@ -105,10 +105,10 @@ let embed_char :
         FStar_Syntax_Syntax.vars = (uu___52_154.FStar_Syntax_Syntax.vars)
       }
   
-let __unembed_char :
+let (__unembed_char :
   Prims.bool ->
     FStar_Syntax_Syntax.term ->
-      FStar_Char.char FStar_Pervasives_Native.option
+      FStar_Char.char FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -128,14 +128,14 @@ let __unembed_char :
            else ();
            FStar_Pervasives_Native.None)
   
-let unembed_char :
-  FStar_Syntax_Syntax.term -> FStar_Char.char FStar_Pervasives_Native.option
+let (unembed_char :
+  FStar_Syntax_Syntax.term -> FStar_Char.char FStar_Pervasives_Native.option)
   = fun t  -> __unembed_char true t 
-let unembed_char_safe :
-  FStar_Syntax_Syntax.term -> FStar_Char.char FStar_Pervasives_Native.option
+let (unembed_char_safe :
+  FStar_Syntax_Syntax.term -> FStar_Char.char FStar_Pervasives_Native.option)
   = fun t  -> __unembed_char false t 
-let embed_int :
-  FStar_Range.range -> FStar_BigInt.t -> FStar_Syntax_Syntax.term =
+let (embed_int :
+  FStar_Range.range -> FStar_BigInt.t -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun i  ->
       let t =
@@ -148,9 +148,9 @@ let embed_int :
         FStar_Syntax_Syntax.vars = (uu___53_210.FStar_Syntax_Syntax.vars)
       }
   
-let __unembed_int :
+let (__unembed_int :
   Prims.bool ->
-    FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -172,23 +172,23 @@ let __unembed_int :
            else ();
            FStar_Pervasives_Native.None)
   
-let unembed_int :
-  FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option =
-  fun t  -> __unembed_int true t 
-let unembed_int_safe :
-  FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option =
-  fun t  -> __unembed_int false t 
-let embed_string :
-  FStar_Range.range -> Prims.string -> FStar_Syntax_Syntax.term =
+let (unembed_int :
+  FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option)
+  = fun t  -> __unembed_int true t 
+let (unembed_int_safe :
+  FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option)
+  = fun t  -> __unembed_int false t 
+let (embed_string :
+  FStar_Range.range -> Prims.string -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun s  ->
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (s, rng)))
         FStar_Pervasives_Native.None rng
   
-let __unembed_string :
+let (__unembed_string :
   Prims.bool ->
-    FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -209,11 +209,11 @@ let __unembed_string :
            else ();
            FStar_Pervasives_Native.None)
   
-let unembed_string :
-  FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option =
+let (unembed_string :
+  FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option) =
   fun t  -> __unembed_string true t 
-let unembed_string_safe :
-  FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option =
+let (unembed_string_safe :
+  FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option) =
   fun t  -> __unembed_string false t 
 let embed_tuple2 :
   'a 'b .
@@ -604,21 +604,21 @@ let embed_arrow_3 :
                                  FStar_Pervasives_Native.Some uu____1801)))
               | uu____1806 -> FStar_Pervasives_Native.None
   
-let embed_string_list :
-  FStar_Range.range -> Prims.string Prims.list -> FStar_Syntax_Syntax.term =
+let (embed_string_list :
+  FStar_Range.range -> Prims.string Prims.list -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun ss  ->
       let uu____1820 = embed_list embed_string FStar_Syntax_Syntax.t_string
          in
       uu____1820 rng ss
   
-let unembed_string_list :
+let (unembed_string_list :
   FStar_Syntax_Syntax.term ->
-    Prims.string Prims.list FStar_Pervasives_Native.option
+    Prims.string Prims.list FStar_Pervasives_Native.option)
   = fun t  -> let uu____1837 = unembed_list unembed_string  in uu____1837 t 
-let unembed_string_list_safe :
+let (unembed_string_list_safe :
   FStar_Syntax_Syntax.term ->
-    Prims.string Prims.list FStar_Pervasives_Native.option
+    Prims.string Prims.list FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____1853 = unembed_list_safe unembed_string_safe  in uu____1853 t
@@ -633,64 +633,65 @@ type norm_step =
   | Iota 
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldAttr of FStar_Syntax_Syntax.attribute [@@deriving show]
-let uu___is_Simpl : norm_step -> Prims.bool =
+let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Simpl  -> true | uu____1873 -> false
   
-let uu___is_Weak : norm_step -> Prims.bool =
+let (uu___is_Weak : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Weak  -> true | uu____1877 -> false
   
-let uu___is_HNF : norm_step -> Prims.bool =
+let (uu___is_HNF : norm_step -> Prims.bool) =
   fun projectee  -> match projectee with | HNF  -> true | uu____1881 -> false 
-let uu___is_Primops : norm_step -> Prims.bool =
+let (uu___is_Primops : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Primops  -> true | uu____1885 -> false
   
-let uu___is_Delta : norm_step -> Prims.bool =
+let (uu___is_Delta : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Delta  -> true | uu____1889 -> false
   
-let uu___is_Zeta : norm_step -> Prims.bool =
+let (uu___is_Zeta : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Zeta  -> true | uu____1893 -> false
   
-let uu___is_Iota : norm_step -> Prims.bool =
+let (uu___is_Iota : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Iota  -> true | uu____1897 -> false
   
-let uu___is_UnfoldOnly : norm_step -> Prims.bool =
+let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | UnfoldOnly _0 -> true | uu____1904 -> false
   
-let __proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list =
+let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
-let uu___is_UnfoldAttr : norm_step -> Prims.bool =
+let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | UnfoldAttr _0 -> true | uu____1922 -> false
   
-let __proj__UnfoldAttr__item___0 : norm_step -> FStar_Syntax_Syntax.attribute
-  = fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
-let steps_Simpl : FStar_Syntax_Syntax.term =
+let (__proj__UnfoldAttr__item___0 :
+  norm_step -> FStar_Syntax_Syntax.attribute) =
+  fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
+let (steps_Simpl : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_simpl 
-let steps_Weak : FStar_Syntax_Syntax.term =
+let (steps_Weak : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_weak 
-let steps_HNF : FStar_Syntax_Syntax.term =
+let (steps_HNF : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_hnf 
-let steps_Primops : FStar_Syntax_Syntax.term =
+let (steps_Primops : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_primops 
-let steps_Delta : FStar_Syntax_Syntax.term =
+let (steps_Delta : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_delta 
-let steps_Zeta : FStar_Syntax_Syntax.term =
+let (steps_Zeta : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_zeta 
-let steps_Iota : FStar_Syntax_Syntax.term =
+let (steps_Iota : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_iota 
-let steps_UnfoldOnly : FStar_Syntax_Syntax.term =
+let (steps_UnfoldOnly : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldonly 
-let steps_UnfoldAttr : FStar_Syntax_Syntax.term =
+let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldattr 
-let embed_norm_step :
-  FStar_Range.range -> norm_step -> FStar_Syntax_Syntax.term =
+let (embed_norm_step :
+  FStar_Range.range -> norm_step -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun n1  ->
       match n1 with
@@ -721,9 +722,9 @@ let embed_norm_step :
             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldAttr uu____1958  in
           uu____1957 FStar_Pervasives_Native.None rng
   
-let __unembed_norm_step :
+let (__unembed_norm_step :
   Prims.bool ->
-    FStar_Syntax_Syntax.term -> norm_step FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term -> norm_step FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -794,24 +795,24 @@ let __unembed_norm_step :
                 else ();
                 FStar_Pervasives_Native.None))
   
-let unembed_norm_step :
-  FStar_Syntax_Syntax.term -> norm_step FStar_Pervasives_Native.option =
+let (unembed_norm_step :
+  FStar_Syntax_Syntax.term -> norm_step FStar_Pervasives_Native.option) =
   fun t  -> __unembed_norm_step true t 
-let unembed_norm_step_safe :
-  FStar_Syntax_Syntax.term -> norm_step FStar_Pervasives_Native.option =
+let (unembed_norm_step_safe :
+  FStar_Syntax_Syntax.term -> norm_step FStar_Pervasives_Native.option) =
   fun t  -> __unembed_norm_step false t 
-let embed_range :
-  FStar_Range.range -> FStar_Range.range -> FStar_Syntax_Syntax.term =
+let (embed_range :
+  FStar_Range.range -> FStar_Range.range -> FStar_Syntax_Syntax.term) =
   fun rng  ->
     fun r  ->
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r))
         FStar_Pervasives_Native.None rng
   
-let __unembed_range :
+let (__unembed_range :
   Prims.bool ->
     FStar_Syntax_Syntax.term ->
-      FStar_Range.range FStar_Pervasives_Native.option
+      FStar_Range.range FStar_Pervasives_Native.option)
   =
   fun w  ->
     fun t0  ->
@@ -832,11 +833,11 @@ let __unembed_range :
            else ();
            FStar_Pervasives_Native.None)
   
-let unembed_range :
+let (unembed_range :
   FStar_Syntax_Syntax.term ->
-    FStar_Range.range FStar_Pervasives_Native.option
+    FStar_Range.range FStar_Pervasives_Native.option)
   = fun t  -> __unembed_range true t 
-let unembed_range_safe :
+let (unembed_range_safe :
   FStar_Syntax_Syntax.term ->
-    FStar_Range.range FStar_Pervasives_Native.option
+    FStar_Range.range FStar_Pervasives_Native.option)
   = fun t  -> __unembed_range false t 

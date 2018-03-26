@@ -1,8 +1,8 @@
 open Prims
 type name = FStar_Syntax_Syntax.bv[@@deriving show]
-let fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid =
+let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s  -> FStar_Parser_Const.fstar_tactics_lid' s 
-let lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term =
+let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l  ->
     let uu____11 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
@@ -10,11 +10,11 @@ let lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term =
        in
     FStar_All.pipe_right uu____11 FStar_Syntax_Syntax.fv_to_tm
   
-let mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term =
+let (mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s  ->
     let uu____15 = fstar_tactics_lid' ["Effect"; s]  in lid_as_tm uu____15
   
-let lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term =
+let (lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l  ->
     let uu____19 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
@@ -22,54 +22,55 @@ let lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term =
        in
     FStar_Syntax_Syntax.fv_to_tm uu____19
   
-let fstar_tactics_lid_as_data_tm : Prims.string -> FStar_Syntax_Syntax.term =
+let (fstar_tactics_lid_as_data_tm : Prims.string -> FStar_Syntax_Syntax.term)
+  =
   fun s  ->
     let uu____23 = fstar_tactics_lid' ["Effect"; s]  in
     lid_as_data_tm uu____23
   
-let fstar_tactics_Failed_lid : FStar_Ident.lid =
+let (fstar_tactics_Failed_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Result"; "Failed"] 
-let fstar_tactics_Success_lid : FStar_Ident.lid =
+let (fstar_tactics_Success_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Result"; "Success"] 
-let fstar_tactics_Failed_tm : FStar_Syntax_Syntax.term =
+let (fstar_tactics_Failed_tm : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_Failed_lid 
-let fstar_tactics_Success_tm : FStar_Syntax_Syntax.term =
+let (fstar_tactics_Success_tm : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_Success_lid 
-let fstar_tactics_topdown_lid : FStar_Ident.lid =
+let (fstar_tactics_topdown_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Types"; "TopDown"] 
-let fstar_tactics_bottomup_lid : FStar_Ident.lid =
+let (fstar_tactics_bottomup_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Types"; "BottomUp"] 
-let fstar_tactics_topdown : FStar_Syntax_Syntax.term =
+let (fstar_tactics_topdown : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_topdown_lid 
-let fstar_tactics_bottomup : FStar_Syntax_Syntax.term =
+let (fstar_tactics_bottomup : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_bottomup_lid 
-let fstar_tactics_SMT_lid : FStar_Ident.lid =
+let (fstar_tactics_SMT_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Types"; "SMT"] 
-let fstar_tactics_Goal_lid : FStar_Ident.lid =
+let (fstar_tactics_Goal_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Types"; "Goal"] 
-let fstar_tactics_Drop_lid : FStar_Ident.lid =
+let (fstar_tactics_Drop_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Types"; "Drop"] 
-let fstar_tactics_Force_lid : FStar_Ident.lid =
+let (fstar_tactics_Force_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Types"; "Force"] 
-let fstar_tactics_SMT : FStar_Syntax_Syntax.term =
+let (fstar_tactics_SMT : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_SMT_lid 
-let fstar_tactics_Goal : FStar_Syntax_Syntax.term =
+let (fstar_tactics_Goal : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_Goal_lid 
-let fstar_tactics_Drop : FStar_Syntax_Syntax.term =
+let (fstar_tactics_Drop : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_Drop_lid 
-let fstar_tactics_Force : FStar_Syntax_Syntax.term =
+let (fstar_tactics_Force : FStar_Syntax_Syntax.term) =
   lid_as_data_tm fstar_tactics_Force_lid 
-let mktuple2_tm : FStar_Syntax_Syntax.term =
+let (mktuple2_tm : FStar_Syntax_Syntax.term) =
   lid_as_data_tm FStar_Parser_Const.lid_Mktuple2 
-let t_proofstate : FStar_Syntax_Syntax.term =
+let (t_proofstate : FStar_Syntax_Syntax.term) =
   let uu____24 = fstar_tactics_lid' ["Types"; "proofstate"]  in
   FStar_Syntax_Syntax.tconst uu____24 
-let t_guard_policy : FStar_Syntax_Syntax.term =
+let (t_guard_policy : FStar_Syntax_Syntax.term) =
   let uu____25 = fstar_tactics_lid' ["Types"; "guard_policy"]  in
   FStar_Syntax_Syntax.tconst uu____25 
-let pair_typ :
+let (pair_typ :
   FStar_Reflection_Data.typ ->
-    FStar_Reflection_Data.typ -> FStar_Reflection_Data.typ
+    FStar_Reflection_Data.typ -> FStar_Reflection_Data.typ)
   =
   fun t  ->
     fun s  ->
@@ -87,9 +88,9 @@ let pair_typ :
         FStar_Syntax_Syntax.mk_Tm_app uu____33 uu____35  in
       uu____32 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let embed_proofstate :
+let (embed_proofstate :
   FStar_Range.range ->
-    FStar_Tactics_Types.proofstate -> FStar_Syntax_Syntax.term
+    FStar_Tactics_Types.proofstate -> FStar_Syntax_Syntax.term)
   =
   fun rng  ->
     fun ps  ->
@@ -97,9 +98,9 @@ let embed_proofstate :
         FStar_Syntax_Syntax.Lazy_proofstate
         (FStar_Pervasives_Native.Some rng)
   
-let unembed_proofstate :
+let (unembed_proofstate :
   FStar_Syntax_Syntax.term ->
-    FStar_Tactics_Types.proofstate FStar_Pervasives_Native.option
+    FStar_Tactics_Types.proofstate FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____61 =
@@ -121,8 +122,8 @@ let unembed_proofstate :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____73);
          FStar_Pervasives_Native.None)
   
-let unfold_lazy_proofstate :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term =
+let (unfold_lazy_proofstate :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i  -> FStar_Syntax_Util.exp_string "(((proofstate)))" 
 let embed_result :
   'a .
@@ -233,9 +234,9 @@ let unembed_result :
             FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____532);
            FStar_Pervasives_Native.None)
   
-let embed_direction :
+let (embed_direction :
   FStar_Range.range ->
-    FStar_Tactics_Types.direction -> FStar_Syntax_Syntax.term
+    FStar_Tactics_Types.direction -> FStar_Syntax_Syntax.term)
   =
   fun rng  ->
     fun d  ->
@@ -243,9 +244,9 @@ let embed_direction :
       | FStar_Tactics_Types.TopDown  -> fstar_tactics_topdown
       | FStar_Tactics_Types.BottomUp  -> fstar_tactics_bottomup
   
-let unembed_direction :
+let (unembed_direction :
   FStar_Syntax_Syntax.term ->
-    FStar_Tactics_Types.direction FStar_Pervasives_Native.option
+    FStar_Tactics_Types.direction FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____569 =
@@ -268,9 +269,9 @@ let unembed_direction :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____579);
          FStar_Pervasives_Native.None)
   
-let embed_guard_policy :
+let (embed_guard_policy :
   FStar_Range.range ->
-    FStar_Tactics_Types.guard_policy -> FStar_Syntax_Syntax.term
+    FStar_Tactics_Types.guard_policy -> FStar_Syntax_Syntax.term)
   =
   fun rng  ->
     fun p  ->
@@ -280,9 +281,9 @@ let embed_guard_policy :
       | FStar_Tactics_Types.Force  -> fstar_tactics_Force
       | FStar_Tactics_Types.Drop  -> fstar_tactics_Drop
   
-let unembed_guard_policy :
+let (unembed_guard_policy :
   FStar_Syntax_Syntax.term ->
-    FStar_Tactics_Types.guard_policy FStar_Pervasives_Native.option
+    FStar_Tactics_Types.guard_policy FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____604 =
