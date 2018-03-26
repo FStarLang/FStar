@@ -393,12 +393,16 @@ let salloc (#a:Type) (#rel:preorder a) (init:a)
   (ensures salloc_post init)
   = salloc_common init false
   
+// JP, AR: these are not supported in C, and `salloc` already benefits from
+// automatic memory management.
+[@ (deprecated "use salloc instead") ]
 let salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   : StackInline (mmmstackref a rel)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
   = salloc_common init true
 
+[@ (deprecated "use salloc instead") ]
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
