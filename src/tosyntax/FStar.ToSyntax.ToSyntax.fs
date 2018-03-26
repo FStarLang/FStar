@@ -252,6 +252,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Bind _
   | Quote _
   | VQuote _
+  | Antiquote _
   | Seq _ -> []
 
 let head_and_args t =
