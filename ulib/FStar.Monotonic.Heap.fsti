@@ -218,30 +218,40 @@ val lemma_unused_upd_modifies (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a re
          (ensures  (modifies (Set.singleton (addr_of r)) h (upd h r x)))
          [SMTPat (upd h r x); SMTPat (r `unused_in` h)]
 
-val upd_upd_same_mref
-  (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
-  (x:a) (y:a)
-  :Lemma (requires True)
-         (ensures  (upd (upd h r x) r y == upd h r y))
-	 [SMTPat (upd (upd h r x) r y)]
-
 val lemma_sel_equals_sel_tot_for_contained_refs
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r})
   :Lemma (requires True)
          (ensures  (sel_tot h r == sel h r))
-	 [SMTPat (sel_tot h r)]
+	 [SMTPat (sel_tot h r); SMTPat (sel h r)]
 
 val lemma_upd_equals_upd_tot_for_contained_refs
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a)
   :Lemma (requires True)
          (ensures  (upd_tot h r x == upd h r x))
-	 [SMTPat (upd_tot h r x)]
+	 [SMTPat (upd_tot h r x); SMTPat (upd h r x)]
 
 val lemma_modifies_and_equal_dom_sel_diff_addr
   (#a:Type0)(#rel:preorder a) (s:set nat) (h0:heap) (h1:heap) (r:mref a rel)
   :Lemma (requires (modifies s h0 h1 /\ equal_dom h0 h1 /\ (~ (S.mem (addr_of r) s))))
          (ensures  (sel h0 r == sel h1 r))
 	 [SMTPat (modifies s h0 h1); SMTPat (equal_dom h0 h1); SMTPat (sel h1 r)]
+
+val lemma_heap_equality_cancel_same_mref_upd
+  (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
+  (x:a) (y:a)
+  :Lemma (requires True)
+         (ensures  (upd (upd h r x) r y == upd h r y))
+
+val lemma_heap_equality_upd_with_sel
+  (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (requires (h `contains` r))
+         (ensures  (upd h r (sel h r) == h))
+
+val lemma_heap_equality_commute_distinct_upds
+  (#a:Type) (#b:Type) (#rel_a:preorder a) (#rel_b:preorder b) (h:heap) (r1:mref a rel_a) (r2:mref b rel_b)
+  (x:a) (y:b)
+  :Lemma (requires (addr_of r1 =!= addr_of r2))
+         (ensures  (upd (upd h r1 x) r2 y == upd (upd h r2 y) r1 x))
 
 (*** Untyped views of monotonic references *)
 
