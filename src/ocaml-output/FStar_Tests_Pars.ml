@@ -1,11 +1,11 @@
 open Prims
-let (test_lid : FStar_Ident.lident) =
+let test_lid : FStar_Ident.lident =
   FStar_Ident.lid_of_path ["Test"] FStar_Range.dummyRange 
-let (tcenv_ref :
-  FStar_TypeChecker_Env.env FStar_Pervasives_Native.option FStar_ST.ref) =
+let tcenv_ref :
+  FStar_TypeChecker_Env.env FStar_Pervasives_Native.option FStar_ST.ref =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let (test_mod_ref :
-  FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option FStar_ST.ref) =
+let test_mod_ref :
+  FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option FStar_ST.ref =
   FStar_Util.mk_ref
     (FStar_Pervasives_Native.Some
        {
@@ -15,11 +15,11 @@ let (test_mod_ref :
          FStar_Syntax_Syntax.is_interface = false
        })
   
-let (parse_mod :
+let parse_mod :
   FStar_Parser_ParseIt.filename ->
     FStar_Syntax_DsEnv.env ->
       (FStar_Syntax_DsEnv.env,FStar_Syntax_Syntax.modul)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun mod_name1  ->
     fun dsenv1  ->
@@ -53,12 +53,12 @@ let (parse_mod :
           failwith
             "Impossible: parsing a Filename always results in an ASTFragment"
   
-let (add_mods :
+let add_mods :
   FStar_Parser_ParseIt.filename Prims.list ->
     FStar_Syntax_DsEnv.env ->
       FStar_TypeChecker_Env.env ->
         (FStar_Syntax_DsEnv.env,FStar_TypeChecker_Env.env)
-          FStar_Pervasives_Native.tuple2)
+          FStar_Pervasives_Native.tuple2
   =
   fun mod_names  ->
     fun dsenv1  ->
@@ -78,7 +78,7 @@ let (add_mods :
                          | (_mod,uu____210,env2) -> (dsenv3, env2))))
           (dsenv1, env) mod_names
   
-let (init_once : Prims.unit -> Prims.unit) =
+let init_once : Prims.unit -> Prims.unit =
   fun uu____218  ->
     let solver1 = FStar_SMTEncoding_Solver.dummy  in
     let env =
@@ -179,14 +179,14 @@ let (init_once : Prims.unit -> Prims.unit) =
               FStar_ST.op_Colon_Equals tcenv_ref
                 (FStar_Pervasives_Native.Some env3)))
   
-let rec (init : Prims.unit -> FStar_TypeChecker_Env.env) =
+let rec init : Prims.unit -> FStar_TypeChecker_Env.env =
   fun uu____275  ->
     let uu____276 = FStar_ST.op_Bang tcenv_ref  in
     match uu____276 with
     | FStar_Pervasives_Native.Some f -> f
     | uu____303 -> (init_once (); init ())
   
-let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
+let frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag =
   fun s  ->
     {
       FStar_Parser_ParseIt.frag_text = s;
@@ -194,7 +194,7 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
       FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
     }
   
-let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
+let pars : Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
     try
       let tcenv = init ()  in
@@ -218,7 +218,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
         let uu____340 = FStar_Options.trace_error ()  in
         Prims.op_Negation uu____340 -> FStar_Exn.raise e
   
-let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
+let tc : Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
     let tm = pars s  in
     let tcenv = init ()  in
@@ -300,7 +300,7 @@ let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
        in
     match uu____348 with | (tm1,uu____356,uu____357) -> tm1
   
-let (pars_and_tc_fragment : Prims.string -> Prims.unit) =
+let pars_and_tc_fragment : Prims.string -> Prims.unit =
   fun s  ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____365 =
