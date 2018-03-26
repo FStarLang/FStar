@@ -368,7 +368,8 @@ let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a
   :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
                     as_addr r1 == as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-  = if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
+  = FStar.Monotonic.Heap.lemma_heap_equality_upd_same_addr (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2) x;
+    if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
       lemma_sel_same_addr h r1 r2
     else lemma_sel_same_addr h r2 r1
 
