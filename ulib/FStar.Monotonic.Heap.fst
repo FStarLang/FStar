@@ -171,8 +171,6 @@ let lemma_free_mm_sel #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_contains #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_unused #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_sel_same_addr #a #rel h r1 r2 = ()
-let lemma_upd_same_addr #a #rel h r1 r2 x =
-  assert (equal (upd h r1 x) (upd h r2 x))
 let lemma_sel_upd1 #a #rel h r1 x r2 = ()
 let lemma_sel_upd2 #a #b #rel1 #rel2 h r1 r2 x = ()
 let lemma_mref_injectivity = ()
@@ -188,6 +186,9 @@ let lemma_unused_upd_modifies #a #rel h r x = ()
 let lemma_sel_equals_sel_tot_for_contained_refs #a #rel h r = ()
 let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()
 let lemma_modifies_and_equal_dom_sel_diff_addr #a #rel s h0 h1 r = ()
+
+let lemma_heap_equality_upd_same_addr #a #rel h r1 r2 x =
+  assert (equal (upd h r1 x) (upd h r2 x))
 
 let lemma_heap_equality_cancel_same_mref_upd #a #rel h r x y =
   let h0 = upd (upd h r x) r y in

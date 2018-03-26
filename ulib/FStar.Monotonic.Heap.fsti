@@ -150,11 +150,6 @@ val lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:heap) (r1:mref a rel) (r
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
 
-val lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: heap) (r1 r2: mref a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ addr_of r1 = addr_of r2 /\ is_mm r1 == is_mm r2))
-         (ensures (upd h r1 x == upd h r2 x))
-         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
-
 (*
   * AR: this is true only if the preorder is same, else r2 may not be contained in h
   *)
@@ -235,6 +230,10 @@ val lemma_modifies_and_equal_dom_sel_diff_addr
   :Lemma (requires (modifies s h0 h1 /\ equal_dom h0 h1 /\ (~ (S.mem (addr_of r) s))))
          (ensures  (sel h0 r == sel h1 r))
 	 [SMTPat (modifies s h0 h1); SMTPat (equal_dom h0 h1); SMTPat (sel h1 r)]
+
+val lemma_heap_equality_upd_same_addr (#a: Type0) (#rel: preorder a) (h: heap) (r1 r2: mref a rel) (x: a)
+  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ addr_of r1 = addr_of r2 /\ is_mm r1 == is_mm r2))
+         (ensures (upd h r1 x == upd h r2 x))
 
 val lemma_heap_equality_cancel_same_mref_upd
   (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
