@@ -217,13 +217,11 @@ val lemma_sel_equals_sel_tot_for_contained_refs
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r})
   :Lemma (requires True)
          (ensures  (sel_tot h r == sel h r))
-	 [SMTPat (sel_tot h r); SMTPat (sel h r)]
 
 val lemma_upd_equals_upd_tot_for_contained_refs
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a)
   :Lemma (requires True)
          (ensures  (upd_tot h r x == upd h r x))
-	 [SMTPat (upd_tot h r x); SMTPat (upd h r x)]
 
 val lemma_modifies_and_equal_dom_sel_diff_addr
   (#a:Type0)(#rel:preorder a) (s:set nat) (h0:heap) (h1:heap) (r:mref a rel)

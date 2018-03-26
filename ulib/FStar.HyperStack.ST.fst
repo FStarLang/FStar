@@ -523,7 +523,8 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
     gst_recall (ref_contains_pred r);
     let m1 = HS.upd_tot m0 r v in
     Heap.lemma_distinct_addrs_distinct_preorders ();
-    Heap.lemma_distinct_addrs_distinct_mm ();    
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Heap.lemma_upd_equals_upd_tot_for_contained_refs (Map.sel m0.h (HS.frameOf r)) (HS.as_ref r) v;
     gst_put m1
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
@@ -539,6 +540,7 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
+    Heap.lemma_sel_equals_sel_tot_for_contained_refs (Map.sel m0.h (HS.frameOf r)) (HS.as_ref r);
     HS.sel_tot m0 r
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
