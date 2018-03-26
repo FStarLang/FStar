@@ -112,6 +112,18 @@ let recall_connection_liveness (c:connection)
     | S _ es_ref         -> ST.recall es_ref
     | R _ es_ref ctr_ref -> ST.recall es_ref; ST.recall ctr_ref
 
+let lemma_sel_entries_equals_sel_tot_entries (c:connection) (h:heap)
+  :Lemma (requires (h `live_connection` c))
+         (ensures  (sel_tot h (entries_of c) == sel h (entries_of c)))
+	 [SMTPat (sel_tot h (entries_of c))]
+  = Heap.lemma_sel_equals_sel_tot_for_contained_refs h (entries_of c)
+
+let lemma_sel_ctr_ref_equals_sel_tot_ctr_ref (c:connection{R? c}) (h:heap)
+  :Lemma (requires (h `live_connection` c))
+         (ensures  (let R _ _ ctr_ref = c in sel_tot h ctr_ref == sel h ctr_ref))
+	 [SMTPat (sel_tot h (R?.ctr c))]
+  = Heap.lemma_sel_equals_sel_tot_for_contained_refs h (R?.ctr c)
+
 (* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap{h `live_connection` c}) :Tot (seq message) =
   ArrayUtils.seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
@@ -123,12 +135,13 @@ let lemma_prefix_entries_implies_prefix_log
 	 [SMTPat (log c h1); SMTPat (log c h2)]
   = ArrayUtils.lemma_map_commutes_with_prefix (fun (E _ m _ _) -> m) (sel h1 (entries_of c)) (sel h2 (entries_of c))
 
+#set-options "--use_two_phase_tc true"
 (* current counter for the connection *)
 let ctr (c:connection) (h:heap{h `live_connection` c}) :Tot nat =
-  match c with
-  | S _ es_ref    -> length (sel_tot h es_ref)
-  | R _ _ ctr_ref -> sel_tot h ctr_ref
+  if S? c then length (sel_tot h (entries_of c))
+  else sel_tot h (R?.ctr c)
 
+#set-options "--use_two_phase_tc false"
 (* recall_counter, as mentioned in the paper *)
 let recall_counter (c:connection)
   :ST unit (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1 /\ h0 `live_connection` c /\ ctr c h0 <= Seq.length (log c h0)))
@@ -296,9 +309,9 @@ let lemma_is_prefix_of_slice
 (*****)
 
 (*
- * assuming a flattening function that flattens a sequence of messages into sequence of bytes
- * and a couple of associated lemmas
- *)
+//  * assuming a flattening function that flattens a sequence of messages into sequence of bytes
+//  * and a couple of associated lemmas
+//  *)
 assume val flatten (s:seq message) :Tot (seq byte)
 
 assume val lemma_flatten_snoc (s:seq message) (m:message)
