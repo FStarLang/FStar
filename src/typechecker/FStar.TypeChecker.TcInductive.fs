@@ -955,7 +955,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
 (******************************************************************************)
 
 //for these types we don't generate projectors, discriminators, and hasEq axioms
-let early_prims_inductives = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; "dtuple2" ]
+let early_prims_inductives = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or" ]
 
 let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
                                             (fvq:fv_qual)            (*                                         *)
@@ -997,6 +997,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
 
+    let early_prims_inductive =
+      lid_equals C.prims_lid  (Env.current_module env) &&
+      (tc.ident.idText = "dtuple2" || List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives)
+    in
+
     let discriminator_ses =
         if fvq <> Data_ctor
         then [] // We do not generate discriminators for record types
@@ -1004,8 +1009,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let discriminator_name = U.mk_discriminator lid in
             let no_decl = false in
             let only_decl =
-                  (lid_equals C.prims_lid  (Env.current_module env) && List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives) ||
-                  Options.dont_gen_projectors (Env.current_module env).str
+              early_prims_inductive ||
+              Options.dont_gen_projectors (Env.current_module env).str
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -1094,8 +1099,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let field_name, _ = U.mk_field_projector_name lid x i in
           let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
           let only_decl =
-              (lid_equals C.prims_lid  (Env.current_module env) && List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives) ||
-              Options.dont_gen_projectors (Env.current_module env).str
+            early_prims_inductive ||
+            Options.dont_gen_projectors (Env.current_module env).str
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
