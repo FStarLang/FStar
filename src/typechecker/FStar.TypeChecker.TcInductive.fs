@@ -637,9 +637,9 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
     else ()
   in
 
-  //create Sig_assume for the axioms
+  //create Sig_assume for the axioms, FIXME: docs?
   let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-    l @ [ { sigel = Sig_assume (lid, [], fml);
+    l @ [ { sigel = Sig_assume (lid, us, fml);
             sigquals = [];
             sigrng = Range.dummyRange;
             sigmeta = default_sigmeta;
@@ -779,13 +779,8 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
 
   let fml = List.fold_left (unoptimized_haseq_ty datas mutuals usubst us) U.t_true tcs in
 
-  let env = Env.push_sigelt env0 sig_bndle in
-  env.solver.push "haseq";
-
-  env.solver.encode_sig env sig_bndle;
-  let env = Env.push_univ_vars env us in
   let se =  //FIXME: docs?
-    { sigel = Sig_assume (get_haseq_axiom_lid lid, [], fml);
+    { sigel = Sig_assume (get_haseq_axiom_lid lid, us, fml);
               sigquals = [];
               sigrng = Range.dummyRange;
               sigmeta = default_sigmeta;

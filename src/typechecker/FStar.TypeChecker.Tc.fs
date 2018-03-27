@@ -1212,6 +1212,15 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_assume(lid, us, phi) ->
     let _, phi = SS.open_univ_vars us phi in
+    let phi =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let phi = tc_assume ({ env with lax = true }) phi r |> N.remove_uvar_solutions env in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Assume after phase 1: %s\n" (Print.term_to_string phi);
+        phi
+      end
+      else phi
+    in
+    
     let phi = tc_assume env phi r in
     let us, phi = TcUtil.generalize_universes env phi in
     [ { sigel = Sig_assume(lid, us, phi);
