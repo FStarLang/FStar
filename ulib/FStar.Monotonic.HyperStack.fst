@@ -481,6 +481,33 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let lemma_heap_equality_cancel_same_mref_upd
+  (#a:Type) (#rel:preorder a) (h:mem) (r:mreference a rel) (x y:a)
+  :Lemma (requires (live_region h (frameOf r)))
+         (ensures  (upd (upd h r x) r y == upd h r y))
+  = let h0 = upd (upd h r x) r y in
+    let h1 = upd h r y in
+    Heap.lemma_heap_equality_cancel_same_mref_upd (Map.sel h.h (frameOf r)) (as_ref r) x y;
+    assert (Map.equal h0.h h1.h)
+
+let lemma_heap_equality_upd_with_sel
+  (#a:Type) (#rel:preorder a) (h:mem) (r:mreference a rel)
+  :Lemma (requires (h `contains` r))
+         (ensures  (upd h r (sel h r) == h))
+  = let h' = upd h r (sel h r) in
+    Heap.lemma_heap_equality_upd_with_sel (Map.sel h.h (frameOf r)) (as_ref r);
+    assert (Map.equal h.h h'.h)
+
+let lemma_heap_equality_commute_distinct_upds
+  (#a:Type) (#b:Type) (#rel_a:preorder a) (#rel_b:preorder b)
+  (h:mem) (r1:mreference a rel_a) (r2:mreference b rel_b) (x:a) (y:b)
+  :Lemma (requires (as_addr r1 =!= as_addr r2 /\ live_region h (frameOf r1) /\ live_region h (frameOf r2)))
+         (ensures  (upd (upd h r1 x) r2 y == upd (upd h r2 y) r1 x))
+  = let h0 = upd (upd h r1 x) r2 y in
+    let h1 = upd (upd h r2 y) r1 x in
+    if frameOf r1 = frameOf r2 then Heap.lemma_heap_equality_commute_distinct_upds (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2) x y;
+    assert (Map.equal h0.h h1.h)
+
 (*** Untyped views of references *)
 
 (* Definition and ghost decidable equality *)
