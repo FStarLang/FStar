@@ -17,6 +17,8 @@ let to_string = Z.to_string
 let ( land )  = Big_int_Z.and_big_int
 let ( lor )   = Big_int_Z.or_big_int
 let ( lxor )  = Big_int_Z.xor_big_int
+let shift_left = Big_int_Z.shift_left_big_int
+let shift_right = Big_int_Z.shift_left_big_int
 
 (** Some misc. types defined in Prims *)
 type nonrec unit = unit

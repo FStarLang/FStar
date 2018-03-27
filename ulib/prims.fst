@@ -253,6 +253,8 @@ assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
 assume val land : int -> int -> int
 assume val lor  : int -> int -> int
 assume val lxor : int -> int -> int
+assume val shift_left : int -> int -> int
+assume val shift_right : int -> int -> int
 
 assume new type exn : Type0
 assume new type array : Type -> Type0
