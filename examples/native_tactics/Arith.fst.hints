@@ -12,7 +12,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f7f268670d4e043ad077f0d538be9d46"
+      "0a697bb98b8a18def21dbe85f5c1d913"
     ],
     [
       "Arith.lem1",
@@ -43,7 +43,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "198188f2fa186a136f218041dd2adb5e"
+      "97733506f1e03516a9e5804fffb0e0d6"
     ],
     [
       "Arith.lem2",
@@ -227,13 +227,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion", "bool_typing", "equation_FStar.UInt32.n",
         "equation_Prims.l_Forall", "equation_Prims.l_and",
         "equation_Prims.squash", "forall-interp",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "int_typing",
         "interpretation_Arith_Tm_abs_150975883dce5a712ce9875f696c2a76",
         "interpretation_Arith_Tm_abs_37007ab544d5f6aa8821b4f58451d0ea",
         "interpretation_Arith_Tm_abs_7de12b313dab3d63d9e908ea75216b8c",

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e4ef4bbf1fa78995978e52ac3d7c2bb5"
+      "0c1aab135be780f1285cb9635101edae"
     ],
     [
       "BV.cong_bvand",
@@ -733,7 +733,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "b2cd5f7529ac1649f2af6eddbaaf9ec7"
+      "db3b7f1ce9b4edf1c1ffa2c3920766ab"
     ],
     [
       "BV.unfold_logand64",
