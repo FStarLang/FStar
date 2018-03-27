@@ -35,7 +35,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b0a1ba7f05adef623daf575f1392b272"
+      "6a838a6ed52478152efe6c3a4d5952db"
     ],
     [
       "Map.OpaqueToSMT.Test.test2",
@@ -44,7 +44,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9dbc39da16c7bba72fbac5da07877a0c"
+      "31105b73ae5e89ba01ae298d168e1c42"
     ],
     [
       "Map.OpaqueToSMT.Test.imap",
