@@ -966,7 +966,7 @@ let tc_inductive env ses quals lids =
     let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
-    (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
+    (if Options.no_positivity () || (not (Env.should_verify env))  then ()  //skipping positivity check if lax mode
      else
        let env = push_sigelt env sig_bndle in
        let b = List.iter (fun ty ->
@@ -1043,7 +1043,9 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env = Env.set_range env r in
     let ses =
       if Options.use_two_phase_tc () && Env.should_verify env then
-        tc_inductive ({ env with lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle
+        let ses = tc_inductive ({ env with lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string { se with sigel = Sig_bundle (ses, lids) });
+        ses
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
@@ -1069,7 +1071,9 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
   | Sig_new_effect(ne) ->
     let ne =
       if Options.use_two_phase_tc () && Env.should_verify env then
-        tc_eff_decl ({ env with lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect
+        let ne = tc_eff_decl ({ env with lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string { se with sigel = Sig_new_effect ne });
+        ne
       else ne
     in
     let ne = tc_eff_decl env ne in
@@ -1337,7 +1341,9 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
             else e_lax
           | _ -> e_lax  //leave recursive lets as is
         in
-        tc_maybe_toplevel_term ({ env0 with lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp
+        let e = tc_maybe_toplevel_term ({ env0 with lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
+        e
       else e
     in
 
