@@ -1761,18 +1761,18 @@ and (encode_arith_term :
                in
             let add1 =
               mk_l ()
-                (fun a414  -> (Obj.magic FStar_SMTEncoding_Util.mkAdd) a414)
-                (fun a415  -> (Obj.magic binary) a415)
+                (fun a421  -> (Obj.magic FStar_SMTEncoding_Util.mkAdd) a421)
+                (fun a422  -> (Obj.magic binary) a422)
                in
             let sub1 =
               mk_l ()
-                (fun a416  -> (Obj.magic FStar_SMTEncoding_Util.mkSub) a416)
-                (fun a417  -> (Obj.magic binary) a417)
+                (fun a423  -> (Obj.magic FStar_SMTEncoding_Util.mkSub) a423)
+                (fun a424  -> (Obj.magic binary) a424)
                in
             let minus =
               mk_l ()
-                (fun a418  -> (Obj.magic FStar_SMTEncoding_Util.mkMinus) a418)
-                (fun a419  -> (Obj.magic unary) a419)
+                (fun a425  -> (Obj.magic FStar_SMTEncoding_Util.mkMinus) a425)
+                (fun a426  -> (Obj.magic unary) a426)
                in
             let mul1 = mk_nl "_mul" FStar_SMTEncoding_Util.mkMul  in
             let div1 = mk_nl "_div" FStar_SMTEncoding_Util.mkDiv  in
@@ -1900,84 +1900,84 @@ and (encode_BitVector_term :
                         FStar_All.pipe_right uu____5156 resBox  in
                       let bv_and =
                         mk_bv ()
-                          (fun a420  ->
-                             (Obj.magic FStar_SMTEncoding_Util.mkBvAnd) a420)
-                          (fun a421  -> (Obj.magic binary) a421)
+                          (fun a427  ->
+                             (Obj.magic FStar_SMTEncoding_Util.mkBvAnd) a427)
+                          (fun a428  -> (Obj.magic binary) a428)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_xor =
                         mk_bv ()
-                          (fun a422  ->
-                             (Obj.magic FStar_SMTEncoding_Util.mkBvXor) a422)
-                          (fun a423  -> (Obj.magic binary) a423)
+                          (fun a429  ->
+                             (Obj.magic FStar_SMTEncoding_Util.mkBvXor) a429)
+                          (fun a430  -> (Obj.magic binary) a430)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_or =
                         mk_bv ()
-                          (fun a424  ->
-                             (Obj.magic FStar_SMTEncoding_Util.mkBvOr) a424)
-                          (fun a425  -> (Obj.magic binary) a425)
+                          (fun a431  ->
+                             (Obj.magic FStar_SMTEncoding_Util.mkBvOr) a431)
+                          (fun a432  -> (Obj.magic binary) a432)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_add =
                         mk_bv ()
-                          (fun a426  ->
-                             (Obj.magic FStar_SMTEncoding_Util.mkBvAdd) a426)
-                          (fun a427  -> (Obj.magic binary) a427)
+                          (fun a433  ->
+                             (Obj.magic FStar_SMTEncoding_Util.mkBvAdd) a433)
+                          (fun a434  -> (Obj.magic binary) a434)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_sub =
                         mk_bv ()
-                          (fun a428  ->
-                             (Obj.magic FStar_SMTEncoding_Util.mkBvSub) a428)
-                          (fun a429  -> (Obj.magic binary) a429)
+                          (fun a435  ->
+                             (Obj.magic FStar_SMTEncoding_Util.mkBvSub) a435)
+                          (fun a436  -> (Obj.magic binary) a436)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_shl =
                         mk_bv ()
-                          (fun a430  ->
+                          (fun a437  ->
                              (Obj.magic (FStar_SMTEncoding_Util.mkBvShl sz))
-                               a430)
-                          (fun a431  -> (Obj.magic binary_arith) a431)
+                               a437)
+                          (fun a438  -> (Obj.magic binary_arith) a438)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_shr =
                         mk_bv ()
-                          (fun a432  ->
+                          (fun a439  ->
                              (Obj.magic (FStar_SMTEncoding_Util.mkBvShr sz))
-                               a432)
-                          (fun a433  -> (Obj.magic binary_arith) a433)
+                               a439)
+                          (fun a440  -> (Obj.magic binary_arith) a440)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_udiv =
                         mk_bv ()
-                          (fun a434  ->
+                          (fun a441  ->
                              (Obj.magic (FStar_SMTEncoding_Util.mkBvUdiv sz))
-                               a434)
-                          (fun a435  -> (Obj.magic binary_arith) a435)
+                               a441)
+                          (fun a442  -> (Obj.magic binary_arith) a442)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_mod =
                         mk_bv ()
-                          (fun a436  ->
+                          (fun a443  ->
                              (Obj.magic (FStar_SMTEncoding_Util.mkBvMod sz))
-                               a436)
-                          (fun a437  -> (Obj.magic binary_arith) a437)
+                               a443)
+                          (fun a444  -> (Obj.magic binary_arith) a444)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_mul =
                         mk_bv ()
-                          (fun a438  ->
+                          (fun a445  ->
                              (Obj.magic (FStar_SMTEncoding_Util.mkBvMul sz))
-                               a438)
-                          (fun a439  -> (Obj.magic binary_arith) a439)
+                               a445)
+                          (fun a446  -> (Obj.magic binary_arith) a446)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let bv_ult =
                         mk_bv ()
-                          (fun a440  ->
-                             (Obj.magic FStar_SMTEncoding_Util.mkBvUlt) a440)
-                          (fun a441  -> (Obj.magic binary) a441)
+                          (fun a447  ->
+                             (Obj.magic FStar_SMTEncoding_Util.mkBvUlt) a447)
+                          (fun a448  -> (Obj.magic binary) a448)
                           FStar_SMTEncoding_Term.boxBool
                          in
                       let bv_uext arg_tms2 =
@@ -1999,23 +1999,23 @@ and (encode_BitVector_term :
                                in
                             sz + uu____5230  in
                           FStar_SMTEncoding_Term.boxBitVec uu____5229  in
-                        mk_bv () (fun a442  -> (Obj.magic uu____5221) a442)
-                          (fun a443  -> (Obj.magic unary) a443) uu____5226
+                        mk_bv () (fun a449  -> (Obj.magic uu____5221) a449)
+                          (fun a450  -> (Obj.magic unary) a450) uu____5226
                           arg_tms2
                          in
                       let to_int1 =
                         mk_bv ()
-                          (fun a444  ->
+                          (fun a451  ->
                              (Obj.magic FStar_SMTEncoding_Util.mkBvToNat)
-                               a444) (fun a445  -> (Obj.magic unary) a445)
+                               a451) (fun a452  -> (Obj.magic unary) a452)
                           FStar_SMTEncoding_Term.boxInt
                          in
                       let bv_to =
                         mk_bv ()
-                          (fun a446  ->
+                          (fun a453  ->
                              (Obj.magic (FStar_SMTEncoding_Util.mkNatToBv sz))
-                               a446)
-                          (fun a447  -> (Obj.magic unary_arith) a447)
+                               a453)
+                          (fun a454  -> (Obj.magic unary_arith) a454)
                           (FStar_SMTEncoding_Term.boxBitVec sz)
                          in
                       let ops =

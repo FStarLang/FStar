@@ -2541,7 +2541,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
         a1)::[] ->
         let uu____5420 = f a0 a1  in FStar_Pervasives_Native.Some uu____5420
     | uu____5421 -> FStar_Pervasives_Native.None  in
-  let unary_op a415 a416 a417 a418 a419 =
+  let unary_op a422 a423 a424 a425 a426 =
     (Obj.magic
        (fun a  ->
           fun as_a  ->
@@ -2550,10 +2550,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                 fun args  ->
                   let uu____5463 = FStar_List.map as_a args  in
                   lift_unary () ()
-                    (fun a414  -> (Obj.magic (f res.psc_range)) a414)
-                    uu____5463)) a415 a416 a417 a418 a419
+                    (fun a421  -> (Obj.magic (f res.psc_range)) a421)
+                    uu____5463)) a422 a423 a424 a425 a426
      in
-  let binary_op a422 a423 a424 a425 a426 =
+  let binary_op a429 a430 a431 a432 a433 =
     (Obj.magic
        (fun a  ->
           fun as_a  ->
@@ -2562,9 +2562,9 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                 fun args  ->
                   let uu____5512 = FStar_List.map as_a args  in
                   lift_binary () ()
-                    (fun a420  ->
-                       fun a421  -> (Obj.magic (f res.psc_range)) a420 a421)
-                    uu____5512)) a422 a423 a424 a425 a426
+                    (fun a427  ->
+                       fun a428  -> (Obj.magic (f res.psc_range)) a427 a428)
+                    uu____5512)) a429 a430 a431 a432 a433
      in
   let as_primitive_step is_strong uu____5539 =
     match uu____5539 with
@@ -2579,41 +2579,17 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
         }
      in
   let unary_int_op f =
-    unary_op () (fun a427  -> (Obj.magic arg_as_int) a427)
-      (fun a428  ->
-         fun a429  ->
-           (Obj.magic
-              (fun r  ->
-                 fun x  ->
-                   let uu____5587 = f x  in
-                   FStar_Syntax_Embeddings.embed_int r uu____5587)) a428 a429)
-     in
-  let binary_int_op f =
-    binary_op () (fun a430  -> (Obj.magic arg_as_int) a430)
-      (fun a431  ->
-         fun a432  ->
-           fun a433  ->
-             (Obj.magic
-                (fun r  ->
-                   fun x  ->
-                     fun y  ->
-                       let uu____5615 = f x y  in
-                       FStar_Syntax_Embeddings.embed_int r uu____5615)) a431
-               a432 a433)
-     in
-  let unary_bool_op f =
-    unary_op () (fun a434  -> (Obj.magic arg_as_bool) a434)
+    unary_op () (fun a434  -> (Obj.magic arg_as_int) a434)
       (fun a435  ->
          fun a436  ->
            (Obj.magic
               (fun r  ->
                  fun x  ->
-                   let uu____5636 = f x  in
-                   FStar_Syntax_Embeddings.embed_bool r uu____5636)) a435
-             a436)
+                   let uu____5587 = f x  in
+                   FStar_Syntax_Embeddings.embed_int r uu____5587)) a435 a436)
      in
-  let binary_bool_op f =
-    binary_op () (fun a437  -> (Obj.magic arg_as_bool) a437)
+  let binary_int_op f =
+    binary_op () (fun a437  -> (Obj.magic arg_as_int) a437)
       (fun a438  ->
          fun a439  ->
            fun a440  ->
@@ -2621,22 +2597,46 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                 (fun r  ->
                    fun x  ->
                      fun y  ->
-                       let uu____5664 = f x y  in
-                       FStar_Syntax_Embeddings.embed_bool r uu____5664)) a438
+                       let uu____5615 = f x y  in
+                       FStar_Syntax_Embeddings.embed_int r uu____5615)) a438
                a439 a440)
      in
-  let binary_string_op f =
-    binary_op () (fun a441  -> (Obj.magic arg_as_string) a441)
+  let unary_bool_op f =
+    unary_op () (fun a441  -> (Obj.magic arg_as_bool) a441)
       (fun a442  ->
          fun a443  ->
-           fun a444  ->
+           (Obj.magic
+              (fun r  ->
+                 fun x  ->
+                   let uu____5636 = f x  in
+                   FStar_Syntax_Embeddings.embed_bool r uu____5636)) a442
+             a443)
+     in
+  let binary_bool_op f =
+    binary_op () (fun a444  -> (Obj.magic arg_as_bool) a444)
+      (fun a445  ->
+         fun a446  ->
+           fun a447  ->
+             (Obj.magic
+                (fun r  ->
+                   fun x  ->
+                     fun y  ->
+                       let uu____5664 = f x y  in
+                       FStar_Syntax_Embeddings.embed_bool r uu____5664)) a445
+               a446 a447)
+     in
+  let binary_string_op f =
+    binary_op () (fun a448  -> (Obj.magic arg_as_string) a448)
+      (fun a449  ->
+         fun a450  ->
+           fun a451  ->
              (Obj.magic
                 (fun r  ->
                    fun x  ->
                      fun y  ->
                        let uu____5692 = f x y  in
                        FStar_Syntax_Embeddings.embed_string r uu____5692))
-               a442 a443 a444)
+               a449 a450 a451)
      in
   let mixed_binary_op a b c as_a as_b embed_c f res args =
     match args with
@@ -2796,15 +2796,15 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                                 (uu____6553,
                                                   (Prims.parse_int "1"),
                                                   (unary_op ()
-                                                     (fun a445  ->
+                                                     (fun a452  ->
                                                         (Obj.magic
                                                            arg_as_string)
-                                                          a445)
-                                                     (fun a446  ->
-                                                        fun a447  ->
+                                                          a452)
+                                                     (fun a453  ->
+                                                        fun a454  ->
                                                           (Obj.magic
                                                              list_of_string')
-                                                            a446 a447)))
+                                                            a453 a454)))
                                                  in
                                               let uu____6560 =
                                                 let uu____6575 =
@@ -2817,17 +2817,17 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                                   (uu____6588,
                                                     (Prims.parse_int "1"),
                                                     (unary_op ()
-                                                       (fun a448  ->
+                                                       (fun a455  ->
                                                           (Obj.magic
                                                              (arg_as_list ()
                                                                 (Obj.magic
                                                                    FStar_Syntax_Embeddings.unembed_char_safe)))
-                                                            a448)
-                                                       (fun a449  ->
-                                                          fun a450  ->
+                                                            a455)
+                                                       (fun a456  ->
+                                                          fun a457  ->
                                                             (Obj.magic
                                                                string_of_list')
-                                                              a449 a450)))
+                                                              a456 a457)))
                                                    in
                                                 let uu____6595 =
                                                   let uu____6610 =
@@ -2870,54 +2870,54 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                         (FStar_Parser_Const.string_compare,
                                           (Prims.parse_int "2"),
                                           (binary_op ()
-                                             (fun a451  ->
+                                             (fun a458  ->
                                                 (Obj.magic arg_as_string)
-                                                  a451)
-                                             (fun a452  ->
-                                                fun a453  ->
-                                                  fun a454  ->
+                                                  a458)
+                                             (fun a459  ->
+                                                fun a460  ->
+                                                  fun a461  ->
                                                     (Obj.magic
-                                                       string_compare') a452
-                                                      a453 a454)))
+                                                       string_compare') a459
+                                                      a460 a461)))
                                           :: uu____6495
                                          in
                                       (FStar_Parser_Const.string_of_bool_lid,
                                         (Prims.parse_int "1"),
                                         (unary_op ()
-                                           (fun a455  ->
-                                              (Obj.magic arg_as_bool) a455)
-                                           (fun a456  ->
-                                              fun a457  ->
+                                           (fun a462  ->
+                                              (Obj.magic arg_as_bool) a462)
+                                           (fun a463  ->
+                                              fun a464  ->
                                                 (Obj.magic string_of_bool1)
-                                                  a456 a457)))
+                                                  a463 a464)))
                                         :: uu____6480
                                        in
                                     (FStar_Parser_Const.string_of_int_lid,
                                       (Prims.parse_int "1"),
                                       (unary_op ()
-                                         (fun a458  ->
-                                            (Obj.magic arg_as_int) a458)
-                                         (fun a459  ->
-                                            fun a460  ->
-                                              (Obj.magic string_of_int1) a459
-                                                a460)))
+                                         (fun a465  ->
+                                            (Obj.magic arg_as_int) a465)
+                                         (fun a466  ->
+                                            fun a467  ->
+                                              (Obj.magic string_of_int1) a466
+                                                a467)))
                                       :: uu____6465
                                      in
                                   (FStar_Parser_Const.str_make_lid,
                                     (Prims.parse_int "2"),
                                     (mixed_binary_op () () ()
-                                       (fun a461  ->
-                                          (Obj.magic arg_as_int) a461)
-                                       (fun a462  ->
-                                          (Obj.magic arg_as_char) a462)
-                                       (fun a463  ->
-                                          fun a464  ->
+                                       (fun a468  ->
+                                          (Obj.magic arg_as_int) a468)
+                                       (fun a469  ->
+                                          (Obj.magic arg_as_char) a469)
+                                       (fun a470  ->
+                                          fun a471  ->
                                             (Obj.magic
                                                FStar_Syntax_Embeddings.embed_string)
-                                              a463 a464)
-                                       (fun a465  ->
-                                          fun a466  ->
-                                            fun a467  ->
+                                              a470 a471)
+                                       (fun a472  ->
+                                          fun a473  ->
+                                            fun a474  ->
                                               (Obj.magic
                                                  (fun r  ->
                                                     fun x  ->
@@ -2927,8 +2927,8 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                                             x
                                                            in
                                                         FStar_String.make
-                                                          uu____6857 y)) a465
-                                                a466 a467)))
+                                                          uu____6857 y)) a472
+                                                a473 a474)))
                                     :: uu____6450
                                    in
                                 (FStar_Parser_Const.strcat_lid',
@@ -2963,10 +2963,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                        in
                     (FStar_Parser_Const.op_GTE, (Prims.parse_int "2"),
                       (binary_op ()
-                         (fun a468  -> (Obj.magic arg_as_int) a468)
-                         (fun a469  ->
-                            fun a470  ->
-                              fun a471  ->
+                         (fun a475  -> (Obj.magic arg_as_int) a475)
+                         (fun a476  ->
+                            fun a477  ->
+                              fun a478  ->
                                 (Obj.magic
                                    (fun r  ->
                                       fun x  ->
@@ -2974,14 +2974,14 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                           let uu____7024 =
                                             FStar_BigInt.ge_big_int x y  in
                                           FStar_Syntax_Embeddings.embed_bool
-                                            r uu____7024)) a469 a470 a471)))
+                                            r uu____7024)) a476 a477 a478)))
                       :: uu____6345
                      in
                   (FStar_Parser_Const.op_GT, (Prims.parse_int "2"),
-                    (binary_op () (fun a472  -> (Obj.magic arg_as_int) a472)
-                       (fun a473  ->
-                          fun a474  ->
-                            fun a475  ->
+                    (binary_op () (fun a479  -> (Obj.magic arg_as_int) a479)
+                       (fun a480  ->
+                          fun a481  ->
+                            fun a482  ->
                               (Obj.magic
                                  (fun r  ->
                                     fun x  ->
@@ -2989,14 +2989,14 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                         let uu____7050 =
                                           FStar_BigInt.gt_big_int x y  in
                                         FStar_Syntax_Embeddings.embed_bool r
-                                          uu____7050)) a473 a474 a475)))
+                                          uu____7050)) a480 a481 a482)))
                     :: uu____6330
                    in
                 (FStar_Parser_Const.op_LTE, (Prims.parse_int "2"),
-                  (binary_op () (fun a476  -> (Obj.magic arg_as_int) a476)
-                     (fun a477  ->
-                        fun a478  ->
-                          fun a479  ->
+                  (binary_op () (fun a483  -> (Obj.magic arg_as_int) a483)
+                     (fun a484  ->
+                        fun a485  ->
+                          fun a486  ->
                             (Obj.magic
                                (fun r  ->
                                   fun x  ->
@@ -3004,14 +3004,14 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                       let uu____7076 =
                                         FStar_BigInt.le_big_int x y  in
                                       FStar_Syntax_Embeddings.embed_bool r
-                                        uu____7076)) a477 a478 a479)))
+                                        uu____7076)) a484 a485 a486)))
                   :: uu____6315
                  in
               (FStar_Parser_Const.op_LT, (Prims.parse_int "2"),
-                (binary_op () (fun a480  -> (Obj.magic arg_as_int) a480)
-                   (fun a481  ->
-                      fun a482  ->
-                        fun a483  ->
+                (binary_op () (fun a487  -> (Obj.magic arg_as_int) a487)
+                   (fun a488  ->
+                      fun a489  ->
+                        fun a490  ->
                           (Obj.magic
                              (fun r  ->
                                 fun x  ->
@@ -3019,7 +3019,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                     let uu____7102 =
                                       FStar_BigInt.lt_big_int x y  in
                                     FStar_Syntax_Embeddings.embed_bool r
-                                      uu____7102)) a481 a482 a483)))
+                                      uu____7102)) a488 a489 a490)))
                 :: uu____6300
                in
             (FStar_Parser_Const.op_Division, (Prims.parse_int "2"),
@@ -3072,10 +3072,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                    in
                 (uu____7409, (Prims.parse_int "2"),
                   (binary_op ()
-                     (fun a484  -> (Obj.magic arg_as_bounded_int) a484)
-                     (fun a485  ->
-                        fun a486  ->
-                          fun a487  ->
+                     (fun a491  -> (Obj.magic arg_as_bounded_int) a491)
+                     (fun a492  ->
+                        fun a493  ->
+                          fun a494  ->
                             (Obj.magic
                                (fun r  ->
                                   fun uu____7425  ->
@@ -3085,7 +3085,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                           let uu____7455 =
                                             FStar_BigInt.add_big_int x y  in
                                           int_as_bounded r int_to_t1
-                                            uu____7455)) a485 a486 a487)))
+                                            uu____7455)) a492 a493 a494)))
                  in
               let uu____7456 =
                 let uu____7471 =
@@ -3093,10 +3093,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                      in
                   (uu____7484, (Prims.parse_int "2"),
                     (binary_op ()
-                       (fun a488  -> (Obj.magic arg_as_bounded_int) a488)
-                       (fun a489  ->
-                          fun a490  ->
-                            fun a491  ->
+                       (fun a495  -> (Obj.magic arg_as_bounded_int) a495)
+                       (fun a496  ->
+                          fun a497  ->
+                            fun a498  ->
                               (Obj.magic
                                  (fun r  ->
                                     fun uu____7500  ->
@@ -3107,7 +3107,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                               FStar_BigInt.sub_big_int x y
                                                in
                                             int_as_bounded r int_to_t1
-                                              uu____7530)) a489 a490 a491)))
+                                              uu____7530)) a496 a497 a498)))
                    in
                 let uu____7531 =
                   let uu____7546 =
@@ -3115,10 +3115,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                       FStar_Parser_Const.p2l ["FStar"; m; "mul"]  in
                     (uu____7559, (Prims.parse_int "2"),
                       (binary_op ()
-                         (fun a492  -> (Obj.magic arg_as_bounded_int) a492)
-                         (fun a493  ->
-                            fun a494  ->
-                              fun a495  ->
+                         (fun a499  -> (Obj.magic arg_as_bounded_int) a499)
+                         (fun a500  ->
+                            fun a501  ->
+                              fun a502  ->
                                 (Obj.magic
                                    (fun r  ->
                                       fun uu____7575  ->
@@ -3129,7 +3129,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                                 FStar_BigInt.mult_big_int x y
                                                  in
                                               int_as_bounded r int_to_t1
-                                                uu____7605)) a493 a494 a495)))
+                                                uu____7605)) a500 a501 a502)))
                      in
                   let uu____7606 =
                     let uu____7621 =
@@ -3137,16 +3137,16 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                         FStar_Parser_Const.p2l ["FStar"; m; "v"]  in
                       (uu____7634, (Prims.parse_int "1"),
                         (unary_op ()
-                           (fun a496  -> (Obj.magic arg_as_bounded_int) a496)
-                           (fun a497  ->
-                              fun a498  ->
+                           (fun a503  -> (Obj.magic arg_as_bounded_int) a503)
+                           (fun a504  ->
+                              fun a505  ->
                                 (Obj.magic
                                    (fun r  ->
                                       fun uu____7646  ->
                                         match uu____7646 with
                                         | (int_to_t1,x) ->
                                             FStar_Syntax_Embeddings.embed_int
-                                              r x)) a497 a498)))
+                                              r x)) a504 a505)))
                        in
                     [uu____7621]  in
                   uu____7546 :: uu____7606  in
@@ -3162,10 +3162,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                    in
                 (uu____7773, (Prims.parse_int "2"),
                   (binary_op ()
-                     (fun a499  -> (Obj.magic arg_as_bounded_int) a499)
-                     (fun a500  ->
-                        fun a501  ->
-                          fun a502  ->
+                     (fun a506  -> (Obj.magic arg_as_bounded_int) a506)
+                     (fun a507  ->
+                        fun a508  ->
+                          fun a509  ->
                             (Obj.magic
                                (fun r  ->
                                   fun uu____7789  ->
@@ -3175,7 +3175,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                           let uu____7819 =
                                             FStar_BigInt.div_big_int x y  in
                                           int_as_bounded r int_to_t1
-                                            uu____7819)) a500 a501 a502)))
+                                            uu____7819)) a507 a508 a509)))
                  in
               let uu____7820 =
                 let uu____7835 =
@@ -3183,10 +3183,10 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                      in
                   (uu____7848, (Prims.parse_int "2"),
                     (binary_op ()
-                       (fun a503  -> (Obj.magic arg_as_bounded_int) a503)
-                       (fun a504  ->
-                          fun a505  ->
-                            fun a506  ->
+                       (fun a510  -> (Obj.magic arg_as_bounded_int) a510)
+                       (fun a511  ->
+                          fun a512  ->
+                            fun a513  ->
                               (Obj.magic
                                  (fun r  ->
                                     fun uu____7864  ->
@@ -3197,7 +3197,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                               FStar_BigInt.mod_big_int x y
                                                in
                                             int_as_bounded r int_to_t1
-                                              uu____7894)) a504 a505 a506)))
+                                              uu____7894)) a511 a512 a513)))
                    in
                 [uu____7835]  in
               uu____7760 :: uu____7820))
