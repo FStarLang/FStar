@@ -1,22 +1,22 @@
 open Prims
-let (embed_bv :
-  FStar_Range.range -> FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term) =
+let embed_bv :
+  FStar_Range.range -> FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term =
   fun rng  ->
     fun bv  ->
       FStar_Syntax_Util.mk_lazy bv FStar_Reflection_Data.fstar_refl_binder
         FStar_Syntax_Syntax.Lazy_bv (FStar_Pervasives_Native.Some rng)
   
-let (embed_binder :
-  FStar_Range.range -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term)
+let embed_binder :
+  FStar_Range.range -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun b  ->
       FStar_Syntax_Util.mk_lazy b FStar_Reflection_Data.fstar_refl_binder
         FStar_Syntax_Syntax.Lazy_binder (FStar_Pervasives_Native.Some rng)
   
-let (embed_term_aq :
+let embed_term_aq :
   FStar_Syntax_Syntax.antiquotations ->
-    FStar_Syntax_Syntax.term FStar_Syntax_Embeddings.embedder)
+    FStar_Syntax_Syntax.term FStar_Syntax_Embeddings.embedder
   =
   fun aq  ->
     fun rng  ->
@@ -29,12 +29,12 @@ let (embed_term_aq :
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_quoted (t, qi))
           FStar_Pervasives_Native.None rng
   
-let (embed_term :
-  FStar_Range.range -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  = fun rng  -> fun t  -> let uu____42 = embed_term_aq []  in uu____42 rng t 
-let (embed_aqualv :
+let embed_term :
+  FStar_Range.range -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
+  fun rng  -> fun t  -> let uu____42 = embed_term_aq []  in uu____42 rng t 
+let embed_aqualv :
   FStar_Range.range ->
-    FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun q  ->
@@ -52,9 +52,9 @@ let (embed_aqualv :
         FStar_Syntax_Syntax.vars = (uu___53_66.FStar_Syntax_Syntax.vars)
       }
   
-let (embed_binders :
+let embed_binders :
   FStar_Range.range ->
-    FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun l  ->
@@ -64,32 +64,31 @@ let (embed_binders :
          in
       uu____76 rng l
   
-let (embed_fv :
-  FStar_Range.range -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term) =
+let embed_fv :
+  FStar_Range.range -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term =
   fun rng  ->
     fun fv  ->
       FStar_Syntax_Util.mk_lazy fv FStar_Reflection_Data.fstar_refl_fv
         FStar_Syntax_Syntax.Lazy_fvar (FStar_Pervasives_Native.Some rng)
   
-let (embed_comp :
-  FStar_Range.range -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.term)
-  =
+let embed_comp :
+  FStar_Range.range -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.term =
   fun rng  ->
     fun c  ->
       FStar_Syntax_Util.mk_lazy c FStar_Reflection_Data.fstar_refl_comp
         FStar_Syntax_Syntax.Lazy_comp (FStar_Pervasives_Native.Some rng)
   
-let (embed_env :
-  FStar_Range.range -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term)
+let embed_env :
+  FStar_Range.range -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun e  ->
       FStar_Syntax_Util.mk_lazy e FStar_Reflection_Data.fstar_refl_env
         FStar_Syntax_Syntax.Lazy_env (FStar_Pervasives_Native.Some rng)
   
-let (embed_const :
+let embed_const :
   FStar_Range.range ->
-    FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun c  ->
@@ -136,8 +135,8 @@ let (embed_const :
         FStar_Syntax_Syntax.vars = (uu___54_136.FStar_Syntax_Syntax.vars)
       }
   
-let rec (embed_pattern :
-  FStar_Reflection_Data.pattern FStar_Syntax_Embeddings.embedder) =
+let rec embed_pattern :
+  FStar_Reflection_Data.pattern FStar_Syntax_Embeddings.embedder =
   fun rng  ->
     fun p  ->
       match p with
@@ -217,11 +216,11 @@ let rec (embed_pattern :
              in
           uu____192 FStar_Pervasives_Native.None rng
   
-let (embed_branch_aq :
+let embed_branch_aq :
   FStar_Syntax_Syntax.antiquotations ->
     FStar_Range.range ->
       (FStar_Reflection_Data.pattern,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple2 -> FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2 -> FStar_Syntax_Syntax.term
   =
   fun aqs  ->
     fun rng  ->
@@ -234,11 +233,11 @@ let (embed_branch_aq :
            in
         uu____220 rng br
   
-let (embed_argv_aq :
+let embed_argv_aq :
   FStar_Syntax_Syntax.antiquotations ->
     FStar_Range.range ->
       (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)
-        FStar_Pervasives_Native.tuple2 -> FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2 -> FStar_Syntax_Syntax.term
   =
   fun aqs  ->
     fun rng  ->
@@ -251,16 +250,16 @@ let (embed_argv_aq :
            in
         uu____256 rng aq
   
-let (embed_branch :
+let embed_branch :
   FStar_Range.range ->
-    FStar_Reflection_Data.branch -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.branch -> FStar_Syntax_Syntax.term
   = fun rng  -> fun br  -> embed_branch_aq [] rng br 
-let (embed_argv :
-  FStar_Range.range -> FStar_Reflection_Data.argv -> FStar_Syntax_Syntax.term)
+let embed_argv :
+  FStar_Range.range -> FStar_Reflection_Data.argv -> FStar_Syntax_Syntax.term
   = fun rng  -> fun aq  -> embed_argv_aq [] rng aq 
-let (embed_term_view_aq :
+let embed_term_view_aq :
   FStar_Syntax_Syntax.antiquotations ->
-    FStar_Reflection_Data.term_view FStar_Syntax_Embeddings.embedder)
+    FStar_Reflection_Data.term_view FStar_Syntax_Embeddings.embedder
   =
   fun aq  ->
     fun rng  ->
@@ -547,16 +546,16 @@ let (embed_term_view_aq :
                 (uu___55_620.FStar_Syntax_Syntax.vars)
             }
   
-let (embed_term_view :
+let embed_term_view :
   FStar_Range.range ->
-    FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun t  -> let uu____630 = embed_term_view_aq []  in uu____630 rng t
   
-let (embed_bv_view :
+let embed_bv_view :
   FStar_Range.range ->
-    FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun bvv  ->
@@ -588,9 +587,9 @@ let (embed_bv_view :
          in
       uu____653 FStar_Pervasives_Native.None rng
   
-let (embed_comp_view :
+let embed_comp_view :
   FStar_Range.range ->
-    FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun cv  ->
@@ -644,8 +643,8 @@ let (embed_comp_view :
             FStar_Syntax_Syntax.vars = (uu___56_719.FStar_Syntax_Syntax.vars)
           }
   
-let (embed_order :
-  FStar_Range.range -> FStar_Order.order -> FStar_Syntax_Syntax.term) =
+let embed_order :
+  FStar_Range.range -> FStar_Order.order -> FStar_Syntax_Syntax.term =
   fun rng  ->
     fun o  ->
       let r =
@@ -660,17 +659,17 @@ let (embed_order :
         FStar_Syntax_Syntax.vars = (uu___57_730.FStar_Syntax_Syntax.vars)
       }
   
-let (embed_sigelt :
-  FStar_Range.range -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term)
+let embed_sigelt :
+  FStar_Range.range -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun se  ->
       FStar_Syntax_Util.mk_lazy se FStar_Reflection_Data.fstar_refl_sigelt
         FStar_Syntax_Syntax.Lazy_sigelt (FStar_Pervasives_Native.Some rng)
   
-let (embed_sigelt_view :
+let embed_sigelt_view :
   FStar_Range.range ->
-    FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.term)
+    FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.term
   =
   fun rng  ->
     fun sev  ->
@@ -767,8 +766,8 @@ let (embed_sigelt_view :
             FStar_Syntax_Syntax.vars = (uu___58_833.FStar_Syntax_Syntax.vars)
           }
   
-let rec (embed_exp :
-  FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedder) =
+let rec embed_exp :
+  FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedder =
   fun rng  ->
     fun e  ->
       let r =
@@ -814,9 +813,9 @@ let rec (embed_exp :
         FStar_Syntax_Syntax.vars = (uu___59_863.FStar_Syntax_Syntax.vars)
       }
   
-let (unembed_bv :
+let unembed_bv :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____873 =
@@ -836,9 +835,9 @@ let (unembed_bv :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____883);
          FStar_Pervasives_Native.None)
   
-let (unembed_binder :
+let unembed_binder :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____899 =
@@ -875,8 +874,8 @@ let rec mapM_opt :
                FStar_Util.bind_opt uu____963
                  (fun xs1  -> FStar_Pervasives_Native.Some (x1 :: xs1)))
   
-let rec (unembed_term :
-  FStar_Syntax_Syntax.term FStar_Syntax_Embeddings.unembedder) =
+let rec unembed_term :
+  FStar_Syntax_Syntax.term FStar_Syntax_Embeddings.unembedder =
   fun t  ->
     let t1 = FStar_Syntax_Util.unmeta_safe t  in
     match t1.FStar_Syntax_Syntax.n with
@@ -911,9 +910,9 @@ let rec (unembed_term :
           FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____1049);
          FStar_Pervasives_Native.None)
   
-let (unembed_aqualv :
+let unembed_aqualv :
   FStar_Syntax_Syntax.term ->
-    FStar_Reflection_Data.aqualv FStar_Pervasives_Native.option)
+    FStar_Reflection_Data.aqualv FStar_Pervasives_Native.option
   =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
@@ -944,17 +943,17 @@ let (unembed_aqualv :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____1176);
               FStar_Pervasives_Native.None))
   
-let (unembed_binders :
+let unembed_binders :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.binders FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.binders FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____1190 = FStar_Syntax_Embeddings.unembed_list unembed_binder  in
     uu____1190 t
   
-let (unembed_fv :
+let unembed_fv :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.fv FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.fv FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____1206 =
@@ -974,9 +973,9 @@ let (unembed_fv :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____1216);
          FStar_Pervasives_Native.None)
   
-let (unembed_comp :
+let unembed_comp :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.comp FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.comp FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____1232 =
@@ -996,9 +995,9 @@ let (unembed_comp :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____1242);
          FStar_Pervasives_Native.None)
   
-let (unembed_env :
+let unembed_env :
   FStar_Syntax_Syntax.term ->
-    FStar_TypeChecker_Env.env FStar_Pervasives_Native.option)
+    FStar_TypeChecker_Env.env FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____1258 =
@@ -1018,9 +1017,9 @@ let (unembed_env :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____1268);
          FStar_Pervasives_Native.None)
   
-let (unembed_const :
+let unembed_const :
   FStar_Syntax_Syntax.term ->
-    FStar_Reflection_Data.vconst FStar_Pervasives_Native.option)
+    FStar_Reflection_Data.vconst FStar_Pervasives_Native.option
   =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
@@ -1075,8 +1074,8 @@ let (unembed_const :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____1478);
               FStar_Pervasives_Native.None))
   
-let rec (unembed_pattern :
-  FStar_Reflection_Data.pattern FStar_Syntax_Embeddings.unembedder) =
+let rec unembed_pattern :
+  FStar_Reflection_Data.pattern FStar_Syntax_Embeddings.unembedder =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
     let uu____1493 = FStar_Syntax_Util.head_and_args t1  in
@@ -1161,17 +1160,17 @@ let rec (unembed_pattern :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____1794);
               FStar_Pervasives_Native.None))
   
-let (unembed_branch :
+let unembed_branch :
   (FStar_Reflection_Data.pattern,FStar_Syntax_Syntax.term)
-    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder)
+    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder
   = FStar_Syntax_Embeddings.unembed_tuple2 unembed_pattern unembed_term 
-let (unembed_argv :
+let unembed_argv :
   (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)
-    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder)
+    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder
   = FStar_Syntax_Embeddings.unembed_tuple2 unembed_term unembed_aqualv 
-let (unembed_term_view :
+let unembed_term_view :
   FStar_Syntax_Syntax.term ->
-    FStar_Reflection_Data.term_view FStar_Pervasives_Native.option)
+    FStar_Reflection_Data.term_view FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____1830 = FStar_Syntax_Util.head_and_args t  in
@@ -1409,9 +1408,9 @@ let (unembed_term_view :
                FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____2722);
               FStar_Pervasives_Native.None))
   
-let (unembed_bv_view :
+let unembed_bv_view :
   FStar_Syntax_Syntax.term ->
-    FStar_Reflection_Data.bv_view FStar_Pervasives_Native.option)
+    FStar_Reflection_Data.bv_view FStar_Pervasives_Native.option
   =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
@@ -1458,8 +1457,8 @@ let (unembed_bv_view :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____2889);
               FStar_Pervasives_Native.None))
   
-let rec (unembed_exp :
-  FStar_Reflection_Data.exp FStar_Syntax_Embeddings.unembedder) =
+let rec unembed_exp :
+  FStar_Reflection_Data.exp FStar_Syntax_Embeddings.unembedder =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
     let uu____2904 = FStar_Syntax_Util.head_and_args t1  in
@@ -1509,9 +1508,9 @@ let rec (unembed_exp :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____3085);
               FStar_Pervasives_Native.None))
   
-let (unembed_comp_view :
+let unembed_comp_view :
   FStar_Syntax_Syntax.term ->
-    FStar_Reflection_Data.comp_view FStar_Pervasives_Native.option)
+    FStar_Reflection_Data.comp_view FStar_Pervasives_Native.option
   =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
@@ -1573,9 +1572,9 @@ let (unembed_comp_view :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____3318);
               FStar_Pervasives_Native.None))
   
-let (unembed_order :
+let unembed_order :
   FStar_Syntax_Syntax.term ->
-    FStar_Order.order FStar_Pervasives_Native.option)
+    FStar_Order.order FStar_Pervasives_Native.option
   =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
@@ -1610,9 +1609,9 @@ let (unembed_order :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____3460);
               FStar_Pervasives_Native.None))
   
-let (unembed_sigelt :
+let unembed_sigelt :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____3476 =
@@ -1632,9 +1631,9 @@ let (unembed_sigelt :
           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____3486);
          FStar_Pervasives_Native.None)
   
-let (unembed_sigelt_view :
+let unembed_sigelt_view :
   FStar_Syntax_Syntax.term ->
-    FStar_Reflection_Data.sigelt_view FStar_Pervasives_Native.option)
+    FStar_Reflection_Data.sigelt_view FStar_Pervasives_Native.option
   =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
@@ -1718,20 +1717,20 @@ let (unembed_sigelt_view :
                FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu____3818);
               FStar_Pervasives_Native.None))
   
-let (embed_binder_view :
+let embed_binder_view :
   (FStar_Syntax_Syntax.bv,FStar_Reflection_Data.aqualv)
-    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.embedder)
+    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.embedder
   =
   FStar_Syntax_Embeddings.embed_tuple2 embed_bv
     FStar_Reflection_Data.fstar_refl_bv_view embed_aqualv
     FStar_Reflection_Data.fstar_refl_aqualv
   
-let (unembed_binder_view :
+let unembed_binder_view :
   (FStar_Syntax_Syntax.bv,FStar_Reflection_Data.aqualv)
-    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder)
+    FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.unembedder
   = FStar_Syntax_Embeddings.unembed_tuple2 unembed_bv unembed_aqualv 
-let (unfold_lazy_bv :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+let unfold_lazy_bv : FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term
+  =
   fun i  ->
     let bv = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
     let uu____3851 =
@@ -1748,8 +1747,8 @@ let (unfold_lazy_bv :
        in
     uu____3851 FStar_Pervasives_Native.None i.FStar_Syntax_Syntax.rng
   
-let (unfold_lazy_binder :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+let unfold_lazy_binder :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term =
   fun i  ->
     let binder = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
     let uu____3862 = FStar_Reflection_Basic.inspect_binder binder  in
@@ -1773,8 +1772,8 @@ let (unfold_lazy_binder :
            in
         uu____3869 FStar_Pervasives_Native.None i.FStar_Syntax_Syntax.rng
   
-let (unfold_lazy_fvar :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+let unfold_lazy_fvar :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term =
   fun i  ->
     let fv = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
     let uu____3884 =
@@ -1796,8 +1795,8 @@ let (unfold_lazy_fvar :
        in
     uu____3884 FStar_Pervasives_Native.None i.FStar_Syntax_Syntax.rng
   
-let (unfold_lazy_comp :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+let unfold_lazy_comp :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term =
   fun i  ->
     let comp = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
     let uu____3905 =
@@ -1814,11 +1813,11 @@ let (unfold_lazy_comp :
        in
     uu____3905 FStar_Pervasives_Native.None i.FStar_Syntax_Syntax.rng
   
-let (unfold_lazy_env :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+let unfold_lazy_env :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term =
   fun i  -> FStar_Syntax_Util.exp_unit 
-let (unfold_lazy_sigelt :
-  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+let unfold_lazy_sigelt :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term =
   fun i  ->
     let sigelt = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
     let uu____3919 =
