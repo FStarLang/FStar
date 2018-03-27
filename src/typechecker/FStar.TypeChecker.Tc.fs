@@ -1006,11 +1006,7 @@ let tc_inductive env ses quals lids =
               if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env tc_assume
               else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env tc_assume
             in
-            { sigel = Sig_bundle(tcs@datas, lids);
-              sigquals = quals;
-              sigrng = Env.get_range env;
-              sigmeta = default_sigmeta;
-              sigattrs = []  }::ses, data_ops_ses in
+            [ sig_bndle ], ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
     ignore (Env.pop env "tc_inductive");
     res
 
@@ -1045,14 +1041,22 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
-    let ses, projectors_ses = tc_inductive env ses se.sigquals lids in
-    ses, projectors_ses
+    if Options.use_two_phase_tc () then
+      //first phase
+      let ses, projectors_ses = tc_inductive ({ env with lax = true }) ses se.sigquals lids in
+      if Env.should_verify env then  //second phase
+        //remove unification variables
+        let ses = ses |> List.map (fun se -> N.elim_uvars env se) in
+        //verify
+        tc_inductive env ses se.sigquals lids
+      else ses, projectors_ses
+    else tc_inductive env ses se.sigquals lids
 
-  | Sig_pragma(p) ->
+  | Sig_pragma(p) ->  //no need for two-phase here
     U.process_pragma p r;
     [se], []
 
-  | Sig_new_effect_for_free (ne) ->
+  | Sig_new_effect_for_free (ne) ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
       (* This is only an elaboration rule not a typechecking one *)
 
       // Let the power of Dijkstra generate everything "for free", then defer
@@ -1066,11 +1070,23 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       [], ses @ effect_and_lift_ses
 
   | Sig_new_effect(ne) ->
-    let ne = tc_eff_decl env ne in
+    let ne =
+      if Options.use_two_phase_tc () then
+        //first phase
+        let ne = tc_eff_decl ({ env with lax = true }) ne in
+        if Env.should_verify env then  //second phase
+          //remove unification variables
+          let se' = { se with sigel = Sig_new_effect (ne) } |> N.elim_uvars env in
+          let ne = match se'.sigel with | Sig_new_effect ne -> ne | _ -> failwith "Impossible" in
+          //verify
+          tc_eff_decl env ne
+        else ne
+      else tc_eff_decl env ne
+    in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], []
 
-  | Sig_sub_effect(sub) ->
+  | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let ed_src = Env.get_effect_decl env sub.source in
     let ed_tgt = Env.get_effect_decl env sub.target in
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -1111,7 +1127,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         let _ = recheck_debug "lift-elab" env lift_elab in
         Some ([], lift_elab), ([], lift_wp)
     in
-    let lax = env.lax in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)
     let env = {env with lax=true} in
