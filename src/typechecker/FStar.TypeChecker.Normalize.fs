@@ -378,190 +378,271 @@ let norm_universe cfg (env:env) u =
 (*      subsituted with their closures in env (recursively closed) *)
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
-let rec closure_as_term cfg (env:env) t =
+let rec inline_closure_env cfg (env:env) stack t =
     log cfg (fun () -> BU.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
     match env with
-        | [] when not <| cfg.steps.compress_uvars -> t
-        | _ ->
-        let t = compress t in
-        match t.n with
-            | Tm_delayed _ ->
-              failwith "Impossible"
+    | [] when not <| cfg.steps.compress_uvars ->
+      rebuild_closure cfg env stack t
 
-            | Tm_unknown
-            | Tm_constant _
-            | Tm_name _
-            | Tm_lazy _
-            | Tm_fvar _ -> t
+    | _ ->
+      let t = compress t in
+      match t.n with
+      | Tm_delayed _ ->
+        failwith "Impossible"
 
-            | Tm_uvar _ ->
-              if cfg.steps.check_no_uvars
-              then failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
-                                (Range.string_of_range t.pos)
-                                (Print.term_to_string t))
-              else t //should be closed anyway
+      | Tm_unknown
+      | Tm_constant _
+      | Tm_name _
+      | Tm_lazy _
+      | Tm_fvar _ ->
+        rebuild_closure cfg env stack t
 
-            | Tm_type u ->
-              mk (Tm_type (norm_universe cfg env u)) t.pos
+      | Tm_uvar _ ->
+        if cfg.steps.check_no_uvars
+        then failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
+                        (Range.string_of_range t.pos)
+                        (Print.term_to_string t))
+        else rebuild_closure cfg env stack t //should be closed anyway
 
-            | Tm_uinst(t', us) -> (* head symbol must be an fvar *)
-              mk_Tm_uinst t' (List.map (norm_universe cfg env) us)
+      | Tm_type u ->
+        let t = mk (Tm_type (norm_universe cfg env u)) t.pos in
+        rebuild_closure cfg env stack t
 
-            | Tm_bvar x ->
-              begin match lookup_bvar env x with
-                    | Univ _ -> failwith "Impossible: term variable is bound to a universe"
-                    | Dummy -> t
-                    | Clos(env, t0, _, _) -> closure_as_term cfg env t0
-              end
+      | Tm_uinst(t', us) -> (* head symbol must be an fvar *)
+        let t = mk_Tm_uinst t' (List.map (norm_universe cfg env) us) in
+        rebuild_closure cfg env stack t
 
-           | Tm_app(head, args) ->
-             let head = closure_as_term_delayed cfg env head in
-             let args = closures_as_args_delayed cfg env args in
-             mk (Tm_app(head, args)) t.pos
+      | Tm_bvar x ->
+        begin
+            match lookup_bvar env x with
+            | Univ _ -> failwith "Impossible: term variable is bound to a universe"
+            | Dummy ->
+              let x = {x with sort = S.tun} in
+              let t = mk (Tm_bvar x) t.pos in
+              rebuild_closure cfg env stack t
+            | Clos(env, t0, _, _) ->
+              inline_closure_env cfg env stack t0
+        end
 
-           | Tm_abs(bs, body, lopt) ->
-             let bs, env = closures_as_binders_delayed cfg env bs in
-             let body = closure_as_term_delayed cfg env body in
-             mk (Tm_abs(bs, body, close_lcomp_opt cfg env lopt)) t.pos
+      | Tm_app(head, args) ->
+        let stack =
+            stack |> List.fold_right
+            (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+            args
+        in
+        inline_closure_env cfg env stack head
 
-           | Tm_arrow(bs, c) ->
-             let bs, env = closures_as_binders_delayed cfg env bs in
-             let c = close_comp cfg env c in
-             mk (Tm_arrow(bs, c)) t.pos
+      | Tm_abs(bs, body, lopt) ->
+        let env' =
+            env |> List.fold_right
+            (fun _b env -> (None, Dummy)::env)
+            bs
+        in
+        let stack = (Abs(env, bs, env', lopt, t.pos)::stack) in
+        inline_closure_env cfg env' stack body
 
-           | Tm_refine(x, phi) ->
-             let x, env = closures_as_binders_delayed cfg env [mk_binder x] in
-             let phi = closure_as_term_delayed cfg env phi in
-             mk (Tm_refine(List.hd x |> fst, phi)) t.pos
+      | Tm_arrow(bs, c) ->
+        let bs, env' = close_binders cfg env bs in
+        let c = close_comp cfg env' c in
+        let t = mk (Tm_arrow(bs, c)) t.pos in
+        rebuild_closure cfg env stack t
 
-           | Tm_ascribed(t1, (annot,tacopt), lopt) ->
-             let annot = match annot with
-                | Inl t -> Inl (closure_as_term_delayed cfg env t)
-                | Inr c -> Inr (close_comp cfg env c) in
-             let tacopt = BU.map_opt tacopt (closure_as_term_delayed cfg env) in
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1,
-                             (annot, tacopt),
-                             lopt)) t.pos
+      | Tm_refine(x, phi) ->
+        let x, env = close_binders cfg env [mk_binder x] in
+        let phi = non_tail_inline_closure_env cfg env phi in
+        let t = mk (Tm_refine(List.hd x |> fst, phi)) t.pos in
+        rebuild_closure cfg env stack t
 
-           | Tm_quoted (t', qi) ->
-             begin match qi.qkind with
-             | Quote_dynamic -> mk (Tm_quoted(closure_as_term_delayed cfg env t', qi)) t.pos
-             | Quote_static  ->
-                let qi = S.on_antiquoted (closure_as_term_delayed cfg env) qi in
-                mk (Tm_quoted(t', qi)) t.pos
-             end
+      | Tm_ascribed(t1, (annot,tacopt), lopt) ->
+        let annot =
+            match annot with
+            | Inl t -> Inl (non_tail_inline_closure_env cfg env t)
+            | Inr c -> Inr (close_comp cfg env c) in
+        let tacopt = BU.map_opt tacopt (non_tail_inline_closure_env cfg env) in
+        let t =
+            mk (Tm_ascribed(non_tail_inline_closure_env cfg env t1,
+                            (annot, tacopt),
+                            lopt)) t.pos
+        in
+        rebuild_closure cfg env stack t
 
-           | Tm_meta(t', Meta_pattern args) ->
-             mk (Tm_meta(closure_as_term_delayed cfg env t',
-                         Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
+      | Tm_quoted (t', qi) ->
+        let t =
+            match qi.qkind with
+            | Quote_dynamic ->
+              mk (Tm_quoted(non_tail_inline_closure_env cfg env t', qi)) t.pos
+            | Quote_static  ->
+              let qi = S.on_antiquoted (non_tail_inline_closure_env cfg env) qi in
+              mk (Tm_quoted(t', qi)) t.pos
+        in
+        rebuild_closure cfg env stack t
 
-           | Tm_meta(t', Meta_monadic(m, tbody)) ->
-             mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic(m, closure_as_term_delayed cfg env tbody))) t.pos
+      | Tm_meta(t', m) ->
+        let stack = Meta(m, t.pos)::stack in
+        inline_closure_env cfg env stack t'
 
-           | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
-                 mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
+      | Tm_let((false, [lb]), body) -> //non-recursive let
+        let env0 = env in
+        let env = List.fold_left (fun env _ -> dummy::env) env lb.lbunivs in
+        let typ = non_tail_inline_closure_env cfg env lb.lbtyp in
+        let def = non_tail_inline_closure_env cfg env lb.lbdef in
+        let nm, body =
+            if S.is_top_level [lb]
+            then lb.lbname, body
+            else let x = BU.left lb.lbname in
+                 Inl ({x with sort=typ}),
+                 non_tail_inline_closure_env cfg (dummy::env0) body
+        in
+        let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
+        let t = mk (Tm_let((false, [lb]), body)) t.pos in
+        rebuild_closure cfg env stack t
 
-           | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
-             mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
-
-           | Tm_let((false, [lb]), body) -> //non-recursive let
-             let env0 = env in
-             let env = List.fold_left (fun env _ -> dummy::env) env lb.lbunivs in
-             let typ = closure_as_term_delayed cfg env lb.lbtyp in
-             let def = closure_as_term cfg env lb.lbdef in
-             let nm, body =
-                if S.is_top_level [lb]
-                then lb.lbname, body
+      | Tm_let((_,lbs), body) -> //recursive let
+        let norm_one_lb env lb =
+            let env_univs = List.fold_right (fun _ env -> dummy::env) lb.lbunivs env in
+            let env =
+                if S.is_top_level lbs
+                then env_univs
+                else List.fold_right (fun _ env -> dummy::env) lbs env_univs in
+            let ty = non_tail_inline_closure_env cfg env_univs lb.lbtyp in
+            let nm =
+                if S.is_top_level lbs
+                then lb.lbname
                 else let x = BU.left lb.lbname in
-                     Inl ({x with sort=typ}),
-                     closure_as_term cfg (dummy::env0) body in
-             let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
-             mk (Tm_let((false, [lb]), body)) t.pos
+                     Inl ({x with sort=ty})
+            in
+            {lb with lbname=nm;
+                     lbtyp=ty;
+                     lbdef=non_tail_inline_closure_env cfg env lb.lbdef}
+        in
+        let lbs = lbs |> List.map (norm_one_lb env) in
+        let body =
+            let body_env = List.fold_right (fun _ env -> dummy::env) lbs env in
+            non_tail_inline_closure_env cfg body_env body in
+        let t = mk (Tm_let((true, lbs), body)) t.pos in
+        rebuild_closure cfg env stack t
 
-           | Tm_let((_,lbs), body) -> //recursive let
-             let norm_one_lb env lb =
-                let env_univs = List.fold_right (fun _ env -> dummy::env) lb.lbunivs env in
-                let env = if S.is_top_level lbs
-                          then env_univs
-                          else List.fold_right (fun _ env -> dummy::env) lbs env_univs in
-                let ty = closure_as_term cfg env_univs lb.lbtyp in
-                let nm = if S.is_top_level lbs then lb.lbname else let x = BU.left lb.lbname in {x with sort=ty} |> Inl in
-                {lb with lbname=nm;
-                         lbtyp=ty;
-                         lbdef=closure_as_term cfg env lb.lbdef} in
-             let lbs = lbs |> List.map (norm_one_lb env) in
-             let body =
-                let body_env = List.fold_right (fun _ env -> dummy::env) lbs env in
-                closure_as_term cfg body_env body in
-             mk (Tm_let((true, lbs), body)) t.pos
+      | Tm_match(head, branches) ->
+        let stack = Match(env, branches, cfg, t.pos)::stack in
+        inline_closure_env cfg env stack head
 
-           | Tm_match(head, branches) ->
-             let head = closure_as_term cfg env head in
-             let norm_one_branch env (pat, w_opt, tm) =
-                let rec norm_pat env p = match p.v with
-                    | Pat_constant _ -> p, env
-                    | Pat_cons(fv, pats) ->
-                      let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
-                            let p, env = norm_pat env p in
-                            (p,b)::pats, env) ([], env) in
-                      {p with v=Pat_cons(fv, List.rev pats)}, env
-                    | Pat_var x ->
-                      let x = {x with sort=closure_as_term cfg env x.sort} in
-                      {p with v=Pat_var x}, dummy::env
-                    | Pat_wild x ->
-                      let x = {x with sort=closure_as_term cfg env x.sort} in
-                      {p with v=Pat_wild x}, dummy::env
-                    | Pat_dot_term(x, t) ->
-                      let x = {x with sort=closure_as_term cfg env x.sort} in
-                      let t = closure_as_term cfg env t in
-                      {p with v=Pat_dot_term(x, t)}, env in
-               let pat, env = norm_pat env pat in
-               let w_opt = match w_opt with
-                | None -> None
-                | Some w -> Some (closure_as_term cfg env w) in
-               let tm = closure_as_term cfg env tm in
-               (pat, w_opt, tm) in
-            mk (Tm_match(head, branches |> List.map (norm_one_branch env))) t.pos
+and non_tail_inline_closure_env cfg env t =
+    inline_closure_env cfg env [] t
 
-and closure_as_term_delayed cfg env t =
-    match env with
-        | [] when not <| cfg.steps.compress_uvars -> t
-        | _ -> closure_as_term cfg env t
-//            mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos
+and rebuild_closure cfg env stack t =
+    match stack with
+    | [] -> t
 
-and closures_as_args_delayed cfg env args =
-    match env with
-        | [] when not <| cfg.steps.compress_uvars -> args
-        | _ -> List.map (fun (x, imp) -> closure_as_term_delayed cfg env x, imp) args
+    | Arg (Clos(env_arg, tm, _, _), aq, r) :: stack ->
+      let stack = App(env, t, aq, r)::stack in
+      inline_closure_env cfg env_arg stack tm
 
-and closures_as_binders_delayed cfg env bs =
+    | App(env, head, aq, r)::stack ->
+      let t = S.extend_app head (t,aq) None r in
+      rebuild_closure cfg env stack t
+
+    | Abs (env', bs, env'', lopt, r)::stack ->
+      let bs, _ = close_binders cfg env' bs in
+      let lopt = close_lcomp_opt cfg env'' lopt in
+      rebuild_closure cfg env stack ({abs bs t lopt with pos=r})
+
+    | Match(env, branches, cfg, r)::stack ->
+      let close_one_branch env (pat, w_opt, tm) =
+          let rec norm_pat env p =
+            match p.v with
+            | Pat_constant _ ->
+              p, env
+            | Pat_cons(fv, pats) ->
+              let pats, env =
+                  pats |> List.fold_left
+                  (fun (pats, env) (p, b) ->
+                    let p, env = norm_pat env p in (p,b)::pats, env)
+                  ([], env)
+              in
+              {p with v=Pat_cons(fv, List.rev pats)}, env
+            | Pat_var x ->
+              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
+              {p with v=Pat_var x}, dummy::env
+            | Pat_wild x ->
+              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
+              {p with v=Pat_wild x}, dummy::env
+            | Pat_dot_term(x, t) ->
+              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
+              let t = non_tail_inline_closure_env cfg env t in
+              {p with v=Pat_dot_term(x, t)}, env
+          in
+          let pat, env = norm_pat env pat in
+          let w_opt =
+              match w_opt with
+              | None -> None
+              | Some w -> Some (non_tail_inline_closure_env cfg env w) in
+          let tm = non_tail_inline_closure_env cfg env tm in
+          (pat, w_opt, tm)
+      in
+      let t =
+          mk (Tm_match(t, branches |> List.map (close_one_branch env))) t.pos
+      in
+      rebuild_closure cfg env stack t
+
+    | Meta(m, r)::stack ->
+      let m =
+          match m with
+          | Meta_pattern args ->
+            Meta_pattern (args |> List.map (fun args ->
+                                            args |> List.map (fun (a, q) ->
+                                            non_tail_inline_closure_env cfg env a, q)))
+
+          | Meta_monadic(m, tbody) ->
+            Meta_monadic(m, non_tail_inline_closure_env cfg env tbody)
+
+          | Meta_monadic_lift(m1, m2, tbody) ->
+            Meta_monadic_lift(m1, m2, non_tail_inline_closure_env cfg env tbody)
+
+          | _ -> //other metadata's do not have any embedded closures
+            m
+      in
+      let t = mk (Tm_meta(t, m)) r in
+      rebuild_closure cfg env stack t
+
+    | _ -> failwith "Impossible: unexpected stack element"
+
+
+and close_binders cfg env bs =
     let env, bs = bs |> List.fold_left (fun (env, out) (b, imp) ->
-            let b = {b with sort = closure_as_term_delayed cfg env b.sort} in
+            let b = {b with sort = inline_closure_env cfg env [] b.sort} in
             let env = dummy::env in
             env, ((b,imp)::out)) (env, []) in
     List.rev bs, env
 
 and close_comp cfg env c =
     match env with
-        | [] when not <| cfg.steps.compress_uvars -> c
-        | _ ->
-        match c.n with
-            | Total (t, uopt) ->
-              mk_Total' (closure_as_term_delayed cfg env t)
-                        (Option.map (norm_universe cfg env) uopt)
-            | GTotal (t, uopt) ->
-              mk_GTotal' (closure_as_term_delayed cfg env t)
-                         (Option.map (norm_universe cfg env) uopt)
-            | Comp c ->
-              let rt = closure_as_term_delayed cfg env c.result_typ in
-              let args = closures_as_args_delayed cfg env c.effect_args in
-              let flags = c.flags |> List.map (function
-                | DECREASES t -> DECREASES (closure_as_term_delayed cfg env t)
-                | f -> f) in
-              mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
-                               result_typ=rt;
-                               effect_args=args;
-                               flags=flags})
+    | [] when not <| cfg.steps.compress_uvars -> c
+    | _ ->
+      match c.n with
+      | Total (t, uopt) ->
+        mk_Total' (inline_closure_env cfg env [] t)
+                  (Option.map (norm_universe cfg env) uopt)
+
+      | GTotal (t, uopt) ->
+        mk_GTotal' (inline_closure_env cfg env [] t)
+                   (Option.map (norm_universe cfg env) uopt)
+
+      | Comp c ->
+        let rt = inline_closure_env cfg env [] c.result_typ in
+        let args =
+            c.effect_args |>
+            List.map (fun (a, q) -> inline_closure_env cfg env [] a, q)
+        in
+        let flags =
+            c.flags |>
+            List.map (function
+                | DECREASES t -> DECREASES (inline_closure_env cfg env [] t)
+                | f -> f)
+        in
+        mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
+                result_typ=rt;
+                effect_args=args;
+                flags=flags})
 
 and filter_out_lcomp_cflags flags =
     (* TODO : lc.comp might have more cflags than lcomp.cflags *)
@@ -572,10 +653,11 @@ and close_lcomp_opt cfg env lopt = match lopt with
       let flags =
           rc.residual_flags |>
           List.filter (function DECREASES _ -> false | _ -> true) in
-      let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (closure_as_term cfg env)} in
+      let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (inline_closure_env cfg env [])} in
       Some rc
     | _ -> lopt
 
+let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 (*******************************************************************)
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
@@ -1080,7 +1162,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack' =
                 let tail = (Cfg cfg)::stack in
                 if cfg.debug.print_normalized
-                then (// printfn "Starting to normalize %s" (Print.term_to_string t); 
+                then (// printfn "Starting to normalize %s" (Print.term_to_string t);
     Debug(t, BU.now())::tail)
                 else tail in
               norm cfg' env stack' tm
@@ -1134,7 +1216,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
                              | _, _ -> false)))
                  in
-                 log cfg (fun () -> 
+                 log cfg (fun () ->
                      // printfn "cfg.delta_level = %A" cfg.delta_level;
                      BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
