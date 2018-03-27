@@ -1281,7 +1281,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
-    let should_generalize, lbs', quals_opt =  //val_lids are bindings for which there is a val declaration
+    let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
           let lbname = right lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
@@ -1321,7 +1321,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
-    (* 3.1. Type-check the Tm_let and convert it back to Sig_let *)
+    (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env0 = { env with top_level = true; generalize = should_generalize } in
     let e =
       if Options.use_two_phase_tc () && Env.should_verify env0 then

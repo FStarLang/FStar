@@ -1,1 +1,18 @@
-[ "¡eX\u000eé¶√q∏J·§R\u0000\u0001\u0015", [] ]
+[
+  "¡eX\u000eé¶√q∏J·§R\u0000\u0001\u0015",
+  [
+    [
+      "FStar.Reflection.Types.name",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "62c2e50a267b559834f606d188a576ef"
+    ]
+  ]
+]

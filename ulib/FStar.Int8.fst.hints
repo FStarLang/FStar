@@ -11,7 +11,7 @@
         "haseqFStar.Int_Tm_refine_f5da0921f0dd8806caefeddce48fd98d"
       ],
       0,
-      "ce71bd13cc956b8a5c510f5bfe0f7102"
+      "728479f40d6307b5b19edd280b7fc794"
     ],
     [
       "FStar.Int8.int_to_t",
@@ -23,7 +23,7 @@
         "haseqFStar.Int8_Tm_refine_5c54aa80b5fd7e1e91a6239fd460736a"
       ],
       0,
-      "626b2a8fad7fa8929fdf7dd0160f35be"
+      "2ea9a964680b8c3cfcd849cfd04a27f6"
     ],
     [
       "FStar.Int8.int_to_t",
@@ -35,7 +35,7 @@
         "projection_inverse_FStar.Int8.Mk_v"
       ],
       0,
-      "ebc6a8cac09e3d0ed8e4fd9d650d64e3"
+      "6100c88de1e1e5741e2b5b5b19a1d117"
     ],
     [
       "FStar.Int8.uv_inv",
@@ -48,7 +48,7 @@
         "proj_equation_FStar.Int8.Mk_v", "unit_typing"
       ],
       0,
-      "55c2467e44b929ec96974131ed228b8d"
+      "ca57d016b63784d2dd1990a32f768399"
     ],
     [
       "FStar.Int8.vu_inv",
@@ -63,7 +63,7 @@
         "refinement_interpretation_FStar.Int_Tm_refine_f5da0921f0dd8806caefeddce48fd98d"
       ],
       0,
-      "820320a724bc32deaa6e9ab5a3a3dcf4"
+      "a3c4d71ff70284a8fb6d43c7f29eb9e8"
     ],
     [
       "FStar.Int8.v_inj",
@@ -83,7 +83,7 @@
         "refinement_interpretation_FStar.Int_Tm_refine_f5da0921f0dd8806caefeddce48fd98d"
       ],
       0,
-      "ed510f62680cbd75c4dd34b703d40e40"
+      "aee3d223883f437db907c6238f4a92e5"
     ],
     [
       "FStar.Int8.add",
@@ -96,7 +96,7 @@
         "projection_inverse_FStar.Int8.Mk_v"
       ],
       0,
-      "452d171c03c43635cd4542ad82c2c014"
+      "d627351b577e31b70ec1d2e2a1034d67"
     ],
     [
       "FStar.Int8.sub",
@@ -109,7 +109,7 @@
         "projection_inverse_FStar.Int8.Mk_v"
       ],
       0,
-      "e1959efa2f997e5dd40e42ecc3e5f008"
+      "1587db1c22d451e3c4bc0b0e618c7a80"
     ],
     [
       "FStar.Int8.mul",
@@ -122,7 +122,7 @@
         "projection_inverse_FStar.Int8.Mk_v"
       ],
       0,
-      "971fd8cb480e9e8cf2d4168c604012bb"
+      "8138fee67aac900fbf54b3643a3a196f"
     ],
     [
       "FStar.Int8.div",
@@ -137,7 +137,7 @@
         "refinement_interpretation_FStar.Int8_Tm_refine_bcfada7fe24cdb2217294983169b91ee"
       ],
       0,
-      "3752a30c36786428622ecddcfc0698a0"
+      "d064bf2fb3706557168c0723deccaa37"
     ],
     [
       "FStar.Int8.rem",
@@ -145,40 +145,17 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
-        "bool_typing", "equation_FStar.Int.fits", "equation_FStar.Int.int_t",
-        "equation_FStar.Int.max_int", "equation_FStar.Int.min_int",
-        "equation_FStar.Int.mod", "equation_FStar.Int.op_Slash",
-        "equation_FStar.Int.size", "equation_FStar.Int8.n",
-        "equation_FStar.Int8.v", "equation_FStar.UInt32.n",
-        "equation_Prims.abs", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Int8.t",
-        "function_token_typing_FStar.Int8.n",
-        "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "int_typing", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Division",
-        "primitive_Prims.op_GreaterThanOrEqual",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "proj_equation_FStar.Int8.Mk_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
+        "assumption_Prims.HasEq_int", "equation_FStar.Int8.v",
+        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "haseqFStar.Int8_Tm_refine_5c54aa80b5fd7e1e91a6239fd460736a",
+        "proj_equation_FStar.Int8.Mk_v",
         "projection_inverse_FStar.Int8.Mk_v",
-        "refinement_interpretation_FStar.Int8_Tm_refine_8416aed751737febf90d55fc394ebe2e",
-        "refinement_interpretation_FStar.Int8_Tm_refine_bcfada7fe24cdb2217294983169b91ee",
-        "refinement_interpretation_FStar.Int_Tm_refine_f5da0921f0dd8806caefeddce48fd98d",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "token_correspondence_Prims.pow2.fuel_instrumented",
-        "typing_FStar.Int.fits", "typing_FStar.Int8.v", "typing_Prims.abs"
+        "refinement_interpretation_FStar.Int8_Tm_refine_bcfada7fe24cdb2217294983169b91ee"
       ],
       0,
-      "1a0c2e9e3c70c4b6d0aa7b6da39bfbbe"
+      "18834e35276c07c059e71d2f1ef3d466"
     ],
     [
       "FStar.Int8.logand",
@@ -206,7 +183,7 @@
         "typing_FStar.Int.logand", "typing_FStar.Int8.v"
       ],
       0,
-      "f4e56fa33dda6cb9eefdff94f6f5af9f"
+      "dce2a1a0341ab8f999a72b42da0df151"
     ],
     [
       "FStar.Int8.logxor",
@@ -232,7 +209,7 @@
         "typing_FStar.Int.logxor", "typing_FStar.Int8.v"
       ],
       0,
-      "5f7846a62656d65ca6e31d73a6576dc7"
+      "84ba8b8aab097809d0c6426910c996d7"
     ],
     [
       "FStar.Int8.logor",
@@ -258,7 +235,7 @@
         "typing_FStar.Int.logor", "typing_FStar.Int8.v"
       ],
       0,
-      "e1fccd6d085fe1b8230235ae1d9b617c"
+      "e7ead9ca5b5b15c77fea911ada31f8a5"
     ],
     [
       "FStar.Int8.lognot",
@@ -284,7 +261,7 @@
         "typing_FStar.Int.lognot", "typing_FStar.Int8.v"
       ],
       0,
-      "cc79b211edc6050f9d458f4c6d5ffa75"
+      "b91c5bc2480744e63f6e3598ffb51119"
     ],
     [
       "FStar.Int8.shift_right",
@@ -311,7 +288,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "b4a98889aed381c3b665425b5571fe78"
+      "3a858e2efa89613fd52ab9cab209c7e3"
     ],
     [
       "FStar.Int8.shift_left",
@@ -319,41 +296,21 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
-        "data_elim_FStar.Int8.Mk", "equation_FStar.Int.fits",
-        "equation_FStar.Int.int_t", "equation_FStar.Int.max_int",
-        "equation_FStar.Int.min_int", "equation_FStar.Int.op_At_Percent",
-        "equation_FStar.Int.op_Slash", "equation_FStar.Int.shift_left",
-        "equation_FStar.Int.size", "equation_FStar.Int8.n",
-        "equation_FStar.Int8.v", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
-        "equation_Prims.abs", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Int8.t",
-        "function_token_typing_FStar.Int8.n",
-        "function_token_typing_FStar.UInt32.n", "int_typing",
-        "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Division",
-        "primitive_Prims.op_GreaterThanOrEqual",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "assumption_Prims.HasEq_int", "b2t_def", "equation_FStar.Int8.v",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "haseqFStar.Int8_Tm_refine_5c54aa80b5fd7e1e91a6239fd460736a",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Int8.Mk_v", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Int8.Mk_v",
-        "refinement_interpretation_FStar.Int_Tm_refine_f5da0921f0dd8806caefeddce48fd98d",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Int.fits", "typing_FStar.UInt32.v", "typing_Prims.pow2"
+        "typing_FStar.UInt32.v"
       ],
       0,
-      "3b2a800f1dfffd0bf85f9cd2ac160871"
+      "84ddf31fc126b02cf4aa2e8d0e83e451"
     ],
     [
       "FStar.Int8.int_to_t",
@@ -365,7 +322,7 @@
         "haseqFStar.Int8_Tm_refine_5c54aa80b5fd7e1e91a6239fd460736a"
       ],
       0,
-      "5b3c5df0d8c08d057ef767960c3f710b"
+      "abc94988f3b26a74bd6c0f83691bfec4"
     ],
     [
       "FStar.Int8.vu_inv",
@@ -374,7 +331,7 @@
       1,
       [ "@query" ],
       0,
-      "5678173b5c2968c9d725c544563e6a58"
+      "48caebc26d21b4fd46ea0957e37b0383"
     ],
     [
       "FStar.Int8.v_inj",
@@ -383,7 +340,7 @@
       1,
       [ "@query" ],
       0,
-      "ddfb051101cf2c16ca7d590a21fdb632"
+      "e97ee4f572633fbaa8c48f5e0f316f7e"
     ],
     [
       "FStar.Int8.add",
@@ -392,7 +349,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1823bf2ece7c8f7c8c47edc4cb2c1856"
+      "c63ab711eef0f35cb8a17baf24e59133"
     ],
     [
       "FStar.Int8.sub",
@@ -401,7 +358,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4dde466ac329d549f632346d1cf9cc05"
+      "1354fc412139b1e5e0d2b2e5f5ee4270"
     ],
     [
       "FStar.Int8.mul",
@@ -410,7 +367,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ca615dbe03299215e9fa291dea39e0dd"
+      "84d60b376495d1a23d2ce42f27a9520a"
     ],
     [
       "FStar.Int8.div",
@@ -422,7 +379,7 @@
         "refinement_interpretation_FStar.Int8_Tm_refine_12251fbc953e74d53f3976a3f2840567"
       ],
       0,
-      "2b92c9de0f9f41198ee4343335c75b2a"
+      "0a51a9abc54e19ef9c805c7738fe5066"
     ],
     [
       "FStar.Int8.rem",
@@ -438,7 +395,7 @@
         "refinement_interpretation_FStar.Int8_Tm_refine_12251fbc953e74d53f3976a3f2840567"
       ],
       0,
-      "abc1e8aa4f2f780cc5bb411909b6b25a"
+      "7366f4a654eea91f74bf66883cccc393"
     ],
     [
       "FStar.Int8.logand",
@@ -450,7 +407,7 @@
         "haseqFStar.Int8_Tm_refine_5c54aa80b5fd7e1e91a6239fd460736a"
       ],
       0,
-      "4d16631aa7fc0736037f6e3304959935"
+      "94e89b7e23e2b3361fe679ced8becb03"
     ],
     [
       "FStar.Int8.logxor",
@@ -459,7 +416,7 @@
       1,
       [ "@query" ],
       0,
-      "b48bbe55418e0e68ca7a543f75bc4624"
+      "6a8e0758b7ae68a13caf696c40d34679"
     ],
     [
       "FStar.Int8.logor",
@@ -468,7 +425,7 @@
       1,
       [ "@query" ],
       0,
-      "61f847b2b4ed59d24ebe9ec77e8b45c2"
+      "588c144fae68ad82b03e54259b9c9477"
     ],
     [
       "FStar.Int8.lognot",
@@ -477,7 +434,7 @@
       1,
       [ "@query" ],
       0,
-      "87991ed8c69b1cfec169cdc3deb2b1ce"
+      "6d37fe2de402230a3cd6ba94153d31ef"
     ],
     [
       "FStar.Int8.shift_right",
@@ -498,7 +455,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "f5e8be88b1079e5ec24bb2011a4c30ce"
+      "bdf345e6597734bd7880707d7e78607c"
     ],
     [
       "FStar.Int8.shift_left",
@@ -519,7 +476,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "58075fe0aa5d9f642b640aecc7b8289b"
+      "c06c05f9c073991b8810c53e3122de7f"
     ],
     [
       "FStar.Int8.op_Plus_Hat",
@@ -528,7 +485,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f583bdb72e265c9c99b421baccc7f051"
+      "8f2a7bef1403c4a9ce45486b6cb34b00"
     ],
     [
       "FStar.Int8.op_Subtraction_Hat",
@@ -537,7 +494,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ceacfa90feae031dd96d0d826632a3b4"
+      "eed14fe67034630d6d70b233c7a3d7ea"
     ],
     [
       "FStar.Int8.op_Star_Hat",
@@ -546,7 +503,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2bfef735601179c0e984837e981f3cac"
+      "12da70d728fd9e9f4954b32a6f459d5a"
     ],
     [
       "FStar.Int8.op_Slash_Hat",
@@ -558,7 +515,7 @@
         "refinement_interpretation_FStar.Int8_Tm_refine_12251fbc953e74d53f3976a3f2840567"
       ],
       0,
-      "0d40bdc6cea86c35ae2a9e29505f0bb3"
+      "103bc1192c05c1a589aebbb0544c74b6"
     ],
     [
       "FStar.Int8.op_Percent_Hat",
@@ -574,7 +531,7 @@
         "refinement_interpretation_FStar.Int8_Tm_refine_12251fbc953e74d53f3976a3f2840567"
       ],
       0,
-      "87d6912898028c74386ebaa40f1cf857"
+      "c416e810533345d9ffb9f837d8474322"
     ],
     [
       "FStar.Int8.op_Hat_Hat",
@@ -583,7 +540,7 @@
       1,
       [ "@query" ],
       0,
-      "2b97b300a7f2511e06278199e9ef0abd"
+      "adc70dff523f08e81106c4552098fccd"
     ],
     [
       "FStar.Int8.op_Amp_Hat",
@@ -598,7 +555,7 @@
         "haseqFStar.Int8_Tm_refine_5c54aa80b5fd7e1e91a6239fd460736a"
       ],
       0,
-      "95c7f51f02c7740dd253ded4bfcb4124"
+      "78cd09d8e9de576c64f3a8ac747ed684"
     ],
     [
       "FStar.Int8.op_Bar_Hat",
@@ -607,7 +564,7 @@
       1,
       [ "@query" ],
       0,
-      "262af2e74483265cdd0a08e4e99d0888"
+      "12561080efea7c7bea089439638db819"
     ],
     [
       "FStar.Int8.op_Less_Less_Hat",
@@ -625,7 +582,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "4d11a00a2a0b6e47670ecb79b26d8fe1"
+      "8f020171de8e647a4f09aebe0507dade"
     ],
     [
       "FStar.Int8.op_Greater_Greater_Hat",
@@ -643,7 +600,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5067bdc9506ba10daacd95ddcdbc2017"
+      "8a1300aa8c5a52cc30e55b23a3cf3854"
     ]
   ]
 ]
