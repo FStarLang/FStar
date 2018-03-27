@@ -756,6 +756,16 @@ let mk_field_projector_name lid (x:bv) i =
     let y = {x with ppname=nm} in
     mk_field_projector_name_from_ident lid nm, y
 
+let ses_of_sigbundle (se:sigelt) :list<sigelt> =
+  match se.sigel with
+  | Sig_bundle (ses, _) -> ses
+  | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
