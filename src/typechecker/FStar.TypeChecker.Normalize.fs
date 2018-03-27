@@ -230,7 +230,7 @@ type stack_elt =
  | Arg      of closure * aqual * Range.range
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
- | Match    of env * branches * Range.range
+ | Match    of env * branches * cfg * Range.range
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
  | Meta     of S.metadata * Range.range
@@ -1080,7 +1080,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack' =
                 let tail = (Cfg cfg)::stack in
                 if cfg.debug.print_normalized
-                then Debug(t, BU.now())::tail
+                then (// printfn "Starting to normalize %s" (Print.term_to_string t); 
+    Debug(t, BU.now())::tail)
                 else tail in
               norm cfg' env stack' tm
             end
@@ -1133,7 +1134,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
                              | _, _ -> false)))
                  in
-                 log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
+                 log cfg (fun () -> 
+                     // printfn "cfg.delta_level = %A" cfg.delta_level;
+                     BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
                                  (Range.string_of_range t.pos)
                                  (string_of_bool should_delta));
@@ -1278,7 +1281,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_match(head, branches) ->
-            let stack = Match(env, branches, t.pos)::stack in
+            let stack = Match(env, branches, cfg, t.pos)::stack in
+            let cfg = { cfg with steps={cfg.steps with weak=true; hnf=true} } in
             norm cfg env stack head
 
           | Tm_let((b, lbs), lbody) when is_top_level lbs && cfg.steps.compress_uvars ->
@@ -1443,7 +1447,8 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
-         log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
+         log cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
+                         BU.print "Tm_fvar case 2\n" []) ;
          rebuild cfg env stack t0
 
        | Some (us, t) ->
@@ -2184,7 +2189,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     let t = S.extend_app head (t,aq) None r in
     rebuild cfg env stack t
 
-  | Match(env, branches, r) :: stack ->
+  | Match(env, branches, cfg, r) :: stack ->
     log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
     //the scrutinee is always guaranteed to be a pure or ghost term
     //see tc.fs, the case of Tm_match and the comment related to issue #594
@@ -2197,13 +2202,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       // If either Weak or HNF, then don't descend into branch
       let whnf = cfg.steps.weak || cfg.steps.hnf in
       let cfg_exclude_iota_zeta =
-        let new_delta =
-          cfg.delta_level |> List.filter (function
-            | Env.Inlining
-            | Env.Eager_unfolding_only -> true
-            | _ -> false)
-        in
-        ({cfg with delta_level=new_delta; steps= { cfg.steps with zeta = false }; strong=true})
+        // let new_delta =
+        //   cfg.delta_level |> List.filter (function
+        //     | Env.Inlining
+        //     | Env.Eager_unfolding_only -> true
+        //     | _ -> false)
+        // in
+        ({cfg with steps= { cfg.steps with zeta = false }; strong=true})
       in
       let norm_or_whnf env t =
         if whnf
