@@ -611,7 +611,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
 
 
-let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) (tc_assume:(env_t -> lident -> formula -> list<qualifier> -> Range.range -> sigelt)) :list<sigelt> =
+let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) :list<sigelt> =
   let us =
     let ty = List.hd tcs in
     match ty.sigel with
@@ -639,9 +639,11 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
 
   //create Sig_assume for the axioms
   let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-    let se = tc_assume env lid fml [] Range.dummyRange in // FIXME: Docs?
-    //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
-    l @ [se]
+    l @ [ { sigel = Sig_assume (lid, [], fml);
+            sigquals = [];
+            sigrng = Range.dummyRange;
+            sigmeta = default_sigmeta;
+            sigattrs = []  } ]
   ) [] axioms in
 
   env.solver.pop "haseq";
@@ -758,7 +760,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //new accumulator is old accumulator /\ fml
   U.mk_conj acc fml
 
-let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) (tc_assume:(env_t -> lident -> formula -> list<qualifier> -> Range.range -> sigelt)) :list<sigelt> =
+let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) :list<sigelt> =
   //TODO: perhaps make it a map ?
   let mutuals = List.map (fun ty ->
     match ty.sigel with
@@ -782,9 +784,14 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
 
   env.solver.encode_sig env sig_bndle;
   let env = Env.push_univ_vars env us in
-  let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] Range.dummyRange in // FIXME: Should we generate docs for this identifier?
+  let se =  //FIXME: docs?
+    { sigel = Sig_assume (get_haseq_axiom_lid lid, [], fml);
+              sigquals = [];
+              sigrng = Range.dummyRange;
+              sigmeta = default_sigmeta;
+              sigattrs = []  }
 
-  env.solver.pop "haseq";
+  in
   [se]
 
 

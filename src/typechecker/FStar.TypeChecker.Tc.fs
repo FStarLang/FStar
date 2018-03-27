@@ -941,17 +941,12 @@ let tc_lex_t env ses quals lids =
         raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
     end
 
-let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+let tc_assume (env:env) (phi:formula) (r:Range.range) :term =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    let us, phi = TcUtil.generalize_universes env phi in
-    { sigel = Sig_assume(lid, us, phi);
-      sigquals = quals;
-      sigrng = r;
-      sigmeta = default_sigmeta;
-      sigattrs = []  }
+    phi
 
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
@@ -1003,8 +998,8 @@ let tc_inductive env ses quals lids =
         else
             let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
             let ses =
-              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env tc_assume
-              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env tc_assume
+              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env
+              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
     ignore (Env.pop env "tc_inductive");
@@ -1217,8 +1212,13 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_assume(lid, us, phi) ->
     let _, phi = SS.open_univ_vars us phi in
-    let se = tc_assume env lid phi se.sigquals r in
-    [se], []
+    let phi = tc_assume env phi r in
+    let us, phi = TcUtil.generalize_universes env phi in
+    [ { sigel = Sig_assume(lid, us, phi);
+        sigquals = se.sigquals;
+        sigrng = r;
+        sigmeta = default_sigmeta;
+        sigattrs = []  } ], []
 
   | Sig_main(e) ->
     let env = Env.set_range env r in

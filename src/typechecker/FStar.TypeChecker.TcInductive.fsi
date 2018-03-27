@@ -22,7 +22,7 @@ val early_prims_inductives :list<string>
 
 val is_haseq_lid: lid -> bool  //see if the given lid is that of an haseq axiom
 val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get the haseq axiom lid
-val optimized_haseq_scheme: sigelt -> list<sigelt> -> list<sigelt> -> env_t -> (env_t -> lident -> formula -> list<qualifier> -> Range.range -> sigelt) -> list<sigelt>
-val unoptimized_haseq_scheme: sigelt -> list<sigelt> -> list<sigelt> -> env_t -> (env_t -> lident -> formula -> list<qualifier> -> Range.range -> sigelt) -> list<sigelt>
+val optimized_haseq_scheme: sigelt -> list<sigelt> -> list<sigelt> -> env_t -> list<sigelt>
+val unoptimized_haseq_scheme: sigelt -> list<sigelt> -> list<sigelt> -> env_t -> list<sigelt>
 
 val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
