@@ -307,6 +307,7 @@ type raw_error =
   | Fatal_IncoherentPatterns
   | Error_NoSMTButNeeded
   | Fatal_UnexpectedAntiquotation
+  | Fatal_SplicedUndef
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -616,6 +617,7 @@ let default_flags =
   (Fatal_IncoherentPatterns                          , CFatal);
   (Error_NoSMTButNeeded                              , CError);
   (Fatal_UnexpectedAntiquotation                     , CFatal);
+  (Fatal_SplicedUndef                                , CFatal);
   ]
 
 exception Err of raw_error* string

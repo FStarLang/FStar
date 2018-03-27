@@ -878,8 +878,9 @@ val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
-(** This function allocates a buffer into a manually-managed region, meaning that the client must
-//  * call rfree in order to avoid memory leaks. It translates to C as a straight malloc. *)
+(** This function allocates a buffer into a manually-managed buffer in a heap
+ * region, meaning that the client must call rfree in order to avoid memory
+ * leaks. It translates to C as a straight malloc. *)
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
                  (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))

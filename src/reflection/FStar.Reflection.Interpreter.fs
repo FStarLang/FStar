@@ -72,6 +72,7 @@ let reflection_primops : list<N.primitive_step> =
 
         mk2 "term_eq" term_eq E.unembed_term E.unembed_term embed_bool;
 
+        mk1 "moduleof" moduleof E.unembed_env (embed_list embed_string t_string);
         mk1 "term_to_string" term_to_string E.unembed_term embed_string;
         mk1 "binders_of_env" binders_of_env E.unembed_env E.embed_binders;
         mk2 "lookup_typ" lookup_typ E.unembed_env unembed_string_list (embed_option E.embed_sigelt fstar_refl_sigelt);

@@ -241,7 +241,7 @@ let log_size
 module T = FStar.Tactics
 
 let tfail (#a: Type) (s: Prims.string) : T.Tac a =
-  T.print ("Tactic failure: " ^ s);
+  T.debug ("Tactic failure: " ^ s);
   T.fail s
 
 let unfold_fv (t: T.fv) : T.Tac T.term =
@@ -314,12 +314,12 @@ let compile_ret
   (ret_sz_tm: T.term)
   (t: T.term)
 : T.Tac T.term
-= T.print "compile_ret";
+= T.debug "compile_ret";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (ret_tm ()) in
   tassert test;
   let res = T.mk_app ret_sz_tm ar in
-  T.print (T.term_to_string res);
+  T.debug (T.term_to_string res);
   res
 
 let compile_bind
@@ -329,7 +329,7 @@ let compile_bind
   (t: T.term)
   (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
 : T.Tac T.term
-= T.print "compile_bind";
+= T.debug "compile_bind";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (bind_tm ()) in
   tassert test;
@@ -351,7 +351,7 @@ let compile_bind
         (T.pack (T.Tv_Abs v y_), T.Q_Explicit);
       ]
       in
-      T.print (T.term_to_string res);
+      T.debug (T.term_to_string res);
       res
     | _ -> tfail ("compile: Not an abstraction: " ^ T.term_to_string y)
     end
@@ -361,12 +361,12 @@ let compile_print_char
   (print_char_sz_tm: T.term)
   (t: T.term)
 : T.Tac T.term
-= T.print "compile_print_char";
+= T.debug "compile_print_char";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (print_char_tm ()) in
   tassert test;
   let res = T.mk_app print_char_sz_tm ar in
-  T.print (T.term_to_string res);
+  T.debug (T.term_to_string res);
   res
 
 let compile_fvar
@@ -376,11 +376,11 @@ let compile_fvar
   (ty: T.term)
   (t: T.term)
 : T.Tac T.term
-= T.print ("compile_fvar: " ^ T.term_to_string t);
+= T.debug ("compile_fvar: " ^ T.term_to_string t);
   let (f, ar) = app_head_tail t in
-  T.print "after app_head_tail";
+  T.debug "after app_head_tail";
   let ins = T.inspect f in
-  T.print "after inspect";
+  T.debug "after inspect";
   let test = T.Tv_FVar? ins in
   tassert test;
   let (T.Tv_FVar v) = ins in
@@ -388,9 +388,9 @@ let compile_fvar
     let t' = T.mk_app v' ar in
     // unfolding might have introduced a redex,
     // so we find an opportunity to reduce it here
-    T.print ("before norm_term: " ^ T.term_to_string t');
+    T.debug ("before norm_term: " ^ T.term_to_string t');
     let t' = T.norm_term_env env [Prims.iota] t' in // beta implicit
-    T.print "after norm_term";
+    T.debug "after norm_term";
     let res' = compile ty t' in
     let u = quote () in
     let res = T.mk_app coerce_sz_tm [
@@ -409,7 +409,7 @@ let compile_ifthenelse
   (t: T.term)
   (compile: (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
 : T.Tac T.term
-= T.print "compile_ifthenelse";
+= T.debug "compile_ifthenelse";
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
@@ -441,7 +441,7 @@ let rec first (#t: Type) (l: list (unit -> T.Tac t)) : T.Tac t =
   match l with
   | [] -> tfail "All tactics failed"
   | a :: q ->
-    T.or_else a (fun () -> T.print "failed"; first q)
+    T.or_else a (fun () -> T.debug "failed"; first q)
 
 let rec compile
   (
@@ -454,7 +454,7 @@ let rec compile
   (env: T.env)
   (ty: T.term) (t: T.term)
 : T.Tac T.term
-= T.print "BEGIN compile";
+= T.debug "BEGIN compile";
   let compile' = compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm in
   let res = first [
     (fun () -> compile_ret ret_sz_tm t);
@@ -464,7 +464,7 @@ let rec compile
     (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile' env));
   ]
   in
-  T.print ("END compile, result: " ^ T.term_to_string res);
+  T.debug ("END compile, result: " ^ T.term_to_string res);
   res
 
 let mk_sz'

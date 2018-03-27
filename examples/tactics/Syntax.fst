@@ -100,8 +100,8 @@ let _ = assert_by_tactic True
                             let t = quote ((y:int) -> (x:int) -> x + 2 == 5) in
                             match term_as_formula t with
                             | Implies _ _ -> fail "" // make it fail for now, but this is the wanted result, I think
-                            | f -> print ("This should be an implication: " ^ formula_to_string f);
-                                   print "But that's a known issue...";
+                            | f -> debug ("This should be an implication: " ^ formula_to_string f);
+                                   debug "But that's a known issue...";
                                    ())
 
 open FStar.Tactics
@@ -110,7 +110,7 @@ let arith_test1 =
     assert_by_tactic True
                     (fun () -> let t = quote (1 + 2) in
                                match run_tm (is_arith_expr t) with
-                               | Inr (Plus (Lit 1) (Lit 2)) -> print "alright!"
+                               | Inr (Plus (Lit 1) (Lit 2)) -> debug "alright!"
                                | Inl s -> fail ("oops: " ^ s)
                                | _ -> fail "different thing")
 
@@ -118,7 +118,7 @@ let arith_test2 (x : int) =
     assert_by_tactic True
                     (fun () -> let t = quote (x + x) in
                                match run_tm (is_arith_expr t) with
-                               | Inr (Plus (Atom 0 _) (Atom 0 _)) -> print "alright!"
+                               | Inr (Plus (Atom 0 _) (Atom 0 _)) -> debug "alright!"
                                | Inl s -> fail ("oops: " ^ s)
                                | _ -> fail "different thing")
 
@@ -127,10 +127,10 @@ let _ = assert_by_tactic True
                 let t = quote (let x = 2 in x + 6) in
                 match inspect t with
                 | Tv_Let r bv t1 t2 -> (
-                   print ("r = " ^ (if r then "true" else "false"));
-                   print ("bv = " ^ bv_to_string bv);
-                   print ("t1 = " ^ term_to_string t1);
-                   print ("t2 = " ^ term_to_string t2)
+                   debug ("r = " ^ (if r then "true" else "false"));
+                   debug ("bv = " ^ bv_to_string bv);
+                   debug ("t1 = " ^ term_to_string t1);
+                   debug ("t2 = " ^ term_to_string t2)
                    )
                 | _ -> fail "wat?")
 
@@ -139,9 +139,9 @@ let _ = assert_by_tactic True
                 let t = quote (let rec f x = if (x <= 0) then 1 else f (x - 1) in f 5) in
                 match inspect t with
                 | Tv_Let r bv t1 t2 -> (
-                   print ("r = " ^ (if r then "true" else "false"));
-                   print ("bv = " ^ bv_to_string bv);
-                   print ("t1 = " ^ term_to_string t1);
-                   print ("t2 = " ^ term_to_string t2)
+                   debug ("r = " ^ (if r then "true" else "false"));
+                   debug ("bv = " ^ bv_to_string bv);
+                   debug ("t1 = " ^ term_to_string t1);
+                   debug ("t2 = " ^ term_to_string t2)
                    )
                 | _ -> fail "wat?")

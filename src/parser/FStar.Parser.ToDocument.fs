@@ -512,6 +512,13 @@ and p_justSig d = match d.d with
   | _ ->
       empty
 
+and p_list f sep l =
+    let rec p_list' = function
+        | [] -> empty
+        | [x] -> f x
+        | x::xs -> f x ^^ sep ^^ p_list' xs
+    in
+    str "[" ^^ p_list' l ^^ str "]"
 
 and p_rawDecl d = match d.d with
   | Open uid ->
@@ -557,8 +564,8 @@ and p_rawDecl d = match d.d with
     failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
-  | Splice t ->
-    str "%splice" ^^ space ^^ p_term false false t
+  | Splice (ids, t) ->
+    str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
 
 (* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function
@@ -895,7 +902,7 @@ and paren_if b =
   else
     fun x -> x
 
-and p_term ps pb e = match e.tm with
+and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->
       (* Don't swallow semicolons on the left-hand side of a semicolon! Note:
        * the `false` for pb is kind of useless because there is no construct

@@ -88,6 +88,7 @@ let apply                   = from_tac_1 (B.apply true)
 let apply_raw               = from_tac_1 (B.apply false)
 let apply_lemma             = from_tac_1 B.apply_lemma
 let print                   = from_tac_1 B.print
+let debug                   = from_tac_1 B.debug
 let dump                    = from_tac_1 B.print_proof_state
 let dump1                   = from_tac_1 B.print_proof_state1
 let trefl                   = from_tac_1 B.trefl

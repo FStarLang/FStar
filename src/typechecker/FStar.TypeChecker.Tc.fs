@@ -963,7 +963,7 @@ let tc_inductive env ses quals lids =
        *)
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
-    let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
+    let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
     (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
@@ -992,8 +992,7 @@ let tc_inductive env ses quals lids =
                 | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
-        List.existsb (fun s -> s = lid.ident.idText) types_to_skip
+        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives
     in
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
@@ -1218,10 +1217,17 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let se = { se with sigel = Sig_main(e) } in
     [se], []
 
-  | Sig_splice t ->
+  | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
     let ses = env.splice env t in
+    let lids' = List.collect U.lids_of_sigelt ses in
+    List.iter (fun lid ->
+        match List.tryFind (Ident.lid_equals lid) lids' with
+        | Some _ -> ()
+        | None ->
+            raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
+    ) lids;
     [], ses
 
   | Sig_let(lbs, lids) ->
@@ -1701,9 +1707,9 @@ let extract_interface (env:env) (m:modul) :modul =
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
-      let is_haseq = TcUtil.is_haseq_lid lid in
+      let is_haseq = TcInductive.is_haseq_lid lid in
       if is_haseq then
-        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcUtil.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
+        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcInductive.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
         if is_haseq_of_abstract_inductive then [ { s with sigquals = filter_out_abstract s.sigquals } ]
         else []
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
