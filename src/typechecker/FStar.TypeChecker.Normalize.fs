@@ -2284,13 +2284,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       // If either Weak or HNF, then don't descend into branch
       let whnf = cfg.steps.weak || cfg.steps.hnf in
       let cfg_exclude_iota_zeta =
-        // let new_delta =
-        //   cfg.delta_level |> List.filter (function
-        //     | Env.Inlining
-        //     | Env.Eager_unfolding_only -> true
-        //     | _ -> false)
-        // in
-        ({cfg with steps= { cfg.steps with zeta = false }; strong=true})
+         let new_delta =
+           cfg.delta_level |> List.filter (function
+             | Env.Inlining
+             | Env.Eager_unfolding_only -> true
+             | _ -> false)
+         in
+        ({cfg with delta_level=new_delta; steps= { cfg.steps with zeta = false }; strong=true})
       in
       let norm_or_whnf env t =
         if whnf
