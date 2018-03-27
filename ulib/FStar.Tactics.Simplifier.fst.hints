@@ -104,6 +104,21 @@
       "f412c19741c05db99e1ed73b15dd2ed1"
     ],
     [
+      "FStar.Tactics.Simplifier.inhabit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list__uu___haseq",
+        "equation_FStar.Reflection.Types.name",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "b43a7f4e5ec1ad2959724d08d0756300"
+    ],
+    [
       "FStar.Tactics.Simplifier.equiv",
       1,
       2,
@@ -115,7 +130,22 @@
         "unit_typing"
       ],
       0,
-      "6882a3aa541ec5401034532910e1c5ba"
+      "3362f1e852287f713bcf71667b9c55b1"
+    ],
+    [
+      "FStar.Tactics.Simplifier.inhabit",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list__uu___haseq",
+        "equation_FStar.Reflection.Types.name",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "41926cc306825e0624166d8efa528d3c"
     ]
   ]
 ]
