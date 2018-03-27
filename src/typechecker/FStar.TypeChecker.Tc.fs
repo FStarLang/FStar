@@ -963,7 +963,7 @@ let tc_inductive env ses quals lids =
        *)
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
-    let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
+    let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
     (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
@@ -992,8 +992,7 @@ let tc_inductive env ses quals lids =
                 | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
-        List.existsb (fun s -> s = lid.ident.idText) types_to_skip
+        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives
     in
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
@@ -1277,7 +1276,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
-    let should_generalize, lbs', quals_opt =
+    let should_generalize, lbs', quals_opt =  //val_lids are bindings for which there is a val declaration
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
           let lbname = right lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
@@ -1317,8 +1316,37 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
-    (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
-    let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
+    (* 3.1. Type-check the Tm_let *)
+    let ret =
+      let env0 = { env with top_level = true; generalize = should_generalize } in
+      if Options.use_two_phase_tc () then
+        //first phase
+        let e_lax, lc, g = tc_maybe_toplevel_term ({ env0 with lax = true }) e in
+        if Env.debug env (Options.Other "TwoPhases") then BU.print1 ("Phase 1 checked: %s") (Print.term_to_string e_lax);
+        if Env.should_verify env0 then  //second phase
+          //remove uvar solutions
+          let e_lax = N.remove_uvar_solutions env0 e_lax in
+          //drop the first phase inferred type, if the original lb was unannotated
+          let e_lax =
+            match (SS.compress e_lax).n with
+            | Tm_let ((false, [ lb ]), e2) ->
+              let lb_unannotated =
+                match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1
+                | Tm_let ((_, [ lb ]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
+                | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
+              in
+              if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
+              else e_lax
+            | _ -> e_lax  //leave recursive lets as is
+          in
+          //typecheck e_lax again
+          tc_maybe_toplevel_term env0 e_lax
+        else e_lax, lc, g
+      else tc_maybe_toplevel_term env0 e
+    in
+
+    (* 3.2. Convert it back to a Sig_let *)
+    let se, lbs = match ret with
       | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
@@ -1708,9 +1736,9 @@ let extract_interface (env:env) (m:modul) :modul =
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
-      let is_haseq = TcUtil.is_haseq_lid lid in
+      let is_haseq = TcInductive.is_haseq_lid lid in
       if is_haseq then
-        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcUtil.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
+        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcInductive.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
         if is_haseq_of_abstract_inductive then [ { s with sigquals = filter_out_abstract s.sigquals } ]
         else []
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]

@@ -92,11 +92,3 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit
-
-//inductive types utilities
-
-val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
-
-val is_haseq_lid: lid -> bool  //see if the given lid is that of an haseq axiom
-val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get the haseq axiom lid
-val get_optimized_haseq_axiom: env -> sigelt -> list<subst_elt> -> univ_names -> (lident * term * binders * binders * term)

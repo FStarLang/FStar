@@ -29,7 +29,6 @@ open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.Const
 open FStar.SMTEncoding
-open FStar.SMTEncoding.SplitQueryCases
 open FStar.SMTEncoding.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
