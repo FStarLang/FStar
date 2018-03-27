@@ -1042,10 +1042,12 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
     let ses =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
         let ses = tc_inductive ({ env with lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string { se with sigel = Sig_bundle (ses, lids) });
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
         ses
+      end
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
@@ -1070,10 +1072,11 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_new_effect(ne) ->
     let ne =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
         let ne = tc_eff_decl ({ env with lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string { se with sigel = Sig_new_effect ne });
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
         ne
+      end
       else ne
     in
     let ne = tc_eff_decl env ne in
@@ -1328,7 +1331,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env0 = { env with top_level = true; generalize = should_generalize } in
     let e =
-      if Options.use_two_phase_tc () && Env.should_verify env0 then
+      if Options.use_two_phase_tc () && Env.should_verify env0 then begin
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
           | Tm_let ((false, [ lb ]), e2) ->
@@ -1344,6 +1347,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         let e = tc_maybe_toplevel_term ({ env0 with lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
         e
+      end
       else e
     in
 
