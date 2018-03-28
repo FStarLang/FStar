@@ -1,39 +1,43 @@
 module SL.ThreadedHeap
 
 private noeq type heap_rec = {
-  next_addr : nat;
   next_tid  : nat;
+  tdomain   : addrs;
+  next_addr : nat;
   hdomain   : addrs;
-  memory    : nat -> Tot (option ((a:Type0 & a) * (option nat)))   //(option nat) denotes locking by a thread
+  memory    : nat -> Tot (option (a:Type0 & a))
 }
 
 let heap = h:heap_rec
-  {(forall (r:nat) . 
-      OS.mem r h.hdomain ==> r < h.next_addr) /\
-      (forall (r:nat) . OS.mem r h.hdomain ==> Some? (h.memory r)) /\ 
-      (forall (r:nat) . not (OS.mem r h.hdomain) ==> None? (h.memory r))}
+  {(forall (t:nat) . OS.mem t h.tdomain ==> t < h.next_tid) /\
+   (forall (r:nat) . OS.mem r h.hdomain ==> r < h.next_addr) /\
+   (forall (r:nat) . OS.mem r h.hdomain ==> Some? (h.memory r)) /\ 
+   (forall (r:nat) . not (OS.mem r h.hdomain) ==> None? (h.memory r))}
 
 private let equal_heaps (h0 h1:heap) =
   let _ = () in
-  h0.next_addr = h1.next_addr /\
   h0.next_tid = h1.next_tid /\
+  h0.tdomain = h1.tdomain /\   
+  h0.next_addr = h1.next_addr /\
   h0.hdomain = h1.hdomain /\ 
   FStar.FunctionalExtensionality.feq h0.memory h1.memory
   
 private noeq type memory_rec = {
   domain   : addrs; 
-  contents : nat -> Tot (option ((a:Type0 & a) * (option nat)))
+  contents : nat -> Tot (option (a:Type0 & a))
 }
 
 let memory = m:(option memory_rec)
-  {forall m' . m == Some m' ==> 
-               ((forall r . OS.mem r m'.domain ==> Some? (m'.contents r)) /\ 
-                (forall r . not (OS.mem r m'.domain) ==> None? (m'.contents r)))}
+  {forall m' . 
+    m == Some m' ==> 
+           ((forall r . OS.mem r m'.domain ==> Some? (m'.contents r)) /\ 
+            (forall r . not (OS.mem r m'.domain) ==> None? (m'.contents r)))}
 
 private let equal_memories (m0 m1:memory) =
   match (m0, m1) with
-  | (Some m0', Some m1') -> m0'.domain = m1'.domain /\ 
-                            FStar.FunctionalExtensionality.feq m0'.contents m1'.contents
+  | (Some m0', Some m1') -> 
+      m0'.domain = m1'.domain /\ 
+      FStar.FunctionalExtensionality.feq m0'.contents m1'.contents
   | (Some _, None)     -> False
   | (None, Some _)     -> False
   | (None, None)       -> True
@@ -52,24 +56,25 @@ let addr_of #a n = n
 let heap_memory h = Some ({ domain   = h.hdomain;
                             contents = h.memory   })
 
-let disjoint_heaps (h0 h1:heap) =
+let disjoint_heaps (h0 h1:heap) = //TODO: disjointness of heaps should also include disjointness of threads (?)
   let _ = () in
   disjoint_addrs h0.hdomain h1.hdomain
 
 let join h0 h1 =
-  let domain = OS.union h0.hdomain h1.hdomain in 
+  let next_tid = if (h0.next_tid < h1.next_tid) then h1.next_tid else h0.next_tid in
+  let tdomain = OS.union h0.tdomain h1.tdomain in
+  let next_addr = if (h0.next_addr < h1.next_addr) then h1.next_addr else h0.next_addr in
+  let hdomain = OS.union h0.hdomain h1.hdomain in 
   let memory = (fun r ->  match (h0.memory r, h1.memory r) with
                           | (Some v1, None) -> Some v1
 			  | (None, Some v2) -> Some v2
 			  | (None, None)    -> None) in
-  let next_addr = if (h0.next_addr < h1.next_addr) then h1.next_addr else h0.next_addr in
-  let next_tid = if (h0.next_tid < h1.next_tid) then h1.next_tid else h0.next_tid in
-  { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory }
+  { next_tid = next_tid; tdomain = tdomain; next_addr = next_addr; hdomain = hdomain; memory = memory }
 
 let ( |> ) #a r x = 
   let domain = OS.singleton r in
-  let contents : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
-    (fun r' -> if r = r' then Some ((| a , x |) , None) else None) in
+  let contents : nat -> Tot (option (a:Type0 & a)) = 
+    (fun r' -> if r = r' then Some (| a , x |) else None) in
   Some ({ domain = domain; contents = contents })
 
 let ( <*> ) m0 m1 = 
@@ -88,31 +93,33 @@ let ( <*> ) m0 m1 =
 let split_heap m0 m1 h = 
   match (m0, m1) with 
   | (Some m0', Some m1') -> 
-      let h0 = { next_addr = h.next_addr; 
-                 next_tid = h.next_tid;
+      let h0 = { next_tid = h.next_tid;
+                 tdomain = h.tdomain;
+                 next_addr = h.next_addr; 
                  hdomain = m0'.domain; 
                  memory = m0'.contents } in
-      let h1 = { next_addr = h.next_addr; 
-                 next_tid = h.next_tid;
+      let h1 = { next_tid = h.next_tid;
+                 tdomain = h.tdomain;
+                 next_addr = h.next_addr; 
                  hdomain = m1'.domain; 
                  memory = m1'.contents } in
       (h0,h1)
 
 let hcontains #a h r = 
   let _ = () in 
-  exists x . h.memory r == Some ((| a , x |) , None)
+  exists x . h.memory r == Some (| a , x |)
 
 let mcontains #a m r = 
   match m with
-  | Some m' -> exists x . m'.contents r == Some ((| a , x |) , None)
+  | Some m' -> exists x . m'.contents r == Some (| a , x |)
   | None    -> False
 
 let sel #a h r =
-  let Some ((| _ , x |) , None) = h.memory r in
+  let Some (| _ , x |) = h.memory r in
   x
 
 let upd' (#a:Type0) (h:heap) (r:ref a) (x:a) =
-  { h with memory = (fun r' -> if r = r' then Some ((| a , x |) , None) else h.memory r') }
+  { h with memory = (fun r' -> if r = r' then Some (| a , x |) else h.memory r') }
 
 let upd #a h r x = upd' h r x
 
@@ -121,19 +128,21 @@ let fresh #a r h =
 
 let alloc #a h0 x = 
   let r = h0.next_addr in 
-  let next_addr = h0.next_addr + 1 in
   let next_tid = h0.next_tid + 1 in
-  let domain = OS.union h0.hdomain (OS.singleton r) in
-  let memory = (fun r' -> if r = r' then Some ((| a , x |) , None) else h0.memory r') in
-  let h1 = { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory } in
+  let tdomain = h0.tdomain in 
+  let next_addr = h0.next_addr + 1 in
+  let hdomain = OS.union h0.hdomain (OS.singleton r) in
+  let memory = (fun r' -> if r = r' then Some (| a , x |) else h0.memory r') in
+  let h1 = { next_tid = next_tid; tdomain = tdomain; next_addr = next_addr; hdomain = hdomain; memory = memory } in
   (r, h1)
 
 let dealloc #a h0 r =
-  let next_addr = h0.next_addr in
   let next_tid = h0.next_tid in
-  let domain = OS.remove r h0.hdomain in
+  let tdomain = h0.tdomain in 
+  let next_addr = h0.next_addr in
+  let hdomain = OS.remove r h0.hdomain in
   let memory = (fun r' -> if r <> r' then h0.memory r' else None) in
-  { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory }
+  { next_tid = next_tid; tdomain = tdomain; next_addr = next_addr; hdomain = hdomain; memory = memory }
   
 let addrs_in m = 
   match m with
@@ -144,7 +153,7 @@ let addr_to_ref m r =
   match m with
   | Some m' ->
     match m'.contents r with
-    | Some v -> (| dfst (fst v), r |)
+    | Some v -> (| dfst v, r |)
 
 let restrict_memory rs m = 
   match m with 
@@ -168,6 +177,7 @@ let lemma_sep_defined_disjoint_heaps h0 h1 = ()
 
 let lemma_join_comm h0 h1 =
   assert (OS.equal (OS.union h0.hdomain h1.hdomain) (OS.union h1.hdomain h0.hdomain));
+  assert (OS.equal (OS.union h0.tdomain h1.tdomain) (OS.union h1.tdomain h0.tdomain));
   assert (equal_heaps (join h0 h1) (join h1 h0))
 
 let lemma_sep_unit m = 
@@ -221,7 +231,9 @@ let lemma_heap_memory_defined h = ()
 let lemma_split_heap_disjoint m0 m1 h = ()
 
 let lemma_split_heap_join m0 m1 h = 
-  assert (let (h0,h1) = split_heap m0 m1 h in equal_heaps h (join h0 h1))
+  let (h0,h1) = split_heap m0 m1 h in 
+  assert (OS.equal h.tdomain (join h0 h1).tdomain);
+  assert (equal_heaps h (join h0 h1))
 
 let lemma_split_heap_memories m0 m1 h = ()
 
@@ -406,56 +418,46 @@ let lemma_fresh_or_old_upd #a r x h0 =
 
 let tid fp post = nat
 
-let fp_free fp m = 
-  let (Some m') = m in 
-  (forall r . {:pattern (r `in_fp` fp)} (  r `in_fp` fp  ==> Some? (m'.contents r) /\ 
-                                                             (let (Some (_ , t)) = m'.contents r in t = None)) /\
-                                        (~(r `in_fp` fp) ==> m'.contents r == None))
-
-let fp_locked_by #fp #post t m = 
-  let (Some m') = m in 
-  (forall r . {:pattern (r `in_fp` fp)} (  r `in_fp` fp  ==> Some? (m'.contents r) /\ 
-                                                             (let (Some (_ , t')) = m'.contents r in t' = Some t)) /\
-                                        (~(r `in_fp` fp) ==> m'.contents r == None))
-
-let points_to_locked_by #fp #post #a r x t = 
-  let domain = OS.singleton r in
-  let contents : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
-    (fun r' -> if r = r' then Some ((| a , x |) , Some t) else None) in
-  Some ({ domain = domain; contents = contents })
+let tcontains #fp #post h t = 
+  OS.mem t h.tdomain
 
 let alloc_tid fp post h0 = 
   let t = h0.next_tid in
-  let next_addr = h0.next_addr in
   let next_tid = h0.next_tid + 1 in
-  let domain = h0.hdomain in 
-  let memory : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
-    (fun r -> 
-       if not (r `in_fp` fp)
-       then None
-       else (match (h0.memory r) with 
-              | Some ((| a , x |) , _) -> Some ((| a , x |) , Some t))) in
-  let h1 = { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory } in
+  let tdomain = OS.union h0.tdomain (OS.singleton t) in 
+  let next_addr = h0.next_addr in
+  let hdomain = OS.empty in 
+  let memory = fun r -> None in 
+  let h1 = { next_tid = next_tid; tdomain = tdomain; next_addr = next_addr; hdomain = hdomain; memory = memory } in
   (t,h1)
 
-let dealloc_tid #fp #post t h0 =
-  let next_addr = h0.next_addr in
+let compatible_with m h = 
+  let _ = () in 
+  defined m /\ 
+  (let (Some m') = m in 
+   disjoint_addrs m'.domain h.hdomain /\
+   (forall r . OS.mem r m'.domain ==> r < h.next_addr))
+
+let dealloc_tid #fp #post t h0 m =
   let next_tid = h0.next_tid in 
-  let domain = h0.hdomain in 
-  let memory : nat -> Tot (option ((a:Type0 & a) * (option nat))) = 
-    (fun r -> 
-       if not (r `in_fp` fp)
-       then None
-       else (match (h0.memory r) with
-             | Some ((| a , x |) , _) -> Some ((| a , x |) , None))) in
-  { next_addr = next_addr; next_tid = next_tid; hdomain = domain; memory = memory }
+  let tdomain = OS.remove t h0.tdomain in 
+  let next_addr = h0.next_addr in
+  let (Some m') = m in 
+  let hdomain = m'.domain in 
+  let memory = m'.contents in 
+  { next_tid = next_tid; tdomain = tdomain; next_addr = next_addr; hdomain = hdomain; memory = memory }
 
-let lemma_points_to_locked_by_defined #post #a r x t = ()
+let lemma_compatible_with_defined m h = ()
 
-let lemma_points_to_fp_free #a r x m = ()
+let lemma_compatible_with_disjoint m h = ()
 
-let lemma_points_to_locked_by #post #a r x t m = ()
+let lemma_compatible_with_not_fresh m h #a r = ()
 
-let lemma_fp_free_fp_locked_by #fp #post h0 = ()
+let lemma_alloc_tid_emp fp post h0 = ()
 
-let lemma_fp_locked_by_fp_free #fp #post t h0 = ()
+let lemma_dealloc_tid_m #fp #post t h0 m = ()
+
+let lemma_alloc_tid_tcontains fp post h0 = ()
+
+let lemma_dealloc_tid_tcontains #fp #post t h0 m = ()
+

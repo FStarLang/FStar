@@ -21,15 +21,15 @@ val defined : memory -> Type0
 val emp : memory
 
 val ref (a:Type0) : Type0
-val addr_of : #a:Type0 -> ref a -> Tot nat
+val addr_of : #a:Type0 -> ref a -> GTot nat
 
-val heap_memory : heap -> Tot memory
+val heap_memory : heap -> memory
 
 val disjoint_heaps : heap -> heap -> Type0
-val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> Tot heap
+val join : h0:heap -> h1:heap{disjoint_heaps h0 h1} -> heap
 
-val ( |> ) : #a:Type0 -> r:ref a -> x:a -> Tot memory
-val ( <*> ) : m0:memory -> m1:memory -> Tot memory
+val ( |> ) : #a:Type0 -> r:ref a -> x:a -> memory
+val ( <*> ) : m0:memory -> m1:memory -> memory
 
 val split_heap : (m0:memory) 
               -> (m1:memory)
@@ -39,15 +39,15 @@ val split_heap : (m0:memory)
 val hcontains : #a:Type0 -> heap -> ref a -> Type0
 val mcontains : #a:Type0 -> memory -> ref a -> Type0
 
-val sel : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot a
-val upd : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> x:a -> Tot heap
+val sel : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> a
+val upd : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> x:a -> heap
 
 val fresh : #a:Type0 -> ref a -> heap -> Type0
-val alloc : #a:Type0 -> h:heap -> a -> Tot (ref a * heap) 
-val dealloc : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> Tot heap
+val alloc : #a:Type0 -> h:heap -> a -> ref a * heap
+val dealloc : #a:Type0 -> h:heap -> r:ref a{h `hcontains` r} -> heap
 
-val addrs_in : memory -> Tot addrs
-val addr_to_ref : m:memory{defined m} -> r:nat{OS.mem r (addrs_in m)} -> a:Type0 & ref a
+val addrs_in : memory -> GTot addrs
+val addr_to_ref : m:memory{defined m} -> r:nat{OS.mem r (addrs_in m)} -> GTot (a:Type0 & ref a)
 
 let fresh_or_old' (h0 h1:heap) (m_old m_fresh:memory) = 
     heap_memory h1 == (m_old <*> m_fresh) /\ 
@@ -63,10 +63,10 @@ let same_freshness (h0 h1:heap) =
 
 val restrict_memory : rs:addrs
                    -> m:memory{defined m}
-                   -> Tot memory
+                   -> memory
 val complement_memory : rs:addrs
                      -> m:memory{defined m}
-                     -> Tot memory
+                     -> memory
 
 (* disjoint_heaps *)
 
@@ -246,7 +246,8 @@ val lemma_addrs_in_join (m0 m1:memory)
 (* addr_to_ref *)
 val lemma_addr_to_ref_addr_of (m:memory) (r:nat) 
   : Lemma (requires (defined m /\ OS.mem r (addrs_in m)))
-          (ensures  (addr_of (dsnd (addr_to_ref m r)) = r))
+          (ensures  (let (|_,r'|) = addr_to_ref m r in 
+                     addr_of r' = r))
           [SMTPat (defined m);
            SMTPat (OS.mem r (addrs_in m))]
 
@@ -303,66 +304,64 @@ val lemma_fresh_or_old_upd (#a:Type0) (r:ref a) (x:a) (h0:heap)
 
 (* threads *)
 
-let footprint = addrs
+let footprint = addrs      // in future this will probably have to be changed to TSet.set (a:Type0 & ref a)
+
 let in_fp (r:nat) (fp:footprint) = OS.mem r fp
 
 val tid : fp:footprint
-       -> post:(heap -> Type0)
+       -> post:(memory -> Type0)
        -> Type0
 
-val fp_free : fp:footprint
-           -> m:memory{defined m}
-           -> Type0
-
-val fp_locked_by : #fp:footprint
-                -> #post:(heap -> Type0)
-                -> t:tid fp post
-                -> m:memory{defined m}
-                -> Type0
-
-val points_to_locked_by : #fp:footprint
-                       -> #post:(heap -> Type0)
-                       -> #a:Type0
-                       -> r:ref a{in_fp (addr_of r) fp}
-                       -> x:a 
-                       -> t:tid fp post                    
-                       -> Tot memory
+val tcontains : #fp:footprint
+             -> #post:(memory -> Type0)
+             -> h:heap 
+             -> t:tid fp post
+             -> Type0
 
 val alloc_tid : fp:footprint                       
-             -> post:(heap -> Type0)
-             -> h:heap{fp_free fp (heap_memory h)}
+             -> post:(memory -> Type0)
+             -> h:heap{addrs_in (heap_memory h) = fp}
              -> (tid fp post) * heap
-             
+
+val compatible_with : m:memory
+                   -> h:heap
+                   -> Type0
+
 val dealloc_tid : #fp:footprint
-               -> #post:(heap -> Type0)
+               -> #post:(memory -> Type0)
                -> t:tid fp post
-               -> h:heap{fp_locked_by t (heap_memory h)}
+               -> h:heap{heap_memory h == emp /\ h `tcontains` t}
+               -> m:memory{addrs_in m = fp /\ m `compatible_with` h}
                -> heap
 
-val lemma_points_to_locked_by_defined (#post:heap -> Type0) (#a:Type0) (r:ref a) (x:a) (t:tid (OS.singleton (addr_of r)) post)
-  : Lemma (defined (points_to_locked_by r x t))
-          [SMTPat (defined (points_to_locked_by r x t))]
+val lemma_compatible_with_defined (m:memory) (h:heap)
+  : Lemma (requires (m `compatible_with` h))
+          (ensures  (defined m))
 
-val lemma_points_to_fp_free (#a:Type0) (r:ref a) (x:a) (m:memory)
-  : Lemma (requires (m == (r |> x)))
-          (ensures  (fp_free (OS.singleton (addr_of r)) m))
-          [SMTPat (fp_free (OS.singleton (addr_of r)) m);
-           SMTPat (r |> x)]
+val lemma_compatible_with_disjoint (m:memory) (h:heap)
+  : Lemma (requires (m `compatible_with` h))
+          (ensures  (disjoint_addrs (addrs_in m) (addrs_in (heap_memory h))))
 
-val lemma_points_to_locked_by (#post:heap -> Type0) (#a:Type0) (r:ref a) (x:a) (t:tid (OS.singleton (addr_of r)) post) (m:memory)
-  : Lemma (requires (m == points_to_locked_by r x t))
-          (ensures  (fp_locked_by t m))
-          [SMTPat (points_to_locked_by r x t);
-           SMTPat (fp_locked_by t m)]
+val lemma_compatible_with_not_fresh (m:memory) (h:heap) (#a:Type0) (r:ref a)
+  : Lemma (requires (m `compatible_with` h /\ m `mcontains` r))
+          (ensures  (~(fresh r h)))
 
-val lemma_fp_free_fp_locked_by (#fp:footprint) (#post:heap -> Type0) (h0:heap)
-  : Lemma (requires (fp_free fp (heap_memory h0)))
-          (ensures  (let (t,h1) = alloc_tid fp post h0 in
-                     fp_locked_by t (heap_memory h1)))
-          [SMTPat (alloc_tid fp post h0)]
+val lemma_alloc_tid_emp (fp:footprint) (post:memory -> Type0) (h0:heap)
+  : Lemma (requires (addrs_in (heap_memory h0) = fp))
+          (ensures  (let (t,h1) = alloc_tid fp post h0 in 
+                     heap_memory h1 == emp))
 
-val lemma_fp_locked_by_fp_free (#fp:footprint) (#post:heap -> Type0) (t:tid fp post) (h0:heap)
-  : Lemma (requires (fp_locked_by t (heap_memory h0)))
-          (ensures  (let h1 = dealloc_tid t h0 in
-                     fp_free fp (heap_memory h1)))
-          [SMTPat (dealloc_tid t h0)]
+val lemma_dealloc_tid_m (#fp:footprint) (#post:memory -> Type0) (t:tid fp post) (h0:heap) (m:memory)
+  : Lemma (requires (heap_memory h0 == emp /\ addrs_in m = fp /\ m `compatible_with` h0 /\ h0 `tcontains` t))
+          (ensures  (let h1 = dealloc_tid t h0 m in
+                     heap_memory h1 == m))
+
+val lemma_alloc_tid_tcontains (fp:footprint) (post:memory -> Type0) (h0:heap)
+  : Lemma (requires (addrs_in (heap_memory h0) = fp))
+          (ensures  (let (t,h1) = alloc_tid fp post h0 in 
+                     h1 `tcontains` t))
+
+val lemma_dealloc_tid_tcontains (#fp:footprint) (#post:memory -> Type0) (t:tid fp post) (h0:heap) (m:memory)
+  : Lemma (requires (heap_memory h0 == emp /\ addrs_in m = fp /\ m `compatible_with` h0 /\ h0 `tcontains` t))
+          (ensures  (let h1 = dealloc_tid t h0 m in
+                     ~(h1 `tcontains` t)))
