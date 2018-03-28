@@ -461,3 +461,4 @@ let lemma_alloc_tid_tcontains fp post h0 = ()
 
 let lemma_dealloc_tid_tcontains #fp #post t h0 m = ()
 
+let lemma_tcontains_sel #fp #post t h0 #a r x = ()
