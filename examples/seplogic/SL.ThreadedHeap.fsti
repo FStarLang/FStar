@@ -366,6 +366,6 @@ val lemma_dealloc_tid_tcontains (#fp:footprint) (#post:memory -> Type0) (t:tid f
           (ensures  (let h1 = dealloc_tid t h0 m in
                      ~(h1 `tcontains` t)))
 
-val lemma_tcontains_sel (#fp:footprint) (#post:memory -> Type0) (t:tid fp post) (h:heap) (#a:Type0) (r:ref a) (x:a)
+val lemma_tcontains_upd (#fp:footprint) (#post:memory -> Type0) (t:tid fp post) (h:heap) (#a:Type0) (r:ref a) (x:a)
   : Lemma (requires (h `tcontains` t /\ h `hcontains` r))
           (ensures  ((upd h r x) `tcontains` t))
