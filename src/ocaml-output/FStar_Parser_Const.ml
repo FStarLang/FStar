@@ -88,6 +88,7 @@ let (string_of_bool_lid : FStar_Ident.lident) =
   p2l ["Prims"; "string_of_bool"] 
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"] 
+let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"] 
 let (op_Eq : FStar_Ident.lident) = pconst "op_Equality" 
 let (op_notEq : FStar_Ident.lident) = pconst "op_disEquality" 
 let (op_LT : FStar_Ident.lident) = pconst "op_LessThan" 

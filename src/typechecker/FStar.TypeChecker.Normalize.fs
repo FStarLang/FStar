@@ -668,11 +668,11 @@ let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : BU.psmap<primitive_step> =
-    let arg_as_int    (a:arg) = fst a |> EMB.unembed_int_safe in
-    let arg_as_bool   (a:arg) = fst a |> EMB.unembed_bool_safe in
-    let arg_as_char   (a:arg) = fst a |> EMB.unembed_char_safe in
-    let arg_as_string (a:arg) = fst a |> EMB.unembed_string_safe in
-    let arg_as_list (u : EMB.unembedder<'a>) a = fst a |> EMB.unembed_list_safe u in
+    let arg_as_int    (a:arg) = fst a |> EMB.try_unembed EMB.e_int in
+    let arg_as_bool   (a:arg) = fst a |> EMB.try_unembed EMB.e_bool in
+    let arg_as_char   (a:arg) = fst a |> EMB.try_unembed EMB.e_char in
+    let arg_as_string (a:arg) = fst a |> EMB.try_unembed EMB.e_string in
+    let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> EMB.try_unembed (EMB.e_list e) in
     let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
@@ -719,19 +719,19 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         interpretation=f
     } in
     let unary_int_op (f:Z.t -> Z.t) =
-        unary_op arg_as_int (fun r x -> EMB.embed_int r (f x))
+        unary_op arg_as_int (fun r x -> EMB.embed EMB.e_int r (f x))
     in
     let binary_int_op (f:Z.t -> Z.t -> Z.t) =
-        binary_op arg_as_int (fun r x y -> EMB.embed_int r (f x y))
+        binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_int r (f x y))
     in
     let unary_bool_op (f:bool -> bool) =
-        unary_op arg_as_bool (fun r x -> EMB.embed_bool r (f x))
+        unary_op arg_as_bool (fun r x -> EMB.embed EMB.e_bool r (f x))
     in
     let binary_bool_op (f:bool -> bool -> bool) =
-        binary_op arg_as_bool (fun r x y -> EMB.embed_bool r (f x y))
+        binary_op arg_as_bool (fun r x y -> EMB.embed EMB.e_bool r (f x y))
     in
     let binary_string_op (f : string -> string -> string) =
-        binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
+        binary_op arg_as_string (fun r x y -> EMB.embed EMB.e_string r (f x y))
     in
     let mixed_binary_op
            :  (arg -> option<'a>)
@@ -763,17 +763,17 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     in
     let string_compare' rng (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
-        EMB.embed_int rng (Z.big_int_of_string (BU.string_of_int r))
+        EMB.embed EMB.e_int rng (Z.big_int_of_string (BU.string_of_int r))
     in
     let string_concat' psc args : option<term> =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1 with
             | Some s1 ->
-                begin match arg_as_list EMB.unembed_string_safe a2 with
+                begin match arg_as_list EMB.e_string a2 with
                 | Some s2 ->
                     let r = String.concat s1 s2 in
-                    Some (EMB.embed_string psc.psc_range r)
+                    Some (EMB.embed EMB.e_string psc.psc_range r)
                 | _ -> None
                 end
             | _ -> None
@@ -781,10 +781,10 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         | _ -> None
     in
     let string_of_int rng (i:Z.t) : term =
-        EMB.embed_string rng (Z.string_of_big_int i)
+        EMB.embed EMB.e_string rng (Z.string_of_big_int i)
     in
     let string_of_bool rng (b:bool) : term =
-        EMB.embed_string rng (if b then "true" else "false")
+        EMB.embed EMB.e_string rng (if b then "true" else "false")
     in
     let mk_range (psc:psc) args : option<term> =
       match args with
@@ -798,7 +798,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
           let r = FStar.Range.mk_range fn
                               (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                               (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-          Some (EMB.embed_range psc.psc_range r)
+          Some (EMB.embed EMB.e_range psc.psc_range r)
         | _ -> None
         end
       | _ -> None
@@ -821,8 +821,8 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let prims_to_fstar_range_step psc args : option<term> =
         match args with
         | [(a1, _)] ->
-            begin match EMB.unembed_range_safe a1 with
-            | Some r -> Some (EMB.embed_range psc.psc_range r)
+            begin match EMB.try_unembed EMB.e_range a1 with
+            | Some r -> Some (EMB.embed EMB.e_range psc.psc_range r)
             | None -> None
             end
         | _ -> failwith "Unexpected number of arguments"
@@ -833,17 +833,17 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y));
              (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y));
              (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.lt_big_int x y)));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.le_big_int x y)));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.gt_big_int x y)));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.ge_big_int x y)));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.lt_big_int x y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.le_big_int x y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.gt_big_int x y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.ge_big_int x y)));
              (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
              (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
-             (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char EMB.embed_string
+             (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char (EMB.embed EMB.e_string)
                                     (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
@@ -853,7 +853,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
+                                    1, unary_op (arg_as_list EMB.e_char) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
              ]
@@ -871,7 +871,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
            [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
         in
         let int_as_bounded r int_to_t n =
-            let c = EMB.embed_int r n in
+            let c = EMB.embed EMB.e_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
@@ -881,7 +881,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
              (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
              (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)));
-             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> EMB.embed_int r x))])
+             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> EMB.embed EMB.e_int r x))])
         in
         let div_mod_unsigned =
           bounded_unsigned_int_types
@@ -929,10 +929,10 @@ let equality_ops : BU.psmap<primitive_step> =
     prim_from_list [propositional_equality; hetero_propositional_equality]
 
 (* A hacky knot, set by FStar.Main *)
-let unembed_binder_knot : ref<option<EMB.unembedder<binder>>> = BU.mk_ref None
+let unembed_binder_knot : ref<option<EMB.embedding<binder>>> = BU.mk_ref None
 let unembed_binder (t : term) : option<S.binder> =
     match !unembed_binder_knot with
-    | Some f -> f t
+    | Some e -> EMB.unembed e t
     | None ->
         Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
@@ -1011,7 +1011,7 @@ let reduce_primops cfg env stack tm =
            log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
                                         (Print.term_to_string tm));
            begin match args with
-           | [(a1, _)] -> (EMB.embed_range tm.pos a1.pos)
+           | [(a1, _)] -> (EMB.embed EMB.e_range tm.pos a1.pos)
            | _ -> tm
            end
 
@@ -1020,7 +1020,7 @@ let reduce_primops cfg env stack tm =
                                         (Print.term_to_string tm));
            begin match args with
            | [(t, _); (r, _)] ->
-                begin match EMB.unembed_range r with
+                begin match EMB.unembed EMB.e_range r with
                 | Some rng -> ({ t with pos = rng })
                 | None -> tm
                 end
@@ -1068,9 +1068,9 @@ let tr_norm_steps s =
 
 let get_norm_request (full_norm:term -> term) args =
     let parse_steps s =
-      try
-        Some (EMB.unembed_list_safe EMB.unembed_norm_step s |> BU.must |> tr_norm_steps)
-      with | _ -> None
+      match EMB.try_unembed (EMB.e_list EMB.e_norm_step) s with
+      | Some steps -> Some (tr_norm_steps steps)
+      | None -> None
     in
     match args with
     | [_; (tm, _)]
@@ -1680,8 +1680,8 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
               in
               let maybe_range_arg =
                 if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                then [as_arg (EMB.embed_range lb.lbpos lb.lbpos);
-                      as_arg (EMB.embed_range body.pos body.pos)]
+                then [as_arg (EMB.embed EMB.e_range lb.lbpos lb.lbpos);
+                      as_arg (EMB.embed EMB.e_range body.pos body.pos)]
                 else []
               in
               let reified = S.mk (Tm_app(bind_inst, [

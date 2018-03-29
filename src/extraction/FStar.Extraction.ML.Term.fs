@@ -43,6 +43,7 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
 module R  = FStar.Reflection.Basic
 module RD = FStar.Reflection.Data
+module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 
 exception Un_extractable
@@ -874,12 +875,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               ml_int_ty
 
             | None ->
-              let tv = RE.embed_term_view_aq aqs t.pos (RD.Tv_Var bv) in
+              let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos (RD.Tv_Var bv) in
               let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr' g t
             end
           | tv ->
-              let tv = RE.embed_term_view_aq aqs t.pos tv in
+              let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos tv in
               let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr' g t
           end

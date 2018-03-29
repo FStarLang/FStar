@@ -941,17 +941,12 @@ let tc_lex_t env ses quals lids =
         raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
     end
 
-let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+let tc_assume (env:env) (phi:formula) (r:Range.range) :term =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    let us, phi = TcUtil.generalize_universes env phi in
-    { sigel = Sig_assume(lid, us, phi);
-      sigquals = quals;
-      sigrng = r;
-      sigmeta = default_sigmeta;
-      sigattrs = []  }
+    phi
 
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
@@ -966,7 +961,7 @@ let tc_inductive env ses quals lids =
     let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
-    (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
+    (if Options.no_positivity () || (not (Env.should_verify env))  then ()  //skipping positivity check if lax mode
      else
        let env = push_sigelt env sig_bndle in
        let b = List.iter (fun ty ->
@@ -999,18 +994,14 @@ let tc_inductive env ses quals lids =
 
     let res =
         if ((List.length tcs = 0) || ((lid_equals env.curmodule PC.prims_lid) && skip_prims_type ()) || is_noeq)
-        then [sig_bndle], data_ops_ses
+        then sig_bndle, data_ops_ses
         else
             let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
             let ses =
-              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env tc_assume
-              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env tc_assume
+              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env
+              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
-            { sigel = Sig_bundle(tcs@datas, lids);
-              sigquals = quals;
-              sigrng = Env.get_range env;
-              sigmeta = default_sigmeta;
-              sigattrs = []  }::ses, data_ops_ses in
+            sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
     ignore (Env.pop env "tc_inductive");
     res
 
@@ -1045,14 +1036,23 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
-    let ses, projectors_ses = tc_inductive env ses se.sigquals lids in
-    ses, projectors_ses
+    let ses =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
+        let ses = tc_inductive ({ env with lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
+        ses
+      end
+      else ses
+    in
+    let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
+    [ sigbndle ], projectors_ses
 
-  | Sig_pragma(p) ->
+  | Sig_pragma(p) ->  //no need for two-phase here
     U.process_pragma p r;
     [se], []
 
-  | Sig_new_effect_for_free (ne) ->
+  | Sig_new_effect_for_free (ne) ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
       (* This is only an elaboration rule not a typechecking one *)
 
       // Let the power of Dijkstra generate everything "for free", then defer
@@ -1066,11 +1066,19 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       [], ses @ effect_and_lift_ses
 
   | Sig_new_effect(ne) ->
+    let ne =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let ne = tc_eff_decl ({ env with lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
+        ne
+      end
+      else ne
+    in
     let ne = tc_eff_decl env ne in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], []
 
-  | Sig_sub_effect(sub) ->
+  | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let ed_src = Env.get_effect_decl env sub.source in
     let ed_tgt = Env.get_effect_decl env sub.target in
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -1111,7 +1119,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         let _ = recheck_debug "lift-elab" env lift_elab in
         Some ([], lift_elab), ([], lift_wp)
     in
-    let lax = env.lax in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)
     let env = {env with lax=true} in
@@ -1205,8 +1212,22 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_assume(lid, us, phi) ->
     let _, phi = SS.open_univ_vars us phi in
-    let se = tc_assume env lid phi se.sigquals r in
-    [se], []
+    let phi =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let phi = tc_assume ({ env with lax = true }) phi r |> N.remove_uvar_solutions env in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Assume after phase 1: %s\n" (Print.term_to_string phi);
+        phi
+      end
+      else phi
+    in
+    
+    let phi = tc_assume env phi r in
+    let us, phi = TcUtil.generalize_universes env phi in
+    [ { sigel = Sig_assume(lid, us, phi);
+        sigquals = se.sigquals;
+        sigrng = r;
+        sigmeta = default_sigmeta;
+        sigattrs = []  } ], []
 
   | Sig_main(e) ->
     let env = Env.set_range env r in
@@ -1276,7 +1297,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
-    let should_generalize, lbs', quals_opt =  //val_lids are bindings for which there is a val declaration
+    let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
           let lbname = right lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
@@ -1316,37 +1337,30 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
-    (* 3.1. Type-check the Tm_let *)
-    let ret =
-      let env0 = { env with top_level = true; generalize = should_generalize } in
-      if Options.use_two_phase_tc () then
-        //first phase
-        let e_lax, lc, g = tc_maybe_toplevel_term ({ env0 with lax = true }) e in
-        if Env.debug env (Options.Other "TwoPhases") then BU.print1 ("Phase 1 checked: %s") (Print.term_to_string e_lax);
-        if Env.should_verify env0 then  //second phase
-          //remove uvar solutions
-          let e_lax = N.remove_uvar_solutions env0 e_lax in
-          //drop the first phase inferred type, if the original lb was unannotated
-          let e_lax =
-            match (SS.compress e_lax).n with
-            | Tm_let ((false, [ lb ]), e2) ->
-              let lb_unannotated =
-                match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1
-                | Tm_let ((_, [ lb ]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
-                | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
-              in
-              if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
-              else e_lax
-            | _ -> e_lax  //leave recursive lets as is
-          in
-          //typecheck e_lax again
-          tc_maybe_toplevel_term env0 e_lax
-        else e_lax, lc, g
-      else tc_maybe_toplevel_term env0 e
+    (* 3. Type-check the Tm_let and convert it back to Sig_let *)
+    let env0 = { env with top_level = true; generalize = should_generalize } in
+    let e =
+      if Options.use_two_phase_tc () && Env.should_verify env0 then begin
+        let drop_lbtyp (e_lax:term) :term =
+          match (SS.compress e_lax).n with
+          | Tm_let ((false, [ lb ]), e2) ->
+            let lb_unannotated =
+              match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
+              | Tm_let ((_, [ lb ]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
+              | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
+            in
+            if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
+            else e_lax
+          | _ -> e_lax  //leave recursive lets as is
+        in
+        let e = tc_maybe_toplevel_term ({ env0 with lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
+        e
+      end
+      else e
     in
 
-    (* 3.2. Convert it back to a Sig_let *)
-    let se, lbs = match ret with
+    let se, lbs = match tc_maybe_toplevel_term env0 e with
       | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
