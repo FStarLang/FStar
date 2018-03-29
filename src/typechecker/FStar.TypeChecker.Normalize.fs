@@ -191,10 +191,6 @@ and env = list<(option<binder>*closure)>
 
 let dummy : option<binder> * closure = None,Dummy
 
-let closure_to_string = function
-    | Clos (_, t, _, _) -> Print.term_to_string t
-    | Univ _ -> "Univ"
-    | Dummy -> "dummy"
 
 type debug_switches = {
     gen : bool;
@@ -233,7 +229,7 @@ type stack_elt =
  | Match    of env * branches * cfg * Range.range
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
- | Meta     of S.metadata * Range.range
+ | Meta     of env * S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
  | Cfg      of cfg
  | Debug    of term * BU.time
@@ -248,8 +244,17 @@ let set_memo cfg (r:memo<'a>) (t:'a) =
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
 
-let env_to_string env =
-    List.map closure_to_string env |> String.concat "; "
+let rec env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
+    List.map (fun (bopt, c) ->
+                BU.format2 "(%s, %s)"
+                   (match bopt with None -> "." | Some x -> FStar.Syntax.Print.binder_to_string x)
+                   (closure_to_string c))
+             env
+            |> String.concat "; "
+and closure_to_string = function
+    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
+    | Univ _ -> "Univ"
+    | Dummy -> "dummy"
 
 let stack_elt_to_string = function
     | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
@@ -258,7 +263,7 @@ let stack_elt_to_string = function
     | UnivArgs _ -> "UnivArgs"
     | Match   _ -> "Match"
     | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
-    | Meta (m,_) -> "Meta"
+    | Meta (_, m,_) -> "Meta"
     | Let  _ -> "Let"
     | Cfg _ -> "Cfg"
     | Debug (t, _) -> BU.format1 "Debug %s" (Print.term_to_string t)
@@ -279,7 +284,7 @@ let is_empty = function
 
 let lookup_bvar env x =
     try snd (List.nth env x.index)
-    with _ -> failwith (BU.format1 "Failed to find %s\n" (Print.db_to_string x))
+    with _ -> failwith (BU.format2 "Failed to find %s\nEnv is %s\n" (Print.db_to_string x) (env_to_string env))
 
 let downgrade_ghost_effect_name l =
     if Ident.lid_equals l PC.effect_Ghost_lid
@@ -379,13 +384,13 @@ let norm_universe cfg (env:env) u =
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
 let rec inline_closure_env cfg (env:env) stack t =
-    log cfg (fun () -> BU.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
+    let t = compress t in
+    log cfg (fun () -> BU.print3 "\n>>> %s (env=%s) Closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (Print.term_to_string t));
     match env with
     | [] when not <| cfg.steps.compress_uvars ->
       rebuild_closure cfg env stack t
 
     | _ ->
-      let t = compress t in
       match t.n with
       | Tm_delayed _ ->
         failwith "Impossible"
@@ -478,7 +483,7 @@ let rec inline_closure_env cfg (env:env) stack t =
         rebuild_closure cfg env stack t
 
       | Tm_meta(t', m) ->
-        let stack = Meta(m, t.pos)::stack in
+        let stack = Meta(env, m, t.pos)::stack in
         inline_closure_env cfg env stack t'
 
       | Tm_let((false, [lb]), body) -> //non-recursive let
@@ -530,6 +535,7 @@ and non_tail_inline_closure_env cfg env t =
     inline_closure_env cfg env [] t
 
 and rebuild_closure cfg env stack t =
+    log cfg (fun () -> BU.print4 "\n>>> %s (env=%s, stack=%s) Rebuild closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (stack_to_string stack) (Print.term_to_string t));
     match stack with
     | [] -> t
 
@@ -584,19 +590,19 @@ and rebuild_closure cfg env stack t =
       in
       rebuild_closure cfg env stack t
 
-    | Meta(m, r)::stack ->
+    | Meta(env_m, m, r)::stack ->
       let m =
           match m with
           | Meta_pattern args ->
             Meta_pattern (args |> List.map (fun args ->
                                             args |> List.map (fun (a, q) ->
-                                            non_tail_inline_closure_env cfg env a, q)))
+                                            non_tail_inline_closure_env cfg env_m a, q)))
 
           | Meta_monadic(m, tbody) ->
-            Meta_monadic(m, non_tail_inline_closure_env cfg env tbody)
+            Meta_monadic(m, non_tail_inline_closure_env cfg env_m tbody)
 
           | Meta_monadic_lift(m1, m2, tbody) ->
-            Meta_monadic_lift(m1, m2, non_tail_inline_closure_env cfg env tbody)
+            Meta_monadic_lift(m1, m2, non_tail_inline_closure_env cfg env_m tbody)
 
           | _ -> //other metadata's do not have any embedded closures
             m
@@ -1162,8 +1168,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack' =
                 let tail = (Cfg cfg)::stack in
                 if cfg.debug.print_normalized
-                then (// printfn "Starting to normalize %s" (Print.term_to_string t);
-    Debug(t, BU.now())::tail)
+                then (Debug(t, BU.now())::tail)
                 else tail in
               norm cfg' env stack' tm
             end
@@ -1366,7 +1371,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let stack = Match(env, branches, cfg, t.pos)::stack in
             let cfg =
                 if cfg.steps.iota
-                then { cfg with steps={cfg.steps with weak=true; hnf=true} }
+                then { cfg with steps={cfg.steps with weak=true} }
                 else cfg in
             norm cfg env stack head
 
@@ -1488,11 +1493,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     begin match m with
                       | Meta_labeled(l, r, _) ->
                         (* meta doesn't block reduction, but we need to put the label back *)
-                        norm cfg env (Meta(m,r)::stack) head
+                        norm cfg env (Meta(env,m,r)::stack) head
 
                       | Meta_pattern args ->
                           let args = norm_pattern_args cfg env args in
-                          norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                          norm cfg env (Meta(env,Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                       | _ ->
                           norm cfg env stack head //meta doesn't block reduction
@@ -1602,7 +1607,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                    | Inl m -> Meta_monadic (m, t)
                    | Inr (m, m') -> Meta_monadic_lift (m, m', t)
     in
-    norm cfg env (Meta(metadata, head.pos)::stack) head
+    norm cfg env (Meta(env,metadata, head.pos)::stack) head
 
 and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
@@ -2173,7 +2178,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   | Cfg cfg :: stack ->
     rebuild cfg env stack t
 
-  | Meta(m, r)::stack ->
+  | Meta(_, m, r)::stack ->
     let t = mk (Tm_meta(t, m)) r in
     rebuild cfg env stack t
 
