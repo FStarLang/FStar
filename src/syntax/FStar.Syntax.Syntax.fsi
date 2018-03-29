@@ -526,7 +526,9 @@ val t_string      : term
 val t_float       : term
 val t_char        : term
 val t_range       : term
+val t_norm_step   : term
 val t_term        : term
+val t_order       : term
 val t_decls       : term
 val t_binder      : term
 val t_bv          : term

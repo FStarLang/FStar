@@ -18,228 +18,204 @@ module Err = FStar.Errors
 module Z = FStar.BigInt
 open FStar.Char
 
-type embedder<'a>   = range -> 'a -> term
-type unembedder<'a> = term -> option<'a>
+type embedding<'a> = {
+  em : range -> 'a -> term;
+  un : bool -> term -> option<'a>;
+  typ : typ
+}
 
-let embed_any : embedder<term> = fun r t -> t
-let unembed_any: unembedder<term> = fun t -> Some t
+(* Eta-expand to make F# happy *)
+let embed       (e:embedding<'a>) r x = e.em r x
+let unembed'    (e:embedding<'a>) b t = e.un b t
+let unembed     (e:embedding<'a>) t   = e.un true  t
+let try_unembed (e:embedding<'a>) t   = e.un false t
+let type_of     (e:embedding<'a>)     = e.typ
 
-// embed: turning a value into a term (compiler internals -> userland)
-// unembed: interpreting a term as a value, which might fail (userland -> compiler internals)
+type raw_embedder<'a>    = range -> 'a -> term
+type raw_unembedder'<'a> = bool -> term -> option<'a>
+type raw_unembedder<'a>  = term -> option<'a>
 
-let embed_unit (rng:range) (u:unit) : term = { U.exp_unit with pos = rng }
-let __unembed_unit (w:bool) (t0:term) : option<unit> =
-    let t = U.unascribe t0 in
-    match t.n with
-    | S.Tm_constant C.Const_unit -> Some ()
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
-        None
+let mk_emb em un typ = { em = em ; un = un ; typ = typ }
 
-(* These two, and every other unembedder, need to be eta-expanded
- * because F# is stupid about this *)
-let unembed_unit      t = __unembed_unit true  t
-let unembed_unit_safe t = __unembed_unit false t
+let e_any =
+    let em = fun r t -> t in
+    let un = fun b t -> Some t in
+    let typ = S.t_term in
+    mk_emb em un typ
 
-let embed_bool (rng:range) (b:bool) : term =
-    let t = if b then U.exp_true_bool else U.exp_false_bool in
-    { t with pos = rng }
+let mk_any_emb typ = { em = e_any.em ; un = e_any.un ; typ = typ }
 
-let __unembed_bool (w:bool) (t0:term) : option<bool> =
-    let t = U.unmeta_safe t0 in
-    match t.n with
-    | Tm_constant(FStar.Const.Const_bool b) -> Some b
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded bool: %s" (Print.term_to_string t0));
-        None
+let e_unit =
+    let em (rng:range) (u:unit) : term = { U.exp_unit with pos = rng } in
+    let un (w:bool) (t0:term) : option<unit> =
+        let t = U.unascribe t0 in
+        match t.n with
+        | S.Tm_constant C.Const_unit -> Some ()
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
+            None
+    in
+    mk_emb em un S.t_unit
 
-let unembed_bool      t = __unembed_bool true  t
-let unembed_bool_safe t = __unembed_bool false t
+let e_bool =
+    let em (rng:range) (b:bool) : term =
+        let t = if b then U.exp_true_bool else U.exp_false_bool in
+        { t with pos = rng }
+    in
+    let un (w:bool) (t0:term) : option<bool> =
+        let t = U.unmeta_safe t0 in
+        match t.n with
+        | Tm_constant(FStar.Const.Const_bool b) -> Some b
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded bool: %s" (Print.term_to_string t0));
+            None
+    in
+    mk_emb em un S.t_bool
 
-let embed_char (rng:range) (c:char) : term =
-    let t = U.exp_char c in
-    { t with pos = rng }
+let e_char =
+    let em (rng:range) (c:char) : term =
+        let t = U.exp_char c in
+        { t with pos = rng }
+    in
+    let un (w:bool) (t0:term) : option<char> =
+        let t = U.unmeta_safe t0 in
+        match t.n with
+        | Tm_constant(FStar.Const.Const_char c) -> Some c
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded char: %s" (Print.term_to_string t0));
+            None
+    in
+    mk_emb em un S.t_char
 
-let __unembed_char (w:bool) (t0:term) : option<char> =
-    let t = U.unmeta_safe t0 in
-    match t.n with
-    | Tm_constant(FStar.Const.Const_char c) -> Some c
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded char: %s" (Print.term_to_string t0));
-        None
+let e_int =
+    let em (rng:range) (i:Z.t) : term =
+        let t = U.exp_int (Z.string_of_big_int i) in
+        { t with pos = rng }
+    in
+    let un (w:bool) (t0:term) : option<Z.t> =
+        let t = U.unmeta_safe t0 in
+        match t.n with
+        | Tm_constant(FStar.Const.Const_int (s, _)) ->
+            Some (Z.big_int_of_string s)
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0)));
+            None
+    in
+    mk_emb em un S.t_int
 
-let unembed_char      t = __unembed_char true  t
-let unembed_char_safe t = __unembed_char false t
+let e_string =
+    let em (rng:range) (s:string) : term =
+        S.mk (Tm_constant(FStar.Const.Const_string(s, rng)))
+             None
+             rng
+    in
+    let un (w:bool) (t0:term) : option<string> =
+        let t = U.unmeta_safe t0 in
+        match t.n with
+        | Tm_constant(FStar.Const.Const_string(s, _)) -> Some s
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded string: %s" (Print.term_to_string t0)));
+            None
+    in
+    mk_emb em un S.t_string
 
-let embed_int (rng:range) (i:Z.t) : term =
-    let t = U.exp_int (Z.string_of_big_int i) in
-    { t with pos = rng }
+let e_option (ea : embedding<'a>) =
+    let em (rng:range) (o:option<'a>) : term =
+        match o with
+        | None ->
+          S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.none_lid) [U_zero])
+                      [S.iarg (type_of ea)]
+                      None rng
+        | Some a ->
+          S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.some_lid) [U_zero])
+                      [S.iarg (type_of ea); S.as_arg (embed ea rng a)]
+                      None rng
+    in
+    let un (w:bool) (t0:term) : option<option<'a>> =
+        let t = U.unmeta_safe t0 in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
+        | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
+             BU.bind_opt (unembed ea a) (fun a -> Some (Some a))
+        | _ ->
+             if w then
+             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0)));
+             None
+    in
+    mk_emb em un (S.t_option_of (type_of ea))
 
-let __unembed_int (w:bool) (t0:term) : option<Z.t> =
-    let t = U.unmeta_safe t0 in
-    match t.n with
-    | Tm_constant(FStar.Const.Const_int (s, _)) ->
-        Some (Z.big_int_of_string s)
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0)));
-        None
+let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
+    let em (rng:range) (x:('a * 'b)) : term =
+        S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple2) [U_zero;U_zero])
+                    [S.iarg (type_of ea);
+                     S.iarg (type_of eb);
+                     S.as_arg (embed ea rng (fst x));
+                     S.as_arg (embed eb rng (snd x))]
+                    None
+                    rng
+    in
+    let un (w:bool) (t0:term) : option<('a * 'b)> =
+        let t = U.unmeta_safe t0 in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
+            BU.bind_opt (unembed ea a) (fun a ->
+            BU.bind_opt (unembed eb b) (fun b ->
+            Some (a, b)))
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
+            None
+    in
+    mk_emb em un (S.t_tuple2_of (type_of ea) (type_of eb))
 
-let unembed_int      t = __unembed_int true  t
-let unembed_int_safe t = __unembed_int false t
-
-let embed_string (rng:range) (s:string) : term =
-    S.mk (Tm_constant(FStar.Const.Const_string(s, rng)))
-         None
-         rng
-
-let __unembed_string (w:bool) (t0:term) : option<string> =
-    let t = U.unmeta_safe t0 in
-    match t.n with
-    | Tm_constant(FStar.Const.Const_string(s, _)) -> Some s
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded string: %s" (Print.term_to_string t0)));
-        None
-
-let unembed_string      t = __unembed_string true  t
-let unembed_string_safe t = __unembed_string false t
-
-let embed_tuple2 (embed_a:embedder<'a>) (t_a:term)
-                 (embed_b:embedder<'b>) (t_b:term)
-                 (rng:range) (x:('a * 'b)) : term =
-    S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple2) [U_zero;U_zero])
-                [S.iarg t_a;
-                 S.iarg t_b;
-                 S.as_arg (embed_a rng (fst x));
-                 S.as_arg (embed_b rng (snd x))]
-                None
-                rng
-
-let __unembed_tuple2 (w:bool)
-                     (unembed_a:unembedder<'a>)
-                     (unembed_b:unembedder<'b>)
-                     (t0:term) : option<('a * 'b)> =
-    let t = U.unmeta_safe t0 in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
-        BU.bind_opt (unembed_a a) (fun a ->
-        BU.bind_opt (unembed_b b) (fun b ->
-        Some (a, b)))
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
-        None
-
-(* Need eta expansion for F# *)
-let unembed_tuple2        ul ur t = __unembed_tuple2 true  ul ur t
-let unembed_tuple2_safe   ul ur t = __unembed_tuple2 false ul ur t
-
-let embed_option (embed_a:embedder<'a>) (typ:term) (rng:range) (o:option<'a>) : term =
-    match o with
-    | None ->
-      S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.none_lid) [U_zero])
-                  [S.iarg typ]
-                  None rng
-    | Some a ->
-      S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.some_lid) [U_zero])
-                  [S.iarg typ; S.as_arg (embed_a rng a)]
-                  None rng
-
-let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t0:term) : option<option<'a>> =
-    let t = U.unmeta_safe t0 in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
-    | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
-         BU.bind_opt (unembed_a a) (fun a -> Some (Some a))
-    | _ ->
-         if w then
-         Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0)));
-         None
-
-let unembed_option      ua t = __unembed_option true  ua t
-let unembed_option_safe ua t = __unembed_option false ua t
-
-let embed_list (embed_a:embedder<'a>) (typ:term) (rng:range) (l:list<'a>) : term =
-    let t = S.iarg typ in
-    let nil =
-        S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.nil_lid) [U_zero])
-                            [t]
+let e_list (ea:embedding<'a>) =
+    let em (rng:range) (l:list<'a>) : term =
+        let t = S.iarg (type_of ea) in
+        let nil =
+            S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.nil_lid) [U_zero])
+                                [t]
+                                None
+                                rng
+        in
+        let cons =
+            S.mk_Tm_uinst (S.tdataconstr PC.cons_lid) [U_zero]
+        in
+        FStar.List.fold_right (fun hd tail ->
+                S.mk_Tm_app cons
+                            [t;
+                             S.as_arg (embed ea rng hd);
+                             S.as_arg tail]
                             None
-                            rng
+                            rng)
+             l nil
     in
-    let cons =
-        S.mk_Tm_uinst (S.tdataconstr PC.cons_lid) [U_zero]
+    let rec un (w:bool) (t0:term) : option<list<'a>> =
+        let t = U.unmeta_safe t0 in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, _
+            when S.fv_eq_lid fv PC.nil_lid -> Some []
+
+        | Tm_fvar fv, [_t; (hd, _); (tl, _)]
+            when S.fv_eq_lid fv PC.cons_lid ->
+            BU.bind_opt (unembed ea hd) (fun hd ->
+            BU.bind_opt (un w tl) (fun tl ->
+            Some (hd :: tl)))
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded list: %s" (Print.term_to_string t0));
+            None
     in
-    FStar.List.fold_right (fun hd tail ->
-            S.mk_Tm_app cons
-                        [t;
-                         S.as_arg (embed_a rng hd);
-                         S.as_arg tail]
-                        None
-                        rng)
-         l nil
+    mk_emb em un (S.t_list_of (type_of ea))
 
-let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t0:term) : option<list<'a>> =
-    let t = U.unmeta_safe t0 in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, _
-        when S.fv_eq_lid fv PC.nil_lid -> Some []
-
-    | Tm_fvar fv, [_t; (hd, _); (tl, _)]
-        when S.fv_eq_lid fv PC.cons_lid ->
-        BU.bind_opt (unembed_a hd) (fun hd ->
-        BU.bind_opt (__unembed_list w unembed_a tl) (fun tl ->
-        Some (hd :: tl)))
-    | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded list: %s" (Print.term_to_string t0));
-        None
-
-let unembed_list      ua t = __unembed_list true  ua t
-let unembed_list_safe ua t = __unembed_list false ua t
-
-let embed_arrow_1 (ua:unembedder<'a>) (eb:embedder<'b>) (f:'a -> 'b) (args:args) : option<term> =
-    match args with
-    | [(x, _)] ->
-      BU.bind_opt (ua x) (fun a ->
-      Some (eb FStar.Range.dummyRange (f (BU.must (ua x)))))
-    | _ ->
-      None
-
-let embed_arrow_2 (ua:unembedder<'a>) (ub:unembedder<'b>) (ed:embedder<'d>)
-                  (f:'a -> 'b -> 'd)
-                  (args:args) =
-    match args with
-    | [(x, _); (y, _)] ->
-      BU.bind_opt (ua x) (fun a ->
-      BU.bind_opt (ub y) (fun b ->
-      Some (ed FStar.Range.dummyRange (f a b))))
-    | _ ->
-      None
-
-let embed_arrow_3 (ua:unembedder<'a>) (ub:unembedder<'b>) (uc:unembedder<'c>) (ed:embedder<'d>)
-                  (f:'a -> 'b -> 'c -> 'd)
-                  (args:args) =
-    match args with
-    | [(x, _); (y, _); (z, _)] ->
-      BU.bind_opt (ua x) (fun a ->
-      BU.bind_opt (ub y) (fun b ->
-      BU.bind_opt (uc z) (fun c ->
-      Some (ed FStar.Range.dummyRange (f a b c)))))
-    | _ ->
-      None
-
-// Commonly called
-let embed_string_list rng ss   = embed_list embed_string S.t_string rng ss
-let unembed_string_list      t = unembed_list unembed_string t
-let unembed_string_list_safe t = unembed_list_safe unembed_string_safe t
+let e_string_list = e_list e_string
 
 type norm_step =
     | Simpl
@@ -263,70 +239,115 @@ let steps_Iota       = tdataconstr PC.steps_iota
 let steps_UnfoldOnly = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldAttr = tdataconstr PC.steps_unfoldattr
 
-let embed_norm_step (rng:range) (n:norm_step) : term =
-    match n with
-    | Simpl ->
-        steps_Simpl
-    | Weak ->
-        steps_Weak
-    | HNF ->
-        steps_HNF
-    | Primops ->
-        steps_Primops
-    | Delta ->
-        steps_Delta
-    | Zeta ->
-        steps_Zeta
-    | Iota ->
-        steps_Iota
-    | UnfoldOnly l ->
-        S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string rng l)]
-                    None rng
-    | UnfoldAttr a ->
-        S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
+let e_norm_step =
+    let em (rng:range) (n:norm_step) : term =
+        match n with
+        | Simpl ->
+            steps_Simpl
+        | Weak ->
+            steps_Weak
+        | HNF ->
+            steps_HNF
+        | Primops ->
+            steps_Primops
+        | Delta ->
+            steps_Delta
+        | Zeta ->
+            steps_Zeta
+        | Iota ->
+            steps_Iota
+        | UnfoldOnly l ->
+            S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed (e_list e_string) rng l)]
+                        None rng
+        | UnfoldAttr a ->
+            S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
+    in
+    let un (w:bool) (t0:term) : option<norm_step> =
+        let t = U.unmeta_safe t0 in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
+            Some Simpl
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_weak ->
+            Some Weak
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_hnf ->
+            Some HNF
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_primops ->
+            Some Primops
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_delta ->
+            Some Delta
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta ->
+            Some Zeta
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
+            Some Iota
+        | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
+            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            Some <| UnfoldOnly ss)
+        | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
+            Some (UnfoldAttr a)
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));
+            None
+    in
+    mk_emb em un S.t_norm_step
 
-let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
-    let t = U.unmeta_safe t0 in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
-        Some Simpl
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_weak ->
-        Some Weak
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_hnf ->
-        Some HNF
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_primops ->
-        Some Primops
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_delta ->
-        Some Delta
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta ->
-        Some Zeta
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
-        Some Iota
-    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
-        BU.bind_opt (unembed_list unembed_string l) (fun ss ->
-        Some <| UnfoldOnly ss)
-    | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
-        Some (UnfoldAttr a)
+
+let e_range =
+    let em (rng:range) (r:range) : term =
+        S.mk (Tm_constant (C.Const_range r)) None rng
+    in
+    let un (w:bool) (t0:term) : option<range> =
+        let t = U.unmeta_safe t0 in
+        match t.n with
+        | Tm_constant (C.Const_range r) -> Some r
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded range: %s" (Print.term_to_string t0)));
+            None
+    in
+    mk_emb em un S.t_range
+
+
+
+
+let embed_arrow_1 (ea:embedding<'a>) (eb:embedding<'b>) (f:'a -> 'b) (args:args) : option<term> =
+    let ua = unembed ea in
+    let eb = embed eb in
+    match args with
+    | [(x, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      Some (eb FStar.Range.dummyRange (f (BU.must (ua x)))))
     | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));
-        None
+      None
 
-let unembed_norm_step      t = __unembed_norm_step true  t
-let unembed_norm_step_safe t = __unembed_norm_step false t
-
-let embed_range (rng:range) (r:range) : term =
-    S.mk (Tm_constant (C.Const_range r)) None rng
-
-let __unembed_range (w:bool) (t0:term) : option<range> =
-    let t = U.unmeta_safe t0 in
-    match t.n with
-    | Tm_constant (C.Const_range r) -> Some r
+let embed_arrow_2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>)
+                  (f:'a -> 'b -> 'c)
+                  (args:args) =
+    let ua = unembed ea in
+    let ub = unembed eb in
+    let ec = embed ec in
+    match args with
+    | [(x, _); (y, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      BU.bind_opt (ub y) (fun b ->
+      Some (ec FStar.Range.dummyRange (f a b))))
     | _ ->
-        if w then
-        Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded range: %s" (Print.term_to_string t0)));
-        None
+      None
 
-let unembed_range      t = __unembed_range true  t
-let unembed_range_safe t = __unembed_range false t
+let embed_arrow_3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
+                  (f:'a -> 'b -> 'c -> 'd)
+                  (args:args) =
+    let ua = unembed ea in
+    let ub = unembed eb in
+    let uc = unembed ec in
+    let ed = embed ed in
+    match args with
+    | [(x, _); (y, _); (z, _)] ->
+      BU.bind_opt (ua x) (fun a ->
+      BU.bind_opt (ub y) (fun b ->
+      BU.bind_opt (uc z) (fun c ->
+      Some (ed FStar.Range.dummyRange (f a b c)))))
+    | _ ->
+      None
+
