@@ -68,13 +68,14 @@ val e_list        : embedding<'a> -> embedding<list<'a>>
 val e_tuple2      : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
 val e_string_list : embedding<list<string>>
 
+val mk_any_emb : typ -> embedding<term>
 
 (* These are different, really, we're not embedding functions *)
-val embed_arrow_1     : raw_unembedder<'a> -> raw_embedder<'b> ->
+val embed_arrow_1     : embedding<'a> -> embedding<'b> ->
                         ('a -> 'b) -> args -> option<term>
 
-val embed_arrow_2     : raw_unembedder<'a> -> raw_unembedder<'b> -> raw_embedder<'c> ->
+val embed_arrow_2     : embedding<'a> -> embedding<'b> -> embedding<'c> ->
                         ('a -> 'b -> 'c) -> args -> option<term>
 
-val embed_arrow_3     : raw_unembedder<'a> -> raw_unembedder<'b> -> raw_unembedder<'c> -> raw_embedder<'d> ->
+val embed_arrow_3     : embedding<'a> -> embedding<'b> -> embedding<'c> -> embedding<'d> ->
                         ('a -> 'b -> 'c -> 'd) -> args -> option<term>

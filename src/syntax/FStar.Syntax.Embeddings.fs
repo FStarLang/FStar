@@ -43,6 +43,8 @@ let e_any =
     let typ = S.t_term in
     mk_emb em un typ
 
+let mk_any_emb typ = { em = e_any.em ; un = e_any.un ; typ = typ }
+
 let e_unit =
     let em (rng:range) (u:unit) : term = { U.exp_unit with pos = rng } in
     let un (w:bool) (t0:term) : option<unit> =
@@ -309,7 +311,9 @@ let e_range =
 
 
 
-let embed_arrow_1 (ua:raw_unembedder<'a>) (eb:raw_embedder<'b>) (f:'a -> 'b) (args:args) : option<term> =
+let embed_arrow_1 (ea:embedding<'a>) (eb:embedding<'b>) (f:'a -> 'b) (args:args) : option<term> =
+    let ua = unembed ea in
+    let eb = embed eb in
     match args with
     | [(x, _)] ->
       BU.bind_opt (ua x) (fun a ->
@@ -317,20 +321,27 @@ let embed_arrow_1 (ua:raw_unembedder<'a>) (eb:raw_embedder<'b>) (f:'a -> 'b) (ar
     | _ ->
       None
 
-let embed_arrow_2 (ua:raw_unembedder<'a>) (ub:raw_unembedder<'b>) (ed:raw_embedder<'d>)
-                  (f:'a -> 'b -> 'd)
+let embed_arrow_2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>)
+                  (f:'a -> 'b -> 'c)
                   (args:args) =
+    let ua = unembed ea in
+    let ub = unembed eb in
+    let ec = embed ec in
     match args with
     | [(x, _); (y, _)] ->
       BU.bind_opt (ua x) (fun a ->
       BU.bind_opt (ub y) (fun b ->
-      Some (ed FStar.Range.dummyRange (f a b))))
+      Some (ec FStar.Range.dummyRange (f a b))))
     | _ ->
       None
 
-let embed_arrow_3 (ua:raw_unembedder<'a>) (ub:raw_unembedder<'b>) (uc:raw_unembedder<'c>) (ed:raw_embedder<'d>)
+let embed_arrow_3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
                   (f:'a -> 'b -> 'c -> 'd)
                   (args:args) =
+    let ua = unembed ea in
+    let ub = unembed eb in
+    let uc = unembed ec in
+    let ed = embed ed in
     match args with
     | [(x, _); (y, _); (z, _)] ->
       BU.bind_opt (ua x) (fun a ->
