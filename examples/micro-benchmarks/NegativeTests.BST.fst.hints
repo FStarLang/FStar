@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "50dcd82005def5f0db79dbb206ad41ff"
+      "dc41356224c2fd0a37221bb5649a8635"
     ],
     [
       "NegativeTests.BST.tree",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bb5b69e5f4afc5f039b9612fd26809d7"
+      "396266b2fac93956bebff833ebaa2915"
     ],
     [
       "NegativeTests.BST.tree",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6e4a4c0f1e990c91784df34690fb4db7"
+      "5b5f3ceb1cc6c1b552fd65ae3252fad9"
     ],
     [
       "NegativeTests.BST.tree",
@@ -41,7 +41,22 @@
         "int_inversion", "kinding_NegativeTests.BST.tree@tok"
       ],
       0,
-      "01c0f732e404ea4b7eb0dac30c6255a9"
+      "5411e750958992e512e2935a3380ffba"
+    ],
+    [
+      "NegativeTests.BST.tree",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_Prims.HasEq_int",
+        "haseqNegativeTests.BST_Tm_refine_7b1de022dd98e3cefdde3a41e40ebd18",
+        "int_inversion", "kinding_NegativeTests.BST.tree@tok"
+      ],
+      0,
+      "0f502bed9fc1a39748421f059a743dcd"
     ],
     [
       "NegativeTests.BST.__proj__Leaf__item__n",
@@ -55,7 +70,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_c89ea22d08945e60fddbf2e1bfa3e94f"
       ],
       0,
-      "688d0bb00236abc06708b403b0f60f80"
+      "091e6ce68057d773d43c45489f620933"
     ],
     [
       "NegativeTests.BST.uu___is_Node",
@@ -64,7 +79,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "11a1f6356004f109e6b26ab9284536c3"
+      "b85b9a21239adf293da37ff864608d86"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__l",
@@ -78,7 +93,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "de9b3815c7ce36985eb0da5f731b89da"
+      "0471314bf3a1bc7d0895bcced41c8288"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__left",
@@ -94,7 +109,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "d2a6d818855962105da584e8d55a3e1b"
+      "18bce40215b068a151627531dbaef8d0"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__n",
@@ -108,7 +123,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "87eab38b71a441f5d242b078e02e4bcf"
+      "9799b05f13125d2e56b3a26bae635a79"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__r",
@@ -122,7 +137,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "e3e21d2ec65984afc87ab3bd074b68fc"
+      "11b461b2d63602ee085b3e932e0eef44"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -131,7 +146,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fac6b3299625ae47302bf0436c89cd2a"
+      "59cdce1e0fe2c3278c7914fb21e1b52a"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -158,7 +173,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "e3724c13c7770399e7dce99655f3c569"
+      "2d365eb480f96b61eecd07e19f3bb58e"
     ],
     [
       "NegativeTests.BST.test_node_1",
@@ -172,7 +187,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "a8a4b672c16991a8c556d5ffd82794bf"
+      "a868cdd4216090bfd151fc34bc59fc98"
     ],
     [
       "NegativeTests.BST.test_node_2",
@@ -189,7 +204,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "3cc1105caba31c312e0b15ee1cffddd3"
+      "09e693a6bb0e75892dcd5734f7b6523c"
     ],
     [
       "NegativeTests.BST.test_node_3",
@@ -204,7 +219,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "eae7b8eeef36a0f7a8ee54276cfdf87a"
+      "7099ad69634e7e259f0ab02efe62d8ac"
     ]
   ]
 ]
