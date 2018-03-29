@@ -608,47 +608,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
-    if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
-    if Options.use_two_phase_tc ()
-    then
-      //AR: if the top-level binding is unannotated, we want to drop the wps computed in phase 1
-      //since they are lax etc., and phase 2 will do the proper computation anyway
-      //in case they are annotated, we will retain them
-      let is_lb_unannotated (t:term) :bool = match t.n with
-        | Tm_let ((_, [lb]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
-        | _                     -> failwith "Impossible"
-      in
-
-      let drop_lbtyp (t:term) :term = match t.n with
-        | Tm_let ((t1, [lb]), t2) ->  { t with n = Tm_let ((t1, [ { lb with lbtyp = mk Tm_unknown None lb.lbtyp.pos }]), t2) }
-        | _                       -> failwith "Impossible"
-      in
-
-      let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
-         let lax_top = N.remove_uvar_solutions env lax_top in
-         if Env.debug env <| Options.Other "TwoPhases"
-         then BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
-         if Env.should_verify env then
-           check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
-         else lax_top, l, g
-    else check_top_level_let env top
+    check_top_level_let env top
 
   | Tm_let ((false, _), _) ->
     check_inner_let env top
 
   | Tm_let ((true, {lbname=Inr _}::_), _) ->
-    if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
-    if Options.use_two_phase_tc ()
-    then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
-         let lax_top = N.remove_uvar_solutions env lax_top in  (* AR: are we calling it two times currently if lax mode? *)
-         if Env.debug env (Options.Other "TwoPhases") then
-           BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
-         if Env.should_verify env then
-            check_top_level_let_rec env lax_top
-         else lax_top, l, g
-    else check_top_level_let_rec env top
+    check_top_level_let_rec env top
 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top

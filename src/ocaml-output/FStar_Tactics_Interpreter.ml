@@ -1,5 +1,5 @@
 open Prims
-let (tacdbg : Prims.bool FStar_ST.ref) = FStar_Util.mk_ref false 
+let tacdbg : Prims.bool FStar_ST.ref = FStar_Util.mk_ref false 
 let mk_tactic_interpretation_0 :
   'r .
     Prims.bool ->
@@ -679,9 +679,9 @@ let mk_tactic_interpretation_6 :
                                    in
                                 failwith uu____1815
   
-let (step_from_native_step :
+let step_from_native_step :
   FStar_Tactics_Native.native_primitive_step ->
-    FStar_TypeChecker_Normalize.primitive_step)
+    FStar_TypeChecker_Normalize.primitive_step
   =
   fun s  ->
     {
@@ -697,8 +697,8 @@ let (step_from_native_step :
         (fun psc  -> fun args  -> s.FStar_Tactics_Native.tactic psc args)
     }
   
-let rec (primitive_steps :
-  Prims.unit -> FStar_TypeChecker_Normalize.primitive_step Prims.list) =
+let rec primitive_steps :
+  Prims.unit -> FStar_TypeChecker_Normalize.primitive_step Prims.list =
   fun uu____1903  ->
     let mk1 nm arity interpretation =
       let nm1 = FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]
@@ -885,17 +885,17 @@ let rec (primitive_steps :
     let uu____2623 =
       let uu____2626 =
         mktac2 () () () "fail"
-          (fun a438  ->
-             fun a439  ->
-               (Obj.magic (fun uu____2628  -> FStar_Tactics_Basic.fail)) a438
-                 a439) (Obj.magic get1)
+          (fun a417  ->
+             fun a418  ->
+               (Obj.magic (fun uu____2628  -> FStar_Tactics_Basic.fail)) a417
+                 a418) (Obj.magic get1)
           (Obj.magic FStar_Syntax_Embeddings.unembed_string) (Obj.magic put1)
           FStar_Syntax_Syntax.t_unit
          in
       let uu____2629 =
         let uu____2632 =
           mktac1 () () "trivial"
-            (fun a440  -> (Obj.magic FStar_Tactics_Basic.trivial) a440)
+            (fun a419  -> (Obj.magic FStar_Tactics_Basic.trivial) a419)
             (Obj.magic FStar_Syntax_Embeddings.unembed_unit)
             (Obj.magic FStar_Syntax_Embeddings.embed_unit)
             FStar_Syntax_Syntax.t_unit
@@ -907,17 +907,17 @@ let rec (primitive_steps :
                 FStar_Syntax_Syntax.t_unit
                in
             mktac2 () () () "__trytac"
-              (fun a441  ->
-                 fun a442  ->
+              (fun a420  ->
+                 fun a421  ->
                    (Obj.magic (fun uu____2643  -> FStar_Tactics_Basic.trytac))
-                     a441 a442) (Obj.magic get1)
+                     a420 a421) (Obj.magic get1)
               (Obj.magic (unembed_tactic_0' get1)) (Obj.magic uu____2637)
               FStar_Syntax_Syntax.t_unit
              in
           let uu____2650 =
             let uu____2653 =
               mktac1 () () "intro"
-                (fun a443  -> (Obj.magic FStar_Tactics_Basic.intro) a443)
+                (fun a422  -> (Obj.magic FStar_Tactics_Basic.intro) a422)
                 (Obj.magic FStar_Syntax_Embeddings.unembed_unit)
                 (Obj.magic FStar_Reflection_Embeddings.embed_binder)
                 FStar_Reflection_Data.fstar_refl_binder
@@ -937,8 +937,8 @@ let rec (primitive_steps :
                     FStar_Reflection_Data.fstar_refl_binder
                    in
                 mktac1 () () "intro_rec"
-                  (fun a444  ->
-                     (Obj.magic FStar_Tactics_Basic.intro_rec) a444)
+                  (fun a423  ->
+                     (Obj.magic FStar_Tactics_Basic.intro_rec) a423)
                   (Obj.magic FStar_Syntax_Embeddings.unembed_unit)
                   (Obj.magic uu____2658) uu____2665
                  in
@@ -949,7 +949,7 @@ let rec (primitive_steps :
                       FStar_Syntax_Embeddings.unembed_norm_step
                      in
                   mktac1 () () "norm"
-                    (fun a445  -> (Obj.magic FStar_Tactics_Basic.norm) a445)
+                    (fun a424  -> (Obj.magic FStar_Tactics_Basic.norm) a424)
                     (Obj.magic uu____2676)
                     (Obj.magic FStar_Syntax_Embeddings.embed_unit)
                     FStar_Syntax_Syntax.t_unit
@@ -961,11 +961,11 @@ let rec (primitive_steps :
                         FStar_Syntax_Embeddings.unembed_norm_step
                        in
                     mktac3 () () () () "norm_term_env"
-                      (fun a446  ->
-                         fun a447  ->
-                           fun a448  ->
+                      (fun a425  ->
+                         fun a426  ->
+                           fun a427  ->
                              (Obj.magic FStar_Tactics_Basic.norm_term_env)
-                               a446 a447 a448)
+                               a425 a426 a427)
                       (Obj.magic FStar_Reflection_Embeddings.unembed_env)
                       (Obj.magic uu____2689)
                       (Obj.magic FStar_Reflection_Embeddings.unembed_term)
@@ -979,10 +979,10 @@ let rec (primitive_steps :
                           FStar_Syntax_Embeddings.unembed_norm_step
                          in
                       mktac2 () () () "norm_binder_type"
-                        (fun a449  ->
-                           fun a450  ->
+                        (fun a428  ->
+                           fun a429  ->
                              (Obj.magic FStar_Tactics_Basic.norm_binder_type)
-                               a449 a450) (Obj.magic uu____2702)
+                               a428 a429) (Obj.magic uu____2702)
                         (Obj.magic FStar_Reflection_Embeddings.unembed_binder)
                         (Obj.magic FStar_Syntax_Embeddings.embed_unit)
                         FStar_Syntax_Syntax.t_unit
@@ -990,10 +990,10 @@ let rec (primitive_steps :
                     let uu____2711 =
                       let uu____2714 =
                         mktac2 () () () "rename_to"
-                          (fun a451  ->
-                             fun a452  ->
-                               (Obj.magic FStar_Tactics_Basic.rename_to) a451
-                                 a452)
+                          (fun a430  ->
+                             fun a431  ->
+                               (Obj.magic FStar_Tactics_Basic.rename_to) a430
+                                 a431)
                           (Obj.magic
                              FStar_Reflection_Embeddings.unembed_binder)
                           (Obj.magic FStar_Syntax_Embeddings.unembed_string)
@@ -1003,9 +1003,9 @@ let rec (primitive_steps :
                       let uu____2715 =
                         let uu____2718 =
                           mktac1 () () "binder_retype"
-                            (fun a453  ->
+                            (fun a432  ->
                                (Obj.magic FStar_Tactics_Basic.binder_retype)
-                                 a453)
+                                 a432)
                             (Obj.magic
                                FStar_Reflection_Embeddings.unembed_binder)
                             (Obj.magic FStar_Syntax_Embeddings.embed_unit)
@@ -1014,8 +1014,8 @@ let rec (primitive_steps :
                         let uu____2719 =
                           let uu____2722 =
                             mktac1 () () "revert"
-                              (fun a454  ->
-                                 (Obj.magic FStar_Tactics_Basic.revert) a454)
+                              (fun a433  ->
+                                 (Obj.magic FStar_Tactics_Basic.revert) a433)
                               (Obj.magic FStar_Syntax_Embeddings.unembed_unit)
                               (Obj.magic FStar_Syntax_Embeddings.embed_unit)
                               FStar_Syntax_Syntax.t_unit
@@ -1023,9 +1023,9 @@ let rec (primitive_steps :
                           let uu____2723 =
                             let uu____2726 =
                               mktac1 () () "clear_top"
-                                (fun a455  ->
+                                (fun a434  ->
                                    (Obj.magic FStar_Tactics_Basic.clear_top)
-                                     a455)
+                                     a434)
                                 (Obj.magic
                                    FStar_Syntax_Embeddings.unembed_unit)
                                 (Obj.magic FStar_Syntax_Embeddings.embed_unit)
@@ -1034,9 +1034,9 @@ let rec (primitive_steps :
                             let uu____2727 =
                               let uu____2730 =
                                 mktac1 () () "clear"
-                                  (fun a456  ->
+                                  (fun a435  ->
                                      (Obj.magic FStar_Tactics_Basic.clear)
-                                       a456)
+                                       a435)
                                   (Obj.magic
                                      FStar_Reflection_Embeddings.unembed_binder)
                                   (Obj.magic
@@ -1046,9 +1046,9 @@ let rec (primitive_steps :
                               let uu____2731 =
                                 let uu____2734 =
                                   mktac1 () () "rewrite"
-                                    (fun a457  ->
+                                    (fun a436  ->
                                        (Obj.magic FStar_Tactics_Basic.rewrite)
-                                         a457)
+                                         a436)
                                     (Obj.magic
                                        FStar_Reflection_Embeddings.unembed_binder)
                                     (Obj.magic
@@ -1058,9 +1058,9 @@ let rec (primitive_steps :
                                 let uu____2735 =
                                   let uu____2738 =
                                     mktac1 () () "smt"
-                                      (fun a458  ->
+                                      (fun a437  ->
                                          (Obj.magic FStar_Tactics_Basic.smt)
-                                           a458)
+                                           a437)
                                       (Obj.magic
                                          FStar_Syntax_Embeddings.unembed_unit)
                                       (Obj.magic
@@ -1070,10 +1070,10 @@ let rec (primitive_steps :
                                   let uu____2739 =
                                     let uu____2742 =
                                       mktac1 () () "refine_intro"
-                                        (fun a459  ->
+                                        (fun a438  ->
                                            (Obj.magic
                                               FStar_Tactics_Basic.refine_intro)
-                                             a459)
+                                             a438)
                                         (Obj.magic
                                            FStar_Syntax_Embeddings.unembed_unit)
                                         (Obj.magic
@@ -1083,11 +1083,11 @@ let rec (primitive_steps :
                                     let uu____2743 =
                                       let uu____2746 =
                                         mktac2 () () () "t_exact"
-                                          (fun a460  ->
-                                             fun a461  ->
+                                          (fun a439  ->
+                                             fun a440  ->
                                                (Obj.magic
                                                   FStar_Tactics_Basic.t_exact)
-                                                 a460 a461)
+                                                 a439 a440)
                                           (Obj.magic
                                              FStar_Syntax_Embeddings.unembed_bool)
                                           (Obj.magic
@@ -1099,10 +1099,10 @@ let rec (primitive_steps :
                                       let uu____2747 =
                                         let uu____2750 =
                                           mktac1 () () "apply"
-                                            (fun a462  ->
+                                            (fun a441  ->
                                                (Obj.magic
                                                   (FStar_Tactics_Basic.apply
-                                                     true)) a462)
+                                                     true)) a441)
                                             (Obj.magic
                                                FStar_Reflection_Embeddings.unembed_term)
                                             (Obj.magic
@@ -1112,10 +1112,10 @@ let rec (primitive_steps :
                                         let uu____2751 =
                                           let uu____2754 =
                                             mktac1 () () "apply_raw"
-                                              (fun a463  ->
+                                              (fun a442  ->
                                                  (Obj.magic
                                                     (FStar_Tactics_Basic.apply
-                                                       false)) a463)
+                                                       false)) a442)
                                               (Obj.magic
                                                  FStar_Reflection_Embeddings.unembed_term)
                                               (Obj.magic
@@ -1125,10 +1125,10 @@ let rec (primitive_steps :
                                           let uu____2755 =
                                             let uu____2758 =
                                               mktac1 () () "apply_lemma"
-                                                (fun a464  ->
+                                                (fun a443  ->
                                                    (Obj.magic
                                                       FStar_Tactics_Basic.apply_lemma)
-                                                     a464)
+                                                     a443)
                                                 (Obj.magic
                                                    FStar_Reflection_Embeddings.unembed_term)
                                                 (Obj.magic
@@ -1146,11 +1146,11 @@ let rec (primitive_steps :
                                                    in
                                                 mktac5 () () () () () ()
                                                   "__divide"
-                                                  (fun a465  ->
-                                                     fun a466  ->
-                                                       fun a467  ->
-                                                         fun a468  ->
-                                                           fun a469  ->
+                                                  (fun a444  ->
+                                                     fun a445  ->
+                                                       fun a446  ->
+                                                         fun a447  ->
+                                                           fun a448  ->
                                                              (Obj.magic
                                                                 (fun
                                                                    uu____2772
@@ -1159,8 +1159,8 @@ let rec (primitive_steps :
                                                                     uu____2773
                                                                      ->
                                                                     FStar_Tactics_Basic.divide))
-                                                               a465 a466 a467
-                                                               a468 a469)
+                                                               a444 a445 a446
+                                                               a447 a448)
                                                   (Obj.magic get1)
                                                   (Obj.magic get1)
                                                   (Obj.magic
@@ -1175,11 +1175,11 @@ let rec (primitive_steps :
                                               let uu____2780 =
                                                 let uu____2783 =
                                                   mktac2 () () () "__seq"
-                                                    (fun a470  ->
-                                                       fun a471  ->
+                                                    (fun a449  ->
+                                                       fun a450  ->
                                                          (Obj.magic
                                                             FStar_Tactics_Basic.seq)
-                                                           a470 a471)
+                                                           a449 a450)
                                                     (Obj.magic
                                                        (unembed_tactic_0'
                                                           FStar_Syntax_Embeddings.unembed_unit))
@@ -1194,10 +1194,10 @@ let rec (primitive_steps :
                                                   let uu____2787 =
                                                     mktac1 () ()
                                                       "set_options"
-                                                      (fun a472  ->
+                                                      (fun a451  ->
                                                          (Obj.magic
                                                             FStar_Tactics_Basic.set_options)
-                                                           a472)
+                                                           a451)
                                                       (Obj.magic
                                                          FStar_Syntax_Embeddings.unembed_string)
                                                       (Obj.magic
@@ -1207,10 +1207,10 @@ let rec (primitive_steps :
                                                   let uu____2788 =
                                                     let uu____2791 =
                                                       mktac1 () () "tc"
-                                                        (fun a473  ->
+                                                        (fun a452  ->
                                                            (Obj.magic
                                                               FStar_Tactics_Basic.tc)
-                                                             a473)
+                                                             a452)
                                                         (Obj.magic
                                                            FStar_Reflection_Embeddings.unembed_term)
                                                         (Obj.magic
@@ -1221,10 +1221,10 @@ let rec (primitive_steps :
                                                       let uu____2795 =
                                                         mktac1 () ()
                                                           "unshelve"
-                                                          (fun a474  ->
+                                                          (fun a453  ->
                                                              (Obj.magic
                                                                 FStar_Tactics_Basic.unshelve)
-                                                               a474)
+                                                               a453)
                                                           (Obj.magic
                                                              FStar_Reflection_Embeddings.unembed_term)
                                                           (Obj.magic
@@ -1235,11 +1235,11 @@ let rec (primitive_steps :
                                                         let uu____2799 =
                                                           mktac2 () () ()
                                                             "unquote"
-                                                            (fun a475  ->
-                                                               fun a476  ->
+                                                            (fun a454  ->
+                                                               fun a455  ->
                                                                  (Obj.magic
                                                                     FStar_Tactics_Basic.unquote)
-                                                                   a475 a476)
+                                                                   a454 a455)
                                                             (Obj.magic get1)
                                                             (Obj.magic
                                                                FStar_Reflection_Embeddings.unembed_term)
@@ -1250,10 +1250,10 @@ let rec (primitive_steps :
                                                           let uu____2803 =
                                                             mktac1 () ()
                                                               "prune"
-                                                              (fun a477  ->
+                                                              (fun a456  ->
                                                                  (Obj.magic
                                                                     FStar_Tactics_Basic.prune)
-                                                                   a477)
+                                                                   a456)
                                                               (Obj.magic
                                                                  FStar_Syntax_Embeddings.unembed_string)
                                                               (Obj.magic
@@ -1264,10 +1264,10 @@ let rec (primitive_steps :
                                                             let uu____2807 =
                                                               mktac1 () ()
                                                                 "addns"
-                                                                (fun a478  ->
+                                                                (fun a457  ->
                                                                    (Obj.magic
                                                                     FStar_Tactics_Basic.addns)
-                                                                    a478)
+                                                                    a457)
                                                                 (Obj.magic
                                                                    FStar_Syntax_Embeddings.unembed_string)
                                                                 (Obj.magic
@@ -1279,11 +1279,11 @@ let rec (primitive_steps :
                                                                 =
                                                                 mktac1 () ()
                                                                   "print"
-                                                                  (fun a479 
+                                                                  (fun a458 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.print)
-                                                                    a479)
+                                                                    a458)
                                                                   (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
                                                                   (Obj.magic
@@ -1298,11 +1298,11 @@ let rec (primitive_steps :
                                                                     ()
                                                                     "debug"
                                                                     (
-                                                                    fun a480 
+                                                                    fun a459 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.debug)
-                                                                    a480)
+                                                                    a459)
                                                                     (
                                                                     Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
@@ -1317,11 +1317,11 @@ let rec (primitive_steps :
                                                                     =
                                                                     mktac1 ()
                                                                     () "dump"
-                                                                    (fun a481
+                                                                    (fun a460
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.print_proof_state)
-                                                                    a481)
+                                                                    a460)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
                                                                     (Obj.magic
@@ -1335,11 +1335,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "dump1"
-                                                                    (fun a482
+                                                                    (fun a461
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.print_proof_state1)
-                                                                    a482)
+                                                                    a461)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
                                                                     (Obj.magic
@@ -1353,13 +1353,13 @@ let rec (primitive_steps :
                                                                     mktac2 ()
                                                                     () ()
                                                                     "__pointwise"
-                                                                    (fun a483
+                                                                    (fun a462
                                                                      ->
-                                                                    fun a484 
+                                                                    fun a463 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.pointwise)
-                                                                    a483 a484)
+                                                                    a462 a463)
                                                                     (Obj.magic
                                                                     FStar_Tactics_Embedding.unembed_direction)
                                                                     (Obj.magic
@@ -1388,13 +1388,13 @@ let rec (primitive_steps :
                                                                     mktac2 ()
                                                                     () ()
                                                                     "__topdown_rewrite"
-                                                                    (fun a485
+                                                                    (fun a464
                                                                      ->
-                                                                    fun a486 
+                                                                    fun a465 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.topdown_rewrite)
-                                                                    a485 a486)
+                                                                    a464 a465)
                                                                     (Obj.magic
                                                                     uu____2832)
                                                                     (Obj.magic
@@ -1411,11 +1411,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "trefl"
-                                                                    (fun a487
+                                                                    (fun a466
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.trefl)
-                                                                    a487)
+                                                                    a466)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1429,11 +1429,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "later"
-                                                                    (fun a488
+                                                                    (fun a467
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.later)
-                                                                    a488)
+                                                                    a467)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1446,11 +1446,11 @@ let rec (primitive_steps :
                                                                     =
                                                                     mktac1 ()
                                                                     () "dup"
-                                                                    (fun a489
+                                                                    (fun a468
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.dup)
-                                                                    a489)
+                                                                    a468)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1463,11 +1463,11 @@ let rec (primitive_steps :
                                                                     =
                                                                     mktac1 ()
                                                                     () "flip"
-                                                                    (fun a490
+                                                                    (fun a469
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.flip)
-                                                                    a490)
+                                                                    a469)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1480,11 +1480,11 @@ let rec (primitive_steps :
                                                                     =
                                                                     mktac1 ()
                                                                     () "qed"
-                                                                    (fun a491
+                                                                    (fun a470
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.qed)
-                                                                    a491)
+                                                                    a470)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1498,11 +1498,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "dismiss"
-                                                                    (fun a492
+                                                                    (fun a471
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.dismiss)
-                                                                    a492)
+                                                                    a471)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1516,11 +1516,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "tadmit"
-                                                                    (fun a493
+                                                                    (fun a472
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.tadmit)
-                                                                    a493)
+                                                                    a472)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1548,11 +1548,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "cases"
-                                                                    (fun a494
+                                                                    (fun a473
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cases)
-                                                                    a494)
+                                                                    a473)
                                                                     (Obj.magic
                                                                     FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
@@ -1566,11 +1566,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "top_env"
-                                                                    (fun a495
+                                                                    (fun a474
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.top_env)
-                                                                    a495)
+                                                                    a474)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1584,11 +1584,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "cur_env"
-                                                                    (fun a496
+                                                                    (fun a475
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cur_env)
-                                                                    a496)
+                                                                    a475)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1602,11 +1602,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "cur_goal"
-                                                                    (fun a497
+                                                                    (fun a476
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cur_goal')
-                                                                    a497)
+                                                                    a476)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1620,11 +1620,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "cur_witness"
-                                                                    (fun a498
+                                                                    (fun a477
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.cur_witness)
-                                                                    a498)
+                                                                    a477)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1638,11 +1638,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "inspect"
-                                                                    (fun a499
+                                                                    (fun a478
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.inspect)
-                                                                    a499)
+                                                                    a478)
                                                                     (Obj.magic
                                                                     FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
@@ -1655,11 +1655,11 @@ let rec (primitive_steps :
                                                                     =
                                                                     mktac1 ()
                                                                     () "pack"
-                                                                    (fun a500
+                                                                    (fun a479
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.pack)
-                                                                    a500)
+                                                                    a479)
                                                                     (Obj.magic
                                                                     FStar_Reflection_Embeddings.unembed_term_view)
                                                                     (Obj.magic
@@ -1673,11 +1673,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "fresh"
-                                                                    (fun a501
+                                                                    (fun a480
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.fresh)
-                                                                    a501)
+                                                                    a480)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1691,11 +1691,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "ngoals"
-                                                                    (fun a502
+                                                                    (fun a481
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.ngoals)
-                                                                    a502)
+                                                                    a481)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1709,11 +1709,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "ngoals_smt"
-                                                                    (fun a503
+                                                                    (fun a482
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.ngoals_smt)
-                                                                    a503)
+                                                                    a482)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1727,11 +1727,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "is_guard"
-                                                                    (fun a504
+                                                                    (fun a483
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.is_guard)
-                                                                    a504)
+                                                                    a483)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1750,13 +1750,13 @@ let rec (primitive_steps :
                                                                     mktac2 ()
                                                                     () ()
                                                                     "uvar_env"
-                                                                    (fun a505
+                                                                    (fun a484
                                                                      ->
-                                                                    fun a506 
+                                                                    fun a485 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.uvar_env)
-                                                                    a505 a506)
+                                                                    a484 a485)
                                                                     (Obj.magic
                                                                     FStar_Reflection_Embeddings.unembed_env)
                                                                     (Obj.magic
@@ -1772,13 +1772,13 @@ let rec (primitive_steps :
                                                                     mktac2 ()
                                                                     () ()
                                                                     "unify"
-                                                                    (fun a507
+                                                                    (fun a486
                                                                      ->
-                                                                    fun a508 
+                                                                    fun a487 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.unify)
-                                                                    a507 a508)
+                                                                    a486 a487)
                                                                     (Obj.magic
                                                                     FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
@@ -1794,16 +1794,16 @@ let rec (primitive_steps :
                                                                     mktac3 ()
                                                                     () () ()
                                                                     "launch_process"
-                                                                    (fun a509
+                                                                    (fun a488
                                                                      ->
-                                                                    fun a510 
+                                                                    fun a489 
                                                                     ->
-                                                                    fun a511 
+                                                                    fun a490 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.launch_process)
-                                                                    a509 a510
-                                                                    a511)
+                                                                    a488 a489
+                                                                    a490)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
                                                                     (Obj.magic
@@ -1821,13 +1821,13 @@ let rec (primitive_steps :
                                                                     mktac2 ()
                                                                     () ()
                                                                     "fresh_bv_named"
-                                                                    (fun a512
+                                                                    (fun a491
                                                                      ->
-                                                                    fun a513 
+                                                                    fun a492 
                                                                     ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.fresh_bv_named)
-                                                                    a512 a513)
+                                                                    a491 a492)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_string)
                                                                     (Obj.magic
@@ -1843,11 +1843,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "change"
-                                                                    (fun a514
+                                                                    (fun a493
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.change)
-                                                                    a514)
+                                                                    a493)
                                                                     (Obj.magic
                                                                     FStar_Reflection_Embeddings.unembed_term)
                                                                     (Obj.magic
@@ -1861,11 +1861,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "get_guard_policy"
-                                                                    (fun a515
+                                                                    (fun a494
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.get_guard_policy)
-                                                                    a515)
+                                                                    a494)
                                                                     (Obj.magic
                                                                     FStar_Syntax_Embeddings.unembed_unit)
                                                                     (Obj.magic
@@ -1879,11 +1879,11 @@ let rec (primitive_steps :
                                                                     mktac1 ()
                                                                     ()
                                                                     "set_guard_policy"
-                                                                    (fun a516
+                                                                    (fun a495
                                                                      ->
                                                                     (Obj.magic
                                                                     FStar_Tactics_Basic.set_guard_policy)
-                                                                    a516)
+                                                                    a495)
                                                                     (Obj.magic
                                                                     FStar_Tactics_Embedding.unembed_guard_policy)
                                                                     (Obj.magic
@@ -2171,9 +2171,9 @@ and unembed_tactic_0' :
       FStar_All.pipe_left (fun _0_40  -> FStar_Pervasives_Native.Some _0_40)
         uu____3168
 
-let (report_implicits :
+let report_implicits :
   FStar_Tactics_Types.proofstate ->
-    FStar_TypeChecker_Env.implicits -> Prims.unit)
+    FStar_TypeChecker_Env.implicits -> Prims.unit
   =
   fun ps  ->
     fun is  ->
@@ -2200,12 +2200,12 @@ let (report_implicits :
            FStar_Errors.add_errors tl1;
            FStar_Errors.raise_error (e, msg) r)
   
-let (run_tactic_on_typ :
+let run_tactic_on_typ :
   FStar_Syntax_Syntax.term ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
         (FStar_Tactics_Basic.goal Prims.list,FStar_Syntax_Syntax.term)
-          FStar_Pervasives_Native.tuple2)
+          FStar_Pervasives_Native.tuple2
   =
   fun tactic  ->
     fun env  ->
@@ -2524,11 +2524,11 @@ type pol =
   | Pos 
   | Neg 
   | Both [@@deriving show]
-let (uu___is_Pos : pol -> Prims.bool) =
+let uu___is_Pos : pol -> Prims.bool =
   fun projectee  -> match projectee with | Pos  -> true | uu____3543 -> false 
-let (uu___is_Neg : pol -> Prims.bool) =
+let uu___is_Neg : pol -> Prims.bool =
   fun projectee  -> match projectee with | Neg  -> true | uu____3547 -> false 
-let (uu___is_Both : pol -> Prims.bool) =
+let uu___is_Both : pol -> Prims.bool =
   fun projectee  ->
     match projectee with | Both  -> true | uu____3551 -> false
   
@@ -2566,10 +2566,10 @@ let __proj__Dual__item___0 :
 type tres = FStar_Syntax_Syntax.term tres_m[@@deriving show]
 let tpure : 'Auu____3724 . 'Auu____3724 -> 'Auu____3724 tres_m =
   fun x  -> Unchanged x 
-let (flip : pol -> pol) =
+let flip : pol -> pol =
   fun p  -> match p with | Pos  -> Neg | Neg  -> Pos | Both  -> Both 
-let (by_tactic_interp :
-  pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres) =
+let by_tactic_interp :
+  pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres =
   fun pol  ->
     fun e  ->
       fun t  ->
@@ -2717,9 +2717,9 @@ let emit : 'a . FStar_Tactics_Basic.goal Prims.list -> 'a tres_m -> 'a tres_m
   fun gs  ->
     fun m  -> comb2 (fun uu____4410  -> fun x  -> x) (Simplified ((), gs)) m
   
-let rec (traverse :
+let rec traverse :
   (pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres) ->
-    pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres)
+    pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres
   =
   fun f  ->
     fun pol  ->
@@ -2928,10 +2928,10 @@ let rec (traverse :
                            (uu___68_5066.FStar_Syntax_Syntax.vars)
                        }), p', (FStar_List.append gs gs')))
   
-let (getprop :
+let getprop :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun e  ->
     fun t  ->
@@ -2944,11 +2944,11 @@ let (getprop :
          in
       FStar_Syntax_Util.un_squash tn
   
-let (preprocess :
+let preprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       (FStar_TypeChecker_Env.env,FStar_Syntax_Syntax.term,FStar_Options.optionstate)
-        FStar_Pervasives_Native.tuple3 Prims.list)
+        FStar_Pervasives_Native.tuple3 Prims.list
   =
   fun env  ->
     fun goal  ->
@@ -3051,7 +3051,7 @@ let (preprocess :
                    (env, t', uu____5432)  in
                  uu____5425 :: gs1)))
   
-let (reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+let reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun a  ->
     let r =
       let uu____5443 =
@@ -3072,10 +3072,10 @@ let (reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
       FStar_Syntax_Syntax.mk_Tm_app r uu____5446  in
     uu____5445 FStar_Pervasives_Native.None a.FStar_Syntax_Syntax.pos
   
-let (synthesize :
+let synthesize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun env  ->
     fun typ  ->
@@ -3106,9 +3106,9 @@ let (synthesize :
                    "synthesis left open goals") typ.FStar_Syntax_Syntax.pos
              else w)
   
-let (splice :
+let splice :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.sigelt Prims.list)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.sigelt Prims.list
   =
   fun env  ->
     fun tau  ->

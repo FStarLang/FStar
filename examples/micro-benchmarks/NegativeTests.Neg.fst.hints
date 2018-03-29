@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1f393c08ff1c5fc47c1f110f24ab641a"
-    ],
-    [
-      "NegativeTests.Neg.TEST",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "513cf38b5b8508a31fbea5f5f2f37ad8"
+      "e2bdfde2eb827ca521ffcb97d23b3525"
     ]
   ]
 ]
