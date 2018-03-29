@@ -1140,6 +1140,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     let tcenv = TcEnv.set_current_module g.tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
                     debug g (fun () ->
+                                BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                                 Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         if Options.ml_ish()
