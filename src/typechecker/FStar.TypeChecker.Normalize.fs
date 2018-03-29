@@ -1652,7 +1652,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
             | _ -> false
           in
           if BU.for_some is_arg_impure ((as_arg head_app)::args)
-          then failwith (BU.format1 "Incompability between typechecker and normalizer; \
+          then failwith (BU.format1 "Incompatibility between typechecker and normalizer; \
                                      this monadic application contains impure terms %s\n"
                                     (Print.term_to_string head))
         in
