@@ -1,6 +1,6 @@
 open Prims
-let inspect_aqual : FStar_Syntax_Syntax.aqual -> FStar_Reflection_Data.aqualv
-  =
+let (inspect_aqual :
+  FStar_Syntax_Syntax.aqual -> FStar_Reflection_Data.aqualv) =
   fun aq  ->
     match aq with
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit uu____4) ->
@@ -9,19 +9,20 @@ let inspect_aqual : FStar_Syntax_Syntax.aqual -> FStar_Reflection_Data.aqualv
         FStar_Reflection_Data.Q_Explicit
     | FStar_Pervasives_Native.None  -> FStar_Reflection_Data.Q_Explicit
   
-let pack_aqual : FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.aqual =
+let (pack_aqual : FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.aqual)
+  =
   fun aqv  ->
     match aqv with
     | FStar_Reflection_Data.Q_Explicit  -> FStar_Pervasives_Native.None
     | FStar_Reflection_Data.Q_Implicit  ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
   
-let inspect_fv : FStar_Syntax_Syntax.fv -> Prims.string Prims.list =
+let (inspect_fv : FStar_Syntax_Syntax.fv -> Prims.string Prims.list) =
   fun fv  ->
     let uu____15 = FStar_Syntax_Syntax.lid_of_fv fv  in
     FStar_Ident.path_of_lid uu____15
   
-let pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv =
+let (pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv) =
   fun ns  ->
     let lid = FStar_Parser_Const.p2l ns  in
     let attr =
@@ -66,8 +67,8 @@ let rec init : 'a . 'a Prims.list -> 'a Prims.list =
     | x::[] -> []
     | x::xs -> let uu____82 = init xs  in x :: uu____82
   
-let inspect_const :
-  FStar_Syntax_Syntax.sconst -> FStar_Reflection_Data.vconst =
+let (inspect_const :
+  FStar_Syntax_Syntax.sconst -> FStar_Reflection_Data.vconst) =
   fun c  ->
     match c with
     | FStar_Const.Const_unit  -> FStar_Reflection_Data.C_Unit
@@ -84,8 +85,8 @@ let inspect_const :
           FStar_Util.format1 "unknown constant: %s" uu____107  in
         failwith uu____106
   
-let rec inspect_ln :
-  FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view =
+let rec (inspect_ln :
+  FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view) =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t  in
     let t2 = FStar_Syntax_Util.un_uinst t1  in
@@ -208,8 +209,8 @@ let rec inspect_ln :
           FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu____631);
          FStar_Reflection_Data.Tv_Unknown)
   
-let inspect_comp :
-  FStar_Syntax_Syntax.comp -> FStar_Reflection_Data.comp_view =
+let (inspect_comp :
+  FStar_Syntax_Syntax.comp -> FStar_Reflection_Data.comp_view) =
   fun c  ->
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t,uu____643) ->
@@ -252,7 +253,8 @@ let inspect_comp :
            else FStar_Reflection_Data.C_Unknown)
     | FStar_Syntax_Syntax.GTotal uu____746 -> FStar_Reflection_Data.C_Unknown
   
-let pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp =
+let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
+  =
   fun cv  ->
     match cv with
     | FStar_Reflection_Data.C_Total (t,uu____759) ->
@@ -260,7 +262,8 @@ let pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp =
     | uu____764 ->
         failwith "sorry, can embed comp_views other than C_Total for now"
   
-let pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst =
+let (pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst)
+  =
   fun c  ->
     match c with
     | FStar_Reflection_Data.C_Unit  -> FStar_Const.Const_unit
@@ -274,7 +277,7 @@ let pack_const : FStar_Reflection_Data.vconst -> FStar_Syntax_Syntax.sconst =
     | FStar_Reflection_Data.C_String s ->
         FStar_Const.Const_string (s, FStar_Range.dummyRange)
   
-let pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term =
+let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
   fun tv  ->
     match tv with
     | FStar_Reflection_Data.Tv_Var bv -> FStar_Syntax_Syntax.bv_to_name bv
@@ -372,8 +375,8 @@ let pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term =
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
           FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let compare_bv :
-  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order =
+let (compare_bv :
+  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order) =
   fun x  ->
     fun y  ->
       let n1 = FStar_Syntax_Syntax.order_bv x y  in
@@ -382,13 +385,13 @@ let compare_bv :
       else
         if n1 = (Prims.parse_int "0") then FStar_Order.Eq else FStar_Order.Gt
   
-let is_free :
-  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool =
+let (is_free :
+  FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun x  -> fun t  -> FStar_Syntax_Util.is_free_in x t 
-let lookup_typ :
+let (lookup_typ :
   FStar_TypeChecker_Env.env ->
     Prims.string Prims.list ->
-      FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option
+      FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun ns  ->
@@ -401,8 +404,8 @@ let lookup_typ :
       | FStar_Pervasives_Native.Some (FStar_Util.Inr (se,us),rng) ->
           FStar_Pervasives_Native.Some se
   
-let inspect_sigelt :
-  FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.sigelt_view =
+let (inspect_sigelt :
+  FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.sigelt_view) =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_let ((r,lb::[]),uu____1216) ->
@@ -427,8 +430,8 @@ let inspect_sigelt :
         FStar_Reflection_Data.Sg_Constructor uu____1279
     | uu____1285 -> FStar_Reflection_Data.Unk
   
-let pack_sigelt :
-  FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt =
+let (pack_sigelt :
+  FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt) =
   fun sv  ->
     match sv with
     | FStar_Reflection_Data.Sg_Let (r,fv,ty,def) ->
@@ -451,7 +454,7 @@ let pack_sigelt :
         failwith "packing Sg_Inductive, sorry"
     | FStar_Reflection_Data.Unk  -> failwith "packing Unk, sorry"
   
-let inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view =
+let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv  ->
     let uu____1339 =
       FStar_Ident.string_of_ident bv.FStar_Syntax_Syntax.ppname  in
@@ -462,7 +465,7 @@ let inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view =
       FStar_Reflection_Data.bv_sort = (bv.FStar_Syntax_Syntax.sort)
     }
   
-let pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv =
+let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
   fun bvv  ->
     let uu____1344 =
       FStar_Ident.mk_ident
@@ -476,32 +479,33 @@ let pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv =
       FStar_Syntax_Syntax.sort = (bvv.FStar_Reflection_Data.bv_sort)
     }
   
-let inspect_binder :
+let (inspect_binder :
   FStar_Syntax_Syntax.binder ->
     (FStar_Syntax_Syntax.bv,FStar_Reflection_Data.aqualv)
-      FStar_Pervasives_Native.tuple2
+      FStar_Pervasives_Native.tuple2)
   =
   fun b  ->
     let uu____1357 = b  in
     match uu____1357 with
     | (bv,aq) -> let uu____1364 = inspect_aqual aq  in (bv, uu____1364)
   
-let pack_binder :
+let (pack_binder :
   FStar_Syntax_Syntax.bv ->
-    FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.binder
+    FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.binder)
   =
   fun bv  -> fun aqv  -> let uu____1371 = pack_aqual aqv  in (bv, uu____1371) 
-let moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list =
+let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e  -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule 
-let binders_of_env : FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders
-  = fun e  -> FStar_TypeChecker_Env.all_binders e 
-let term_eq :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool =
+let (binders_of_env :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
+  fun e  -> FStar_TypeChecker_Env.all_binders e 
+let (term_eq :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1  ->
     fun t2  ->
       let uu____1388 = FStar_Syntax_Util.un_uinst t1  in
       let uu____1389 = FStar_Syntax_Util.un_uinst t2  in
       FStar_Syntax_Util.term_eq uu____1388 uu____1389
   
-let term_to_string : FStar_Syntax_Syntax.term -> Prims.string =
+let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 

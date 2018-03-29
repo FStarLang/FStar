@@ -1,12 +1,12 @@
 open Prims
-let info_at_pos :
+let (info_at_pos :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
       Prims.int ->
         Prims.int ->
           ((Prims.string,FStar_Ident.lid) FStar_Util.either,FStar_Syntax_Syntax.typ,
             FStar_Range.range) FStar_Pervasives_Native.tuple3
-            FStar_Pervasives_Native.option
+            FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun file  ->
@@ -43,10 +43,10 @@ let info_at_pos :
                       in
                    FStar_Pervasives_Native.Some uu____117)
   
-let add_errors :
+let (add_errors :
   FStar_TypeChecker_Env.env ->
     (FStar_Errors.raw_error,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list -> Prims.unit
+      FStar_Pervasives_Native.tuple3 Prims.list -> Prims.unit)
   =
   fun env  ->
     fun errs  ->
@@ -88,11 +88,11 @@ let add_errors :
          in
       FStar_Errors.add_errors errs1
   
-let err_msg_type_strings :
+let (err_msg_type_strings :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
-        (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
+        (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun t1  ->
@@ -115,11 +115,11 @@ let err_msg_type_strings :
                 (uu____289, uu____290)))
         else (s1, s2)
   
-let exhaustiveness_check : Prims.string = "Patterns are incomplete" 
-let subtyping_failed :
+let (exhaustiveness_check : Prims.string) = "Patterns are incomplete" 
+let (subtyping_failed :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ -> Prims.unit -> Prims.string
+      FStar_Syntax_Syntax.typ -> Prims.unit -> Prims.string)
   =
   fun env  ->
     fun t1  ->
@@ -131,13 +131,13 @@ let subtyping_failed :
               FStar_Util.format2
                 "Subtyping check failed; expected type %s; got type %s" s2 s1
   
-let ill_kinded_type : Prims.string = "Ill-kinded type" 
-let totality_check : Prims.string = "This term may not terminate" 
-let unexpected_signature_for_monad :
+let (ill_kinded_type : Prims.string) = "Ill-kinded type" 
+let (totality_check : Prims.string) = "This term may not terminate" 
+let (unexpected_signature_for_monad :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+        (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun m  ->
@@ -151,13 +151,13 @@ let unexpected_signature_for_monad :
            in
         (FStar_Errors.Fatal_UnexpectedSignatureForMonad, uu____324)
   
-let expected_a_term_of_type_t_got_a_function :
+let (expected_a_term_of_type_t_got_a_function :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_Errors.raw_error,Prims.string)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun msg  ->
@@ -173,18 +173,18 @@ let expected_a_term_of_type_t_got_a_function :
              in
           (FStar_Errors.Fatal_ExpectTermGotFunction, uu____342)
   
-let unexpected_implicit_argument :
-  (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2 =
+let (unexpected_implicit_argument :
+  (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2) =
   (FStar_Errors.Fatal_UnexpectedImplicitArgument,
     "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments")
   
-let expected_expression_of_type :
+let (expected_expression_of_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_Errors.raw_error,Prims.string)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun t1  ->
@@ -201,10 +201,10 @@ let expected_expression_of_type :
                  in
               (FStar_Errors.Fatal_UnexpectedExpressionType, uu____376)
   
-let expected_function_with_parameter_of_type :
+let (expected_function_with_parameter_of_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term -> Prims.string -> Prims.string
+      FStar_Syntax_Syntax.term -> Prims.string -> Prims.string)
   =
   fun env  ->
     fun t1  ->
@@ -216,13 +216,13 @@ let expected_function_with_parameter_of_type :
               "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\""
               s1 s2
   
-let expected_pattern_of_type :
+let (expected_pattern_of_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_Errors.raw_error,Prims.string)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun t1  ->
@@ -239,13 +239,13 @@ let expected_pattern_of_type :
                  in
               (FStar_Errors.Fatal_UnexpectedPattern, uu____425)
   
-let basic_type_error :
+let (basic_type_error :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_Errors.raw_error,Prims.string)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun eopt  ->
@@ -268,16 +268,16 @@ let basic_type_error :
                  in
               (FStar_Errors.Error_TypeError, msg)
   
-let occurs_check :
-  (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2 =
+let (occurs_check :
+  (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2) =
   (FStar_Errors.Fatal_PossibleInfiniteTyp,
     "Possibly infinite typ (occurs check failed)")
   
-let incompatible_kinds :
+let (incompatible_kinds :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+        (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun k1  ->
@@ -292,13 +292,13 @@ let incompatible_kinds :
            in
         (FStar_Errors.Fatal_IncompatibleKinds, uu____478)
   
-let constructor_builds_the_wrong_type :
+let (constructor_builds_the_wrong_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_Errors.raw_error,Prims.string)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun d  ->
@@ -336,9 +336,9 @@ let constructor_fails_the_positivity_check :
            in
         (FStar_Errors.Fatal_ConstructorFailedCheck, uu____522)
   
-let inline_type_annotation_and_val_decl :
+let (inline_type_annotation_and_val_decl :
   FStar_Ident.lid ->
-    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun l  ->
     let uu____532 =
@@ -349,11 +349,11 @@ let inline_type_annotation_and_val_decl :
        in
     (FStar_Errors.Fatal_DuplicateTypeAnnotationAndValDecl, uu____532)
   
-let inferred_type_causes_variable_to_escape :
+let (inferred_type_causes_variable_to_escape :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.bv ->
-        (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+        (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun t  ->
@@ -368,10 +368,10 @@ let inferred_type_causes_variable_to_escape :
            in
         (FStar_Errors.Fatal_InferredTypeCauseVarEscape, uu____547)
   
-let expected_function_typ :
+let (expected_function_typ :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun t  ->
@@ -382,13 +382,13 @@ let expected_function_typ :
          in
       (FStar_Errors.Fatal_FunctionTypeExpected, uu____560)
   
-let expected_poly_typ :
+let (expected_poly_typ :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_Errors.raw_error,Prims.string)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun f  ->
@@ -406,9 +406,9 @@ let expected_poly_typ :
              in
           (FStar_Errors.Fatal_PolyTypeExpected, uu____578)
   
-let nonlinear_pattern_variable :
+let (nonlinear_pattern_variable :
   FStar_Syntax_Syntax.bv ->
-    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun x  ->
     let m = FStar_Syntax_Print.bv_to_string x  in
@@ -418,10 +418,10 @@ let nonlinear_pattern_variable :
        in
     (FStar_Errors.Fatal_NonLinearPatternVars, uu____590)
   
-let disjunctive_pattern_vars :
+let (disjunctive_pattern_vars :
   FStar_Syntax_Syntax.bv Prims.list ->
     FStar_Syntax_Syntax.bv Prims.list ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun v1  ->
     fun v2  ->
@@ -440,10 +440,10 @@ let disjunctive_pattern_vars :
          in
       (FStar_Errors.Fatal_DisjuctivePatternVarsMismatch, uu____626)
   
-let name_and_result :
+let (name_and_result :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
     (Prims.string,FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple2
+      FStar_Pervasives_Native.tuple2)
   =
   fun c  ->
     match c.FStar_Syntax_Syntax.n with
@@ -485,10 +485,10 @@ let computed_computation_type_does_not_match_annotation :
                         (FStar_Errors.Fatal_ComputedTypeNotMatchAnnotation,
                           uu____755)))
   
-let unexpected_non_trivial_precondition_on_term :
+let (unexpected_non_trivial_precondition_on_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun f  ->
@@ -499,10 +499,10 @@ let unexpected_non_trivial_precondition_on_term :
          in
       (FStar_Errors.Fatal_UnExpectedPreCondition, uu____766)
   
-let expected_pure_expression :
+let (expected_pure_expression :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun e  ->
     fun c  ->
@@ -517,10 +517,10 @@ let expected_pure_expression :
          in
       (FStar_Errors.Fatal_ExpectedPureExpression, uu____782)
   
-let expected_ghost_expression :
+let (expected_ghost_expression :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun e  ->
     fun c  ->
@@ -535,10 +535,10 @@ let expected_ghost_expression :
          in
       (FStar_Errors.Fatal_ExpectedGhostExpression, uu____814)
   
-let expected_effect_1_got_effect_2 :
+let (expected_effect_1_got_effect_2 :
   FStar_Ident.lident ->
     FStar_Ident.lident ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun c1  ->
     fun c2  ->
@@ -551,10 +551,10 @@ let expected_effect_1_got_effect_2 :
          in
       (FStar_Errors.Fatal_UnexpectedEffect, uu____842)
   
-let failed_to_prove_specification_of :
+let (failed_to_prove_specification_of :
   FStar_Syntax_Syntax.lbname ->
     Prims.string Prims.list ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun l  ->
     fun lbls  ->
@@ -568,9 +568,9 @@ let failed_to_prove_specification_of :
          in
       (FStar_Errors.Error_TypeCheckerFailToProve, uu____859)
   
-let failed_to_prove_specification :
+let (failed_to_prove_specification :
   Prims.string Prims.list ->
-    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun lbls  ->
     let msg =
@@ -585,15 +585,15 @@ let failed_to_prove_specification :
        in
     (FStar_Errors.Error_TypeCheckerFailToProve, msg)
   
-let top_level_effect :
-  (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2 =
+let (top_level_effect :
+  (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2) =
   (FStar_Errors.Warning_TopLevelEffect,
     "Top-level let-bindings must be total; this term may have effects")
   
-let cardinality_constraint_violated :
+let (cardinality_constraint_violated :
   FStar_Ident.lid ->
     FStar_Syntax_Syntax.bv FStar_Syntax_Syntax.withinfo_t ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
+      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun l  ->
     fun a  ->
