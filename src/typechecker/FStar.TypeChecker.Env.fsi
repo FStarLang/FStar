@@ -217,6 +217,7 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 val push_sigelt        : env -> sigelt -> env
 val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env
+val push_bvs           : env -> list<bv> -> env
 val pop_bv             : env -> option<(bv * env)>
 val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
