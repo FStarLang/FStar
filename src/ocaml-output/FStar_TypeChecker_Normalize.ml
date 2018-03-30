@@ -1893,7 +1893,7 @@ let rec (inline_closure_env :
     fun env  ->
       fun stack  ->
         fun t  ->
-          let t1 = FStar_Syntax_Subst.compress t  in
+          let t1 = t in
           log cfg
             (fun uu____3149  ->
                let uu____3150 = FStar_Syntax_Print.tag_of_term t1  in
@@ -1909,7 +1909,7 @@ let rec (inline_closure_env :
            | uu____3161 ->
                (match t1.FStar_Syntax_Syntax.n with
                 | FStar_Syntax_Syntax.Tm_delayed uu____3164 ->
-                    failwith "Impossible"
+                    inline_closure_env cfg env stack (FStar_Syntax_Subst.compress t)
                 | FStar_Syntax_Syntax.Tm_unknown  ->
                     rebuild_closure cfg env stack t1
                 | FStar_Syntax_Syntax.Tm_constant uu____3191 ->
@@ -1922,19 +1922,23 @@ let rec (inline_closure_env :
                     rebuild_closure cfg env stack t1
                 | FStar_Syntax_Syntax.Tm_uvar uu____3195 ->
                     if (cfg.steps).check_no_uvars
-                    then
-                      let uu____3214 =
-                        let uu____3215 =
-                          FStar_Range.string_of_range
-                            t1.FStar_Syntax_Syntax.pos
+                    then let t = (FStar_Syntax_Subst.compress t) in
+                         match t.n with
+                         | Tm_uvar _ ->
+                             let uu____3214 =
+                             let uu____3215 =
+                               FStar_Range.string_of_range
+                               t1.FStar_Syntax_Syntax.pos
+                             in
+                         let uu____3216 = FStar_Syntax_Print.term_to_string t1
+                             in
+                         FStar_Util.format2
+                           "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
+                           uu____3215 uu____3216
                            in
-                        let uu____3216 = FStar_Syntax_Print.term_to_string t1
-                           in
-                        FStar_Util.format2
-                          "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
-                          uu____3215 uu____3216
-                         in
-                      failwith uu____3214
+                         failwith uu____3214
+                        | _ -> 
+                          inline_closure_env cfg env stack t
                     else rebuild_closure cfg env stack t1
                 | FStar_Syntax_Syntax.Tm_type u ->
                     let t2 =

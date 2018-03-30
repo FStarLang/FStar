@@ -384,7 +384,6 @@ let norm_universe cfg (env:env) u =
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
 let rec inline_closure_env cfg (env:env) stack t =
-    let t = compress t in
     log cfg (fun () -> BU.print3 "\n>>> %s (env=%s) Closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (Print.term_to_string t));
     match env with
     | [] when not <| cfg.steps.compress_uvars ->
@@ -393,7 +392,7 @@ let rec inline_closure_env cfg (env:env) stack t =
     | _ ->
       match t.n with
       | Tm_delayed _ ->
-        failwith "Impossible"
+        inline_closure_env cfg env stack (compress t)
 
       | Tm_unknown
       | Tm_constant _
@@ -404,9 +403,14 @@ let rec inline_closure_env cfg (env:env) stack t =
 
       | Tm_uvar _ ->
         if cfg.steps.check_no_uvars
-        then failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
+        then let t = compress t in 
+             match t.n with
+             | Tm_uvar _ -> 
+               failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
                         (Range.string_of_range t.pos)
                         (Print.term_to_string t))
+             | _ -> 
+              inline_closure_env cfg env stack t
         else rebuild_closure cfg env stack t //should be closed anyway
 
       | Tm_type u ->
