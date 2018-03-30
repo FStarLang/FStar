@@ -104,6 +104,7 @@ type fsteps = {
     check_no_uvars : bool;
     unmeta : bool;
     unascribe : bool;
+    in_full_norm_request: bool;
 }
 
 let default_steps : fsteps = {
@@ -128,6 +129,7 @@ let default_steps : fsteps = {
     check_no_uvars = false;
     unmeta = false;
     unascribe = false;
+    in_full_norm_request = false;
 }
 
 let fstep_add_one s fs =
@@ -403,13 +405,13 @@ let rec inline_closure_env cfg (env:env) stack t =
 
       | Tm_uvar _ ->
         if cfg.steps.check_no_uvars
-        then let t = compress t in 
+        then let t = compress t in
              match t.n with
-             | Tm_uvar _ -> 
+             | Tm_uvar _ ->
                failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
                         (Range.string_of_range t.pos)
                         (Print.term_to_string t))
-             | _ -> 
+             | _ ->
               inline_closure_env cfg env stack t
         else rebuild_closure cfg env stack t //should be closed anyway
 
@@ -1166,7 +1168,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
-              let cfg' = {cfg with steps = to_fsteps s
+              let cfg' = {cfg with steps = ({ to_fsteps s with in_full_norm_request=true})
                                ; delta_level = delta_level
                                ; normalize_pure_lets = true } in
               let stack' =
@@ -1201,7 +1203,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  else rebuild cfg env stack t
             else // not an action, common case
                  let should_delta =
-                     Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
+                     not cfg.steps.no_delta_steps
+                     && Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
                      && cfg.delta_level |> BU.for_some (function
                          | Env.UnfoldTac
                          | NoDelta -> false
@@ -1299,7 +1302,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Abs _ :: _
                 | [] ->
                   if cfg.steps.weak //don't descend beneath a lambda if we're just doing weak reduction
-                  then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
+                  then let t =
+                           //if we're in the middle of processing a `normalize` request
+                           //then don't touch the body of the lambda, just close it
+                           //Otherwise, we may have a large lambda term because of uvar solutions ... at least reduce those away
+                           //This is trying to reach a middle ground between two bad performance problems
+                           //Which we should ultimately resolve by revising the unification algorithm to not produce such large terms
+                           if cfg.steps.in_full_norm_request
+                           then closure_as_term cfg env t //But, if the environment is non-empty, we need to substitute within the term
+                           else let steps' = {cfg.steps with weak=false; iota=false; zeta=false; primops=false; no_delta_steps=true;  pure_subterms_within_computations=false; simplify=false; reify_=false; no_full_norm=true; unmeta=false; unascribe=false } in
+                                let cfg' = {cfg with steps=steps'} in
+                                norm cfg' env [] t
+                       in
+                       rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
                        let lopt = match lopt with
