@@ -445,7 +445,7 @@ let open_comp (bs:binders) t =
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
 
-let open_pat (p:pat) : pat * subst_t =
+let open_pat_renaming (p:pat) : pat * subst_t * list<(bv * bv)> =
     let rec open_pat_aux sub renaming p =
         match p.v with
         | Pat_constant _ -> p, sub, renaming
@@ -471,8 +471,10 @@ let open_pat (p:pat) : pat * subst_t =
             let t0 = subst sub t0 in
             {p with v=Pat_dot_term(x, t0)}, sub, renaming //these are not in scope, so don't shift the index
     in
+    open_pat_aux [] [] p
 
-    let p, sub, _ = open_pat_aux [] [] p in
+let open_pat (p:pat) : pat * subst_t =
+    let p, sub, _ = open_pat_renaming p in
     p, sub
 
 let open_branch (p, wopt, e) =
