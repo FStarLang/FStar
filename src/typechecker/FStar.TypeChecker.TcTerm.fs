@@ -1855,7 +1855,7 @@ and check_top_level_let env e =
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
                  let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, lcomp_comp c1]) in
-                 let g1 = map_guard g1 <| N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
+                 let g1 = map_guard g1 <| N.normalize [N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
                  let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
@@ -2421,7 +2421,7 @@ let rec universe_of_aux env e =
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
           //      or a let,
-          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
+          let e = N.normalize [N.Beta; N.DoNotUnfoldPureLets] env e in
           let hd, args = U.head_and_args e in
           type_of_head false hd args
         | _ ->

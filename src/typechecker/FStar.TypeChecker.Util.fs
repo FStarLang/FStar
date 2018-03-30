@@ -1397,7 +1397,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let norm c =
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
-         let c = Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.NoDeltaSteps] env c in
+         let c = Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.DoNotUnfoldPureLets] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
@@ -1521,7 +1521,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
+              let c = N.normalize_comp [N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
               let e = N.reduce_uvar_solutions env e in
               let e =
                 if is_rec

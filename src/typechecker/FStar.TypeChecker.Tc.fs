@@ -1532,7 +1532,7 @@ let tc_decls env ses =
         N.normalize
                [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 N.CheckNoUvars;
-                N.Beta; N.NoDeltaSteps; N.CompressUvars;
+                N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars;
                 N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm]
               env
               t); //update the id_info table after having removed their uvars

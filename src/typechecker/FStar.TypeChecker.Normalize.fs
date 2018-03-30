@@ -61,7 +61,7 @@ type step =
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
-  | NoDeltaSteps
+  | DoNotUnfoldPureLets
   | UnfoldUntil of S.delta_depth
   | UnfoldOnly of list<I.lid>
   | UnfoldAttr of attribute
@@ -89,7 +89,7 @@ type fsteps = {
     weak : bool;
     hnf  : bool;
     primops : bool;
-    no_delta_steps : bool;
+    do_not_unfold_pure_lets : bool;
     unfold_until : option<S.delta_depth>;
     unfold_only : option<list<I.lid>>;
     unfold_attr : option<list<attribute>>;
@@ -114,7 +114,7 @@ let default_steps : fsteps = {
     weak = false;
     hnf  = false;
     primops = false;
-    no_delta_steps = false;
+    do_not_unfold_pure_lets = false;
     unfold_until = None;
     unfold_only = None;
     unfold_attr = None;
@@ -150,7 +150,7 @@ let fstep_add_one s fs =
     | Primops -> { fs with primops = true }
     | Eager_unfolding -> fs // eager_unfolding is not a step
     | Inlining -> fs // not a step
-    | NoDeltaSteps ->  { fs with no_delta_steps = true }
+    | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly lids -> { fs with unfold_only = Some lids }
     | UnfoldAttr attr -> { fs with unfold_attr = add_opt attr fs.unfold_attr }
@@ -1148,7 +1148,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
-                                                         ; no_delta_steps = false };
+                                                         ; do_not_unfold_pure_lets = false };
                                   delta_level=[Unfold Delta_constant];
                                   normalize_pure_lets=true} in
             begin
@@ -1203,8 +1203,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  else rebuild cfg env stack t
             else // not an action, common case
                  let should_delta =
-                     not cfg.steps.no_delta_steps
-                     && Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
+                     Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
                      && cfg.delta_level |> BU.for_some (function
                          | Env.UnfoldTac
                          | NoDelta -> false
@@ -1310,8 +1309,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
                            //Which we should ultimately resolve by revising the unification algorithm to not produce such large terms
                            if cfg.steps.in_full_norm_request
                            then closure_as_term cfg env t //But, if the environment is non-empty, we need to substitute within the term
-                           else let steps' = {cfg.steps with weak=false; iota=false; zeta=false; primops=false; no_delta_steps=true;  pure_subterms_within_computations=false; simplify=false; reify_=false; no_full_norm=true; unmeta=false; unascribe=false } in
-                                let cfg' = {cfg with steps=steps'} in
+                           else let steps' = {cfg.steps with
+                                        weak=false;
+                                        iota=false;
+                                        zeta=false;
+                                        primops=false;
+                                        do_not_unfold_pure_lets=true;
+                                        pure_subterms_within_computations=false;
+                                        simplify=false;
+                                        reify_=false;
+                                        no_full_norm=true;
+                                        unmeta=false;
+                                        unascribe=false } in
+                                let cfg' = {cfg with delta_level=[NoDelta]; steps=steps'} in
                                 norm cfg' env [] t
                        in
                        rebuild cfg env stack t
@@ -1411,7 +1421,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps.no_delta_steps) //we're allowed to do some delta steps, and ..
+            if not (cfg.steps.do_not_unfold_pure_lets) //we're allowed to do some delta steps, and ..
             && ((cfg.steps.pure_subterms_within_computations &&
                  U.has_attribute lb.lbattrs PC.inline_let_attr)        //1. we're extracting, and it's marked @inline_let
              || (U.is_pure_effect n && (cfg.normalize_pure_lets        //Or, 2. it's pure and we either not extracting, or
@@ -2557,7 +2567,7 @@ let normalize_refinement steps env t0 =
 let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
-              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
+              @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
               env
               t
 let reduce_uvar_solutions env t = reduce_or_remove_uvar_solutions false env t

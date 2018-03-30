@@ -33,7 +33,7 @@ type step =
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
-  | NoDeltaSteps
+  | DoNotUnfoldPureLets
   | UnfoldUntil of delta_depth
   | UnfoldOnly of list<FStar.Ident.lid>
   | UnfoldAttr of attribute
