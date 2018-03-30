@@ -1561,6 +1561,11 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          rebuild cfg env stack t0
 
        | Some (us, t) ->
+         begin
+         match qninfo with
+         | Some (Inr ({sigel=Sig_let((true, _), _)}, _), _) when not cfg.steps.zeta -> rebuild cfg env stack t0
+         | _ ->
+
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
@@ -1581,7 +1586,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                   norm cfg env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
-
+         end
 and reduce_impure_comp cfg env stack (head : term) // monadic term
                                      (m : either<monad_name,(monad_name * monad_name)>)
                                         // relevant monads.
@@ -2310,19 +2315,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
       // If either Weak or HNF, then don't descend into branch
       let whnf = cfg.steps.weak || cfg.steps.hnf in
-      let cfg_exclude_iota_zeta =
-         let new_delta =
-           cfg.delta_level |> List.filter (function
-             | Env.Inlining
-             | Env.Eager_unfolding_only -> true
-             | _ -> false)
-         in
-        ({cfg with delta_level=new_delta; steps= { cfg.steps with zeta = false }; strong=true})
+      let cfg_exclude_zeta =
+//         let new_delta =
+//           cfg.delta_level |> List.filter (function
+//             | Env.Inlining
+//             | Env.Eager_unfolding_only -> true
+//             | _ -> false)
+//         in
+        ({cfg with steps= { cfg.steps with zeta = false }; strong=true})
       in
       let norm_or_whnf env t =
         if whnf
-        then closure_as_term cfg_exclude_iota_zeta env t
-        else norm cfg_exclude_iota_zeta env [] t
+        then closure_as_term cfg_exclude_zeta env t
+        else norm cfg_exclude_zeta env [] t
       in
       let rec norm_pat env p = match p.v with
         | Pat_constant _ -> p, env

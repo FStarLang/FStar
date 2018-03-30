@@ -54,7 +54,7 @@ let set_hint_correlator env se =
       let n_opt = BU.smap_try_find tbl lid.str in
       if is_some n_opt then n_opt |> must else 0
     in
-    
+
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
@@ -384,7 +384,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               let usubst, uvs = SS.univ_var_opening act.action_univs in
               { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
           in
-          
+
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
@@ -395,7 +395,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               if lid_equals c.effect_name ed.mname then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args)))) else act.action_typ
             | _ -> act.action_typ
           in
-          
+
           let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
 
           // 1) Check action definition, setting its expected type to
@@ -675,7 +675,7 @@ let cps_and_elaborate env ed =
               (Some rc_gtot)
 
       | _ ->
-          raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
+          raise_error (Errors.Fatal_UnexpectedReturnShape, (BU.format1 "unexpected shape for return: %s" (Print.term_to_string return_wp)))
   in
 
   let return_wp =
@@ -684,7 +684,7 @@ let cps_and_elaborate env ed =
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
         U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
-        raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
+        raise_error (Errors.Fatal_UnexpectedReturnShape, (BU.format1 "unexpected shape for return: %s" (Print.term_to_string return_wp)))
   in
   let bind_wp =
     match (SS.compress bind_wp).n with
@@ -1220,7 +1220,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       end
       else phi
     in
-    
+
     let phi = tc_assume env phi r in
     let us, phi = TcUtil.generalize_universes env phi in
     [ { sigel = Sig_assume(lid, us, phi);
@@ -1690,13 +1690,13 @@ let extract_interface (env:env) (m:modul) :modul =
   let should_keep_lbdef (t:typ) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
-    in 
-    
+    in
+
     let c_opt =
       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
-     
+
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
      //if c is pure or ghost then keep it if the return type is not unit
@@ -1711,7 +1711,7 @@ let extract_interface (env:env) (m:modul) :modul =
     | Sig_datacon _ -> failwith "Impossible! Bare data constructor"
 
     | Sig_splice _ -> failwith "Impossible! Trying to extract splice"
-    
+
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
@@ -1743,7 +1743,7 @@ let extract_interface (env:env) (m:modul) :modul =
         //if is it abstract or irreducible or lemma, keep just the vals
         let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
         if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
-        else 
+        else
           let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
           if should_keep_defs then [ s ]
           else vals
