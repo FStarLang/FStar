@@ -63,7 +63,8 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
-  | UnfoldOnly of list<I.lid>
+  | UnfoldOnly  of list<I.lid>
+  | UnfoldFully of list<I.lid>
   | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
@@ -92,6 +93,7 @@ type fsteps = {
     no_delta_steps : bool;
     unfold_until : option<S.delta_depth>;
     unfold_only : option<list<I.lid>>;
+    unfold_fully : option<list<I.lid>>;
     unfold_attr : option<list<attribute>>;
     unfold_tac : bool;
     pure_subterms_within_computations : bool;
@@ -116,6 +118,7 @@ let default_steps : fsteps = {
     no_delta_steps = false;
     unfold_until = None;
     unfold_only = None;
+    unfold_fully = None;
     unfold_attr = None;
     unfold_tac = false;
     pure_subterms_within_computations = false;
@@ -150,7 +153,8 @@ let fstep_add_one s fs =
     | Inlining -> fs // not a step
     | NoDeltaSteps ->  { fs with no_delta_steps = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
-    | UnfoldOnly lids -> { fs with unfold_only = Some lids }
+    | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
+    | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr attr -> { fs with unfold_attr = add_opt attr fs.unfold_attr }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
@@ -972,6 +976,8 @@ let tr_norm_step = function
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | EMB.UnfoldFully names ->
+        [UnfoldUntil Delta_constant; UnfoldFully (List.map I.lid_of_str names)]
     | EMB.UnfoldAttr t ->
         [UnfoldUntil Delta_constant; UnfoldAttr t]
 
@@ -1054,6 +1060,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
+                                                         ; unfold_fully = None
                                                          ; no_delta_steps = false };
                                   delta_level=[Unfold Delta_constant];
                                   normalize_pure_lets=true} in
@@ -1071,7 +1078,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
             | Some (s, tm) ->
               let delta_level =
-                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
+                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
               let cfg' = {cfg with steps = to_fsteps s
@@ -1133,10 +1140,23 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
                              | _, _ -> false)))
                  in
+                 let should_delta, fully =
+                     match cfg.steps.unfold_fully with
+                     | None -> should_delta, false
+                     | Some lids -> if BU.for_some (fv_eq_lid fv) lids
+                                    then true, true
+                                    else should_delta, false
+                 in
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
                                  (Range.string_of_range t.pos)
                                  (string_of_bool should_delta));
+                 let cfg = if fully
+                           then { cfg with steps = { cfg.steps with
+                                           unfold_only = None
+                                         ; unfold_until = Some Delta_constant } }
+                           else cfg
+                 in
                  if should_delta
                  then do_unfold_fv cfg env stack t qninfo fv
                  else rebuild cfg env stack t
