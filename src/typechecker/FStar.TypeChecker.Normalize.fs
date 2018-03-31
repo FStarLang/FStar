@@ -1740,20 +1740,36 @@ and norm_pattern_args cfg env args =
 
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
+        log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements"
+                                        (Print.comp_to_string comp)
+                                        (BU.string_of_int (List.length env)));
         match comp.n with
             | Total (t, uopt) ->
-              {comp with n=Total (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
+              let t = norm cfg env [] t in
+              let uopt = match uopt with
+                         | Some u -> Some <| norm_universe cfg env u
+                         | None -> None
+              in
+              { comp with n = Total (t, uopt) }
 
             | GTotal (t, uopt) ->
-              {comp with n=GTotal (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
+              let t = norm cfg env [] t in
+              let uopt = match uopt with
+                         | Some u -> Some <| norm_universe cfg env u
+                         | None -> None
+              in
+              { comp with n = GTotal (t, uopt) }
 
             | Comp ct ->
-              let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              let norm_args = List.mapi (fun idx (a, i) -> (norm cfg env [] a, i)) in
+              let effect_args = norm_args ct.effect_args in
               let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
-              {comp with n=Comp ({ct with comp_univs=List.map (norm_universe cfg env) ct.comp_univs;
-                                          result_typ=norm cfg env [] ct.result_typ;
-                                          effect_args=norm_args ct.effect_args;
-                                          flags=flags})}
+              let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
+              let result_typ = norm cfg env [] ct.result_typ in
+              { comp with n = Comp ({ct with comp_univs  = comp_univs;
+                                             result_typ  = result_typ;
+                                             effect_args = effect_args;
+                                             flags       = flags}) }
 
 and norm_binder : cfg -> env -> binder -> binder =
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
