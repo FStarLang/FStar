@@ -1674,21 +1674,6 @@ let term_eq t1 t2 =
     debug_term_eq := false;
     r
 
-let rec bottom_fold (f : term -> term) (t : term) : term =
-    let ff = bottom_fold f in
-    let tn = (compress t).n in
-    let tn = match tn with
-             | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
-             // TODO: We ignore the types. Bug or feature?
-             | Tm_abs (bs, t, k) -> let bs, t' = open_term bs t in
-                                    let t'' = ff t' in
-                                    Tm_abs (bs, close bs t'', k)
-             | Tm_arrow (bs, k) -> tn //TODO
-             | Tm_uinst (t, us) ->
-                Tm_uinst (ff t, us)
-             | _ -> tn in
-    f ({ t with n = tn })
-
 // An estimation of the size of a term, only for debugging
 let rec sizeof (t:term) : int =
     match t.n with
