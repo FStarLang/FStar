@@ -24,101 +24,101 @@ type step =
   | CheckNoUvars 
   | Unmeta 
   | Unascribe [@@deriving show]
-let (uu___is_Beta : step -> Prims.bool) =
+let uu___is_Beta : step -> Prims.bool =
   fun projectee  -> match projectee with | Beta  -> true | uu____22 -> false 
-let (uu___is_Iota : step -> Prims.bool) =
+let uu___is_Iota : step -> Prims.bool =
   fun projectee  -> match projectee with | Iota  -> true | uu____26 -> false 
-let (uu___is_Zeta : step -> Prims.bool) =
+let uu___is_Zeta : step -> Prims.bool =
   fun projectee  -> match projectee with | Zeta  -> true | uu____30 -> false 
-let (uu___is_Exclude : step -> Prims.bool) =
+let uu___is_Exclude : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Exclude _0 -> true | uu____35 -> false
   
-let (__proj__Exclude__item___0 : step -> step) =
+let __proj__Exclude__item___0 : step -> step =
   fun projectee  -> match projectee with | Exclude _0 -> _0 
-let (uu___is_Weak : step -> Prims.bool) =
+let uu___is_Weak : step -> Prims.bool =
   fun projectee  -> match projectee with | Weak  -> true | uu____46 -> false 
-let (uu___is_HNF : step -> Prims.bool) =
+let uu___is_HNF : step -> Prims.bool =
   fun projectee  -> match projectee with | HNF  -> true | uu____50 -> false 
-let (uu___is_Primops : step -> Prims.bool) =
+let uu___is_Primops : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Primops  -> true | uu____54 -> false
   
-let (uu___is_Eager_unfolding : step -> Prims.bool) =
+let uu___is_Eager_unfolding : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Eager_unfolding  -> true | uu____58 -> false
   
-let (uu___is_Inlining : step -> Prims.bool) =
+let uu___is_Inlining : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Inlining  -> true | uu____62 -> false
   
-let (uu___is_NoDeltaSteps : step -> Prims.bool) =
+let uu___is_NoDeltaSteps : step -> Prims.bool =
   fun projectee  ->
     match projectee with | NoDeltaSteps  -> true | uu____66 -> false
   
-let (uu___is_UnfoldUntil : step -> Prims.bool) =
+let uu___is_UnfoldUntil : step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldUntil _0 -> true | uu____71 -> false
   
-let (__proj__UnfoldUntil__item___0 : step -> FStar_Syntax_Syntax.delta_depth)
-  = fun projectee  -> match projectee with | UnfoldUntil _0 -> _0 
-let (uu___is_UnfoldOnly : step -> Prims.bool) =
+let __proj__UnfoldUntil__item___0 : step -> FStar_Syntax_Syntax.delta_depth =
+  fun projectee  -> match projectee with | UnfoldUntil _0 -> _0 
+let uu___is_UnfoldOnly : step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldOnly _0 -> true | uu____85 -> false
   
-let (__proj__UnfoldOnly__item___0 : step -> FStar_Ident.lid Prims.list) =
+let __proj__UnfoldOnly__item___0 : step -> FStar_Ident.lid Prims.list =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
-let (uu___is_UnfoldAttr : step -> Prims.bool) =
+let uu___is_UnfoldAttr : step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldAttr _0 -> true | uu____103 -> false
   
-let (__proj__UnfoldAttr__item___0 : step -> FStar_Syntax_Syntax.attribute) =
+let __proj__UnfoldAttr__item___0 : step -> FStar_Syntax_Syntax.attribute =
   fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
-let (uu___is_UnfoldTac : step -> Prims.bool) =
+let uu___is_UnfoldTac : step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldTac  -> true | uu____114 -> false
   
-let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
+let uu___is_PureSubtermsWithinComputations : step -> Prims.bool =
   fun projectee  ->
     match projectee with
     | PureSubtermsWithinComputations  -> true
     | uu____118 -> false
   
-let (uu___is_Simplify : step -> Prims.bool) =
+let uu___is_Simplify : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Simplify  -> true | uu____122 -> false
   
-let (uu___is_EraseUniverses : step -> Prims.bool) =
+let uu___is_EraseUniverses : step -> Prims.bool =
   fun projectee  ->
     match projectee with | EraseUniverses  -> true | uu____126 -> false
   
-let (uu___is_AllowUnboundUniverses : step -> Prims.bool) =
+let uu___is_AllowUnboundUniverses : step -> Prims.bool =
   fun projectee  ->
     match projectee with
     | AllowUnboundUniverses  -> true
     | uu____130 -> false
   
-let (uu___is_Reify : step -> Prims.bool) =
+let uu___is_Reify : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Reify  -> true | uu____134 -> false
   
-let (uu___is_CompressUvars : step -> Prims.bool) =
+let uu___is_CompressUvars : step -> Prims.bool =
   fun projectee  ->
     match projectee with | CompressUvars  -> true | uu____138 -> false
   
-let (uu___is_NoFullNorm : step -> Prims.bool) =
+let uu___is_NoFullNorm : step -> Prims.bool =
   fun projectee  ->
     match projectee with | NoFullNorm  -> true | uu____142 -> false
   
-let (uu___is_CheckNoUvars : step -> Prims.bool) =
+let uu___is_CheckNoUvars : step -> Prims.bool =
   fun projectee  ->
     match projectee with | CheckNoUvars  -> true | uu____146 -> false
   
-let (uu___is_Unmeta : step -> Prims.bool) =
+let uu___is_Unmeta : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Unmeta  -> true | uu____150 -> false
   
-let (uu___is_Unascribe : step -> Prims.bool) =
+let uu___is_Unascribe : step -> Prims.bool =
   fun projectee  ->
     match projectee with | Unascribe  -> true | uu____154 -> false
   
@@ -161,7 +161,7 @@ type fsteps =
   check_no_uvars: Prims.bool ;
   unmeta: Prims.bool ;
   unascribe: Prims.bool }[@@deriving show]
-let (__proj__Mkfsteps__item__beta : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__beta : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -180,7 +180,7 @@ let (__proj__Mkfsteps__item__beta : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__beta
   
-let (__proj__Mkfsteps__item__iota : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__iota : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -199,7 +199,7 @@ let (__proj__Mkfsteps__item__iota : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__iota
   
-let (__proj__Mkfsteps__item__zeta : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__zeta : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -218,7 +218,7 @@ let (__proj__Mkfsteps__item__zeta : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__zeta
   
-let (__proj__Mkfsteps__item__weak : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__weak : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -237,7 +237,7 @@ let (__proj__Mkfsteps__item__weak : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__weak
   
-let (__proj__Mkfsteps__item__hnf : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__hnf : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -256,7 +256,7 @@ let (__proj__Mkfsteps__item__hnf : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__hnf
   
-let (__proj__Mkfsteps__item__primops : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__primops : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -275,7 +275,7 @@ let (__proj__Mkfsteps__item__primops : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__primops
   
-let (__proj__Mkfsteps__item__no_delta_steps : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__no_delta_steps : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -294,8 +294,8 @@ let (__proj__Mkfsteps__item__no_delta_steps : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__no_delta_steps
   
-let (__proj__Mkfsteps__item__unfold_until :
-  fsteps -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option) =
+let __proj__Mkfsteps__item__unfold_until :
+  fsteps -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -314,8 +314,8 @@ let (__proj__Mkfsteps__item__unfold_until :
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__unfold_until
   
-let (__proj__Mkfsteps__item__unfold_only :
-  fsteps -> FStar_Ident.lid Prims.list FStar_Pervasives_Native.option) =
+let __proj__Mkfsteps__item__unfold_only :
+  fsteps -> FStar_Ident.lid Prims.list FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -334,9 +334,9 @@ let (__proj__Mkfsteps__item__unfold_only :
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__unfold_only
   
-let (__proj__Mkfsteps__item__unfold_attr :
+let __proj__Mkfsteps__item__unfold_attr :
   fsteps ->
-    FStar_Syntax_Syntax.attribute Prims.list FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.attribute Prims.list FStar_Pervasives_Native.option
   =
   fun projectee  ->
     match projectee with
@@ -356,7 +356,7 @@ let (__proj__Mkfsteps__item__unfold_attr :
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__unfold_attr
   
-let (__proj__Mkfsteps__item__unfold_tac : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__unfold_tac : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -375,8 +375,8 @@ let (__proj__Mkfsteps__item__unfold_tac : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__unfold_tac
   
-let (__proj__Mkfsteps__item__pure_subterms_within_computations :
-  fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__pure_subterms_within_computations :
+  fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -396,7 +396,7 @@ let (__proj__Mkfsteps__item__pure_subterms_within_computations :
         unascribe = __fname__unascribe;_} ->
         __fname__pure_subterms_within_computations
   
-let (__proj__Mkfsteps__item__simplify : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__simplify : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -415,7 +415,7 @@ let (__proj__Mkfsteps__item__simplify : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__simplify
   
-let (__proj__Mkfsteps__item__erase_universes : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__erase_universes : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -434,8 +434,7 @@ let (__proj__Mkfsteps__item__erase_universes : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__erase_universes
   
-let (__proj__Mkfsteps__item__allow_unbound_universes : fsteps -> Prims.bool)
-  =
+let __proj__Mkfsteps__item__allow_unbound_universes : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -454,7 +453,7 @@ let (__proj__Mkfsteps__item__allow_unbound_universes : fsteps -> Prims.bool)
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__allow_unbound_universes
   
-let (__proj__Mkfsteps__item__reify_ : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__reify_ : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -473,7 +472,7 @@ let (__proj__Mkfsteps__item__reify_ : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__reify_
   
-let (__proj__Mkfsteps__item__compress_uvars : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__compress_uvars : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -492,7 +491,7 @@ let (__proj__Mkfsteps__item__compress_uvars : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__compress_uvars
   
-let (__proj__Mkfsteps__item__no_full_norm : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__no_full_norm : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -511,7 +510,7 @@ let (__proj__Mkfsteps__item__no_full_norm : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__no_full_norm
   
-let (__proj__Mkfsteps__item__check_no_uvars : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__check_no_uvars : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -530,7 +529,7 @@ let (__proj__Mkfsteps__item__check_no_uvars : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__check_no_uvars
   
-let (__proj__Mkfsteps__item__unmeta : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__unmeta : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -549,7 +548,7 @@ let (__proj__Mkfsteps__item__unmeta : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__unmeta
   
-let (__proj__Mkfsteps__item__unascribe : fsteps -> Prims.bool) =
+let __proj__Mkfsteps__item__unascribe : fsteps -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { beta = __fname__beta; iota = __fname__iota; zeta = __fname__zeta;
@@ -568,7 +567,7 @@ let (__proj__Mkfsteps__item__unascribe : fsteps -> Prims.bool) =
         check_no_uvars = __fname__check_no_uvars; unmeta = __fname__unmeta;
         unascribe = __fname__unascribe;_} -> __fname__unascribe
   
-let (default_steps : fsteps) =
+let default_steps : fsteps =
   {
     beta = true;
     iota = true;
@@ -592,7 +591,7 @@ let (default_steps : fsteps) =
     unmeta = false;
     unascribe = false
   } 
-let (fstep_add_one : step -> fsteps -> fsteps) =
+let fstep_add_one : step -> fsteps -> fsteps =
   fun s  ->
     fun fs  ->
       let add_opt x uu___78_1038 =
@@ -1229,29 +1228,29 @@ let (fstep_add_one : step -> fsteps -> fsteps) =
             unascribe = true
           }
   
-let rec (to_fsteps : step Prims.list -> fsteps) =
+let rec to_fsteps : step Prims.list -> fsteps =
   fun s  -> FStar_List.fold_right fstep_add_one s default_steps 
 type psc =
   {
   psc_range: FStar_Range.range ;
   psc_subst: Prims.unit -> FStar_Syntax_Syntax.subst_t }[@@deriving show]
-let (__proj__Mkpsc__item__psc_range : psc -> FStar_Range.range) =
+let __proj__Mkpsc__item__psc_range : psc -> FStar_Range.range =
   fun projectee  ->
     match projectee with
     | { psc_range = __fname__psc_range; psc_subst = __fname__psc_subst;_} ->
         __fname__psc_range
   
-let (__proj__Mkpsc__item__psc_subst :
-  psc -> Prims.unit -> FStar_Syntax_Syntax.subst_t) =
+let __proj__Mkpsc__item__psc_subst :
+  psc -> Prims.unit -> FStar_Syntax_Syntax.subst_t =
   fun projectee  ->
     match projectee with
     | { psc_range = __fname__psc_range; psc_subst = __fname__psc_subst;_} ->
         __fname__psc_subst
   
-let (null_psc : psc) =
+let null_psc : psc =
   { psc_range = FStar_Range.dummyRange; psc_subst = (fun uu____1128  -> []) } 
-let (psc_range : psc -> FStar_Range.range) = fun psc  -> psc.psc_range 
-let (psc_subst : psc -> FStar_Syntax_Syntax.subst_t) =
+let psc_range : psc -> FStar_Range.range = fun psc  -> psc.psc_range 
+let psc_subst : psc -> FStar_Syntax_Syntax.subst_t =
   fun psc  -> psc.psc_subst () 
 type primitive_step =
   {
@@ -1265,8 +1264,8 @@ type primitive_step =
       FStar_Syntax_Syntax.args ->
         FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
     }[@@deriving show]
-let (__proj__Mkprimitive_step__item__name :
-  primitive_step -> FStar_Ident.lid) =
+let __proj__Mkprimitive_step__item__name : primitive_step -> FStar_Ident.lid
+  =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; arity = __fname__arity;
@@ -1275,7 +1274,7 @@ let (__proj__Mkprimitive_step__item__name :
         requires_binder_substitution = __fname__requires_binder_substitution;
         interpretation = __fname__interpretation;_} -> __fname__name
   
-let (__proj__Mkprimitive_step__item__arity : primitive_step -> Prims.int) =
+let __proj__Mkprimitive_step__item__arity : primitive_step -> Prims.int =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; arity = __fname__arity;
@@ -1284,8 +1283,8 @@ let (__proj__Mkprimitive_step__item__arity : primitive_step -> Prims.int) =
         requires_binder_substitution = __fname__requires_binder_substitution;
         interpretation = __fname__interpretation;_} -> __fname__arity
   
-let (__proj__Mkprimitive_step__item__auto_reflect :
-  primitive_step -> Prims.int FStar_Pervasives_Native.option) =
+let __proj__Mkprimitive_step__item__auto_reflect :
+  primitive_step -> Prims.int FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; arity = __fname__arity;
@@ -1294,8 +1293,8 @@ let (__proj__Mkprimitive_step__item__auto_reflect :
         requires_binder_substitution = __fname__requires_binder_substitution;
         interpretation = __fname__interpretation;_} -> __fname__auto_reflect
   
-let (__proj__Mkprimitive_step__item__strong_reduction_ok :
-  primitive_step -> Prims.bool) =
+let __proj__Mkprimitive_step__item__strong_reduction_ok :
+  primitive_step -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; arity = __fname__arity;
@@ -1305,8 +1304,8 @@ let (__proj__Mkprimitive_step__item__strong_reduction_ok :
         interpretation = __fname__interpretation;_} ->
         __fname__strong_reduction_ok
   
-let (__proj__Mkprimitive_step__item__requires_binder_substitution :
-  primitive_step -> Prims.bool) =
+let __proj__Mkprimitive_step__item__requires_binder_substitution :
+  primitive_step -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; arity = __fname__arity;
@@ -1316,11 +1315,11 @@ let (__proj__Mkprimitive_step__item__requires_binder_substitution :
         interpretation = __fname__interpretation;_} ->
         __fname__requires_binder_substitution
   
-let (__proj__Mkprimitive_step__item__interpretation :
+let __proj__Mkprimitive_step__item__interpretation :
   primitive_step ->
     psc ->
       FStar_Syntax_Syntax.args ->
-        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun projectee  ->
     match projectee with
@@ -1341,37 +1340,37 @@ type closure =
   FStar_Pervasives_Native.tuple4 
   | Univ of FStar_Syntax_Syntax.universe 
   | Dummy [@@deriving show]
-let (uu___is_Clos : closure -> Prims.bool) =
+let uu___is_Clos : closure -> Prims.bool =
   fun projectee  ->
     match projectee with | Clos _0 -> true | uu____1371 -> false
   
-let (__proj__Clos__item___0 :
+let __proj__Clos__item___0 :
   closure ->
     ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
        FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term,
       ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
          FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term)
         FStar_Pervasives_Native.tuple2 FStar_Syntax_Syntax.memo,Prims.bool)
-      FStar_Pervasives_Native.tuple4)
+      FStar_Pervasives_Native.tuple4
   = fun projectee  -> match projectee with | Clos _0 -> _0 
-let (uu___is_Univ : closure -> Prims.bool) =
+let uu___is_Univ : closure -> Prims.bool =
   fun projectee  ->
     match projectee with | Univ _0 -> true | uu____1473 -> false
   
-let (__proj__Univ__item___0 : closure -> FStar_Syntax_Syntax.universe) =
+let __proj__Univ__item___0 : closure -> FStar_Syntax_Syntax.universe =
   fun projectee  -> match projectee with | Univ _0 -> _0 
-let (uu___is_Dummy : closure -> Prims.bool) =
+let uu___is_Dummy : closure -> Prims.bool =
   fun projectee  ->
     match projectee with | Dummy  -> true | uu____1484 -> false
   
 type env =
   (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
     FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
-let (dummy :
+let dummy :
   (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-    FStar_Pervasives_Native.tuple2)
+    FStar_Pervasives_Native.tuple2
   = (FStar_Pervasives_Native.None, Dummy) 
-let (closure_to_string : closure -> Prims.string) =
+let closure_to_string : closure -> Prims.string =
   fun uu___79_1503  ->
     match uu___79_1503 with
     | Clos (uu____1504,t,uu____1506,uu____1507) ->
@@ -1386,29 +1385,29 @@ type debug_switches =
   b380: Prims.bool ;
   norm_delayed: Prims.bool ;
   print_normalized: Prims.bool }[@@deriving show]
-let (__proj__Mkdebug_switches__item__gen : debug_switches -> Prims.bool) =
+let __proj__Mkdebug_switches__item__gen : debug_switches -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { gen = __fname__gen; primop = __fname__primop; b380 = __fname__b380;
         norm_delayed = __fname__norm_delayed;
         print_normalized = __fname__print_normalized;_} -> __fname__gen
   
-let (__proj__Mkdebug_switches__item__primop : debug_switches -> Prims.bool) =
+let __proj__Mkdebug_switches__item__primop : debug_switches -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { gen = __fname__gen; primop = __fname__primop; b380 = __fname__b380;
         norm_delayed = __fname__norm_delayed;
         print_normalized = __fname__print_normalized;_} -> __fname__primop
   
-let (__proj__Mkdebug_switches__item__b380 : debug_switches -> Prims.bool) =
+let __proj__Mkdebug_switches__item__b380 : debug_switches -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { gen = __fname__gen; primop = __fname__primop; b380 = __fname__b380;
         norm_delayed = __fname__norm_delayed;
         print_normalized = __fname__print_normalized;_} -> __fname__b380
   
-let (__proj__Mkdebug_switches__item__norm_delayed :
-  debug_switches -> Prims.bool) =
+let __proj__Mkdebug_switches__item__norm_delayed :
+  debug_switches -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { gen = __fname__gen; primop = __fname__primop; b380 = __fname__b380;
@@ -1416,8 +1415,8 @@ let (__proj__Mkdebug_switches__item__norm_delayed :
         print_normalized = __fname__print_normalized;_} ->
         __fname__norm_delayed
   
-let (__proj__Mkdebug_switches__item__print_normalized :
-  debug_switches -> Prims.bool) =
+let __proj__Mkdebug_switches__item__print_normalized :
+  debug_switches -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { gen = __fname__gen; primop = __fname__primop; b380 = __fname__b380;
@@ -1435,7 +1434,7 @@ type cfg =
   strong: Prims.bool ;
   memoize_lazy: Prims.bool ;
   normalize_pure_lets: Prims.bool }[@@deriving show]
-let (__proj__Mkcfg__item__steps : cfg -> fsteps) =
+let __proj__Mkcfg__item__steps : cfg -> fsteps =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1445,7 +1444,7 @@ let (__proj__Mkcfg__item__steps : cfg -> fsteps) =
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__steps
   
-let (__proj__Mkcfg__item__tcenv : cfg -> FStar_TypeChecker_Env.env) =
+let __proj__Mkcfg__item__tcenv : cfg -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1455,7 +1454,7 @@ let (__proj__Mkcfg__item__tcenv : cfg -> FStar_TypeChecker_Env.env) =
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__tcenv
   
-let (__proj__Mkcfg__item__debug : cfg -> debug_switches) =
+let __proj__Mkcfg__item__debug : cfg -> debug_switches =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1465,8 +1464,8 @@ let (__proj__Mkcfg__item__debug : cfg -> debug_switches) =
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__debug
   
-let (__proj__Mkcfg__item__delta_level :
-  cfg -> FStar_TypeChecker_Env.delta_level Prims.list) =
+let __proj__Mkcfg__item__delta_level :
+  cfg -> FStar_TypeChecker_Env.delta_level Prims.list =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1476,8 +1475,8 @@ let (__proj__Mkcfg__item__delta_level :
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__delta_level
   
-let (__proj__Mkcfg__item__primitive_steps :
-  cfg -> primitive_step FStar_Util.psmap) =
+let __proj__Mkcfg__item__primitive_steps :
+  cfg -> primitive_step FStar_Util.psmap =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1487,7 +1486,7 @@ let (__proj__Mkcfg__item__primitive_steps :
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__primitive_steps
   
-let (__proj__Mkcfg__item__strong : cfg -> Prims.bool) =
+let __proj__Mkcfg__item__strong : cfg -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1497,7 +1496,7 @@ let (__proj__Mkcfg__item__strong : cfg -> Prims.bool) =
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__strong
   
-let (__proj__Mkcfg__item__memoize_lazy : cfg -> Prims.bool) =
+let __proj__Mkcfg__item__memoize_lazy : cfg -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1507,7 +1506,7 @@ let (__proj__Mkcfg__item__memoize_lazy : cfg -> Prims.bool) =
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__memoize_lazy
   
-let (__proj__Mkcfg__item__normalize_pure_lets : cfg -> Prims.bool) =
+let __proj__Mkcfg__item__normalize_pure_lets : cfg -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { steps = __fname__steps; tcenv = __fname__tcenv;
@@ -1517,9 +1516,9 @@ let (__proj__Mkcfg__item__normalize_pure_lets : cfg -> Prims.bool) =
         normalize_pure_lets = __fname__normalize_pure_lets;_} ->
         __fname__normalize_pure_lets
   
-let (add_steps :
+let add_steps :
   primitive_step FStar_Util.psmap ->
-    primitive_step Prims.list -> primitive_step FStar_Util.psmap)
+    primitive_step Prims.list -> primitive_step FStar_Util.psmap
   =
   fun m  ->
     fun l  ->
@@ -1529,14 +1528,14 @@ let (add_steps :
              let uu____1804 = FStar_Ident.text_of_lid p.name  in
              FStar_Util.psmap_add m1 uu____1804 p) l m
   
-let (prim_from_list :
-  primitive_step Prims.list -> primitive_step FStar_Util.psmap) =
+let prim_from_list :
+  primitive_step Prims.list -> primitive_step FStar_Util.psmap =
   fun l  ->
     let uu____1816 = FStar_Util.psmap_empty ()  in add_steps uu____1816 l
   
-let (find_prim_step :
+let find_prim_step :
   cfg ->
-    FStar_Syntax_Syntax.fv -> primitive_step FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.fv -> primitive_step FStar_Pervasives_Native.option
   =
   fun cfg  ->
     fun fv  ->
@@ -1574,94 +1573,94 @@ type stack_elt =
   | Cfg of cfg 
   | Debug of (FStar_Syntax_Syntax.term,FStar_Util.time)
   FStar_Pervasives_Native.tuple2 [@@deriving show]
-let (uu___is_Arg : stack_elt -> Prims.bool) =
+let uu___is_Arg : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Arg _0 -> true | uu____1969 -> false
   
-let (__proj__Arg__item___0 :
+let __proj__Arg__item___0 :
   stack_elt ->
     (closure,FStar_Syntax_Syntax.aqual,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3)
+      FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Arg _0 -> _0 
-let (uu___is_UnivArgs : stack_elt -> Prims.bool) =
+let uu___is_UnivArgs : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | UnivArgs _0 -> true | uu____2005 -> false
   
-let (__proj__UnivArgs__item___0 :
+let __proj__UnivArgs__item___0 :
   stack_elt ->
     (FStar_Syntax_Syntax.universe Prims.list,FStar_Range.range)
-      FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | UnivArgs _0 -> _0 
-let (uu___is_MemoLazy : stack_elt -> Prims.bool) =
+let uu___is_MemoLazy : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | MemoLazy _0 -> true | uu____2041 -> false
   
-let (__proj__MemoLazy__item___0 :
+let __proj__MemoLazy__item___0 :
   stack_elt ->
     (env,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
-      FStar_Syntax_Syntax.memo)
+      FStar_Syntax_Syntax.memo
   = fun projectee  -> match projectee with | MemoLazy _0 -> _0 
-let (uu___is_Match : stack_elt -> Prims.bool) =
+let uu___is_Match : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Match _0 -> true | uu____2110 -> false
   
-let (__proj__Match__item___0 :
+let __proj__Match__item___0 :
   stack_elt ->
-    (env,branches,FStar_Range.range) FStar_Pervasives_Native.tuple3)
+    (env,branches,FStar_Range.range) FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Match _0 -> _0 
-let (uu___is_Abs : stack_elt -> Prims.bool) =
+let uu___is_Abs : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Abs _0 -> true | uu____2152 -> false
   
-let (__proj__Abs__item___0 :
+let __proj__Abs__item___0 :
   stack_elt ->
     (env,FStar_Syntax_Syntax.binders,env,FStar_Syntax_Syntax.residual_comp
                                            FStar_Pervasives_Native.option,
-      FStar_Range.range) FStar_Pervasives_Native.tuple5)
+      FStar_Range.range) FStar_Pervasives_Native.tuple5
   = fun projectee  -> match projectee with | Abs _0 -> _0 
-let (uu___is_App : stack_elt -> Prims.bool) =
+let uu___is_App : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | App _0 -> true | uu____2208 -> false
   
-let (__proj__App__item___0 :
+let __proj__App__item___0 :
   stack_elt ->
     (env,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual,FStar_Range.range)
-      FStar_Pervasives_Native.tuple4)
+      FStar_Pervasives_Native.tuple4
   = fun projectee  -> match projectee with | App _0 -> _0 
-let (uu___is_Meta : stack_elt -> Prims.bool) =
+let uu___is_Meta : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Meta _0 -> true | uu____2248 -> false
   
-let (__proj__Meta__item___0 :
+let __proj__Meta__item___0 :
   stack_elt ->
     (FStar_Syntax_Syntax.metadata,FStar_Range.range)
-      FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | Meta _0 -> _0 
-let (uu___is_Let : stack_elt -> Prims.bool) =
+let uu___is_Let : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Let _0 -> true | uu____2280 -> false
   
-let (__proj__Let__item___0 :
+let __proj__Let__item___0 :
   stack_elt ->
     (env,FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.letbinding,FStar_Range.range)
-      FStar_Pervasives_Native.tuple4)
+      FStar_Pervasives_Native.tuple4
   = fun projectee  -> match projectee with | Let _0 -> _0 
-let (uu___is_Cfg : stack_elt -> Prims.bool) =
+let uu___is_Cfg : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Cfg _0 -> true | uu____2316 -> false
   
-let (__proj__Cfg__item___0 : stack_elt -> cfg) =
+let __proj__Cfg__item___0 : stack_elt -> cfg =
   fun projectee  -> match projectee with | Cfg _0 -> _0 
-let (uu___is_Debug : stack_elt -> Prims.bool) =
+let uu___is_Debug : stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Debug _0 -> true | uu____2332 -> false
   
-let (__proj__Debug__item___0 :
+let __proj__Debug__item___0 :
   stack_elt ->
-    (FStar_Syntax_Syntax.term,FStar_Util.time) FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.term,FStar_Util.time) FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | Debug _0 -> _0 
 type stack = stack_elt Prims.list[@@deriving show]
-let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+let head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  ->
     let uu____2357 = FStar_Syntax_Util.head_and_args' t  in
     match uu____2357 with | (hd1,uu____2371) -> hd1
@@ -1686,12 +1685,12 @@ let set_memo : 'a . cfg -> 'a FStar_Syntax_Syntax.memo -> 'a -> Prims.unit =
               FStar_ST.op_Colon_Equals r (FStar_Pervasives_Native.Some t)
         else ()
   
-let (env_to_string : closure Prims.list -> Prims.string) =
+let env_to_string : closure Prims.list -> Prims.string =
   fun env  ->
     let uu____2547 = FStar_List.map closure_to_string env  in
     FStar_All.pipe_right uu____2547 (FStar_String.concat "; ")
   
-let (stack_elt_to_string : stack_elt -> Prims.string) =
+let stack_elt_to_string : stack_elt -> Prims.string =
   fun uu___80_2554  ->
     match uu___80_2554 with
     | Arg (c,uu____2556,uu____2557) ->
@@ -1715,14 +1714,14 @@ let (stack_elt_to_string : stack_elt -> Prims.string) =
         let uu____2613 = FStar_Syntax_Print.term_to_string t  in
         FStar_Util.format1 "Debug %s" uu____2613
   
-let (stack_to_string : stack_elt Prims.list -> Prims.string) =
+let stack_to_string : stack_elt Prims.list -> Prims.string =
   fun s  ->
     let uu____2621 = FStar_List.map stack_elt_to_string s  in
     FStar_All.pipe_right uu____2621 (FStar_String.concat "; ")
   
-let (log : cfg -> (Prims.unit -> Prims.unit) -> Prims.unit) =
+let log : cfg -> (Prims.unit -> Prims.unit) -> Prims.unit =
   fun cfg  -> fun f  -> if (cfg.debug).gen then f () else () 
-let (log_primops : cfg -> (Prims.unit -> Prims.unit) -> Prims.unit) =
+let log_primops : cfg -> (Prims.unit -> Prims.unit) -> Prims.unit =
   fun cfg  -> fun f  -> if (cfg.debug).primop then f () else () 
 let is_empty : 'Auu____2652 . 'Auu____2652 Prims.list -> Prims.bool =
   fun uu___81_2658  ->
@@ -1745,8 +1744,8 @@ let lookup_bvar :
             FStar_Util.format1 "Failed to find %s\n" uu____2708  in
           failwith uu____2707
   
-let (downgrade_ghost_effect_name :
-  FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option) =
+let downgrade_ghost_effect_name :
+  FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option =
   fun l  ->
     let uu____2714 =
       FStar_Ident.lid_equals l FStar_Parser_Const.effect_Ghost_lid  in
@@ -1765,8 +1764,8 @@ let (downgrade_ghost_effect_name :
             FStar_Pervasives_Native.Some FStar_Parser_Const.effect_PURE_lid
           else FStar_Pervasives_Native.None))
   
-let (norm_universe :
-  cfg -> env -> FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe)
+let norm_universe :
+  cfg -> env -> FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe
   =
   fun cfg  ->
     fun env  ->
@@ -1858,8 +1857,8 @@ let (norm_universe :
            | u1::[] -> u1
            | us -> FStar_Syntax_Syntax.U_max us)
   
-let rec (closure_as_term :
-  cfg -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+let rec closure_as_term :
+  cfg -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun cfg  ->
     fun env  ->
       fun t  ->
@@ -2295,11 +2294,11 @@ let rec (closure_as_term :
                     FStar_Syntax_Syntax.Tm_match uu____4624  in
                   mk uu____4623 t1.FStar_Syntax_Syntax.pos))
 
-and (closure_as_term_delayed :
+and closure_as_term_delayed :
   cfg ->
     env ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
   fun cfg  ->
     fun env  ->
@@ -2310,13 +2309,13 @@ and (closure_as_term_delayed :
             -> t
         | uu____4733 -> closure_as_term cfg env t
 
-and (closures_as_args_delayed :
+and closures_as_args_delayed :
   cfg ->
     env ->
       (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.tuple2 Prims.list ->
         (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
-          FStar_Pervasives_Native.tuple2 Prims.list)
+          FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun cfg  ->
     fun env  ->
@@ -2333,14 +2332,14 @@ and (closures_as_args_delayed :
                      let uu____4795 = closure_as_term_delayed cfg env x  in
                      (uu____4795, imp)) args
 
-and (closures_as_binders_delayed :
+and closures_as_binders_delayed :
   cfg ->
     env ->
       (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.tuple2 Prims.list ->
         ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
            FStar_Pervasives_Native.tuple2 Prims.list,env)
-          FStar_Pervasives_Native.tuple2)
+          FStar_Pervasives_Native.tuple2
   =
   fun cfg  ->
     fun env  ->
@@ -2370,11 +2369,11 @@ and (closures_as_binders_delayed :
            in
         match uu____4809 with | (env1,bs1) -> ((FStar_List.rev bs1), env1)
 
-and (close_comp :
+and close_comp :
   cfg ->
     env ->
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax
   =
   fun cfg  ->
     fun env  ->
@@ -2431,9 +2430,9 @@ and (close_comp :
                    }  in
                  FStar_Syntax_Syntax.mk_Comp uu____5085)
 
-and (filter_out_lcomp_cflags :
+and filter_out_lcomp_cflags :
   FStar_Syntax_Syntax.cflags Prims.list ->
-    FStar_Syntax_Syntax.cflags Prims.list)
+    FStar_Syntax_Syntax.cflags Prims.list
   =
   fun flags1  ->
     FStar_All.pipe_right flags1
@@ -2443,11 +2442,11 @@ and (filter_out_lcomp_cflags :
             | FStar_Syntax_Syntax.DECREASES uu____5098 -> false
             | uu____5101 -> true))
 
-and (close_lcomp_opt :
+and close_lcomp_opt :
   cfg ->
     env ->
       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)
+        FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option
   =
   fun cfg  ->
     fun env  ->
@@ -2477,7 +2476,7 @@ and (close_lcomp_opt :
             FStar_Pervasives_Native.Some rc1
         | uu____5133 -> lopt
 
-let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
+let built_in_primitive_steps : primitive_step FStar_Util.psmap =
   let arg_as_int a =
     FStar_All.pipe_right (FStar_Pervasives_Native.fst a)
       (FStar_Syntax_Embeddings.try_unembed FStar_Syntax_Embeddings.e_int)
@@ -3237,7 +3236,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
   FStar_All.pipe_left prim_from_list
     (FStar_List.append strong_steps weak_steps)
   
-let (equality_ops : primitive_step FStar_Util.psmap) =
+let equality_ops : primitive_step FStar_Util.psmap =
   let interp_prop psc args =
     let r = psc.psc_range  in
     match args with
@@ -3309,13 +3308,13 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
       interpretation = interp_prop
     }  in
   prim_from_list [propositional_equality; hetero_propositional_equality] 
-let (unembed_binder_knot :
+let unembed_binder_knot :
   FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding
-    FStar_Pervasives_Native.option FStar_ST.ref)
+    FStar_Pervasives_Native.option FStar_ST.ref
   = FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let (unembed_binder :
+let unembed_binder :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option
   =
   fun t  ->
     let uu____8178 = FStar_ST.op_Bang unembed_binder_knot  in
@@ -3642,7 +3641,7 @@ let is_norm_request :
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.norm
       | uu____8889 -> false
   
-let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
+let tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list =
   fun uu___86_8900  ->
     match uu___86_8900 with
     | FStar_Syntax_Embeddings.Zeta  -> [Zeta]
@@ -3663,8 +3662,8 @@ let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
     | FStar_Syntax_Embeddings.UnfoldAttr t ->
         [UnfoldUntil FStar_Syntax_Syntax.Delta_constant; UnfoldAttr t]
   
-let (tr_norm_steps :
-  FStar_Syntax_Embeddings.norm_step Prims.list -> step Prims.list) =
+let tr_norm_steps :
+  FStar_Syntax_Embeddings.norm_step Prims.list -> step Prims.list =
   fun s  -> FStar_List.concatMap tr_norm_step s 
 let get_norm_request :
   'Auu____8926 .
@@ -3721,7 +3720,7 @@ let get_norm_request :
                FStar_Pervasives_Native.Some (s3, tm))
       | uu____9142 -> FStar_Pervasives_Native.None
   
-let (is_reify_head : stack_elt Prims.list -> Prims.bool) =
+let is_reify_head : stack_elt Prims.list -> Prims.bool =
   fun uu___87_9159  ->
     match uu___87_9159 with
     | (App
@@ -3744,7 +3743,7 @@ let firstn :
     fun l  ->
       if (FStar_List.length l) < k then (l, []) else FStar_Util.first_N k l
   
-let (should_reify : cfg -> stack_elt Prims.list -> Prims.bool) =
+let should_reify : cfg -> stack_elt Prims.list -> Prims.bool =
   fun cfg  ->
     fun stack  ->
       match stack with
@@ -3758,8 +3757,8 @@ let (should_reify : cfg -> stack_elt Prims.list -> Prims.bool) =
           -> (cfg.steps).reify_
       | uu____9228 -> false
   
-let rec (norm :
-  cfg -> env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+let rec norm :
+  cfg -> env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -5226,13 +5225,13 @@ let rec (norm :
                     else rebuild cfg env stack t2
                 | uu____13502 -> norm cfg env stack t2))
 
-and (do_unfold_fv :
+and do_unfold_fv :
   cfg ->
     env ->
       stack_elt Prims.list ->
         FStar_Syntax_Syntax.term ->
           FStar_TypeChecker_Env.qninfo ->
-            FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+            FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -5310,7 +5309,7 @@ and (do_unfold_fv :
                           failwith uu____13614
                     else norm cfg env stack t1))
 
-and (reduce_impure_comp :
+and reduce_impure_comp :
   cfg ->
     env ->
       stack ->
@@ -5319,7 +5318,7 @@ and (reduce_impure_comp :
                                             FStar_Syntax_Syntax.monad_name)
                                             FStar_Pervasives_Native.tuple2)
             FStar_Util.either ->
-            FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
+            FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -5407,14 +5406,14 @@ and (reduce_impure_comp :
                 ((Meta (metadata, (head1.FStar_Syntax_Syntax.pos))) ::
                 stack1) head1
 
-and (do_reify_monadic :
+and do_reify_monadic :
   (Prims.unit -> FStar_Syntax_Syntax.term) ->
     cfg ->
       env ->
         stack_elt Prims.list ->
           FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.monad_name ->
-              FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
+              FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term
   =
   fun fallback  ->
     fun cfg  ->
@@ -5920,12 +5919,12 @@ and (do_reify_monadic :
                      norm cfg env uu____14434 tm
                  | uu____14435 -> fallback ())
 
-and (reify_lift :
+and reify_lift :
   cfg ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.monad_name ->
         FStar_Syntax_Syntax.monad_name ->
-          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun e  ->
@@ -6035,13 +6034,13 @@ and (reify_lift :
                     let uu____14593 = FStar_Syntax_Util.mk_reify e  in
                     lift uu____14592 t FStar_Syntax_Syntax.tun uu____14593))
 
-and (norm_pattern_args :
+and norm_pattern_args :
   cfg ->
     env ->
       (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.tuple2 Prims.list Prims.list ->
         (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
-          FStar_Pervasives_Native.tuple2 Prims.list Prims.list)
+          FStar_Pervasives_Native.tuple2 Prims.list Prims.list
   =
   fun cfg  ->
     fun env  ->
@@ -6055,8 +6054,8 @@ and (norm_pattern_args :
                        let uu____14660 = norm cfg env [] a  in
                        (uu____14660, imp))))
 
-and (norm_comp :
-  cfg -> env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp) =
+and norm_comp :
+  cfg -> env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp =
   fun cfg  ->
     fun env  ->
       fun comp  ->
@@ -6142,8 +6141,8 @@ and (norm_comp :
                 (uu___167_14795.FStar_Syntax_Syntax.vars)
             }
 
-and (norm_binder :
-  cfg -> env -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder) =
+and norm_binder :
+  cfg -> env -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder =
   fun cfg  ->
     fun env  ->
       fun uu____14814  ->
@@ -6162,8 +6161,8 @@ and (norm_binder :
               }  in
             (uu____14817, imp)
 
-and (norm_binders :
-  cfg -> env -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders) =
+and norm_binders :
+  cfg -> env -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders =
   fun cfg  ->
     fun env  ->
       fun bs  ->
@@ -6178,11 +6177,11 @@ and (norm_binders :
            in
         match uu____14825 with | (nbs,uu____14883) -> FStar_List.rev nbs
 
-and (norm_lcomp_opt :
+and norm_lcomp_opt :
   cfg ->
     env ->
       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)
+        FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option
   =
   fun cfg  ->
     fun env  ->
@@ -6208,12 +6207,12 @@ and (norm_lcomp_opt :
             FStar_Pervasives_Native.Some uu____14899
         | uu____14908 -> lopt
 
-and (maybe_simplify :
+and maybe_simplify :
   cfg ->
     ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option,
       closure) FStar_Pervasives_Native.tuple2 Prims.list ->
-      stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+      stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -6230,12 +6229,12 @@ and (maybe_simplify :
           else ();
           tm'
 
-and (maybe_simplify_aux :
+and maybe_simplify_aux :
   cfg ->
     ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option,
       closure) FStar_Pervasives_Native.tuple2 Prims.list ->
-      stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+      stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -7177,8 +7176,8 @@ and (maybe_simplify_aux :
                        | FStar_Pervasives_Native.None  -> tm1)
                   | uu____19584 -> tm1))
 
-and (rebuild :
-  cfg -> env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+and rebuild :
+  cfg -> env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun cfg  ->
     fun env  ->
@@ -7751,9 +7750,9 @@ and (rebuild :
                  then matches scrutinee branches
                  else norm_and_rebuild_match ())))
 
-let (plugins :
+let plugins :
   (primitive_step -> Prims.unit,Prims.unit -> primitive_step Prims.list)
-    FStar_Pervasives_Native.tuple2)
+    FStar_Pervasives_Native.tuple2
   =
   let plugins = FStar_Util.mk_ref []  in
   let register p =
@@ -7762,13 +7761,13 @@ let (plugins :
     FStar_ST.op_Colon_Equals plugins uu____21676  in
   let retrieve uu____21777 = FStar_ST.op_Bang plugins  in
   (register, retrieve) 
-let (register_plugin : primitive_step -> Prims.unit) =
+let register_plugin : primitive_step -> Prims.unit =
   fun p  -> FStar_Pervasives_Native.fst plugins p 
-let (retrieve_plugins : Prims.unit -> primitive_step Prims.list) =
+let retrieve_plugins : Prims.unit -> primitive_step Prims.list =
   fun uu____21842  -> FStar_Pervasives_Native.snd plugins () 
-let (config' :
+let config' :
   primitive_step Prims.list ->
-    step Prims.list -> FStar_TypeChecker_Env.env -> cfg)
+    step Prims.list -> FStar_TypeChecker_Env.env -> cfg
   =
   fun psteps  ->
     fun s  ->
@@ -7835,42 +7834,42 @@ let (config' :
           normalize_pure_lets = uu____21904
         }
   
-let (config : step Prims.list -> FStar_TypeChecker_Env.env -> cfg) =
+let config : step Prims.list -> FStar_TypeChecker_Env.env -> cfg =
   fun s  -> fun e  -> config' [] s e 
-let (normalize_with_primitive_steps :
+let normalize_with_primitive_steps :
   primitive_step Prims.list ->
     step Prims.list ->
       FStar_TypeChecker_Env.env ->
-        FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+        FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun ps  ->
     fun s  -> fun e  -> fun t  -> let c = config' ps s e  in norm c [] [] t
   
-let (normalize :
+let normalize :
   steps ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   = fun s  -> fun e  -> fun t  -> normalize_with_primitive_steps [] s e t 
-let (normalize_comp :
+let normalize_comp :
   steps ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
+      FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp
   =
   fun s  ->
     fun e  ->
       fun t  -> let uu____21964 = config s e  in norm_comp uu____21964 [] t
   
-let (normalize_universe :
+let normalize_universe :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe)
+    FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe
   =
   fun env  ->
     fun u  ->
       let uu____21977 = config [] env  in norm_universe uu____21977 [] u
   
-let (ghost_to_pure :
+let ghost_to_pure :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
+    FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp
   =
   fun env  ->
     fun c  ->
@@ -7961,9 +7960,9 @@ let (ghost_to_pure :
           else c
       | uu____22046 -> c
   
-let (ghost_to_pure_lcomp :
+let ghost_to_pure_lcomp :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.lcomp -> FStar_Syntax_Syntax.lcomp)
+    FStar_Syntax_Syntax.lcomp -> FStar_Syntax_Syntax.lcomp
   =
   fun env  ->
     fun lc  ->
@@ -7995,8 +7994,8 @@ let (ghost_to_pure_lcomp :
         | FStar_Pervasives_Native.None  -> lc
       else lc
   
-let (term_to_string :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
+let term_to_string :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string =
   fun env  ->
     fun t  ->
       let t1 =
@@ -8015,8 +8014,8 @@ let (term_to_string :
          in
       FStar_Syntax_Print.term_to_string' env.FStar_TypeChecker_Env.dsenv t1
   
-let (comp_to_string :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
+let comp_to_string :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string =
   fun env  ->
     fun c  ->
       let c1 =
@@ -8037,10 +8036,10 @@ let (comp_to_string :
          in
       FStar_Syntax_Print.comp_to_string' env.FStar_TypeChecker_Env.dsenv c1
   
-let (normalize_refinement :
+let normalize_refinement :
   steps ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ
   =
   fun steps  ->
     fun env  ->
@@ -8064,9 +8063,9 @@ let (normalize_refinement :
           | uu____22177 -> t2  in
         aux t
   
-let (unfold_whnf :
+let unfold_whnf :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun env  ->
     fun t  ->
@@ -8077,10 +8076,10 @@ let (unfold_whnf :
         UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
         Beta] env t
   
-let (reduce_or_remove_uvar_solutions :
+let reduce_or_remove_uvar_solutions :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun remove  ->
     fun env  ->
@@ -8094,18 +8093,18 @@ let (reduce_or_remove_uvar_solutions :
              Exclude Iota;
              NoFullNorm]) env t
   
-let (reduce_uvar_solutions :
+let reduce_uvar_solutions :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   = fun env  -> fun t  -> reduce_or_remove_uvar_solutions false env t 
-let (remove_uvar_solutions :
+let remove_uvar_solutions :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   = fun env  -> fun t  -> reduce_or_remove_uvar_solutions true env t 
-let (eta_expand_with_type :
+let eta_expand_with_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term
   =
   fun env  ->
     fun e  ->
@@ -8139,9 +8138,9 @@ let (eta_expand_with_type :
                                (FStar_Pervasives_Native.Some
                                   (FStar_Syntax_Util.residual_comp_of_comp c)))))
   
-let (eta_expand :
+let eta_expand :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun env  ->
     fun t  ->
@@ -8327,8 +8326,8 @@ let (eta_expand :
                      | (uu____22435,ty,uu____22437) ->
                          eta_expand_with_type env t ty)))
   
-let rec (elim_delayed_subst_term :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+let rec elim_delayed_subst_term :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  ->
     let mk1 x =
       FStar_Syntax_Syntax.mk x FStar_Pervasives_Native.None
@@ -8556,9 +8555,9 @@ let rec (elim_delayed_subst_term :
           FStar_Syntax_Syntax.Tm_meta uu____23328  in
         mk1 uu____23327
 
-and (elim_delayed_subst_cflags :
+and elim_delayed_subst_cflags :
   FStar_Syntax_Syntax.cflags Prims.list ->
-    FStar_Syntax_Syntax.cflags Prims.list)
+    FStar_Syntax_Syntax.cflags Prims.list
   =
   fun flags1  ->
     FStar_List.map
@@ -8569,8 +8568,8 @@ and (elim_delayed_subst_cflags :
              FStar_Syntax_Syntax.DECREASES uu____23347
          | f -> f) flags1
 
-and (elim_delayed_subst_comp :
-  FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp) =
+and elim_delayed_subst_comp :
+  FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp =
   fun c  ->
     let mk1 x =
       FStar_Syntax_Syntax.mk x FStar_Pervasives_Native.None
@@ -8611,8 +8610,8 @@ and (elim_delayed_subst_comp :
           }  in
         mk1 (FStar_Syntax_Syntax.Comp ct1)
 
-and (elim_delayed_subst_meta :
-  FStar_Syntax_Syntax.metadata -> FStar_Syntax_Syntax.metadata) =
+and elim_delayed_subst_meta :
+  FStar_Syntax_Syntax.metadata -> FStar_Syntax_Syntax.metadata =
   fun uu___94_23422  ->
     match uu___94_23422 with
     | FStar_Syntax_Syntax.Meta_pattern args ->
@@ -8630,11 +8629,11 @@ and (elim_delayed_subst_meta :
         FStar_Syntax_Syntax.Meta_monadic_lift uu____23482
     | m -> m
 
-and (elim_delayed_subst_args :
+and elim_delayed_subst_args :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
     FStar_Pervasives_Native.tuple2 Prims.list ->
     (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun args  ->
     FStar_List.map
@@ -8644,11 +8643,11 @@ and (elim_delayed_subst_args :
              let uu____23525 = elim_delayed_subst_term t  in (uu____23525, q))
       args
 
-and (elim_delayed_subst_binders :
+and elim_delayed_subst_binders :
   (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
     FStar_Pervasives_Native.tuple2 Prims.list ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun bs  ->
     FStar_List.map
@@ -8668,7 +8667,7 @@ and (elim_delayed_subst_binders :
                }  in
              (uu____23556, q)) bs
 
-let (elim_uvars_aux_tc :
+let elim_uvars_aux_tc :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.univ_names ->
       FStar_Syntax_Syntax.binders ->
@@ -8680,7 +8679,7 @@ let (elim_uvars_aux_tc :
                                                          FStar_Syntax_Syntax.comp'
                                                            FStar_Syntax_Syntax.syntax)
                                                          FStar_Util.either)
-            FStar_Pervasives_Native.tuple3)
+            FStar_Pervasives_Native.tuple3
   =
   fun env  ->
     fun univ_names  ->
@@ -8737,7 +8736,7 @@ let (elim_uvars_aux_tc :
               (match uu____23695 with
                | (binders1,tc1) -> (univ_names1, binders1, tc1))
   
-let (elim_uvars_aux_t :
+let elim_uvars_aux_t :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.univ_names ->
       FStar_Syntax_Syntax.binders ->
@@ -8745,7 +8744,7 @@ let (elim_uvars_aux_t :
           (FStar_Syntax_Syntax.univ_names,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
                                             FStar_Pervasives_Native.tuple2
                                             Prims.list,FStar_Syntax_Syntax.term)
-            FStar_Pervasives_Native.tuple3)
+            FStar_Pervasives_Native.tuple3
   =
   fun env  ->
     fun univ_names  ->
@@ -8758,7 +8757,7 @@ let (elim_uvars_aux_t :
               let uu____24049 = FStar_Util.left tc  in
               (univ_names1, binders1, uu____24049)
   
-let (elim_uvars_aux_c :
+let elim_uvars_aux_c :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.univ_names ->
       FStar_Syntax_Syntax.binders ->
@@ -8767,7 +8766,7 @@ let (elim_uvars_aux_c :
                                             FStar_Pervasives_Native.tuple2
                                             Prims.list,FStar_Syntax_Syntax.comp'
                                                          FStar_Syntax_Syntax.syntax)
-            FStar_Pervasives_Native.tuple3)
+            FStar_Pervasives_Native.tuple3
   =
   fun env  ->
     fun univ_names  ->
@@ -8780,9 +8779,9 @@ let (elim_uvars_aux_c :
               let uu____24144 = FStar_Util.right tc  in
               (univ_names1, binders1, uu____24144)
   
-let rec (elim_uvars :
+let rec elim_uvars :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)
+    FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt
   =
   fun env  ->
     fun s  ->
@@ -9264,9 +9263,9 @@ let rec (elim_uvars :
       | FStar_Syntax_Syntax.Sig_pragma uu____25214 -> s
       | FStar_Syntax_Syntax.Sig_splice uu____25215 -> s
   
-let (erase_universes :
+let erase_universes :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun env  ->
     fun t  -> normalize [EraseUniverses; AllowUnboundUniverses] env t
