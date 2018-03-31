@@ -1074,11 +1074,8 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
              | Tm_match (hd, brs) ->
                  bind (ff hd) (fun hd ->
                  let ffb br =
-                    let (pat, w, e) = br in
-                    let pat, subst, renaming = SS.open_pat_renaming pat in
-                    let w = BU.map_opt w (SS.subst subst) in
-                    let e = SS.subst subst e in
-                    let bvs = List.rev <| List.map snd renaming in
+                    let (pat, w, e) = SS.open_branch br in
+                    let bvs = S.pat_bvs pat in
                     let ff = tac_fold_env d f (Env.push_bvs env bvs) in
                     bind (ff e) (fun e ->
                     let br = SS.close_branch (pat, w, e) in
