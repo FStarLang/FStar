@@ -166,11 +166,6 @@ let print_env e =
 
 let lookup_binding env f = BU.find_map env.bindings f
 
-let caption_t env t =
-    if Env.debug env.tcenv Options.Low
-    then Some (Print.term_to_string t)
-    else None
-
 let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
 
