@@ -1274,11 +1274,11 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     in
     let gt = g.goal_ty in
     log ps (fun () ->
-        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
+        BU.print1 "Topdown_rewrite starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
     bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) g.context keepGoing gt) (fun (gt', _) ->
     log ps (fun () ->
-        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
+        BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 
