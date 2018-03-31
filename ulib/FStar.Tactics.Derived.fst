@@ -234,7 +234,11 @@ let unfold_point (t:term) : Tac unit =
         fail "impossible"
 
 let unfold_def (t:term) : Tac unit =
-    pointwise (fun () -> unfold_point t)
+    match inspect t with
+    | Tv_FVar fv ->
+        let n = String.concat "." (inspect_fv fv) in
+        norm [delta_fully [n]]
+    | _ -> fail "unfold_def: term is not a fv"
 
 let grewrite' (t1 t2 eq : term) : Tac unit =
     let g = cur_goal () in
