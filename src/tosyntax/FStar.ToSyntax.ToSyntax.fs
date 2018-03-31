@@ -2336,7 +2336,7 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
   let attrs = mk_comment_attr d :: attrs in
-  let s = List.fold_left (fun s a -> s ^ "; " ^ (Print.term_to_string a)) "" attrs in
+  (* let s = List.fold_left (fun s a -> s ^ "; " ^ (Print.term_to_string a)) "" attrs in *)
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
