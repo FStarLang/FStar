@@ -223,16 +223,6 @@ let rewrite_eqs_from_context () : Tac unit =
 let rewrite_equality (t:term) : Tac unit =
     try_rewrite_equality t (binders_of_env (cur_env ()))
 
-let unfold_point (t:term) : Tac unit =
-    let g : term = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l r ->
-        if term_eq l t
-        then (norm [delta]; trefl ())
-        else trefl ()
-    | _ ->
-        fail "impossible"
-
 let unfold_def (t:term) : Tac unit =
     match inspect t with
     | Tv_FVar fv ->

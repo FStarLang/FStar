@@ -1145,20 +1145,28 @@ let rec norm : cfg -> env -> stack -> term -> term =
                      | None -> should_delta, false
                      | Some lids -> if BU.for_some (fv_eq_lid fv) lids
                                     then true, true
-                                    else should_delta, false
+                                    else false, false
                  in
                  log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
                                  (Print.term_to_string t)
                                  (Range.string_of_range t.pos)
                                  (string_of_bool should_delta));
-                 let cfg = if fully
-                           then { cfg with steps = { cfg.steps with
-                                           unfold_only = None
-                                         ; unfold_until = Some Delta_constant } }
-                           else cfg
-                 in
-                 if should_delta
-                 then do_unfold_fv cfg env stack t qninfo fv
+                 if should_delta then
+                     let stack, cfg =
+                        if fully
+                        then (Cfg cfg) :: stack,
+                             { cfg with steps = { cfg.steps with
+                                        iota         = false
+                                      ; zeta         = false
+                                      ; weak         = false
+                                      ; hnf          = false
+                                      ; primops      = false
+                                      ; simplify     = false
+                                      ; unfold_only  = None
+                                      ; unfold_until = Some Delta_constant } }
+                        else stack, cfg
+                     in
+                     do_unfold_fv cfg env stack t qninfo fv
                  else rebuild cfg env stack t
 
           | Tm_bvar x ->
