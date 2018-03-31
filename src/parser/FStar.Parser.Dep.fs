@@ -716,6 +716,13 @@ let collect_one
  * In particular, we no longer compute transitive dependencies, and we no longer
  * map lowercase module names to filenames. *)
 
+// Used by F*.js
+let collect_one_cache : ref<(smap<(list<dependence> * list<dependence>)>)> =
+  BU.mk_ref (BU.smap_create 0)
+
+let set_collect_one_cache (cache: smap<(list<dependence> * list<dependence>)>) : unit =
+  collect_one_cache := cache
+
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
 let collect (all_cmd_line_files: list<file_name>)
@@ -744,7 +751,10 @@ let collect (all_cmd_line_files: list<file_name>)
   let rec discover_one (file_name:file_name) =
     if deps_try_find dep_graph file_name = None then
     begin
-      let deps, mo_roots = collect_one file_system_map file_name in
+      let deps, mo_roots =
+        match BU.smap_try_find !collect_one_cache file_name with
+        | Some cached -> cached
+        | None -> collect_one file_system_map file_name in
       let deps =
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
