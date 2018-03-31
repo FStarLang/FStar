@@ -445,37 +445,33 @@ let open_comp (bs:binders) t =
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
 
-let open_pat_renaming (p:pat) : pat * subst_t * list<(bv * bv)> =
-    let rec open_pat_aux sub renaming p =
+let open_pat (p:pat) : pat * subst_t =
+    let rec open_pat_aux sub p =
         match p.v with
-        | Pat_constant _ -> p, sub, renaming
+        | Pat_constant _ -> p, sub
 
         | Pat_cons(fv, pats) ->
-            let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
-                let p, sub, renaming = open_pat_aux sub renaming p in
-                ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
-            {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
+            let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
+                let p, sub = open_pat_aux sub p in
+                ((p,imp)::pats, sub)) ([], sub) in
+            {p with v=Pat_cons(fv, List.rev pats)}, sub
 
         | Pat_var x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
             let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_var x'}, sub, (x,x')::renaming
+            {p with v=Pat_var x'}, sub
 
         | Pat_wild x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
             let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_wild x'}, sub, (x,x')::renaming
+            {p with v=Pat_wild x'}, sub
 
         | Pat_dot_term(x, t0) ->
             let x = {x with sort=subst sub x.sort} in
             let t0 = subst sub t0 in
-            {p with v=Pat_dot_term(x, t0)}, sub, renaming //these are not in scope, so don't shift the index
+            {p with v=Pat_dot_term(x, t0)}, sub //these are not in scope, so don't shift the index
     in
-    open_pat_aux [] [] p
-
-let open_pat (p:pat) : pat * subst_t =
-    let p, sub, _ = open_pat_renaming p in
-    p, sub
+    open_pat_aux [] p
 
 let open_branch (p, wopt, e) =
     let p, opening = open_pat p in
