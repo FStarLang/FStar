@@ -648,3 +648,17 @@ let opening_of_binders (bs:binders) =
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
 
 let closing_of_binders (bs:binders) = closing_subst bs
+
+let open_term_1 b t =
+    match open_term [b] t with
+    | [b], t -> b, t
+    | _ -> failwith "impossible: open_term_1"
+
+let open_term_bvs bvs t =
+    let bs, t = open_term (List.map mk_binder bvs) t in
+    List.map fst bs, t
+
+let open_term_bv bv t =
+    match open_term_bvs [bv] t with
+    | [bv], t -> bv, t
+    | _ -> failwith "impossible: open_term_bv"
