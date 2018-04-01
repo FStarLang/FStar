@@ -5,6 +5,7 @@ PKG pprint
 PKG yojson
 PKG zarith
 PKG menhirLib
+PKG ulex
 
 S src/basic/ml
 S src/extraction/ml
