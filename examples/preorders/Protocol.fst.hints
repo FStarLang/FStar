@@ -1,5 +1,5 @@
 [
-  "\u001ab\u001c\u0019Â)7žì&xP9ÜùQ",
+  "Í~ô\u001eŠ\"‚!àiƒ\u0000Á\"¥j",
   [
     [
       "Protocol.lemma_seq_append_unstable",
@@ -31,7 +31,7 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "8682d90b4c94bc4117eb22708e041602"
+      "fc036cdbf35add41638fe01e830f52a3"
     ],
     [
       "Protocol.network_message",
@@ -43,7 +43,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "69a9ec507d216cef772236c09e250a43"
+      "42795b52ddad56e27d201d6d27e8c3c4"
     ],
     [
       "Protocol.zeroes",
@@ -55,7 +55,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ced288482aeefc2b985e47333c39fa87"
+      "ff7ac3048456079f4fd64a311fd8d433"
     ],
     [
       "Protocol.zeroes",
@@ -68,7 +68,7 @@
         "lemma_FStar.Seq.Base.lemma_create_len"
       ],
       0,
-      "437d09615e1e0e48527c4f2fabb3d5e6"
+      "b1c2599563c83bb22251712cd94c77cc"
     ],
     [
       "Protocol.pad",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Protocol_Tm_refine_d872c5fb83c0bb7ff4e5b2fa63b8aca0"
       ],
       0,
-      "7a128b78286ef6bdca18a192df33c309"
+      "9556366bd75d095a53b40c4e48fe9b84"
     ],
     [
       "Protocol.unpad",
@@ -102,7 +102,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "af77d8597b3d58d1cb6a96219a7bdd7b"
+      "974077f2cb7b642b3b683368b642c7bf"
     ],
     [
       "Protocol.__proj__E__item__cipher",
@@ -115,7 +115,7 @@
         "projection_inverse_Protocol.E_msg"
       ],
       0,
-      "ee7f2db64cf2007e2a2483d80cd4ecbb"
+      "ffde109d5c4ae21d82138e950f0bc804"
     ],
     [
       "Protocol.__proj__E__item__tag",
@@ -128,7 +128,7 @@
         "projection_inverse_Protocol.E_i"
       ],
       0,
-      "b5f6a907dd99d6ec65e0076e2b8f1af1"
+      "7f2342af2d2d232b07edf497b22fa363"
     ],
     [
       "Protocol.entries",
@@ -140,7 +140,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "428ca28c4545dff64b3c9ce527f7f083"
+      "a3c228af46d3a38c30245ad32f596703"
     ],
     [
       "Protocol.is_prefix_of",
@@ -149,7 +149,7 @@
       1,
       [ "@query" ],
       0,
-      "a101f71f6eb885a6cf6a073cfbf2d631"
+      "29187532298ab26e3701dde90e50e208"
     ],
     [
       "Protocol.entries_pre",
@@ -162,7 +162,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "47ecad1d0f65a78f82286d64d598eb0a"
+      "532b0a69b69a9110622ba9704ee8240f"
     ],
     [
       "Protocol.counter_pred",
@@ -187,33 +187,7 @@
         "typing_Protocol.entries", "typing_Protocol.entries_rel"
       ],
       0,
-      "9ef4d368c192239e1ebecc54754ed0eb"
-    ],
-    [
-      "Protocol.counter_pred",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "d8bb4fcb3c40bd236b5fea148d4ff28c"
-    ],
-    [
-      "Protocol.counter_pred",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "84dad1b0231a3ec0f129058f774bd445"
+      "704d5c248bf540fcf8964bcaf6e3c45d"
     ],
     [
       "Protocol.counter_t",
@@ -226,7 +200,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "81211ae740bb2e61bd06d89db2b06760"
+      "6dfdf3337b9a706cc8905d79f57c40d4"
     ],
     [
       "Protocol.counter_t",
@@ -239,7 +213,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "8db5487343db4625ada84deb59a1e866"
+      "7459505980d4f78fd868413bbeebfab0"
     ],
     [
       "Protocol.counter_rel",
@@ -252,7 +226,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "996a5f565e92df571a918632ace03bd1"
+      "25f18d973667d998eb9c57f7e305b305"
     ],
     [
       "Protocol.counter_pre",
@@ -269,7 +243,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "97bbad378b4bdf2497896705591affe6"
+      "4e2996f07466695f6118cfcf665d2f49"
     ],
     [
       "Protocol.connection",
@@ -282,7 +256,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "db7af67c6b3a978492b4ff3d5a43b4ce"
+      "13c7d19a07dc642e8b66da7b6b82c583"
     ],
     [
       "Protocol.connection",
@@ -295,7 +269,20 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "d9f1042f761757c4f74c4b0af74e2329"
+      "9dea1d7d39c94022e1566adb5b623246"
+    ],
+    [
+      "Protocol.uu___is_S",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
+      ],
+      0,
+      "9d2dcd3dc894c50a25cec1ae8e995179"
     ],
     [
       "Protocol.__proj__S__item__rand",
@@ -304,11 +291,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.S",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Protocol_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "9349fb580c73f0e8d4b05a12ba1a06db"
+      "df4889150b17526111e2d0de180cc053"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -322,7 +312,7 @@
         "proj_equation_Protocol.S_rand"
       ],
       0,
-      "e3a99d991624bc7f6de68f6e808ea693"
+      "cc0e6d3e6f1eee42d48819a9d9fdc131"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -331,12 +321,28 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.S",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "proj_equation_Protocol.S_rand", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.S_rand",
         "refinement_interpretation_Protocol_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "84d50707443412d6f3396d33d756aeef"
+      "34505a0fd2858807acb09785701e358a"
+    ],
+    [
+      "Protocol.uu___is_R",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
+      ],
+      0,
+      "0098bd07957f33368425fe08d4b4209e"
     ],
     [
       "Protocol.__proj__R__item__rand",
@@ -345,11 +351,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "3b9935261333ab072af1162682f30ff5"
+      "8f74e9412c25ab9b562ff20352552ac3"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -363,7 +372,7 @@
         "proj_equation_Protocol.R_rand"
       ],
       0,
-      "530111f7583cf6c64333a7f94a0e64d1"
+      "3508da700eeb70080bc70976fc939f93"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -372,12 +381,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "proj_equation_Protocol.R_rand", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.R_rand",
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "dc1c66e494d6a72d82d79a369de5b7d4"
+      "e432c0b3a46e19ba7d1878abfb56af02"
     ],
     [
       "Protocol.__proj__R__item__ctr",
@@ -386,6 +398,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
+        "equation_FStar.Preorder.preorder_rel", "equation_Protocol.entries",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "proj_equation_Protocol.R_entries", "proj_equation_Protocol.R_rand",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.R_entries",
@@ -393,7 +408,7 @@
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "903f884fcf39bd96085fe1716d07b845"
+      "517aed946c78c6f5c06409c48de71a43"
     ],
     [
       "Protocol.rand_of",
@@ -402,11 +417,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
-        "disc_equation_Protocol.S",
-        "fuel_guarded_inversion_Protocol.connection"
+        "disc_equation_Protocol.S", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "fuel_guarded_inversion_Protocol.connection",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "f1487df008e2a70f475966b8d8109567"
+      "e059968512721fd25d707bc078bdd512"
     ],
     [
       "Protocol.entries_of",
@@ -426,7 +443,7 @@
         "projection_inverse_Protocol.S_rand"
       ],
       0,
-      "e226e5277410ec937096bca1dfab7f5d"
+      "114ba3974c1b35adc8e4360809df4306"
     ],
     [
       "Protocol.live_connection",
@@ -435,37 +452,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
-        "disc_equation_Protocol.S",
-        "fuel_guarded_inversion_Protocol.connection"
-      ],
-      0,
-      "0a4e966f35441bd861f8bdfab3fa1889"
-    ],
-    [
-      "Protocol.live_connection",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "disc_equation_Protocol.S", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries", "equation_Protocol.entries_rel",
+        "equation_Protocol.is_prefix_of",
+        "fuel_guarded_inversion_Protocol.connection",
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "65deab09fa6bc58c36f57c39e637c395"
-    ],
-    [
-      "Protocol.live_connection",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "8241fd78fff6019ded46561e44d66293"
+      "24cbf90abc693c8fb3430e15a135c0c5"
     ],
     [
       "Protocol.recall_connection_liveness",
@@ -475,131 +469,47 @@
       [
         "@MaxIFuel_assumption", "@query", "constructor_distinct_Protocol.R",
         "constructor_distinct_Protocol.S", "disc_equation_Protocol.R",
-        "disc_equation_Protocol.S", "equation_Protocol.live_connection",
-        "fuel_guarded_inversion_Protocol.connection", "l_and-interp",
-        "projection_inverse_Protocol.R_ctr",
+        "disc_equation_Protocol.S", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.counter_pre", "equation_Protocol.counter_t",
+        "equation_Protocol.entries", "equation_Protocol.entries_rel",
+        "equation_Protocol.is_prefix_of",
+        "equation_Protocol.live_connection",
+        "fuel_guarded_inversion_Protocol.connection",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
+        "l_and-interp", "projection_inverse_Protocol.R_ctr",
         "projection_inverse_Protocol.R_entries",
         "projection_inverse_Protocol.R_rand",
         "projection_inverse_Protocol.S_entries",
         "projection_inverse_Protocol.S_rand", "unit_typing"
       ],
       0,
-      "082781da880b3a0ab0e1d1aea759f788"
-    ],
-    [
-      "Protocol.recall_connection_liveness",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "6fe10862bc207b0c533164c4e8791fe5"
-    ],
-    [
-      "Protocol.recall_connection_liveness",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "bd2b24fe0a9338325fdc0668589a8468"
+      "a5265692ab4619ae5338aef104591b30"
     ],
     [
       "Protocol.lemma_sel_entries_equals_sel_tot_entries",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.squash", "equation_Protocol.entries_of",
-        "equation_Protocol.live_connection", "equation_Protocol.rand_of",
-        "fuel_guarded_inversion_Protocol.connection", "l_and-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
-      ],
-      0,
-      "835054d3e9ef9fbf029c23d3c163b470"
-    ],
-    [
-      "Protocol.lemma_sel_entries_equals_sel_tot_entries",
-      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int", "equation_FStar.Preorder.preorder_rel",
+        "equation_Prims.nat", "equation_Prims.squash",
+        "equation_Protocol.entries", "equation_Protocol.entries_of",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "equation_Protocol.live_connection", "equation_Protocol.rand_of",
+        "fuel_guarded_inversion_Protocol.connection",
         "function_token_typing_Protocol.fragment_size",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
+        "l_and-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "unit_typing"
       ],
       0,
-      "7ea9a8ec13d6a73fc82f51a308469973"
-    ],
-    [
-      "Protocol.lemma_sel_entries_equals_sel_tot_entries",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "4ff6bbd510f332f2862bb1b54e593a16"
-    ],
-    [
-      "Protocol.lemma_sel_entries_equals_sel_tot_entries",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "f782a94224264d7f0ce710f3fcc6834f"
-    ],
-    [
-      "Protocol.lemma_sel_entries_equals_sel_tot_entries",
-      5,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "70db029434ef1cd4095939d103b10fd3"
-    ],
-    [
-      "Protocol.lemma_sel_entries_equals_sel_tot_entries",
-      6,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "756bef807cce54572f7ca3c7b4a0136d"
+      "6409b4fabf2266bd0626aaa81595cb4e"
     ],
     [
       "Protocol.lemma_sel_ctr_ref_equals_sel_tot_ctr_ref",
@@ -608,21 +518,30 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "disc_equation_Protocol.R", "equation_Prims.squash",
+        "disc_equation_Protocol.R", "equation_FStar.Preorder.preorder_rel",
+        "equation_Prims.nat", "equation_Prims.squash",
         "equation_Protocol.counter_pre", "equation_Protocol.counter_t",
-        "equation_Protocol.live_connection", "l_and-interp",
-        "proj_equation_Protocol.R_ctr", "proj_equation_Protocol.R_entries",
-        "proj_equation_Protocol.R_rand", "projection_inverse_BoxBool_proj_0",
+        "equation_Protocol.entries", "equation_Protocol.entries_rel",
+        "equation_Protocol.is_prefix_of",
+        "equation_Protocol.live_connection",
+        "function_token_typing_Protocol.fragment_size",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
+        "l_and-interp", "proj_equation_Protocol.R_ctr",
+        "proj_equation_Protocol.R_entries", "proj_equation_Protocol.R_rand",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.R_ctr",
         "projection_inverse_Protocol.R_entries",
         "projection_inverse_Protocol.R_rand",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb",
+        "refinement_interpretation_Protocol_Tm_refine_5b9d4afb00631771b470453395549e99",
         "unit_typing"
       ],
       0,
-      "6f4d684174b9d9ecbcafab80948d7a94"
+      "a2439f551e6c374dc59dfe27069b30de"
     ],
     [
       "Protocol.log",
@@ -630,27 +549,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Protocol.entries_of",
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_of", "equation_Protocol.entries_rel",
+        "equation_Protocol.is_prefix_of",
         "equation_Protocol.live_connection", "equation_Protocol.rand_of",
-        "fuel_guarded_inversion_Protocol.connection", "l_and-interp",
+        "fuel_guarded_inversion_Protocol.connection",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
+        "l_and-interp",
         "refinement_interpretation_Protocol_Tm_refine_0b9bfa7c9199a4522bd11aa0a624263b"
       ],
       0,
-      "228e48b5d5bba4670f5ac9e9803e3ef9"
-    ],
-    [
-      "Protocol.log",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "6e61f3e28a3838fa3670e8957ff4320f"
+      "8ecff8e48c76aa6ebbf4a96ed6a3b36c"
     ],
     [
       "Protocol.lemma_prefix_entries_implies_prefix_log",
@@ -659,69 +569,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_ArrayUtils.is_prefix_of",
-        "equation_Protocol.is_prefix_of", "equation_Protocol.log",
-        "equation_Protocol.message",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "equation_Protocol.log", "equation_Protocol.message",
+        "equation_Protocol.rand_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "lemma_Protocol.lemma_sel_entries_equals_sel_tot_entries",
         "refinement_interpretation_Protocol_Tm_refine_6ad1911ba7997a4706e7f484754f6c48"
       ],
       0,
-      "ce9f874a2eb3f47c72668cee18c7386d"
-    ],
-    [
-      "Protocol.lemma_prefix_entries_implies_prefix_log",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "5fbf94b5b7db94733294ea9d56891054"
-    ],
-    [
-      "Protocol.lemma_prefix_entries_implies_prefix_log",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "beab2cf2c7a728c29ca94f62a3e3df89"
-    ],
-    [
-      "Protocol.lemma_prefix_entries_implies_prefix_log",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "2e959a1168a35244788326b0c5c2c08a"
-    ],
-    [
-      "Protocol.lemma_prefix_entries_implies_prefix_log",
-      5,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "7d0639f55f92cc2210d891f847ddcd31"
+      "686586c49697a8c928b7e48612b72e86"
     ],
     [
       "Protocol.ctr",
@@ -742,7 +599,7 @@
         "refinement_interpretation_Protocol_Tm_refine_0b9bfa7c9199a4522bd11aa0a624263b"
       ],
       0,
-      "c713ff8a4067a2c4cfd05f28b8769103"
+      "0c2dec101d6bd506b248fa142e043c1e"
     ],
     [
       "Protocol.recall_counter",
@@ -796,7 +653,7 @@
         "unit_typing"
       ],
       0,
-      "e8e2a97c8ab1e77fa49bfc6aa3153901"
+      "f4ddf49f2d3e00d079135033716e305d"
     ],
     [
       "Protocol.snapshot",
@@ -844,7 +701,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "60089977f123dcf0172ab9da2168828a"
+      "50ed5c0fcca6734c7381250a7dc9ec90"
     ],
     [
       "Protocol.snap",
@@ -864,7 +721,7 @@
         "token_correspondence_Protocol.snapshot", "unit_typing"
       ],
       0,
-      "338ed5d5845f2a4a25b8c183152efa7a"
+      "19ccba576dc1e7ad1173938d17dd9bfe"
     ],
     [
       "Protocol.connection_footprint",
@@ -875,88 +732,17 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_int", "disc_equation_Protocol.R",
-        "disc_equation_Protocol.S", "equation_Prims.nat",
+        "disc_equation_Protocol.S", "equation_FStar.Preorder.preorder_rel",
+        "equation_Prims.nat", "equation_Protocol.entries",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
         "fuel_guarded_inversion_Protocol.connection",
         "function_token_typing_Protocol.fragment_size",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "156308331540610ba03e881434f255c7"
-    ],
-    [
-      "Protocol.connection_footprint",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "28445cf1d3326b628035aacbf743a876"
-    ],
-    [
-      "Protocol.connection_footprint",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "11abe682a3f23dc5bd02ae1003aeb48a"
-    ],
-    [
-      "Protocol.connection_footprint",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "10d43bb0172c0693af4fb89b8e4dfa43"
-    ],
-    [
-      "Protocol.connection_footprint",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "f370eb4420c20b8046ff0683e751a3e2"
-    ],
-    [
-      "Protocol.connection_footprint",
-      6,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "9f2e5db55b8b8c07a0cc6e087ab85fbe"
-    ],
-    [
-      "Protocol.connection_footprint",
-      7,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "a178435af7354628acd24ef0e8c31827"
+      "946b27b843b8570cc13031a21c437643"
     ],
     [
       "Protocol.lemma_snoc_log",
@@ -964,57 +750,20 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Protocol.log",
-        "equation_Protocol.message",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.S",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "equation_Protocol.log", "equation_Protocol.message",
+        "equation_Protocol.sender",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "lemma_Protocol.lemma_sel_entries_equals_sel_tot_entries",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Protocol_Tm_refine_349b58696eb9cfae6073e9368f8333df",
         "refinement_interpretation_Protocol_Tm_refine_6ad1911ba7997a4706e7f484754f6c48",
         "refinement_interpretation_Protocol_Tm_refine_8b8773cc8e8e97faff9782919cb96e44"
       ],
       0,
-      "bdc1e2746381e3363ff2a4e7ff7b25ab"
-    ],
-    [
-      "Protocol.lemma_snoc_log",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "5c6869b28c7a09a12dc2f7b2c2c054ef"
-    ],
-    [
-      "Protocol.lemma_snoc_log",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "00ba3b36434f6f9650a13cffb7457093"
-    ],
-    [
-      "Protocol.lemma_snoc_log",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "equation_Protocol.rand_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "c02a154e6a275f5a12a56e191e8ae31f"
+      "6af97f7bc96dda13300ee52f24d0fe29"
     ],
     [
       "Protocol.network_send",
@@ -1027,7 +776,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "2d0ff2b2019274ec9578638011bcdc8a"
+      "de0bea6ccaac777eabfa4544413d8f3e"
     ],
     [
       "Protocol.network_send",
@@ -1042,7 +791,7 @@
         "typing_Protocol.sender"
       ],
       0,
-      "ab1e9b09f931b398d5b4aef297d80d37"
+      "bb788bc4f032387ccf1a15ed28733a50"
     ],
     [
       "Protocol.send",
@@ -1052,13 +801,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6", "b2t_def",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.Some",
+        "Protocol_interpretation_Tm_arrow_a39182cf6ce78bd9725fe078b96ce1ed",
+        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6",
+        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
+        "data_elim_Protocol.E", "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Protocol.S", "equation_ArrayUtils.all_some",
         "equation_ArrayUtils.init_at_seq",
         "equation_ArrayUtils.some_equivalent_seqs",
         "equation_FStar.Monotonic.Heap.equal_dom",
-        "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel", "equation_FStar.ST.mref",
         "equation_FStar.Seq.Properties.snoc",
         "equation_MonotonicArray.all_init",
@@ -1072,7 +822,9 @@
         "equation_Protocol.entries_of", "equation_Protocol.entries_rel",
         "equation_Protocol.iarray", "equation_Protocol.is_prefix_of",
         "equation_Protocol.live_connection", "equation_Protocol.pad",
-        "equation_Protocol.rand_of", "equation_Protocol.sender",
+        "equation_Protocol.rand_of", "equation_Protocol.randomness",
+        "equation_Protocol.sender", "fuel_guarded_inversion_Protocol.entry",
+        "function_token_typing_Protocol.__proj__E__item__i",
         "function_token_typing_Protocol.byte",
         "function_token_typing_Protocol.fragment_size",
         "function_token_typing_Protocol.zero_b", "int_inversion",
@@ -1097,11 +849,9 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Protocol.E_cipher",
         "projection_inverse_Protocol.E_i",
-        "projection_inverse_Protocol.E_tag",
         "projection_inverse_Protocol.S_entries",
         "projection_inverse_Protocol.S_rand",
         "refinement_interpretation_ArrayUtils_Tm_refine_e50addb6c1bbd8f85fb54bf03b146e15",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
@@ -1109,57 +859,23 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
         "refinement_interpretation_MonotonicArray_Tm_refine_f984cba283a0017499e468d307a8fd1d",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Protocol_Tm_refine_1cddc8d8d6a00f56086ed5a19c8b1fc7",
         "refinement_interpretation_Protocol_Tm_refine_2244126fa9e3f73aca320e63eaeaee37",
         "refinement_interpretation_Protocol_Tm_refine_349b58696eb9cfae6073e9368f8333df",
         "refinement_interpretation_Protocol_Tm_refine_59588aa05256a48fbb0f2fd6cd1a026d",
+        "refinement_interpretation_Protocol_Tm_refine_95a3c028e34a35700868a967abdd809f",
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531",
+        "token_correspondence_Protocol.__proj__E__item__i",
         "token_correspondence_Protocol.entries_rel",
         "token_correspondence_Protocol.rand_of",
         "typing_ArrayUtils.get_some_equivalent",
         "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
-        "typing_FStar.Seq.Base.slice", "typing_MonotonicArray.as_seq",
-        "typing_Prims.min", "typing_Protocol.__proj__E__item__i",
-        "typing_Protocol.entries", "typing_Protocol.entries_rel",
-        "typing_Protocol.sender"
+        "typing_MonotonicArray.as_seq", "typing_Prims.min",
+        "typing_Protocol.entries", "typing_Protocol.sender"
       ],
       0,
-      "36836f57a2b894b266c656417363e52e"
-    ],
-    [
-      "Protocol.send",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f5c9dae8518b02396e2c924e37cb8a3d"
-    ],
-    [
-      "Protocol.send",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "043740114ac7955b05ec99c231ddc7b1"
-    ],
-    [
-      "Protocol.send",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
-        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
-      ],
-      0,
-      "d88196788d0f6a78572a914eb3703baa"
+      "0172bf381b8b1a5eaf558c96ac7a9ce7"
     ],
     [
       "Protocol.ciphers",
@@ -1173,7 +889,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "a5a19fa0bbf4a8c395f7b84215b8f706"
+      "88c4e3885440ce721ab31e45b80f3279"
     ],
     [
       "Protocol.modifies_r",
@@ -1185,7 +901,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "016da42b43aa3d322c44afa389612efb"
+      "ab81fd0db6b604d28c92cf6f01402b2a"
     ],
     [
       "Protocol.verify",
@@ -1198,7 +914,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "e19c524103b177caaf11ac4162c2925c"
+      "35f214197de4eed4bff36497737bed19"
     ],
     [
       "Protocol.verify",
@@ -1211,7 +927,7 @@
         "refinement_interpretation_Protocol_Tm_refine_e478ac71fa1875d2f6d4c23ab44e0977"
       ],
       0,
-      "086572ca61f7f913d324b86eb28343ec"
+      "ef1a643f592bf4d58c4f8983844585bc"
     ],
     [
       "Protocol.receive",
@@ -1334,64 +1050,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "e0c556428bbb88c8fb9acd4282ba07a1"
-    ],
-    [
-      "Protocol.receive",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "93be3d677897e058dcc57e00808e3157"
-    ],
-    [
-      "Protocol.receive",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b1f44f9e6db8ef8314471e323c8815de"
-    ],
-    [
-      "Protocol.receive",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "d1550fcef84e0df1326db0db49899a36"
-    ],
-    [
-      "Protocol.receive",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "e3db4e2986d4817120580ed87e1d7cf9"
-    ],
-    [
-      "Protocol.receive",
-      6,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "3f360ff4d04df87d6f9fe55f32589584"
+      "f6c6e8baef5413055cfff41483f71a7f"
     ],
     [
       "Protocol.lemma_is_prefix_of_slice",
@@ -1408,7 +1067,7 @@
         "refinement_interpretation_Protocol_Tm_refine_6472b0a877e3e824d44d3d3f19ad04e0"
       ],
       0,
-      "8657a054f05523fc2a71e743d47bba65"
+      "b31402cf133b84edf103c0a26e64fb75"
     ],
     [
       "Protocol.sent_bytes'",
@@ -1424,7 +1083,7 @@
         "refinement_interpretation_Protocol_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "fcf7d755cf40fe458f21822a3b778160"
+      "947c2209b397a754dd345d65f827868a"
     ],
     [
       "Protocol.sent_bytes",
@@ -1473,7 +1132,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "076af93d079699eb442fec105d833c3d"
+      "5edde5905294ee936800f96926366078"
     ],
     [
       "Protocol.iarray_as_seq",
@@ -1501,7 +1160,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "d80859d5adc286152d4a161f4dae3d5e"
+      "f2fd8e6a2c1390620df6acc218ba410d"
     ],
     [
       "Protocol.fully_initialized_in",
@@ -1514,7 +1173,7 @@
         "refinement_interpretation_MonotonicArray_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "0b0f2583a374eb4aed316bf87e6b17b8"
+      "eee03e2b019dbfee12201bcd858a2e03"
     ],
     [
       "Protocol.subseq_suffix",
@@ -1553,37 +1212,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "30ca468903a230127a70e7df878669e8"
-    ],
-    [
-      "Protocol.subseq_suffix",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "96f46895d1f290ef686a511c7be10d69"
-    ],
-    [
-      "Protocol.subseq_suffix",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "7121ce3561fd31d47f0258f5fc187be5"
+      "7e57713ecd3ef011ec493f9fe060b4a4"
     ],
     [
       "Protocol.slice_snoc",
@@ -1614,7 +1243,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "49cbcab890a887d7f627297bb1558397"
+      "398cd277391e9469bac91c05a855ad7a"
     ],
     [
       "Protocol.slice_snoc2",
@@ -1649,7 +1278,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "a1076cfd7a9f2e2b92dddf893b361f4c"
+      "a56d24af35350e72344a5dec56553cd0"
     ],
     [
       "Protocol.append_subseq",
@@ -1699,52 +1328,7 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "f318b317e7b63e344e4090b1a99f52b5"
-    ],
-    [
-      "Protocol.append_subseq",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "1ee06f0d56489973cc443d0374452a00"
-    ],
-    [
-      "Protocol.append_subseq",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "51c82c8f78e0b4bafdc31e099557f62b"
-    ],
-    [
-      "Protocol.append_subseq",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "0ab3c932fbdb41134bc470b96ef5e8db"
+      "1d5e18a368a8071d59635b15074a67eb"
     ],
     [
       "Protocol.lemma_sender_connection_ctr_equals_length_log",
@@ -1780,7 +1364,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "fabbcb95e45d240cfd0c03bb9cf16e9e"
+      "55842897834fe124fad05bce0a7e75b0"
     ],
     [
       "Protocol.send_aux",
@@ -1792,7 +1376,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8930b6b7b88784e1492829214dd3c3ad"
+      "3d0a781f12527bb313905339739660ee"
     ],
     [
       "Protocol.send_aux",
@@ -1819,7 +1403,7 @@
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531"
       ],
       0,
-      "3bb89b90c0503c638be48a833491ef83"
+      "ab6958aaee39eade25ebe5b19c57a45c"
     ],
     [
       "Protocol.send_aux",
@@ -1828,14 +1412,11 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "ArrayUtils_interpretation_Tm_arrow_dbeedfa99b93a9008468d7c8e81521cb",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "Protocol_interpretation_Tm_arrow_3a12d11149297e47488de3dd4a6a28b8",
-        "Protocol_interpretation_Tm_arrow_6583b94c413ee34e90c8125642edddc3",
-        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6", "b2t_def",
-        "disc_equation_FStar.Pervasives.Native.Some",
+        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6",
+        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
         "disc_equation_Protocol.S", "eq2-interp",
         "equation_ArrayUtils.all_some", "equation_ArrayUtils.init_at_seq",
         "equation_ArrayUtils.some_equivalent_seqs",
@@ -1848,29 +1429,27 @@
         "equation_MonotonicArray.as_initialized_subseq",
         "equation_MonotonicArray.init_arr_in_heap_i_j",
         "equation_MonotonicArray.suffix", "equation_Prims.eq2",
-        "equation_Prims.l_and", "equation_Prims.min", "equation_Prims.nat",
-        "equation_Prims.squash", "equation_Protocol.connection_footprint",
-        "equation_Protocol.ctr", "equation_Protocol.entries",
+        "equation_Prims.min", "equation_Prims.nat",
+        "equation_Protocol.connection_footprint", "equation_Protocol.ctr",
+        "equation_Protocol.entries", "equation_Protocol.entries_of",
         "equation_Protocol.entries_rel",
         "equation_Protocol.fully_initialized_in", "equation_Protocol.iarray",
         "equation_Protocol.is_prefix_of",
         "equation_Protocol.live_connection", "equation_Protocol.log",
-        "equation_Protocol.message", "equation_Protocol.sender",
-        "equation_Protocol.sent_bytes", "equation_Protocol.sent_bytes_",
-        "fuel_guarded_inversion_Prims.c_and",
-        "function_token_typing_ArrayUtils.get_some_equivalent",
+        "equation_Protocol.message", "equation_Protocol.rand_of",
+        "equation_Protocol.sender", "equation_Protocol.sent_bytes",
+        "equation_Protocol.sent_bytes_",
         "function_token_typing_Protocol.byte",
-        "function_token_typing_Protocol.flatten",
         "function_token_typing_Protocol.fragment_size",
         "function_token_typing_Protocol.message",
-        "function_token_typing_Protocol.zero_b", "int_inversion",
-        "int_typing",
+        "function_token_typing_Protocol.zero_b",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "int_typing",
         "interpretation_Protocol_Tm_abs_440b7d41bf07a3c0c174e3e87f7ba354",
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_Protocol.entry@tok", "l_and-interp",
         "lemma_ArrayUtils.lemma_get_some_equivalent_slice",
-        "lemma_FStar.Seq.Base.lemma_index_slice",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_FStar.Seq.Properties.slice_length",
         "lemma_FStar.Seq.Properties.slice_slice",
@@ -1878,6 +1457,7 @@
         "lemma_MonotonicArray.lemma_framing_of_as_seq",
         "lemma_MonotonicArray.lemma_sub_contains",
         "lemma_MonotonicArray.lemma_sub_footprint",
+        "lemma_MonotonicArray.lemma_sub_is_slice",
         "lemma_MonotonicArray.lemma_sub_preserves_array_mutable_flag",
         "lemma_Protocol.lemma_sel_entries_equals_sel_tot_entries",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -1890,106 +1470,27 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
+        "refinement_interpretation_MonotonicArray_Tm_refine_5e6ca8186676c4a43c361642490c1be4",
         "refinement_interpretation_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
         "refinement_interpretation_MonotonicArray_Tm_refine_f984cba283a0017499e468d307a8fd1d",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Protocol_Tm_refine_0b9bfa7c9199a4522bd11aa0a624263b",
         "refinement_interpretation_Protocol_Tm_refine_2244126fa9e3f73aca320e63eaeaee37",
         "refinement_interpretation_Protocol_Tm_refine_5f517b5f7d02af5291ebd79945a22e63",
         "refinement_interpretation_Protocol_Tm_refine_7d5d8d52fd8ac87597c956560cb50e0e",
         "refinement_interpretation_Protocol_Tm_refine_8aa1c18a13fbc3e3fe9376d1a9627ecc",
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531",
-        "token_correspondence_ArrayUtils.get_some_equivalent",
-        "token_correspondence_Protocol.flatten",
         "token_correspondence_Protocol.sent_bytes",
         "typing_ArrayUtils.get_some_equivalent", "typing_ArrayUtils.seq_map",
-        "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Seq.Base.length",
-        "typing_FStar.Seq.Base.slice", "typing_MonotonicArray.as_seq",
-        "typing_MonotonicArray.sub", "typing_Protocol.connection_footprint",
-        "typing_Protocol.ctr", "typing_Protocol.entries",
+        "typing_FStar.Monotonic.Heap.sel", "typing_MonotonicArray.as_seq",
+        "typing_Protocol.connection_footprint", "typing_Protocol.entries",
         "typing_Protocol.entries_of", "typing_Protocol.entries_rel",
-        "typing_Protocol.log", "typing_Protocol.rand_of",
-        "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c",
-        "unit_typing"
+        "typing_Protocol.rand_of", "typing_Protocol.sender",
+        "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "fe931299b57bf2ae924b9819771281f4"
-    ],
-    [
-      "Protocol.send_aux",
-      4,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "62d5d1ba0dcf8b1e09b338e9793676d2"
-    ],
-    [
-      "Protocol.send_aux",
-      5,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
-      ],
-      0,
-      "739b7e567a6119691a50d72032bf73cb"
-    ],
-    [
-      "Protocol.send_aux",
-      6,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
-      ],
-      0,
-      "1546310920daad36d492a082e7a2bffc"
-    ],
-    [
-      "Protocol.send_aux",
-      7,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "35f4578e3df2de0af14a4b2d2188d7a8"
-    ],
-    [
-      "Protocol.send_aux",
-      8,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "9b962bb7febeea9f32dd864a2f4196f8"
-    ],
-    [
-      "Protocol.send_aux",
-      9,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "927640e91588ee902625fa67daf60f77"
+      "965d4ab0f20aa2042773d2c3891e4c35"
     ],
     [
       "Protocol.send_file",
@@ -1999,9 +1500,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Protocol_interpretation_Tm_arrow_3a12d11149297e47488de3dd4a6a28b8",
-        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6", "b2t_def",
-        "bool_inversion", "disc_equation_Protocol.S", "eq2-interp",
+        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6",
+        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
+        "disc_equation_Protocol.S", "eq2-interp",
         "equation_ArrayUtils.all_some", "equation_ArrayUtils.init_at_seq",
         "equation_ArrayUtils.some_equivalent_seqs",
         "equation_FStar.Pervasives.st_pre_h",
@@ -2022,8 +1525,11 @@
         "equation_Protocol.sender", "equation_Protocol.sent",
         "equation_Protocol.sent_bytes", "equation_Protocol.sent_bytes_",
         "function_token_typing_Protocol.byte",
+        "function_token_typing_Protocol.fragment_size",
         "function_token_typing_Protocol.message",
-        "function_token_typing_Protocol.zero_b", "int_inversion",
+        "function_token_typing_Protocol.zero_b",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion",
         "interpretation_Protocol_Tm_abs_440b7d41bf07a3c0c174e3e87f7ba354",
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "kinding_FStar.Pervasives.Native.option@tok",
@@ -2061,19 +1567,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "6c90c901050c0bd66b5e8ccaa5b8a3da"
-    ],
-    [
-      "Protocol.send_file",
-      2,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "85eb22c73078036c98e5b4827386d041"
+      "38c8917c7abd7a942896f313cce485c6"
     ],
     [
       "Protocol.received",
@@ -2090,7 +1584,7 @@
         "function_token_typing_Protocol.zero_b"
       ],
       0,
-      "f3d4616512828c122106483cd9186008"
+      "aac150508ea731e346328665296744f3"
     ],
     [
       "Protocol.receive_aux",
@@ -2102,7 +1596,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "56d5252d6f82a52540f7d0d702d2c7f1"
+      "7d40f50f94e061ca7f28b6610b278079"
     ],
     [
       "Protocol.receive_aux",
@@ -2114,7 +1608,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8e3f0216fc52625d4c9cf12f04d1b033"
+      "c53877b83516ab0da8108e55d37b94ee"
     ],
     [
       "Protocol.receive_aux",
@@ -2148,7 +1642,7 @@
         "refinement_kinding_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
       ],
       0,
-      "e36d30ece5f867f01c9401f7e0800dfe"
+      "2a815caef94e1b0b53bc446cb4051c41"
     ],
     [
       "Protocol.append_filled",
@@ -2212,50 +1706,7 @@
         "typing_MonotonicArray.as_seq", "typing_MonotonicArray.sub"
       ],
       0,
-      "3af6ffad5be66678b21879b6e546327a"
-    ],
-    [
-      "Protocol.append_filled",
-      2,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "d0cb3df420578dd80cf26b590b7894da"
-    ],
-    [
-      "Protocol.append_filled",
-      3,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "b3bb4a2c49dd00e9c8d68f19867c16f8"
-    ],
-    [
-      "Protocol.append_filled",
-      4,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "c4b53ac5e5a75beab1c9bbb496d59020"
+      "7b2b21d76cd0b26976f9cbfd315868cd"
     ],
     [
       "Protocol.extend_initialization",
@@ -2293,94 +1744,7 @@
         "typing_MonotonicArray.as_seq", "typing_MonotonicArray.sub"
       ],
       0,
-      "f64b0680ac86bb38a4674472cea76bf3"
-    ],
-    [
-      "Protocol.extend_initialization",
-      2,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "c4c79010e7c1ccc856747e7f582321da"
-    ],
-    [
-      "Protocol.extend_initialization",
-      3,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "b8b6938bf58b828a1aa72360915ec9bf"
-    ],
-    [
-      "Protocol.extend_initialization",
-      4,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "fb66be4bef13e90709999137801afb9e"
-    ],
-    [
-      "Protocol.extend_initialization",
-      5,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "9c6a3fef1d90ba92c021249b291aa324"
-    ],
-    [
-      "Protocol.extend_initialization",
-      6,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Protocol_Tm_refine_c96dacf268ffee31ff6caa8cad464bdb"
-      ],
-      0,
-      "ee9e52bb5388f74a41394e6ac2ace244"
-    ],
-    [
-      "Protocol.extend_initialization",
-      7,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "lemma_MonotonicArray.lemma_as_seq_length",
-        "primitive_Prims.op_Addition",
-        "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Protocol_Tm_refine_c96dacf268ffee31ff6caa8cad464bdb"
-      ],
-      0,
-      "f3a3d5a8571ae922fed5ab2bdd8ab72e"
+      "a4d982ff926da3f8e3dd4911e61ac7c9"
     ],
     [
       "Protocol.receive_aux",
@@ -2458,7 +1822,7 @@
         "typing_Protocol.log", "typing_Protocol.receiver"
       ],
       0,
-      "9ec440bb083d90d978a9f618e25adec2"
+      "6c84ebf1eee009c23eb215746bcbced5"
     ],
     [
       "Protocol.receive_aux",
@@ -2470,7 +1834,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "77a4b0691792ced15a88a97e1ffdf61f"
+      "15d002ffe72d389864f148f1122286d4"
     ],
     [
       "Protocol.receive_aux",
@@ -2484,7 +1848,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "db9c35cd78684692fef8c4454a2751ca"
+      "2f56ad668f295447b37ebb962720c1d6"
     ],
     [
       "Protocol.receive_aux",
@@ -2498,7 +1862,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "05e5f00926e803d981a7f3025dcaf476"
+      "b3581c7a5bac9aadecc25468ba0fab75"
     ],
     [
       "Protocol.receive_aux",
@@ -2512,7 +1876,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "8310d1c4e18c6c73d5c9349e0a2e1055"
+      "b25d2d0e884cda1a2e4c5eccf78bf8e6"
     ],
     [
       "Protocol.receive_aux",
@@ -2526,7 +1890,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "8d17b182ffd038e0c16d61cf4f3a6e45"
+      "7e62f1b47fc1471ed86c08fe3e9cfd38"
     ],
     [
       "Protocol.receive_aux",
@@ -2540,7 +1904,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "e241bef638869431c332da708696a276"
+      "560718ff13656a77a968f1f13e4707ff"
     ],
     [
       "Protocol.receive_aux",
@@ -2554,7 +1918,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "6ba9f73f9efed8bc3330c0c5859382bf"
+      "baa2a34559600e629c62815a1da64f90"
     ],
     [
       "Protocol.receive_aux",
@@ -2568,7 +1932,7 @@
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3"
       ],
       0,
-      "66a82879129bbf8bb92352755452bdba"
+      "64c53806e1ac86d30d1178018ae571c3"
     ],
     [
       "Protocol.receive_aux",
@@ -2577,7 +1941,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "27a3b240c9b17a2bc63420b54823b89b"
+      "2f1ffb6463deef3f71e264502f6c1e99"
     ],
     [
       "Protocol.receive_file",
@@ -2589,7 +1953,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0f4ee1987c2e56c3aa572d2e77697422"
+      "a671ffaf3d8da3b2a2ab9e994f8dd934"
     ],
     [
       "Protocol.receive_file",
@@ -2618,7 +1982,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e497fb7f51c975e4d1827d5a0f7730fd"
+      "ca425bb881c221c6c9b2b66690306b97"
     ],
     [
       "Protocol.receive_file",
@@ -2631,8 +1995,8 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Protocol_interpretation_Tm_arrow_3a12d11149297e47488de3dd4a6a28b8",
         "Protocol_interpretation_Tm_arrow_79ecb2d16827c1cf3d1e239f0b881b5f",
-        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6", "b2t_def",
-        "bool_inversion",
+        "Protocol_pretyping_d1978c882b530b60e372963c3ccf3dc6",
+        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.None",
@@ -2665,7 +2029,9 @@
         "function_token_typing_Protocol.fragment_size",
         "function_token_typing_Protocol.message",
         "function_token_typing_Protocol.sent_bytes",
-        "function_token_typing_Protocol.zero_b", "int_inversion",
+        "function_token_typing_Protocol.zero_b",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion",
         "interpretation_Protocol_Tm_abs_0b111045ea5e5c0ee895e7a41cfb659a",
         "interpretation_Protocol_Tm_abs_440b7d41bf07a3c0c174e3e87f7ba354",
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
@@ -2712,12 +2078,12 @@
         "typing_FStar.Monotonic.Heap.sel", "typing_MonotonicArray.as_seq",
         "typing_Protocol.counter_pre", "typing_Protocol.counter_pred",
         "typing_Protocol.counter_t", "typing_Protocol.entries",
-        "typing_Protocol.entries_of", "typing_Protocol.entries_rel",
-        "typing_Protocol.rand_of", "typing_Protocol.receiver",
+        "typing_Protocol.entries_rel", "typing_Protocol.rand_of",
+        "typing_Protocol.receiver",
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "1c3546eca8b86910b99d73f07f7bc18e"
+      "afd034d92deecce119da4cc250d202b6"
     ],
     [
       "Protocol.tags",
@@ -2731,7 +2097,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "03232ecfeab1c145ac4bae8c3c981f16"
+      "b8753727e90a2c519895293f5f0b3abc"
     ],
     [
       "Protocol.lemma_partial_length_hiding",
@@ -2793,7 +2159,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "e80cfe6f100b15d4755f8768163b0a59"
+      "53d64c6e42c3b1444f4c727701a7a788"
     ],
     [
       "Protocol.lemma_seq_append_unstable",
@@ -2811,7 +2177,7 @@
         "refinement_interpretation_Protocol_Tm_refine_4eafbcb438fb79493974de24a3b20fd7"
       ],
       0,
-      "546aeb31c070c8575beffcabed22153b"
+      "5c64c149e4df320d82aae797bafd149b"
     ],
     [
       "Protocol.network_message",
@@ -2823,7 +2189,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "086d8dba889d410322da456840e94e98"
+      "0770926ec4603d257545e37e538c0113"
     ],
     [
       "Protocol.zeroes",
@@ -2836,7 +2202,7 @@
         "lemma_FStar.Seq.Base.lemma_create_len"
       ],
       0,
-      "bc81994de2af6fc7b98a3c1de3a05d11"
+      "4ea9bab58065b2a5ab2d8d1dc760103b"
     ],
     [
       "Protocol.zeroes",
@@ -2848,7 +2214,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e9f1a11602ba7fe84b18236d6130a29a"
+      "6ba14ef4762f732136ac70b45ba8a58f"
     ],
     [
       "Protocol.pad",
@@ -2872,7 +2238,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a63bc2c047203272f4980d2647d758ff"
+      "23dca71339ae7bdb926b75b5e1200d6f"
     ],
     [
       "Protocol.unpad",
@@ -2884,7 +2250,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a02020e9d266d51da841b9b199887d4c"
+      "1e089b9d9491fb609f5b4449be3e7bfa"
     ],
     [
       "Protocol.__proj__E__item__cipher",
@@ -2897,7 +2263,7 @@
         "projection_inverse_Protocol.E_msg"
       ],
       0,
-      "e5d03474d1d57db50416ce3ae80ca890"
+      "e1e280045e9d14ab78fcdf930d40393a"
     ],
     [
       "Protocol.__proj__E__item__tag",
@@ -2910,7 +2276,7 @@
         "projection_inverse_Protocol.E_i"
       ],
       0,
-      "d577a23236cb44cbf08a55f5550848c4"
+      "5ce5d352eedbea3af035c62942f82a90"
     ],
     [
       "Protocol.entries",
@@ -2922,7 +2288,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "91a6fa257b27b48852aa1127bf3770be"
+      "504829b1c7792ab274dbd2c6edb6a831"
     ],
     [
       "Protocol.is_prefix_of",
@@ -2931,7 +2297,7 @@
       1,
       [ "@query" ],
       0,
-      "d5dcff21540107c241b6b0511eb6964f"
+      "953eab7d1fde90ca4a3178883854a543"
     ],
     [
       "Protocol.entries_pre",
@@ -2944,11 +2310,11 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "c77119da42d3de5bb8e5640508c219a9"
+      "5c9821e0af7f627f8b72fb0366d614bd"
     ],
     [
       "Protocol.counter_pred",
-      4,
+      2,
       2,
       1,
       [
@@ -2969,11 +2335,11 @@
         "typing_Protocol.entries", "typing_Protocol.entries_rel"
       ],
       0,
-      "a6f73a1d4e6c91f894015018d33b518e"
+      "ae73a13444581acb0a49cfbf12fbecd9"
     ],
     [
       "Protocol.counter_pred",
-      5,
+      3,
       2,
       1,
       [
@@ -2982,7 +2348,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "1f4dca6811362e5d527485664dd8343c"
+      "2b4938981b93426f80ea6d810cc9b85c"
     ],
     [
       "Protocol.counter_t",
@@ -2995,7 +2361,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "7e506bf0be0899a3eecb49e79d158ee2"
+      "6a35123872309c0ab62580e367b7a2f0"
     ],
     [
       "Protocol.counter_t",
@@ -3008,7 +2374,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "c2955764aa583158f30b2d034943f12d"
+      "2c9c0e219b1f3d8ff4acbd471f290651"
     ],
     [
       "Protocol.counter_rel",
@@ -3021,7 +2387,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "f5387edb39c5fe0444a96014e9a073d8"
+      "1fd221f969fb349f5e441baca6910d4d"
     ],
     [
       "Protocol.counter_rel",
@@ -3034,7 +2400,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "ff4d43d214e1340a6629530e60ec1397"
+      "efa7f8714f0c18eaabe81e12463d5ca2"
     ],
     [
       "Protocol.counter_pre",
@@ -3051,7 +2417,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "961dff231f8647ac05e3f3f08174ef6a"
+      "ddfcb315cc79c8b29b895bf31156e506"
     ],
     [
       "Protocol.counter_pre",
@@ -3064,7 +2430,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "d6f3e07389c234d93f164880ad15f36a"
+      "ce991ab8b724104bf84ad0e61770d669"
     ],
     [
       "Protocol.connection",
@@ -3077,7 +2443,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "a63d71f494195be08a312dbd442f24d8"
+      "88fa8ab810bb9f0a90bef568d97cd150"
     ],
     [
       "Protocol.connection",
@@ -3090,7 +2456,20 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "da0520c2deb72acb3e7b57eba7144343"
+      "5cf43283aa405a063619fe02b9f770d0"
+    ],
+    [
+      "Protocol.uu___is_S",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
+      ],
+      0,
+      "716c93b5d36c9e1dc87e68cfe53d2d4f"
     ],
     [
       "Protocol.__proj__S__item__rand",
@@ -3099,11 +2478,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.S",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Protocol_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "2f28b300f92d14318777b3da2f0afeb2"
+      "1a347b76c394d7b53ae553342ea36ce2"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -3117,7 +2499,7 @@
         "proj_equation_Protocol.S_rand"
       ],
       0,
-      "f66a8aee24de1c05fd406934a50ebe32"
+      "79b0b023fa36231cd55cc1ce02992663"
     ],
     [
       "Protocol.__proj__S__item__entries",
@@ -3126,12 +2508,28 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.S",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "proj_equation_Protocol.S_rand", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.S_rand",
         "refinement_interpretation_Protocol_Tm_refine_e6ab7d7d11fd937f30ad6128228c18b5"
       ],
       0,
-      "57f9d28a1ce253594b2d14475d1abfa6"
+      "e98f899f1f7d34613c15027f0c35aeb8"
+    ],
+    [
+      "Protocol.uu___is_R",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
+      ],
+      0,
+      "0602983eb29864a9fee21a80b3c2cc7e"
     ],
     [
       "Protocol.__proj__R__item__rand",
@@ -3140,11 +2538,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "eec0c7e8842615939e7fe864ca30baaa"
+      "c4aa1b6d6d5fbc26b4266fca0b7489ec"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -3158,7 +2559,7 @@
         "proj_equation_Protocol.R_rand"
       ],
       0,
-      "31ff38b531fffb52f17e9e3eeb32ff0f"
+      "19284e70aeca8aa06cc4787ad04270d7"
     ],
     [
       "Protocol.__proj__R__item__entries",
@@ -3167,12 +2568,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "proj_equation_Protocol.R_rand", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.R_rand",
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "b6b7b23113c17f4ef1181c440cc529b9"
+      "de8d5326654192aecdbb7fbb8e4706db"
     ],
     [
       "Protocol.__proj__R__item__ctr",
@@ -3181,6 +2585,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Protocol.R",
+        "equation_FStar.Preorder.preorder_rel", "equation_Protocol.entries",
+        "equation_Protocol.entries_rel", "equation_Protocol.is_prefix_of",
+        "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "proj_equation_Protocol.R_entries", "proj_equation_Protocol.R_rand",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Protocol.R_entries",
@@ -3188,7 +2595,7 @@
         "refinement_interpretation_Protocol_Tm_refine_1515f8c9bed8836c1665cbcf6953f9bb"
       ],
       0,
-      "aa9c2c4b47b25978dff56dfd9dd9cac7"
+      "24f71fdfa66d2548b8c5bb8b6eb84106"
     ],
     [
       "Protocol.rand_of",
@@ -3204,7 +2611,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "1c5faf76b7832448d018289bd8a9a12f"
+      "a7cb9475fb06bfd5dcb6b97ed53c7769"
     ],
     [
       "Protocol.entries_of",
@@ -3224,7 +2631,7 @@
         "projection_inverse_Protocol.S_rand"
       ],
       0,
-      "133582266930a362c56b8fad55daf94f"
+      "b2e1b74a8ab58cab016eb2660c6005d7"
     ],
     [
       "Protocol.entries_of",
@@ -3238,11 +2645,11 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "8c9da3edcc7d220e48e6c51c28910bfe"
+      "278eb931606dccb4e384be4b9195a937"
     ],
     [
       "Protocol.live_connection",
-      4,
+      2,
       2,
       1,
       [
@@ -3254,11 +2661,11 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "227a5b4d93bcca598953d1dd1f77e345"
+      "d2106f89c906b4623049a2233a0909c3"
     ],
     [
       "Protocol.lemma_sel_entries_equals_sel_tot_entries",
-      7,
+      2,
       2,
       1,
       [
@@ -3278,7 +2685,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f35161b4c8733dfbdcfff752a5d75c66"
+      "70bd4fd3297a864ebec52004a37ee21a"
     ],
     [
       "Protocol.lemma_sel_ctr_ref_equals_sel_tot_ctr_ref",
@@ -3306,11 +2713,11 @@
         "typing_Protocol.uu___is_R"
       ],
       0,
-      "577e251880add60dbd81490a6489e28d"
+      "cea73ad323c0032738540c7da1d44e9c"
     ],
     [
       "Protocol.log",
-      3,
+      2,
       2,
       1,
       [
@@ -3325,11 +2732,11 @@
         "refinement_interpretation_Protocol_Tm_refine_0b9bfa7c9199a4522bd11aa0a624263b"
       ],
       0,
-      "45e72d252e38b2099f45f901a42cdbc2"
+      "d6ade2c42a60b706b9742879f6e2e79b"
     ],
     [
       "Protocol.lemma_prefix_entries_implies_prefix_log",
-      6,
+      2,
       2,
       1,
       [
@@ -3341,7 +2748,7 @@
         "refinement_interpretation_Protocol_Tm_refine_6ad1911ba7997a4706e7f484754f6c48"
       ],
       0,
-      "a22d13ba84143b397b8150078c356cd1"
+      "daa7319d1b83c1590bf757cac73986a6"
     ],
     [
       "Protocol.ctr",
@@ -3362,7 +2769,7 @@
         "refinement_interpretation_Protocol_Tm_refine_0b9bfa7c9199a4522bd11aa0a624263b"
       ],
       0,
-      "cfa409a06e956f1beba7bc8f188b7a74"
+      "4b248154ae5e7915786ae3e4e6b73b44"
     ],
     [
       "Protocol.recall_counter",
@@ -3371,7 +2778,7 @@
       1,
       [ "@query" ],
       0,
-      "085a3d74da9e61452e20b83c68ca3054"
+      "6cadb46a47ccbc805de511ca54a6d029"
     ],
     [
       "Protocol.snapshot",
@@ -3419,7 +2826,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "6a2f3ff595f254a65167d4726643a6a1"
+      "51388f39c51f46f2306d26accef9a0d3"
     ],
     [
       "Protocol.snap",
@@ -3428,11 +2835,11 @@
       1,
       [ "@query" ],
       0,
-      "18375a39b1fa7c660ae26b4e254af622"
+      "55fa1b309648f14da190bcc36949f48e"
     ],
     [
       "Protocol.connection_footprint",
-      8,
+      2,
       2,
       1,
       [
@@ -3449,11 +2856,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8bef76c9dfc6fdd575807e351e07a369"
+      "887e4cab1f3be99063c23a3187eb5d92"
     ],
     [
       "Protocol.connection_footprint",
-      9,
+      3,
       2,
       1,
       [
@@ -3461,11 +2868,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7f5e2d292446aa657ee7ec2eb514456b"
+      "24d148356815e5a861521416c434095e"
     ],
     [
       "Protocol.lemma_snoc_log",
-      5,
+      2,
       2,
       1,
       [
@@ -3478,7 +2885,7 @@
         "refinement_interpretation_Protocol_Tm_refine_8b8773cc8e8e97faff9782919cb96e44"
       ],
       0,
-      "4e846af09c0f4b1ec2d670de6874e670"
+      "e6f22572bbd12394fda03583347cc963"
     ],
     [
       "Protocol.network_send",
@@ -3501,11 +2908,11 @@
         "typing_Protocol.sender"
       ],
       0,
-      "49d4e48e7285a2d3caab41f0a2fac47f"
+      "5edc00903202753a5e4367482cac6fb5"
     ],
     [
       "Protocol.send",
-      5,
+      2,
       2,
       1,
       [
@@ -3522,8 +2929,7 @@
         "equation_Protocol.sender", "function_token_typing_Protocol.byte",
         "function_token_typing_Protocol.fragment_size",
         "function_token_typing_Protocol.zero_b", "int_inversion",
-        "int_typing", "kinding_FStar.Pervasives.Native.option@tok",
-        "lemma_ArrayUtils.lemma_get_some_equivalent_slice",
+        "int_typing", "lemma_ArrayUtils.lemma_get_some_equivalent_slice",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_MonotonicArray.lemma_as_seq_length",
         "primitive_Prims.op_LessThanOrEqual",
@@ -3540,7 +2946,7 @@
         "typing_MonotonicArray.as_seq", "typing_Protocol.sender"
       ],
       0,
-      "d73a587a455fced7204c615bd3936bb0"
+      "39bc565d143426ee47fcbe2a7e916b0d"
     ],
     [
       "Protocol.ciphers",
@@ -3554,7 +2960,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "7684ee86a9e4436443c878e759021b4a"
+      "9d6dfd3bbc3c5ca4ef921b1748bbc4c4"
     ],
     [
       "Protocol.modifies_r",
@@ -3566,7 +2972,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4e4898838fa5d82e9dab19d4fd1dafbf"
+      "d44cd1e0b7432c577e282d2db011b698"
     ],
     [
       "Protocol.verify",
@@ -3583,11 +2989,11 @@
         "typing_Protocol.receiver"
       ],
       0,
-      "d88ab92ffaa0b0ce8d0f668b7e5365b2"
+      "2c1604f6b89e2b22edbe3de15635d49b"
     ],
     [
       "Protocol.receive",
-      7,
+      2,
       2,
       1,
       [
@@ -3616,7 +3022,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e9513d7cc604e3c85b65780e1d552e2e"
+      "41d750ebe6356564a1dcf2ed5e5ef3c0"
     ],
     [
       "Protocol.lemma_is_prefix_of_slice",
@@ -3633,7 +3039,7 @@
         "refinement_interpretation_Protocol_Tm_refine_6472b0a877e3e824d44d3d3f19ad04e0"
       ],
       0,
-      "852a7364aeb9d696e424a1679898aecb"
+      "841ea72ce976a1a67a9e28dfdb5e3a19"
     ],
     [
       "Protocol.sent_bytes'",
@@ -3649,7 +3055,7 @@
         "refinement_interpretation_Protocol_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "662b04f2280378a277f07428a7093d25"
+      "1c02ce054e8dab4ddfa11cfa0f806165"
     ],
     [
       "Protocol.sent_bytes",
@@ -3698,7 +3104,7 @@
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0,
-      "f6f2b7921efd98bb63adcc8e3919afe8"
+      "bf5020649cc8204b60a1944851ecab59"
     ],
     [
       "Protocol.iarray_as_seq",
@@ -3717,7 +3123,7 @@
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531"
       ],
       0,
-      "efd34dd0b49001a25f12f6364e4bd2e1"
+      "10104e03b4b2fa4c5779ec2f7c2d4320"
     ],
     [
       "Protocol.fully_initialized_in",
@@ -3730,11 +3136,11 @@
         "refinement_interpretation_MonotonicArray_Tm_refine_f984cba283a0017499e468d307a8fd1d"
       ],
       0,
-      "ad08c26f1e98c69923b803a9e149c2df"
+      "c1ae0d51bb2c710a99d3f279317587df"
     ],
     [
       "Protocol.subseq_suffix",
-      4,
+      2,
       2,
       1,
       [
@@ -3745,27 +3151,24 @@
         "equation_MonotonicArray.init_arr_in_heap_i_j",
         "equation_MonotonicArray.suffix", "equation_Prims.nat",
         "equation_Protocol.fully_initialized_in", "equation_Protocol.iarray",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_Protocol.fragment_size", "int_inversion",
         "int_typing", "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Seq.Base.lemma_index_slice",
         "lemma_MonotonicArray.lemma_as_seq_length",
         "lemma_MonotonicArray.lemma_sub_is_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_MonotonicArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
         "refinement_interpretation_MonotonicArray_Tm_refine_f984cba283a0017499e468d307a8fd1d",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531",
         "refinement_interpretation_Protocol_Tm_refine_a84c31dd3ffb7247ff03d9663266e434",
-        "typing_FStar.Seq.Base.index", "typing_MonotonicArray.as_seq"
+        "typing_MonotonicArray.as_seq"
       ],
       0,
-      "81ef030656be7f4a1a7b65436e5c48a3"
+      "07043719a7be640a3aeed2f97ba7f5f5"
     ],
     [
       "Protocol.slice_snoc",
@@ -3787,7 +3190,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "82288597d171c42d9f467680b1a33ac9"
+      "7b0a245748177aa5e81f7e117030224c"
     ],
     [
       "Protocol.slice_snoc2",
@@ -3809,11 +3212,11 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "25d06819d2d7ee70c02808a0ecf5ac77"
+      "d34a9841c70d4256769a08c614714d1f"
     ],
     [
       "Protocol.append_subseq",
-      5,
+      2,
       2,
       1,
       [
@@ -3842,11 +3245,11 @@
         "typing_MonotonicArray.as_seq"
       ],
       0,
-      "9839fb49c067ba411156ce9008724cef"
+      "5f697ad9d251a6fdc5d88b2c54d0a3a2"
     ],
     [
       "Protocol.send_aux",
-      10,
+      4,
       0,
       0,
       [
@@ -3872,11 +3275,11 @@
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531"
       ],
       0,
-      "2e4e4239e102f9fef3666007054da9f4"
+      "08b2130a2b243e76659cf277e2e2c199"
     ],
     [
       "Protocol.send_file",
-      3,
+      2,
       0,
       0,
       [
@@ -3897,7 +3300,7 @@
         "refinement_interpretation_Protocol_Tm_refine_9dd2f7dc4f1c13136a80acee9d90b531"
       ],
       0,
-      "83f9af5c12cc28770f0dad241559748b"
+      "413eda6320afc3f240a7c2594df5d6e5"
     ],
     [
       "Protocol.received",
@@ -3914,11 +3317,11 @@
         "function_token_typing_Protocol.zero_b"
       ],
       0,
-      "5ad4a21445b127b9be379b0252cd28a0"
+      "a1f577d6a32b6c0e6decab4a42d8386a"
     ],
     [
       "Protocol.append_filled",
-      5,
+      2,
       0,
       0,
       [
@@ -3957,11 +3360,11 @@
         "typing_FStar.Seq.Base.index", "typing_MonotonicArray.as_seq"
       ],
       0,
-      "bf07f86c0fd70757c2420131b26aa56f"
+      "4f3efe0f7f471732809570378e478191"
     ],
     [
       "Protocol.extend_initialization",
-      8,
+      2,
       0,
       0,
       [
@@ -3979,7 +3382,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9ad52ed475f4475f18e1ededc21655d0"
+      "3f9226ab2d84e70955b91a7035d937dd"
     ],
     [
       "Protocol.receive_aux",
@@ -4019,7 +3422,7 @@
         "refinement_kinding_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
       ],
       0,
-      "7c613156f43ec83b7ad7f166c3d7a903"
+      "f91c6c8fe58de768dcbac7839f9f35dc"
     ],
     [
       "Protocol.receive_file",
@@ -4050,7 +3453,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "11c316d9cca01c06be2780a57e0519a0"
+      "e92e781c63cad4ddb2271e1bae263da5"
     ],
     [
       "Protocol.tags",
@@ -4064,7 +3467,7 @@
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7"
       ],
       0,
-      "5c6c2ffbcb2118a5ec3400fbb70c582c"
+      "83b60e18ec8c3e9303befda59a79c627"
     ],
     [
       "Protocol.lemma_partial_length_hiding",
@@ -4119,7 +3522,7 @@
         "unit_typing"
       ],
       0,
-      "51ec89da7a5285236e7b9525d270a79e"
+      "070c932e0313a2ce4f99006f600d33c9"
     ]
   ]
 ]
