@@ -377,10 +377,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
-    let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
+    let topt = tc_tactic_opt env0 topt in
+    let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
-    let topt = tc_tactic_opt env0 topt in
     let f =
         match topt with
         | None -> f
