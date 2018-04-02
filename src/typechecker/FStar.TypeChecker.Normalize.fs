@@ -1163,6 +1163,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                       ; primops      = false
                                       ; simplify     = false
                                       ; unfold_only  = None
+                                      ; unfold_fully = None
                                       ; unfold_until = Some Delta_constant } }
                         else stack, cfg
                      in
