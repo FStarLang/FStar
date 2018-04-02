@@ -360,8 +360,7 @@ let main : 'Auu____539 . Prims.unit -> 'Auu____539 =
         (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
       FStar_ST.op_Colon_Equals
         FStar_TypeChecker_Normalize.unembed_binder_knot
-        (FStar_Pervasives_Native.Some
-           FStar_Reflection_Embeddings.unembed_binder);
+        (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder);
       (let uu____650 = FStar_Util.record_time go  in
        match uu____650 with
        | (uu____655,time) ->

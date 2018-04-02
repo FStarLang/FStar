@@ -163,6 +163,7 @@ type norm_step =
     | Zeta
     | Iota
     | UnfoldOnly : string list -> norm_step
+    | UnfoldFully : string list -> norm_step
 
 let simplify : norm_step = Simpl
 let weak    : norm_step = Weak
@@ -172,6 +173,7 @@ let delta   : norm_step = Delta
 let zeta    : norm_step = Zeta
 let iota    : norm_step = Iota
 let delta_only (s:string list) : norm_step = UnfoldOnly s
+let delta_fully (s:string list) : norm_step = UnfoldFully s
 
 type ('a, 'b) admit = unit
 

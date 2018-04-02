@@ -41,6 +41,5 @@ let tau2 = fun () -> let e = cur_env () in
                        // We're removing two binders
                        guard (List.length (binders_of_env e) = n - 2)
 
-#set-options "--use_two_phase_tc false"
 let l2 (x : int) (y : bool) (z : int) =
     assert_by_tactic (phi ==> (psi ==> xi)) tau2

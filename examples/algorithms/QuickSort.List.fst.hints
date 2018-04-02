@@ -12,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b83357d9194618f5eeb1bff4830881fd"
+      "16c959745a392f3ff210fb96c7c6cba4"
     ],
     [
       "QuickSort.List.count",
@@ -32,7 +32,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7bd3307c347d261ed152e29624a9be77"
+      "f5fc0c29da98eb61287cd9aa367851cc"
     ],
     [
       "QuickSort.List.mem_count",
@@ -41,7 +41,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "d020b20f75bb62e4314a33398a554f61"
+      "55f1185ec774b309df860f3fed826c34"
     ],
     [
       "QuickSort.List.mem_count",
@@ -73,7 +73,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "5a240aca0130af10d7fe233725da06c6"
+      "a69d2ecbdc37e963f4fd320f50205d54"
     ],
     [
       "QuickSort.List.partition",
@@ -87,7 +87,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2c4eec96dc7ea12b41ec146219d91504"
+      "172ea9dbea27bae2c83782db2d4f122c"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -96,7 +96,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b38e96c96aad4adb0a851355bbb6ab04"
+      "32d20c74ddbdd80abb84062af1d87fac"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -105,7 +105,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "57b7f73d731516cf37c866845d9f53bf"
+      "01ab5ea09e25886c8933130e10e2d066"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -162,7 +162,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "8413d09dc91d5dee918af47a67844429"
+      "23bb024810ea49b514e368ec72129073"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -213,7 +213,7 @@
         "typing_QuickSort.List.sorted", "unit_typing"
       ],
       0,
-      "2f49983baf432784a8a5cd37fafd7eb5"
+      "396983093b06b5110516c0c0486b5215"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -225,7 +225,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "870bb6266c461adba3f7627eaab107be"
+      "8080165f40766c8e65cf47472054fabc"
     ],
     [
       "QuickSort.List.append_count",
@@ -234,7 +234,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "460cb809489f5210e9d105f91f8ec72f"
+      "5b6a7b00e785dc2ca248781046bebf9b"
     ],
     [
       "QuickSort.List.append_count",
@@ -270,7 +270,7 @@
         "typing_FStar.List.Tot.Base.append", "typing_QuickSort.List.count"
       ],
       0,
-      "1caeba5101ac3b679e81052e1b1a2822"
+      "adc180d2e29e7550d68b36eec18616e2"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -300,7 +300,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "83b446883c0bbaa559540b8d3147b67b"
+      "6dc35577facca5dd6fb4d860efc1ecd8"
     ],
     [
       "QuickSort.List.quicksort",
@@ -356,7 +356,7 @@
         "typing_QuickSort.List.sorted", "well-founded-ordering-on-nat"
       ],
       0,
-      "37b8606538ceeef0d71c8e6434bed460"
+      "b7cb67463c897a6975ee7bf59f75d225"
     ],
     [
       "QuickSort.List.sorted",
@@ -369,7 +369,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3e3a189ff97bc76f3fd24e98b3aabd58"
+      "c3a6631329a41ad6d29bba423d3575f0"
     ],
     [
       "QuickSort.List.count",
@@ -389,7 +389,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aca148044faee9f77efc89ae75e88bf1"
+      "748a19be376f158ac1c364aefaf1150f"
     ],
     [
       "QuickSort.List.mem_count",
@@ -398,7 +398,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "57712bd83a6244233a423a1050144ded"
+      "7033838c65bacd739c952339e1f519df"
     ],
     [
       "QuickSort.List.partition",
@@ -412,7 +412,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fc22f0d7484fe239fab63075a2805124"
+      "b38d4d0a6efe85042c15084d14e3ed08"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -421,7 +421,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c427d890658fbe65f57fbf63c3c72936"
+      "7f50d0e0c1298de1509ee35fc34edf10"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -433,7 +433,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2e0385278047a45cdd3edd2ca44e98a9"
+      "1e2c59e770ead040bdc0bd8eafca27e0"
     ],
     [
       "QuickSort.List.append_count",
@@ -442,7 +442,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "30bdaadf04cb46d14f76d21c2c31ca4b"
+      "65324020fe12aead928300cc4cada217"
     ],
     [
       "QuickSort.List.quicksort",
@@ -498,7 +498,7 @@
         "typing_QuickSort.List.sorted", "well-founded-ordering-on-nat"
       ],
       0,
-      "a20039239cfa8a4f9d202a263c5a2669"
+      "e0995d39cea6c055bb8c73aa3e8828d7"
     ]
   ]
 ]

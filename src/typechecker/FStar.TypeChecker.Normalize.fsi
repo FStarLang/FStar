@@ -35,7 +35,8 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of delta_depth
-  | UnfoldOnly of list<FStar.Ident.lid>
+  | UnfoldOnly  of list<FStar.Ident.lid>
+  | UnfoldFully of list<FStar.Ident.lid>
   | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations
@@ -89,4 +90,4 @@ val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
 
 val remove_uvar_solutions: Env.env -> term -> term
 
-val unembed_binder_knot : ref<option<FStar.Syntax.Embeddings.unembedder<binder>>>
+val unembed_binder_knot : ref<option<FStar.Syntax.Embeddings.embedding<binder>>>
