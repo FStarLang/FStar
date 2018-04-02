@@ -1615,3 +1615,45 @@ let (opening_of_binders :
 let (closing_of_binders :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_t) =
   fun bs  -> closing_subst bs 
+let (open_term_1 :
+  FStar_Syntax_Syntax.binder ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2)
+  =
+  fun b  ->
+    fun t  ->
+      let uu____5553 = open_term [b] t  in
+      match uu____5553 with
+      | (b1::[],t1) -> (b1, t1)
+      | uu____5586 -> failwith "impossible: open_term_1"
+  
+let (open_term_bvs :
+  FStar_Syntax_Syntax.bv Prims.list ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.bv Prims.list,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2)
+  =
+  fun bvs  ->
+    fun t  ->
+      let uu____5611 =
+        let uu____5616 = FStar_List.map FStar_Syntax_Syntax.mk_binder bvs  in
+        open_term uu____5616 t  in
+      match uu____5611 with
+      | (bs,t1) ->
+          let uu____5625 = FStar_List.map FStar_Pervasives_Native.fst bs  in
+          (uu____5625, t1)
+  
+let (open_term_bv :
+  FStar_Syntax_Syntax.bv ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2)
+  =
+  fun bv  ->
+    fun t  ->
+      let uu____5644 = open_term_bvs [bv] t  in
+      match uu____5644 with
+      | (bv1::[],t1) -> (bv1, t1)
+      | uu____5659 -> failwith "impossible: open_term_bv"
+  
