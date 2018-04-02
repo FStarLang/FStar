@@ -37,6 +37,7 @@ all:	Apply.uver		\
 	Logic.uver		\
 	DependentSynth.uver	\
 	NatPos.uver		\
+	Unfold.uver		\
 	Trace.uver		\
 	Bug1252.uver		\
 	Bug1270.uver		\
