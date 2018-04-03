@@ -78,19 +78,19 @@ let (reflection_primops :
     let l = mklid nm in mk1 l (Prims.parse_int "2") (int2 l f u1 u2 em) in
   let uu____304 =
     mk11 () () "inspect_ln"
-      (fun a421 -> (Obj.magic FStar_Reflection_Basic.inspect_ln) a421)
+      (fun a393 -> (Obj.magic FStar_Reflection_Basic.inspect_ln) a393)
       (Obj.magic FStar_Reflection_Embeddings.e_term)
       (Obj.magic FStar_Reflection_Embeddings.e_term_view) in
   let uu____305 =
     let uu____308 =
       mk11 () () "pack_ln"
-        (fun a422 -> (Obj.magic FStar_Reflection_Basic.pack_ln) a422)
+        (fun a394 -> (Obj.magic FStar_Reflection_Basic.pack_ln) a394)
         (Obj.magic FStar_Reflection_Embeddings.e_term_view)
         (Obj.magic FStar_Reflection_Embeddings.e_term) in
     let uu____309 =
       let uu____312 =
         mk11 () () "inspect_fv"
-          (fun a423 -> (Obj.magic FStar_Reflection_Basic.inspect_fv) a423)
+          (fun a395 -> (Obj.magic FStar_Reflection_Basic.inspect_fv) a395)
           (Obj.magic FStar_Reflection_Embeddings.e_fv)
           (Obj.magic FStar_Syntax_Embeddings.e_string_list) in
       let uu____313 =
@@ -98,101 +98,101 @@ let (reflection_primops :
           let uu____317 =
             FStar_Syntax_Embeddings.e_list FStar_Syntax_Embeddings.e_string in
           mk11 () () "pack_fv"
-            (fun a424 -> (Obj.magic FStar_Reflection_Basic.pack_fv) a424)
+            (fun a396 -> (Obj.magic FStar_Reflection_Basic.pack_fv) a396)
             (Obj.magic uu____317)
             (Obj.magic FStar_Reflection_Embeddings.e_fv) in
         let uu____322 =
           let uu____325 =
             mk11 () () "inspect_comp"
-              (fun a425 ->
-                 (Obj.magic FStar_Reflection_Basic.inspect_comp) a425)
+              (fun a397 ->
+                 (Obj.magic FStar_Reflection_Basic.inspect_comp) a397)
               (Obj.magic FStar_Reflection_Embeddings.e_comp)
               (Obj.magic FStar_Reflection_Embeddings.e_comp_view) in
           let uu____326 =
             let uu____329 =
               mk11 () () "pack_comp"
-                (fun a426 ->
-                   (Obj.magic FStar_Reflection_Basic.pack_comp) a426)
+                (fun a398 ->
+                   (Obj.magic FStar_Reflection_Basic.pack_comp) a398)
                 (Obj.magic FStar_Reflection_Embeddings.e_comp_view)
                 (Obj.magic FStar_Reflection_Embeddings.e_comp) in
             let uu____330 =
               let uu____333 =
                 mk11 () () "inspect_sigelt"
-                  (fun a427 ->
-                     (Obj.magic FStar_Reflection_Basic.inspect_sigelt) a427)
+                  (fun a399 ->
+                     (Obj.magic FStar_Reflection_Basic.inspect_sigelt) a399)
                   (Obj.magic FStar_Reflection_Embeddings.e_sigelt)
                   (Obj.magic FStar_Reflection_Embeddings.e_sigelt_view) in
               let uu____334 =
                 let uu____337 =
                   mk11 () () "pack_sigelt"
-                    (fun a428 ->
-                       (Obj.magic FStar_Reflection_Basic.pack_sigelt) a428)
+                    (fun a400 ->
+                       (Obj.magic FStar_Reflection_Basic.pack_sigelt) a400)
                     (Obj.magic FStar_Reflection_Embeddings.e_sigelt_view)
                     (Obj.magic FStar_Reflection_Embeddings.e_sigelt) in
                 let uu____338 =
                   let uu____341 =
                     mk11 () () "inspect_bv"
-                      (fun a429 ->
-                         (Obj.magic FStar_Reflection_Basic.inspect_bv) a429)
+                      (fun a401 ->
+                         (Obj.magic FStar_Reflection_Basic.inspect_bv) a401)
                       (Obj.magic FStar_Reflection_Embeddings.e_bv)
                       (Obj.magic FStar_Reflection_Embeddings.e_bv_view) in
                   let uu____342 =
                     let uu____345 =
                       mk11 () () "pack_bv"
-                        (fun a430 ->
-                           (Obj.magic FStar_Reflection_Basic.pack_bv) a430)
+                        (fun a402 ->
+                           (Obj.magic FStar_Reflection_Basic.pack_bv) a402)
                         (Obj.magic FStar_Reflection_Embeddings.e_bv_view)
                         (Obj.magic FStar_Reflection_Embeddings.e_bv) in
                     let uu____346 =
                       let uu____349 =
                         mk11 () () "inspect_binder"
-                          (fun a431 ->
+                          (fun a403 ->
                              (Obj.magic FStar_Reflection_Basic.inspect_binder)
-                               a431)
+                               a403)
                           (Obj.magic FStar_Reflection_Embeddings.e_binder)
                           (Obj.magic
                              FStar_Reflection_Embeddings.e_binder_view) in
                       let uu____350 =
                         let uu____353 =
                           mk2 () () () "pack_binder"
-                            (fun a432 ->
-                               fun a433 ->
+                            (fun a404 ->
+                               fun a405 ->
                                  (Obj.magic
-                                    FStar_Reflection_Basic.pack_binder) a432
-                                   a433)
+                                    FStar_Reflection_Basic.pack_binder) a404
+                                   a405)
                             (Obj.magic FStar_Reflection_Embeddings.e_bv)
                             (Obj.magic FStar_Reflection_Embeddings.e_aqualv)
                             (Obj.magic FStar_Reflection_Embeddings.e_binder) in
                         let uu____354 =
                           let uu____357 =
                             mk2 () () () "compare_bv"
-                              (fun a434 ->
-                                 fun a435 ->
+                              (fun a406 ->
+                                 fun a407 ->
                                    (Obj.magic
-                                      FStar_Reflection_Basic.compare_bv) a434
-                                     a435)
+                                      FStar_Reflection_Basic.compare_bv) a406
+                                     a407)
                               (Obj.magic FStar_Reflection_Embeddings.e_bv)
                               (Obj.magic FStar_Reflection_Embeddings.e_bv)
                               (Obj.magic FStar_Reflection_Embeddings.e_order) in
                           let uu____358 =
                             let uu____361 =
                               mk2 () () () "is_free"
-                                (fun a436 ->
-                                   fun a437 ->
+                                (fun a408 ->
+                                   fun a409 ->
                                      (Obj.magic
-                                        FStar_Reflection_Basic.is_free) a436
-                                       a437)
+                                        FStar_Reflection_Basic.is_free) a408
+                                       a409)
                                 (Obj.magic FStar_Reflection_Embeddings.e_bv)
                                 (Obj.magic FStar_Reflection_Embeddings.e_term)
                                 (Obj.magic FStar_Syntax_Embeddings.e_bool) in
                             let uu____362 =
                               let uu____365 =
                                 mk2 () () () "term_eq"
-                                  (fun a438 ->
-                                     fun a439 ->
+                                  (fun a410 ->
+                                     fun a411 ->
                                        (Obj.magic
                                           FStar_Reflection_Basic.term_eq)
-                                         a438 a439)
+                                         a410 a411)
                                   (Obj.magic
                                      FStar_Reflection_Embeddings.e_term)
                                   (Obj.magic
@@ -204,20 +204,20 @@ let (reflection_primops :
                                     FStar_Syntax_Embeddings.e_list
                                       FStar_Syntax_Embeddings.e_string in
                                   mk11 () () "moduleof"
-                                    (fun a440 ->
+                                    (fun a412 ->
                                        (Obj.magic
                                           FStar_Reflection_Basic.moduleof)
-                                         a440)
+                                         a412)
                                     (Obj.magic
                                        FStar_Reflection_Embeddings.e_env)
                                     (Obj.magic uu____370) in
                                 let uu____375 =
                                   let uu____378 =
                                     mk11 () () "term_to_string"
-                                      (fun a441 ->
+                                      (fun a413 ->
                                          (Obj.magic
                                             FStar_Reflection_Basic.term_to_string)
-                                           a441)
+                                           a413)
                                       (Obj.magic
                                          FStar_Reflection_Embeddings.e_term)
                                       (Obj.magic
@@ -225,10 +225,10 @@ let (reflection_primops :
                                   let uu____379 =
                                     let uu____382 =
                                       mk11 () () "binders_of_env"
-                                        (fun a442 ->
+                                        (fun a414 ->
                                            (Obj.magic
                                               FStar_Reflection_Basic.binders_of_env)
-                                             a442)
+                                             a414)
                                         (Obj.magic
                                            FStar_Reflection_Embeddings.e_env)
                                         (Obj.magic
@@ -239,11 +239,11 @@ let (reflection_primops :
                                           FStar_Syntax_Embeddings.e_option
                                             FStar_Reflection_Embeddings.e_sigelt in
                                         mk2 () () () "lookup_typ"
-                                          (fun a443 ->
-                                             fun a444 ->
+                                          (fun a415 ->
+                                             fun a416 ->
                                                (Obj.magic
                                                   FStar_Reflection_Basic.lookup_typ)
-                                                 a443 a444)
+                                                 a415 a416)
                                           (Obj.magic
                                              FStar_Reflection_Embeddings.e_env)
                                           (Obj.magic
