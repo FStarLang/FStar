@@ -9772,7 +9772,7 @@ let (encode_env_bindings :
         | (i,decls,env1) ->
             (match b with
              | FStar_TypeChecker_Env.Binding_univ uu____25471 ->
-                 ((i + (Prims.parse_int "1")), [], env1)
+                 ((i + (Prims.parse_int "1")), decls, env1)
              | FStar_TypeChecker_Env.Binding_var x ->
                  let t1 =
                    FStar_TypeChecker_Normalize.normalize
