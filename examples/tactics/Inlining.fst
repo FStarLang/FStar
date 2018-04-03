@@ -31,7 +31,7 @@ let create_add_1 (u:unit) : St unit =
 
 let normalize (#t:Type) (x:t) : Tac unit =
   dup ();
-  print (term_to_string (quote x));
+  debug (term_to_string (quote x));
   exact (quote x);
   norm [delta; delta_only [%`(add_1)]; delta_only [%`(set_to_1)]];
   trefl ()

@@ -228,7 +228,7 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
                         T.pack (T.Tv_Abs x body'), T.Q_Explicit;
                       ]
                     in
-                    T.print (T.term_to_string res);
+                    T.debug (T.term_to_string res);
                     T.exact_guard res
                   | _ -> T.fail "KO 1"
                   end

@@ -1119,6 +1119,9 @@ let push_local_binding env b = {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
+let push_bvs env bvs =
+    List.fold_left (fun env bv -> push_bv env bv) env bvs
+
 let pop_bv env =
     match env.gamma with
     | Binding_var x::rest -> Some (x, {env with gamma=rest})

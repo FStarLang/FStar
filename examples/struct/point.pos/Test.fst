@@ -3,11 +3,14 @@ module Test
 module S  = FStar.Pointer
 module HST = FStar.HyperStack.ST
 
-let point_struct : S.struct_typ = [
-  ("X", S.TBase S.TInt);
-  ("Y", S.TBase S.TInt);
-  ("Color", S.TBase S.TBool);
-]
+let point_struct : S.struct_typ = {
+  S.name = "point_struct";
+  S.fields = [
+    ("X", S.TBase S.TInt);
+    ("Y", S.TBase S.TInt);
+    ("Color", S.TBase S.TBool);
+  ]
+}
 
 let point_struct_t = S.TStruct point_struct
 

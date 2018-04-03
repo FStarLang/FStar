@@ -4,8 +4,6 @@ open FStar.Tactics
 module TD = FStar.Tactics.Derived
 module TU = FStar.Tactics.Util
 
-#set-options "--use_two_phase_tc false"
-
 let print_Prims_string : string -> Tot string = fun s -> "\"" ^ s ^ "\""
 let print_Prims_int : int -> Tot string = string_of_int
 
@@ -19,13 +17,13 @@ let paren (e : term) : Tac term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
 let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
-    (* print ("self = " ^ String.concat "." self ^ "\n>>>>>> f = : " ^ term_to_string f); *)
+    (* debug ("self = " ^ String.concat "." self ^ "\n>>>>>> f = : " ^ term_to_string f); *)
     let mk n = pack (Tv_FVar (pack_fv n)) in
     match inspect (type_of_bv bv) with
     | Tv_FVar fv ->
         if inspect_fv fv = self
         then mk_e_app f [pack (Tv_Var bv)]
-        else let f = mk ["Printers"; "print_" ^ (String.concat "_" (inspect_fv fv))] in
+        else let f = mk (cur_module () @ ["print_" ^ (String.concat "_" (inspect_fv fv))]) in
              mk_e_app f [pack (Tv_Var bv)]
     | _ ->
         mk_stringlit "?"
@@ -84,21 +82,21 @@ let mk_printer_fun (dom : term) : Tac term =
 
         // Generate the match on the internal argument
         let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) branches) in
-        (* print ("m = " ^ term_to_string m); *)
+        (* debug ("m = " ^ term_to_string m); *)
 
         // Wrap it into an internal function
         let f = pack (Tv_Abs xi m) in
-        (* print ("f = " ^ term_to_string f); *)
+        (* debug ("f = " ^ term_to_string f); *)
 
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
         let xtm = pack (Tv_Var (bv_of_binder x)) in
         let b = pack (Tv_Let true ff f (mk_e_app fftm [xtm])) in
-        (* print ("b = " ^ term_to_string b); *)
+        (* debug ("b = " ^ term_to_string b); *)
 
         // Wrap it in a lambda taking the initial argument
         let tm = pack (Tv_Abs x b) in
-        (* print ("tm = " ^ term_to_string tm); *)
+        (* debug ("tm = " ^ term_to_string tm); *)
 
         tm
     | _ -> fail "type not found?"
@@ -128,18 +126,14 @@ type t1 =
     | E : t1 -> t1
     | F : (unit -> t1) -> t1
 
-%splice (fun () -> mk_printer (`t1))
+(* We need to provide the name of the generated definition
+ * by hand, since desugaring this module occurs entirely
+ * before running the metaprograms. *)
+%splice[t1_print] (fun () -> mk_printer (`t1))
 
-(* Haven't still done the desugaring modification the code following this
-to reoslve properly. The printer is there but using it in this module
-will fail, so add a declaration like this. *)
-let t1_print' : t1 -> string = synth_by_tactic (fun () -> exact (mk_printer_fun (`t1)))
-
-
-
-let _ = assert_norm (t1_print' (A 5 "hey") = "(Printers.A 5 \"hey\")")
-let _ = assert_norm (t1_print' (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
-let _ = assert_norm (t1_print' C = "Printers.C")
-let _ = assert_norm (t1_print' (D "test") = "(Printers.D \"test\")")
-let _ = assert_norm (t1_print' (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
-let _ = assert_norm (t1_print' (F (fun _ -> C)) = "(Printers.F ?)")
+let _ = assert_norm (t1_print (A 5 "hey") = "(Printers.A 5 \"hey\")")
+let _ = assert_norm (t1_print (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
+let _ = assert_norm (t1_print C = "Printers.C")
+let _ = assert_norm (t1_print (D "test") = "(Printers.D \"test\")")
+let _ = assert_norm (t1_print (E (B (D "thing") 42)) = "(Printers.E (Printers.B (Printers.D \"thing\") 42))")
+let _ = assert_norm (t1_print (F (fun _ -> C)) = "(Printers.F ?)")

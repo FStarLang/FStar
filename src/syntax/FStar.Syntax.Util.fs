@@ -651,6 +651,7 @@ let destruct typ lid =
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
+  | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
   | Sig_inductive_typ (lid, _,  _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
@@ -661,8 +662,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _
-  | Sig_splice _ -> []
+  | Sig_main _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -682,8 +682,11 @@ let range_of_args args r =
    args |> List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r
 
 let mk_app f args =
-  let r = range_of_args args f.pos in
-  mk (Tm_app(f, args)) None r
+  match args with
+  | [] -> f
+  | _ ->
+      let r = range_of_args args f.pos in
+      mk (Tm_app(f, args)) None r
 
 let mk_data l args =
   match args with
@@ -752,6 +755,16 @@ let mk_field_projector_name lid (x:bv) i =
              else x.ppname in
     let y = {x with ppname=nm} in
     mk_field_projector_name_from_ident lid nm, y
+
+let ses_of_sigbundle (se:sigelt) :list<sigelt> =
+  match se.sigel with
+  | Sig_bundle (ses, _) -> ses
+  | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
 
 let set_uvar uv t =
   match Unionfind.find uv with
@@ -1660,21 +1673,6 @@ let term_eq t1 t2 =
     let r = term_eq_dbg !debug_term_eq t1 t2 in
     debug_term_eq := false;
     r
-
-let rec bottom_fold (f : term -> term) (t : term) : term =
-    let ff = bottom_fold f in
-    let tn = (compress t).n in
-    let tn = match tn with
-             | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
-             // TODO: We ignore the types. Bug or feature?
-             | Tm_abs (bs, t, k) -> let bs, t' = open_term bs t in
-                                    let t'' = ff t' in
-                                    Tm_abs (bs, close bs t'', k)
-             | Tm_arrow (bs, k) -> tn //TODO
-             | Tm_uinst (t, us) ->
-                Tm_uinst (ff t, us)
-             | _ -> tn in
-    f ({ t with n = tn })
 
 // An estimation of the size of a term, only for debugging
 let rec sizeof (t:term) : int =

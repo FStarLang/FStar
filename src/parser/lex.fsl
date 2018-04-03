@@ -238,6 +238,10 @@ rule token args = parse
      { QUOTE }
  | ident
      { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
+ | "`#"
+     { BACKTICK_HASH }
+ | "`@"
+     { BACKTICK_AT }
  | '`'
      { BACKTICK }
  | constructor

@@ -88,6 +88,7 @@ type term' =
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
+  | Antiquote of bool * term   (* Antiquotation within a quoted term. Boolean is true when value. *)
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
@@ -200,7 +201,7 @@ type decl' =
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of ident * term
-  | Splice of term
+  | Splice of list<ident> * term
 
 and decl = {
   d:decl';
@@ -667,7 +668,7 @@ let decl_to_string (d:decl) = match d.d with
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | Splice t -> "splice (" ^ term_to_string t ^ ")"
+  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

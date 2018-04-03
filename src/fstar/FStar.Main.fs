@@ -211,7 +211,7 @@ let main () =
   try
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
-    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.unembed_binder;
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
     let _, time = FStar.Util.record_time go in
     if FStar.Options.query_stats()
     then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"

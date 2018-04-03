@@ -7,8 +7,8 @@ open FStar.Seq
 let is_seq_t t : Tac bool = 
     let hd, args = collect_app t in
     let tseq = `seq in
-    print ("This is the quoted term: " ^ (term_to_string tseq));
-    print ("This is hd: " ^ (term_to_string hd));
+    debug ("This is the quoted term: " ^ (term_to_string tseq));
+    debug ("This is hd: " ^ (term_to_string hd));
     term_eq tseq hd
 
 let clear_hypothesis (b:binder) : Tac unit = ()
@@ -57,7 +57,7 @@ let sequence_pruning () =
   let _ = repeat try_unref_eq in
   let g = cur_goal () in
   let f = term_as_formula g in
-  print ("This is the formula: " ^ (formula_to_string f));
+  debug ("This is the formula: " ^ (formula_to_string f));
   match f with 
   | Comp (Eq (Some t)) l r ->
     //could use inspect t, but in this case ...
@@ -68,7 +68,7 @@ let sequence_pruning () =
     else fail "Not a sequence" //don't know about this goal, leave it untouched
   | _ -> fail "Not a sequence"
 
-(* tseqthe quoted term    print ("This is the quoted term: " ^ (term_to_string tseq));     *)
+(* tseqthe quoted term    debug ("This is the quoted term: " ^ (term_to_string tseq));     *)
 
 (* This is a way to match more explicitly on an fvar
     match inspect hd with 

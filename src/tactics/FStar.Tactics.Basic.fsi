@@ -38,6 +38,7 @@ val tacprint1 : string -> string -> unit
 val tacprint2 : string -> string -> string -> unit
 val tacprint3 : string -> string -> string -> string -> unit
 val print           : string -> tac<unit>
+val debug           : string -> tac<unit>
 val dump_proofstate : proofstate -> string -> unit
 val print_proof_state1 : string -> tac<unit>
 val print_proof_state  : string -> tac<unit>

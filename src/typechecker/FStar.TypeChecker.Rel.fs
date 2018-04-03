@@ -1639,6 +1639,12 @@ and solve_flex_rigid_join  (env:env) (tp:tprob) (wl:worklist) : option<worklist>
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
                   (rhs:binders -> Env.env -> list<subst_elt> -> prob) : solution =
 
+   if debug env <| Options.Other "Rel"
+   then BU.print3 "solve_binders\n\t%s\n%s\n\t%s\n"
+                       (Print.binders_to_string ", " bs1)
+                       (rel_to_string (p_rel orig))
+                       (Print.binders_to_string ", " bs2);
+
    let rec aux scope env subst (xs:binders) (ys:binders) : either<(probs * formula), string> =
         match xs, ys with
             | [], [] ->
@@ -2582,15 +2588,19 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 
     let solve_eq c1_comp c2_comp =
         let _ = if Env.debug env <| Options.Other "EQ"
-                then BU.print_string "solve_c is using an equality constraint\n" in
+                then BU.print2 "solve_c is using an equality constraint (%s vs %s)\n"
+                            (Print.comp_to_string (mk_Comp c1_comp))
+                            (Print.comp_to_string (mk_Comp c2_comp)) in
         if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
         then giveup env (BU.format2 "incompatible effects: %s <> %s"
                                         (Print.lid_to_string c1_comp.effect_name)
                                         (Print.lid_to_string c2_comp.effect_name)) orig
-        else let sub_probs =
-                List.map2 (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
+        else let ret_sub_prob = TProb <| sub_prob c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
+             let arg_sub_probs =
+                List.map2 (fun (a1, _) (a2, _) -> TProb <| sub_prob a1 EQ a2 "effect arg")
                         c1_comp.effect_args
                         c2_comp.effect_args in
+             let sub_probs = ret_sub_prob :: arg_sub_probs in
              let guard = U.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
              let wl = solve_prob orig (Some guard) [] wl in
              solve env (attempt sub_probs wl)

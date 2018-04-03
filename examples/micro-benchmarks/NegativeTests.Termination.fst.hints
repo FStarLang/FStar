@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8bbaba492dac73ff2ed0953bbceebc6f"
+      "30d236f280469e9be06251ed7c53c46e"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "a092316dcf4fd6398b3e48f8feb28a54"
+      "83be6c39195131c4a50c5c9e71f4c501"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -39,7 +39,7 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "5b654f74176401723479df5a3855f15c"
+      "244cbb0fd08317e37c6d696f3341da1f"
     ]
   ]
 ]

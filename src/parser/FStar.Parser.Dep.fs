@@ -494,7 +494,7 @@ let collect_one
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t
-    | Splice t
+    | Splice (_, t)
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
     | SubEffect { lift_op = LiftForFree t }
@@ -654,7 +654,8 @@ let collect_one
         collect_term t
     | VQuote t ->
         collect_term t
-    | Quote _ -> ()
+    | Quote _
+    | Antiquote _ -> ()
     | Attributes cattributes  ->
         List.iter collect_term cattributes
 

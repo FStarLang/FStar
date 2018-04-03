@@ -298,7 +298,7 @@ let canon_monoid_with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
-          dump ("vm =" ^ term_to_string (quote vm));
+          //dump ("vm =" ^ term_to_string (quote vm));
           change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           // dump ("before =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (mdenote m vm r1 == mdenote m vm r2))));
