@@ -1,6 +1,5 @@
 module NegativeTests.False 
 (* #284 *)
-#set-options "--use_two_phase_tc false"
 val foo : f:(unit -> Tot bool){f () = true}
           -> Tot (r:bool {r = f () /\ r = true})
 let foo f = f ()

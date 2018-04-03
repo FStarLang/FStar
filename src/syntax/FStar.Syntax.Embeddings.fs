@@ -226,18 +226,20 @@ type norm_step =
     | Zeta
     | Iota
     | UnfoldOnly of list<string>
+    | UnfoldFully of list<string>
     | UnfoldAttr of attribute
 
 (* the steps as terms *)
-let steps_Simpl      = tdataconstr PC.steps_simpl
-let steps_Weak       = tdataconstr PC.steps_weak
-let steps_HNF        = tdataconstr PC.steps_hnf
-let steps_Primops    = tdataconstr PC.steps_primops
-let steps_Delta      = tdataconstr PC.steps_delta
-let steps_Zeta       = tdataconstr PC.steps_zeta
-let steps_Iota       = tdataconstr PC.steps_iota
-let steps_UnfoldOnly = tdataconstr PC.steps_unfoldonly
-let steps_UnfoldAttr = tdataconstr PC.steps_unfoldattr
+let steps_Simpl         = tdataconstr PC.steps_simpl
+let steps_Weak          = tdataconstr PC.steps_weak
+let steps_HNF           = tdataconstr PC.steps_hnf
+let steps_Primops       = tdataconstr PC.steps_primops
+let steps_Delta         = tdataconstr PC.steps_delta
+let steps_Zeta          = tdataconstr PC.steps_zeta
+let steps_Iota          = tdataconstr PC.steps_iota
+let steps_UnfoldOnly    = tdataconstr PC.steps_unfoldonly
+let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
+let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
 
 let e_norm_step =
     let em (rng:range) (n:norm_step) : term =
@@ -258,6 +260,9 @@ let e_norm_step =
             steps_Iota
         | UnfoldOnly l ->
             S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed (e_list e_string) rng l)]
+                        None rng
+        | UnfoldFully l ->
+            S.mk_Tm_app steps_UnfoldFully [S.as_arg (embed (e_list e_string) rng l)]
                         None rng
         | UnfoldAttr a ->
             S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
@@ -283,6 +288,9 @@ let e_norm_step =
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
             Some <| UnfoldOnly ss)
+        | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
+            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            Some <| UnfoldFully ss)
         | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
             Some (UnfoldAttr a)
         | _ ->

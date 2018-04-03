@@ -10,7 +10,7 @@ open FStar.Reflection
 open FStar.List
 
 // --using_facts_from '* -FStar.Tactics -FStar.Reflection'
-#reset-options "--use_two_phase_tc false --__temp_fast_implicits"
+#reset-options "--__temp_fast_implicits"
 
 let memory_cm : cm memory =
   CM emp (<*>) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())

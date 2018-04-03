@@ -377,10 +377,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
-    let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
+    let topt = tc_tactic_opt env0 topt in
+    let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
-    let topt = tc_tactic_opt env0 topt in
     let f =
         match topt with
         | None -> f
@@ -921,11 +921,10 @@ and tc_universe env u : universe =
         | U_zero    -> u
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
-        | U_name x  -> u
-            (* TODO : Is that really okay ? (any free variable should be automatically bound at top-level) *)
-            // if env.use_bv_sorts || Env.lookup_univ env x
-            // then u
-            // else raise (Error (BU.format1 "Universe variable '%s' not found" x.idText, Env.get_range env))
+        | U_name x  ->
+          if env.use_bv_sorts || Env.lookup_univ env x
+          then u
+          else failwith ("Universe variable " ^ (Print.univ_to_string u) ^ " not found")
    in if env.lax_universes then U_zero
       else match u with
            | U_unknown -> U.type_u () |> snd
@@ -2107,7 +2106,8 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
         let t =
             if not check_t
             then t
-            else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
+            else (let env0 = Env.push_univ_vars env0 univ_vars in
+                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
                   let g = Rel.resolve_implicits g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
@@ -2199,7 +2199,7 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
         | Tm_unknown ->
           //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
-          None, Rel.trivial_guard, univ_vars, univ_opening, env
+          None, Rel.trivial_guard, univ_vars, univ_opening, Env.push_univ_vars env univ_vars
 
         | _ ->
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
