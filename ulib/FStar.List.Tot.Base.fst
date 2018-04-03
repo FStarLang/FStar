@@ -50,6 +50,22 @@ type-checking time, that [l] be nonempty. Named as in: OCaml, F#, Coq
 val tl: l:list 'a {Cons? l} -> Tot (list 'a)
 let tl = tail
 
+(** [last l] returns the last element of [l]. Requires, at
+type-checking time, that [l] be nonempty. Named as in: Haskell
+*)
+val last: l:list 'a {Cons? l} -> Tot 'a
+let rec last = function
+  | [hd] -> hd
+  | _::tl -> last tl
+
+(** [init l] returns [l] without its last element. Requires, at
+type-checking time, that [l] be nonempty. Named as in: Haskell
+*)
+val init: l:list 'a {Cons? l} -> Tot (list 'a)
+let rec init = function
+  | [_] -> []
+  | hd::tl -> hd::(init tl)
+
 (** [length l] returns the total number of elements in [l]. Named as
 in: OCaml, F#, Coq *)
 val length: list 'a -> Tot nat

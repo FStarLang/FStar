@@ -139,7 +139,7 @@ let string_of_decl' d =
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-  | Splice t -> "splice " ^ term_to_string t
+  | Splice (ids, t) -> "splice " ^ term_to_string t
   | Fsdoc (comm,_) -> comm
 
 // A decl is documented if either:

@@ -122,21 +122,6 @@ clean_extracted:
 # --------------------------------------------------------------------
 OTHERFLAGS+=--hint_info
 
-utest:
-	+$(MAKE) utest-prelude
-	+$(MAKE) uregressions
-
-# The first tests have to be performed sequentially (but each one may use some parallelism)
-utest-prelude:
-	+$(MAKE) boot-ocaml        #build the ocaml-snapshot
-	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
-	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
-	+$(MAKE) ocaml-unit-tests  #run the unit tests
-	+$(MAKE) fstarlib
-
-ocaml-unit-tests:
-	$(BIN)/tests.exe
-
 # The regressions to be run with a working F# build of F*
 fsharp-unit-tests:
 ifeq ($(OS),Windows_NT)
@@ -145,6 +130,27 @@ else
 	@# On Linux, we need to increase the maximum stack size, or we overflow
 	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
 endif
+
+fsharp-build-and-test:
+	+$(MAKE) fstar-in-fsharp
+	+$(MAKE) fsharp-unit-tests
+
+utest:
+	+$(MAKE) utest-prelude
+	+$(MAKE) uregressions
+
+# The first tests have to be performed sequentially (but each one may use some parallelism)
+# Adding the F# build and F# tests also here
+#   since in the uregressions target it may not be a good idea to override the fstar.exe binary?
+utest-prelude: fsharp-build-and-test
+	+$(MAKE) boot-ocaml        #build the ocaml-snapshot
+	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
+	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
+	+$(MAKE) ocaml-unit-tests  #run the unit tests
+	+$(MAKE) fstarlib
+
+ocaml-unit-tests:
+	$(BIN)/tests.exe
 
 # Getting parallelism from this target
 uregressions: fstarlib ulib tutorial uexamples interactive-test
@@ -173,8 +179,6 @@ interactive-test:
 	$(MAKE) -C tests/interactive
 
 ulong:
-	+$(MAKE) fstar-in-fsharp
-	+$(MAKE) fsharp-unit-tests
 	+$(MAKE) utest-prelude
 	+$(MAKE) uregressions-ulong
 

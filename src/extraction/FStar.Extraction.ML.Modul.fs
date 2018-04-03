@@ -231,7 +231,7 @@ let extract_bundle env se =
         | _ -> failwith "Unexpected signature element"
 
 (* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
-   is extracted along with an invocation to FStar.Tactics.Native.register_tactic,
+   is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
 let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =

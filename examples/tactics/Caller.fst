@@ -12,4 +12,4 @@ assume val ax : tau:(unit -> Tac unit) ->
 
 (* Will call tau to discharge the `b2t (3 > 0)` goal. *)
 let f () : int =
-    ax (fun () -> print "Hello!"; trivial ()) 3
+    ax (fun () -> debug "Hello!"; trivial ()) 3

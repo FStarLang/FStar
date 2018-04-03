@@ -276,7 +276,7 @@ let compile_do_while
   (t: T.term)
   (compile: (env' : T.env) -> (ty' : T.term) -> (t' : T.term) -> T.Tac T.term)
 : T.Tac T.term
-= T.print "compile_do_while";
+= T.debug "compile_do_while";
   let (f, ar) = app_head_tail t in
   let test = tm_eq_fvar f (do_while_tm ()) in
   tassert test;
@@ -327,7 +327,7 @@ let rec compile
   (env: T.env)
   (ty: T.term) (t: T.term)
 : T.Tac T.term
-= T.print "BEGIN compile";
+= T.debug "BEGIN compile";
   let compile' = compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm in
   let res = first [
     (fun () -> compile_ret ret_sz_tm t);
@@ -338,7 +338,7 @@ let rec compile
     (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile' env));
   ]
   in
-  T.print ("END compile, result: " ^ T.term_to_string res);
+  T.debug ("END compile, result: " ^ T.term_to_string res);
   res
 
 #reset-options

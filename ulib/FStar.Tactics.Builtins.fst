@@ -189,6 +189,10 @@ assume val apply_lemma : term -> Tac unit
 of printing [str] on the compiler's standard output. *)
 assume val print : string -> Tac unit
 
+(** [debug str] is similar to [print str], but will only print the message
+if the [--debug] option was given for the current module. *)
+assume val debug : string -> Tac unit
+
 (** Similar to [print], but will dump a text representation of the proofstate
 along with the message. *)
 assume val dump : string -> Tac unit

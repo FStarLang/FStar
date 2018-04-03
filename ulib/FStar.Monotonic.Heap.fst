@@ -40,7 +40,7 @@ let contains #a #rel h r =
   let _ = () in
   Some? (h.memory r.addr) /\
   (let Some (| a1, pre_opt, mm, _ |) = h.memory r.addr in
-   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt == rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
 let addr_unused_in n h = None? (h.memory n)
 
@@ -171,8 +171,6 @@ let lemma_free_mm_sel #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_contains #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_unused #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_sel_same_addr #a #rel h r1 r2 = ()
-let lemma_upd_same_addr #a #rel h r1 r2 x =
-  assert (equal (upd h r1 x) (upd h r2 x))
 let lemma_sel_upd1 #a #rel h r1 x r2 = ()
 let lemma_sel_upd2 #a #b #rel1 #rel2 h r1 r2 x = ()
 let lemma_mref_injectivity = ()
@@ -185,11 +183,27 @@ let lemma_upd_unused #a #b #rel1 #rel2 h r1 x r2 = ()
 let lemma_contains_upd_modifies #a #rel h r x = ()
 let lemma_unused_upd_modifies #a #rel h r x = ()
 
-let upd_upd_same_mref #a #rel h r x y = assert (equal (upd (upd h r x) r y) (upd h r y))
 let lemma_sel_equals_sel_tot_for_contained_refs #a #rel h r = ()
 let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()
 let lemma_modifies_and_equal_dom_sel_diff_addr #a #rel s h0 h1 r = ()
 
+let lemma_heap_equality_upd_same_addr #a #rel h r1 r2 x =
+  assert (equal (upd h r1 x) (upd h r2 x))
+
+let lemma_heap_equality_cancel_same_mref_upd #a #rel h r x y =
+  let h0 = upd (upd h r x) r y in
+  let h1 = upd h r y in
+  assert (equal h0 h1)
+
+let lemma_heap_equality_upd_with_sel #a #rel h r =
+  let h' = upd h r (sel h r) in
+  let Some (| _, _, _, _ |) = h.memory r.addr in
+  assert (equal h h')
+
+let lemma_heap_equality_commute_distinct_upds #a #b #rel_a #rel_b h r1 r2 x y =
+  let h0 = upd (upd h r1 x) r2 y in
+  let h1 = upd (upd h r2 y) r1 x in
+  assert (equal h0 h1)
 
 (*** Untyped views of references *)
 

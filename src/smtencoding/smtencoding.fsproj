@@ -59,7 +59,6 @@
     <Compile Include="FStar.SMTEncoding.Util.fs" />
     <Compile Include="FStar.SMTEncoding.Z3.fsi" />
     <Compile Include="FStar.SMTEncoding.Z3.fs" />
-    <Compile Include="FStar.SMTEncoding.SplitQueryCases.fs" />
     <Compile Include="FStar.SMTEncoding.ErrorReporting.fsi" />
     <Compile Include="FStar.SMTEncoding.ErrorReporting.fs" />
     <Compile Include="FStar.SMTEncoding.Encode.fsi" />
@@ -121,7 +120,7 @@
     </ProjectReference>
     <ProjectReference Include="..\reflection\reflection.fsproj">
       <Name>reflection</Name>
-      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
+      <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

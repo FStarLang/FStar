@@ -21,6 +21,7 @@ open FStar.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Const
+open FStar.List
 module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
@@ -122,6 +123,7 @@ let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
+let order_lid       = p2l ["FStar"; "Order"; "order"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -229,15 +231,16 @@ let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl      = pconst "simplify"
-let steps_weak       = pconst "weak"
-let steps_hnf        = pconst "hnf"
-let steps_primops    = pconst "primops"
-let steps_zeta       = pconst "zeta"
-let steps_iota       = pconst "iota"
-let steps_delta      = pconst "delta"
-let steps_unfoldonly = pconst "delta_only"
-let steps_unfoldattr = pconst "delta_attr"
+let steps_simpl         = pconst "simplify"
+let steps_weak          = pconst "weak"
+let steps_hnf           = pconst "hnf"
+let steps_primops       = pconst "primops"
+let steps_zeta          = pconst "zeta"
+let steps_iota          = pconst "iota"
+let steps_delta         = pconst "delta"
+let steps_unfoldonly    = pconst "delta_only"
+let steps_unfoldfully   = pconst "delta_fully"
+let steps_unfoldattr    = pconst "delta_attr"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]

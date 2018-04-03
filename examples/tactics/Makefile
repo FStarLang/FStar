@@ -20,6 +20,7 @@ all:	Apply.uver		\
 	VC.uver			\
 	Div.uver		\
 	Change.uver		\
+	Antiquote.uver		\
 	Tutorial.uver		\
 	Fresh.uver		\
 	SolveThen.uver		\
@@ -36,6 +37,7 @@ all:	Apply.uver		\
 	Logic.uver		\
 	DependentSynth.uver	\
 	NatPos.uver		\
+	Unfold.uver		\
 	Trace.uver		\
 	Bug1252.uver		\
 	Bug1270.uver		\

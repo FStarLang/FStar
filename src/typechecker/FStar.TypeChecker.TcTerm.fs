@@ -304,12 +304,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  // static quoted terms are of type `term` ...
-  | Tm_quoted (_, { qkind = Quote_static }) ->
+  // completely staticly quoted terms are of type `term` ...
+  | Tm_quoted (_, { qkind = Quote_static; antiquotes = aqs })
+              when List.for_all (fun (_, b, _) -> not b) aqs ->
     value_check_expected_typ env top (Inl S.t_term) Rel.trivial_guard
 
-  // ... but dynamic ones are in the TAC effect
-  | Tm_quoted (_, { qkind = Quote_dynamic }) ->
+  // ... but other ones are in the TAC effect
+  | Tm_quoted _ ->
     let c = mk_Comp ({ comp_univs = [U_zero];
                        effect_name = Const.effect_Tac_lid;
                        result_typ = S.t_term;
@@ -376,10 +377,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
-    let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
+    let topt = tc_tactic_opt env0 topt in
+    let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
-    let topt = tc_tactic_opt env0 topt in
     let f =
         match topt with
         | None -> f
@@ -607,47 +608,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
-    if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
-    if Options.use_two_phase_tc ()
-    then
-      //AR: if the top-level binding is unannotated, we want to drop the wps computed in phase 1
-      //since they are lax etc., and phase 2 will do the proper computation anyway
-      //in case they are annotated, we will retain them
-      let is_lb_unannotated (t:term) :bool = match t.n with
-        | Tm_let ((_, [lb]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
-        | _                     -> failwith "Impossible"
-      in
-
-      let drop_lbtyp (t:term) :term = match t.n with
-        | Tm_let ((t1, [lb]), t2) ->  { t with n = Tm_let ((t1, [ { lb with lbtyp = mk Tm_unknown None lb.lbtyp.pos }]), t2) }
-        | _                       -> failwith "Impossible"
-      in
-
-      let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
-         let lax_top = N.remove_uvar_solutions env lax_top in
-         if Env.debug env <| Options.Other "TwoPhases"
-         then BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
-         if Env.should_verify env then
-           check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
-         else lax_top, l, g
-    else check_top_level_let env top
+    check_top_level_let env top
 
   | Tm_let ((false, _), _) ->
     check_inner_let env top
 
   | Tm_let ((true, {lbname=Inr _}::_), _) ->
-    if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
-    if Options.use_two_phase_tc ()
-    then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
-         let lax_top = N.remove_uvar_solutions env lax_top in  (* AR: are we calling it two times currently if lax mode? *)
-         if Env.debug env (Options.Other "TwoPhases") then
-           BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
-         if Env.should_verify env then
-            check_top_level_let_rec env lax_top
-         else lax_top, l, g
-    else check_top_level_let_rec env top
+    check_top_level_let_rec env top
 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top

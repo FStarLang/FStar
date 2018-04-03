@@ -1,5 +1,5 @@
 [
-  "Ü\u0017\ròø–—d#½¨\u001eF‚½\u0002",
+  "\rà;rR(¹Ù:ê\u0007=Tùøü",
   [
     [
       "Bug1299.should_fail",
@@ -26,7 +26,7 @@
         "unit_typing"
       ],
       0,
-      "76e3e209a7f2f4e9d965a996361ee458"
+      "581e89efc0733ee41842094a7bdaf83e"
     ],
     [
       "Bug1299.should_fail",
@@ -53,7 +53,7 @@
         "unit_typing"
       ],
       0,
-      "f522f67d26c9edf26786c30b48de52b0"
+      "08d2d7237b1e4e130d3dc53bb7964a1a"
     ]
   ]
 ]

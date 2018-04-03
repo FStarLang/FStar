@@ -1,5 +1,5 @@
 [
-  "0³,·ÖÞÛÐ\u0011œµ*Ä\f€\r",
+  "ußéPü”¢¾P+Ýii®¯ÿ",
   [
     [
       "UserTactics.test_print_goal",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c3b74131d61a37c94a6f736255d732cf"
+      "189f63ff0fa068cec0968f6c850d40ae"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "30b43b648786925ee0c4f0c993087628"
+      "3a743561592df19405a237545aa3c734"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ab4b5fefc4f217d109a3066ca9589f01"
+      "5fdbdd18bb9585b646ce2ce8503ec942"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "43c03af2d7a1ccfdcc6be3422b75a184"
+      "ec83dc497f98df4287c0aa01ea91e04d"
     ],
     [
       "UserTactics.sqintro",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "48798d2bac590d915bce3ef3753ac4ea"
+      "4ec34ffabe9a0fa742d61561417f55d0"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -60,7 +60,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "0b043115a059893205e01ed1a53ad44d"
+      "6bc41f7a10ff28dcca26da35e5f98938"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -69,7 +69,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "1900cae1b27298ba20e05f7a78a14c04"
+      "85b4d3a8bf32983ab808dcd9a9bbd398"
     ],
     [
       "UserTactics.f",
@@ -82,7 +82,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "c73ccdfd037debe57c049038b7b0794d"
+      "305a90c95fb7392aa6b31e4fe67211ce"
     ],
     [
       "UserTactics.sqintro",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "a4f049dcc8f579a9fd40f984adaec330"
+      "f579a1713660e6663fa9e44f0afbbf5d"
     ]
   ]
 ]
