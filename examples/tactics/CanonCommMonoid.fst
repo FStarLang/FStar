@@ -520,10 +520,6 @@ let sep_logic
 (* TODO: need a version of canon that works on assumption(s)
          (canon_in / canon_all) *)
 
-(* TODO: Wondering whether we should support arbitrary re-association?
-         Could be useful for separation logic, but we might also just
-         work around it. *)
-
 (* TODO: would be nice to just find all terms of monoid type in the
          goal and replace them with their canonicalization;
          basically use flatten_correct instead of monoid_reflect
@@ -532,7 +528,14 @@ let sep_logic
          - even better, the user would have control over the place(s)
            where the canonicalization is done *)
 
+(* TODO: Can we write a tactic that automatically inverts any
+         well-behaved denote function? Coq has this in the quote
+         tactic, and it also seems to be what the Why3 people do
+         (Section 3.2 here: https://hal.inria.fr/hal-01699754/) *)
+
 (* TODO (open ended) Do the things used for reflective tactics really
-                     need to be this pure? Can we prove correctness of
-                     denotations intrinsically / by monadic
-                     reification for an effectful denotation? *)
+        need to be this pure? Can we prove correctness of denotations
+        intrinsically / by monadic reification for an effectful denotation?
+        This seems to be what the Why3 people are now doing?
+        (Section 4 here: https://hal.inria.fr/hal-01699754/)
+*)
