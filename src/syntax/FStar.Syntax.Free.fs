@@ -230,5 +230,6 @@ let names t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_names S
 let uvars t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uvars compare_uv
 let univs t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univs compare_universe_uvar
 let univnames t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
+let univnames_comp c = FStar.Util.as_set (fst (free_names_and_uvars_comp c true)).free_univ_names Syntax.order_univ_name
 let fvars t = snd (free_names_and_uvars t false)
 let names_of_binders (bs:binders) = FStar.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv

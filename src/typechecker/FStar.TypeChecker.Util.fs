@@ -116,7 +116,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
   let t = SS.compress t in
   match t.n with
    | Tm_unknown ->
-     if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
+     //if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown"; //AR: not necessarily for universe annotated let recs
+     let univ_vars, e = SS.open_univ_vars univ_vars e in
+     let env = Env.push_univ_vars env univ_vars in
      let r = Env.get_range env in
      let mk_binder scope a =
         match (SS.compress a.sort).n with
@@ -172,7 +174,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
              else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec, (BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                                         (Print.comp_to_string c))) rng
        | Inl t -> t in
-    [], t, b
+    univ_vars, t, b
 
   | _ ->
     let univ_vars, t = open_univ_vars univ_vars t in

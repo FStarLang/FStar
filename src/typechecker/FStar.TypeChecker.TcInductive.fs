@@ -54,7 +54,10 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
  = match s.sigel with
    | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data) -> //the only valid qual is Private
          //assert (uvs = []); AR: not necessarily true in two phase
- (*open*)let tps, k = SS.open_term tps k in
+         let env0 = env in
+ (*open*)let usubst, uvs = SS.univ_var_opening uvs in
+         let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
+         let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
          let k = N.unfold_whnf env k in
          let indices, t = U.arrow_formals k in
@@ -66,11 +69,15 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let t_type, u = U.type_u() in
          Rel.force_trivial_guard env' (Rel.teq env' t t_type);
 
-(*close*)let t_tc = U.arrow (tps@indices) (S.mk_Total t) in
+(*close*)let usubst = SS.univ_var_closing uvs in
+         let t_tc = U.arrow ((tps |> SS.subst_binders usubst) @
+                             (indices |> SS.subst_binders (SS.shift_subst (List.length tps) usubst)))
+                            (S.mk_Total (t |> SS.subst (SS.shift_subst (List.length tps + List.length indices) usubst))) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
+         let tps, k = SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let fv_tc = S.lid_as_fv tc Delta_constant None in
-         Env.push_let_binding env (Inr fv_tc) (uvs, t_tc),
+         Env.push_let_binding env0 (Inr fv_tc) (uvs, t_tc),
          { s with sigel = Sig_inductive_typ(tc, uvs, tps, k, mutuals, data) },
          u,
          guard
@@ -83,14 +90,15 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
   : sigelt -> sigelt * guard_t =
     fun se -> match se.sigel with
     | Sig_datacon(c, _uvs, t, tc_lid, ntps, _mutual_tcs) ->
-         assert (_uvs = []);
-
+         //assert (_uvs = []);
+         let usubst, _uvs = SS.univ_var_opening _uvs in
+         let env, t = Env.push_univ_vars env _uvs, SS.subst usubst t in
          let (env, tps, u_tc) = //u_tc is the universe of the inductive that c constructs
             let tps_u_opt = BU.find_map tcs (fun (se, u_tc) ->
                 if lid_equals tc_lid (must (U.lid_of_sigelt se))
                 then match se.sigel with
                      | Sig_inductive_typ(_, _, tps, _, _, _) ->
-                        let tps = tps |> List.map (fun (x, _) -> (x, Some S.imp_tag)) in
+                        let tps = tps |> SS.subst_binders usubst |> List.map (fun (x, _) -> (x, Some S.imp_tag)) in
                         let tps = Subst.open_binders tps in
                         Some (Env.push_binders env tps, tps, u_tc)
                      | _ -> failwith "Impossible"
@@ -130,21 +138,33 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                                                 (Print.term_to_string (res_lcomp.res_typ)))) se.sigrng
          end;
          let head, _ = U.head_and_args result in
-         let _ = match (SS.compress head).n with
-            | Tm_uinst ( { n = Tm_fvar fv }, _)  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
-            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
+         (*
+          * AR: if the inductive type is explictly universe annotated,
+          *     we need to instantiate universes properly in head (head = tycon<applied to uvars>)
+          *     the following code unifies them with the annotated universes
+          *)
+         let g_uvs = match (SS.compress head).n with
+            | Tm_uinst ( { n = Tm_fvar fv }, tuvs) ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
+              if List.length _uvs = List.length tuvs then
+                List.fold_left2 (fun g u1 u2 ->
+                  //unify the two
+                  Rel.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
+                ) Rel.trivial_guard tuvs _uvs
+              else failwith "Impossible: tc_datacon: length of annotated universes not same as instantiated ones"
+            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Rel.trivial_guard
             | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
                                         (Print.term_to_string head))) se.sigrng in
          let g =List.fold_left2 (fun g (x, _) u_x ->
                 Rel.conj_guard g (Rel.universe_inequality u_x u_tc))
-            Rel.trivial_guard
+            g_uvs
             arguments
             us in
 
 (*close*)let t = U.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
                         //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
-         { se with sigel = Sig_datacon(c, [], t, tc_lid, ntps, []) },
+         let t = SS.close_univ_vars _uvs t in
+         { se with sigel = Sig_datacon(c, _uvs, t, tc_lid, ntps, []) },
          g
 
    | _ -> failwith "impossible"
@@ -639,6 +659,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
 
   //create Sig_assume for the axioms, FIXME: docs?
   let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
+    let fml = SS.close_univ_vars us fml in
     l @ [ { sigel = Sig_assume (lid, us, fml);
             sigquals = [];
             sigrng = Range.dummyRange;
@@ -857,7 +878,6 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   let tys, datas = ses |> List.partition (function { sigel = Sig_inductive_typ _ } -> true | _ -> false) in
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
   then raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) (Env.get_range env);
-  let env0 = env in
 
   //AR: adding this code for the second phase
   //    univs need not be empty, so open all along
@@ -869,8 +889,10 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
       | _ -> failwith "Impossible, can't happen!"
   in
 
-  let tys, datas =
-    if List.length univs = 0 then tys, datas
+  let env0 = env in
+
+  let env1, tys, datas =  //AR: env1 contains the opened universe names if any
+    if List.length univs = 0 then env, tys, datas
     else
       let subst, univs = SS.univ_var_opening univs in
       let tys = List.map (fun se ->
@@ -889,7 +911,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
         in
         { se with sigel = sigel }) datas
       in
-      tys, datas
+      Env.push_univ_vars env univs, tys, datas
   in
 
   (* Check each tycon *)
@@ -898,7 +920,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     let g' = Rel.universe_inequality S.U_zero tc_u in
     if Env.debug env Options.Low then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
     env, (tc, tc_u)::all_tcs, Rel.conj_guard g (Rel.conj_guard guard g')
-  ) tys (env, [], Rel.trivial_guard)
+  ) tys (env1, [], Rel.trivial_guard)
   in
 
   (* Check each datacon *)
@@ -908,8 +930,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   ) datas ([], g)
   in
 
-  (* Generalize their universes *)
-  let tcs, datas = generalize_and_inst_within env0 g tcs datas in
+  (* Generalize their universes if not already annotated *)
+  let tcs, datas = if List.length univs = 0 then generalize_and_inst_within env1 g tcs datas else (List.map fst tcs), datas in
 
   let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
                     sigquals = quals;

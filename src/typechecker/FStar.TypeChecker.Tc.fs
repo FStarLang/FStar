@@ -123,7 +123,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let effect_params_un, signature_un, opening =
       SS.open_term' (open_univs_binders 0 ed.binders)
                     (open_univs n_effect_params ed.signature) in
-  let effect_params, env, _ = tc_tparams env0 effect_params_un in
+  
+  let env = Env.push_univ_vars env0 annotated_univ_names in  //AR: push the univs in the environment
+
+  let effect_params, env, _ = tc_tparams env effect_params_un in
   let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=effect_params;
                     signature=signature} in
@@ -204,7 +207,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
       | _::_ ->
         let (us, t) = SS.subst_tscheme open_annotated_univs (us, t) in
         let us, t = SS.open_univ_vars us t in
-        let _ = tc_check_trivial_guard env t k in
+        let _ = tc_check_trivial_guard (Env.push_univ_vars env us) t k in  //AR: push univ vars in the env
         us, SS.close_univ_vars us t
   in
 
@@ -378,10 +381,12 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // of the form [binders -> repr ...], i.e. is it properly curried.
 
           //in case action has universes, open the action type etc. first
-          let act =
-            if act.action_univs = [] then act
+          let env, act =
+            if act.action_univs = [] then env, act
             else
               let usubst, uvs = SS.univ_var_opening act.action_univs in
+              Env.push_univ_vars env uvs,
+              //AR: TODO: FIXME: why is usubst not shifted before applying to action_defn and action_typ?
               { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
           in
           
@@ -449,7 +454,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (*         (Print.term_to_string act_defn) *)
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
 
-          let univs, act_defn = TcUtil.generalize_universes env act_defn in
+          //AR: if the action universes were already annotated, simply close, else generalize
+          let univs, act_defn = if act.action_univs = [] then TcUtil.generalize_universes env act_defn else
+                                act.action_univs, SS.close_univ_vars act.action_univs act_defn
+          in
           let act_typ = N.normalize [N.Beta] env act_typ in
           let act_typ = Subst.close_univ_vars univs act_typ in
           {act with
@@ -1102,22 +1110,36 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         failwith "Impossible (parser)"
       | lift, Some (uvs, lift_wp) ->
         //AR: open the universes, if present (two phases)
-        let lift_wp = if List.length uvs > 0 then SS.subst (fst (SS.univ_var_opening uvs)) lift_wp else lift_wp in
+        let env, lift_wp =
+          if List.length uvs > 0 then
+            let usubst, uvs = SS.univ_var_opening uvs in 
+            Env.push_univ_vars env uvs, SS.subst usubst lift_wp
+          else env, lift_wp
+        in
         (* Covers both the "classic" format and the reifiable case. *)
-        lift, check_and_gen env lift_wp expected_k
+        //AR: if universes are already annotated, simply close, else generalize
+        let lift_wp = if List.length uvs = 0 then check_and_gen env lift_wp expected_k
+                      else let lift_wp = tc_check_trivial_guard env lift_wp expected_k in uvs, SS.close_univ_vars uvs lift_wp
+        in
+        lift, lift_wp
       (* Sub-effect for free case *)
       | Some (what, lift), None ->
         //AR: open the universes if present (two phases)
-        let lift = if List.length what > 0 then SS.subst (fst (SS.univ_var_opening what)) lift else lift in
+        let uvs, lift =
+          if List.length what > 0 then
+            let usubst, uvs = SS.univ_var_opening what in
+            uvs, SS.subst usubst lift
+          else [], lift
+        in
         if Env.debug env (Options.Other "ED") then
             BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
         let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
-        let lift, comp, _ = tc_term env lift in
+        let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
         (* TODO : Check that comp is pure ? *)
         let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
         let _ = recheck_debug "lift-wp" env lift_wp in
         let _ = recheck_debug "lift-elab" env lift_elab in
-        Some ([], lift_elab), ([], lift_wp)
+        Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
     in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)
@@ -1125,7 +1147,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let lift = match lift with
     | None -> None
     | Some (uvs, lift) ->
-      let lift = SS.subst (fst (SS.univ_var_opening uvs)) lift in
+      let env, lift =
+        let usubst, uvs = SS.univ_var_opening uvs in
+        Env.push_univ_vars env uvs, SS.subst usubst lift
+      in
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let wp_a = S.new_bv None wp_a_src in
       let a_typ = S.bv_to_name a in
@@ -1142,7 +1167,12 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         let expected_k, _, _ =
           tc_tot_or_gtot_term env expected_k in
 //          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
-        let lift = check_and_gen env lift expected_k in
+        let lift =
+          if List.length uvs = 0 then check_and_gen env lift expected_k
+          else
+            let lift = tc_check_trivial_guard env lift expected_k in
+            uvs, SS.close_univ_vars uvs lift
+        in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
     in
@@ -1155,13 +1185,13 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env0 = env in
 
     //AR: open universes in tps and c if needed
-    let uvs, tps, c =
-      if List.length uvs = 0 then uvs, tps, c
+    let env, uvs, tps, c =
+      if List.length uvs = 0 then env, uvs, tps, c
       else
         let usubst, uvs = SS.univ_var_opening uvs in
         let tps = SS.subst_binders usubst tps in
         let c = SS.subst_comp (SS.shift_subst (List.length tps) usubst) c in
-        uvs, tps, c
+        Env.push_univ_vars env uvs, uvs, tps, c
     in
     let env = Env.set_range env r in
     let tps, c = SS.open_comp tps c in
@@ -1203,6 +1233,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         then check_and_gen env t (fst (U.type_u()))
         else
             let uvs, t = SS.open_univ_vars uvs t in
+            let env = Env.push_univ_vars env uvs in
             let t = tc_check_trivial_guard env t (fst (U.type_u())) in
             let t = N.normalize [N.NoFullNorm; N.Beta] env t in
             uvs, SS.close_univ_vars uvs t
@@ -1211,7 +1242,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     [se], []
 
   | Sig_assume(lid, us, phi) ->
-    let _, phi = SS.open_univ_vars us phi in
+    let us, phi = SS.open_univ_vars us phi in
+    let env = Env.push_univ_vars env us in
     let phi =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         let phi = tc_assume ({ env with lax = true }) phi r |> N.remove_uvar_solutions env in
@@ -1222,7 +1254,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     in
     
     let phi = tc_assume env phi r in
-    let us, phi = TcUtil.generalize_universes env phi in
+    let us, phi =
+      if us = [] then TcUtil.generalize_universes env phi
+      else us, SS.close_univ_vars us phi
+    in
     [ { sigel = Sig_assume(lid, us, phi);
         sigquals = se.sigquals;
         sigrng = r;
