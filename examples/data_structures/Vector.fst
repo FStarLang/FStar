@@ -16,7 +16,6 @@
 
 module Vector
 
-#set-options "--lax"
 type vector 'a : nat -> Type =
   | VNil : vector 'a 0
   | VCons : hd:'a
@@ -24,7 +23,6 @@ type vector 'a : nat -> Type =
          -> tl:vector 'a n
          -> vector 'a (n + 1)
 
-#reset-options
 val head: #a:Type -> #n:pos -> vector a n -> Tot a
 let head #a #n v = match v with
   | VCons x xs -> x
