@@ -461,7 +461,7 @@ private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem
 [@"opaque_to_smt"]
 unfold private let norm_steps :list norm_step =
   //iota for reducing match
-  [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
+  [iota; zeta; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
                             "FStar.Monotonic.HyperStack.refs_in_region";
                             "FStar.Monotonic.HyperStack.modifies_some_refs"];
    primops]
