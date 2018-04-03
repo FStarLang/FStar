@@ -2387,7 +2387,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         ({cfg with delta_level=new_delta; steps=steps; strong=true})
       in
       let norm_or_whnf env t =
-        if whnf || (FStar.Options.no_reduction_under_match() && not(cfg.steps.check_no_uvars || cfg.steps.compress_uvars))
+        if whnf
         then closure_as_term cfg_exclude_zeta env t
         else norm cfg_exclude_zeta env [] t
       in
