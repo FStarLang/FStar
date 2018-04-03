@@ -35,7 +35,8 @@ type step =
   | Inlining
   | DoNotUnfoldPureLets
   | UnfoldUntil of delta_depth
-  | UnfoldOnly of list<FStar.Ident.lid>
+  | UnfoldOnly  of list<FStar.Ident.lid>
+  | UnfoldFully of list<FStar.Ident.lid>
   | UnfoldAttr of attribute
   | UnfoldTac
   | PureSubtermsWithinComputations

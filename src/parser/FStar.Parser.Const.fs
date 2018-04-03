@@ -231,15 +231,16 @@ let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl      = pconst "simplify"
-let steps_weak       = pconst "weak"
-let steps_hnf        = pconst "hnf"
-let steps_primops    = pconst "primops"
-let steps_zeta       = pconst "zeta"
-let steps_iota       = pconst "iota"
-let steps_delta      = pconst "delta"
-let steps_unfoldonly = pconst "delta_only"
-let steps_unfoldattr = pconst "delta_attr"
+let steps_simpl         = pconst "simplify"
+let steps_weak          = pconst "weak"
+let steps_hnf           = pconst "hnf"
+let steps_primops       = pconst "primops"
+let steps_zeta          = pconst "zeta"
+let steps_iota          = pconst "iota"
+let steps_delta         = pconst "delta"
+let steps_unfoldonly    = pconst "delta_only"
+let steps_unfoldfully   = pconst "delta_fully"
+let steps_unfoldattr    = pconst "delta_attr"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]

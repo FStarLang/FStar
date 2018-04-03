@@ -191,7 +191,7 @@ let split_lem #a #b sa sb = ()
 private let get_to_the_next_frame () :Tac unit =
   ignore (repeat (fun () -> apply_lemma (`split_lem); smt ()))
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --use_two_phase_tc false --print_full_names --__temp_fast_implicits"
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --print_full_names --__temp_fast_implicits"
 
 (*
  * two commands
@@ -547,7 +547,8 @@ let rec append (l1 l2:listptr)
 				           (Some? l1 ==> l1 == l)                                             /\
 				           (valid l (List.Tot.append fl1 fl2) mf)) ==> p l mf))
 
-     by (fun () -> ignore (forall_intros ());
+     by (fun () -> split (); smt (); 
+                ignore (forall_intros ());
                 let h = implies_intro () in
 		let l = __elim_exists_return_binders2 h in
 		let fl1_binder = List.Tot.hd l in
@@ -715,7 +716,8 @@ let rec rev_append (l1:listptr) (l2:listptr)
 				(forall mf l. ((Set.equal (dom mf) (Set.union (dom m1) (dom m2))) /\
 				          (valid l (List.Tot.rev_acc fl1 fl2) mf)) ==> p l mf))
 
-    by (fun () -> ignore (forall_intros ());
+    by (fun () -> split (); smt (); 
+               ignore (forall_intros ());
                let h = implies_intro () in let l = __elim_exists_return_binders2 h in
 	       let fl1 = List.Tot.hd l in let fl2 = List.Tot.hd (List.Tot.tl l) in
                let h = implies_intro () in let l = __elim_exists_return_binders2 h in

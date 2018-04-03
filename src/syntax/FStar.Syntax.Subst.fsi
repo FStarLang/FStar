@@ -59,3 +59,8 @@ val univ_var_opening: univ_names -> list<subst_elt> * list<univ_name>
 val univ_var_closing: univ_names -> list<subst_elt>
 
 val set_use_range: Range.range -> term -> term
+
+(* Helpers *)
+val open_term_1   : binder   -> term -> binder * term
+val open_term_bvs : list<bv> -> term -> list<bv> * term
+val open_term_bv  : bv       -> term -> bv * term

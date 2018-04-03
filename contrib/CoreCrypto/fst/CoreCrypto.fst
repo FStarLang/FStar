@@ -122,6 +122,8 @@ assume val stream_fini : cipher_stream -> EXT unit
 assume val init : unit -> EXT int
 assume val zero : l:nat -> EXT (lbytes l)
 assume val random : l:nat -> EXT (lbytes l)
+assume val random32 : l:UInt32.t -> EXT (lbytes32 l) 
+// 18-02-25 we should probably keep just the latter
 
 assume val rsa_gen_key : int -> EXT (k:rsa_key{Some? k.rsa_prv_exp})
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes

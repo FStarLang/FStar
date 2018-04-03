@@ -2730,7 +2730,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
     *)
     let encode_binding b (i, decls, env) = match b with
         | Binding_univ _ ->
-          i+1, [], env
+          i+1, decls, env
 
         | Env.Binding_var x ->
             let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv x.sort in

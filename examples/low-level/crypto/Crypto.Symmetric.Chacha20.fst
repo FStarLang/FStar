@@ -21,6 +21,8 @@ module ST = FStar.HyperStack.ST
 
 type u64 = FStar.UInt64.t
 
+// JP: see comment in Buffer.Utils.fst
+#set-options "--lax"
 
 (*** Chacha 20 ***)
 

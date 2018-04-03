@@ -235,48 +235,47 @@ let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
 let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
-    let debug_on () =
-        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
-        ()
-    in
-    let debug_off () =
-        let _ = Options.set_options Options.Reset "" in
-        ()
-    in
-
-    let _ = if Env.debug env (Options.Other "1346")
-            then let _ = debug_on () in
+    let _ = if Env.debug env (Options.Other "1346") then
                   BU.print2 "%%%%%%%%do_unify %s =? %s\n"
                             (Print.term_to_string t1)
                             (Print.term_to_string t2) in
     try
             let res = Rel.teq_nosmt env t1 t2 in
-            debug_off();
             if Env.debug env (Options.Other "1346")
-            then BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
-                            (string_of_bool res)
-                            (Print.term_to_string t1)
-                            (Print.term_to_string t2);
+            then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                                  (string_of_bool res)
+                                  (Print.term_to_string t1)
+                                  (Print.term_to_string t2));
             ret res
     with | Errors.Err (_, msg) -> begin
-            debug_off();
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
             ret false)
             end
          | Errors.Error (_, msg, r) -> begin
-            debug_off();
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
             end
 
 let do_unify env t1 t2 : tac<bool> =
-    bind (__do_unify env t1 t2) (fun b ->
-    if not b
-    then let t1 = N.normalize [] env t1 in
-         let t2 = N.normalize [] env t2 in
-         __do_unify env t1 t2
-    else ret b)
+    bind idtac (fun () ->
+    if Env.debug env (Options.Other "1346") then (
+        Options.push ();
+        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
+        ()
+    );
+
+    bind (
+        bind (__do_unify env t1 t2) (fun b ->
+        if not b
+        then let t1 = N.normalize [] env t1 in
+             let t2 = N.normalize [] env t2 in
+             __do_unify env t1 t2
+        else ret b)) (fun r ->
+
+    if Env.debug env (Options.Other "1346") then
+        Options.pop ();
+    ret r))
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
@@ -1075,6 +1074,8 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
                  bind (ff hd) (fun hd ->
                  let ffb br =
                     let (pat, w, e) = SS.open_branch br in
+                    let bvs = S.pat_bvs pat in
+                    let ff = tac_fold_env d f (Env.push_bvs env bvs) in
                     bind (ff e) (fun e ->
                     let br = SS.close_branch (pat, w, e) in
                     ret br)
@@ -1094,6 +1095,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
                 in
                 bind (fflb lb) (fun lb ->
                 let bs, e = SS.open_term [S.mk_binder bv] e in
+                let ff = tac_fold_env d f (Env.push_binders env bs) in
                 bind (ff e) (fun e ->
                 let e = SS.close bs e in
                 ret (Tm_let ((false, [lb]), e))))
@@ -1271,11 +1273,11 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     in
     let gt = g.goal_ty in
     log ps (fun () ->
-        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
+        BU.print1 "Topdown_rewrite starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
     bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) g.context keepGoing gt) (fun (gt', _) ->
     log ps (fun () ->
-        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
+        BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 

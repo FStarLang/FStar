@@ -35,7 +35,6 @@ let rec fib_norm (n : int) : Tac unit =
 let fn8 : int = synth (fun () -> fib_norm 8)
 let _ = assert (fn8 == 34) // syntactically equal
 
-#set-options "--use_two_phase_tc false"  //AR: need to check
 let iszero (x : int) : int =
     synth (fun () ->
         set_guard_policy SMT;

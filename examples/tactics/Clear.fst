@@ -30,7 +30,6 @@ let clear_all_of_type (t : typ) : Tac unit =
          (List.rev bs) in
     ()
 
-#set-options "--use_two_phase_tc false"
 let l2 (x : int) (y : bool) (z : int) =
     assert_by_tactic (phi ==> (psi ==> xi))
             (fun () -> let e = cur_env () in
