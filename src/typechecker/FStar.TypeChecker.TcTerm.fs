@@ -2106,7 +2106,8 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
         let t =
             if not check_t
             then t
-            else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
+            else (let env0 = Env.push_univ_vars env0 univ_vars in
+                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
                   let g = Rel.resolve_implicits g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
