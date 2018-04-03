@@ -1023,8 +1023,8 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
       if seen then
         exe, deps
       else begin
-        (* JP: unclear why I need to add this. Looks like there are some nodes
-         * that point to themselves, now. *)
+        (* JP: avoid loops for nodes that point to themselves via their
+         * interface. *)
         smap_add transitive_krml f (exe, deps, true);
         let deps = List.unique (List.flatten (List.map (fun dep ->
           let _, deps = make_transitive dep in
@@ -1036,10 +1036,11 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     in
     List.iter (fun f ->
       let exe, deps = make_transitive f in
-      Util.print2 "%s: %s\n\n"
-        exe
-        (String.concat " " (List.unique (f :: deps))))
-      (smap_keys transitive_krml);
+      let deps = String.concat " " (List.unique (f :: deps)) in
+      let wasm = BU.substring exe 0 (String.length exe - 4) ^ ".wasm" in
+      Util.print2 "%s: %s\n\n" exe deps;
+      Util.print2 "%s: %s\n\n" wasm deps
+    ) (smap_keys transitive_krml);
 
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");

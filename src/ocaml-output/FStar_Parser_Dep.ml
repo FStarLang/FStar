@@ -1521,39 +1521,45 @@ let (print_full : deps -> Prims.unit) =
           (let uu____4843 = FStar_Util.smap_keys transitive_krml in
            FStar_List.iter
              (fun f ->
-                let uu____4860 = make_transitive f in
-                match uu____4860 with
+                let uu____4862 = make_transitive f in
+                match uu____4862 with
                 | (exe, deps1) ->
-                    let uu____4873 =
-                      let uu____4874 = FStar_List.unique (f :: deps1) in
-                      FStar_String.concat " " uu____4874 in
-                    FStar_Util.print2 "%s: %s\n\n" exe uu____4873) uu____4843);
-          (let uu____4878 =
-             let uu____4879 =
+                    let deps2 =
+                      let uu____4876 = FStar_List.unique (f :: deps1) in
+                      FStar_String.concat " " uu____4876 in
+                    let wasm =
+                      let uu____4880 =
+                        FStar_Util.substring exe (Prims.parse_int "0")
+                          ((FStar_String.length exe) - (Prims.parse_int "4")) in
+                      Prims.strcat uu____4880 ".wasm" in
+                    (FStar_Util.print2 "%s: %s\n\n" exe deps2;
+                     FStar_Util.print2 "%s: %s\n\n" wasm deps2)) uu____4843);
+          (let uu____4883 =
+             let uu____4884 =
                FStar_All.pipe_right all_fst_files (FStar_List.map norm_path) in
-             FStar_All.pipe_right uu____4879 (FStar_String.concat " \\\n\t") in
-           FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n" uu____4878);
-          (let uu____4889 =
-             let uu____4890 =
+             FStar_All.pipe_right uu____4884 (FStar_String.concat " \\\n\t") in
+           FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n" uu____4883);
+          (let uu____4894 =
+             let uu____4895 =
                FStar_All.pipe_right all_ml_files (FStar_List.map norm_path) in
-             FStar_All.pipe_right uu____4890 (FStar_String.concat " \\\n\t") in
-           FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n" uu____4889);
-          (let uu____4899 =
-             let uu____4900 =
+             FStar_All.pipe_right uu____4895 (FStar_String.concat " \\\n\t") in
+           FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n" uu____4894);
+          (let uu____4904 =
+             let uu____4905 =
                FStar_All.pipe_right all_krml_files (FStar_List.map norm_path) in
-             FStar_All.pipe_right uu____4900 (FStar_String.concat " \\\n\t") in
-           FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____4899)))
+             FStar_All.pipe_right uu____4905 (FStar_String.concat " \\\n\t") in
+           FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____4904)))
 let (print : deps -> Prims.unit) =
   fun deps ->
-    let uu____4912 = FStar_Options.dep () in
-    match uu____4912 with
+    let uu____4917 = FStar_Options.dep () in
+    match uu____4917 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps
     | FStar_Pervasives_Native.Some "full" -> print_full deps
     | FStar_Pervasives_Native.Some "graph" ->
-        let uu____4915 = deps in
-        (match uu____4915 with
-         | Mk (deps1, uu____4917, uu____4918) -> print_graph deps1)
-    | FStar_Pervasives_Native.Some uu____4923 ->
+        let uu____4920 = deps in
+        (match uu____4920 with
+         | Mk (deps1, uu____4922, uu____4923) -> print_graph deps1)
+    | FStar_Pervasives_Native.Some uu____4928 ->
         FStar_Errors.raise_err
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None -> ()
