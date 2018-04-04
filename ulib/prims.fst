@@ -51,10 +51,17 @@ abstract let is_prop (a:Type0) =
 (* The type of squashed types *)
 let prop = a:Type0{is_prop a}
 
-(* A coercion down to universe 0 *)
+(* A coercion down to prop *)
 [@ "tac_opaque"]
 assume val squash : Type -> Tot prop
-// let squash (p:Type) : prop = x:unit{p} TODO
+//let squash : Type -> prop = fun p -> x:unit{p}
+
+// the primitive refinements can still be accessed outside prims
+// but we don't expect user code to really use this
+let p_refine : a:Type -> (a->Type) -> Type = fun a p -> x:a{p x}
+
+// Refinement types outside prims desugar to this
+unfold let t_refine : a:Type -> (a->prop) -> Type = fun a p -> x:a{p x}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
@@ -414,3 +421,15 @@ let with_type (#t:Type) (e:t) = e
 let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
 let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
+
+// TODO: we might add a coercion to convert sub-singletons to prop,
+//       here are some not-yet-working attempts
+
+// let to_is_prop (a:Type0) : Lemma (requires (squash (t_Forall #a (fun x -> t_Forall #a (fun y -> t_eq2 x y)))))
+//                                  (ensures (squash (is_prop a))) = admit()
+
+// let to_is_prop (a:Type0) : Lemma (requires (forall (x y: a). x == y))
+//                                  (ensures (squash (is_prop a))) = admit()
+
+// abstract let to_is_prop (a:Type0) : Pure prop (requires (forall (x y: a). x == y))
+//                                               (ensures (fun _ -> True)) = a
