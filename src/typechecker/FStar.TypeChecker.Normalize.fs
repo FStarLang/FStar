@@ -1117,6 +1117,73 @@ let should_reify cfg stack = match stack with
         cfg.steps.reify_
     | _ -> false
 
+
+let rec maybe_weakly_reduced tm :  bool =
+    let aux_comp c =
+        match c.n with
+        | GTotal (t, _)
+        | Total (t, _) ->
+          maybe_weakly_reduced t
+
+        | Comp ct ->
+          maybe_weakly_reduced ct.result_typ
+          || BU.for_some (fun (a, _) -> maybe_weakly_reduced a) ct.effect_args
+    in
+    let t = Subst.compress tm in
+    match t.n with
+      | Tm_delayed _ -> failwith "Impossible"
+
+      | Tm_name _
+      | Tm_uvar _
+      | Tm_type _
+      | Tm_bvar _
+      | Tm_fvar _
+      | Tm_constant _
+      | Tm_lazy _
+      | Tm_unknown
+      | Tm_uinst _
+      | Tm_quoted _ -> false
+
+      | Tm_let _
+      | Tm_abs _
+      | Tm_arrow _
+      | Tm_refine _ ->
+        true
+
+      | Tm_app(t, args) ->
+        maybe_weakly_reduced t
+        || (args |> BU.for_some (fun (a, _) -> maybe_weakly_reduced a))
+
+      | Tm_match(t, pats) ->
+        maybe_weakly_reduced t
+        || (pats |> BU.for_some (fun (_, wopt, t) ->
+                 (match wopt with None -> false | Some t -> maybe_weakly_reduced t)
+                 || maybe_weakly_reduced t))
+
+      | Tm_ascribed(t1, asc, _) ->
+        maybe_weakly_reduced t1
+        || (match fst asc with
+            | Inl t2 -> maybe_weakly_reduced t2
+            | Inr c2 -> aux_comp c2)
+        || (match snd asc with
+           | None -> false
+           | Some tac -> maybe_weakly_reduced tac)
+
+      | Tm_meta(t, m) ->
+        maybe_weakly_reduced t
+        || (match m with
+           | Meta_pattern args ->
+             BU.for_some (BU.for_some (fun (a, _) -> maybe_weakly_reduced a)) args
+
+           | Meta_monadic_lift(_, _, t')
+           | Meta_monadic(_, t') ->
+             maybe_weakly_reduced t'
+
+           | Meta_labeled _
+           | Meta_desugared _
+           | Meta_named _ -> false)
+
+
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t =
@@ -1273,12 +1340,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    then match !r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
-                            begin match (compress t').n with
-                                | Tm_abs _  ->
-                                    norm cfg env stack t'
-                                | _ ->
-                                    rebuild cfg env stack t'
-                            end
+                            if maybe_weakly_reduced t'
+                            then norm cfg env stack t'
+                            else rebuild cfg env stack t'
                         | None -> norm cfg env (MemoLazy r::stack) t0
                    else norm cfg env stack t0 //Fixpoint steps are excluded; so don't take the recursive knot
             end
@@ -2434,7 +2498,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           U.branch (p, wopt, e))
       in
       let scrutinee =
-        if cfg.steps.iota
+        if cfg.steps.iota && maybe_weakly_reduced scrutinee
         then norm cfg scrutinee_env [] scrutinee //scrutinee was only reduced to wnf; reduce it fully
         else scrutinee
       in
