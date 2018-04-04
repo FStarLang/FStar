@@ -1278,6 +1278,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             else // not an action, common case
                  let should_delta =
                      Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
+                     && (match qninfo with
+                         | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _) ->
+                           not (List.contains HasMaskedEffect qs)
+                           &&  (not is_rec || cfg.steps.zeta)
+                         | _ -> true)
                      && cfg.delta_level |> BU.for_some (function
                          | Env.UnfoldTac
                          | NoDelta -> false
@@ -1653,8 +1658,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | _ ->
             norm cfg env stack t
 
-
-
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     //preserve the range info on the returned def
     let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
@@ -1666,12 +1669,6 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
 
        | Some (us, t) ->
          begin
-         match qninfo with
-         | Some (Inr ({sigel=Sig_let((true, _), _)}, _), _) when not cfg.steps.zeta -> rebuild cfg env stack t0
-         | Some (Inr ({sigquals=qs}, _), _) when qs |> List.contains HasMaskedEffect -> rebuild cfg env stack t0
-
-         | _ ->
-
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
