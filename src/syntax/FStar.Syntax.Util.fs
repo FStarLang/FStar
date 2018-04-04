@@ -1727,7 +1727,6 @@ let process_pragma p r =
       | None -> ()
       | Some s -> set_options Options.Reset s
 
-/////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm :  list<bv> =
     let t = Subst.compress tm in
@@ -1833,3 +1832,4 @@ and unbound_variables_comp c =
     | Comp ct ->
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
+
