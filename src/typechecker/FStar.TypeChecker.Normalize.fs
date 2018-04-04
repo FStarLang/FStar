@@ -1341,7 +1341,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
                             if maybe_weakly_reduced t'
-                            then norm cfg env stack t'
+                            then match stack with
+                                 | [] when cfg.steps.weak || cfg.steps.compress_uvars ->
+                                   rebuild cfg env stack t'
+                                 | _ -> norm cfg env stack t'
                             else rebuild cfg env stack t'
                         | None -> norm cfg env (MemoLazy r::stack) t0
                    else norm cfg env stack t0 //Fixpoint steps are excluded; so don't take the recursive knot
@@ -1665,6 +1668,8 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          begin
          match qninfo with
          | Some (Inr ({sigel=Sig_let((true, _), _)}, _), _) when not cfg.steps.zeta -> rebuild cfg env stack t0
+         | Some (Inr ({sigquals=qs}, _), _) when qs |> List.contains HasMaskedEffect -> rebuild cfg env stack t0
+
          | _ ->
 
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
@@ -2498,7 +2503,10 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           U.branch (p, wopt, e))
       in
       let scrutinee =
-        if cfg.steps.iota && maybe_weakly_reduced scrutinee
+        if cfg.steps.iota
+        && (not cfg.steps.weak)
+        && (not cfg.steps.compress_uvars)
+        && maybe_weakly_reduced scrutinee
         then norm cfg scrutinee_env [] scrutinee //scrutinee was only reduced to wnf; reduce it fully
         else scrutinee
       in
