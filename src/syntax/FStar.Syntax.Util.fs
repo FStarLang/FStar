@@ -1726,3 +1726,110 @@ let process_pragma p r =
       match sopt with
       | None -> ()
       | Some s -> set_options Options.Reset s
+
+/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+let rec unbound_variables tm :  list<bv> =
+    let t = Subst.compress tm in
+    match t.n with
+      | Tm_delayed _ -> failwith "Impossible"
+
+      | Tm_name x ->
+        []
+
+      | Tm_uvar (x, t) ->
+        []
+
+      | Tm_type u ->
+        []
+
+      | Tm_bvar x ->
+        [x]
+
+      | Tm_fvar _
+      | Tm_constant _
+      | Tm_lazy _
+      | Tm_unknown ->
+        []
+
+      | Tm_uinst(t, us) ->
+        unbound_variables t
+
+      | Tm_abs(bs, t, _) ->
+        let bs, t = Subst.open_term bs t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_arrow (bs, c) ->
+        let bs, c = Subst.open_comp bs c in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables_comp c
+
+      | Tm_refine(b, t) ->
+        let bs, t = Subst.open_term [b, None] t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_app(t, args) ->
+        List.collect (fun (x, _) -> unbound_variables x) args
+        @ unbound_variables t
+
+      | Tm_match(t, pats) ->
+        unbound_variables t
+        @ (pats |> List.collect (fun br ->
+                 let p, wopt, t = Subst.open_branch br in
+                 unbound_variables t
+                 @ (match wopt with None -> [] | Some t -> unbound_variables t)))
+
+      | Tm_ascribed(t1, asc, _) ->
+        unbound_variables t1
+        @ (match fst asc with
+           | Inl t2 -> unbound_variables t2
+           | Inr c2 -> unbound_variables_comp c2)
+        @ (match snd asc with
+           | None -> []
+           | Some tac -> unbound_variables tac)
+
+      | Tm_let ((false, [lb]), t) ->
+        unbound_variables lb.lbtyp
+        @ unbound_variables lb.lbdef
+        @ (match lb.lbname with
+           | Inr _ -> unbound_variables t
+           | Inl bv -> let _, t= Subst.open_term [bv, None] t in
+                       unbound_variables t)
+
+      | Tm_let ((_, lbs), t) ->
+        let lbs, t = Subst.open_let_rec lbs t in
+        unbound_variables t
+        @ List.collect (fun lb -> unbound_variables lb.lbtyp @ unbound_variables lb.lbdef) lbs
+
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static  -> []
+        | Quote_dynamic -> unbound_variables tm
+        end
+
+      | Tm_meta(t, m) ->
+        unbound_variables t
+        @ (match m with
+           | Meta_pattern args ->
+             List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
+
+           | Meta_monadic_lift(_, _, t')
+           | Meta_monadic(_, t') ->
+             unbound_variables t'
+
+           | Meta_labeled _
+           | Meta_desugared _
+           | Meta_named _ -> [])
+
+
+and unbound_variables_comp c =
+    match c.n with
+    | GTotal (t, _)
+    | Total (t, _) ->
+      unbound_variables t
+
+    | Comp ct ->
+      unbound_variables ct.result_typ
+      @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args

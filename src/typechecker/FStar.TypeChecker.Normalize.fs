@@ -1147,7 +1147,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_quoted _ ->
-            rebuild cfg env stack t
+            rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_app(hd, args)
             when not (cfg.steps.no_full_norm)
@@ -2237,6 +2237,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
+  if Env.debug cfg.tcenv (Options.Other "NormRebuild")
+  then (match FStar.Syntax.Util.unbound_variables t with
+       | [] -> ()
+       | bvs ->
+          BU.print3 "!!! Rebuild (%s) %s, free vars=%s\n"
+                               (Print.tag_of_term t)
+                               (Print.term_to_string t)
+                               (bvs |> List.map Print.bv_to_string |> String.concat ", ");
+          failwith "DIE!")
+  ;
   let t = maybe_simplify cfg env stack t in
   match stack with
   | [] -> t
