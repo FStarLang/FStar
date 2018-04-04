@@ -60,8 +60,8 @@ let int2 :
                               FStar_Pervasives_Native.Some uu____184))
                 | uu____186 -> FStar_Pervasives_Native.None
   
-let reflection_primops :
-  FStar_TypeChecker_Normalize.primitive_step Prims.list =
+let (reflection_primops :
+  FStar_TypeChecker_Normalize.primitive_step Prims.list) =
   let mklid nm = FStar_Reflection_Data.fstar_refl_basic_lid nm  in
   let mk1 l arity fn =
     {
