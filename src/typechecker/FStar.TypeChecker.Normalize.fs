@@ -2433,7 +2433,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let e = norm_or_whnf env e in
           U.branch (p, wopt, e))
       in
-      let scrutinee = norm cfg scrutinee_env [] scrutinee in
+      let scrutinee =
+        if cfg.steps.iota
+        then norm cfg scrutinee_env [] scrutinee //scrutinee was only reduced to wnf; reduce it fully
+        else scrutinee
+      in
       rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
     in
 
