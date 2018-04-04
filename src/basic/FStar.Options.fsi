@@ -207,7 +207,7 @@ val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val use_extracted_interfaces    : unit    -> bool
-val no_reduction_under_match    : unit    -> bool
+
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the
 // whole build tree. A classy technique I learned from the OCaml compiler.
