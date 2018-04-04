@@ -307,7 +307,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 150 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 150 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
@@ -322,7 +322,7 @@ let lemma_mod_plus_mul_distr a b c p =
   lemma_mod_plus_distr_l a b p;
   lemma_mod_plus_distr_l b (a % p) p
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0 --max_ifuel 0"
 
 val lemma_mod_mod: a:int -> b:int -> p:pos -> Lemma
   (requires (a = b % p))

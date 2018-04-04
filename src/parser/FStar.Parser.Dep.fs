@@ -711,6 +711,11 @@ let collect_one
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
 
+
+(* JP: it looks like the code was changed but the comments were never updated.
+ * In particular, we no longer compute transitive dependencies, and we no longer
+ * map lowercase module names to filenames. *)
+
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
 let collect (all_cmd_line_files: list<file_name>)
@@ -933,6 +938,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
     let cache_file f = norm_path (cache_file_name f) in
+    let transitive_krml = smap_create 41 in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
@@ -955,6 +961,16 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                       (cache_file f)
                       norm_f
                       files;
+
+          // for building an executable from a given module:
+          // foo.exe: dep1.krml dep2.krml etc.
+          smap_add transitive_krml 
+            (norm_path (output_file ".krml" f))
+            (norm_path (output_file ".exe" f),
+              List.map
+                (fun x -> norm_path (output_file ".krml" x))
+                (deps_of (Mk (deps, file_system_map, all_cmd_line_files)) f),
+              false);
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
@@ -1000,6 +1016,32 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                        BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
+    // compute transitive closure for dependency graphs that contain multiple
+    // entry points
+    let rec make_transitive f =
+      let exe, deps, seen = must (smap_try_find transitive_krml f) in
+      if seen then
+        exe, deps
+      else begin
+        (* JP: avoid loops for nodes that point to themselves via their
+         * interface. *)
+        smap_add transitive_krml f (exe, deps, true);
+        let deps = List.unique (List.flatten (List.map (fun dep ->
+          let _, deps = make_transitive dep in
+          dep :: deps
+        ) deps)) in
+        smap_add transitive_krml f (exe, deps, true);
+        exe, deps
+      end
+    in
+    List.iter (fun f ->
+      let exe, deps = make_transitive f in
+      let deps = String.concat " " (List.unique (f :: deps)) in
+      let wasm = BU.substring exe 0 (String.length exe - 4) ^ ".wasm" in
+      Util.print2 "%s: %s\n\n" exe deps;
+      Util.print2 "%s: %s\n\n" wasm deps
+    ) (smap_keys transitive_krml);
+
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> List.map norm_path |> String.concat " \\\n\t")
@@ -1012,6 +1054,8 @@ let print deps =
       print_full deps
   | Some "graph" ->
       let (Mk(deps, _, _)) = deps in
+      (* JP: this was broken by the change of the main map to contain filenames
+       * instead of module names. *)
       print_graph deps
   | Some _ ->
       raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
