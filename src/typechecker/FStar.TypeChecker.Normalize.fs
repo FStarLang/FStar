@@ -510,7 +510,7 @@ let rec inline_closure_env cfg (env:env) stack t =
         in
         let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
         let t = mk (Tm_let((false, [lb]), body)) t.pos in
-        rebuild_closure cfg env stack t
+        rebuild_closure cfg env0 stack t
 
       | Tm_let((_,lbs), body) -> //recursive let
         let norm_one_lb env lb =
@@ -2493,6 +2493,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                           (List.map (fun (_, t) -> Print.term_to_string t) s |> String.concat "; "));
             //the elements of s are sub-terms of t
             //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
+            let env0 = env in
             let env = List.fold_left
                   (fun env (bv, t) -> (Some (S.mk_binder bv),
                                        Clos([], t, BU.mk_ref (Some ([], t)), false))::env)
