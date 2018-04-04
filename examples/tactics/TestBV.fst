@@ -8,7 +8,7 @@ module U64 = FStar.UInt64
 /// These examples only rely on facts about bounded ints, U64, and Prims
 /// In particular, pruning away sequences, reflection, tactics etc.
 /// from the SMT solver makes a big difference
-#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims'"
+#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims' --__temp_fast_implicits"
 
 ////////////////////////////////////////////////////////////////////////////////
 //Some examples working on FStar.UInt.uint_t, i.e., bounded natural numbers
@@ -97,27 +97,27 @@ let bv64_tac () : Tac unit =
     //call bv_tac to encode the whole thing to bit vectors
     bv_tac ()
 
-// /// First a simple one
-// let test6 (x y: U64.t) =
-//     assert_by_tactic (U64.logand x y == U64.logand y x)
-//                      bv64_tac
+/// First a simple one
+let test6 (x y: U64.t) =
+    assert_by_tactic (U64.logand x y == U64.logand y x)
+                     bv64_tac
 
-// /// In this one, the tactic works by:
-// ///   -- 1. rewriting the goal to
-// ///            ` v (U64.logand x (U64.logand y (U64.logand z z))) ==
-// ///              v (U64.logand (U64.logand x y) z)`
-// ///   -- 2. recursive applying the homomorphisms ..
-// ///         e.g., on the RHS
-// ///             v (U64.logand x (U64.logand y (U64.logand z z)))  ~>
-// ///             logand (v x)  (v (U64.logand y (U64.logand z z))) ~>
-// ///             logand (v x)  (logand (v y) (v (U64.logand z z)))  ~>
-// ///             logand (v x)  (logand (v y) (logand (v z) (v z)))
-// ///         and similarly on the LHS
-// ///   -- 3. We're left with  bitwise operations on uint_t 64,
-// ///         which bv_tac encodes to FStar.BitVector
-// ///   -- 4. Finally, F*'s built-in  SMT encoding encode FStar.BitVector.t 64
-// ///         to Z3's primitive bv 64.
-// let test7 (x y z: U64.t) =
-//     assert_by_tactic (U64.logand x (U64.logand y (U64.logand z z)) ==
-//                       U64.logand (U64.logand x y) z)
-//                      bv64_tac
+/// In this one, the tactic works by:
+///   -- 1. rewriting the goal to
+///            ` v (U64.logand x (U64.logand y (U64.logand z z))) ==
+///              v (U64.logand (U64.logand x y) z)`
+///   -- 2. recursive applying the homomorphisms ..
+///         e.g., on the RHS
+///             v (U64.logand x (U64.logand y (U64.logand z z)))  ~>
+///             logand (v x)  (v (U64.logand y (U64.logand z z))) ~>
+///             logand (v x)  (logand (v y) (v (U64.logand z z)))  ~>
+///             logand (v x)  (logand (v y) (logand (v z) (v z)))
+///         and similarly on the LHS
+///   -- 3. We're left with  bitwise operations on uint_t 64,
+///         which bv_tac encodes to FStar.BitVector
+///   -- 4. Finally, F*'s built-in  SMT encoding encode FStar.BitVector.t 64
+///         to Z3's primitive bv 64.
+let test7 (x y z: U64.t) =
+    assert_by_tactic (U64.logand x (U64.logand y (U64.logand z z)) ==
+                      U64.logand (U64.logand x y) z)
+                     bv64_tac
