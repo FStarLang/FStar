@@ -2366,10 +2366,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     let t = S.extend_app head (t,aq) None r in
     rebuild cfg env stack t
 
-  | Match(env, branches, cfg, r) :: stack ->
+  | Match(env', branches, cfg, r) :: stack ->
     log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
     //the scrutinee is always guaranteed to be a pure or ghost term
     //see tc.fs, the case of Tm_match and the comment related to issue #594
+    let scrutinee_env = env in
+    let env = env' in
     let scrutinee = t in
     let norm_and_rebuild_match () =
       log cfg (fun () ->
@@ -2431,6 +2433,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let e = norm_or_whnf env e in
           U.branch (p, wopt, e))
       in
+      let scrutinee = norm cfg scrutinee_env [] scrutinee in
       rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
     in
 
