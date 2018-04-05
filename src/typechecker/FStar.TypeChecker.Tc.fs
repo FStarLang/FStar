@@ -1746,7 +1746,6 @@ let tc_more_partial_modul env modul decls =
 
 let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
   let lax_mode = env0.lax in
-  let env0 = if lid_equals env0.curmodule Parser.Const.prims_lid then { env0 with lax = true } else env0 in
   let msg = "Internals for " ^ m.name.str in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
@@ -1762,6 +1761,7 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
 
     //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from env
     let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
+    let en0 = if lid_equals en0.curmodule Parser.Const.prims_lid then { en0 with lax = true } else en0 in
 
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
 
