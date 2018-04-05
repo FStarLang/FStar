@@ -20,8 +20,9 @@ val get_proof : p:prop ->
 val give_proof : #p:prop -> squash p ->
   Pure unit (requires True) (ensures (fun _ -> p))
 
+// CH: TODO: the eq2 now needed to avoid nasty type inference bug (maybe #1338 or #1173)
 val proof_irrelevance : p:Type -> x:squash p ->
-                                  y:squash p -> Tot (squash (x == y))
+                                  y:squash p -> Tot (squash (eq2 #(squash p) x y))
 
 (* This is equivalent to push_squash *)
 val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
