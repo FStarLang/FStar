@@ -1,1 +1,205 @@
-[ "ð5¬|ò/Qs¬.j\u0004s¦1\u0010", [] ]
+[
+  "ð5¬|ò/Qs¬.j\u0004s¦1\u0010",
+  [
+    [
+      "Prims.Ghost",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "00ebcfc70a4098d3ef401600f39049bf"
+    ],
+    [
+      "Prims.list",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "24b196351256df21b3afc3de1cbdb795"
+    ],
+    [
+      "Prims.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+      ],
+      0,
+      "d971dbf292743e35b3323f49c59032bc"
+    ],
+    [
+      "Prims.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+      ],
+      0,
+      "d159b0e1b7075e23d6f58cc52dbeb954"
+    ],
+    [
+      "Prims.Lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "1b117a28d8660abe3718dda7d1764a6b"
+    ],
+    [
+      "Prims._assert",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8ade28e5368606f318ed3e2fa780e618"
+    ],
+    [
+      "Prims.assert_spinoff",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "862c15b9ec7b020536b5bb34b3507188"
+    ],
+    [
+      "Prims.cut",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fc5730a10d3c67a3b40082385f8a0843"
+    ],
+    [
+      "Prims.nonzero",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "86c56d05ccdc7464fe3644cc3a4e1a70"
+    ],
+    [
+      "Prims.pow2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
+        "int_typing", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "f9df406a202f12d3a206de238cc1ac88"
+    ],
+    [
+      "Prims.__proj__UnfoldOnly__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.UnfoldOnly",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_4d5fdd81326d62e4902f453115e4f88e"
+      ],
+      0,
+      "3c5ac85b55f19c3d03255d86d8e02e8b"
+    ],
+    [
+      "Prims.__proj__UnfoldFully__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.UnfoldFully",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_953a5166cdd0016c2c62d89410a77c22"
+      ],
+      0,
+      "34fc2100942e1e8d0639aef01ea6a397"
+    ],
+    [
+      "Prims.__proj__UnfoldAttr__item__t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.UnfoldAttr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_2d13f1642f6ea430528edc9d2fc127eb"
+      ],
+      0,
+      "9626a2c25d97f452d77cbd49392cc66d"
+    ],
+    [
+      "Prims.__proj__UnfoldAttr__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.UnfoldAttr",
+        "proj_equation_Prims.UnfoldAttr_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.UnfoldAttr_t",
+        "refinement_interpretation_Prims_Tm_refine_2d13f1642f6ea430528edc9d2fc127eb"
+      ],
+      0,
+      "9e6e82e71d9101678baac75a339e2199"
+    ],
+    [
+      "Prims.assert_norm",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize" ],
+      0,
+      "8c726b24ce6ba9df873ed686f1eeedf0"
+    ],
+    [
+      "Prims.normalize_term_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize_term" ],
+      0,
+      "57ff37fa29c47ab93586dbdbba6cc31a"
+    ],
+    [
+      "Prims.normalize_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.normalize" ],
+      0,
+      "d12338db41cf7891fb0b2939ad791920"
+    ],
+    [
+      "Prims.norm_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.norm" ],
+      0,
+      "4153426cdd6a784d43077286cc2c2b81"
+    ]
+  ]
+]
