@@ -138,10 +138,10 @@ let lemma_mem_tset_of_set (#a:eqtype) (s:Set.set a) (x:a)
   = lemma_mem_tset_of_set_l #a s x; lemma_mem_tset_of_set_r #a s x
 
 abstract
-let filter (#a:Type) (f:a -> prop) (s:set a) : set a =
+let filter (#a:Type) (f:a -> Tot prop) (s:set a) : set a =
   (fun (x:a) -> f x /\ s x)
 
-let lemma_mem_filter (#a:Type) (f:(a -> prop)) (s:set a) (x:a)
+let lemma_mem_filter (#a:Type) (f:(a -> Tot prop)) (s:set a) (x:a)
   :Lemma (requires True)
          (ensures  (mem x (filter f s) <==> mem x s /\ f x))
          [SMTPat (mem x (filter f s))]

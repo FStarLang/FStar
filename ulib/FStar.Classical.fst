@@ -67,22 +67,22 @@ let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot prop))
   = let g : x:a -> Lemma (forall (y:b x). p x y) = fun x -> forall_intro (f x) in
     forall_intro g
 
-let forall_intro_3 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#p:(x:a -> y:b x -> z:c x y -> prop))
+let forall_intro_3 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#p:(x:a -> y:b x -> z:c x y -> Tot prop))
 		  ($f: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
   : Lemma (forall (x:a) (y:b x) (z:c x y). p x y z)
   = let g : x:a -> Lemma (forall (y:b x) (z:c x y). p x y z) = fun x -> forall_intro_2 (f x) in
     forall_intro g
 
-let exists_intro (#a:Type) (p:(a -> prop)) (witness:a)
+let exists_intro (#a:Type) (p:(a -> Tot prop)) (witness:a)
   : Lemma (requires (p witness))
 	  (ensures (exists (x:a). p x))
   = ()
 
-let forall_to_exists (#a:Type) (#p:(a -> prop)) (#r:prop) ($f:(x:a -> Lemma (p x ==> r)))
+let forall_to_exists (#a:Type) (#p:(a -> Tot prop)) (#r:prop) ($f:(x:a -> Lemma (p x ==> r)))
   : Lemma ((exists (x:a). p x) ==> r)
   = forall_intro f
 
-let forall_to_exists_2 (#a:Type) (#p:(a -> prop)) (#b:Type) (#q:(b -> prop)) (#r:prop)
+let forall_to_exists_2 (#a:Type) (#p:(a -> Tot prop)) (#b:Type) (#q:(b -> Tot prop)) (#r:prop)
 		 ($f:(x:a -> y:b -> Lemma ((p x /\ q y) ==> r)))
   : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
   = forall_intro_2 f
@@ -92,12 +92,12 @@ let impl_intro_gtot (#p #q:prop) ($f:p -> GTot q) : GTot (p ==> q) = return_squa
 let impl_intro (#p #q:prop) ($f: p -> Lemma q) : Lemma (p ==> q)  =
     give_witness #(p ==> q) (squash_double_arrow (return_squash (lemma_to_squash_gtot f)))
 
-val exists_elim: goal:prop -> #a:Type -> #p:(a -> prop) -> $have:squash (exists (x:a). p x) -> f:(x:a{p x} -> GTot (squash goal)) ->
+val exists_elim: goal:prop -> #a:Type -> #p:(a -> Tot prop) -> $have:squash (exists (x:a). p x) -> f:(x:a{p x} -> GTot (squash goal)) ->
   Lemma goal
 let exists_elim goal #a #p have f =
   bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
 
-let move_requires (#a:Type) (#p #q:(a -> prop))
+let move_requires (#a:Type) (#p #q:(a -> Tot prop))
   ($f:(x:a -> Lemma (requires (p x)) (ensures (q x)))) (x:a)
   : Lemma (p x ==> q x) =
       give_proof

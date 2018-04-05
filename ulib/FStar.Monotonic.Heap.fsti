@@ -10,7 +10,7 @@ let tset = TSet.set
 
 val heap :Type u#1
 
-val equal: heap -> heap -> prop
+val equal: heap -> heap -> Tot prop
 
 val equal_extensional (h1:heap) (h2:heap)
   :Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
@@ -28,11 +28,11 @@ val compare_addrs:
   #a:Type0 -> #b:Type0 -> #rel1:preorder a -> #rel2:preorder b ->
   r1:mref a rel1 -> r2:mref b rel2 -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 
-logic val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> prop
+logic val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Tot prop
 
-val addr_unused_in: nat -> heap -> prop
+val addr_unused_in: nat -> heap -> Tot prop
 
-val unused_in: #a:Type0 -> #rel:preorder a -> mref a rel -> heap -> prop
+val unused_in: #a:Type0 -> #rel:preorder a -> mref a rel -> heap -> Tot prop
 
 let fresh (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) =
   r `unused_in` h0 /\ h1 `contains` r
@@ -260,7 +260,7 @@ val addr_of_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (ad
 val aref_is_mm: aref -> GTot bool
 val is_mm_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (is_mm r == aref_is_mm (aref_of r))
 [SMTPat (aref_is_mm (aref_of r))]
-val aref_unused_in: aref -> heap -> prop
+val aref_unused_in: aref -> heap -> Tot prop
 val unused_in_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> h: heap -> Lemma (unused_in r h <==> aref_unused_in (aref_of r) h)
 [SMTPat (aref_unused_in (aref_of r) h)]
 val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:heap -> x:mref a rel -> y:aref -> Lemma

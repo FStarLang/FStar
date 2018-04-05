@@ -16,14 +16,14 @@ open FStar.Preorder
 
 (* Witnessed modality *)
 
-val witnessed : #state:Type -> rel:preorder state -> p:(state -> prop) -> prop
+val witnessed : #state:Type -> rel:preorder state -> p:(state -> Tot prop) -> Tot prop
 
 (* Weakening for the witnessed modality *)
 
 val lemma_witnessed_weakening :#state:Type
                                -> rel:preorder state
-                               -> p:(state -> prop)
-                               -> q:(state -> prop)
+                               -> p:(state -> Tot prop)
+                               -> q:(state -> Tot prop)
                                -> Lemma (requires (forall s. p s ==> q s))
                                        (ensures  (witnessed rel p ==> witnessed rel q))
 
@@ -36,35 +36,35 @@ val lemma_witnessed_constant :#state:Type
 
 val lemma_witnessed_nested :#state:Type
                             -> rel:preorder state
-                            -> p:(state -> prop)
+                            -> p:(state -> Tot prop)
                             -> Lemma (witnessed rel (fun _ -> witnessed rel p) <==> witnessed rel p)
 
 val lemma_witnessed_and :#state:Type
                          -> rel:preorder state
-                         -> p:(state -> prop) 
-                         -> q:(state -> prop)
+                         -> p:(state -> Tot prop) 
+                         -> q:(state -> Tot prop)
                          -> Lemma (witnessed rel (fun s -> p s /\ q s) <==> (witnessed rel p /\ witnessed rel q))
 
 val lemma_witnessed_or :#state:Type
                         -> rel:preorder state
-                        -> p:(state -> prop)
-                        -> q:(state -> prop)
+                        -> p:(state -> Tot prop)
+                        -> q:(state -> Tot prop)
                         -> Lemma ((witnessed rel p \/ witnessed rel q) ==> witnessed rel (fun s -> p s \/ q s))
 
 val lemma_witnessed_impl :#state:Type
                           -> rel:preorder state
-                          -> p:(state -> prop)
-                          -> q:(state -> prop)
+                          -> p:(state -> Tot prop)
+                          -> q:(state -> Tot prop)
                           -> Lemma ((witnessed rel (fun s -> p s ==> q s) /\ witnessed rel p) ==> witnessed rel q)
 
 val lemma_witnessed_forall :#state:Type
                             -> #t:Type
                             -> rel:preorder state
-                            -> p:(t -> state -> prop) 
+                            -> p:(t -> state -> Tot prop) 
                             -> Lemma ((witnessed rel (fun s -> forall x. p x s)) <==> (forall x. witnessed rel (p x)))
 
 val lemma_witnessed_exists :#state:Type
                             -> #t:Type
                             -> rel:preorder state
-                            -> p:(t -> state -> prop) 
+                            -> p:(t -> state -> Tot prop) 
                             -> Lemma ((exists x. witnessed rel (p x)) ==> witnessed rel (fun s -> exists x. p x s))

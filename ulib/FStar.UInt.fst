@@ -46,7 +46,7 @@ let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
 
 let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
-let size (x:int) (n:nat) : Tot Type0 = b2p(fits x n)
+let size (x:int) (n:nat) : Tot prop = b2p(fits x n)
 
 (* Machine integer type *)
 type uint_t (n:nat) = x:int{size x n}

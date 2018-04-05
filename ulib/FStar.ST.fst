@@ -40,7 +40,7 @@ let heap_rel (h1:heap) (h2:heap) =
 assume val gst_get: unit    -> GST heap (fun p h0 -> p h0 h0)
 assume val gst_put: h1:heap -> GST unit (fun p h0 -> heap_rel h0 h1 /\ p () h1)
 
-type heap_predicate = heap -> prop
+type heap_predicate = heap -> Tot prop
 
 let stable (p:heap_predicate) =
   forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2

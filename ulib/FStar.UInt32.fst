@@ -147,13 +147,13 @@ let lognot (x:t) : Pure t
 (* Shift operators *)
 abstract
 let shift_right (a:t) (s:t) : Pure t
-  (requires (v s < n))
+  (requires (b2p (v s < n)))
   (ensures (fun c -> FStar.UInt.shift_right (v a) (v s) = v c))
   = Mk (shift_right (v a) (v s))
 
 abstract
 let shift_left (a:t) (s:t) : Pure t
-  (requires (v s < n))
+  (requires (b2p (v s < n)))
   (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
   = Mk (shift_left (v a) (v s))
 

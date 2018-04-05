@@ -473,7 +473,7 @@ Pure prop
   | [] -> False
   | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
 
-val list_unref : #a:Type -> #p:(a -> prop) -> list (x:a{p x}) -> Tot (list a)
+val list_unref : #a:Type -> #p:(a -> Tot prop) -> list (x:a{p x}) -> Tot (list a)
 let rec list_unref #a #p l =
     match l with
     | [] -> []

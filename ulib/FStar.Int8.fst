@@ -97,13 +97,13 @@ let lognot (x:t) : Pure t
 (* Shift operators *)
 abstract
 let shift_right (a:t) (s:UInt32.t) : Pure t
-  (requires (UInt32.v s < n))
+  (requires (b2p (UInt32.v s < n)))
   (ensures (fun c -> FStar.Int.shift_right (v a) (UInt32.v s) = v c))
   = Mk (shift_right (v a) (UInt32.v s))
 
 abstract
 let shift_left (a:t) (s:UInt32.t) : Pure t
-  (requires (UInt32.v s < n))
+  (requires (b2p (UInt32.v s < n)))
   (ensures (fun c -> FStar.Int.shift_left (v a) (UInt32.v s) = v c))
   = Mk (shift_left (v a) (UInt32.v s))
 
