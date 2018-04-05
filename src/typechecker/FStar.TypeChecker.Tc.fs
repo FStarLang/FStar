@@ -54,7 +54,7 @@ let set_hint_correlator env se =
       let n_opt = BU.smap_try_find tbl lid.str in
       if is_some n_opt then n_opt |> must else 0
     in
-    
+
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
@@ -123,7 +123,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let effect_params_un, signature_un, opening =
       SS.open_term' (open_univs_binders 0 ed.binders)
                     (open_univs n_effect_params ed.signature) in
-  
+
   let env = Env.push_univ_vars env0 annotated_univ_names in  //AR: push the univs in the environment
 
   let effect_params, env, _ = tc_tparams env effect_params_un in
@@ -389,7 +389,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               //AR: TODO: FIXME: why is usubst not shifted before applying to action_defn and action_typ?
               { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
           in
-          
+
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
@@ -400,7 +400,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               if lid_equals c.effect_name ed.mname then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args)))) else act.action_typ
             | _ -> act.action_typ
           in
-          
+
           let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
 
           // 1) Check action definition, setting its expected type to
@@ -442,7 +442,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 let a, wp = destruct_repr (U.comp_result c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-		          effect_name = ed.mname;
+                          effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
                   flags = []
@@ -1112,7 +1112,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         //AR: open the universes, if present (two phases)
         let env, lift_wp =
           if List.length uvs > 0 then
-            let usubst, uvs = SS.univ_var_opening uvs in 
+            let usubst, uvs = SS.univ_var_opening uvs in
             Env.push_univ_vars env uvs, SS.subst usubst lift_wp
           else env, lift_wp
         in
@@ -1252,7 +1252,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       end
       else phi
     in
-    
+
     let phi = tc_assume env phi r in
     let us, phi =
       if us = [] then TcUtil.generalize_universes env phi
@@ -1567,7 +1567,7 @@ let tc_decls env ses =
         N.normalize
                [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 N.CheckNoUvars;
-                N.Beta; N.NoDeltaSteps; N.CompressUvars;
+                N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars;
                 N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm]
               env
               t); //update the id_info table after having removed their uvars
@@ -1728,13 +1728,13 @@ let extract_interface (en:env) (m:modul) :modul =
   let should_keep_lbdef (t:typ) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
-    in 
-    
+    in
+
     let c_opt =
       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
-     
+
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
      //if c is pure or ghost then keep it if the return type is not unit
@@ -1749,7 +1749,7 @@ let extract_interface (en:env) (m:modul) :modul =
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
 
     | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
-    
+
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
@@ -1781,7 +1781,7 @@ let extract_interface (en:env) (m:modul) :modul =
         //if is it abstract or irreducible or lemma, keep just the vals
         let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
         if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
-        else 
+        else
           let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
           if should_keep_defs then [ s ]
           else vals

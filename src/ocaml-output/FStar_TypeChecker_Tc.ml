@@ -6367,7 +6367,7 @@ let (tc_decls :
                           [FStar_TypeChecker_Normalize.AllowUnboundUniverses;
                           FStar_TypeChecker_Normalize.CheckNoUvars;
                           FStar_TypeChecker_Normalize.Beta;
-                          FStar_TypeChecker_Normalize.NoDeltaSteps;
+                          FStar_TypeChecker_Normalize.DoNotUnfoldPureLets;
                           FStar_TypeChecker_Normalize.CompressUvars;
                           FStar_TypeChecker_Normalize.Exclude
                             FStar_TypeChecker_Normalize.Zeta;
