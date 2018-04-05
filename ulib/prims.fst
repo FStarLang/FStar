@@ -48,13 +48,21 @@ abstract private let t_eq2 (#a:Type) (x y:a) = _:unit{equals x y}
 abstract let is_prop (a:Type0) =
   t_Forall #a (fun x -> t_Forall #a (fun y -> t_eq2 x y))
 
-(* The type of squashed types *)
+(* The type of propositions (sub-singleton types) *)
 let prop = a:Type0{is_prop a}
 
 (* A coercion down to prop *)
+
+(* CH: squash only lax checks, and not sure we can do better
+       since it has a non-trivial guard that seems hard to discharge
+       so early in this file;
+  squash also needs --use_two_phase_tc true *)
+#set-options "--lax"
+
 [@ "tac_opaque"]
-assume val squash : Type -> Tot prop
-//let squash : Type -> prop = fun p -> x:unit{p}
+let squash : Type -> Tot prop = fun p -> x:unit{p}
+
+#reset-options
 
 // the primitive refinements can still be accessed outside prims
 // but we don't expect user code to really use this

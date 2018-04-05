@@ -1,21 +1,40 @@
-* TODO P0 Give squash a definition
+* TODO P0 Give squash a definition (workaround now applied)
 
-- couldn't add a `prop` type annotation on squash (see above), so
+- couldn't add a `prop` type annotation on squash (see below), so
   assumed squash for now
 
 <dummy>(0,0-0,0): (Error 72) Identifier not found: [Prims.Tot]
 Module Prims resolved into Prims, which does not belong to the list of
 modules in scope, namely
 
+- With Guido's new definition of squash this lax checks:
+let squash : Type -> prop = fun p -> x:unit{p}
+- But still fails non-lax type-checking:
+Unexpected error; please file a bug report, ideally with a minimized
+version of the source program that triggered the error.
+Impossible: Got a computation Prims.Tot with effect args []
+
+- The main problem here seems to be that squash has a non-trivial VC
+  and it's too early in the file; just that the last error above
+  appears even if I put squash in Type -> Type
+
+- Tried to check only this definition laxly but that only made a
+  difference if squash is marked Type -> Type; if it's in Type -> prop
+  it still fails with the last error above
+
+- This last problem goes away with --use_two_phase_tc true!
+
 * TODO P1 Update typing rule for refinements to require `prop`
 ...  after type-checking squash / prims so that we get better errors
 and b2p has some chance of kicking in there too ... this is blocker
 for porting more examples without lots of pain
 
-CH: to be discussed, I still think we should do this, but for now
-    triggering b2p to go from bool to Type0 too
+- for now triggering b2p to go from bool to Type0 too (stop-gap)
 
-* TODO P0 Still need to replace the `logic` qualifier with `prop`
+- the solution we discussed is to desugar all uses of refinements
+  in user code to `t_refine` in prims
+
+* TODO P0 Replace the `logic` qualifier with `prop`
 
 * TODO P0 Get rid of all the newly introduced admits in:
 ** FStar.Squash.fst (4, Giving squash a definition)
@@ -23,3 +42,53 @@ CH: to be discussed, I still think we should do this, but for now
 ** FStar.List.Tot.Properties (2 adjacent ones, Giving squash a definition)
 ** FStar.TSet.fst (strange! 2)
 ** FStar.Monotonic.Heap.fst (strange! 1 assume; WIP!)
+* TODO P1 Carefully review all the uses of Type(0) in the type-checker
+
+There are 20+ hard-coded uses of `Type0` in the type-checker and my
+guess is that quite a few of them will have to point at `prop` now.
+Plus there are also uses of Type(u) (ktypeu?), where the type-checker
+is used to infer that u=0.
+
+[hritcu@resurrected src]$ grep -R ktype0 | grep .fs | grep -v Binary                                               (git)-[c_prop-dev] 
+syntax/FStar.Syntax.Util.fs:let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
+syntax/FStar.Syntax.Util.fs:                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) None dummyRange
+typechecker/FStar.TypeChecker.Util.fs:        else Inl (Rel.new_uvar r vars U.ktype0 |> fst), false
+typechecker/FStar.TypeChecker.Util.fs:                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
+typechecker/FStar.TypeChecker.Util.fs:                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
+typechecker/FStar.TypeChecker.Util.fs:                then [], U.ktype0, true
+typechecker/FStar.TypeChecker.Tc.fs:              let g_opt = Rel.try_teq true env rt U.ktype0 in
+typechecker/FStar.TypeChecker.Normalize.fs:                        let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
+typechecker/FStar.TypeChecker.Normalize.fs:                        let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
+typechecker/FStar.TypeChecker.DMFF.fs:    let star_once typ = U.arrow [S.mk_binder <| S.new_bv None typ] (S.mk_Total U.ktype0) in
+typechecker/FStar.TypeChecker.DMFF.fs:    mk_Total U.ktype0
+typechecker/FStar.TypeChecker.DMFF.fs:                mk_Total U.ktype0))
+typechecker/FStar.TypeChecker.DMFF.fs:  U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0))
+typechecker/FStar.TypeChecker.DMFF.fs:            (Some (U.residual_tot U.ktype0))
+typechecker/FStar.TypeChecker.DMFF.fs:    let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
+typechecker/FStar.TypeChecker.DMFF.fs:      let s_e2 = U.abs x_binders s_e2 (Some (U.residual_tot U.ktype0)) in
+typechecker/FStar.TypeChecker.DMFF.fs:      U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0)),
+typechecker/FStar.TypeChecker.Rel.fs:        let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
+typechecker/FStar.TypeChecker.Rel.fs:     logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed;
+typechecker/FStar.TypeChecker.Rel.fs:    logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed?
+typechecker/FStar.TypeChecker.TcTerm.fs:      | Const_effect -> U.ktype0 //NS: really?
+typechecker/FStar.TypeChecker.TcTerm.fs:   | Tm_quoted _ -> U.ktype0
+smtencoding/FStar.SMTEncoding.Encode.fs:                | None -> FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst
+tests/FStar.Tests.Unif.fs:    else let t, _ = Rel.new_uvar dummyRange [] U.ktype0 in
+
+After a first round of changes in Redmond this looks like this:
+[hritcu@resurrected src]$ grep -R ktype0 | grep .fs | grep -v Binary                                               (git)-[c_prop-dev] 
+syntax/FStar.Syntax.Util.fs:let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
+syntax/FStar.Syntax.Util.fs:                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) None dummyRange
+typechecker/FStar.TypeChecker.Util.fs:        else Inl (Rel.new_uvar r vars U.ktype0 |> fst), false
+typechecker/FStar.TypeChecker.Util.fs:                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
+typechecker/FStar.TypeChecker.Util.fs:                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
+typechecker/FStar.TypeChecker.Util.fs:      let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (if is_prop t then U.kprop else U.ktype0)) in
+typechecker/FStar.TypeChecker.Util.fs:                then [], U.ktype0, true
+typechecker/FStar.TypeChecker.Tc.fs:              let g_opt = Rel.try_teq true env rt U.ktype0 in
+typechecker/FStar.TypeChecker.Rel.fs:        let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
+typechecker/FStar.TypeChecker.Rel.fs:     logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed;
+typechecker/FStar.TypeChecker.Rel.fs:    logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed?
+typechecker/FStar.TypeChecker.TcTerm.fs:      | Const_effect -> U.ktype0 //NS: really?
+typechecker/FStar.TypeChecker.TcTerm.fs:   | Tm_quoted _ -> U.ktype0
+smtencoding/FStar.SMTEncoding.Encode.fs:                | None -> FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst
+tests/FStar.Tests.Unif.fs:    else let t, _ = Rel.new_uvar dummyRange [] U.ktype0 in
