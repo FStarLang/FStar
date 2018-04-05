@@ -381,7 +381,7 @@ assume val string_of_int: int -> Tot string
 (* Marking terms for normalization *)
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:Type0) :Type0 = a
+abstract let normalize (p:prop) : prop = p
 
 abstract
 noeq type norm_step =
@@ -431,7 +431,7 @@ irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
 let with_type (#t:Type) (e:t) = e
 
 let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
-let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
+let normalize_spec (a: prop) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
 
 // TODO: we might add a coercion to convert sub-singletons to prop,

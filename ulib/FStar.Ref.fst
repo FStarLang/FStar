@@ -16,13 +16,13 @@ abstract let upd (#a:Type0) (h:heap) (r:ref a) (v:a) :GTot (h1:heap{h1 == Heap.u
 
 abstract let addr_of (#a:Type0) (r:ref a) :GTot (n:nat{n == Heap.addr_of r}) = addr_of r
 
-abstract let contains (#a:Type0) (h:heap) (r:ref a) :GTot (p:Type0{p <==> Heap.contains h r})
+abstract let contains (#a:Type0) (h:heap) (r:ref a) :GTot (p:prop{p <==> Heap.contains h r})
   = Heap.contains h r
 
-abstract let unused_in (#a:Type0) (r:ref a) (h:heap) :GTot (p:Type0{p <==> Heap.unused_in r h})
+abstract let unused_in (#a:Type0) (r:ref a) (h:heap) :GTot (p:prop{p <==> Heap.unused_in r h})
   = Heap.unused_in r h
 
-abstract let fresh (#a:Type0) (r:ref a) (h0:heap) (h1:heap) :GTot (p:Type0{p <==> Heap.fresh r h0 h1})
+abstract let fresh (#a:Type0) (r:ref a) (h0:heap) (h1:heap) :GTot (p:prop{p <==> Heap.fresh r h0 h1})
   = Heap.fresh r h0 h1
 
 abstract let only (#a:Type0) (r:ref a) :GTot (s:Set.set nat{s == Heap.only r})

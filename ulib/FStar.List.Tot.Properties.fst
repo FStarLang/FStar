@@ -421,7 +421,7 @@ let rec mem_memP
 : Lemma (ensures (mem x l <==> memP x l))
 = match l with
   | [] -> ()
-  | a :: q -> mem_memP x q
+  | a :: q -> mem_memP x q; admit() // TODO
 
 (** The empty list has no elements. *)
 val memP_empty : #a: Type -> x:a ->
@@ -436,7 +436,7 @@ val memP_existsb: #a: Type -> f:(a -> Tot bool) -> xs:list a ->
 let rec memP_existsb #a f xs =
   match xs with
   | [] -> ()
-  | hd::tl -> memP_existsb f tl
+  | hd::tl -> memP_existsb f tl; admit() // TODO
 
 let rec memP_map_intro
   (#a #b: Type)
@@ -449,7 +449,7 @@ let rec memP_map_intro
   (decreases l)
 = match l with
   | [] -> ()
-  | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
+  | _ :: q -> memP_map_intro f x q; admit() // TODO (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
 
 let rec memP_map_elim
   (#a #b: Type)
@@ -462,7 +462,7 @@ let rec memP_map_elim
   (decreases l)
 = match l with
   | [] -> ()
-  | _ :: q -> memP_map_elim f y q
+  | _ :: q -> memP_map_elim f y q; admit() // TODO
 
 (** Properties of [noRepeats] *)
 let noRepeats_nil
@@ -575,7 +575,7 @@ let rec assoc_memP_some
   (decreases l)
 = match l with
   | [] -> ()
-  | (x', _) :: q -> if x = x' then () else assoc_memP_some x y q
+  | (x', _) :: q -> if x = x' then () else assoc_memP_some x y q; admit() // TODO
 
 let rec assoc_memP_none
   (#a: eqtype)
@@ -613,14 +613,14 @@ let rec fold_left_invar
   (#a #b: Type)
   (f: (a -> b -> Tot a))
   (l: list b)
-  (p: (a -> Tot Type0))
+  (p: (a -> Tot prop))
   : Lemma
   (requires forall (x: a) (y: b) . p x ==> memP y l ==> p (f x y) )
   (ensures forall (x: a) . p x ==> p (fold_left f x l))
 =
   match l with
   | [] -> ()
-  | y :: q -> fold_left_invar f q p
+  | y :: q -> fold_left_invar f q p; admit() // TODO
 
 let rec fold_left_map
   (#a #b #c: Type)
@@ -727,7 +727,7 @@ let rec strict_prefix_of_nil (#a: Type) (x: a) (l: list a)
   (ensures (strict_prefix_of [] (x::l)))
   (decreases l)
 = match l with
-  | [] -> ()
+  | [] -> (); admit() // TODO
   | a' :: q -> strict_prefix_of_nil a' q
 
 let strict_prefix_of_or_eq_nil (#a: Type) (l: list a)
@@ -740,7 +740,7 @@ let strict_prefix_of_or_eq_nil (#a: Type) (l: list a)
 let strict_prefix_of_cons (#a: Type) (x: a) (l: list a) :
   Lemma
   (ensures (strict_prefix_of l (x::l)))
-= ()
+= (); admit() // TODO
 
 let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
 : Lemma
@@ -770,7 +770,7 @@ let rec map_strict_prefix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: lis
 = match l2 with
   | [] -> ()
   | a::q ->
-    map_strict_prefix_of f l1 q
+    map_strict_prefix_of f l1 q; admit() // TODO
 
 let rec mem_strict_prefix_of (#a: eqtype) (l1: list a) (m: a) (l2: list a)
 : Lemma

@@ -261,6 +261,6 @@ let gref_of a t rel =
 
 let ref_of h a t rel = ref_of' h a t rel
 
-let aref_live_at_aref_of h #t #rel r = ()
+let aref_live_at_aref_of h #t #rel r = admit() // TODO
 let contains_gref_of h a t rel = ()
 let aref_of_gref_of a t rel = ()

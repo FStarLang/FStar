@@ -464,8 +464,8 @@ private abstract let test_sort :unit = assert (sortWith (compare_of_bool (<)) [3
 
 (** A l1 is a strict prefix of l2. *)
 
-let rec strict_prefix_of (#a: Type) (l1 l2: list a)
-: Pure prop
+let rec strict_prefix_of (#a: Type) (l1 l2: list a) :
+Pure prop
   (requires True)
   (ensures (fun _ -> True))
   (decreases l2)

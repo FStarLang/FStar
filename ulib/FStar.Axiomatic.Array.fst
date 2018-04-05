@@ -29,7 +29,7 @@ assume val length   : #a:Type -> seq a -> Tot nat
 assume val slice    : #a:Type -> seq a -> int -> int -> Tot (seq a)
 assume val append   : #a:Type -> seq a -> seq a -> Tot (seq a)
 assume val proj_some: #a:Type -> seq (option a) -> Tot (seq a)
-assume type equal          : #a:Type -> seq a -> seq a -> Type
+assume type equal   : #a:Type -> seq a -> seq a -> prop
 type array (a:Type) = ref (seq a)
 
 assume LengthConst:  forall (a:Type) (n:int) (v:a).{:pattern (length (create n v))} 
@@ -60,10 +60,10 @@ assume IndexSlice:   forall (a:Type) (s:seq a) (i:int) (j:int) (k:int). {:patter
 assume LengthAppend: forall (a:Type) (s1:seq a) (s2:seq a). {:pattern (length (append s1 s2))} 
                      length (append s1 s2) == length s1 + length s2
 
-assume IndexAppend:  forall (a:Type) (s1:seq a) (s2:seq a) (i:int). {:pattern (index (append s1 s2) i)}
-                     if (0 <= i && i < length s1) 
-                     then index (append s1 s2) i == index s1 i
-                     else index (append s1 s2) i == index s2 (i - length s1)
+// assume IndexAppend:  forall (a:Type) (s1:seq a) (s2:seq a) (i:int). {:pattern (index (append s1 s2) i)}
+//                      if (0 <= i && i < length s1)
+//                      then index (append s1 s2) i == index s1 i
+//                      else index (append s1 s2) i == index s2 (i - length s1)
 
 assume SeqEquals:    forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (equal s1 s2)} 
                      equal s1 s2
@@ -91,4 +91,3 @@ assume EmpConst:     forall (a:Type) (s:seq a).{:pattern (length s)}
                      ==> s==emp a
 
 type is_Some_All (a:Type) (s:seq (option a)) = (forall (i:int). (0 <= i /\ i < length s) ==> Some? (index s i))
-

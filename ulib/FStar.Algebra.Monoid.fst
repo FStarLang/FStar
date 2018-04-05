@@ -128,7 +128,7 @@ let monoid_morphism_unit_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid 
 let monoid_morphism_mult_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   forall (x y:a). Monoid?.mult mb (f x) (f y) == f (Monoid?.mult ma x y)
 
-type monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
+noeq type monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   | MonoidMorphism :
     unit:squash (monoid_morphism_unit_lemma f ma mb) ->
     mult:squash (monoid_morphism_mult_lemma f ma mb) ->
@@ -141,6 +141,7 @@ let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
 =
   MonoidMorphism () ()
 
+(* TODO
 let embed_nat_int (n:nat) : int = n
 let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 
@@ -191,3 +192,4 @@ let left_action_morphism
     (la:left_action mma a)
     (lb:left_action mmb b)
 = forall (g:ma) (x:a). LAct?.act lb (mf g) (f x) == f (LAct?.act la g x)
+*)

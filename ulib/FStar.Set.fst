@@ -20,7 +20,7 @@ module FStar.Set
 open FStar.FunctionalExtensionality
 
 abstract type set (a:eqtype) :Type u#a = a -> Tot bool
-abstract type equal (#a:eqtype) (s1:set a) (s2:set a) = feq s1 s2
+abstract type equal (#a:eqtype) (s1:set a) (s2:set a) : prop = feq s1 s2
 
 (* destructors *)
 
@@ -46,7 +46,7 @@ let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
 
 
 (* ops *)
-type subset (#a:eqtype) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
+type subset (#a:eqtype) (s1:set a) (s2:set a) : prop = forall x. mem x s1 ==> mem x s2
 
 (* Properties *)
 abstract val mem_empty: #a:eqtype -> x:a -> Lemma

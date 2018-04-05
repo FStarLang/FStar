@@ -26,7 +26,7 @@ module W = FStar.Monotonic.Witnessed
 new_effect GST = STATE_h heap
 
 let gst_pre           = st_pre_h heap
-let gst_post' (a:Type) (pre:Type) = st_post_h' heap a pre
+let gst_post' (a:Type) (pre:prop) = st_post_h' heap a pre
 let gst_post  (a:Type) = st_post_h heap a
 let gst_wp (a:Type)   = st_wp_h heap a
 
@@ -40,12 +40,12 @@ let heap_rel (h1:heap) (h2:heap) =
 assume val gst_get: unit    -> GST heap (fun p h0 -> p h0 h0)
 assume val gst_put: h1:heap -> GST unit (fun p h0 -> heap_rel h0 h1 /\ p () h1)
 
-type heap_predicate = heap -> Type0
+type heap_predicate = heap -> prop
 
 let stable (p:heap_predicate) =
   forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2
 
-abstract let witnessed (p:heap_predicate{stable p}) :Type0 = W.witnessed heap_rel p
+abstract let witnessed (p:heap_predicate{stable p}) : prop = W.witnessed heap_rel p
 
 assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
@@ -126,4 +126,3 @@ abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
 type ref (a:Type0) = mref a (trivial_preorder a)
 
 let modifies_none (h0:heap) (h1:heap) = modifies !{} h0 h1
-

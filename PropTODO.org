@@ -38,6 +38,20 @@ for porting more examples without lots of pain
 
 * TODO P0 Get rid of all the newly introduced admits:
 ** FStar.TSet.fst (strange! 1 out of 2 left)
+** FStar.Algebra.Monoid.fst (commented out the end)
+** FStar.List.Tot.Properties.fst (everything related to memP, recursive prop)
+- mem_memP
+- memP_existsb
+- memP_map_intro
+- memP_map_elim
+- assoc_memP_some
+- fold_left_invar
+- strict_prefix_of_nil (another recursive prop)
+- map_strict_prefix_of
+** FStar.Axiomatic.Array
+- IndexAppend caused some bogus assertion failed
+** FStar.DependentMap (used lax for 2 definitions)
+** FStar.Monotonic.Heap.fst (admit in aref_live_at_aref_of)
 * TODO P1 Fix Z3 errors related to reshuffling in prims:
 <dummy>(0,0-0,0): (Warning 276) Prims: Unexpected output from Z3:
 (error "line 1370 column 4: unknown function/constant Prims.hasEq")
@@ -97,3 +111,27 @@ typechecker/FStar.TypeChecker.TcTerm.fs:      | Const_effect -> U.ktype0 //NS: r
 typechecker/FStar.TypeChecker.TcTerm.fs:   | Tm_quoted _ -> U.ktype0
 smtencoding/FStar.SMTEncoding.Encode.fs:                | None -> FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst
 tests/FStar.Tests.Unif.fs:    else let t, _ = Rel.new_uvar dummyRange [] U.ktype0 in
+* TODO P1 Type inference doesn't work so well for prop
+** There are many examples but here is one from FStar.Seq.Base.fst,
+the prop annotation is currently needed!
+
+abstract type equal (#a:Type) (s1:seq a) (s2:seq a) : prop =
+  (length s1 = length s2
+   /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
+
+abstract val eq: #a:eqtype -> s1:seq a -> s2:seq a -> Tot (r:bool{r <==> equal s1 s2})
+
+** Same thing in FStar.Seq.Properties.fst:
+type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
+       (forall i. count i s1 = count i s2)
+val lemma_swap_permutes: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
+  (permutation a s (swap s i j))
+* TODO P1 Refinement of eqtype no longer an eqtype?
+** From ulib/FStar.DependentMap.fst (fails with both Type0 and prop):
+abstract let restrict
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (p: (key -> Tot prop))
+  (m: t key value)
+: Tot (t (k: key {p k}) value)
+= { mappings = m.mappings }

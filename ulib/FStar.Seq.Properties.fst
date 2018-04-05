@@ -296,7 +296,7 @@ let lemma_swap_permutes_aux #a s i j x =
 #reset-options
 
 #set-options "--max_fuel 0 --initial_fuel 0"
-type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
+type permutation (a:eqtype) (s1:seq a) (s2:seq a) : prop =
        (forall i. count i s1 = count i s2)
 val lemma_swap_permutes: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
   (permutation a s (swap s i j))
@@ -675,13 +675,13 @@ let rec lemma_index_is_nth #a s i =
   )
 
 ////////////////////////////////////////////////////////////////////////////////
-//s `contains` x : Type0
+//s `contains` x : prop
 //    An undecidable version of `mem`, 
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
-abstract let contains (#a:Type) (s:seq a) (x:a) : Tot Type0 = 
+abstract let contains (#a:Type) (s:seq a) (x:a) : Tot prop = 
   exists (k:nat). k < Seq.length s /\ Seq.index s k == x
-    
+
 let contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
   : Lemma (k < Seq.length s /\ Seq.index s k == x
 	    ==>
@@ -767,7 +767,7 @@ let rec find_l_none_no_index #a s f =
 
 let suffix_of
   (#a: Type)
-  (s_suff s: seq a)
+  (s_suff s: seq a) : prop
 = exists s_pref . (s == append s_pref s_suff)
 
 let cons_head_tail

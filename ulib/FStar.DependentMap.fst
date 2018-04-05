@@ -73,7 +73,7 @@ abstract let equal
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (m1 m2: t key value)
-: Tot Type0
+: Tot prop
 = forall k . sel m1 k == sel m2 k
 
 abstract let equal_intro
@@ -106,6 +106,8 @@ assume val equal_elim
   (ensures (m1 == m2))
   [SMTPat (equal m1 m2)]
 
+#set-options "--lax" // TODO
+
 abstract let restrict
   (#key: eqtype)
   (#value: (key -> Tot Type))
@@ -117,13 +119,15 @@ abstract let restrict
 abstract let sel_restrict
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: (key -> Tot Type0))
+  (p: (key -> Tot prop))
   (m: t key value)
   (k: key {p k})
 : Lemma
   (requires True)
   (ensures (sel (restrict p m) k == sel m k))
 = ()
+
+#reset-options
 
 let concat_value
   (#key1: eqtype)
