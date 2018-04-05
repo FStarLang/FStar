@@ -1677,11 +1677,6 @@ let check_exports env (modul:modul) exports =
 (*
  * extract an interface from m
  * this function uses the environment ONLY for unfolding effect abbreviations to see if the effect is reifiable etc.
- * so, for effects defined in the current module, we will add them to en for rest of the module
- * therefore, effect related sigelts are the ONLY sigelts that will be added to en in the process of extracting the interface
- * for all other sigelts, it is simply threaded through, see the extract_sigelt function
- *
- * (caller anyway will take care of pop etc.)
  *)
 let extract_interface (en:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
@@ -1730,7 +1725,7 @@ let extract_interface (en:env) (m:modul) :modul =
   (*
    * When do we keep the body of the letbinding in the interface ...
    *)
-  let should_keep_lbdef (en:env) (t:typ) :bool =
+  let should_keep_lbdef (t:typ) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
     in 
@@ -1748,7 +1743,7 @@ let extract_interface (en:env) (m:modul) :modul =
      else Env.is_reifiable_effect en (comp_effect_name c))
   in
 
-  let extract_sigelt (en:env) (s:sigelt) :(env * list<sigelt>) =
+  let extract_sigelt (s:sigelt) :list<sigelt> =
     match s.sigel with
     | Sig_inductive_typ _
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
@@ -1758,26 +1753,25 @@ let extract_interface (en:env) (m:modul) :modul =
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
-        en,
-        List.fold_left (fun sigelts s ->
+        sigelts |> List.fold_left (fun sigelts s ->
           match s.sigel with
           | Sig_inductive_typ (lid, _, _, _, _, _) -> abstract_inductive_tycons := lid::!abstract_inductive_tycons; (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons
-          | _ -> failwith "Impossible! Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
-        ) [] sigelts
-      else en, [s]  //if it is not abstract, retain as is
+          | _ -> failwith "Impossible! extract_interface: Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
+        ) []
+      else [s]  //if it is not abstract, retain the bundle as is
     | Sig_declare_typ (lid, uvs, t) ->
       //if it's a projector or discriminator of an abstract inductive, got to go
-      if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then en, []
+      if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       //if it's an assumption, no let is coming, so add it as is
-      else if is_assume s.sigquals then en, [ { s with sigquals = filter_out_abstract s.sigquals } ]
+      else if is_assume s.sigquals then [ { s with sigquals = filter_out_abstract s.sigquals } ]
       //else leave the decision to let
-      else en, []
+      else []
     | Sig_let (lbs, lids) ->
       //if it's a projector or discriminator of an abstract inductive, got to go
-      if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then en, []
+      if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
       else
         //extract the type annotations from all the letbindings
         let flbs, slbs = lbs in
@@ -1786,31 +1780,28 @@ let extract_interface (en:env) (m:modul) :modul =
         let is_lemma = List.existsML (fun (_, t) -> t |> U.is_lemma) typs in
         //if is it abstract or irreducible or lemma, keep just the vals
         let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
-        if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then en, vals
+        if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
         else 
-          let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef en) typs in
-          if should_keep_defs then en, [ s ]
-          else en, vals
+          let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
+          if should_keep_defs then [ s ]
+          else vals
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
       let is_haseq = TcInductive.is_haseq_lid lid in
       if is_haseq then
         let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcInductive.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
-        if is_haseq_of_abstract_inductive then en, [ { s with sigquals = filter_out_abstract s.sigquals } ]
-        else en, []
-      else en, [ { s with sigquals = filter_out_abstract s.sigquals } ]
+        if is_haseq_of_abstract_inductive then [ { s with sigquals = filter_out_abstract s.sigquals } ]
+        else []
+      else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_new_effect_for_free _
     | Sig_sub_effect _
-    | Sig_effect_abbrev _ -> Env.push_sigelt en s, [s]  //per the comment at the beginning of this function, only place where we extend the environment
-    | Sig_pragma _ -> en, [s]
+    | Sig_effect_abbrev _ -> [s]
+    | Sig_pragma _ -> [s]
   in
 
-  {
-    m with declarations = m.declarations |> List.fold_left (fun (en, l) s -> extract_sigelt en s |> (fun (en, l') -> en, l@l')) (en, []) |> snd;
-    is_interface = true
-  }
+  { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }
 
 //AR: moving these push and pop functions from Universal, using them in extracting interface etc.
 let pop_context env msg =
@@ -1852,25 +1843,21 @@ let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
 and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
-    //pop AND use the old env for rest of the function
-    let en0 = pop_context en ("Ending modul " ^ m.name.str) in
-
-    (* extract interface block *)
-    //push new context for extracting the interface
-    let en0 = push_context en0 ("Extracting interface for " ^ m.name.str) in
-    let modul_iface = extract_interface en0 m in
+    //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
+    let modul_iface = extract_interface en m in
     if Env.debug en <| Options.Low then
       BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
                 (if Options.should_verify m.name.str then "" else " (in lax mode) ")
                 (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
                 (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
-    let en0 = pop_context en0 ("Ending interface extraction for " ^ m.name.str) in 
-    (* end extract interface block *)
 
-    //set up the environment to verify the extracted interface
+    //set up the environment to verify the interface
     let en0 =
-      //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from env
+      //pop to get the env before this module type checking
+      let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+      //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from latest env
       let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
+      //restore command line options ad restart z3 (to reset things like nl.arith options)
       if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
         Options.restore_cmd_line_options true |> ignore;
         z3_reset_options en0
@@ -1879,7 +1866,7 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
     in
 
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
-    if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
+    if must_be_none <> None then failwith "Impossible! finish_partial_module: expected the second component to be None"
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
