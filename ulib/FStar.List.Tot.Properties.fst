@@ -369,7 +369,7 @@ let rec sorted f = function
 
 (** [f] is a total order if, and only if, it is reflexive,
 anti-symmetric, transitive and total. *)
-type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
+type total_order (#a:Type) (f: (a -> a -> Tot bool)) : prop =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 == a2)          (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
@@ -800,11 +800,10 @@ let rec strict_prefix_of_exists_append
 	  (exists l3 . l2 == append l3 l1)
 	  #_
 	  #(fun l3 -> q == append l3 l1)
-	  (admit()) // TODO (strict_prefix_of_exists_append l1 q)
-          (admit())) // TODO
-	  // (fun l3 ->
-	  //    FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
-	  //    ))
+	  (strict_prefix_of_exists_append l1 q)
+	  (fun l3 ->
+	     FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
+	     ))
 
 let strict_prefix_of_or_eq_exists_append
   (#a: Type)

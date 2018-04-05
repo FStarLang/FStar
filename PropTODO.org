@@ -1,7 +1,7 @@
 * TODO P0 Give squash a definition (workaround now applied)
 
 - couldn't add a `prop` type annotation on squash (see below), so
-  assumed squash for now
+  originally assumed squash
 
 <dummy>(0,0-0,0): (Error 72) Identifier not found: [Prims.Tot]
 Module Prims resolved into Prims, which does not belong to the list of
@@ -36,12 +36,17 @@ for porting more examples without lots of pain
 
 * TODO P0 Replace the `logic` qualifier with `prop`
 
-* TODO P0 Get rid of all the newly introduced admits in:
-** FStar.Squash.fst (4, Giving squash a definition)
-** FStar.Classical.fst (many, Giving squash a definition)
-** FStar.List.Tot.Properties (2 adjacent ones, Giving squash a definition)
-** FStar.TSet.fst (strange! 2)
-** FStar.Monotonic.Heap.fst (strange! 1 assume; WIP!)
+* TODO P0 Get rid of all the newly introduced admits:
+** FStar.TSet.fst (strange! 1 out of 2 left)
+* TODO P1 Fix Z3 errors related to reshuffling in prims:
+<dummy>(0,0-0,0): (Warning 276) Prims: Unexpected output from Z3:
+(error "line 1370 column 4: unknown function/constant Prims.hasEq")
+(error "line 1569 column 4: unknown function/constant Prims.hasEq")
+(error "line 1741 column 85: unknown function/constant Prims.hasEq")
+(error "line 1876 column 4: unknown function/constant Prims.hasEq")
+(error "line 1990 column 4: unknown function/constant Prims.hasEq")
+(error "line 2350 column 7: named expression already defined")
+(error "line 5738 column 7: named expression already defined")
 * TODO P1 Carefully review all the uses of Type(0) in the type-checker
 
 There are 20+ hard-coded uses of `Type0` in the type-checker and my

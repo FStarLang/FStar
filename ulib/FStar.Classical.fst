@@ -2,7 +2,7 @@ module FStar.Classical
 open FStar.Squash
 
 val give_witness: #a:prop -> a -> Lemma (ensures a)
-let give_witness #a x = admit() // TODO: return_squash x
+let give_witness #a x = return_squash x
 
 val get_squashed (#b:Type) (a:prop) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
 let get_squashed #b a =
@@ -27,10 +27,10 @@ let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (retu
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 val forall_intro_gtot  : #a:Type -> #p:(a -> GTot prop) -> $f:(x:a -> GTot (p x)) -> Tot (squash (forall (x:a). p x))
-let forall_intro_gtot #a #p $f = return_squash #(forall (x:a). p x) (admit()) // TODO: ()
+let forall_intro_gtot #a #p $f = return_squash #(forall (x:a). p x) ()
 
 val lemma_forall_intro_gtot  : #a:Type -> #p:(a -> GTot prop) -> $f:(x:a -> GTot (p x)) -> Lemma (forall (x:a). p x)
-let lemma_forall_intro_gtot #a #p $f = admit() // TODO: forall_intro_gtot #a #p f
+let lemma_forall_intro_gtot #a #p $f = forall_intro_gtot #a #p f
 
 val gtot_to_lemma  : #a:Type -> #p:(a -> GTot prop) -> $f:(x:a -> GTot (p x)) -> x:a -> Lemma (p x)
 let gtot_to_lemma #a #p $f x = give_proof #(p x) (return_squash (f x))
@@ -42,7 +42,7 @@ val forall_intro_squash_gtot  : #a:Type -> #p:(a -> GTot prop) -> $f:(x:a -> GTo
 let forall_intro_squash_gtot #a #p $f =
   bind_squash #(x:a -> GTot (p x)) #(forall (x:a). p x)
 	      (squash_double_arrow #a #p (return_squash f))
-	      (admit()) // TODO: (fun f -> lemma_forall_intro_gtot #a #p f)
+	      (fun f -> lemma_forall_intro_gtot #a #p f)
 
 //This one seems more generally useful than the one above
 val forall_intro_squash_gtot_join  : #a:Type -> #p:(a -> GTot prop) -> $f:(x:a -> GTot (squash (p x))) -> Tot (forall (x:a). p x)
@@ -50,10 +50,10 @@ let forall_intro_squash_gtot_join #a #p $f =
   join_squash
     (bind_squash #(x:a -> GTot (p x)) #(forall (x:a). p x)
 	      (squash_double_arrow #a #p (return_squash f))
-	      (admit())) // TODO: (fun f -> lemma_forall_intro_gtot #a #p f))
+	      (fun f -> lemma_forall_intro_gtot #a #p f))
 
 val forall_intro  : #a:Type -> #p:(a -> GTot prop) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-let forall_intro #a #p $f = admit() // TODO: forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
+let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
 
 val forall_intro'  : #a:Type -> #p:(a -> GTot prop) -> f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro' #a #p f = forall_intro f
@@ -94,8 +94,8 @@ let impl_intro (#p #q:prop) ($f: p -> Lemma q) : Lemma (p ==> q)  =
 
 val exists_elim: goal:prop -> #a:Type -> #p:(a -> prop) -> $have:squash (exists (x:a). p x) -> f:(x:a{p x} -> GTot (squash goal)) ->
   Lemma goal
-let exists_elim goal #a #p have f = admit()
-// TODO:  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
+let exists_elim goal #a #p have f =
+  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
 
 let move_requires (#a:Type) (#p #q:(a -> prop))
   ($f:(x:a -> Lemma (requires (p x)) (ensures (q x)))) (x:a)
@@ -106,7 +106,7 @@ let move_requires (#a:Type) (#p #q:(a -> prop))
           bind_squash b (fun (b' : c_or (p x) (~(p x))) ->
             match b' with
             | Left hp -> give_witness hp; f x; get_proof (p x ==> q x)
-            | Right hnp -> admit() // give_witness hnp
+            | Right hnp -> give_witness hnp
           )))
 
 val forall_impl_intro :
@@ -123,16 +123,13 @@ let forall_impl_intro #a #p #q $f =
 val impl_intro_gen
   (#p: prop)
   (#q: (h: squash p) -> Tot prop)
-  (f: (x: squash p) -> Lemma (q (admit()))) // TODO: ()
-: Lemma (p ==> q (admit())) // TODO: ()
+  (f: (x: squash p) -> Lemma (q ()))
+: Lemma (p ==> q ())
 let impl_intro_gen #p #q f =
   let g () : Lemma
     (requires p)
-    (ensures (p ==> q  (admit()) // TODO: ()
-  ))
-  =
-   give_proof #(q (admit()) // TODO: ()
-  ) (admit()) // TODO: (f (get_proof p))
+    (ensures (p ==> q  () ))
+  = give_proof #(q ()) (f (get_proof p))
   in
   move_requires g ()
 
@@ -148,19 +145,19 @@ let ghost_lemma #a #p #q $f =
           bind_squash b (fun (b' : c_or (p x) (~(p x))) ->
             match b' with
             | Left hp -> give_witness hp; f x; get_proof (p x ==> q x ())
-            | Right hnp -> (admit()) // TODO: give_witness hnp
+            | Right hnp -> give_witness hnp
           ))))
  in forall_intro lem
  
 let or_elim
   (#l #r: prop)
   (#goal: (squash (l \/ r) -> Tot prop))
-  (hl: squash l -> Lemma (goal (admit()))) // TODO: ()
-  (hr: squash r -> Lemma (goal (admit()))) // TODO: ()
+  (hl: squash l -> Lemma (goal ()))
+  (hr: squash r -> Lemma (goal ()))
 : Lemma
-  ((l \/ r) ==> goal (admit())) // TODO: ()
-= impl_intro_gen #l #(fun _ -> goal (admit())) hl; // TODO: ()
-  impl_intro_gen #r #(fun _ -> goal (admit())) hr // TODO: ()
+  ((l \/ r) ==> goal ())
+= impl_intro_gen #l #(fun _ -> goal ()) hl;
+  impl_intro_gen #r #(fun _ -> goal ()) hr
 
 ////////////////////////////////////////////////////////////////////////////////
 (* the most standard variant of excluded middle is provable by SMT *)

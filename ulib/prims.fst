@@ -237,6 +237,10 @@ effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
 effect Tot (a:Type) = PURE a (pure_null_wp a)
 
+// Sanity check that the squash definition above is well-typed
+// once Pure and Tot are fully set up
+let squash' : Type -> Tot prop = fun p -> x:unit{p}
+
 total new_effect GHOST = PURE
 
 unfold let purewp_id (a:Type) (wp:pure_wp a) = wp

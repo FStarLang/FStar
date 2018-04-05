@@ -126,7 +126,7 @@ private let lemma_mem_tset_of_set_r (#a:eqtype) (s:Set.set a) (x:a)
   :Lemma (requires True)
          (ensures (Set.mem x s ==> mem x (tset_of_set s)))
   = if Set.mem x s then
-      let u:squash (b2p (Set.mem x s)) = admit() in // TODO
+      let u:squash (b2p (Set.mem x s)) = () in
       let _ = assert (mem x (tset_of_set s) == squash (b2p (Set.mem x s))) in
       FStar.Squash.give_proof u
     else ()

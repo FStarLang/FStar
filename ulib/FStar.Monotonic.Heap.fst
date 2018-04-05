@@ -50,7 +50,6 @@ let sel_tot #a #rel h r =
   let Some (| b, _, _, x |) = h.memory r.addr in
   assert(h `contains` r);
   assert(Some? (h.memory r.addr));
-  assume(b===a); // CH: TODO very strange
   x
 
 let sel #a #rel h r =
