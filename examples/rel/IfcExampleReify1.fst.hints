@@ -89,7 +89,6 @@
         "equality_tok_IfcRulesReify.Low@tok",
         "equality_tok_WhileReify.Plus@tok",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
-        "equation_FStar.DM4F.Heap.IntStoreFixed.upd",
         "equation_FStar.DM4F.IntStoreExcFixed.write",
         "equation_FStar.DM4F.IntStoreFixedReader.read",
         "equation_IfcExampleReify1.c1_3", "equation_IfcExampleReify1.c1_4",

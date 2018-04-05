@@ -54,7 +54,7 @@ let set_hint_correlator env se =
       let n_opt = BU.smap_try_find tbl lid.str in
       if is_some n_opt then n_opt |> must else 0
     in
-
+    
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
@@ -389,7 +389,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               //AR: TODO: FIXME: why is usubst not shifted before applying to action_defn and action_typ?
               { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
           in
-
+          
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
@@ -400,7 +400,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               if lid_equals c.effect_name ed.mname then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args)))) else act.action_typ
             | _ -> act.action_typ
           in
-
+          
           let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
 
           // 1) Check action definition, setting its expected type to
@@ -683,7 +683,7 @@ let cps_and_elaborate env ed =
               (Some rc_gtot)
 
       | _ ->
-          raise_error (Errors.Fatal_UnexpectedReturnShape, (BU.format1 "unexpected shape for return: %s" (Print.term_to_string return_wp)))
+          raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
   in
 
   let return_wp =
@@ -692,7 +692,7 @@ let cps_and_elaborate env ed =
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
         U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
-        raise_error (Errors.Fatal_UnexpectedReturnShape, (BU.format1 "unexpected shape for return: %s" (Print.term_to_string return_wp)))
+        raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
   in
   let bind_wp =
     match (SS.compress bind_wp).n with
@@ -1252,7 +1252,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       end
       else phi
     in
-
+    
     let phi = tc_assume env phi r in
     let us, phi =
       if us = [] then TcUtil.generalize_universes env phi
@@ -1567,7 +1567,7 @@ let tc_decls env ses =
         N.normalize
                [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 N.CheckNoUvars;
-                N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars;
+                N.Beta; N.NoDeltaSteps; N.CompressUvars;
                 N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm]
               env
               t); //update the id_info table after having removed their uvars
@@ -1674,8 +1674,11 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
-//extract an interface from m
-let extract_interface (env:env) (m:modul) :modul =
+(*
+ * extract an interface from m
+ * this function uses the environment ONLY for unfolding effect abbreviations to see if the effect is reifiable etc.
+ *)
+let extract_interface (en:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let is_assume = List.contains Assumption in
@@ -1725,40 +1728,40 @@ let extract_interface (env:env) (m:modul) :modul =
   let should_keep_lbdef (t:typ) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
-    in
-
+    in 
+    
     let c_opt =
       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
-
+     
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
      //if c is pure or ghost then keep it if the return type is not unit
      if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
      //else keep it if the effect is reifiable
-     else Env.is_reifiable_effect env (comp_effect_name c))
+     else Env.is_reifiable_effect en (comp_effect_name c))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
     match s.sigel with
     | Sig_inductive_typ _
-    | Sig_datacon _ -> failwith "Impossible! Bare data constructor"
+    | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
 
-    | Sig_splice _ -> failwith "Impossible! Trying to extract splice"
-
+    | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
+    
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
-        List.fold_left (fun sigelts s ->
+        sigelts |> List.fold_left (fun sigelts s ->
           match s.sigel with
           | Sig_inductive_typ (lid, _, _, _, _, _) -> abstract_inductive_tycons := lid::!abstract_inductive_tycons; (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons
-          | _ -> failwith "Impossible! Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
-        ) [] sigelts
-      else [s]  //if it is not abstract, retain as is
+          | _ -> failwith "Impossible! extract_interface: Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
+        ) []
+      else [s]  //if it is not abstract, retain the bundle as is
     | Sig_declare_typ (lid, uvs, t) ->
       //if it's a projector or discriminator of an abstract inductive, got to go
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
@@ -1778,7 +1781,7 @@ let extract_interface (env:env) (m:modul) :modul =
         //if is it abstract or irreducible or lemma, keep just the vals
         let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
         if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
-        else
+        else 
           let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
           if should_keep_defs then [ s ]
           else vals
@@ -1794,11 +1797,11 @@ let extract_interface (env:env) (m:modul) :modul =
     | Sig_new_effect _
     | Sig_new_effect_for_free _
     | Sig_sub_effect _
-    | Sig_effect_abbrev _
+    | Sig_effect_abbrev _ -> [s]
     | Sig_pragma _ -> [s]
   in
 
-  { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
+  { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }
 
 //AR: moving these push and pop functions from Universal, using them in extracting interface etc.
 let pop_context env msg =
@@ -1831,25 +1834,30 @@ let tc_more_partial_modul env modul decls =
   modul, exports, env
 
 let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
-  let lax_mode = env0.lax in
-  let env0 = if lid_equals env0.curmodule Parser.Const.prims_lid then { env0 with lax = true } else env0 in
   let msg = "Internals for " ^ m.name.str in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
-  let m, m_opt, env = finish_partial_modul false env modul non_private_decls in
-  m, m_opt, { env with lax = lax_mode }
+  finish_partial_modul false env modul non_private_decls
 
 and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
-    //pop AND use the old env for rest of the function
-    let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+    //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
+    let modul_iface = extract_interface en m in
+    if Env.debug en <| Options.Low then
+      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
+                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
+                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
 
-    //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from env
-    let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
-
+    //set up the environment to verify the interface
     let en0 =
+      //pop to get the env before this module type checking
+      let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+      //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from latest env
+      let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
+      //restore command line options ad restart z3 (to reset things like nl.arith options)
       if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
         Options.restore_cmd_line_options true |> ignore;
         z3_reset_options en0
@@ -1857,16 +1865,8 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
       else en0
     in
 
-    //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
-    let modul_iface = extract_interface en m in
-    if Env.debug en <| Options.Low then
-      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
-                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
-                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
-    let env0 = { en0 with is_iface = true } in
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
-    if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
+    if must_be_none <> None then failwith "Impossible! finish_partial_module: expected the second component to be None"
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
