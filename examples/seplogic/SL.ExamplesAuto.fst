@@ -197,7 +197,7 @@ let rec sl (i:int) : Tac unit =
 
   //post procedure call, we sometimes have a m == m kind of expression in the wp
   //this will solve it in the tactic itself rather than farming it out to smt
-  norm [Prims.simplify];
+  norm [simplify];
   match peek_cmd () with
   | Unknown None ->
     //either we are done

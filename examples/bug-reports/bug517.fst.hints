@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c395db5e6a6de39f90eb23e572ff03f4"
+      "bde9ab0a60f4869d25c2f738987c5beb"
     ],
     [
       "Bug517.add",
@@ -18,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "dc0dc4bb2f21e2024e6d82807b289ef3"
+      "58e51e4ca544008fab93e5d43299d734"
     ],
     [
       "Bug517.add'",
@@ -31,10 +31,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "15f8413ca94b4183d8866d6002420824"
+      "7574c7d61ebc31b313665d50432b4c0d"
     ]
   ]
 ]
