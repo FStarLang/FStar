@@ -1,6 +1,6 @@
 F*: An ML-like language aimed at program verification
 =====================================================
- 
+
 [![Build status](https://travis-ci.org/FStarLang/FStar.svg?branch=master)](https://travis-ci.org/FStarLang/FStar)
 
 ### F\* website
