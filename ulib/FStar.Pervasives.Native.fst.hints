@@ -1,5 +1,5 @@
 [
-  ".µ,I¶©¼HŽ€Ê\u0002*#Cù",
+  "¢i\r&ÏW\nðÁ\\ÿhïHãÛ",
   [
     [
       "FStar.Pervasives.Native.option",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b5452e71ac77d38a76bf01e76d1229e3"
+      "189d487b28e3422ddf438f46ed6f97b2"
     ],
     [
       "FStar.Pervasives.Native.__proj__Some__item__v",
@@ -22,7 +22,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "8590ed9f0c67e9214af1a2458031054a"
+      "15dd9fadd744aeb3c6b639bf1ac54c6a"
     ],
     [
       "FStar.Pervasives.Native.tuple2",
@@ -31,7 +31,7 @@
       1,
       [ "@query" ],
       0,
-      "03d94bf44aa99cc590ab8aa7a946e14f"
+      "3c02d1b3d5dad9b516e87404157d5a70"
     ],
     [
       "FStar.Pervasives.Native.tuple3",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "7c2d4eeeff90d9eacde73af46976a8e1"
+      "573ed732abf7901ff873dd0e1d61c631"
     ],
     [
       "FStar.Pervasives.Native.tuple4",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "e5ce884203ff40e6b65dfd1939de55fc"
+      "2a760225a0a8ed919dd2b35da17c47f5"
     ],
     [
       "FStar.Pervasives.Native.tuple5",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "7289577777e4221ae2ec29e3baf932d5"
+      "07a19ac165231d543922e71f7053287d"
     ],
     [
       "FStar.Pervasives.Native.tuple6",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "9851bfd595a24395386e24fa306dc29c"
+      "48afcda232bf0ec0324c4e9edcc29ebf"
     ],
     [
       "FStar.Pervasives.Native.tuple7",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "a7c4ae75ef3190faa312ab572c12633a"
+      "e9b30aa6035bdf329c4ba98dab9f3325"
     ],
     [
       "FStar.Pervasives.Native.tuple8",
@@ -85,7 +85,83 @@
       1,
       [ "@query" ],
       0,
-      "7ce960237615d933b86099225d1462a1"
+      "c68103a0e07f4650fdf267e323f97d6a"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__UnfoldOnly__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.UnfoldOnly",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_49a80e3a696f36051da873e693dd8572"
+      ],
+      0,
+      "3dc60e056ef07fca747a1025dc3ef7ea"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__UnfoldFully__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.UnfoldFully",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_5daa8a0dbfb1f26488a22b8271f0f7fb"
+      ],
+      0,
+      "bb8fb3c7245cd9138db67d309d090df7"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__UnfoldAttr__item__t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.UnfoldAttr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_0cce2fd214ad797cef3792b409c3a38b"
+      ],
+      0,
+      "57b0c67d8e4432d41b69bdc71c211881"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__UnfoldAttr__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.UnfoldAttr",
+        "proj_equation_FStar.Pervasives.Native.UnfoldAttr_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.UnfoldAttr_t",
+        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_0cce2fd214ad797cef3792b409c3a38b"
+      ],
+      0,
+      "c3d4f2a3be6d714b4e66d8bc0a4f2c52"
+    ],
+    [
+      "FStar.Pervasives.Native.assert_norm",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Pervasives.Native.normalize" ],
+      0,
+      "d7521f21eab8a942db7b2897e57c6cb8"
+    ],
+    [
+      "FStar.Pervasives.Native.norm_spec",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Pervasives.Native.norm" ],
+      0,
+      "d0524f93cb3a5c40d8a1c0f9880f27f4"
     ],
     [
       "FStar.Pervasives.Native.option",
@@ -94,7 +170,7 @@
       1,
       [ "@query" ],
       0,
-      "77dfa6f7607d364d948cd1ee9aeddfdf"
+      "66f2cc5bc7736f051c410f995fe37680"
     ],
     [
       "FStar.Pervasives.Native.__proj__Some__item__v",
@@ -108,7 +184,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "97ee53efc469cd9e428b610865b01421"
+      "c842002bfd21247119a28ce64fcdad14"
     ],
     [
       "FStar.Pervasives.Native.tuple2",
@@ -117,7 +193,7 @@
       1,
       [ "@query" ],
       0,
-      "cd110f225294b7db0433ab080a111ab5"
+      "dbee60e1d0f48a93f9b06437be86cbba"
     ],
     [
       "FStar.Pervasives.Native.tuple3",
@@ -126,7 +202,7 @@
       1,
       [ "@query" ],
       0,
-      "2f768c047c78f7e559b24f71d8984dfd"
+      "2c044eaeaaa99fb9099cc45aa236d0a0"
     ],
     [
       "FStar.Pervasives.Native.tuple4",
@@ -135,7 +211,7 @@
       1,
       [ "@query" ],
       0,
-      "8bc69fd97c20fe61172c4cb0a82767bf"
+      "0c212a21ef55ac38e6be47c027b4fed8"
     ],
     [
       "FStar.Pervasives.Native.tuple5",
@@ -144,7 +220,7 @@
       1,
       [ "@query" ],
       0,
-      "b5fbdb192d44ce395241a7aacb827f4c"
+      "7921148467cdcb34483eced445edf2ea"
     ],
     [
       "FStar.Pervasives.Native.tuple6",
@@ -153,7 +229,7 @@
       1,
       [ "@query" ],
       0,
-      "59f9c995cd0ceb9c559c3b1c01a35daa"
+      "c38fc118d8bf1e1b00b00254ba858a24"
     ],
     [
       "FStar.Pervasives.Native.tuple7",
@@ -162,7 +238,7 @@
       1,
       [ "@query" ],
       0,
-      "b6f83969cc46b08105ab1f234c788ccc"
+      "d86059113484014d236617378bc5ff5e"
     ],
     [
       "FStar.Pervasives.Native.tuple8",
@@ -171,7 +247,7 @@
       1,
       [ "@query" ],
       0,
-      "ad09242bb51b0f95b78201fa4e35d5fa"
+      "39dc914933923fa1e2ac8a435c653d4e"
     ]
   ]
 ]
