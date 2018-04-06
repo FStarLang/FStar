@@ -344,12 +344,3 @@ assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
 
 irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
-
-(*
- * `with_type t e` is just an identity function, but it receives special treatment
- *  in the SMT encoding, where in addition to being an identity function, we have
- *  an SMT axiom:
- *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
- *)
-let with_type (#t:Type) (e:t) = e
-

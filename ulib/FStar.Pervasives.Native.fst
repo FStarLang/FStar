@@ -119,3 +119,12 @@ let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) =
  * See the example usage in ulib/FStar.Algebra.Monoid.fst.
  *)
 irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
+
+
+(*
+ * `with_type t e` is just an identity function, but it receives special treatment
+ *  in the SMT encoding, where in addition to being an identity function, we have
+ *  an SMT axiom:
+ *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
+ *)
+let with_type (#t:Type) (e:t) = e
