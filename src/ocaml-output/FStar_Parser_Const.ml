@@ -171,21 +171,21 @@ let (range_0 : FStar_Ident.lident) = pconst "range_0"
 let (guard_free : FStar_Ident.lident) = pconst "guard_free" 
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"] 
-let with_type_lid : FStar_Ident.lident = psnconst "with_type" 
-let normalize : FStar_Ident.lident = psnconst "normalize" 
-let normalize_term : FStar_Ident.lident = psnconst "normalize_term" 
-let norm : FStar_Ident.lident = psnconst "norm" 
-let steps_simpl : FStar_Ident.lident = psnconst "simplify" 
-let steps_weak : FStar_Ident.lident = psnconst "weak" 
-let steps_hnf : FStar_Ident.lident = psnconst "hnf" 
-let steps_primops : FStar_Ident.lident = psnconst "primops" 
-let steps_zeta : FStar_Ident.lident = psnconst "zeta" 
-let steps_iota : FStar_Ident.lident = psnconst "iota" 
-let steps_delta : FStar_Ident.lident = psnconst "delta" 
-let steps_unfoldonly : FStar_Ident.lident = psnconst "delta_only" 
-let steps_unfoldfully : FStar_Ident.lident = psnconst "delta_fully" 
-let steps_unfoldattr : FStar_Ident.lident = psnconst "delta_attr" 
-let deprecated_attr : FStar_Ident.lident =
+let (with_type_lid : FStar_Ident.lident) = psnconst "with_type" 
+let (normalize : FStar_Ident.lident) = psnconst "normalize" 
+let (normalize_term : FStar_Ident.lident) = psnconst "normalize_term" 
+let (norm : FStar_Ident.lident) = psnconst "norm" 
+let (steps_simpl : FStar_Ident.lident) = psnconst "simplify" 
+let (steps_weak : FStar_Ident.lident) = psnconst "weak" 
+let (steps_hnf : FStar_Ident.lident) = psnconst "hnf" 
+let (steps_primops : FStar_Ident.lident) = psnconst "primops" 
+let (steps_zeta : FStar_Ident.lident) = psnconst "zeta" 
+let (steps_iota : FStar_Ident.lident) = psnconst "iota" 
+let (steps_delta : FStar_Ident.lident) = psnconst "delta" 
+let (steps_unfoldonly : FStar_Ident.lident) = psnconst "delta_only" 
+let (steps_unfoldfully : FStar_Ident.lident) = psnconst "delta_fully" 
+let (steps_unfoldattr : FStar_Ident.lident) = psnconst "delta_attr" 
+let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
