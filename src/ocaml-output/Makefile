@@ -234,13 +234,13 @@ ulib:
 # proper license files.
 package: all
 	$(MAKE) ulib
-        # Clean previous packages.
+	# Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
-        # Install the F* binary
+	# Install the F* binary
 	mkdir -p $(PREFIX)/bin/
 	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-        # Then the standard library.
+	# Then the standard library.
 	$(call fexport,ulib)
 	# Do not provide ml/fs sources, however. From ulib/ml, only
 	# preserve Makefile.include
@@ -270,7 +270,7 @@ endif
 
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
+	cp ../../src/gmake/*.mk ../../src/gmake/*.tmpl $(PREFIX)/src/gmake/
 
 	# Z3
 ifeq ($(OS),Windows_NT)
