@@ -343,45 +343,6 @@ let abs (x:int) : Tot int = if x >= 0 then x else -x
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
 
-
-
-(*********************************************************************************)
-(* Marking terms for normalization *)
-(*********************************************************************************)
-abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:Type0) :Type0 = a
-
-abstract
-noeq type norm_step =
-  | Simpl
-  | Weak
-  | HNF
-  | Primops
-  | Delta
-  | Zeta
-  | Iota
-  | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
-  | UnfoldFully:list string -> norm_step // idem
-  | UnfoldAttr:#t:Type0 -> a:t -> norm_step
-
-// Helpers, so we don't expose the actual inductive
-abstract let simplify : norm_step = Simpl
-abstract let weak     : norm_step = Weak
-abstract let hnf      : norm_step = HNF
-abstract let primops  : norm_step = Primops
-abstract let delta    : norm_step = Delta
-abstract let zeta     : norm_step = Zeta
-abstract let iota     : norm_step = Iota
-abstract let delta_only (s:list string) : norm_step = UnfoldOnly s
-abstract let delta_fully (s:list string) : norm_step = UnfoldFully s
-abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
-
-// Normalization marker
-abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
-
-abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
-let assert_norm p = ()
-
 irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
 
 (*
@@ -400,6 +361,3 @@ irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
  *)
 let with_type (#t:Type) (e:t) = e
 
-let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
-let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
-let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()

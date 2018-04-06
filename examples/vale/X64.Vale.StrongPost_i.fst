@@ -20,13 +20,13 @@ let lemma_update_reg_equal (r:reg) (v:nat64) (s1:state) (s2:state) : Lemma
   ()
 
 let assert_from_norm' (p:Type0): Lemma
-  (requires (Prims.norm [delta_only wp_code_delta; zeta; iota; primops] p))
+  (requires (norm [delta_only wp_code_delta; zeta; iota; primops] p))
   (ensures p)
   = ()
 
 let assert_to_norm' (p:Type0): Lemma
   (requires p)
-  (ensures (Prims.norm [delta_only wp_code_delta; zeta; iota; primops] p))
+  (ensures (norm [delta_only wp_code_delta; zeta; iota; primops] p))
   = ()
 
 let lemma_weak_pre_ins (i:ins) (inss:list ins) 
@@ -47,7 +47,7 @@ let lemma_weak_pre_ins (i:ins) (inss:list ins)
    Not an embedded list: X64.Vale.StrongPost_i.wp_code_delta")
   let some_pre (sM:state) (p:Type0) : Ghost (option state)
     (requires p)
-    (ensures fun _ -> Prims.norm [delta_only wp_code_delta; zeta; iota; primops] p) =
+    (ensures fun _ -> norm [delta_only wp_code_delta; zeta; iota; primops] p) =
     assert_to_norm' p;
     Some sM
   in*)
@@ -152,7 +152,7 @@ let lemma_weakest_pre_norm' (inss: list ins) (s0: state) (sN:state) (#post:unit 
      	    mem0 == s0.mem ==>
 	    s0.ok /\
 	    eval_code (va_Block (normalize_term (inss_to_codes inss))) s0 sN /\
-	    Prims.norm [delta_only wp_code_delta; zeta; iota; primops]
+	    norm [delta_only wp_code_delta; zeta; iota; primops]
 		       (wp_code (normalize_term inss) (augment sN post)
 				   ({ok=ok0; regs=regs0; flags=flags0; mem=mem0}))))
 	(ensures (post ())) = 
