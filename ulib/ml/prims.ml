@@ -155,5 +155,3 @@ let __proj__Cons__item__tl = List.tl
 let min = min
 
 type ('a, 'b) admit = unit
-
-let singleton x = x

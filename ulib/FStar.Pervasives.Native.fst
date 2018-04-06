@@ -111,3 +111,11 @@ let assert_norm p = ()
 let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
 let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
+
+(*
+ * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
+ * the return type is not unit and the head symbol is not marked irreducible.
+ * To circumvent this behavior, singleton can be used.
+ * See the example usage in ulib/FStar.Algebra.Monoid.fst.
+ *)
+irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x

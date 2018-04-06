@@ -346,14 +346,6 @@ assume val string_of_int: int -> Tot string
 irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
 
 (*
- * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
- * the return type is not unit and the head symbol is not marked irreducible.
- * To circumvent this behavior, singleton can be used.
- * See the example usage in ulib/FStar.Algebra.Monoid.fst.
- *)
-irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
-
-(*
  * `with_type t e` is just an identity function, but it receives special treatment
  *  in the SMT encoding, where in addition to being an identity function, we have
  *  an SMT axiom:
