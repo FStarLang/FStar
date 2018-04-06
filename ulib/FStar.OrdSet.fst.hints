@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "e4796672ac35e2523844362913797e07"
+      "a81cd84625f7ebbcc4ac1503e551f9b0"
     ],
     [
       "FStar.OrdSet.hasEq_ordset",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "673a4db277fcd8309e925542da56268a"
+      "c921600e951e0bf0ba859f249aeb7b39"
     ],
     [
       "FStar.OrdSet.set_props",
@@ -47,7 +47,7 @@
         "refinement_interpretation_FStar.OrdSet_Tm_refine_e00a70afb2033366e70144b9d967c6dc"
       ],
       0,
-      "90a964f04fde9a1edf8510beaa7ff910"
+      "dd345a44c16dca7e989e38a21997ca81"
     ],
     [
       "FStar.OrdSet.set_props",
@@ -87,7 +87,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "b74ad09ccfa4a4ed42f1bfad0aba2ab2"
+      "117c9119554bf7381a2dad4c14b3a245"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -99,7 +99,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "f286068f795372bb8d5dca5520e06e3b"
+      "138011bbebb398334b8bf21f7e2a6ef7"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -114,7 +114,7 @@
         "refinement_interpretation_FStar.OrdSet_Tm_refine_e30b609aa55e6fae2a5527dce3ebc3de"
       ],
       0,
-      "67608e1b773a38589c2f576665e9e019"
+      "16138e05fabd78d8678c89d4dec079d8"
     ],
     [
       "FStar.OrdSet.empty",
@@ -128,7 +128,7 @@
         "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "3ec8c0374fc81a867ef4e1e279334239"
+      "ee07805f756db5b3c8b2e9df07b84162"
     ],
     [
       "FStar.OrdSet.insert'",
@@ -140,7 +140,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3a8676f6157e27051a9c1225c8fcad8a"
+      "441d521be485d04a6bc126503d562bb4"
     ],
     [
       "FStar.OrdSet.insert'",
@@ -174,7 +174,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "4498bacb0ee5d5a8aed71a0d826a8c0e"
+      "4860e3529df88313088df30b2149bcea"
     ],
     [
       "FStar.OrdSet.union",
@@ -199,7 +199,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "9c25687763ab41ac0889cb5804f41e78"
+      "1ddc01ad5305b1c339c1f0a8d04b0dfe"
     ],
     [
       "FStar.OrdSet.intersect",
@@ -225,7 +225,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "342b3cadf2248b04c6635bdbdb31fe65"
+      "1cb8dfb34f385a43ff3b881bad911db6"
     ],
     [
       "FStar.OrdSet.choose",
@@ -239,7 +239,7 @@
         "refinement_interpretation_FStar.OrdSet_Tm_refine_e30b609aa55e6fae2a5527dce3ebc3de"
       ],
       0,
-      "2759fb0a3fd879de5e9ed2c000292709"
+      "b8a023f6d2847b3a42ee11db29647c4d"
     ],
     [
       "FStar.OrdSet.remove'",
@@ -252,7 +252,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f5d801af7ecbbd1bc4336b200de6d816"
+      "b7f97d2fbb31ef7a690d370e05195615"
     ],
     [
       "FStar.OrdSet.remove'",
@@ -290,7 +290,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "ef2bd550f28eb5b2b950a6b19ba194dd"
+      "104a634aeb5fca1a5127f4e6a565fa71"
     ],
     [
       "FStar.OrdSet.remove'",
@@ -328,7 +328,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "057db59c7a1742a284eb7b6309e22a0b"
+      "c13177cf5218c79d7a11d17554417af4"
     ],
     [
       "FStar.OrdSet.subset",
@@ -361,7 +361,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "abf99bd2e024c360328e8a8b70fefe23"
+      "699f314ebd4f736e45b4a2509d38ca85"
     ],
     [
       "FStar.OrdSet.singleton",
@@ -379,7 +379,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "7ee5045d60de8eb3ccc05ef63b321283"
+      "d5e5c6ad5fd0ba02ef5ab39c22cfd68f"
     ],
     [
       "FStar.OrdSet.equal",
@@ -388,7 +388,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "d762cc7bf821d176e22ae77193d7c7e4"
+      "cf3babd46e895b6c60f98a817cf54487"
     ],
     [
       "FStar.OrdSet.eq_lemma",
@@ -397,7 +397,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "4f5f7119dfb067b68f99754ba13cccaa"
+      "bf2b162bdb778f752c96dcae35b96ed3"
     ],
     [
       "FStar.OrdSet.mem_singleton",
@@ -406,7 +406,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "3342624b2dccca998f42544fd897eb1a"
+      "634957727a328ab63de010f3df25f1f1"
     ],
     [
       "FStar.OrdSet.mem_union",
@@ -415,7 +415,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "e5b43505fb7e0a862ddddda18c1e3855"
+      "71f494bb5fe8e93831023c02fc818f2e"
     ],
     [
       "FStar.OrdSet.mem_intersect",
@@ -424,7 +424,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "42589ca60e252b18cd7889eb1850e3c3"
+      "7a3104ef147b1e4cebb257e88fea564c"
     ],
     [
       "FStar.OrdSet.choose_s",
@@ -433,7 +433,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "7ce1b8f6d1f80e1bdbf4bfaac821d3f8"
+      "028f9b88dce4804fb34c195e6e3626dd"
     ],
     [
       "FStar.OrdSet.choose_s",
@@ -442,7 +442,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "1e955a28c7737df7b0b19b345e841c8b"
+      "e498da3245fd5507f598286157f370e6"
     ],
     [
       "FStar.OrdSet.choose_s",
@@ -451,7 +451,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "59dbd35f3e16ad7c0dc53ee5966131a8"
+      "9f0be635901c7d8589c0b0108e126e28"
     ],
     [
       "FStar.OrdSet.mem_remove",
@@ -460,7 +460,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "4995a61e938c4ac5cbb010a4af2fbef4"
+      "c25c33e04f8700ae379b8962f2e794f7"
     ],
     [
       "FStar.OrdSet.eq_remove",
@@ -469,7 +469,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "fe22fc2f09c40ecd3cb958b4681f6b74"
+      "9b203b98f1f211e16658b851dedb6274"
     ],
     [
       "FStar.OrdSet.size_empty",
@@ -478,7 +478,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "dc76ee35cc863739f39eddfadc8435e6"
+      "16d65f13ff81a673bedaae7f24f58ce4"
     ],
     [
       "FStar.OrdSet.size_empty",
@@ -487,7 +487,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "533493448b27ee8a2d5f1ccae29d8905"
+      "bc4fed42376b3ac169834ce751c638ae"
     ],
     [
       "FStar.OrdSet.size_empty",
@@ -499,7 +499,7 @@
         "assumption_Prims.HasEq_int", "lemma_FStar.OrdSet.hasEq_ordset"
       ],
       0,
-      "c6d2a38a8c38b5148130b9bf140260f7"
+      "0e0f7c8dc9b1b0d148d9d59bb3967d7f"
     ],
     [
       "FStar.OrdSet.size_remove",
@@ -508,7 +508,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "46328935cb52c34df9f64cc873d23602"
+      "7e40570d1f16b1ea4aa8af0392e26118"
     ],
     [
       "FStar.OrdSet.size_singleton",
@@ -517,7 +517,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "165ddf7bfca8411b83eb3804abd1a81c"
+      "cce492f5d28da3bb74602c6efae3c13a"
     ],
     [
       "FStar.OrdSet.eq_helper",
@@ -526,7 +526,7 @@
       1,
       [ "@query" ],
       0,
-      "670f793023d34a1a11d355d2c69336c2"
+      "ac2d33fe30796b45016fc4251113c70c"
     ],
     [
       "FStar.OrdSet.eq_helper",
@@ -554,7 +554,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "455d686fc074684ff246ae99bb4b6882"
+      "b37b56e5ad8ceb54d7ac8f7ec4ec96ab"
     ],
     [
       "FStar.OrdSet.eq_lemma",
@@ -598,7 +598,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "fe760eacee1fe4c7e1ff0c88e16e47ed"
+      "43602ffd94a315213c6fe33e34591408"
     ],
     [
       "FStar.OrdSet.mem_empty",
@@ -614,7 +614,7 @@
         "projection_inverse_Prims.Nil_a", "unit_typing"
       ],
       0,
-      "13315518f3f3d05b315e9c944f55c24f"
+      "f39da1cf3f91a4489bfa8925de92fff6"
     ],
     [
       "FStar.OrdSet.mem_singleton",
@@ -633,7 +633,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "38f57f768eab2b67ac18c694e611f2a9"
+      "02d79a61ef4e30e4e5802d25bd118b54"
     ],
     [
       "FStar.OrdSet.insert_mem",
@@ -642,7 +642,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "cda0ae07d717ed035d6345de9fc35929"
+      "549ae0f94605ed176b69bf1ae66ee070"
     ],
     [
       "FStar.OrdSet.insert_mem",
@@ -682,7 +682,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "15c84cf9ce543e0fbbed16d454a33701"
+      "883e388d5a1a8d5d9969185ed135321a"
     ],
     [
       "FStar.OrdSet.mem_union",
@@ -721,7 +721,7 @@
         "typing_FStar.OrdSet.sorted", "unit_typing"
       ],
       0,
-      "1bd5ce8bf8017b772e3407cc04f24cae"
+      "60cffc8f8a2c1b0374d3bbaafc96a836"
     ],
     [
       "FStar.OrdSet.mem_intersect",
@@ -762,7 +762,7 @@
         "typing_FStar.OrdSet.sorted", "unit_inversion", "unit_typing"
       ],
       0,
-      "1fa9c99f12518c7088c42a8339f2dac7"
+      "1a11654255d3b701a56ea98df333232a"
     ],
     [
       "FStar.OrdSet.subset_implies_mem",
@@ -807,7 +807,7 @@
         "typing_FStar.OrdSet.subset", "unit_inversion", "unit_typing"
       ],
       0,
-      "324a194a6cd7b0b1f2161f810c163e8c"
+      "5a1976694562c76c1a0e3f0c0a1ed4ae"
     ],
     [
       "FStar.OrdSet.mem_implies_subset",
@@ -854,7 +854,7 @@
         "typing_FStar.OrdSet.subset", "unit_inversion", "unit_typing"
       ],
       0,
-      "08913e985bc4a138e56cfa46b4b2d2b3"
+      "5996193f1d1df7323b8377a10f8ef3e7"
     ],
     [
       "FStar.OrdSet.mem_subset",
@@ -863,7 +863,7 @@
       1,
       [ "@query" ],
       0,
-      "a50e514263e5e386634f4c8c5db58f43"
+      "812a7d8ebe280883a1691bc4bf0687b0"
     ],
     [
       "FStar.OrdSet.choose_empty",
@@ -880,7 +880,7 @@
         "projection_inverse_Prims.Nil_a", "unit_typing"
       ],
       0,
-      "7b6bd66177deb3d5789931f34e814314"
+      "2d3216194e3b017c1c16f9502c132174"
     ],
     [
       "FStar.OrdSet.choose_s",
@@ -928,7 +928,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "ed6579f663f33160a622d29aea2aba95"
+      "49a16dff196af65cf70f072127f56958"
     ],
     [
       "FStar.OrdSet.mem_remove",
@@ -970,7 +970,7 @@
         "typing_FStar.OrdSet.sorted", "unit_inversion", "unit_typing"
       ],
       0,
-      "2c90033f746c1cc86669b83c25dce39a"
+      "f8656df175c1419ceadedd5116852a4f"
     ],
     [
       "FStar.OrdSet.eq_remove",
@@ -1006,7 +1006,7 @@
         "typing_FStar.OrdSet.sorted", "unit_typing"
       ],
       0,
-      "7221d62fab812bde0f59af660a7d791a"
+      "0fa1d67e8943e96da57aeba820243c0c"
     ],
     [
       "FStar.OrdSet.size_empty",
@@ -1033,7 +1033,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "34c64c938c344a1532c0c6fde34b0053"
+      "a14d466274853fc2d487b22db6f907d7"
     ],
     [
       "FStar.OrdSet.size_remove",
@@ -1081,7 +1081,7 @@
         "unit_typing"
       ],
       0,
-      "a41ac506bcc7a0ba3fb9bb06d0716c2a"
+      "de76f3b6eec06282636b2244b9e51e25"
     ],
     [
       "FStar.OrdSet.size_singleton",
@@ -1108,7 +1108,7 @@
         "unit_typing"
       ],
       0,
-      "c4f779f26dfd752e9cd17bd57bbbb692"
+      "ec4175294d1df2a3f43310fd2a3f9c96"
     ],
     [
       "FStar.OrdSet.subset_size",
@@ -1154,7 +1154,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "42dbb2e328ca1f5a2e27ecab132ebad2"
+      "1fd40fed3ad06d53ad24f2e0b8c59750"
     ],
     [
       "FStar.OrdSet.map_internal",
@@ -1186,7 +1186,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "9562f25f37dd9fa5181c676bda09821e"
+      "393baf29f7a954376b5ccf3d41f37ed8"
     ],
     [
       "FStar.OrdSet.map",
@@ -1195,7 +1195,7 @@
       1,
       [ "@query" ],
       0,
-      "73ed2dda9242c641ceb140019aaf753a"
+      "5af3fa0fe645bceb5a80b7bde5ee386f"
     ],
     [
       "FStar.OrdSet.remove_le",
@@ -1228,7 +1228,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "c7bf80a1642d8760f049e1e489185074"
+      "174d57b4fc258f914c3049eea1b949b8"
     ],
     [
       "FStar.OrdSet.minus'",
@@ -1264,7 +1264,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "297b34a77de3cf3e6f2e10780aba2970"
+      "67c7da39598ad6d819b49742a4ba55dc"
     ],
     [
       "FStar.OrdSet.minus",
@@ -1286,7 +1286,7 @@
         "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "56a5eb0e62a4c6020134ee6f25782bca"
+      "7de83a99e448ca4afe87f87c6561eab8"
     ],
     [
       "FStar.OrdSet.strict_subset",
@@ -1295,7 +1295,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "e1d48ebe58d9fa81fdd4357edb90ab32"
+      "e6bdea219d76e90fd487cdb4ed84a8f1"
     ],
     [
       "FStar.OrdSet.lemma_minus_mem",
@@ -1304,7 +1304,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "399617cbf853370fa57cd4007bde6276"
+      "fce7e248f3bd9ddcf4e44372655e352e"
     ],
     [
       "FStar.OrdSet.lemma_subset_union",
@@ -1320,7 +1320,7 @@
         "typing_FStar.OrdSet.union", "unit_typing"
       ],
       0,
-      "e23ef64dc78b2112aa7fe41d1ab2abd9"
+      "405b7baa567725b20e58628ea16925cc"
     ],
     [
       "FStar.OrdSet.as_set",
@@ -1347,7 +1347,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "3abe21064c24ad613cae14ff07afecc7"
+      "68f2ba18f634aabba1139e8abdc79d2f"
     ],
     [
       "FStar.OrdSet.lemma_as_set_disjoint",
@@ -1388,7 +1388,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "d3bf9d1740893bc896b0c4bffb5f5786"
+      "a5d33459b330a9d9c9e2b6b4efd00427"
     ],
     [
       "FStar.OrdSet.lemma_as_set_mem",
@@ -1428,7 +1428,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "aa186dbb2c38f32b890d5752fe5a086b"
+      "475482f36a57b39e732bea6944e34b6a"
     ],
     [
       "FStar.OrdSet.sorted",
@@ -1449,7 +1449,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "4caec90e8d16ccc373f2431d67978d50"
+      "3b4cdedb36995f10a7167b0ca7d2830c"
     ],
     [
       "FStar.OrdSet.set_props",
@@ -1461,7 +1461,7 @@
         "refinement_interpretation_FStar.OrdSet_Tm_refine_e00a70afb2033366e70144b9d967c6dc"
       ],
       0,
-      "0a53350492c492c7d346dcd571f55a0b"
+      "678e3a29800a0c662e808145e953a23a"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -1473,7 +1473,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "2b018c29e7ebbcd7caa36e007f2bb4a1"
+      "f2e13897943342fbb4e27ab99f913547"
     ],
     [
       "FStar.OrdSet.insert'",
@@ -1482,7 +1482,7 @@
       1,
       [ "@query" ],
       0,
-      "f480e17cd421feab18c72544becc7297"
+      "f53eae609639b3267f0f540ce09453ea"
     ],
     [
       "FStar.OrdSet.remove'",
@@ -1495,7 +1495,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a33bb6d333862e888c9a035d61092025"
+      "e1b4f5939624e9e7685fba6c2c473310"
     ],
     [
       "FStar.OrdSet.equal",
@@ -1504,7 +1504,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "154055402a5092b4d6129bce9bb36c48"
+      "2672c2b22880a42412083d29a65e7791"
     ],
     [
       "FStar.OrdSet.eq_helper",
@@ -1513,7 +1513,7 @@
       1,
       [ "@query" ],
       0,
-      "52c4bf802f23c15bba1393c125aefc98"
+      "a3cae5d6d90dc647ef2f5ee0efdd08e4"
     ],
     [
       "FStar.OrdSet.eq_lemma",
@@ -1522,7 +1522,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "2545231d10a1f74f485b898b497a8d3a"
+      "f695ea70b7b200155792e78c6a53b16c"
     ],
     [
       "FStar.OrdSet.mem_singleton",
@@ -1531,7 +1531,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "42caeb8f72118a8838a794f9dc4b0e03"
+      "a0df097604c0a058b41189b3eb30e76b"
     ],
     [
       "FStar.OrdSet.insert_mem",
@@ -1540,7 +1540,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "46017748f52189631d89baa5dd03d2b3"
+      "3fc72e8c9a9f23be6928aa434dab471a"
     ],
     [
       "FStar.OrdSet.mem_union",
@@ -1549,7 +1549,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "65d1a69dea72eb447327676e3ab64650"
+      "b68925957abe9b74bd7e4f6aae0d73b3"
     ],
     [
       "FStar.OrdSet.mem_intersect",
@@ -1558,7 +1558,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "3eddce09bb4902e59766c72db1e1ab05"
+      "6713f3854acd04945c6a063ca926f93f"
     ],
     [
       "FStar.OrdSet.choose_s",
@@ -1567,7 +1567,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "6f8437914e0ca06b4a35d8bb59d9fc38"
+      "090980575fed69bb6ed6a3796f14ab11"
     ],
     [
       "FStar.OrdSet.mem_remove",
@@ -1576,7 +1576,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "b254417fc897f239f41bba64a8322483"
+      "21e496080be925e5212c422de0bda1d0"
     ],
     [
       "FStar.OrdSet.eq_remove",
@@ -1585,7 +1585,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "4c3d4981c1ee53f5892c4723281519fc"
+      "3e5ddeff3636502f50c2816c729e5d66"
     ],
     [
       "FStar.OrdSet.size_empty",
@@ -1597,7 +1597,7 @@
         "assumption_Prims.HasEq_int", "lemma_FStar.OrdSet.hasEq_ordset"
       ],
       0,
-      "7a277f52f76610c93343a158836588e6"
+      "c7cf26f66788823b6792c3fef02af75c"
     ],
     [
       "FStar.OrdSet.size_remove",
@@ -1606,7 +1606,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9529ea2b54871d30924b1bb7c8b157ab"
+      "6fc7733d7b65bf7e62d6376556c32301"
     ],
     [
       "FStar.OrdSet.size_singleton",
@@ -1615,7 +1615,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "95ff4335d8d8536789fa13361b507aad"
+      "83b1e6d4df2c2fcfd0966a66d2f0e104"
     ],
     [
       "FStar.OrdSet.map_internal",
@@ -1624,7 +1624,7 @@
       1,
       [ "@query" ],
       0,
-      "5f1d4dfc3eb8d2a940646fb9dfaa5ae6"
+      "a85bad034c6406f1f41610a3de70f810"
     ],
     [
       "FStar.OrdSet.map",
@@ -1633,7 +1633,7 @@
       1,
       [ "@query" ],
       0,
-      "e4bcfc7a643fd7a74184b0c1d68dbe07"
+      "92c012344968a261e6295e671b47de3c"
     ],
     [
       "FStar.OrdSet.lemma_minus_mem",
@@ -1642,7 +1642,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "fefcad998e547798d6714549ba4cfac4"
+      "06491ff99df65719d9bff64dff6cc61f"
     ],
     [
       "FStar.OrdSet.lemma_as_set_disjoint",
@@ -1651,7 +1651,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "d72fb14201dee955eeaeac683ac0d570"
+      "ba451082f01e14d67403bfc26fb2ac9f"
     ]
   ]
 ]
