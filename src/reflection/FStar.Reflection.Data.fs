@@ -22,6 +22,7 @@ type pattern =
     | Pat_Cons     of fv * list<pattern>
     | Pat_Var      of bv
     | Pat_Wild     of bv
+    | Pat_Dot_Term of bv * term
 
 type branch = pattern * term
 
@@ -32,32 +33,47 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of binder
+    | Tv_Var    of bv
+    | Tv_BVar   of bv
     | Tv_FVar   of fv
     | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * comp
     | Tv_Type   of unit
-    | Tv_Refine of binder * term
+    | Tv_Refine of bv * term
     | Tv_Const  of vconst
     | Tv_Uvar   of Z.t * typ
-    | Tv_Let    of binder * term * term
+    | Tv_Let    of bool * bv * term * term
     | Tv_Match  of term * list<branch>
+    | Tv_AscribedT of term * term * option<term>
+    | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
 
+type bv_view = {
+    bv_ppname : string;
+    bv_index : Z.t;
+    bv_sort : typ;
+}
+
+type binder_view = bv * aqualv
+
 type comp_view =
-    | C_Total of typ
+    | C_Total of typ * option<term> //optional decreases clause
     | C_Lemma of term * term
     | C_Unknown
 
-// See ulib/FStar.Reflection.Syntax.fst for explanations of these two
-type ctor =
-    | Ctor of  name * typ
 type sigelt_view =
-    | Sg_Inductive of name * list<binder> * typ * list<ctor>
-    | Sg_Let of fv * typ * term
+    | Sg_Let of bool * fv * typ * term
+    | Sg_Inductive of name * list<binder> * typ * list<name> // name, params, type, constructors
+    | Sg_Constructor of name * typ
     | Unk
 
+type var = Z.t
+
+type exp =
+    | Unit
+    | Var of var
+    | Mult of exp * exp
 
 (* Contains all lids and terms needed for embedding/unembedding *)
 
@@ -66,6 +82,8 @@ type refl_constant = {
     t : term;
 }
 
+let refl_constant_lid rc = rc.lid
+let refl_constant_term rc = rc.t
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
 let fstar_refl_basic_lid  s = fstar_refl_lid ["Basic";  s]
@@ -81,24 +99,49 @@ let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
 let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 
-let fstar_refl_inspect_lid = fstar_refl_basic_lid "inspect"
-let fstar_refl_inspect     = fvar fstar_refl_inspect_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_lid    = fstar_refl_basic_lid "pack"
-let fstar_refl_pack        = fvar fstar_refl_pack_lid (Delta_defined_at_level 1) None
-let fstar_refl_pack_fv_lid = fstar_refl_basic_lid "pack_fv"
-let fstar_refl_pack_fv     = fvar fstar_refl_pack_fv_lid (Delta_defined_at_level 1) None
+let mk_inspect_pack_pair s =
+    let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
+    let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
+    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_defined_at_level 1) None } in
+    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_defined_at_level 1) None } in
+    (inspect, pack)
 
-(* types *)
-let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
-let fstar_refl_env       = mk_refl_types_lid_as_term "env"
-let fstar_refl_fv        = mk_refl_types_lid_as_term "fv"
-let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
-let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
-let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
-let fstar_refl_term_view = mk_refl_data_lid_as_term "term_view"
-let fstar_refl_ctor      = mk_refl_data_lid_as_term "ctor"
-let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
-let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
+let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
+let fstar_refl_inspect_fv     , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
+let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
+let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
+let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
+let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
+
+(* assumed types *)
+let fstar_refl_env              = mk_refl_types_lid_as_term "env"
+let fstar_refl_bv               = mk_refl_types_lid_as_term "bv"
+let fstar_refl_fv               = mk_refl_types_lid_as_term "fv"
+let fstar_refl_comp             = mk_refl_types_lid_as_term "comp"
+let fstar_refl_binder           = mk_refl_types_lid_as_term "binder"
+let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
+let fstar_refl_term             = mk_refl_types_lid_as_term "term"
+
+(* auxiliary types *)
+let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
+let fstar_refl_comp_view        = mk_refl_data_lid_as_term "comp_view"
+let fstar_refl_term_view        = mk_refl_data_lid_as_term "term_view"
+let fstar_refl_pattern          = mk_refl_data_lid_as_term "pattern"
+let fstar_refl_branch           = mk_refl_data_lid_as_term "branch"
+let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
+let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
+let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
+let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
+
+(* bv_view, this is a record constructor *)
+
+let ref_Mk_bv =
+    let lid = fstar_refl_data_lid "Mkbv_view" in
+    let attr = Record_ctor (fstar_refl_data_lid "bv_view", [
+                                Ident.mk_ident ("bv_ppname", Range.dummyRange);
+                                Ident.mk_ident ("bv_index" , Range.dummyRange);
+                                Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    { lid = lid ; t = fvar lid Delta_constant (Some attr) }
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
@@ -116,9 +159,11 @@ let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
 let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
 let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
 let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
+let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
 
 (* term_view *)
 let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"
+let ref_Tv_BVar    = fstar_refl_data_const "Tv_BVar"
 let ref_Tv_FVar    = fstar_refl_data_const "Tv_FVar"
 let ref_Tv_App     = fstar_refl_data_const "Tv_App"
 let ref_Tv_Abs     = fstar_refl_data_const "Tv_Abs"
@@ -129,6 +174,8 @@ let ref_Tv_Const   = fstar_refl_data_const "Tv_Const"
 let ref_Tv_Uvar    = fstar_refl_data_const "Tv_Uvar"
 let ref_Tv_Let     = fstar_refl_data_const "Tv_Let"
 let ref_Tv_Match   = fstar_refl_data_const "Tv_Match"
+let ref_Tv_AscT    = fstar_refl_data_const "Tv_AscribedT"
+let ref_Tv_AscC    = fstar_refl_data_const "Tv_AscribedC"
 let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
 
 (* comp_view *)
@@ -137,10 +184,16 @@ let ref_C_Lemma   = fstar_refl_data_const "C_Lemma"
 let ref_C_Unknown = fstar_refl_data_const "C_Unknown"
 
 (* inductives & sigelts *)
-let ref_Sg_Inductive = fstar_refl_data_const "Sg_Inductive"
-let ref_Sg_Let       = fstar_refl_data_const "Sg_Let"
-let ref_Unk          = fstar_refl_data_const "Unk"
-let ref_Ctor         = fstar_refl_data_const "Ctor"
+let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
+let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
+let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
+let ref_Unk            = fstar_refl_data_const "Unk"
+
+(* exp *)
+let ref_E_Unit = fstar_refl_data_const "Unit"
+let ref_E_Var = fstar_refl_data_const "Var"
+let ref_E_Mult = fstar_refl_data_const "Mult"
+let t_exp = tconst (Ident.lid_of_path ["FStar"; "Reflection"; "Data"; "exp"] Range.dummyRange)
 
 (* Should not be here *)
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange

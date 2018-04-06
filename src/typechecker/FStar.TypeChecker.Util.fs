@@ -116,7 +116,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
   let t = SS.compress t in
   match t.n with
    | Tm_unknown ->
-     if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
+     //if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown"; //AR: not necessarily for universe annotated let recs
+     let univ_vars, e = SS.open_univ_vars univ_vars e in
+     let env = Env.push_univ_vars env univ_vars in
      let r = Env.get_range env in
      let mk_binder scope a =
         match (SS.compress a.sort).n with
@@ -172,7 +174,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
              else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec, (BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                                         (Print.comp_to_string c))) rng
        | Inl t -> t in
-    [], t, b
+    univ_vars, t, b
 
   | _ ->
     let univ_vars, t = open_univ_vars univ_vars t in
@@ -677,16 +679,9 @@ let strengthen_precondition
                   strengthen,
        {g0 with guard_f=Trivial}
 
-let stable_lcomp lc =
-    U.is_tot_or_gtot_lcomp lc
-    || U.is_tac_lcomp lc
-
-let stable_comp c =
-    U.is_tot_or_gtot_comp c
-    || U.is_tac_comp c
 
 let lcomp_has_trivial_postcondition lc =
-    stable_lcomp lc
+    U.is_tot_or_gtot_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
 
@@ -720,10 +715,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               if U.is_total_lcomp lc1
               then if U.is_total_lcomp lc2
                    then [TOTAL]
-                   else if stable_lcomp lc2
+                   else if U.is_tot_or_gtot_lcomp lc2
                    then [SOMETRIVIAL]
                    else []
-              else if stable_lcomp lc1 && stable_lcomp lc2
+              else if U.is_tot_or_gtot_lcomp lc1
+                   && U.is_tot_or_gtot_lcomp lc2
               then [SOMETRIVIAL]
               else []
           in
@@ -777,8 +773,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
-            then if stable_comp c1
-                 && stable_comp c2
+            then if U.is_tot_or_gtot_comp c1
+                 && U.is_tot_or_gtot_comp c2
                  then Inl (c2, "Early in prims; we don't have bind yet")
                  else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
@@ -789,15 +785,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else if stable_comp c1
-                 && stable_comp c2
-            then let ty = U.comp_result c2 in
-                 Inl (S.mk_Comp ({ comp_univs = [env.universe_of env ty]
-                                 ; effect_name = C.effect_Tac_lid
-                                 ; result_typ = ty
-                                 ; effect_args = []
-                                 ; flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION]
-                                 }), "both Tac")
             else match e1opt, b with
                    | Some e, Some x ->
                      if U.is_total_comp c1
@@ -1412,7 +1399,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let norm c =
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
-         let c = Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.NoDeltaSteps] env c in
+         let c = Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.DoNotUnfoldPureLets] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
@@ -1536,7 +1523,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
+              let c = N.normalize_comp [N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
               let e = N.reduce_uvar_solutions env e in
               let e =
                 if is_rec
@@ -1892,343 +1879,5 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
 
 
 
-(******************************************************************************)
-(*                                                                            *)
-(*                Elaboration of the projectors                               *)
-(*                                                                            *)
-(******************************************************************************)
 
 
-
-let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
-                                            (fvq:fv_qual)            (*                                         *)
-                                            (refine_domain:bool)     (* If true, discriminates the projectee    *)
-                                            env                      (*                                         *)
-                                            (tc:lident)              (* Type constructor name                   *)
-                                            (lid:lident)             (* Constructor name                        *)
-                                            (uvs:univ_names)         (* Original universe names                 *)
-                                            (inductive_tps:binders)  (* Type parameters of the type constructor *)
-                                            (indices:binders)        (* Implicit type parameters                *)
-                                            (fields:binders)         (* Fields of the constructor               *)
-                                            : list<sigelt> =
-    let p = range_of_lid lid in
-    let pos q = Syntax.withinfo q p in
-    let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
-    let inst_univs = List.map (fun u -> U_name u) uvs in
-    let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
-    let arg_typ =
-        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p in
-        let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
-        S.mk_Tm_app inst_tc args None p
-    in
-    let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
-    let arg_binder =
-        if not refine_domain
-        then unrefined_arg_binder //records have only one constructor; no point refining the domain
-        else let disc_name = U.mk_discriminator lid in
-             let x = S.new_bv (Some p) arg_typ in
-             let sort =
-                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
-                 U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
-             in
-             S.mk_binder ({projectee arg_typ with sort = sort})
-    in
-
-
-    let ntps = List.length tps in
-    let all_params = List.map (fun (x, _) -> x, Some S.imp_tag) tps @ fields in
-
-    let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
-
-    let discriminator_ses =
-        if fvq <> Data_ctor
-        then [] // We do not generate discriminators for record types
-        else
-            let discriminator_name = U.mk_discriminator lid in
-            let no_decl = false in
-            let only_decl =
-                  lid_equals C.prims_lid  (Env.current_module env)
-                  || Options.dont_gen_projectors (Env.current_module env).str
-            in
-            let quals =
-                (* KM : What about Logic ? should it still be there even with an implementation *)
-                S.Discriminator lid ::
-                (if only_decl then [S.Logic; S.Assumption] else []) @
-                //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
-                List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
-            in
-
-            (* Type of the discriminator *)
-            let binders = imp_binders@[unrefined_arg_binder] in
-            let t =
-                let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
-                SS.close_univ_vars uvs <| U.arrow binders bool_typ
-            in
-            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t);
-                         sigquals = quals;
-                         sigrng = range_of_lid discriminator_name;
-                         sigmeta = default_sigmeta;
-                         sigattrs = [] } in
-            if Env.debug env (Options.Other "LogTypes")
-            then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
-
-            if only_decl
-            then [decl]
-            else
-                (* Term of the discriminator *)
-                let body =
-                    if not refine_domain
-                    then U.exp_true_bool   // If we have at most one constructor
-                    else
-                        let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
-                            let b = S.is_implicit imp in
-                            if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                            else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
-                        in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
-                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
-                        let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
-                        mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
-                in
-                let dd =
-                    if quals |> List.contains S.Abstract
-                    then Delta_abstract Delta_equational
-                    else Delta_equational
-                in
-                let imp = U.abs binders body None in
-                let lbtyp = if no_decl then t else tun in
-                let lb = U.mk_letbinding
-                            (Inr (S.lid_as_fv discriminator_name dd None))
-                            uvs
-                            lbtyp
-                            C.effect_Tot_lid
-                            (SS.close_univ_vars uvs imp)
-                            []
-                            Range.dummyRange
-                in
-                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
-                             sigquals = quals;
-                             sigrng = p;
-                             sigmeta = default_sigmeta;
-                             sigattrs = []  } in
-                if Env.debug env (Options.Other "LogTypes")
-                then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
-                (* TODO : Are there some cases where we don't want one of these ? *)
-                (* If not the declaration is useless, isn't it ?*)
-                [decl ; impl]
-    in
-
-
-    let arg_exp = S.bv_to_name (fst arg_binder) in
-    let binders = imp_binders@[arg_binder] in
-    let arg = U.arg_of_non_null_binder arg_binder in
-
-    let subst = fields |> List.mapi (fun i (a, _) ->
-            let field_name, _ = U.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
-            let proj = mk_Tm_app field_proj_tm [arg] None p in
-            NT(a, proj))
-    in
-
-    let projectors_ses =
-      fields |> List.mapi (fun i (x, _) ->
-          let p = S.range_of_bv x in
-          let field_name, _ = U.mk_field_projector_name lid x i in
-          let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
-          let only_decl =
-              lid_equals C.prims_lid  (Env.current_module env)
-              || Options.dont_gen_projectors (Env.current_module env).str
-          in
-          (* KM : Why would we want to prevent a declaration only in this particular case ? *)
-          (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
-          let no_decl = false (* Syntax.is_type x.sort *) in
-          let quals q =
-              if only_decl
-              then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
-              else q
-          in
-          let quals =
-              let iquals = iquals |> List.filter (function
-                  | S.Abstract
-                  | S.Private -> true
-                  | _ -> false)
-              in
-              quals (S.Projector(lid, x.ppname)::iquals) in
-          let attrs = if only_decl then [] else [ U.attr_substitute ] in
-          let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
-                       sigquals = quals;
-                       sigrng = range_of_lid field_name;
-                       sigmeta = default_sigmeta;
-                       sigattrs = attrs } in
-          if Env.debug env (Options.Other "LogTypes")
-          then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
-          if only_decl
-          then [decl] //only the signature
-          else
-              let projection = S.gen_bv x.ppname.idText None tun in
-              let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
-                  let b = S.is_implicit imp in
-                  if i+ntps=j  //this is the one to project
-                  then pos (Pat_var projection), b
-                  else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                  else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
-              in
-              let pat = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
-              let imp = U.abs binders body None in
-              let dd =
-                  if quals |> List.contains S.Abstract
-                  then Delta_abstract Delta_equational
-                  else Delta_equational
-              in
-              let lbtyp = if no_decl then t else tun in
-              let lb = {
-                  lbname=Inr (S.lid_as_fv field_name dd None);
-                  lbunivs=uvs;
-                  lbtyp=lbtyp;
-                  lbeff=C.effect_Tot_lid;
-                  lbdef=SS.close_univ_vars uvs imp;
-                  lbattrs=[];
-                  lbpos=Range.dummyRange;
-              } in
-              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
-                           sigquals = quals;
-                           sigrng = p;
-                           sigmeta = default_sigmeta;
-                           sigattrs = attrs } in
-              if Env.debug env (Options.Other "LogTypes")
-              then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
-              if no_decl then [impl] else [decl;impl]) |> List.flatten
-    in
-    discriminator_ses @ projectors_ses
-
-let mk_data_operations iquals env tcs se =
-  match se.sigel with
-  | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, _) when not (lid_equals constr_lid C.lexcons_lid) ->
-
-    let univ_opening, uvs = SS.univ_var_opening uvs in
-    let t = SS.subst univ_opening t in
-    let formals, _ = U.arrow_formals t in
-
-    let inductive_tps, typ0, should_refine =
-        let tps_opt = BU.find_map tcs (fun se ->
-            if lid_equals typ_lid (must (U.lid_of_sigelt se))
-            then match se.sigel with
-                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs) ->
-                      assert (List.length uvs = List.length uvs') ;
-                      Some (tps, typ0, List.length constrs > 1)
-                  | _ -> failwith "Impossible"
-            else None)
-        in
-        match tps_opt with
-            | Some x -> x
-            | None ->
-                if lid_equals typ_lid C.exn_lid
-                then [], U.ktype0, true
-                else raise_error (Errors.Fatal_UnexpectedDataConstructor, "Unexpected data constructor") se.sigrng
-    in
-
-    let inductive_tps = SS.subst_binders univ_opening inductive_tps in
-    let typ0 = SS.subst univ_opening typ0 in
-    let indices, _ = U.arrow_formals typ0 in
-
-    let refine_domain =
-        if se.sigquals |> BU.for_some (function RecordConstructor _ -> true | _ -> false)
-        then false
-        else should_refine
-    in
-
-    let fv_qual =
-        let filter_records = function
-            | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
-            | _ -> None
-        in match BU.find_map se.sigquals filter_records with
-            | None -> Data_ctor
-            | Some q -> q
-    in
-
-    let iquals =
-        if List.contains S.Abstract iquals
-        then S.Private::iquals
-        else iquals
-    in
-
-    let fields =
-        let imp_tps, fields = BU.first_N n_typars formals in
-        let rename = List.map2 (fun (x, _) (x', _) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
-        SS.subst_binders rename fields
-    in
-    mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
-
-  | _ -> []
-
-
-(* private *)
-let haseq_suffix = "__uu___haseq"
-
-let is_haseq_lid lid = 
-  let str = lid.str in let len = String.length str in
-  let haseq_suffix_len = String.length haseq_suffix in
-  len > haseq_suffix_len &&
-  String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
-
-let get_haseq_axiom_lid lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ haseq_suffix))])
-
-//get the optimized hasEq axiom for this inductive
-//the caller is supposed to open the universes, and pass along the universe substitution and universe names
-//returns -- lid of the hasEq axiom
-//        -- the hasEq axiom for the inductive
-//        -- opened parameter binders
-//        -- opened index binders
-//        -- conjunction of hasEq of the binders
-let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:univ_names) :(lident * term * binders * binders * term) =
-  let lid, bs, t =
-    match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, _) -> lid, bs, t
-    | _                                       -> failwith "Impossible!"
-  in
-
-  //apply usubt to bs
-  let bs = SS.subst_binders usubst bs in
-  //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
-  let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
-  //open t with binders bs
-  let bs, t = SS.open_term bs t in
-  //get the index binders, if any
-  let ibs =
-    match (SS.compress t).n with
-    | Tm_arrow (ibs, _) -> ibs
-    | _                 -> []
-  in
-  //open the ibs binders
-  let ibs = SS.open_binders ibs in
-  //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
-  //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
-  //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
-  //haseq of ind
-  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
-  //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
-  //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
-  let bs' = List.filter (fun b ->
-    Rel.subtype_nosmt en (fst b).sort  (fst (U.type_u ()))
-  ) bs in
-  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
-  //implication
-  let fml = U.mk_imp haseq_bs haseq_ind in
-  //attach pattern -- is this the right place ?
-  let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
-  //fold right with ibs, close and add a forall b
-  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
-  
-  //fold right with bs, close and add a forall b
-  //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
-
-  let axiom_lid = get_haseq_axiom_lid lid in
-  axiom_lid, fml, bs, ibs, haseq_bs

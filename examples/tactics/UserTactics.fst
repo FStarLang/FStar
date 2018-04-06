@@ -3,7 +3,7 @@ open FStar.Tactics
 
 let test_print_goal =
   assert_by_tactic (forall (y:int). y==0 ==> 0==y)
-                   (fun () -> print "User print:") //Some auto-thunking or at least some light notation for it
+                   (fun () -> debug "User debug:") //Some auto-thunking or at least some light notation for it
 
 let test_or_else =
     assert_by_tactic True (fun () -> or_else (fun () -> fail "failed") idtac)
@@ -87,7 +87,7 @@ let test_apply_ascription' (x:nat) (y:nat) =
   assert_by_tactic (op_Multiply x y == op_Multiply y x) (fun () -> visit idtac)
 
 let test_apply_ascription (x:nat) (y:nat) =
-  assert (op_Multiply x y == op_Multiply y x)
+  (assert (op_Multiply x y == op_Multiply y x))
   <: Tot unit
   by idtac
 
@@ -104,15 +104,15 @@ let test_inspect =
                    (fun () ->
                     let x = `8 in
                     match inspect x with
-                    | Tv_App hd a -> print "application"
-                    | Tv_Abs bv t -> print "abstraction"
-                    | Tv_Arrow bv t -> print "arrow"
-                    | Tv_Type _ -> print "type"
-                    | Tv_Var _ -> print "var"
-                    | Tv_FVar _ -> print "fvar"
-                    | Tv_Refine _ _ -> print "refinement"
-                    | Tv_Const C_Unit -> print "unit"
-                    | Tv_Const (C_Int i) -> print ("int: " ^ string_of_int i)
+                    | Tv_App hd a -> debug "application"
+                    | Tv_Abs bv t -> debug "abstraction"
+                    | Tv_Arrow bv t -> debug "arrow"
+                    | Tv_Type _ -> debug "type"
+                    | Tv_Var _ -> debug "var"
+                    | Tv_FVar _ -> debug "fvar"
+                    | Tv_Refine _ _ -> debug "refinement"
+                    | Tv_Const C_Unit -> debug "unit"
+                    | Tv_Const (C_Int i) -> debug ("int: " ^ string_of_int i)
                     | _ -> fail "unknown"
                    )
 

@@ -11,7 +11,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "983161d630aacf5b5a46063b3984b4fc"
+      "d84ee3bd03bf3e58f6a4d6524407fe33"
     ],
     [
       "Canon.lem9",
@@ -20,7 +20,24 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1a9f8ab866822afa8da354c0cb8738a0"
+      "f1447a654d3b75e27f73fbaa8da7e5c2"
+    ],
+    [
+      "Canon.check_canon",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "function_token_typing_Prims.unit",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Tactics.Result.uu___is_Failed"
+      ],
+      0,
+      "a06fb71f1f186b059a23de7a5a513455"
     ]
   ]
 ]

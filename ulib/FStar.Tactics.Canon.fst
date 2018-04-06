@@ -82,7 +82,7 @@ let rec canon_point e =
         trefl (); e
     in
     match e with
-    // Fold constants
+    // Evaluate constants
     | Plus (Lit a) (Lit b) ->
         norm [primops];
         trefl ();
@@ -209,10 +209,8 @@ let rec canon_point e =
 let canon_point_entry () : Tac unit =
     norm [];
     let g = cur_goal () in
-    let f = term_as_formula g in
-    match f with
+    match term_as_formula g with
     | Comp (Eq _) l r ->
-        admit (); // coverage...
         begin match run_tm (is_arith_expr l) with
         | Inr e -> (let _e = canon_point e in ())
         | Inl _ -> trefl ()

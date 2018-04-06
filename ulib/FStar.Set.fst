@@ -19,7 +19,7 @@ module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
 
-abstract type set (a:eqtype) :Type u#a = a -> Tot bool
+abstract type set (a:Type u#a{hasEq a}) :Type u#a = a -> Tot bool
 abstract type equal (#a:eqtype) (s1:set a) (s2:set a) = feq s1 s2
 
 (* destructors *)
@@ -42,7 +42,7 @@ let complement #a s    = fun x -> not (s x)
 
 (* a property about sets *)
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
-  intersect s1 s2 == empty
+  equal (intersect s1 s2) empty
 
 
 (* ops *)

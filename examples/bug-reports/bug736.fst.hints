@@ -2,15 +2,6 @@
   "k/Ì\u0018M\u0017\u0015c'lDë½Çv9",
   [
     [
-      "Bug736.uu___is_Goal",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0834cda1adacbe7ecf313433b6a3100b"
-    ],
-    [
       "Bug736.__proj__Goal__item__a",
       1,
       2,
@@ -21,7 +12,7 @@
         "refinement_interpretation_Bug736_Tm_refine_b0ecc9ff3d7b826e8dfbdbd99e83c3c3"
       ],
       0,
-      "6fe11dd18eca51323876a09911a4657e"
+      "e9cc41b5fa9f9a9c22d986b35d5fa0dc"
     ],
     [
       "Bug736.__proj__Goal__item___1",
@@ -35,16 +26,7 @@
         "refinement_interpretation_Bug736_Tm_refine_b0ecc9ff3d7b826e8dfbdbd99e83c3c3"
       ],
       0,
-      "85faf6b15bc48df9723019c3fc61ef5e"
-    ],
-    [
-      "Bug736.uu___is_AHyp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "98db6aed4966506b904dd308f0772900"
+      "2467dd6302358d55eed495f5dc5f2c38"
     ],
     [
       "Bug736.__proj__AHyp__item__a",
@@ -57,7 +39,7 @@
         "refinement_interpretation_Bug736_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
       ],
       0,
-      "9f612ac14ce38188fd06952b7cc56019"
+      "91720fc9444041c748b63bef4f17251b"
     ],
     [
       "Bug736.__proj__AHyp__item___1",
@@ -71,7 +53,7 @@
         "refinement_interpretation_Bug736_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
       ],
       0,
-      "30eb8471957f0eac101a64c50972c011"
+      "236a46dcfc59c59b0e96b44e45184ebd"
     ],
     [
       "Bug736.__proj__AHyp__item___2",
@@ -85,7 +67,7 @@
         "refinement_interpretation_Bug736_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
       ],
       0,
-      "ca4fd09ab23a35947858b73c97596572"
+      "2492357fd29c2ab06d328708d36a75dd"
     ]
   ]
 ]

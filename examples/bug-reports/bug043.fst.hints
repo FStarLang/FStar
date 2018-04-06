@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "fdbcbbe9eecf47074c9bcdc25a19cf90"
-    ],
-    [
-      "Bug043.uu___is_O",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d469c9e5acc6c55de648adc4b57601eb"
-    ],
-    [
-      "Bug043.uu___is_S",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0d867440f864273ca09d24e5d51dfae0"
+      "3c6f256f58c28630359eeb7cca8cc6f0"
     ],
     [
       "Bug043.__proj__S__item___0",
@@ -39,7 +21,7 @@
         "refinement_interpretation_Bug043_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
       ],
       0,
-      "06448bd4330823c45f0849c5d78ba0f8"
+      "6b7130d672731f0248bd95ac7ac6dc23"
     ]
   ]
 ]

@@ -90,9 +90,9 @@ type universes     = list<universe>
 type monad_name    = lident
 
 ///[@ PpxDerivingShow ]
-type quoteinfo     = {
-    qopen : bool;       // True if the quotation is open, and should be substituted
- }
+type quote_kind =
+  | Quote_static
+  | Quote_dynamic
 
 ///[@ PpxDerivingShow ]
 type delta_depth =
@@ -108,11 +108,13 @@ type delta_depth =
 // output_value on them (serious).
 type lazy_kind =
   | BadLazy
+  | Lazy_bv
   | Lazy_binder
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_sigelt
 
 ///[@ PpxDerivingShow ]
 type term' =
@@ -129,11 +131,12 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of uvar * typ                                  (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
+  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -151,6 +154,11 @@ and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
     lbdef  :term;            //e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list<(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -192,7 +200,6 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
@@ -252,10 +259,10 @@ and residual_comp = {
 }
 
 and lazyinfo = {
-    blob : dyn;
-    kind : lazy_kind;
-    typ : typ;
-    rng : Range.range;
+    blob  : dyn;
+    lkind : lazy_kind;
+    typ   : typ;
+    rng   : Range.range;
  }
 
 and attribute = term
@@ -399,6 +406,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of list<lident> * term
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -446,6 +454,17 @@ let range_of_lbname (l:lbname) = match l with
     | Inr fv -> range_of_lid fv.fv_name.v
 let range_of_bv x = x.ppname.idRange
 let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
+
+
+(* Helpers *)
+let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
+    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    { qi with antiquotes = aq }
+
+let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
+    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
+    | Some (_, b, e) -> Some (b, e)
+    | None -> None
 
 (*********************************************************************************)
 (* Syntax builders *)
@@ -624,17 +643,24 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
-let t_unit   = tconst PC.unit_lid
-let t_bool   = tconst PC.bool_lid
-let t_int    = tconst PC.int_lid
-let t_string = tconst PC.string_lid
-let t_float  = tconst PC.float_lid
-let t_char   = tabbrev PC.char_lid
-let t_range  = tconst PC.range_lid
-let t_term   = tconst PC.term_lid
-let t_binder = tconst PC.binder_lid
+let t_unit      = tconst PC.unit_lid
+let t_bool      = tconst PC.bool_lid
+let t_int       = tconst PC.int_lid
+let t_string    = tconst PC.string_lid
+let t_float     = tconst PC.float_lid
+let t_char      = tabbrev PC.char_lid
+let t_range     = tconst PC.range_lid
+let t_term      = tconst PC.term_lid
+let t_order     = tconst PC.order_lid
+let t_decls     = tabbrev PC.decls_lid
+let t_binder    = tconst PC.binder_lid
+let t_binders   = tconst PC.binders_lid
+let t_bv        = tconst PC.bv_lid
+let t_fv        = tconst PC.fv_lid
+let t_norm_step = tconst PC.norm_step_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange

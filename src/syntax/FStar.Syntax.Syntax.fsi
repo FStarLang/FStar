@@ -73,9 +73,11 @@ and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
-type quoteinfo     = {
-    qopen : bool
- }
+
+type quote_kind =
+  | Quote_static
+  | Quote_dynamic
+
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
@@ -89,11 +91,13 @@ type delta_depth =
 // output_value on them (serious).
 type lazy_kind =
   | BadLazy
+  | Lazy_bv
   | Lazy_binder
   | Lazy_fvar
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_sigelt
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -109,11 +113,12 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of uvar * typ                                  (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
+  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -131,6 +136,11 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbdef  :term;            //e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list<(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -172,7 +182,6 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_quoted        of term * quoteinfo                       (* A quoted term, shallowly embedded *)
 and meta_source_info =
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
@@ -234,11 +243,15 @@ and residual_comp = {
 and attribute = term
 
 and lazyinfo = {
-    blob : dyn;
-    kind : lazy_kind;
-    typ : typ;
-    rng : Range.range;
+    blob  : dyn;
+    lkind : lazy_kind;
+    typ   : typ;
+    rng   : Range.range;
  }
+
+
+val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
+val lookup_aq : bv -> antiquotations -> option<(bool * term)>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
@@ -387,6 +400,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of list<lident> * term
 
 and sigelt = {
     sigel:    sigelt';
@@ -446,7 +460,7 @@ val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
-val order_univ_name: univ_name -> univ_name -> Tot<int>
+val order_univ_name: univ_name -> univ_name -> int
 
 val tun:      term
 val teff:     term
@@ -512,10 +526,15 @@ val t_string      : term
 val t_float       : term
 val t_char        : term
 val t_range       : term
+val t_norm_step   : term
 val t_term        : term
+val t_order       : term
+val t_decls       : term
 val t_binder      : term
+val t_bv          : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term
 val t_option_of   : term -> term
+val t_tuple2_of   : term -> term -> term
 val unit_const    : term

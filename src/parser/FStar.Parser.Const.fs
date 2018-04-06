@@ -21,6 +21,7 @@ open FStar.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Const
+open FStar.List
 module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
@@ -122,6 +123,7 @@ let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
+let order_lid       = p2l ["FStar"; "Order"; "order"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -195,7 +197,9 @@ let effect_Lemma_lid = pconst "Lemma"
 let effect_GTot_lid  = pconst "GTot"
 let effect_GHOST_lid = pconst "GHOST"
 let effect_Ghost_lid = pconst "Ghost"
-let effect_DIV_lid   = pconst "DIV"
+let effect_DIV_lid   = psconst "DIV"
+let effect_Div_lid   = psconst "Div"
+let effect_Dv_lid    = psconst "Dv"
 
 (* The "All" monad and its associated symbols *)
 let all_lid          = p2l ["FStar"; "All"]
@@ -211,6 +215,7 @@ let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
@@ -226,19 +231,21 @@ let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl      = pconst "simplify"
-let steps_weak       = pconst "weak"
-let steps_hnf        = pconst "hnf"
-let steps_primops    = pconst "primops"
-let steps_zeta       = pconst "zeta"
-let steps_iota       = pconst "iota"
-let steps_delta      = pconst "delta"
-let steps_unfoldonly = pconst "delta_only"
-let steps_unfoldattr = pconst "delta_attr"
+let steps_simpl         = pconst "simplify"
+let steps_weak          = pconst "weak"
+let steps_hnf           = pconst "hnf"
+let steps_primops       = pconst "primops"
+let steps_zeta          = pconst "zeta"
+let steps_iota          = pconst "iota"
+let steps_delta         = pconst "delta"
+let steps_unfoldonly    = pconst "delta_only"
+let steps_unfoldfully   = pconst "delta_fully"
+let steps_unfoldattr    = pconst "delta_attr"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
+let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 
 let gen_reset =
@@ -343,3 +350,7 @@ let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
 let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange
+let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FStar.Range.dummyRange
+let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange
+let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Range.dummyRange
+let norm_step_lid = lid_of_path (["FStar"; "Syntax"; "Embeddings"; "norm_step"]) FStar.Range.dummyRange

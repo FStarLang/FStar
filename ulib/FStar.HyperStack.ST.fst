@@ -393,12 +393,16 @@ let salloc (#a:Type) (#rel:preorder a) (init:a)
   (ensures salloc_post init)
   = salloc_common init false
   
+// JP, AR: these are not supported in C, and `salloc` already benefits from
+// automatic memory management.
+[@ (deprecated "use salloc instead") ]
 let salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   : StackInline (mmmstackref a rel)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
   = salloc_common init true
 
+[@ (deprecated "use salloc instead") ]
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
@@ -523,7 +527,8 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
     gst_recall (ref_contains_pred r);
     let m1 = HS.upd_tot m0 r v in
     Heap.lemma_distinct_addrs_distinct_preorders ();
-    Heap.lemma_distinct_addrs_distinct_mm ();    
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Heap.lemma_upd_equals_upd_tot_for_contained_refs (Map.sel m0.h (HS.frameOf r)) (HS.as_ref r) v;
     gst_put m1
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
@@ -539,6 +544,7 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
+    Heap.lemma_sel_equals_sel_tot_for_contained_refs (Map.sel m0.h (HS.frameOf r)) (HS.as_ref r);
     HS.sel_tot m0 r
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1

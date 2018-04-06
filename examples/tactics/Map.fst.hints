@@ -2,15 +2,6 @@
   "˜ª¢á\ré<ÈýZ†Gù¨sÖ",
   [
     [
-      "Map.upd",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "285b29e3234b0afef2b4b21aa9f22171"
-    ],
-    [
       "Map.sel_upd1",
       1,
       2,
@@ -21,7 +12,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "2a1e0c3ea63b9feba527d9304919a731"
+      "caf5547f74bcc5764fc5ea0fafdfdc00"
     ],
     [
       "Map.sel_upd2",
@@ -34,16 +25,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "68fc2bdd5abfff22ed3f7090d3938577"
-    ],
-    [
-      "Map.upd",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "938d705f72d92796b7b965d9c6210eb9"
+      "daf3d16139d4697844433c6edf55462f"
     ]
   ]
 ]

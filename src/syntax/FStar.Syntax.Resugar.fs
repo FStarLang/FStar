@@ -667,6 +667,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       (* TODO : should we put a pretty_non_parseable option for these cases ? *)
       label s (mk A.Wild)
 
+    | Tm_quoted (tm, qi) ->
+      let qi = match qi.qkind with
+               | Quote_static -> Static
+               | Quote_dynamic -> Dynamic
+      in
+      mk (A.Quote (resugar_term' env tm, qi))
+
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
           | Sequence ->
@@ -719,7 +726,6 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         mk (A.Ascribed(resugar_term' env e,
                        mk (A.Construct(name,[resugar_term' env t, A.Nothing])),
                        None))
-      | Meta_quoted (qt, qi) -> mk (A.Quote (resugar_term' env qt, qi.qopen))
       end
 
     | Tm_unknown -> mk A.Wild
@@ -815,7 +821,7 @@ and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
   match typ_opt with
   | None | Some { n = Tm_unknown } -> pat
   | Some typ -> if Options.print_bound_var_types ()
-               then mk (A.PatAscribed (pat, resugar_term' env typ))
+               then mk (A.PatAscribed (pat, (resugar_term' env typ, None)))
                else pat
 
 and resugar_bv_as_pat env (x:S.bv) qual body_bv: option<A.pattern> =
@@ -1157,6 +1163,9 @@ let resugar_sigelt' env se : option<A.decl> =
           label universes (resugar_term' env t)
       in
       Some (decl'_to_decl se (A.Val (lid.ident,t')))
+
+  | Sig_splice (ids, t) ->
+    Some (decl'_to_decl se (A.Splice (List.map (fun l -> l.ident) ids, resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

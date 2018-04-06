@@ -79,6 +79,8 @@ val reveal_hide:
 type lbytes (l:nat) = b:bytes{length b = l}
 type kbytes (k:nat) = b:bytes{length b < pow2 k}
 
+let lbytes32 (l:UInt32.t) = b:bytes{len b = l}
+
 val empty_bytes : lbytes 0
 val empty_unique:
     b:bytes
@@ -208,6 +210,7 @@ val bytes_of_int_of_bytes:
   -> Lemma (ensures (bytes_of_int (length b) (int_of_bytes b) == b))
           [SMTPat (int_of_bytes b)]
 
+//18-02-25 use [uint32] instead of [int32] etc? 
 val int32_of_bytes:
     b:bytes{length b <= 4}
   -> n:u32{U32.v n == int_of_bytes b}
@@ -275,8 +278,9 @@ val iutf8_opt:
     m:bytes
   -> (option (s:string{Str.length s < pow2 30 /\ utf8_encode s = m}))
 
-// No definition for these: they're only meant for backwards compatibility with Platform.Bytes
 val string_of_hex: string -> Tot string
+
+// missing post on the length of the results (exact on constant arguments)
 val bytes_of_hex: string -> Tot bytes
 val hex_of_string: string -> Tot string
 val hex_of_bytes: bytes -> Tot string

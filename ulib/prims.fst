@@ -175,7 +175,7 @@ unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure
 
 unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
-	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
+	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
 	 ==> wp k
 
 unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
@@ -360,8 +360,9 @@ noeq type norm_step =
   | Delta
   | Zeta
   | Iota
-  | UnfoldAttr:#t:Type0 -> a:t -> norm_step
   | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
+  | UnfoldFully:list string -> norm_step // idem
+  | UnfoldAttr:#t:Type0 -> a:t -> norm_step
 
 // Helpers, so we don't expose the actual inductive
 abstract let simplify : norm_step = Simpl
@@ -372,6 +373,7 @@ abstract let delta    : norm_step = Delta
 abstract let zeta     : norm_step = Zeta
 abstract let iota     : norm_step = Iota
 abstract let delta_only (s:list string) : norm_step = UnfoldOnly s
+abstract let delta_fully (s:list string) : norm_step = UnfoldFully s
 abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 
 // Normalization marker

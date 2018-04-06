@@ -29,7 +29,6 @@ open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.Const
 open FStar.SMTEncoding
-open FStar.SMTEncoding.SplitQueryCases
 open FStar.SMTEncoding.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -40,6 +39,8 @@ module TcUtil = FStar.TypeChecker.Util
 module Const = FStar.Parser.Const
 module R  = FStar.Reflection.Basic
 module RD = FStar.Reflection.Data
+module EMB = FStar.Syntax.Embeddings
+module RE = FStar.Reflection.Embeddings
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -756,14 +757,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         then Term.mk_Term_unit, []
         else encode_term t env
 
-      | Tm_meta({n = _}, Meta_quoted (qt, _)) ->
+      | Tm_quoted (qt, _) ->
         // Inspect the term and encode its view, recursively.
         // Quoted terms are, in a way, simply an optimization.
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = R.embed_term_view t.pos (R.inspect qt) in
-        let t = U.mk_app RD.fstar_refl_pack [S.as_arg tv] in
+        let tv = EMB.embed RE.e_term_view t.pos (R.inspect_ln qt) in
+        let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
       | Tm_meta(t, _) ->
@@ -2300,7 +2301,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     in
     match se.sigel with
      | Sig_new_effect_for_free _ ->
-         failwith "impossible -- removed by tc.fs"
+         failwith "impossible -- new_effect_for_free should have been removed by Tc.fs"
+     | Sig_splice _ ->
+         failwith "impossible -- splice should have been removed by Tc.fs"
      | Sig_pragma _
      | Sig_main _
      | Sig_effect_abbrev _
@@ -2727,7 +2730,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
     *)
     let encode_binding b (i, decls, env) = match b with
         | Binding_univ _ ->
-          i+1, [], env
+          i+1, decls, env
 
         | Env.Binding_var x ->
             let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv x.sort in

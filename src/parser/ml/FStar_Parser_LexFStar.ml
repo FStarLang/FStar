@@ -84,8 +84,9 @@ let () =
   Hashtbl.add keywords "reify"         REIFY       ;
   Hashtbl.add keywords "reflectable"   REFLECTABLE ;
   Hashtbl.add keywords "requires"      REQUIRES    ;
-  Hashtbl.add keywords "set_range_of"                 SET_RANGE_OF    ;
+  Hashtbl.add keywords "set_range_of"  SET_RANGE_OF;
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
+  Hashtbl.add keywords "synth"         SYNTH       ;
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;
   Hashtbl.add keywords "true"          TRUE        ;
@@ -427,6 +428,10 @@ let regexp ident       = ident_start_char ident_char*
 let regexp tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 
 let rec token = lexer
+ | "%splice" -> SPLICE
+ | "%`" -> PERC_BACKTICK
+ | "`#" -> BACKTICK_HASH
+ | "`@" -> BACKTICK_AT
  | "quote" -> QUOTE
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS

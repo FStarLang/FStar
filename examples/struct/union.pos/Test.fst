@@ -2,15 +2,21 @@ module Test
 open FStar.Pointer
 open FStar.HyperStack.All
 
-let s : struct_typ = [
-  "x", TBase TBool;
-  "y", TBase TUnit;
-]
+let s : struct_typ = {
+  name = "s";
+  fields = [
+    "x", TBase TBool;
+    "y", TBase TUnit;
+  ]
+}
 
-let u : union_typ = [
-  "a", TBase TUInt32;
-  "b", TStruct s;
-]
+let u : union_typ = {
+  name = "u";
+  fields = [
+    "a", TBase TUInt32;
+    "b", TStruct s;
+  ]
+}
 
 let t : typ = TUnion u
 

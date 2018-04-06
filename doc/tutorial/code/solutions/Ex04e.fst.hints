@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c658060f37b7d81b1447d3af15c1b810"
-    ],
-    [
-      "Ex04e.uu___is_None",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e68dc21fc67bba56448335f24133be63"
-    ],
-    [
-      "Ex04e.uu___is_Some",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "58802aca2ba5589b8d5c469dcfd2d9f9"
+      "345bc7d4d8397596a6bccd081cc20002"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -39,7 +21,7 @@
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "15740b334cd9a7b77ddbcabeb4ad40cc"
+      "049a4611b32fc77516751b8e989fea79"
     ],
     [
       "Ex04e.find",
@@ -55,7 +37,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3261d78b4b482ef4980f1bd2cebd3c1b"
+      "4b0122c346702ca8d9185128e509c056"
     ],
     [
       "Ex04e.find'",
@@ -70,7 +52,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ea7014548bae499e6156e306ae6128aa"
+      "3e3196e353e4dce9939bdc3f45c19ffe"
     ],
     [
       "Ex04e.find_some",
@@ -85,7 +67,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_Ex04e.find_"
       ],
       0,
-      "1eebb8df9618c315e66eb79eabf00ccf"
+      "7c6ac8b58836985f87674b7183ed6fac"
     ],
     [
       "Ex04e.find_some",
@@ -109,7 +91,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a84efc42ce4babfcf6f86c9c2cce2901"
+      "256926e0493a82e4d5f73ec067366732"
     ],
     [
       "Ex04e.find_some'",
@@ -123,7 +105,7 @@
         "fuel_guarded_inversion_Ex04e.option", "typing_Ex04e.find"
       ],
       0,
-      "01b3f6b0c682830ecea271b4327ed5de"
+      "8445859ac1934c8688ce6479ceaaa7b8"
     ],
     [
       "Ex04e.find_some'",
@@ -151,7 +133,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex04e.find"
       ],
       0,
-      "758da5dab84c700898e50e31b3565bbc"
+      "3029ad8b454f48b6962280f7c8790323"
     ],
     [
       "Ex04e.option",
@@ -160,25 +142,7 @@
       1,
       [ "@query" ],
       0,
-      "86f00b04473cb9c3f562fb3452181946"
-    ],
-    [
-      "Ex04e.uu___is_None",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e6e5ba499055832c0f892c03b9fa7f7c"
-    ],
-    [
-      "Ex04e.uu___is_Some",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "70c894fda3171a21f1b9108989b3d981"
+      "a013aa1bbfa0779e00fb0cd527cf1491"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -191,7 +155,7 @@
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "93412db42c5d094aec4a1cb5e5a9cd07"
+      "9beefff4da54d9d5b63f86ee6580415a"
     ],
     [
       "Ex04e.find",
@@ -206,7 +170,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "560799a6e17fe1ef06139b14f5117815"
+      "52a3686c3e875dc68c0548a6aa9c8a48"
     ],
     [
       "Ex04e.find'",
@@ -220,7 +184,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6d7e1a58e80e4851be4ce91e63943cf2"
+      "7aabd783a37a104f95589f8a05e1ea26"
     ],
     [
       "Ex04e.find_some",
@@ -235,7 +199,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_Ex04e.find_"
       ],
       0,
-      "34a0f73178157e70c131ec7eec453e15"
+      "337bf297b653015998758d438df02e6a"
     ],
     [
       "Ex04e.find_some'",
@@ -252,7 +216,7 @@
         "projection_inverse_Ex04e.None__a", "typing_Ex04e.find"
       ],
       0,
-      "855b0a4e4cf4d21d86a2220fdbf20726"
+      "7a97a7f1022b4a32dab0de3b088a1f20"
     ]
   ]
 ]

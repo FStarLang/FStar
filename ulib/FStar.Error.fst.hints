@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "5baf8e46ed23cb6d47890ccf4dc3930f"
-    ],
-    [
-      "FStar.Error.uu___is_Error",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7b8227f9b483fca792f78654eca7f9e8"
+      "a510dd7f4c6ba135c3ac40cd9f63c92f"
     ],
     [
       "FStar.Error.__proj__Error__item___0",
@@ -30,16 +21,7 @@
         "refinement_interpretation_FStar.Error_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
       ],
       0,
-      "e8741feeb685447a229d41ea671e9a5f"
-    ],
-    [
-      "FStar.Error.uu___is_Correct",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4033d273f99b6a7d3de95b2466112cea"
+      "b3df39e6da66059b4ac7810f65a8c256"
     ],
     [
       "FStar.Error.__proj__Correct__item___0",
@@ -53,7 +35,7 @@
         "refinement_interpretation_FStar.Error_Tm_refine_9570651724fccc40ed9243df14ac4feb"
       ],
       0,
-      "78e5a69f9e4e61713c22ef773e233516"
+      "429c08bf4b6f918da297d63e29dbf2af"
     ],
     [
       "FStar.Error.invertOptResult",
@@ -68,7 +50,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "52b30d2d543d2c5d3a16a222fd0e302d"
+      "47ada29dae16633a738b0ac1a0b8e7db"
     ],
     [
       "FStar.Error.optResult",
@@ -77,16 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "a7b3ab0a448587ac0073f528f93752d4"
-    ],
-    [
-      "FStar.Error.uu___is_Error",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8fc3f00c999b9963c7342a61d4574a72"
+      "8446456f2a6e11ff02f4f081e65c812a"
     ],
     [
       "FStar.Error.__proj__Error__item___0",
@@ -99,16 +72,7 @@
         "refinement_interpretation_FStar.Error_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
       ],
       0,
-      "f3161d94aad62d27255565814afa7f96"
-    ],
-    [
-      "FStar.Error.uu___is_Correct",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6f2cace587d9ac8b4876d1638dbf23ad"
+      "1e412c60dbb9980a7ed26726ca5a2aa2"
     ],
     [
       "FStar.Error.__proj__Correct__item___0",
@@ -122,7 +86,7 @@
         "refinement_interpretation_FStar.Error_Tm_refine_9570651724fccc40ed9243df14ac4feb"
       ],
       0,
-      "30ab9fff95b997c7595b7cf7d42fed71"
+      "d27667cc6ab954ac604886fb81e56d03"
     ]
   ]
 ]

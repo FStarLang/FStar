@@ -1,0 +1,67 @@
+[
+  "Ùv©\\†Äç\u0001Ûå&Óß\u001d\u0014f",
+  [
+    [
+      "Bug1414.f",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "8bff3fbc446611640cabfa743e2153e1"
+    ],
+    [
+      "Bug1414.f'",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "3927b4ed8db1da6d6699f9e01ff6979f"
+    ],
+    [
+      "Bug1414.list",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "99817e67678affe809569d3bfdc56763"
+    ],
+    [
+      "Bug1414.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1414.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug1414_Tm_refine_1dc6a56c5c49f7722088b41ebcd5d2a7"
+      ],
+      0,
+      "2ed505e10e28ef69d1d8e84c32140e74"
+    ],
+    [
+      "Bug1414.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1414.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug1414_Tm_refine_1dc6a56c5c49f7722088b41ebcd5d2a7"
+      ],
+      0,
+      "b921b4daa574b8a5f7417c0f95d0717f"
+    ],
+    [
+      "Bug1414.f''",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "6961c324c3993ad0e469d9e408db6bd5"
+    ]
+  ]
+]

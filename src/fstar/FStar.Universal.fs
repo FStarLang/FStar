@@ -49,8 +49,6 @@ let cache_version_number = 1
 
 let module_or_interface_name m = m.is_interface, m.name
 
-let user_tactics_modules = Tc.user_tactics_modules
-
 let with_tcenv (env:TcEnv.env) (f:DsEnv.withenv<'a>) =
     let a, dsenv = f env.dsenv in
     a, ({ env with dsenv=dsenv })
@@ -96,7 +94,8 @@ let init_env deps : TcEnv.env =
         Const.prims_lid
   in
   (* Set up some tactics callbacks *)
-  let env = { env with synth = FStar.Tactics.Interpreter.synth } in
+  let env = { env with synth_hook = FStar.Tactics.Interpreter.synthesize } in
+  let env = { env with splice = FStar.Tactics.Interpreter.splice} in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
   env

@@ -17,9 +17,13 @@ let def_of (#t:Type) (x:t) : Tac term =
   let e = cur_env () in
   let t = quote x in
   match inspect t with
-  | Tv_FVar fv ->
-    begin match lookup_typ e (inspect_fv fv) with
-    | Sg_Let _ _ def -> def
+  | Tv_FVar fv -> begin
+    let se = match lookup_typ e (inspect_fv fv) with
+             | None -> fail "Not found..?"
+             | Some se -> se
+    in
+    match inspect_sigelt se with
+    | Sg_Let _ _ _ def -> def
     | _ -> fail "not a sig_let"
     end
   | _ -> fail "not an fvar"
@@ -69,7 +73,7 @@ let _ = assert_by_tactic True
  * when this definition is type-checked, and not when it's called. So, this function is just an
  * identity function with no special semantics. *)
 let does_not_normalize (#t:Type) (x:t) : t =
-  synth_by_tactic #t #unit (fun () -> normalize [primops; delta] x)
+  synth_by_tactic #t (fun () -> normalize [primops; delta] x)
 
 let four'' : int = does_not_normalize (2+2)
 

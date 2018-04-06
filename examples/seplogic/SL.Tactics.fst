@@ -35,7 +35,7 @@ unfold let unfold_steps :list string =
  *)
 private let and_elim' () : Tac unit =
   let h = implies_intro () in  //introduce p /\ q in the context
-  and_elim (pack (Tv_Var h));  //split them into p and q
+  and_elim (pack (Tv_Var (bv_of_binder h)));  //split them into p and q
   clear h  //remove h from the context
 
 (*
@@ -71,12 +71,6 @@ private let rec split_all () : Tac unit =
   | _       -> ()
 
 (***** Tactics *****)
-
-private let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
-    match ts with
-    | [] -> fail "no tactics to try"
-    | [t] -> t ()
-    | t::ts -> or_else t (fun () -> first ts)
 
 private let simplify_unused_in () : Tac unit =
   first [(fun () -> apply_lemma (`lemma_r_unused_in_minus));

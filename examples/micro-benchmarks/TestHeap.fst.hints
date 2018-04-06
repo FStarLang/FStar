@@ -13,7 +13,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "66f2d05753f21c4bdaab44e4e23a5bc8"
+      "97495fb5b1c6319084e10ef4852ea7cc"
     ],
     [
       "TestHeap.test1",
@@ -32,7 +32,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "7debfeeb7b9b76b878ffc1024ef0649c"
+      "62aa25c156d064999a2bb32b4d9a8b5b"
     ],
     [
       "TestHeap.test3",
@@ -48,7 +48,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "56c2450fb080539e0d72cf51f7a0a7b6"
+      "52119ebabc3aa14bc2ed378477fab4ee"
     ],
     [
       "TestHeap.test7",
@@ -67,7 +67,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "ae501a1046d68a5fb4f994c8f6902543"
+      "84aebf93c5e65c4e598ec8073fab531a"
     ],
     [
       "TestHeap.test8",
@@ -83,7 +83,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "0e4a372457e31ac7f4487c2daa7b12b4"
+      "0d73ad0e7029fe93a8f272267e49e2a2"
     ],
     [
       "TestHeap.test0",
@@ -97,7 +97,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "c126b5ed96509aea53fc6e5e5a99d911"
+      "f1477e30cccfd7d915a95001e13a735f"
     ],
     [
       "TestHeap.test1",
@@ -116,7 +116,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "131d7f80c41ab3265e00c1561ebd4078"
+      "2de1ba6895cee1d58a163d0ab0cb16ba"
     ],
     [
       "TestHeap.test3",
@@ -132,7 +132,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "b443351948d98654e44c5368302531b6"
+      "096b336b2f6c68d78a4d17d66d96c273"
     ],
     [
       "TestHeap.test7",
@@ -151,7 +151,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "edc93f86a3a2c21f8ae6a470ec27c71f"
+      "0ef52608cdce89c91b7a51732b7204b4"
     ],
     [
       "TestHeap.test8",
@@ -167,7 +167,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "554fb9d7c678dc80168a2b2d83e69676"
+      "6d7afc3862af90d6982b8668ea729ba6"
     ]
   ]
 ]

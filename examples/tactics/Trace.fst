@@ -1,6 +1,7 @@
 module Trace
 
 (* Instrumenting recursive functions to provide a trace of their calls *)
+(* TODO: update to make use of metaprogrammed let-recs and splicing *)
 
 (* We take a function such as
  *
@@ -70,9 +71,9 @@ let rec instrument_body (ii : ins_info) (t : term) : Tac term =
     pack (Tv_Match t brs')
     end
   // descend into lets
-  | Tv_Let b t1 t2 -> begin
+  | Tv_Let r b t1 t2 -> begin
     let t2' = instrument_body ii t2 in
-    pack (Tv_Let b t1 t2')
+    pack (Tv_Let r b t1 t2')
     end
   | _ -> begin
     let hd, args = collect_app t in
@@ -101,7 +102,6 @@ let rec cutlast (l : list 'a) : list 'a * 'a =
     | x::xs -> let ys, y = cutlast xs in x::ys, y
 
 let instrument (f : 'a) : Tac unit =
-    admit ();
     let t = quote f in
     // name
     let n = match inspect t with
@@ -111,12 +111,12 @@ let instrument (f : 'a) : Tac unit =
     let n' = tick n in
     let all_args = intros () in
     let real, trace_arg = cutlast all_args in 
-    let real = List.Tot.map (fun b -> pack (Tv_Var b)) real in
+    let real = map (fun b -> pack (Tv_Var (bv_of_binder b))) real in
     let ii = {
         orig_name = n;
         ins_name = n';
         args = real;
-        trace_arg = pack (Tv_Var trace_arg)
+        trace_arg = pack (Tv_Var (bv_of_binder trace_arg))
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)

@@ -2,24 +2,6 @@
   "\to\u001dÑsŸxùŸìŒÙo$õ8",
   [
     [
-      "Eta_expand.uu___is_A",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1a928f5469584c8af2ce3f92b8abdefd"
-    ],
-    [
-      "Eta_expand.uu___is_B",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d95246b268ed592663394a8589633e7c"
-    ],
-    [
       "Eta_expand.dec",
       1,
       2,
@@ -29,7 +11,7 @@
         "disc_equation_Eta_expand.B", "fuel_guarded_inversion_Eta_expand.t"
       ],
       0,
-      "6ef80d962b742c3f825727074c736d11"
+      "baef699819e2b2a9a3c0520743f881ef"
     ],
     [
       "Eta_expand.choose",
@@ -45,7 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d84ff00d2c37f8efa970e9d1c56cb393"
+      "b11ac586397dee659da0656f48c66835"
     ],
     [
       "Eta_expand.uu___15",
@@ -59,7 +41,7 @@
         "token_correspondence_Eta_expand.fun_a"
       ],
       0,
-      "546e384e11f83db997b73d66d6bd0444"
+      "f6ebd67ba1a4256170beed4d647b5de4"
     ]
   ]
 ]

@@ -44,7 +44,7 @@ unfold let st_ite_wp        (heap:Type) (a:Type)
                             (wp:st_wp_h heap a)
                             (post:st_post_h heap a) (h0:heap) =
      forall (k:st_post_h heap a).
-	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
+	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
 	 ==> wp k h0
 unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
                         (wp2:st_wp_h heap a) =
@@ -100,7 +100,7 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
 		       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
          : GTot Type0 =
   forall (k:ex_post b).
-     (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
+     (forall (rb:result b).{:pattern (guard_free (k rb))} p rb ==> k rb)
      ==> (wp1 (function
                | V ra1 -> wp2 ra1 k
                | E e -> k (E e)
@@ -108,7 +108,7 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
-     (forall (rb:result a).{:pattern (guard_free (k rb))} k rb <==> post rb)
+     (forall (rb:result a).{:pattern (guard_free (k rb))} post rb ==> k rb)
      ==> wp k
 
 unfold let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
@@ -154,7 +154,7 @@ unfold let all_ite_wp (heap:Type) (a:Type)
                       (wp:all_wp_h heap a)
                       (post:all_post_h heap a) (h0:heap) =
     forall (k:all_post_h heap a).
-       (forall (x:result a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
+       (forall (x:result a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
        ==> wp k h0
 unfold let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
 unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
@@ -261,19 +261,51 @@ let ignore #a x = ()
 irreducible
 let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
 
-(* For the compiler. Use as follows:
+(* These are the supported attributes for top-level declarations. Syntax
+ * example:
+ *   [@ Gc ] type list a = | Nil | Cons of a * list a
+ * or:
+ *   [@ CInline ] let f x = UInt32.(x +%^ 1)
  *
- * [@ PpxDerivingShow ]
- * type t = A | B
- *
- * The resulting OCaml extracted type definition will have [@@ ppx_deriving show] attached to it. *)
+ * Please add new attributes to this list along with a comment! Attributes are
+ * desugared but not type-checked; using the constructors of a data type
+ * guarantees a minimal amount of typo-checking.
+ * *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
+    (* Generate [@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingShowConstant of string
+    (* Similar, but for constant printers. *)
   | CInline
+    (* KreMLin-only: generates a C "inline" attribute on the resulting
+     * function declaration. *)
   | Substitute
+    (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
+     * deprecated and the recommended way is now to use F*'s
+     * [inline_for_extraction], which now also works for stateful functions. *)
   | Gc
+    (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
+     * data-type; this requires running with a conservative GC as the
+     * allocations are not freed. *)
   | Comment of string
+    (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
+     * syntax automatically fills in this attribute. *)
+  | CPrologue of string
+    (* KreMLin-only: berbatim C code to be prepended to the declaration.
+     * Multiple attributes are valid and accumulate, separated by newlines. *)
+  | CEpilogue of string
+    (* Ibid. *)
+  | CConst of string
+    (* KreMLin-only: indicates that the parameter with that name is to be marked
+     * as C const.  This will be checked by the C compiler, not by KreMLin or F*.
+     *
+     * Note: this marks the "innermost" type as const, i.e. (Buf (Buf int))
+     * becomes (Buf (Buf (Const int))), whose C syntax is "const int **p". This
+     * does NOT mark the parameter itself as const; the C syntax would be
+     * "int **const p". This does not allow expressing things such as "int
+     * *const *p" either. *)
+
+(* Some supported attributes encoded using functions. *)
 
 (*
  * to be used in attributes
@@ -287,4 +319,7 @@ irreducible
 let inline_let : unit = ()
 
 irreducible
+let plugin : unit = ()
+
 let dm4f_bind_range : unit = ()
+
