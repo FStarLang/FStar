@@ -2244,7 +2244,7 @@
         "typing_LambdaOmega.is_value", "typing_LambdaOmega.uu___is_ELam"
       ],
       0,
-      "33853525ce1e838e60d7d08cff74a269"
+      "57ed4ab9098d817d96f9900157e91b0e"
     ],
     [
       "LambdaOmega.tappears_free_in",
@@ -4426,7 +4426,7 @@
         "subterm_ordering_LambdaOmega.TyEqu"
       ],
       0,
-      "2448f1de733003f4a12a8e13eece6eff"
+      "39e944ca577a07d91dd4f9d73e144296"
     ],
     [
       "LambdaOmega.preservation",
