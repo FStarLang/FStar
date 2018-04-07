@@ -6,42 +6,42 @@ type goal =
   goal_ty: FStar_Syntax_Syntax.typ ;
   opts: FStar_Options.optionstate ;
   is_guard: Prims.bool }[@@deriving show]
-let (__proj__Mkgoal__item__context : goal -> FStar_TypeChecker_Env.env) =
+let __proj__Mkgoal__item__context : goal -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;
         is_guard = __fname__is_guard;_} -> __fname__context
   
-let (__proj__Mkgoal__item__witness : goal -> FStar_Syntax_Syntax.term) =
+let __proj__Mkgoal__item__witness : goal -> FStar_Syntax_Syntax.term =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;
         is_guard = __fname__is_guard;_} -> __fname__witness
   
-let (__proj__Mkgoal__item__goal_ty : goal -> FStar_Syntax_Syntax.typ) =
+let __proj__Mkgoal__item__goal_ty : goal -> FStar_Syntax_Syntax.typ =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;
         is_guard = __fname__is_guard;_} -> __fname__goal_ty
   
-let (__proj__Mkgoal__item__opts : goal -> FStar_Options.optionstate) =
+let __proj__Mkgoal__item__opts : goal -> FStar_Options.optionstate =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;
         is_guard = __fname__is_guard;_} -> __fname__opts
   
-let (__proj__Mkgoal__item__is_guard : goal -> Prims.bool) =
+let __proj__Mkgoal__item__is_guard : goal -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;
         is_guard = __fname__is_guard;_} -> __fname__is_guard
   
-let (subst_goal : FStar_Syntax_Syntax.subst_t -> goal -> goal) =
+let subst_goal : FStar_Syntax_Syntax.subst_t -> goal -> goal =
   fun subst1  ->
     fun goal  ->
       let uu___53_67 = goal  in
@@ -61,13 +61,13 @@ type guard_policy =
   | SMT 
   | Force 
   | Drop [@@deriving show]
-let (uu___is_Goal : guard_policy -> Prims.bool) =
+let uu___is_Goal : guard_policy -> Prims.bool =
   fun projectee  -> match projectee with | Goal  -> true | uu____74 -> false 
-let (uu___is_SMT : guard_policy -> Prims.bool) =
+let uu___is_SMT : guard_policy -> Prims.bool =
   fun projectee  -> match projectee with | SMT  -> true | uu____78 -> false 
-let (uu___is_Force : guard_policy -> Prims.bool) =
+let uu___is_Force : guard_policy -> Prims.bool =
   fun projectee  -> match projectee with | Force  -> true | uu____82 -> false 
-let (uu___is_Drop : guard_policy -> Prims.bool) =
+let uu___is_Drop : guard_policy -> Prims.bool =
   fun projectee  -> match projectee with | Drop  -> true | uu____86 -> false 
 type proofstate =
   {
@@ -82,8 +82,8 @@ type proofstate =
   entry_range: FStar_Range.range ;
   guard_policy: guard_policy ;
   freshness: Prims.int }[@@deriving show]
-let (__proj__Mkproofstate__item__main_context :
-  proofstate -> FStar_TypeChecker_Env.env) =
+let __proj__Mkproofstate__item__main_context :
+  proofstate -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -94,7 +94,7 @@ let (__proj__Mkproofstate__item__main_context :
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__main_context
   
-let (__proj__Mkproofstate__item__main_goal : proofstate -> goal) =
+let __proj__Mkproofstate__item__main_goal : proofstate -> goal =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -105,8 +105,8 @@ let (__proj__Mkproofstate__item__main_goal : proofstate -> goal) =
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__main_goal
   
-let (__proj__Mkproofstate__item__all_implicits :
-  proofstate -> FStar_TypeChecker_Env.implicits) =
+let __proj__Mkproofstate__item__all_implicits :
+  proofstate -> FStar_TypeChecker_Env.implicits =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -117,7 +117,7 @@ let (__proj__Mkproofstate__item__all_implicits :
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__all_implicits
   
-let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
+let __proj__Mkproofstate__item__goals : proofstate -> goal Prims.list =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -128,7 +128,7 @@ let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__goals
   
-let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
+let __proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -139,7 +139,7 @@ let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__smt_goals
   
-let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
+let __proj__Mkproofstate__item__depth : proofstate -> Prims.int =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -150,8 +150,8 @@ let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__depth
   
-let (__proj__Mkproofstate__item____dump :
-  proofstate -> proofstate -> Prims.string -> Prims.unit) =
+let __proj__Mkproofstate__item____dump :
+  proofstate -> proofstate -> Prims.string -> Prims.unit =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -162,8 +162,8 @@ let (__proj__Mkproofstate__item____dump :
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname____dump
   
-let (__proj__Mkproofstate__item__psc :
-  proofstate -> FStar_TypeChecker_Normalize.psc) =
+let __proj__Mkproofstate__item__psc :
+  proofstate -> FStar_TypeChecker_Normalize.psc =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -174,8 +174,8 @@ let (__proj__Mkproofstate__item__psc :
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__psc
   
-let (__proj__Mkproofstate__item__entry_range :
-  proofstate -> FStar_Range.range) =
+let __proj__Mkproofstate__item__entry_range : proofstate -> FStar_Range.range
+  =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -186,7 +186,7 @@ let (__proj__Mkproofstate__item__entry_range :
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__entry_range
   
-let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
+let __proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -197,7 +197,7 @@ let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__guard_policy
   
-let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
+let __proj__Mkproofstate__item__freshness : proofstate -> Prims.int =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -208,8 +208,8 @@ let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
         guard_policy = __fname__guard_policy;
         freshness = __fname__freshness;_} -> __fname__freshness
   
-let (subst_proof_state :
-  FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =
+let subst_proof_state :
+  FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate =
   fun subst1  ->
     fun ps  ->
       let uu____407 = FStar_Options.tactic_raw_binders ()  in
@@ -233,7 +233,7 @@ let (subst_proof_state :
            freshness = (uu___54_409.freshness)
          })
   
-let (decr_depth : proofstate -> proofstate) =
+let decr_depth : proofstate -> proofstate =
   fun ps  ->
     let uu___55_417 = ps  in
     {
@@ -250,7 +250,7 @@ let (decr_depth : proofstate -> proofstate) =
       freshness = (uu___55_417.freshness)
     }
   
-let (incr_depth : proofstate -> proofstate) =
+let incr_depth : proofstate -> proofstate =
   fun ps  ->
     let uu___56_421 = ps  in
     {
@@ -267,7 +267,7 @@ let (incr_depth : proofstate -> proofstate) =
       freshness = (uu___56_421.freshness)
     }
   
-let (tracepoint : proofstate -> Prims.unit) =
+let tracepoint : proofstate -> Prims.unit =
   fun ps  ->
     let uu____425 =
       (FStar_Options.tactic_trace ()) ||
@@ -282,8 +282,8 @@ let (tracepoint : proofstate -> Prims.unit) =
       ps.__dump uu____428 "TRACE"
     else ()
   
-let (set_ps_psc :
-  FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate) =
+let set_ps_psc : FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate
+  =
   fun psc  ->
     fun ps  ->
       let uu___57_437 = ps  in
@@ -301,7 +301,7 @@ let (set_ps_psc :
         freshness = (uu___57_437.freshness)
       }
   
-let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
+let set_proofstate_range : proofstate -> FStar_Range.range -> proofstate =
   fun ps  ->
     fun r  ->
       let uu___58_444 = ps  in
@@ -322,11 +322,11 @@ let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
 type direction =
   | TopDown 
   | BottomUp [@@deriving show]
-let (uu___is_TopDown : direction -> Prims.bool) =
+let uu___is_TopDown : direction -> Prims.bool =
   fun projectee  ->
     match projectee with | TopDown  -> true | uu____448 -> false
   
-let (uu___is_BottomUp : direction -> Prims.bool) =
+let uu___is_BottomUp : direction -> Prims.bool =
   fun projectee  ->
     match projectee with | BottomUp  -> true | uu____452 -> false
   
