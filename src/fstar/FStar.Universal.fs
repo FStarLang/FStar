@@ -264,10 +264,21 @@ let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
-                              * TcEnv.env =
+type delta_env = option<(env -> env)>
+let apply_delta_env env (f:delta_env) =
+    match f with
+    | None -> env
+    | Some f -> f env
+let extend_delta_env (f:delta_env) (g:env->env) =
+    match f with
+    | None -> Some g
+    | Some f -> Some (fun e -> g (f e))
+let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
+                                    * TcEnv.env
+                                    * delta_env =
   Syntax.reset_gensym();
   let tc_source_file () =
+      let env = apply_delta_env env delta in
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
           let (tcmod, tcmod_iface_opt, env), time =
@@ -294,7 +305,7 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          //but we will not write out a .checked file for an unverified dependence
          //of some file that should be checked
          then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
-         tcmod, env
+         tcmod, env, None
        | Some (tcmod, tcmod_iface_opt, mii) ->
          let tcmod =
            if tcmod.is_interface then tcmod
@@ -306,15 +317,18 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
                else tcmod_iface_opt |> must
              else tcmod
          in
-         let _, env =
-            with_tcenv env <|
-            FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+         let delta_env env =
+             let _, env =
+                with_tcenv env <|
+                FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+             in
+             FStar.TypeChecker.Tc.load_checked_module env tcmod
          in
-         let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
-         (tcmod,0), env
-  else let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
+         (tcmod,0), env, extend_delta_env delta delta_env
+  else let env = apply_delta_env env delta in
+       let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
        let tcmod = if is_some tcmod_iface_opt then (tcmod_iface_opt |> must, snd tcmod) else tcmod in  //AR: TODO: does it matter what we return here?
-       tcmod, env
+       tcmod, env, None
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -330,26 +344,26 @@ let pop_context env msg = Tc.pop_context env msg |> ignore
 
 let push_context env msg = Tc.push_context env msg
 
-let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) =
-  let remaining, (nmods, env) =
+let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) (delta_env:delta_env) =
+  let remaining, (nmods, env, delta_env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let m, env = tc_one_file env (Some intf) impl in
-          remaining, ([m], env)
+          let m, env, delta_env = tc_one_file env delta_env (Some intf) impl in
+          remaining, ([m], env, delta_env)
         | intf_or_impl :: remaining ->
-          let m, env = tc_one_file env None intf_or_impl in
-          remaining, ([m], env)
-        | [] -> [], ([], env)
+          let m, env, delta_env = tc_one_file env delta_env None intf_or_impl in
+          remaining, ([m], env, delta_env)
+        | [] -> [], ([], env, delta_env)
   in
-  remaining, nmods, env
+  remaining, nmods, env, delta_env
 
-let rec tc_fold_interleave (acc:list<(modul * int)> * TcEnv.env) (remaining:list<string>) =
+let rec tc_fold_interleave (acc:list<(modul * int)> * TcEnv.env * delta_env) (remaining:list<string>) =
   match remaining with
     | [] -> acc
     | _  ->
-      let mods, env = acc in
-      let remaining, nmods, env = tc_one_file_from_remaining remaining env in
-      tc_fold_interleave (mods@nmods, env) remaining
+      let mods, env, delta_env = acc in
+      let remaining, nmods, env, delta_env = tc_one_file_from_remaining remaining env delta_env in
+      tc_fold_interleave (mods@nmods, env, delta_env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
@@ -363,9 +377,14 @@ let batch_mode_tc filenames dep_graph =
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = init_env dep_graph in
-  let all_mods, env = tc_fold_interleave ([], env) filenames in
-  if Options.interactive()
-  && FStar.Errors.get_err_count () = 0
-  then env.solver.refresh()
-  else env.solver.finish();
-  all_mods, env
+  let all_mods, env, delta = tc_fold_interleave ([], env, None) filenames in
+  let solver_refresh env =
+      begin
+      if Options.interactive()
+      && FStar.Errors.get_err_count () = 0
+      then env.solver.refresh()
+      else env.solver.finish()
+      end;
+      env
+  in
+  all_mods, env, extend_delta_env delta solver_refresh

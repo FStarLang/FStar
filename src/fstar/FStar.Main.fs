@@ -60,9 +60,10 @@ let report_errors fmods =
   end
 
 (* Extraction to OCaml, F# or Kremlin *)
-let codegen (umods, env) =
+let codegen (umods, env, delta) =
   let opt = Options.codegen () in
   if opt <> None then
+    let env = Universal.apply_delta_env env delta in
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = match opt with
@@ -187,10 +188,10 @@ let go _ =
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
-          let fmods, env = Universal.batch_mode_tc filenames dep_graph in
+          let fmods, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
-          codegen (fmods |> List.map fst, env);
+          codegen (fmods |> List.map fst, env, delta_env);
           report_errors module_names_and_times; //codegen errors
           finished_message module_names_and_times 0
         end //end normal batch mode

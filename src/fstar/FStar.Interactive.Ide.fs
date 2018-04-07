@@ -271,7 +271,8 @@ let string_of_repl_task = function
 
 (** Like ``tc_one_file``, but only return the new environment **)
 let tc_one env intf_opt modf =
-  let _, env = tc_one_file env intf_opt modf in
+  let _, env, delta = tc_one_file env None intf_opt modf in
+  let env = Universal.apply_delta_env env delta in
   env
 
 (** Load the file or files described by `task`.
