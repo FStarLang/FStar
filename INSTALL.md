@@ -225,7 +225,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 5.0.0.x), fsharp (version 4.0.1.x-4.1.18), and msbuild (version 14.1.x-15.2.x)
+  - Install mono (any version from 4.0.3.0 to 5.10.x), fsharp (version 4.0.1.x-4.1.x), and msbuild (version 14.1.x-15.2.x!!!)
 
     - On Debian/Ubuntu
 
