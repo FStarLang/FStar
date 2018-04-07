@@ -1,20 +1,14 @@
 FSTAR_HOME=../..
-include ../Makefile.include
+FSTAR_FILES= LowParse.Bytes.fst LowParse.Bytes32.fst		  \
+	     LowParse.Spec.Base.fst LowParse.SLow.Base.fst	  \
+	     LowParse.Spec.Combinators.fst			  \
+	     LowParse.SLow.Combinators.fst LowParse.Spec.Enum.fst \
+	     LowParse.SLow.Enum.fst
 
-FST_FILES := \
-	LowParse.Bytes.fst \
-	LowParse.Bytes32.fst \
-	LowParse.Spec.Base.fst \
-	LowParse.SLow.Base.fst \
-	LowParse.Spec.Combinators.fst \
-	LowParse.SLow.Combinators.fst \
-	LowParse.Spec.Enum.fst \
-	LowParse.SLow.Enum.fst \
+all:
+	mkdir -p $(CACHE_DIR)
+	$(MAKE) verify-all
 
+include ../Makefile.common
 
-OTHERFLAGS+=$(addprefix --include , $(INCLUDE_PATHS))
-
-all: $(FST_FILES:.fst=.uver)
-
-%.fst-in:
-	@echo $(OTHERFLAGS)
+verify-all: $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
