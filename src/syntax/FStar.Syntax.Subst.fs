@@ -473,13 +473,17 @@ let open_pat (p:pat) : pat * subst_t =
     in
     open_pat_aux [] p
 
-let open_branch (p, wopt, e) =
+let open_branch' (p, wopt, e) =
     let p, opening = open_pat p in
     let wopt = match wopt with
         | None -> None
         | Some w -> Some (subst opening w) in
     let e = subst opening e in
-    (p, wopt, e)
+    (p, wopt, e), opening
+
+let open_branch br =
+    let br, _ = open_branch' br in
+    br
 
 let close (bs:binders) t = subst (closing_subst bs) t
 let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c

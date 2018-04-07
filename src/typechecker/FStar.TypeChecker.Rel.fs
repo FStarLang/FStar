@@ -617,7 +617,7 @@ let extend_solution pid sol wl =
     commit sol;
     {wl with ctr=wl.ctr+1}
 
-let solve_prob prob logical_guard uvis wl =
+let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
     let conj_guard t g = match t, g with
@@ -865,17 +865,6 @@ let rec head_matches env t1 t2 : match_result =
 
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
-
-    | Tm_match _, Tm_match _ ->
-    begin
-      (* This flags causes a bunch of messages to be printed when `term_eq` fails,
-       * useful to find the actual discrepancy. *)
-      if debug env (Options.Other "RelDelta") then
-          U.debug_term_eq := true;
-      if U.term_eq t1 t2
-      then FullMatch
-      else MisMatch (None, None)
-    end
 
     | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
     | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
@@ -1297,7 +1286,6 @@ let solve_universe_eq orig wl u1 u2 =
     if wl.tcenv.lax_universes
     then USolved wl
     else really_solve_universe_eq orig wl u1 u2
-
 
 (* This balances two lists.  Given (xs, f) (ys, g), it will
  * take a maximal same-length prefix from each list, getting
@@ -2528,6 +2516,50 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
+
+      | Tm_match (t1, brs1), Tm_match (t2, brs2) ->
+        let sc_prob = TProb <| mk_problem (p_scope orig) orig t1 EQ t2 None "match scrutinee" in
+        let rec solve_branches brs1 brs2 : option<list<prob>> =
+            match brs1, brs2 with
+            | br1::rs1, br2::rs2 ->
+                let (p1, w1, _) = br1 in
+                let (p2, w2, _) = br2 in
+                (* If the patterns differ in shape, just fail *)
+                if not (eq_pat p1 p2) then None else
+
+                (* Open the first branch, and use that same substitution for the second branch *)
+                let (p1, w1, e1), s = SS.open_branch' br1 in
+                let (p2, w2, e2) = br2 in
+                let w2 = BU.map_opt w2 (SS.subst s) in
+                let e2 = SS.subst s e2 in
+
+                let scope = p_scope orig @ (List.map S.mk_binder <| S.pat_bvs p1) in
+
+                (* Subproblem for then `when` clause *)
+                BU.bind_opt (
+                    match w1, w2 with
+                    | Some _, None
+                    | None, Some _ -> None
+                    | None, None -> Some []
+                    | Some w1, Some w2 -> Some [TProb <| mk_problem scope orig w1 EQ w2 None "when clause"])
+                (fun wprobs ->
+
+                (* Branch body *)
+                let prob = TProb <| mk_problem scope orig e1 EQ e2 None "branch body" in
+                BU.bind_opt (solve_branches rs1 rs2) (fun r ->
+                Some (prob::(wprobs @ r))))
+
+            | [], [] -> Some []
+            | _ -> None
+        in
+        begin match solve_branches brs1 brs2 with
+        | None ->
+            giveup env "Tm_match branches don't match" orig
+        | Some sub_probs ->
+            let sub_probs = sc_prob::sub_probs in
+            let wl = solve_prob orig None [] wl in
+            solve env (attempt sub_probs wl)
+        end
 
       | Tm_match _, _
       | Tm_uinst _, _
