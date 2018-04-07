@@ -25,10 +25,10 @@ lowparse \
 vale \
 seplogic \
 hello \
-native_tactics \
 extraction \
 demos
 
+# native_tactics -- doesn't work with binary package
 # low-level \  ... NS: removing from CI for this branch
 
 # WARNING: this target shouldn't depend on anything other than the F*

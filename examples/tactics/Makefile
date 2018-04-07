@@ -61,10 +61,10 @@ all:	Apply.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
-	stringprinter \
 	Tautology.uver		\
 	Rewrite.Monoid.uver     \
 	neg
+	# stringprinter \
 	# launch			\
 
 launch: Launch.fst
