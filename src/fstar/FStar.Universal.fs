@@ -183,6 +183,40 @@ let load_module_from_cache
     : env -> string -> option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
     let some_cache_invalid = BU.mk_ref None in
     let invalidate_cache fn = some_cache_invalid := Some fn in
+    let load env source_file cache_file =
+        match BU.load_value_from_file cache_file with
+        | None ->
+            Inl "Corrupt"
+        | Some (vnum, digest, tcmod, tcmod_iface_opt, mii) ->
+            if vnum <> cache_version_number then Inl "Stale, because inconsistent cache version"
+            else
+            match FStar.Parser.Dep.hash_dependences env.dep_graph source_file with
+            | Some digest' ->
+                if digest=digest'
+                then Inr (tcmod, tcmod_iface_opt, mii)
+                else begin
+                if Options.debug_any()
+                then begin
+                    BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                            (BU.string_of_int (List.length digest'))
+                            (FStar.Parser.Dep.print_digest digest')
+                            (BU.string_of_int (List.length digest))
+                            (FStar.Parser.Dep.print_digest digest);
+                    if List.length digest = List.length digest'
+                    then List.iter2
+                        (fun (x,y) (x', y') ->
+                        if x<>x' || y<>y'
+                        then BU.print2 "Differ at: Expected %s\n Got %s\n"
+                                        (FStar.Parser.Dep.print_digest [(x,y)])
+                                        (FStar.Parser.Dep.print_digest [(x',y')]))
+                        digest
+                        digest'
+                end;
+                Inl "Stale"
+                end
+            | _ ->
+                Inl "Stale"
+    in
     fun env fn ->
         let cache_file = Dep.cache_file_name fn in
         let fail tag =
@@ -196,39 +230,22 @@ let load_module_from_cache
         | Some _ -> None
         | _ ->
           if BU.file_exists cache_file then
-            match BU.load_value_from_file cache_file with
-            | None ->
-              fail "Corrupt"
-            | Some (vnum, digest, tcmod, tcmod_iface_opt, mii) ->
-              if vnum <> cache_version_number then fail "Stale, because inconsistent cache version"
-              else
-                match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
-                | Some digest' ->
-                  if digest=digest'
-                  then Some (tcmod, tcmod_iface_opt, mii)
-                  else begin
-                    if Options.debug_any()
-                    then begin
-                      BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
-                                (BU.string_of_int (List.length digest'))
-                                (FStar.Parser.Dep.print_digest digest')
-                                (BU.string_of_int (List.length digest))
-                                (FStar.Parser.Dep.print_digest digest);
-                      if List.length digest = List.length digest'
-                      then List.iter2
-                           (fun (x,y) (x', y') ->
-                            if x<>x' || y<>y'
-                            then BU.print2 "Differ at: Expected %s\n Got %s\n"
-                                           (FStar.Parser.Dep.print_digest [(x,y)])
-                                           (FStar.Parser.Dep.print_digest [(x',y')]))
-                           digest
-                           digest'
-                    end;
-                    fail "Stale"
-                  end
-                | _ ->
-                  fail "Stale"
-          else fail "Absent"
+            match load env fn cache_file with
+            | Inl msg -> fail msg
+            | Inr res -> Some res
+          else
+            match FStar.Options.find_file (FStar.Util.basename cache_file) with
+            | None -> fail "Absent"
+            | Some alt_cache_file ->
+              match load env fn alt_cache_file with
+              | Inl msg -> fail msg
+              | Inr res ->
+                //found a valid .checked file somewhere else in the include path
+                //copy it to the destination, if we are supposed to be verifying this file
+                if Options.should_verify_file fn
+                then FStar.Util.copy_file alt_cache_file cache_file;
+                Some res
+
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
