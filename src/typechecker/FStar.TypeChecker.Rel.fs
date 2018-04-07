@@ -2533,17 +2533,19 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let w2 = BU.map_opt w2 (SS.subst s) in
                 let e2 = SS.subst s e2 in
 
+                let scope = p_scope orig @ (List.map S.mk_binder <| S.pat_bvs p1) in
+
                 (* Subproblem for then `when` clause *)
                 BU.bind_opt (
                     match w1, w2 with
                     | Some _, None
                     | None, Some _ -> None
                     | None, None -> Some []
-                    | Some w1, Some w2 -> Some [TProb <| mk_problem (p_scope orig) orig w1 EQ w2 None "when clause"])
+                    | Some w1, Some w2 -> Some [TProb <| mk_problem scope orig w1 EQ w2 None "when clause"])
                 (fun wprobs ->
 
                 (* Branch body *)
-                let prob = TProb <| mk_problem (p_scope orig) orig e1 EQ e2 None "branch body" in
+                let prob = TProb <| mk_problem scope orig e1 EQ e2 None "branch body" in
                 BU.bind_opt (solve_branches rs1 rs2) (fun r ->
                 Some (prob::(wprobs @ r))))
 
@@ -2559,11 +2561,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             solve env (attempt sub_probs wl)
         end
 
+      | Tm_match _, _
       | Tm_uinst _, _
       | Tm_name _, _
       | Tm_constant _, _
       | Tm_fvar _, _
       | Tm_app _, _
+      | _, Tm_match _
       | _, Tm_uinst _
       | _, Tm_name _
       | _, Tm_constant _
