@@ -5263,7 +5263,9 @@ let (tc_decl :
                       let t3 =
                         FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Normalize.NoFullNorm;
-                          FStar_TypeChecker_Normalize.Beta] env3 t2
+                          FStar_TypeChecker_Normalize.Beta;
+                          FStar_TypeChecker_Normalize.DoNotUnfoldPureLets]
+                          env3 t2
                          in
                       let uu____6017 =
                         FStar_Syntax_Subst.close_univ_vars uvs1 t3  in

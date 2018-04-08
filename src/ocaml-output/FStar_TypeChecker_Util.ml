@@ -3552,7 +3552,8 @@ let (generalize_universes :
       let t =
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Normalize.NoFullNorm;
-          FStar_TypeChecker_Normalize.Beta] env t0
+          FStar_TypeChecker_Normalize.Beta;
+          FStar_TypeChecker_Normalize.DoNotUnfoldPureLets] env t0
          in
       let univnames1 = gather_free_univnames env t  in
       (let uu____8206 =
