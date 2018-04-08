@@ -465,7 +465,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
 
 
 let declare_top_level_let env x t t_norm =
-  match try_lookup_lid env x.fv_name.v with
+  match lookup_fvar_binding env x.fv_name.v with
   (* Need to introduce a new name decl *)
   | None ->
       let decls, env = encode_free_var false env x t t_norm [] in
@@ -1312,7 +1312,9 @@ let encode_labels labs =
 
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref<list<env_t>> = BU.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0;
+let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
+                                   fvar_bindings=BU.psmap_empty ();
+                                   tcenv=tcenv; warn=true; depth=0;
                                    cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
