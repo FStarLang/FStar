@@ -1235,7 +1235,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
             let uvs, t = SS.open_univ_vars uvs t in
             let env = Env.push_univ_vars env uvs in
             let t = tc_check_trivial_guard env t (fst (U.type_u())) in
-            let t = N.normalize [N.NoFullNorm; N.Beta] env t in
+            let t = N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env t in
             uvs, SS.close_univ_vars uvs t
     in
     let se = { se with sigel = Sig_declare_typ(lid, uvs, t) } in

@@ -1377,7 +1377,7 @@ let check_universe_generalization
                       ^ Print.term_to_string t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
-    let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
+    let t = N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env t0 in
     let univnames = gather_free_univnames env t in
     if Env.debug env <| Options.Other "Gen"
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
