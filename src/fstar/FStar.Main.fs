@@ -164,8 +164,10 @@ let go _ =
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then let _, deps = Parser.Dep.collect filenames in
              Parser.Dep.print deps
-        else if Options.use_extracted_interfaces () && List.length filenames > 1 then
-          Errors.raise_error (Errors.Error_TooManyFiles, "Only one command line file is allowed if --use_extracted_interfaces is set") Range.dummyRange
+        else if Options.use_extracted_interfaces () && (not (Options.expose_interfaces ())) && List.length filenames > 1 then
+          Errors.raise_error (Errors.Error_TooManyFiles,
+                              "Only one command line file is allowed if --use_extracted_interfaces is set, found %s" ^ (string_of_int (List.length filenames)))
+                             Range.dummyRange
         else if Options.interactive () then begin
           match filenames with
           | [] ->

@@ -299,7 +299,9 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          let tcmod =
            if tcmod.is_interface then tcmod
            else
-             if Options.use_extracted_interfaces () then
+             let use_interface_from_the_cache = Options.use_extracted_interfaces () &&
+                                                (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
+             if use_interface_from_the_cache then
                if tcmod_iface_opt = None then
                  Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces option is set but could not find it in the cache for: " ^ tcmod.name.str)
                                     Range.dummyRange
