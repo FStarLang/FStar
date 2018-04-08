@@ -1,25 +1,26 @@
 open Prims
-let b : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.binder =
+let (b : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.binder) =
   FStar_Syntax_Syntax.mk_binder 
-let id : FStar_Syntax_Syntax.term = FStar_Tests_Pars.pars "fun x -> x" 
-let apply : FStar_Syntax_Syntax.term = FStar_Tests_Pars.pars "fun f x -> f x" 
-let twice : FStar_Syntax_Syntax.term =
+let (id : FStar_Syntax_Syntax.term) = FStar_Tests_Pars.pars "fun x -> x" 
+let (apply : FStar_Syntax_Syntax.term) =
+  FStar_Tests_Pars.pars "fun f x -> f x" 
+let (twice : FStar_Syntax_Syntax.term) =
   FStar_Tests_Pars.pars "fun f x -> f (f x)" 
-let tt : FStar_Syntax_Syntax.term = FStar_Tests_Pars.pars "fun x y -> x" 
-let ff : FStar_Syntax_Syntax.term = FStar_Tests_Pars.pars "fun x y -> y" 
-let z : FStar_Syntax_Syntax.term = FStar_Tests_Pars.pars "fun f x -> x" 
-let one : FStar_Syntax_Syntax.term = FStar_Tests_Pars.pars "fun f x -> f x" 
-let two : FStar_Syntax_Syntax.term =
+let (tt : FStar_Syntax_Syntax.term) = FStar_Tests_Pars.pars "fun x y -> x" 
+let (ff : FStar_Syntax_Syntax.term) = FStar_Tests_Pars.pars "fun x y -> y" 
+let (z : FStar_Syntax_Syntax.term) = FStar_Tests_Pars.pars "fun f x -> x" 
+let (one : FStar_Syntax_Syntax.term) = FStar_Tests_Pars.pars "fun f x -> f x" 
+let (two : FStar_Syntax_Syntax.term) =
   FStar_Tests_Pars.pars "fun f x -> f (f x)" 
-let succ : FStar_Syntax_Syntax.term =
+let (succ : FStar_Syntax_Syntax.term) =
   FStar_Tests_Pars.pars "fun n f x -> f (n f x)" 
-let pred : FStar_Syntax_Syntax.term =
+let (pred : FStar_Syntax_Syntax.term) =
   FStar_Tests_Pars.pars
     "fun n f x -> n (fun g h -> h (g f)) (fun y -> x) (fun y -> y)"
   
-let mul : FStar_Syntax_Syntax.term =
+let (mul : FStar_Syntax_Syntax.term) =
   FStar_Tests_Pars.pars "fun m n f -> m (n f)" 
-let rec encode : Prims.int -> FStar_Syntax_Syntax.term =
+let rec (encode : Prims.int -> FStar_Syntax_Syntax.term) =
   fun n1  ->
     if n1 = (Prims.parse_int "0")
     then z
@@ -29,15 +30,15 @@ let rec encode : Prims.int -> FStar_Syntax_Syntax.term =
           in
        FStar_Tests_Util.app succ uu____7)
   
-let minus :
+let (minus :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   = fun m1  -> fun n1  -> FStar_Tests_Util.app n1 [pred; m1] 
-let let_ :
+let (let_ :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun x1  ->
     fun e  ->
@@ -47,10 +48,10 @@ let let_ :
           FStar_Syntax_Util.abs uu____35 e' FStar_Pervasives_Native.None  in
         FStar_Tests_Util.app uu____32 [e]
   
-let mk_let :
+let (mk_let :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun x1  ->
     fun e  ->
@@ -74,31 +75,31 @@ let mk_let :
                  }]), e'1)) FStar_Pervasives_Native.None
           FStar_Range.dummyRange
   
-let lid : Prims.string -> FStar_Ident.lident =
+let (lid : Prims.string -> FStar_Ident.lident) =
   fun x1  -> FStar_Ident.lid_of_path [x1] FStar_Range.dummyRange 
-let znat_l : FStar_Syntax_Syntax.fv =
+let (znat_l : FStar_Syntax_Syntax.fv) =
   let uu____64 = lid "Z"  in
   FStar_Syntax_Syntax.lid_as_fv uu____64 FStar_Syntax_Syntax.Delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
-let snat_l : FStar_Syntax_Syntax.fv =
+let (snat_l : FStar_Syntax_Syntax.fv) =
   let uu____65 = lid "S"  in
   FStar_Syntax_Syntax.lid_as_fv uu____65 FStar_Syntax_Syntax.Delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
-let tm_fv :
+let (tm_fv :
   FStar_Syntax_Syntax.fv ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun fv  ->
     FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
       FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let znat : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
+let (znat : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) =
   tm_fv znat_l 
-let snat :
+let (snat :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun s  ->
     let uu____78 =
@@ -115,10 +116,10 @@ let snat :
 let pat :
   'Auu____113 . 'Auu____113 -> 'Auu____113 FStar_Syntax_Syntax.withinfo_t =
   fun p  -> FStar_Syntax_Syntax.withinfo p FStar_Range.dummyRange 
-let mk_match :
+let (mk_match :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.branch Prims.list ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun h1  ->
     fun branches  ->
@@ -129,9 +130,9 @@ let mk_match :
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_match (h1, branches1))
         FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let pred_nat :
+let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun s  ->
     let zbranch =
@@ -165,10 +166,10 @@ let pred_nat :
       (uu____213, FStar_Pervasives_Native.None, uu____271)  in
     mk_match s [zbranch; sbranch]
   
-let minus_nat :
+let (minus_nat :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t1  ->
     fun t2  ->
@@ -247,7 +248,7 @@ let minus_nat :
         FStar_Syntax_Syntax.mk uu____544  in
       uu____541 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let encode_nat : Prims.int -> FStar_Syntax_Syntax.term =
+let (encode_nat : Prims.int -> FStar_Syntax_Syntax.term) =
   fun n1  ->
     let rec aux out n2 =
       if n2 = (Prims.parse_int "0")
@@ -258,9 +259,9 @@ let encode_nat : Prims.int -> FStar_Syntax_Syntax.term =
        in
     aux znat n1
   
-let run :
+let (run :
   Prims.int ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.unit
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.unit)
   =
   fun i  ->
     fun r  ->
@@ -287,7 +288,7 @@ let run :
              FStar_Tests_Util.term_eq uu____623 expected  in
            FStar_Tests_Util.always i uu____622)))
   
-let run_all : Prims.unit -> Prims.unit =
+let (run_all : Prims.unit -> Prims.unit) =
   fun uu____626  ->
     FStar_Util.print_string "Testing the normalizer\n";
     FStar_Tests_Pars.pars_and_tc_fragment
