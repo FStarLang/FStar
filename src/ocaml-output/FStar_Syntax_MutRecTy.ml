@@ -1,11 +1,11 @@
 open Prims
-let (disentangle_abbrevs_from_bundle :
+let disentangle_abbrevs_from_bundle :
   FStar_Syntax_Syntax.sigelt Prims.list ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Ident.lident Prims.list ->
         FStar_Range.range ->
           (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.sigelt Prims.list)
-            FStar_Pervasives_Native.tuple2)
+            FStar_Pervasives_Native.tuple2
   =
   fun sigelts  ->
     fun quals  ->
