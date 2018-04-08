@@ -1,6 +1,7 @@
 type int = Z.t
 let parse_int = Z.of_string
 let to_string = Z.to_string
+let lift_native_int = Z.of_int
 
 type attribute = unit
 let (cps : attribute) = ()

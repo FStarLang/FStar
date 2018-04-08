@@ -247,7 +247,13 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
   | MLC_Int (s, Some (_, Int16)) -> s
-  | MLC_Int (s, None) -> "(Prims.parse_int \"" ^s^ "\")"
+  | MLC_Int (s, None) ->
+    let threshold = 1073741823 (* 2^30 *) in
+    let is = int_of_string s in
+    if -threshold <= is && is <= threshold then
+      "(Prims.lift_native_int " ^s^ ")"
+    else
+      "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float d -> string_of_float d
 
   | MLC_Bytes bytes ->

@@ -97,7 +97,11 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
   | MLC_Int (v, None) ->
-     let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
+     let i =
+       if Z.leq (Z.abs (Z.of_string v)) (Z.of_int 1073741823 (* 2^30 *)) then
+         "(Prims.lift_native_int " ^ v ^ ")"
+       else
+         "(Prims.parse_int \"" ^ v ^ "\")" in
      Const.integer i
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
