@@ -121,10 +121,6 @@ type fvar_binding = {
     smt_fuel_partial_app:option<term>
 }
 
-type binding =
-    | Binding_var   of bv * term
-    | Binding_fvar  of fvar_binding //lident * string * option<term> * option<term>
-
 let binder_of_eithervar v = (v, None)
 type cache_entry = {
     cache_symbol_name: string;
@@ -133,7 +129,8 @@ type cache_entry = {
     cache_symbol_assumption_names: list<string>
 }
 type env_t = {
-    bindings:list<binding>;
+    bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
+    fvar_bindings: BU.psmap<fvar_binding>;
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
     warn:bool;
@@ -160,11 +157,28 @@ let mk_cache_entry env tsym cvar_sorts t_decls =
 let use_cache_entry ce =
     [Term.RetainAssumptions ce.cache_symbol_assumption_names]
 let print_env e =
-    e.bindings |> List.map (function
-        | Binding_var  (x, _) -> Print.bv_to_string x
-        | Binding_fvar fvb -> Print.lid_to_string fvb.fvar_lid) |> String.concat ", "
+    let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
+        BU.pimap_fold pi (fun _i (x, _term) acc ->
+            Print.bv_to_string x :: acc) acc) [] in
+    let allvars = BU.psmap_fold e.fvar_bindings (fun _k fvb acc ->
+        Print.lid_to_string fvb.fvar_lid :: acc) bvars in
+    String.concat ", " allvars
 
-let lookup_binding env f = BU.find_map env.bindings f
+let lookup_bvar_binding env bv =
+    match BU.psmap_try_find env.bvar_bindings bv.ppname.idText with
+    | Some bvs -> BU.pimap_try_find bvs bv.index
+    | None -> None
+
+let lookup_fvar_binding env lid =
+    BU.psmap_try_find env.fvar_bindings lid.str
+
+let add_bvar_binding bvb bvbs =
+  BU.psmap_modify bvbs (fst bvb).ppname.idText
+    (fun pimap_opt ->
+     BU.pimap_add (BU.dflt (BU.pimap_empty ()) pimap_opt) (fst bvb).index bvb)
+
+let add_fvar_binding fvb fvbs =
+  BU.psmap_add fvbs fvb.fvar_lid.str fvb
 
 let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
@@ -173,24 +187,23 @@ let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
     let y = mkFreeV(ysym, Term_sort) in
-    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + 1}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings; depth=env.depth + 1}
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
     let y = mkApp(ysym, []) in
-    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings}
 let new_term_constant_from_string (env:env_t) (x:bv) str =
     let ysym = varops.mk_unique str in
     let y = mkApp(ysym, []) in
-    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings}
 let push_term_var (env:env_t) (x:bv) (t:term) =
-    {env with bindings=Binding_var(x,t)::env.bindings}
+    {env with bvar_bindings=add_bvar_binding (x,t) env.bvar_bindings}
 let lookup_term_var env a =
-    let aux a' = lookup_binding env (function Binding_var(b, t) when Syntax.bv_eq b a' -> Some (b,t) | _ -> None) in
-    match aux a with
+    match lookup_bvar_binding env a with
     | None ->
         //AR: this is a temporary fix, use reserved u__ for mangling names
         let a2 = unmangle a in
-        (match aux a2 with
+        (match lookup_bvar_binding env a2 with
             | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s" (Print.bv_to_string a2) (print_env env))
             | Some (b,t) -> t)
     | Some (b,t) -> t
@@ -209,33 +222,21 @@ let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
     let ftok = mkApp(ftok_name, []) in
     let fvb = mk_fvb x fname arity (Some ftok) None in
 //    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
-    fname, ftok_name, {env with bindings=(Binding_fvar fvb)::env.bindings}
-let try_lookup_lid env a =
-    lookup_binding env (function
-      | Binding_fvar fvb
-            when lid_equals fvb.fvar_lid a ->
-        Some fvb
-      | _ -> None)
-let contains_name env (s:string) =
-    lookup_binding env (function
-      | Binding_fvar fvb
-            when (fvb.fvar_lid.str=s) ->
-        Some ()
-      | _ -> None) |> Option.isSome
+    fname, ftok_name, {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let lookup_lid env a =
-    match try_lookup_lid env a with
+    match lookup_fvar_binding env a with
     | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a))
     | Some s -> s
 let push_free_var env (x:lident) arity fname ftok =
     let fvb = mk_fvb x fname arity ftok None in
-    {env with bindings=Binding_fvar fvb::env.bindings}
+    {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let push_zfuel_name env (x:lident) f =
     let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
     let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) in
-    {env with bindings=Binding_fvar fvb::env.bindings}
+    {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let try_lookup_free_var env l =
-    match try_lookup_lid env l with
+    match lookup_fvar_binding env l with
     | None -> None
     | Some fvb ->
       begin
@@ -285,10 +286,9 @@ let lookup_free_var_sym env a =
         end
 
 let tok_of_name env nm =
-    BU.find_map env.bindings (function
-        | Binding_fvar fvb
-            when fvb.smt_id=nm ->
-          fvb.smt_token
-        | _ -> None)
+  BU.bind_opt
+    (BU.psmap_find_map env.fvar_bindings (fun _ fvb ->
+         if fvb.smt_id = nm then Some fvb else None))
+    (fun fvb -> fvb.smt_token)
 
 (* </Environment> *)

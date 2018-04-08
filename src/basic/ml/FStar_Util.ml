@@ -261,6 +261,13 @@ let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
   try BatMap.find key map with Not_found -> dflt
 let psmap_try_find (map: 'value psmap) (key: string) =
   try Some (BatMap.find key map) with Not_found -> None
+let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
+let psmap_find_map (m:'value psmap) f =
+  try Some (BatEnum.find_map (fun (k, v) -> f k v) (BatMap.enum m))
+  with Not_found -> None
+let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
+  BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
+
 
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
@@ -283,6 +290,7 @@ let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
   try BatMap.find key map with Not_found -> dflt
 let pimap_try_find (map: 'value pimap) (key: Z.t) =
   try Some (BatMap.find key map) with Not_found -> None
+let pimap_fold (m:'value pimap) f a = BatMap.foldi f m a
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
