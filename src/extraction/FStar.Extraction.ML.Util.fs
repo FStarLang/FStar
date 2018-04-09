@@ -179,78 +179,82 @@ type unfold_t = mlty -> option<mlty>
 *)
 let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) =
     match t, t' with
-        | MLTY_Var x, MLTY_Var y ->
-          if x = y
-          then true, e
-          else false, None
+    | MLTY_Var x, MLTY_Var y ->
+        if x = y
+        then true, e
+        else false, None
 
-        | MLTY_Fun (t1, f, t2), MLTY_Fun (t1', f', t2') ->
-          let mk_fun xs body = match xs with
+    | MLTY_Fun (t1, f, t2), MLTY_Fun (t1', f', t2') ->
+        let mk_fun xs body =
+            match xs with
             | [] -> body
             | _ ->
-              let e = match body.expr with
+                let e = match body.expr with
                 | MLE_Fun(ys, body) -> MLE_Fun(xs@ys, body)
                 | _ -> MLE_Fun(xs, body) in
-              with_ty (mk_ty_fun xs body.mlty) e in
-          begin match e with
-            | Some ({expr=MLE_Fun(x::xs, body)}) ->
-              if type_leq unfold_ty t1' t1
-              && eff_leq f f'
-              then if f=E_PURE
-                   && f'=E_GHOST
-                   then if type_leq unfold_ty t2 t2'
-                        then let body = if type_leq unfold_ty t2 ml_unit_ty
-                                        then ml_unit
-                                        else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
-                             true, Some (with_ty (mk_ty_fun [x] body.mlty) <| MLE_Fun([x], body))
-                        else false, None
-                   else let ok, body = type_leq_c unfold_ty (Some <| mk_fun xs body) t2 t2' in
-                        let res = match body with
-                            | Some body -> Some (mk_fun [x] body)
-                            | _ ->  None in
-                        ok, res
-              else false, None
+            with_ty (mk_ty_fun xs body.mlty) e in
+        begin match e with
+        | Some ({expr=MLE_Fun(x::xs, body)}) ->
+            if type_leq unfold_ty t1' t1
+            && eff_leq f f'
+            then if f=E_PURE
+                && f'=E_GHOST
+                then if type_leq unfold_ty t2 t2'
+                    then let body = if type_leq unfold_ty t2 ml_unit_ty
+                                    then ml_unit
+                                    else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
+                            true, Some (with_ty (mk_ty_fun [x] body.mlty) <| MLE_Fun([x], body))
+                    else false, None
+                else let ok, body = type_leq_c unfold_ty (Some <| mk_fun xs body) t2 t2' in
+                    let res = match body with
+                        | Some body -> Some (mk_fun [x] body)
+                        | _ ->  None in
+                    ok, res
+            else false, None
 
-            | _ ->
-              if type_leq unfold_ty t1' t1
-              && eff_leq f f'
-              && type_leq unfold_ty t2 t2'
-              then true, e
-              else false, None
-          end
+        | _ ->
+            if type_leq unfold_ty t1' t1
+            && eff_leq f f'
+            && type_leq unfold_ty t2 t2'
+            then true, e
+            else false, None
+        end
 
-        | MLTY_Named(args, path), MLTY_Named(args', path') ->
-          if path=path'
-          then if List.forall2 (type_leq unfold_ty) args args'
-               then true, e
-               else false, None
-          else begin match unfold_ty t with
-                        | Some t -> type_leq_c unfold_ty e t t'
-                        | None -> (match unfold_ty t' with
-                                     | None -> false, None
-                                     | Some t' -> type_leq_c unfold_ty e t t')
-               end
+    | MLTY_Named(args, path), MLTY_Named(args', path') ->
+        if path=path'
+        then if List.forall2 (type_leq unfold_ty) args args'
+            then true, e
+            else false, None
+        else begin match unfold_ty t with
+                    | Some t -> type_leq_c unfold_ty e t t'
+                    | None -> (match unfold_ty t' with
+                                    | None -> false, None
+                                    | Some t' -> type_leq_c unfold_ty e t t')
+            end
 
-        | MLTY_Tuple ts, MLTY_Tuple ts' ->
-          if List.forall2 (type_leq unfold_ty) ts ts'
-          then true, e
-          else false, None
+    | MLTY_Tuple ts, MLTY_Tuple ts' ->
+        if List.forall2 (type_leq unfold_ty) ts ts'
+        then true, e
+        else false, None
 
-        | MLTY_Top, MLTY_Top -> true, e
+    | MLTY_Top, MLTY_Top -> true, e
 
-        | MLTY_Named _, _ ->
-          begin match unfold_ty t with
-            | Some t -> type_leq_c unfold_ty e t t'
-            | _ ->  false, None
-          end
+    | MLTY_Named _, _ ->
+        begin match unfold_ty t with
+        | Some t -> type_leq_c unfold_ty e t t'
+        | _ ->  false, None
+        end
 
-        | _, MLTY_Named _ ->
-          begin match unfold_ty t' with
-            | Some t' -> type_leq_c unfold_ty e t t'
-            | _ -> false, None
-          end
-
+    | _, MLTY_Named _ ->
+        begin match unfold_ty t' with
+        | Some t' -> type_leq_c unfold_ty e t t'
         | _ -> false, None
+        end
+
+    | MLTY_Erased, MLTY_Erased ->
+      true, None
+
+    | _ -> false, None
 
 and type_leq g t1 t2 : bool = type_leq_c g None t1 t2 |> fst
 

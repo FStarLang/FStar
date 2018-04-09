@@ -115,7 +115,7 @@ let extract_typ_abbrev env fv quals attrs def =
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env, ml_bs = binders_as_mlty_binders env bs in
-    let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
+    let body = Term.translate_term_to_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
     let mangled_projector =
          if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
          then let mname = mangle_projector_lid lid in
@@ -186,7 +186,7 @@ let extract_bundle env se =
     let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor):
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
-        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
+        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.translate_term_to_mlty env ctor.dtyp) in
         let steps = [ N.Inlining; N.UnfoldUntil S.Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
@@ -404,33 +404,35 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let g, ml_lbs' =
                 List.fold_left2
                     (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
-                        if ml_lb.mllb_meta |> List.contains Erased then env, ml_lbs else
-                        // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                        let lb_lid = (right lbname).fv_name.v in
-                        let flags'' =
-                            match (SS.compress t).n with
-                            | Tm_arrow (_, { n = Comp { effect_name = e }})
-                                when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
-                                [ StackInline ]
-                            | _ ->
-                                []
-                        in
-                        let meta = flags @ flags' @ flags'' in
-                        let ml_lb = { ml_lb with mllb_meta = meta } in
-                        let g, ml_lb =
-                            if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                            then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                                 let env, _ =
-                                     UEnv.extend_fv'
-                                            env
-                                            (right lbname)
-                                            mname
-                                            (must ml_lb.mllb_tysc)
-                                            ml_lb.mllb_add_unit
-                                            false
-                                 in
-                                 env, {ml_lb with mllb_name=snd mname }
-                            else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                        if ml_lb.mllb_meta |> List.contains Erased
+                        then env, ml_lbs
+                        else
+                            // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                            let lb_lid = (right lbname).fv_name.v in
+                            let flags'' =
+                                match (SS.compress t).n with
+                                | Tm_arrow (_, { n = Comp { effect_name = e }})
+                                    when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                                    [ StackInline ]
+                                | _ ->
+                                    []
+                            in
+                            let meta = flags @ flags' @ flags'' in
+                            let ml_lb = { ml_lb with mllb_meta = meta } in
+                            let g, ml_lb =
+                                if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                                then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
+                                     let env, _ =
+                                         UEnv.extend_fv'
+                                                env
+                                                (right lbname)
+                                                mname
+                                                (must ml_lb.mllb_tysc)
+                                                ml_lb.mllb_add_unit
+                                                false
+                                     in
+                                     env, {ml_lb with mllb_name=snd mname }
+                                else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                         g, ml_lb::ml_lbs)
                 (g, [])
                 bindings

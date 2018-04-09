@@ -149,13 +149,14 @@ let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
         | Some y -> y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
-let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
-    let x = BU.find_map g.gamma (function
+let try_lookup_fv (g:env) (fv:fv) : option<ty_or_exp_b> =
+    BU.find_map g.gamma (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
-        | _ -> None) in
-    match x with
-        | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
-        | Some y -> y
+        | _ -> None)
+let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
+    match try_lookup_fv g fv with
+    | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
+    | Some y -> y
 
 let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
     let x = BU.find_map g.gamma (function
