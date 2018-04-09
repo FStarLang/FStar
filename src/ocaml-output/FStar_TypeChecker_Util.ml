@@ -4328,7 +4328,8 @@ let (check_top_level :
           (let c = FStar_Syntax_Syntax.lcomp_comp lc  in
            let steps =
              [FStar_TypeChecker_Normalize.Beta;
-             FStar_TypeChecker_Normalize.NoFullNorm]  in
+             FStar_TypeChecker_Normalize.NoFullNorm;
+             FStar_TypeChecker_Normalize.DoNotUnfoldPureLets]  in
            let c1 =
              let uu____10637 =
                let uu____10638 =

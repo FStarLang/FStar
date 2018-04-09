@@ -6276,7 +6276,9 @@ and (check_top_level_let :
                             FStar_All.pipe_right uu____14246
                               (FStar_TypeChecker_Normalize.normalize_comp
                                  [FStar_TypeChecker_Normalize.Beta;
-                                 FStar_TypeChecker_Normalize.NoFullNorm] env1)
+                                 FStar_TypeChecker_Normalize.NoFullNorm;
+                                 FStar_TypeChecker_Normalize.DoNotUnfoldPureLets]
+                                 env1)
                              in
                           let e21 =
                             let uu____14250 =
