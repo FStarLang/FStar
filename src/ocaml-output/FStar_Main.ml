@@ -1,15 +1,15 @@
 open Prims
-let (uu___77 : Prims.unit) = FStar_Version.dummy () 
-let (process_args :
+let uu___77 : Prims.unit = FStar_Version.dummy () 
+let process_args :
   Prims.unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
-      FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2
   = fun uu____9  -> FStar_Options.parse_cmd_line () 
-let (cleanup : Prims.unit -> Prims.unit) =
+let cleanup : Prims.unit -> Prims.unit =
   fun uu____18  -> FStar_Util.kill_all () 
-let (finished_message :
+let finished_message :
   ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
-    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int -> Prims.unit)
+    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int -> Prims.unit
   =
   fun fmods  ->
     fun errs  ->
@@ -70,9 +70,9 @@ let (finished_message :
             FStar_Util.print1 "%s\n" uu____108))
       else ()
   
-let (report_errors :
+let report_errors :
   ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
-    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.unit)
+    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.unit
   =
   fun fmods  ->
     (let uu____134 = FStar_Errors.report_all ()  in
@@ -83,9 +83,9 @@ let (report_errors :
        (finished_message fmods nerrs; FStar_All.exit (Prims.parse_int "1"))
      else ())
   
-let (codegen :
+let codegen :
   (FStar_Syntax_Syntax.modul Prims.list,FStar_TypeChecker_Env.env,FStar_Universal.delta_env)
-    FStar_Pervasives_Native.tuple3 -> Prims.unit)
+    FStar_Pervasives_Native.tuple3 -> Prims.unit
   =
   fun uu____154  ->
     match uu____154 with
@@ -145,7 +145,7 @@ let (codegen :
            | uu____255 -> failwith "Unrecognized option")
         else ()
   
-let (load_native_tactics : Prims.unit -> Prims.unit) =
+let load_native_tactics : Prims.unit -> Prims.unit =
   fun uu____261  ->
     let modules_to_load =
       let uu____265 = FStar_Options.load ()  in
@@ -206,7 +206,7 @@ let (load_native_tactics : Prims.unit -> Prims.unit) =
       cmxs_files;
     FStar_Tactics_Load.load_tactics cmxs_files
   
-let (init_warn_error : Prims.unit -> Prims.unit) =
+let init_warn_error : Prims.unit -> Prims.unit =
   fun uu____344  ->
     let s = FStar_Options.warn_error ()  in
     if s <> "" then FStar_Parser_ParseIt.parse_warn_error s else ()
@@ -340,9 +340,9 @@ let go : 'Auu____350 . 'Auu____350 -> Prims.unit =
                                  (FStar_Errors.Error_MissingFileName,
                                    "no file provided\n"))))))))
   
-let (lazy_chooser :
+let lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
-    FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term
   =
   fun k  ->
     fun i  ->
