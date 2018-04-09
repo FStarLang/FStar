@@ -2880,9 +2880,9 @@ let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 let sub_comp env c1 c2 =
-  if debug env <| Options.Other "Rel"
-  then BU.print2 "sub_comp of %s and %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2);
   let rel = if env.use_eq then EQ else SUB in
+  if debug env <| Options.Other "Rel"
+  then BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
   let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
   with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
 
