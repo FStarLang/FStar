@@ -368,7 +368,8 @@ let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a
   :Lemma (requires (frameOf r1 == frameOf r2 /\ (h `contains` r1 \/ h `contains` r2) /\
                     as_addr r1 == as_addr r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-  = if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
+  = FStar.Monotonic.Heap.lemma_heap_equality_upd_same_addr (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2) x;
+    if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
       lemma_sel_same_addr h r1 r2
     else lemma_sel_same_addr h r2 r1
 
@@ -460,7 +461,7 @@ private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem
 [@"opaque_to_smt"]
 unfold private let norm_steps :list norm_step =
   //iota for reducing match
-  [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
+  [iota; zeta; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
                             "FStar.Monotonic.HyperStack.refs_in_region";
                             "FStar.Monotonic.HyperStack.modifies_some_refs"];
    primops]
@@ -479,6 +480,33 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
 
 ////////////////////////////////////////////////////////////////////////////////
+
+let lemma_heap_equality_cancel_same_mref_upd
+  (#a:Type) (#rel:preorder a) (h:mem) (r:mreference a rel) (x y:a)
+  :Lemma (requires (live_region h (frameOf r)))
+         (ensures  (upd (upd h r x) r y == upd h r y))
+  = let h0 = upd (upd h r x) r y in
+    let h1 = upd h r y in
+    Heap.lemma_heap_equality_cancel_same_mref_upd (Map.sel h.h (frameOf r)) (as_ref r) x y;
+    assert (Map.equal h0.h h1.h)
+
+let lemma_heap_equality_upd_with_sel
+  (#a:Type) (#rel:preorder a) (h:mem) (r:mreference a rel)
+  :Lemma (requires (h `contains` r))
+         (ensures  (upd h r (sel h r) == h))
+  = let h' = upd h r (sel h r) in
+    Heap.lemma_heap_equality_upd_with_sel (Map.sel h.h (frameOf r)) (as_ref r);
+    assert (Map.equal h.h h'.h)
+
+let lemma_heap_equality_commute_distinct_upds
+  (#a:Type) (#b:Type) (#rel_a:preorder a) (#rel_b:preorder b)
+  (h:mem) (r1:mreference a rel_a) (r2:mreference b rel_b) (x:a) (y:b)
+  :Lemma (requires (as_addr r1 =!= as_addr r2 /\ live_region h (frameOf r1) /\ live_region h (frameOf r2)))
+         (ensures  (upd (upd h r1 x) r2 y == upd (upd h r2 y) r1 x))
+  = let h0 = upd (upd h r1 x) r2 y in
+    let h1 = upd (upd h r2 y) r1 x in
+    if frameOf r1 = frameOf r2 then Heap.lemma_heap_equality_commute_distinct_upds (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2) x y;
+    assert (Map.equal h0.h h1.h)
 
 (*** Untyped views of references *)
 

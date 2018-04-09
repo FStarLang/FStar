@@ -383,8 +383,10 @@ let push_subst s t =
 
     | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
-        | Quote_static ->  mk (Tm_quoted (tm, qi))
         | Quote_dynamic -> mk (Tm_quoted (subst' s tm, qi))
+        | Quote_static ->
+            let qi = on_antiquoted (subst' s) qi in
+            mk (Tm_quoted (tm, qi))
         end
 
     | Tm_meta(t, m) ->
@@ -444,42 +446,44 @@ let open_comp (bs:binders) t =
    bs', subst_comp opening t
 
 let open_pat (p:pat) : pat * subst_t =
-    let rec open_pat_aux sub renaming p =
+    let rec open_pat_aux sub p =
         match p.v with
-        | Pat_constant _ -> p, sub, renaming
+        | Pat_constant _ -> p, sub
 
         | Pat_cons(fv, pats) ->
-            let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
-                let p, sub, renaming = open_pat_aux sub renaming p in
-                ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
-            {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
+            let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
+                let p, sub = open_pat_aux sub p in
+                ((p,imp)::pats, sub)) ([], sub) in
+            {p with v=Pat_cons(fv, List.rev pats)}, sub
 
         | Pat_var x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
             let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_var x'}, sub, (x,x')::renaming
+            {p with v=Pat_var x'}, sub
 
         | Pat_wild x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
             let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_wild x'}, sub, (x,x')::renaming
+            {p with v=Pat_wild x'}, sub
 
         | Pat_dot_term(x, t0) ->
             let x = {x with sort=subst sub x.sort} in
             let t0 = subst sub t0 in
-            {p with v=Pat_dot_term(x, t0)}, sub, renaming //these are not in scope, so don't shift the index
+            {p with v=Pat_dot_term(x, t0)}, sub //these are not in scope, so don't shift the index
     in
+    open_pat_aux [] p
 
-    let p, sub, _ = open_pat_aux [] [] p in
-    p, sub
-
-let open_branch (p, wopt, e) =
+let open_branch' (p, wopt, e) =
     let p, opening = open_pat p in
     let wopt = match wopt with
         | None -> None
         | Some w -> Some (subst opening w) in
     let e = subst opening e in
-    (p, wopt, e)
+    (p, wopt, e), opening
+
+let open_branch br =
+    let br, _ = open_branch' br in
+    br
 
 let close (bs:binders) t = subst (closing_subst bs) t
 let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
@@ -648,3 +652,17 @@ let opening_of_binders (bs:binders) =
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
 
 let closing_of_binders (bs:binders) = closing_subst bs
+
+let open_term_1 b t =
+    match open_term [b] t with
+    | [b], t -> b, t
+    | _ -> failwith "impossible: open_term_1"
+
+let open_term_bvs bvs t =
+    let bs, t = open_term (List.map mk_binder bvs) t in
+    List.map fst bs, t
+
+let open_term_bv bv t =
+    match open_term_bvs [bv] t with
+    | [bv], t -> bv, t
+    | _ -> failwith "impossible: open_term_bv"

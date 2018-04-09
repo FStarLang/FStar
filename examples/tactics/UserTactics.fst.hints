@@ -1,5 +1,5 @@
 [
-  "0³,·ÖÞÛÐ\u0011œµ*Ä\f€\r",
+  "ußéPü”¢¾P+Ýii®¯ÿ",
   [
     [
       "UserTactics.test_print_goal",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f8999f21e8b22390e523ecf2c1775c46"
+      "b625088434e64e9b84d1bd2538ff4c2b"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "18bf1a4bf9812c8881bac4ac8bf2126c"
+      "941ee1b50a7c774c93bb57c20442bc75"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "777ac0853e3b4ef96d50ef1f2227b95a"
+      "a3da4ca4dd1d43cc6a879e66488ce9aa"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "7c335da917ddbb15bb8682747fc2a5ea"
+      "42095ff3bccdfc87ab939f4f66db0274"
     ],
     [
       "UserTactics.sqintro",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "ce3ed0c7ca927eb5d9e3b2eda5e8c80c"
+      "fe99a745efcfcf2100e63ef0332e01a1"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -60,7 +60,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "9935b65e04bca8ea6e5d4863ce090f34"
+      "8b155de9f1a34fa3cbffbcf5aefe3f6a"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -69,7 +69,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "0b630365bc94d2f78a1e97d1209638b6"
+      "e5799644da4268d3f0c10541a64dac80"
     ],
     [
       "UserTactics.f",
@@ -82,7 +82,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "99e7d8127e3b35a62f8ce38ee1b6f3a7"
+      "aacea9e1af61ed1bf07548c085973449"
     ],
     [
       "UserTactics.sqintro",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "399f4c6a9d8256bb46c01f545021b040"
+      "d5bf5f60d8f42431ce519289d0b684c0"
     ]
   ]
 ]

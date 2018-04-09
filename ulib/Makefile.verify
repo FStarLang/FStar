@@ -1,4 +1,4 @@
-.PHONY: indent extra
+.PHONY: indent extra arraystruct
 
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/z3.mk
@@ -40,3 +40,5 @@ verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
 
 wc:
 	wc -l prims.fst $(ALL)
+
+arraystruct: $(addsuffix .checked,$(wildcard FStar.Pointer*.fst FStar.Pointer*.fsti) FStar.BufferNG.fst FStar.TaggedUnion.fst FStar.TaggedUnion.fsti)

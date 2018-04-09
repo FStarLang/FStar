@@ -43,6 +43,7 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
 module R  = FStar.Reflection.Basic
 module RD = FStar.Reflection.Data
+module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 
 exception Un_extractable
@@ -904,17 +905,35 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_arrow _ ->
           ml_unit, E_PURE, ml_unit_ty
 
-
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
           let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
           E_PURE,
           ml_int_ty
 
-        | Tm_quoted (qt, { qkind = Quote_static }) ->
-          let tv = RE.embed_term_view t.pos (R.inspect_ln qt) in
-          let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
-          term_as_mlexpr' g t
+        | Tm_quoted (qt, { qkind = Quote_static; antiquotes = aqs }) ->
+          begin match R.inspect_ln qt with
+          | RD.Tv_Var bv ->
+            begin match S.lookup_aq bv aqs with
+            | Some (false, tm) ->
+              term_as_mlexpr' g tm
+
+            | Some (true, tm) ->
+              let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
+              with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
+              E_PURE,
+              ml_int_ty
+
+            | None ->
+              let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos (RD.Tv_Var bv) in
+              let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
+              term_as_mlexpr' g t
+            end
+          | tv ->
+              let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos tv in
+              let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
+              term_as_mlexpr' g t
+          end
 
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
             raise_err (Error_NoLetMutable, "let-mutable no longer supported")
@@ -1148,6 +1167,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     let tcenv = TcEnv.set_current_module g.tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
                     debug g (fun () ->
+                                BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                                 Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         if Options.ml_ish()

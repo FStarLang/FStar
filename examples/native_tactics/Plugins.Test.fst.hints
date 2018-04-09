@@ -1,0 +1,52 @@
+[
+  "ÛNu''q\n¶sí=5º`\u0006²",
+  [
+    [
+      "Plugins.Test.uu___65",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.Pervasives.id", "equation_Plugins.int_plugin",
+        "primitive_Prims.op_Equality"
+      ],
+      0,
+      "d0c10b5dfdf90867a6be033eae0f630a"
+    ],
+    [
+      "Plugins.Test.uu___66",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
+        "equation_FStar.UInt32.n", "equation_Plugins.tuple_plugin",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.bool",
+        "function_token_typing_Prims.int", "primitive_Prims.op_Equality"
+      ],
+      0,
+      "ded60ecddcaac59910c25fa5d90dccc2"
+    ],
+    [
+      "Plugins.Test.uu___67",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
+        "equation_FStar.UInt32.n", "equation_Plugins.any_plugin",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int", "primitive_Prims.op_Equality"
+      ],
+      0,
+      "6c48422884df252a2e028e8efdc326a4"
+    ]
+  ]
+]

@@ -8,7 +8,7 @@
       0,
       [ "@MaxIFuel_assumption", "@query", "int_inversion", "unit_typing" ],
       0,
-      "548029984a43a5539a8778db801bd4ca"
+      "7b3db9d7bdadec9460e6ae295b27dfba"
     ],
     [
       "PropositionalExtensionalityInconsistent.clearly_wrong'",
@@ -29,7 +29,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "ba87fe829140507e4e4b33a58b517f8d"
+      "14704e4a8a8fa7db32351f5f8a0c9370"
     ],
     [
       "PropositionalExtensionalityInconsistent.predicateExtensionality",
@@ -50,7 +50,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "96a82257d69c407c89bfefccc76a6ef6"
+      "6c0f4b8a7ae9d9030c086beea87e0c7e"
     ],
     [
       "PropositionalExtensionalityInconsistent.proof",
@@ -68,7 +68,7 @@
         "unit_typing"
       ],
       0,
-      "53f3143ae01545f4cc199a0b7c370c3f"
+      "a4f70705b46df64034efd6ba176ae600"
     ],
     [
       "PropositionalExtensionalityInconsistent.zarb",
@@ -77,7 +77,7 @@
       0,
       [ "@query" ],
       0,
-      "25a2a3f4fa0701010ceacb5ff3a3547d"
+      "e0ce61a4a556d0cf0dd43d509aabb60b"
     ],
     [
       "PropositionalExtensionalityInconsistent.clearly_wrong",
@@ -89,7 +89,7 @@
         "equation_PropositionalExtensionalityInconsistent.p2"
       ],
       0,
-      "c5dbced3803c89e965ee18bb3782545c"
+      "8c97908c5e9837eda7af067e4474bd29"
     ],
     [
       "PropositionalExtensionalityInconsistent.test",
@@ -101,7 +101,7 @@
         "constructor_distinct_Prims.unit"
       ],
       0,
-      "e519933670e9f74aa3c7e66157f57826"
+      "843de629183ff0c2ef929777564f142d"
     ],
     [
       "PropositionalExtensionalityInconsistent.unit_contractible",
@@ -110,7 +110,7 @@
       0,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "f9fc9b09a7755e3eedb3ad77b027f154"
+      "6e4cd63f7adcece0d555055cc26eb144"
     ],
     [
       "PropositionalExtensionalityInconsistent.ahahah",
@@ -119,7 +119,7 @@
       0,
       [ "@query", "int_typing", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "41ce1944df444cb911f05029f1569bf6"
+      "bbc4d1680f9d144783884af3a931db3d"
     ]
   ]
 ]

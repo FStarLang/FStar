@@ -306,6 +306,8 @@ type raw_error =
   | Warning_TacAdmit
   | Fatal_IncoherentPatterns
   | Error_NoSMTButNeeded
+  | Fatal_UnexpectedAntiquotation
+  | Fatal_SplicedUndef
   | Warning_ExtractionUnexpectedEffect
 
 // Needs review: Do we need CFatal, or can we just use CError?
@@ -615,6 +617,8 @@ let default_flags =
   (Warning_TacAdmit                                  , CWarning);
   (Fatal_IncoherentPatterns                          , CFatal);
   (Error_NoSMTButNeeded                              , CError);
+  (Fatal_UnexpectedAntiquotation                     , CFatal);
+  (Fatal_SplicedUndef                                , CFatal);
   (Warning_ExtractionUnexpectedEffect                , CWarning)
   ]
 

@@ -140,6 +140,8 @@ type token =
   | BAR_RBRACK
   | BAR
   | BANG_LBRACE
+  | BACKTICK_HASH
+  | BACKTICK_AT
   | BACKTICK
   | ATTRIBUTES
   | ASSUME
@@ -286,6 +288,8 @@ type tokenId =
     | TOKEN_BAR_RBRACK
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
+    | TOKEN_BACKTICK_HASH
+    | TOKEN_BACKTICK_AT
     | TOKEN_BACKTICK
     | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
@@ -314,6 +318,7 @@ type nonTerminalId =
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_10_
     | NONTERM_list___anonymous_4_
@@ -343,6 +348,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
     | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
+    | NONTERM_separated_nonempty_list_SEMICOLON_lidentOrOperator_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_pragma

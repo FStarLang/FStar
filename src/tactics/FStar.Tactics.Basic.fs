@@ -69,6 +69,10 @@ let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
             | Success (a, q)  -> run (t2 a) q
             | Failed (msg, q) -> Failed (msg, q))
 
+(* get : get the current proof state *)
+let get : tac<proofstate> =
+    mk_tac (fun p -> Success (p, p))
+
 let idtac : tac<unit> = ret ()
 
 let goal_to_string (g:goal) =
@@ -92,6 +96,17 @@ let is_irrelevant (g:goal) : bool =
     match U.un_squash (N.unfold_whnf g.context g.goal_ty) with
     | Some t -> true
     | _ -> false
+
+let print (msg:string) : tac<unit> =
+    tacprint msg;
+    ret ()
+
+let debug (msg:string) : tac<unit> =
+    bind get (fun ps ->
+    if Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)
+    then tacprint msg
+    else ();
+    ret ())
 
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
@@ -152,10 +167,6 @@ let print_proof_state (msg:string) : tac<unit> =
                    let subst = N.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
-
-(* get : get the current proof state *)
-let get : tac<proofstate> =
-    mk_tac (fun p -> Success (p, p))
 
 let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
 let rec log ps f : unit =
@@ -224,48 +235,47 @@ let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
 let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
-    let debug_on () =
-        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
-        ()
-    in
-    let debug_off () =
-        let _ = Options.set_options Options.Reset "" in
-        ()
-    in
-
-    let _ = if Env.debug env (Options.Other "1346")
-            then let _ = debug_on () in
+    let _ = if Env.debug env (Options.Other "1346") then
                   BU.print2 "%%%%%%%%do_unify %s =? %s\n"
                             (Print.term_to_string t1)
                             (Print.term_to_string t2) in
     try
             let res = Rel.teq_nosmt env t1 t2 in
-            debug_off();
             if Env.debug env (Options.Other "1346")
-            then BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
-                            (string_of_bool res)
-                            (Print.term_to_string t1)
-                            (Print.term_to_string t2);
+            then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                                  (string_of_bool res)
+                                  (Print.term_to_string t1)
+                                  (Print.term_to_string t2));
             ret res
     with | Errors.Err (_, msg) -> begin
-            debug_off();
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
             ret false)
             end
          | Errors.Error (_, msg, r) -> begin
-            debug_off();
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
             end
 
 let do_unify env t1 t2 : tac<bool> =
-    bind (__do_unify env t1 t2) (fun b ->
-    if not b
-    then let t1 = N.normalize [] env t1 in
-         let t2 = N.normalize [] env t2 in
-         __do_unify env t1 t2
-    else ret b)
+    bind idtac (fun () ->
+    if Env.debug env (Options.Other "1346") then (
+        Options.push ();
+        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
+        ()
+    );
+
+    bind (
+        bind (__do_unify env t1 t2) (fun b ->
+        if not b
+        then let t1 = N.normalize [] env t1 in
+             let t2 = N.normalize [] env t2 in
+             __do_unify env t1 t2
+        else ret b)) (fun r ->
+
+    if Env.debug env (Options.Other "1346") then
+        Options.pop ();
+    ret r))
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
@@ -1064,6 +1074,8 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
                  bind (ff hd) (fun hd ->
                  let ffb br =
                     let (pat, w, e) = SS.open_branch br in
+                    let bvs = S.pat_bvs pat in
+                    let ff = tac_fold_env d f (Env.push_bvs env bvs) in
                     bind (ff e) (fun e ->
                     let br = SS.close_branch (pat, w, e) in
                     ret br)
@@ -1083,6 +1095,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
                 in
                 bind (fflb lb) (fun lb ->
                 let bs, e = SS.open_term [S.mk_binder bv] e in
+                let ff = tac_fold_env d f (Env.push_binders env bs) in
                 bind (ff e) (fun e ->
                 let e = SS.close bs e in
                 ret (Tm_let ((false, [lb]), e))))
@@ -1260,11 +1273,11 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     in
     let gt = g.goal_ty in
     log ps (fun () ->
-        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
+        BU.print1 "Topdown_rewrite starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
     bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) g.context keepGoing gt) (fun (gt', _) ->
     log ps (fun () ->
-        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
+        BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 
@@ -1380,7 +1393,7 @@ let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     ret tm)))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
-    // If no type was given, add an uvar for it too!
+    // If no type was given, add a uvar for it too!
     bind (match ty with
     | Some ty -> ret ty
     | None -> new_uvar "uvar_env.2" env (fst <| U.type_u ())) (fun typ ->
@@ -1395,13 +1408,14 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
                | g::_ -> g.opts
                | _ -> FStar.Options.peek ()
     in
-    bind (__tc env t) (fun (t, typ, guard) ->
-    bind (proc_guard "unshelve" env guard opts) (fun _ ->
-    add_goals [{ witness  = bnorm env t;
-                 goal_ty  = bnorm env typ;
-                 is_guard = false;
-                 context  = env;
-                 opts     = opts; }])))
+    match U.head_and_args t with
+    | { n = Tm_uvar (_, typ) }, _ ->
+        add_goals [{ witness  = bnorm env t;
+                     goal_ty  = bnorm env typ;
+                     is_guard = false;
+                     context  = env;
+                     opts     = opts; }]
+    | _ -> fail "not a uvar")
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->

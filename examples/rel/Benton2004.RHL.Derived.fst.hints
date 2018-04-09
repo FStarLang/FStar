@@ -17,7 +17,7 @@
         "typing_Benton2004.assign"
       ],
       0,
-      "cd138422b2d1872fee17bdff2b37c02a"
+      "ae810870c39f6a04b3c201580777bd89"
     ],
     [
       "Benton2004.RHL.Derived.r_dassl",
@@ -35,7 +35,7 @@
         "typing_Benton2004.assign"
       ],
       0,
-      "050c3d72d2d58e3f9ad0ee2cb87eaa97"
+      "c75213edd22a2b9400c0b1fd588f53f5"
     ],
     [
       "Benton2004.RHL.Derived.flip_flip",
@@ -51,7 +51,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "7f02f80c6bb21232da392d3883c116c5"
+      "47e49b1cea5d9fc3279fdedc62851342"
     ],
     [
       "Benton2004.RHL.Derived.r_dassr",
@@ -80,7 +80,7 @@
         "typing_Benton2004.assign"
       ],
       0,
-      "ddeb1868e75eaa5885ef15a26b2b854f"
+      "0005f8e5cd9f1d8227ac4451efce81ce"
     ],
     [
       "Benton2004.RHL.Derived.d_su1'_flip",
@@ -93,7 +93,7 @@
         "lemma_Benton2004.RHL.exec_equiv_flip", "typing_Benton2004.seq"
       ],
       0,
-      "1dd36fa604e210277d3090240f945af1"
+      "ef2b2979022175c3f7836785be9cf9d7"
     ]
   ]
 ]

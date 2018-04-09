@@ -54,7 +54,7 @@ let set_hint_correlator env se =
       let n_opt = BU.smap_try_find tbl lid.str in
       if is_some n_opt then n_opt |> must else 0
     in
-    
+
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
@@ -123,7 +123,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let effect_params_un, signature_un, opening =
       SS.open_term' (open_univs_binders 0 ed.binders)
                     (open_univs n_effect_params ed.signature) in
-  let effect_params, env, _ = tc_tparams env0 effect_params_un in
+
+  let env = Env.push_univ_vars env0 annotated_univ_names in  //AR: push the univs in the environment
+
+  let effect_params, env, _ = tc_tparams env effect_params_un in
   let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=effect_params;
                     signature=signature} in
@@ -204,7 +207,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
       | _::_ ->
         let (us, t) = SS.subst_tscheme open_annotated_univs (us, t) in
         let us, t = SS.open_univ_vars us t in
-        let _ = tc_check_trivial_guard env t k in
+        let _ = tc_check_trivial_guard (Env.push_univ_vars env us) t k in  //AR: push univ vars in the env
         us, SS.close_univ_vars us t
   in
 
@@ -378,13 +381,15 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // of the form [binders -> repr ...], i.e. is it properly curried.
 
           //in case action has universes, open the action type etc. first
-          let act =
-            if act.action_univs = [] then act
+          let env, act =
+            if act.action_univs = [] then env, act
             else
               let usubst, uvs = SS.univ_var_opening act.action_univs in
+              Env.push_univ_vars env uvs,
+              //AR: TODO: FIXME: why is usubst not shifted before applying to action_defn and action_typ?
               { act with action_univs = uvs; action_params = SS.subst_binders usubst act.action_params; action_defn = SS.subst usubst act.action_defn; action_typ = SS.subst usubst act.action_typ }
           in
-          
+
           //AR: if the act typ is already in the effect monad (e.g. in the second phase),
           //    then, convert it to repr, so that the code after it can work as it is
           //    perhaps should open/close binders properly
@@ -395,7 +400,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               if lid_equals c.effect_name ed.mname then U.arrow bs (S.mk_Total (mk_repr' c.result_typ (fst (List.hd c.effect_args)))) else act.action_typ
             | _ -> act.action_typ
           in
-          
+
           let act_typ, _, g_t = tc_tot_or_gtot_term env act_typ in
 
           // 1) Check action definition, setting its expected type to
@@ -437,7 +442,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 let a, wp = destruct_repr (U.comp_result c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-		          effect_name = ed.mname;
+                          effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
                   flags = []
@@ -449,7 +454,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (*         (Print.term_to_string act_defn) *)
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
 
-          let univs, act_defn = TcUtil.generalize_universes env act_defn in
+          //AR: if the action universes were already annotated, simply close, else generalize
+          let univs, act_defn = if act.action_univs = [] then TcUtil.generalize_universes env act_defn else
+                                act.action_univs, SS.close_univ_vars act.action_univs act_defn
+          in
           let act_typ = N.normalize [N.Beta] env act_typ in
           let act_typ = Subst.close_univ_vars univs act_typ in
           {act with
@@ -941,17 +949,12 @@ let tc_lex_t env ses quals lids =
         raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
     end
 
-let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+let tc_assume (env:env) (phi:formula) (r:Range.range) :term =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    let us, phi = TcUtil.generalize_universes env phi in
-    { sigel = Sig_assume(lid, us, phi);
-      sigquals = quals;
-      sigrng = r;
-      sigmeta = default_sigmeta;
-      sigattrs = []  }
+    phi
 
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
@@ -963,10 +966,10 @@ let tc_inductive env ses quals lids =
        *)
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
-    let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
+    let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
-    (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
+    (if Options.no_positivity () || (not (Env.should_verify env))  then ()  //skipping positivity check if lax mode
      else
        let env = push_sigelt env sig_bndle in
        let b = List.iter (fun ty ->
@@ -992,29 +995,29 @@ let tc_inductive env ses quals lids =
                 | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
-        List.existsb (fun s -> s = lid.ident.idText) types_to_skip
+        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives
     in
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
     let res =
         if ((List.length tcs = 0) || ((lid_equals env.curmodule PC.prims_lid) && skip_prims_type ()) || is_noeq)
-        then [sig_bndle], data_ops_ses
+        then sig_bndle, data_ops_ses
         else
             let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
             let ses =
-              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env tc_assume
-              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env tc_assume
+              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env
+              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
-            { sigel = Sig_bundle(tcs@datas, lids);
-              sigquals = quals;
-              sigrng = Env.get_range env;
-              sigmeta = default_sigmeta;
-              sigattrs = []  }::ses, data_ops_ses in
+            sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
     ignore (Env.pop env "tc_inductive");
     res
 
+//when we process a reset-options pragma, we need to restart z3 etc.
+let z3_reset_options (en:env) :env =
+  let env = Env.set_proof_ns (Options.using_facts_from ()) en in
+  env.solver.refresh ();
+  env
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
@@ -1041,14 +1044,23 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
-    let ses, projectors_ses = tc_inductive env ses se.sigquals lids in
-    ses, projectors_ses
+    let ses =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
+        let ses = tc_inductive ({ env with lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
+        ses
+      end
+      else ses
+    in
+    let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
+    [ sigbndle ], projectors_ses
 
-  | Sig_pragma(p) ->
+  | Sig_pragma(p) ->  //no need for two-phase here
     U.process_pragma p r;
     [se], []
 
-  | Sig_new_effect_for_free (ne) ->
+  | Sig_new_effect_for_free (ne) ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
       (* This is only an elaboration rule not a typechecking one *)
 
       // Let the power of Dijkstra generate everything "for free", then defer
@@ -1062,11 +1074,19 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       [], ses @ effect_and_lift_ses
 
   | Sig_new_effect(ne) ->
+    let ne =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let ne = tc_eff_decl ({ env with lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
+        ne
+      end
+      else ne
+    in
     let ne = tc_eff_decl env ne in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], []
 
-  | Sig_sub_effect(sub) ->
+  | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let ed_src = Env.get_effect_decl env sub.source in
     let ed_tgt = Env.get_effect_decl env sub.target in
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -1090,31 +1110,47 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         failwith "Impossible (parser)"
       | lift, Some (uvs, lift_wp) ->
         //AR: open the universes, if present (two phases)
-        let lift_wp = if List.length uvs > 0 then SS.subst (fst (SS.univ_var_opening uvs)) lift_wp else lift_wp in
+        let env, lift_wp =
+          if List.length uvs > 0 then
+            let usubst, uvs = SS.univ_var_opening uvs in
+            Env.push_univ_vars env uvs, SS.subst usubst lift_wp
+          else env, lift_wp
+        in
         (* Covers both the "classic" format and the reifiable case. *)
-        lift, check_and_gen env lift_wp expected_k
+        //AR: if universes are already annotated, simply close, else generalize
+        let lift_wp = if List.length uvs = 0 then check_and_gen env lift_wp expected_k
+                      else let lift_wp = tc_check_trivial_guard env lift_wp expected_k in uvs, SS.close_univ_vars uvs lift_wp
+        in
+        lift, lift_wp
       (* Sub-effect for free case *)
       | Some (what, lift), None ->
         //AR: open the universes if present (two phases)
-        let lift = if List.length what > 0 then SS.subst (fst (SS.univ_var_opening what)) lift else lift in
+        let uvs, lift =
+          if List.length what > 0 then
+            let usubst, uvs = SS.univ_var_opening what in
+            uvs, SS.subst usubst lift
+          else [], lift
+        in
         if Env.debug env (Options.Other "ED") then
             BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
         let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
-        let lift, comp, _ = tc_term env lift in
+        let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
         (* TODO : Check that comp is pure ? *)
         let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
         let _ = recheck_debug "lift-wp" env lift_wp in
         let _ = recheck_debug "lift-elab" env lift_elab in
-        Some ([], lift_elab), ([], lift_wp)
+        Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
     in
-    let lax = env.lax in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)
     let env = {env with lax=true} in
     let lift = match lift with
     | None -> None
     | Some (uvs, lift) ->
-      let lift = SS.subst (fst (SS.univ_var_opening uvs)) lift in
+      let env, lift =
+        let usubst, uvs = SS.univ_var_opening uvs in
+        Env.push_univ_vars env uvs, SS.subst usubst lift
+      in
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let wp_a = S.new_bv None wp_a_src in
       let a_typ = S.bv_to_name a in
@@ -1131,7 +1167,12 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         let expected_k, _, _ =
           tc_tot_or_gtot_term env expected_k in
 //          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
-        let lift = check_and_gen env lift expected_k in
+        let lift =
+          if List.length uvs = 0 then check_and_gen env lift expected_k
+          else
+            let lift = tc_check_trivial_guard env lift expected_k in
+            uvs, SS.close_univ_vars uvs lift
+        in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
     in
@@ -1144,13 +1185,13 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env0 = env in
 
     //AR: open universes in tps and c if needed
-    let uvs, tps, c =
-      if List.length uvs = 0 then uvs, tps, c
+    let env, uvs, tps, c =
+      if List.length uvs = 0 then env, uvs, tps, c
       else
         let usubst, uvs = SS.univ_var_opening uvs in
         let tps = SS.subst_binders usubst tps in
         let c = SS.subst_comp (SS.shift_subst (List.length tps) usubst) c in
-        uvs, tps, c
+        Env.push_univ_vars env uvs, uvs, tps, c
     in
     let env = Env.set_range env r in
     let tps, c = SS.open_comp tps c in
@@ -1192,17 +1233,36 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         then check_and_gen env t (fst (U.type_u()))
         else
             let uvs, t = SS.open_univ_vars uvs t in
+            let env = Env.push_univ_vars env uvs in
             let t = tc_check_trivial_guard env t (fst (U.type_u())) in
-            let t = N.normalize [N.NoFullNorm; N.Beta] env t in
+            let t = N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env t in
             uvs, SS.close_univ_vars uvs t
     in
     let se = { se with sigel = Sig_declare_typ(lid, uvs, t) } in
     [se], []
 
   | Sig_assume(lid, us, phi) ->
-    let _, phi = SS.open_univ_vars us phi in
-    let se = tc_assume env lid phi se.sigquals r in
-    [se], []
+    let us, phi = SS.open_univ_vars us phi in
+    let env = Env.push_univ_vars env us in
+    let phi =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let phi = tc_assume ({ env with lax = true }) phi r |> N.remove_uvar_solutions env in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Assume after phase 1: %s\n" (Print.term_to_string phi);
+        phi
+      end
+      else phi
+    in
+
+    let phi = tc_assume env phi r in
+    let us, phi =
+      if us = [] then TcUtil.generalize_universes env phi
+      else us, SS.close_univ_vars us phi
+    in
+    [ { sigel = Sig_assume(lid, us, phi);
+        sigquals = se.sigquals;
+        sigrng = r;
+        sigmeta = default_sigmeta;
+        sigattrs = []  } ], []
 
   | Sig_main(e) ->
     let env = Env.set_range env r in
@@ -1213,10 +1273,17 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let se = { se with sigel = Sig_main(e) } in
     [se], []
 
-  | Sig_splice t ->
+  | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
     let ses = env.splice env t in
+    let lids' = List.collect U.lids_of_sigelt ses in
+    List.iter (fun lid ->
+        match List.tryFind (Ident.lid_equals lid) lids' with
+        | Some _ -> ()
+        | None ->
+            raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
+    ) lids;
     [], ses
 
   | Sig_let(lbs, lids) ->
@@ -1305,8 +1372,30 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
-    (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
-    let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
+    (* 3. Type-check the Tm_let and convert it back to Sig_let *)
+    let env0 = { env with top_level = true; generalize = should_generalize } in
+    let e =
+      if Options.use_two_phase_tc () && Env.should_verify env0 then begin
+        let drop_lbtyp (e_lax:term) :term =
+          match (SS.compress e_lax).n with
+          | Tm_let ((false, [ lb ]), e2) ->
+            let lb_unannotated =
+              match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
+              | Tm_let ((_, [ lb ]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
+              | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
+            in
+            if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
+            else e_lax
+          | _ -> e_lax  //leave recursive lets as is
+        in
+        let e = tc_maybe_toplevel_term ({ env0 with lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
+        e
+      end
+      else e
+    in
+
+    let se, lbs = match tc_maybe_toplevel_term env0 e with
       | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
@@ -1449,10 +1538,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (ResetOptions _) ->
-    let env = Env.set_proof_ns (Options.using_facts_from ()) env in
-    env.solver.refresh();
-    env
+  | Sig_pragma (ResetOptions _) -> z3_reset_options env
   | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
@@ -1481,7 +1567,7 @@ let tc_decls env ses =
         N.normalize
                [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 N.CheckNoUvars;
-                N.Beta; N.NoDeltaSteps; N.CompressUvars;
+                N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars;
                 N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm]
               env
               t); //update the id_info table after having removed their uvars
@@ -1588,8 +1674,11 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
-//extract an interface from m
-let extract_interface (env:env) (m:modul) :modul =
+(*
+ * extract an interface from m
+ * this function uses the environment ONLY for unfolding effect abbreviations to see if the effect is reifiable etc.
+ *)
+let extract_interface (en:env) (m:modul) :modul =
   let is_abstract = List.contains Abstract in
   let is_irreducible = List.contains Irreducible in
   let is_assume = List.contains Assumption in
@@ -1639,40 +1728,40 @@ let extract_interface (env:env) (m:modul) :modul =
   let should_keep_lbdef (t:typ) :bool =
     let comp_effect_name (c:comp) :lident = //internal function, caller makes sure c is a Comp case
       match c.n with | Comp c -> c.effect_name | _ -> failwith "Impossible!"
-    in 
-    
+    in
+
     let c_opt =
       //if t is unit, make c_opt = Some (Tot unit), this will then be culled finally
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
-     
+
     c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
      //if c is pure or ghost then keep it if the return type is not unit
      if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
      //else keep it if the effect is reifiable
-     else Env.is_reifiable_effect env (comp_effect_name c))
+     else Env.is_reifiable_effect en (comp_effect_name c))
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
     match s.sigel with
     | Sig_inductive_typ _
-    | Sig_datacon _ -> failwith "Impossible! Bare data constructor"
+    | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
 
-    | Sig_splice _ -> failwith "Impossible! Trying to extract splice"
-    
+    | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
+
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
-        List.fold_left (fun sigelts s ->
+        sigelts |> List.fold_left (fun sigelts s ->
           match s.sigel with
           | Sig_inductive_typ (lid, _, _, _, _, _) -> abstract_inductive_tycons := lid::!abstract_inductive_tycons; (vals_of_abstract_inductive s)@sigelts
           | Sig_datacon (lid, _, _, _, _, _) ->
             abstract_inductive_datacons := lid::!abstract_inductive_datacons;
             sigelts  //nothing to do for datacons
-          | _ -> failwith "Impossible! Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
-        ) [] sigelts
-      else [s]  //if it is not abstract, retain as is
+          | _ -> failwith "Impossible! extract_interface: Sig_bundle can't have anything other than Sig_inductive_typ and Sig_datacon"
+        ) []
+      else [s]  //if it is not abstract, retain the bundle as is
     | Sig_declare_typ (lid, uvs, t) ->
       //if it's a projector or discriminator of an abstract inductive, got to go
       if is_projector_or_discriminator_of_an_abstract_inductive s.sigquals then []
@@ -1692,27 +1781,27 @@ let extract_interface (env:env) (m:modul) :modul =
         //if is it abstract or irreducible or lemma, keep just the vals
         let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
         if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
-        else 
+        else
           let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
           if should_keep_defs then [ s ]
           else vals
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
-      let is_haseq = TcUtil.is_haseq_lid lid in
+      let is_haseq = TcInductive.is_haseq_lid lid in
       if is_haseq then
-        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcUtil.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
+        let is_haseq_of_abstract_inductive = List.existsML (fun l -> lid_equals lid (TcInductive.get_haseq_axiom_lid l)) !abstract_inductive_tycons in
         if is_haseq_of_abstract_inductive then [ { s with sigquals = filter_out_abstract s.sigquals } ]
         else []
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
     | Sig_new_effect_for_free _
     | Sig_sub_effect _
-    | Sig_effect_abbrev _
+    | Sig_effect_abbrev _ -> [s]
     | Sig_pragma _ -> [s]
   in
 
-  { m with declarations = List.flatten (List.map extract_sigelt m.declarations); is_interface = true }
+  { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }
 
 //AR: moving these push and pop functions from Universal, using them in extracting interface etc.
 let pop_context env msg =
@@ -1745,36 +1834,39 @@ let tc_more_partial_modul env modul decls =
   modul, exports, env
 
 let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
-  let lax_mode = env0.lax in
-  let env0 = if lid_equals env0.curmodule Parser.Const.prims_lid then { env0 with lax = true } else env0 in
   let msg = "Internals for " ^ m.name.str in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
-  let m, m_opt, env = finish_partial_modul false env modul non_private_decls in
-  m, m_opt, { env with lax = lax_mode }
+  finish_partial_modul false env modul non_private_decls
 
 and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
-    //pop AND use the old env for rest of the function
-    let en0 = pop_context en ("Ending modul " ^ m.name.str) in
-
-    //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from env
-    let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
-
-    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
-
-    //extract the interface in new environment en, since we may need to unfold effect abbreviations for the current module to decide what to keep in the interface
+    //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
     let modul_iface = extract_interface en m in
     if Env.debug en <| Options.Low then
       BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
                 (if Options.should_verify m.name.str then "" else " (in lax mode) ")
                 (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
                 (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
-    let env0 = { en0 with is_iface = true } in
+
+    //set up the environment to verify the interface
+    let en0 =
+      //pop to get the env before this module type checking
+      let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+      //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from latest env
+      let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
+      //restore command line options ad restart z3 (to reset things like nl.arith options)
+      if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
+        Options.restore_cmd_line_options true |> ignore;
+        z3_reset_options en0
+      end
+      else en0
+    in
+
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
-    if must_be_none <> None then failwith "Impossible! Expected the second component to be None"
+    if must_be_none <> None then failwith "Impossible! finish_partial_module: expected the second component to be None"
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else

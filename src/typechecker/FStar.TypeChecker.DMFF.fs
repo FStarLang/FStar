@@ -1345,7 +1345,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
+let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.DoNotUnfoldPureLets; N.Eager_unfolding; N.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 

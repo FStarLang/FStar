@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--admit_smt_queries true --cache_checked_modules Bane.Test.fst</StartArguments>
+    <StartArguments>--lax FStar.List.Tot.Properties.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\everest\FStar\ulib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>

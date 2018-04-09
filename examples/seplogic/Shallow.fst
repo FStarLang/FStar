@@ -24,8 +24,12 @@ let st (a:Type) (wp:st_wp a) =
   post:post a -> h0:heap{wp post h0} -> Tot (squash (result h0 a post))
 
 (* return *)
-let return (#a:Type) (x:a)
+let return_without_binding (#a:Type) (x:a)
   : st a (fun post h0 -> heap_memory h0 == emp /\ post (x, h0))
+  = fun post h0 -> S.return_squash (x, h0)
+
+let return_with_binding (#a:Type) (x:a)
+  : st a (fun post h0 -> post (x, h0))
   = fun post h0 -> S.return_squash (x, h0)
 
 (* frame wp by partitioning a heap whose memory is m into h0 and h1, and then prove post on the resulting heap and h1 *)
@@ -55,7 +59,7 @@ let bind_exists
   : Tot (squash a)
   = S.bind_squash #(x:b & p x) #a h (fun (| x, p |) -> f x p)
 
-(*val frame: #a:Type -> #wp:st_wp a -> f:st a wp
+val frame: #a:Type -> #wp:st_wp a -> f:st a wp
          -> st a (fun post -> frame_wp wp (frame_post post))
 let frame #a #wp f = 
   fun post h -> 
@@ -75,79 +79,132 @@ let frame #a #wp f =
                          let res = (x, join h1 h0') in 
                          lemma_fresh_or_old_disjoint h0 h0' h1;
                          lemma_fresh_or_old_sep h0 h0' h1;
-                         S.return_squash res)))*)
-(*
+                         lemma_join_comm h0' h1;
+                         S.return_squash res)))
+
 #set-options "--z3rlimit_factor 1 --max_fuel 0 --max_ifuel 0"
 
-val bind (#a:Type) (#wp1:st_wp a)
+val bind_without_framing (#a:Type) (#wp1:st_wp a)
+         (#b:Type) (#wp2:a -> st_wp b)
+         (f:st a wp1)
+         (g: (x:a -> st b (wp2 x)))
+    : st b (fun post h0 -> wp1 (fun (x, h1) -> wp2 x post h1) h0)
+let bind_without_framing #a #wp1 #b #wp2 f g = 
+  fun post h0 -> 
+    let sq_1 : squash (result h0 a (fun (x, h1) -> wp2 x post h1)) =
+      f (fun (x,h1) -> wp2 x post h1) h0 in
+    S.bind_squash sq_1 (fun (x,h1) -> 
+      let sq_2 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h1 (snd x_h)}) =
+        g x post h1 in 
+        S.bind_squash sq_2 (fun (y,h2) -> 
+          assert (fresh_or_old h0 h2);
+          let sq_3 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd x_h)}) = 
+            S.return_squash (y,h2) in
+          sq_3))
+        
+val bind_with_framing (#a:Type) (#wp1:st_wp a)
          (#b:Type) (#wp2:a -> st_wp b)
          (f:st a wp1)
          (g: (x:a -> st b (wp2 x)))
     : st b (fun post h ->
             frame_wp wp1 (frame_post (fun (x, h1) ->
               frame_wp (wp2 x) (frame_post post) h1)) h)
-              
-(*
-bind f g post :
--> h0:heap{frame_wp wp1 (frame_post (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) h0} 
--> Tot (squash (result h0 a post))
-*)
 
-(*
-frame f (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) :
--> h0:heap{frame_wp wp1 (frame_post (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) h0} 
--> Tot (squash (x_h:(a * heap){(fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) x_h /\ fresh_or_old h0 (snd x_h)}))
-*)
-
-(*
-frame (g x) post :
--> h1:heap{frame_wp (wp2 x) (frame_post post) h1}
--> Tot (squash (x_h':(a * heap){post x_h' /\ fresh_or_old h1 (snd x_h')}))
-*)
-
-let bind #a #wp1 #b #wp2 f g =
+let bind_with_framing #a #wp1 #b #wp2 f g =
     fun post h0 ->
-      assert (frame_wp wp1 (frame_post (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) h0);
       let sq_1 : squash (result h0 a (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) =
-        frame f (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) h0 in 
-      S.bind_squash #(result h0 a (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1)) #(result h0 b post) sq_1 (fun (x, h1) -> 
-        assert (frame_wp (wp2 x) (frame_post post) h1);
-        assert (fresh_or_old h0 h1);
-        let sq_2 : squash (result h1 b post) = 
+        frame f (fun (x, h1) -> frame_wp (wp2 x) (frame_post post) h1) h0 in
+      S.bind_squash sq_1 (fun (x, h1) ->
+        let sq_2 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h1 (snd x_h)}) =
           frame (g x) post h1 in 
-        S.bind_squash #(result h1 b post) #(result h0 b post) sq_2 (fun (y_h:result h1 b post) ->
-          let (y, h2) : x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd #b #heap x_h)} = y_h in
-          assert (post (y, h2));
-          assert (fresh_or_old h1 h2);
-          lemma_fresh_or_old_trans h0 h1 h2; 
+        S.bind_squash sq_2 (fun (y,h2) -> 
           assert (fresh_or_old h0 h2);
-          let res : squash (result h0 b post) = (y, h2) post in 
-          res))*)
+          let sq_3 : squash (x_h:(b * heap){post x_h /\ fresh_or_old h0 (snd x_h)}) = 
+            S.return_squash (y,h2) in
+          sq_3))
 
-let alloc (#a:Type0) (x:a)
-  : st (ref a) (fun post h0 -> heap_memory h0 == emp /\ (let (r,h1) = alloc h0 x in post (r, h1)))
+let read_wp (#a:Type) (r:ref a) : st_wp a =
+    (fun post h0 -> exists (x:a). heap_memory h0 == (r |> x) /\ post (x, h0))
+
+let read_without_framing (#a:Type0) (r:ref a)
+  : st a (read_wp r)
+  = fun post h0 -> 
+      assert_norm (read_wp r post h0 
+                   ==> 
+                   (exists (x:a). heap_memory h0 == (r |> x) /\ post (x, h0)));
+      assert (mcontains (heap_memory h0) r);
+      S.return_squash (sel h0 r, h0)
+
+let frame_read_wp (#a:Type) (r:ref a) : st_wp a =
+   fun post h0 -> 
+     frame_wp (read_wp r) (frame_post post) h0
+
+let read_with_framing (#a:Type0) (r:ref a)
+  : st a (frame_read_wp r)
+  = fun post h0 -> 
+      frame (read_without_framing r) post h0
+
+let write_wp (#a:Type) (r:ref a) (v:a) : st_wp unit =
+  fun post h0 -> 
+    exists (x:a). (heap_memory h0 == (r |> x) /\ post ((), (upd h0 r v)))
+
+let write_without_framing (#a:Type0) (r:ref a) (v:a)
+  : st unit (write_wp r v)
+    = fun post h0 -> 
+        assert_norm (write_wp r v post h0 
+                     ==> 
+                     (exists (x:a). heap_memory h0 == (r |> x) /\ post ((), upd h0 r v)));
+        lemma_fresh_or_old_upd r v h0;
+        S.return_squash ((), upd h0 r v)
+
+let frame_write_wp (#a:Type) (r:ref a) (v:a) : st_wp unit =
+   fun post h0 -> 
+     frame_wp (write_wp r v) (frame_post post) h0
+
+let write_with_framing (#a:Type0) (r:ref a) (v:a)
+  : st unit (frame_write_wp r v)
+  = fun post h0 -> 
+      frame (write_without_framing r v) post h0
+
+let alloc_wp (#a:Type0) (x:a) : st_wp (ref a)
+  = fun post h0 -> 
+      heap_memory h0 == emp /\ post (alloc h0 x)
+
+let alloc_without_framing (#a:Type0) (x:a)
+  : st (ref a) (alloc_wp x)
   = fun post h0 ->
       let (r,h1) = alloc h0 x in
       lemma_fresh_or_old_alloc x h0;
       S.return_squash (r,h1)
 
-let dealloc (#a:Type0) (r:ref a)
-  : st unit (fun post h0 -> (exists x . heap_memory h0 == (r |> x)) /\ hcontains h0 r /\ post ((), dealloc h0 r))
+let frame_alloc_wp (#a:Type0) (x:a) : st_wp (ref a) =
+  fun post h0 ->
+    frame_wp (alloc_wp x) (frame_post post) h0
+
+let alloc_with_framing (#a:Type0) (x:a)
+  : st (ref a) (frame_alloc_wp x)
   = fun post h0 -> 
-        assert (mcontains (heap_memory h0) r);
+      frame (alloc_without_framing x) post h0
+
+let dealloc_wp (#a:Type0) (r:ref a) : st_wp unit = 
+  fun post h0 -> 
+    (exists x . heap_memory h0 == (r |> x) /\ post ((), dealloc h0 r))
+
+let dealloc_without_framing (#a:Type0) (r:ref a)
+  : st unit (dealloc_wp r)
+  = fun post h0 -> 
+        assert_norm (dealloc_wp r post h0 
+                     ==> 
+                     (exists x . heap_memory h0 == (r |> x) /\ post ((), dealloc h0 r)));
         let h1 = dealloc h0 r in
         lemma_fresh_or_old_dealloc r h0;
         S.return_squash ((), h1)
+        
+let frame_dealloc_wp (#a:Type0) (r:ref a) : st_wp unit = 
+  fun post h0 -> 
+    frame_wp (dealloc_wp r) (frame_post post) h0
 
-let read (#a:Type0) (r:ref a)
-  : st a (fun post h0 -> (exists (x:a). heap_memory h0 == (r |> x) /\ post (x, h0)))
+let dealloc_with_framing (#a:Type0) (r:ref a)
+  : st unit (frame_dealloc_wp r)
   = fun post h0 -> 
-      assert (mcontains (heap_memory h0) r);
-      S.return_squash (sel h0 r, h0)
-
-let write (#a:Type0) (r:ref a) (v:a)
-  : st unit (fun post h0 -> (exists (x:a). heap_memory h0 == (r |> x) /\ hcontains h0 r /\ post ((), upd h0 r v)))
-    = fun post h0 -> 
-        assert (mcontains (heap_memory h0) r);
-        lemma_fresh_or_old_upd r v h0;
-        S.return_squash ((), upd h0 r v)
+      frame (dealloc_without_framing r) post h0

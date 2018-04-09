@@ -1,5 +1,5 @@
 [
-  "x\rˆD)6Ûa¼ÿ¢±k\u0018æ:",
+  "M@•îþŒPƒxº¿¡çC0z",
   [
     [
       "LambdaOmega.knd",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b9707bf57b2c742f56ccbc4a335ff04a"
+      "571b6d7e2493a3e7b8ca687e7ffd0a81"
     ],
     [
       "LambdaOmega.__proj__KArr__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8b48b9eeb2a347feedfef98eb374c34d"
       ],
       0,
-      "f9445106a1d65adc66968c0132930d90"
+      "0a02fd45f14754b7242e8e9e538207b7"
     ],
     [
       "LambdaOmega.__proj__KArr__item___1",
@@ -34,7 +34,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8b48b9eeb2a347feedfef98eb374c34d"
       ],
       0,
-      "75a0dd8a3c7d6bfb1c234f463eee2391"
+      "44879588cb524a831cb58093a9ec0efe"
     ],
     [
       "LambdaOmega.typ",
@@ -48,7 +48,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d6eaa2d592e1c9bdde0ac1085d86ef42"
+      "e1954313e260cd48bbe4abf916739255"
     ],
     [
       "LambdaOmega.__proj__TVar__item___0",
@@ -61,7 +61,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8454d7d4c32c3f232806dd6979b25988"
       ],
       0,
-      "bacaf91de19043d4cb2d37a515889b33"
+      "22e0aa26bc9c0e78fb970f42ec70a598"
     ],
     [
       "LambdaOmega.__proj__TLam__item___0",
@@ -74,7 +74,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_5f11a138c840cc7111e27e944b2f32fa"
       ],
       0,
-      "8d7bd350df48353cfc3efba61e8120e2"
+      "ddfb9929aaf716d3be1fcaf01612e725"
     ],
     [
       "LambdaOmega.__proj__TLam__item__t",
@@ -87,7 +87,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_5f11a138c840cc7111e27e944b2f32fa"
       ],
       0,
-      "22ea2a8c2868ed1d4ffea6ab290b1aff"
+      "18c6fa4eacfd7090f049ea18ce9faf02"
     ],
     [
       "LambdaOmega.__proj__TApp__item___0",
@@ -100,7 +100,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0e28fa2f56a31115ec481703c0cb0a1c"
       ],
       0,
-      "86d72f976725cbce2c17fba4f92ca34c"
+      "20c058394643f3fc19373651a2966b46"
     ],
     [
       "LambdaOmega.__proj__TApp__item___1",
@@ -113,7 +113,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0e28fa2f56a31115ec481703c0cb0a1c"
       ],
       0,
-      "32a7a43cbeea467ddfe6eef46a75389d"
+      "f9a2abf6b3f01f7d2c9d36c76951fa55"
     ],
     [
       "LambdaOmega.__proj__TArr__item___0",
@@ -126,7 +126,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ebfacded5bfac7e16f0c4cf9d6c0a24b"
       ],
       0,
-      "d6525d17ac02898cf666eaacfe8a678d"
+      "75cd51278804b9580354ebcefc9eb3c2"
     ],
     [
       "LambdaOmega.__proj__TArr__item___1",
@@ -139,7 +139,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ebfacded5bfac7e16f0c4cf9d6c0a24b"
       ],
       0,
-      "d6443716bfa44bddcf217f67374014e4"
+      "411b6b74a20a3e190e7a6e19044de5d6"
     ],
     [
       "LambdaOmega.exp",
@@ -153,7 +153,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "694d4c3a83ab86d4fded98f6c3626672"
+      "297eb07474c58312e90739e4f8ed7a19"
     ],
     [
       "LambdaOmega.__proj__EVar__item___0",
@@ -166,7 +166,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_13c221c50ecb0c200f598116593dea3d"
       ],
       0,
-      "a0e063b4d081ff3b18a4d6bae2525ad5"
+      "861a3147d9a41ad03c8c706abb9b4c2f"
     ],
     [
       "LambdaOmega.__proj__EApp__item___0",
@@ -179,7 +179,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_e64f1650f71e059a934486674c4393f7"
       ],
       0,
-      "c60ca9a5550496db45c61ffac4a7ce6d"
+      "3cfe1ff7c5ef544b5a4cae77e950f06e"
     ],
     [
       "LambdaOmega.__proj__EApp__item___1",
@@ -192,7 +192,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_e64f1650f71e059a934486674c4393f7"
       ],
       0,
-      "1357eaddb0a692ea70f00ee85e65f91b"
+      "723f5274eea7eca827d9654d0909e88e"
     ],
     [
       "LambdaOmega.__proj__ELam__item___0",
@@ -205,7 +205,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0c4cbaddf94de33c9fa2045e2ec86a00"
       ],
       0,
-      "9679b99ed0a12f1b673c8c194705ecfe"
+      "631dda5cf358c15470a477e24d2980df"
     ],
     [
       "LambdaOmega.__proj__ELam__item___1",
@@ -218,7 +218,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0c4cbaddf94de33c9fa2045e2ec86a00"
       ],
       0,
-      "f449a9cd091a89f2416645c16fc76e41"
+      "79e6b718c623d82b31ab8e6b8ab8f0ed"
     ],
     [
       "LambdaOmega.is_erenaming",
@@ -227,7 +227,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "44fed697ecab3e9d5555a4c6132ebdf8"
+      "53cd85fa705d8f7802c9e2a869182122"
     ],
     [
       "LambdaOmega.is_erenaming",
@@ -236,7 +236,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5f243a293b08c09d4c2922827f93cab7"
+      "5b4be2ffdcc87e75b8eaec83be997a39"
     ],
     [
       "LambdaOmega.is_erenaming",
@@ -248,7 +248,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_815c4eca866d1c7c736f480f60423fbe"
       ],
       0,
-      "3294374cd2b511e21f9927dc2b293f4b"
+      "e60107de06373a0f816fa46bc3502f04"
     ],
     [
       "LambdaOmega.esub_inc",
@@ -262,7 +262,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b62c2a13fa5664044c452d59caf2a49e"
+      "181ec138610ad893b5dc053f4b0c4887"
     ],
     [
       "LambdaOmega.esubst",
@@ -271,7 +271,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8a714e4379358584264e09233a7b8b7e"
+      "5d7598a6fa2c23093ce44fc00616656e"
     ],
     [
       "LambdaOmega.esub_lam",
@@ -280,7 +280,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "06a0f2e5860d19821dc2f7e6cffc5265"
+      "c818ca270de8c1320444a8ad3a2f4b7e"
     ],
     [
       "LambdaOmega.esubst",
@@ -314,7 +314,7 @@
         "typing_LambdaOmega.uu___is_EVar", "well-founded-ordering-on-nat"
       ],
       0,
-      "deb6a88c841782103350ef797c27b919"
+      "17aa7b5402270b561d59ef406779d8c6"
     ],
     [
       "LambdaOmega.esubst",
@@ -342,7 +342,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "81c024169812575f55d077b352841d18"
+      "96ce148502bf025ecd07908cc330bd90"
     ],
     [
       "LambdaOmega.esub_lam_renaming",
@@ -357,7 +357,7 @@
         "typing_LambdaOmega.esub_lam"
       ],
       0,
-      "f10a5cf1c04c18dd26598e1445cd4404"
+      "3ce1b253684260a161795f946c3fe812"
     ],
     [
       "LambdaOmega.esubst_extensional",
@@ -366,7 +366,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.exp__uu___haseq" ],
       0,
-      "b4d5fe501f0036bc46c0519756a539c2"
+      "fff032c506c72ef2efccab1a9f419ddb"
     ],
     [
       "LambdaOmega.esubst_extensional",
@@ -386,7 +386,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_54d80dd4bbc096a3d55a2f9297544fbb"
       ],
       0,
-      "eebb70e768fc9048d0b30eef3d554513"
+      "dfdc20f80cdd15e9f1bc6399386e70e9"
     ],
     [
       "LambdaOmega.esub_lam_hoist",
@@ -395,7 +395,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.exp__uu___haseq" ],
       0,
-      "07e7964c5dd486cf0807b2292a1aee85"
+      "c59eff51b65bc3a2340f8d1006e57aba"
     ],
     [
       "LambdaOmega.esub_beta",
@@ -410,7 +410,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "37eb19cafcf406908bb0fbd91adeacbf"
+      "6c8b866d59ae20af24317c31f310dad3"
     ],
     [
       "LambdaOmega.is_trenaming",
@@ -419,7 +419,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4f4fb6b6ffec083fc09864e00485db2f"
+      "34a064f55e100ce0ce55d0f688bde095"
     ],
     [
       "LambdaOmega.is_trenaming",
@@ -428,7 +428,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a1940b94bfeec924694f45f4d3155bba"
+      "64d5f70315be20d842bb0a32e917acb6"
     ],
     [
       "LambdaOmega.is_trenaming",
@@ -440,7 +440,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_724f68be0871f50df73ba6f499afda02"
       ],
       0,
-      "3fe2d540a657ea4cc4f4ed03dc357753"
+      "2f32b89c916e089973cc4f7963ac7315"
     ],
     [
       "LambdaOmega.tsub_inc_above",
@@ -454,7 +454,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "654f61b58a7f5a6acbc352cfe0dac119"
+      "1714e4c7f4fba7fda8865d22b5826221"
     ],
     [
       "LambdaOmega.trenaming_sub_inc",
@@ -474,7 +474,7 @@
         "typing_LambdaOmega.tsub_inc"
       ],
       0,
-      "8bd001546e650c357fd7e019d62496ca"
+      "db46a2fee8d5358be16645ebb6f63bcd"
     ],
     [
       "LambdaOmega.tsubst",
@@ -483,7 +483,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "50f3f83535b1e715d474fb91ebbfd6d6"
+      "0956c465d2568df986ac0cef2626c668"
     ],
     [
       "LambdaOmega.tsubst",
@@ -525,7 +525,7 @@
         "typing_LambdaOmega.uu___is_TVar", "well-founded-ordering-on-nat"
       ],
       0,
-      "bdc20741eb0dd1fb850ce157a78b6970"
+      "1c342bbc185c0e2d171ac9048a980cdd"
     ],
     [
       "LambdaOmega.tsub_lam",
@@ -540,7 +540,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1a3227384040decb88206387adcd25ab"
+      "8daeef4bb3be2992691a49626670efa4"
     ],
     [
       "LambdaOmega.tsubst_extensional",
@@ -549,7 +549,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "871f4c3c9f8b9694138a795dba7a40a1"
+      "f8a396212f8f1f2ff8fa2bced53c616c"
     ],
     [
       "LambdaOmega.tsubst_extensional",
@@ -569,7 +569,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_daa13168cc3d73a8a146ba7c33c84dd7"
       ],
       0,
-      "afd55395bc1c6db7e302274c4a1f162f"
+      "0b2f8df2c3ff9cb1f20363d8c8b53bb3"
     ],
     [
       "LambdaOmega.tsub_lam_hoist",
@@ -578,7 +578,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "47087bff5b733d46aa6b581baa7af014"
+      "0000190104ac74b7a49c8a880975b5eb"
     ],
     [
       "LambdaOmega.tsub_comp_inc",
@@ -587,7 +587,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "48288631f30e1884973ce4c9d6d78dc5"
+      "9095d004175e9c566e5a88443cab58dd"
     ],
     [
       "LambdaOmega.tsub_comp_inc",
@@ -617,7 +617,7 @@
         "token_correspondence_LambdaOmega.tsub_inc"
       ],
       0,
-      "97b8c0f142ea03348b8aff572e68bf71"
+      "9eceba0c36e1fb9cad99b1187ad8656f"
     ],
     [
       "LambdaOmega.tsub_lam_renaming",
@@ -651,7 +651,7 @@
         "typing_LambdaOmega.tsub_lam"
       ],
       0,
-      "069635921d00625b41b8a3aaced1571d"
+      "d9f96859acfcb0a8828ab7f1f471d65b"
     ],
     [
       "LambdaOmega.tsubst_comp",
@@ -660,7 +660,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "97afcfdf2305099bd4352b4a5a2b2cc7"
+      "1463df1a80e865d613d5b7c323716480"
     ],
     [
       "LambdaOmega.tsubst_comp",
@@ -669,7 +669,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ea0443878a12547f31d054ffa6f12d86"
+      "e353669b12177b70cb727ec2af644887"
     ],
     [
       "LambdaOmega.tsubst_comp",
@@ -678,7 +678,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "99b2c190658a34f27160c568a0c98b9b"
+      "25cf0b163992773330b4e4a193111a01"
     ],
     [
       "LambdaOmega.tsubst_comp",
@@ -735,7 +735,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d8d4214b500651fa48e6b3ed3e92d27b"
+      "b78ff951dca729f5dead6e3e8f5cfdc8"
     ],
     [
       "LambdaOmega.tsub_lam_comp",
@@ -744,7 +744,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "f332e291e8e32d5de3d5d3f02e696873"
+      "b2dd9350ab37dc9f1d52b6c2972a306c"
     ],
     [
       "LambdaOmega.tsub_lam_comp",
@@ -778,7 +778,7 @@
         "typing_LambdaOmega.tsub_inc"
       ],
       0,
-      "bcd4ceecd11d8fe69a00ebed43a29537"
+      "0868860001bcfa05fe751ebc961919d2"
     ],
     [
       "LambdaOmega.tsubst_id",
@@ -787,7 +787,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "39d2d46ccc0e8a41054de0a3980b5391"
+      "4a89f75b37dfaf884439b168e37bf33e"
     ],
     [
       "LambdaOmega.tsubst_id",
@@ -837,7 +837,7 @@
         "typing_LambdaOmega_Tm_abs_195f6a8a67aecb8d824ede39ebd0407d"
       ],
       0,
-      "c349a7f95697957c5b23fa887408433b"
+      "e8d9d2e25066d8716d78822700c32bdd"
     ],
     [
       "LambdaOmega.tsub_beta_gen",
@@ -856,7 +856,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1e493b190b05bf6ef30f8e956bc5422c"
+      "0731f355041d193a47db653630cf3857"
     ],
     [
       "LambdaOmega.step",
@@ -868,7 +868,7 @@
         "assumption_LambdaOmega.typ__uu___haseq"
       ],
       0,
-      "9ef2d141a0f8e23e97961ccb3e6ff036"
+      "8f371bf53851f270831ceba2d3d862c5"
     ],
     [
       "LambdaOmega.__proj__SBeta__item__t",
@@ -881,7 +881,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_99225bc3a8ffd09f5f0e517f8cae3989"
       ],
       0,
-      "7af51c55f39ead4e8f96d614fc651d77"
+      "4e7a228048cd335c39cf7f19f36688d6"
     ],
     [
       "LambdaOmega.__proj__SBeta__item__e1",
@@ -894,7 +894,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_99225bc3a8ffd09f5f0e517f8cae3989"
       ],
       0,
-      "494ee51222e774aa0cd2d5f81429510d"
+      "07a344fb69dc3598c644e96eb876d53c"
     ],
     [
       "LambdaOmega.__proj__SBeta__item__e2",
@@ -907,7 +907,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_99225bc3a8ffd09f5f0e517f8cae3989"
       ],
       0,
-      "c66e3992324a942fe99fd9d0f05615a1"
+      "663fb9b8bfbb72c5efdff502b04ac50f"
     ],
     [
       "LambdaOmega.__proj__SApp1__item__e1",
@@ -920,7 +920,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
       ],
       0,
-      "83f97ef799306dc1ad6ea4493ce81177"
+      "8a99242ba0799f7020cbde1beb312f20"
     ],
     [
       "LambdaOmega.__proj__SApp1__item__e2",
@@ -933,7 +933,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
       ],
       0,
-      "d213e789d0969c183245571802991e94"
+      "d9e7a153abac1434fc3f08046d6c0b9a"
     ],
     [
       "LambdaOmega.__proj__SApp1__item__e1'",
@@ -946,7 +946,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
       ],
       0,
-      "7d718ff7d79d6de375ace77a64407e3b"
+      "8e31e22ca6a9f785903572441feb863a"
     ],
     [
       "LambdaOmega.__proj__SApp1__item__hst",
@@ -963,7 +963,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
       ],
       0,
-      "8f9a9cf454621111f0d7f16c774dc8c8"
+      "29aaabfc103ad4635c449284352981b5"
     ],
     [
       "LambdaOmega.__proj__SApp2__item__e1",
@@ -976,7 +976,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
       ],
       0,
-      "41cd78844a35d768ec86c00754131ddf"
+      "1932b44a97347cd2788769901271bea2"
     ],
     [
       "LambdaOmega.__proj__SApp2__item__e2",
@@ -989,7 +989,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
       ],
       0,
-      "ff102be0c69961f2ce3ed753ee5b2d81"
+      "2732d8b59a5d9b81c41bec46dc11d436"
     ],
     [
       "LambdaOmega.__proj__SApp2__item__e2'",
@@ -1002,7 +1002,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
       ],
       0,
-      "e51b7b0ed4da79f68137bd5d273b8f3a"
+      "7a89fb70e58ba896a566886005ee44a5"
     ],
     [
       "LambdaOmega.__proj__SApp2__item__hst",
@@ -1019,7 +1019,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
       ],
       0,
-      "eff3f347f14b26d93726b2b33e1d837e"
+      "37ad726217af6f04433bade172be2869"
     ],
     [
       "LambdaOmega.extend_tvar",
@@ -1042,7 +1042,7 @@
         "typing_LambdaOmega.lookup_evar"
       ],
       0,
-      "f8b0c9c0552955d87931029fd96064b8"
+      "082d7f65708285c0a432e5463cd3df3c"
     ],
     [
       "LambdaOmega.extend_evar",
@@ -1060,7 +1060,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dcf1af55fa4ff964898edc0e82086d47"
+      "9e774256f629d533d1f69d52a530ae01"
     ],
     [
       "LambdaOmega.kinding",
@@ -1073,7 +1073,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_47d81d21bda8f121fb1a16c8ff2d0c04"
       ],
       0,
-      "f5d44de9eeb49c204619544d4c38ecfa"
+      "a6ee74204ebf7b52bc62fad81b318ddd"
     ],
     [
       "LambdaOmega.__proj__KiVar__item__g",
@@ -1086,7 +1086,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_728f5aba7f4b5dc37458445279a7deb5"
       ],
       0,
-      "3cb9aeba47eff50cfd13ceac91ad0027"
+      "3d44ccd06b28457c2f5ed0c6fb6dd423"
     ],
     [
       "LambdaOmega.__proj__KiVar__item__a",
@@ -1103,7 +1103,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_728f5aba7f4b5dc37458445279a7deb5"
       ],
       0,
-      "61fe5e2a1dde069bfb52b42fd7ad8cb8"
+      "05ef64201f32e4e88a7eed2fdcfb4f77"
     ],
     [
       "LambdaOmega.__proj__KiLam__item__g",
@@ -1116,7 +1116,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
       ],
       0,
-      "7a93f67de20f09a1b65efa6094ef8980"
+      "051ff08812017a4ee40aba0fd0f48575"
     ],
     [
       "LambdaOmega.__proj__KiLam__item__k",
@@ -1129,7 +1129,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
       ],
       0,
-      "3f33eff4ce5478c05698eeeca9e00cc3"
+      "13e04abcb08089a3e1d5ac305c7fb39d"
     ],
     [
       "LambdaOmega.__proj__KiLam__item__t",
@@ -1142,7 +1142,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
       ],
       0,
-      "b263363515680e94991afd2163724375"
+      "764d669219f158787584a1c774940084"
     ],
     [
       "LambdaOmega.__proj__KiLam__item__k'",
@@ -1155,7 +1155,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
       ],
       0,
-      "446da72c26ae9420181dac1aa1810c1b"
+      "36e3a7ebbc63c45451b4c0ddbffd6e37"
     ],
     [
       "LambdaOmega.__proj__KiLam__item__hk",
@@ -1177,7 +1177,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
       ],
       0,
-      "370b5a7f3bcadd415cf6b471c993f954"
+      "601ea3bb0a64e44e8a1e2ffec0d7f615"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__g",
@@ -1190,7 +1190,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "6070ba29eb4b9a27da785c153a869af0"
+      "c477e20203115b657384e4b91698cb44"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__t1",
@@ -1203,7 +1203,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "2cfb2285f24ba49def706f2423b2057d"
+      "cd94d01c9349032e7f9912cbac1573b5"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__t2",
@@ -1216,7 +1216,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "9e12aa582fcd5fd5f9796e803fccb086"
+      "667649d5cd2f28cab4dd768714b75f2a"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__k11",
@@ -1229,7 +1229,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "a880e93270e0ee77097835429352da20"
+      "efa0bae067a1d8b77cf4ff5c20205f26"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__k12",
@@ -1242,7 +1242,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "d8a0e8fa35e68ff0a73763f386cc300f"
+      "7de0128d193c3bd6a28c0c69512598bd"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__hk1",
@@ -1265,7 +1265,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "e6e4adc2b3acb5aa0ea9e294026d7812"
+      "e3d7e27552a66ee8d218d57b52461473"
     ],
     [
       "LambdaOmega.__proj__KiApp__item__hk2",
@@ -1287,7 +1287,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
       ],
       0,
-      "4b0acdb46e7c83c1bcd4fefaefdc4da1"
+      "95190055d62a9008534d7c34205933aa"
     ],
     [
       "LambdaOmega.__proj__KiArr__item__g",
@@ -1300,7 +1300,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
       ],
       0,
-      "4cacff62bab6b308d4e12f796c611438"
+      "07e3d8774feff498f3f8aeb977a97e97"
     ],
     [
       "LambdaOmega.__proj__KiArr__item__t1",
@@ -1313,7 +1313,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
       ],
       0,
-      "45617e7518dda2221eb9c2c87d6982dd"
+      "75cc63927499b3fc91c94f1ae404c2d9"
     ],
     [
       "LambdaOmega.__proj__KiArr__item__t2",
@@ -1326,7 +1326,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
       ],
       0,
-      "65d3e581c07976116aa0f98c5dc9465d"
+      "e08089bf94eb736bdf7fc88e3e6666c9"
     ],
     [
       "LambdaOmega.__proj__KiArr__item__hk1",
@@ -1346,7 +1346,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
       ],
       0,
-      "3cdeb3da06aebb3bdbd86439a9cce35c"
+      "6adbb0fadd6191dd255479c1e99e0624"
     ],
     [
       "LambdaOmega.__proj__KiArr__item__hk2",
@@ -1366,7 +1366,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
       ],
       0,
-      "8322cc972647ca129696c2b0fe83b762"
+      "624616a1ca9742654979eeafd03fb850"
     ],
     [
       "LambdaOmega.tequiv",
@@ -1378,7 +1378,7 @@
         "assumption_LambdaOmega.typ__uu___haseq"
       ],
       0,
-      "2f995351f61857a34be34fd55961de04"
+      "1fd8f160d72b7c32f4161a8690225b14"
     ],
     [
       "LambdaOmega.__proj__EqRefl__item__t",
@@ -1391,7 +1391,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_c9253dcb041a3b4f852211144c57ce7b"
       ],
       0,
-      "bc484367a84e8fddca4241a743519f2a"
+      "a4c18980657f502d3f70aa598f4e3a41"
     ],
     [
       "LambdaOmega.__proj__EqSymm__item__t1",
@@ -1404,7 +1404,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d1c2e9b19e4be2d169b319060dd0529"
       ],
       0,
-      "76a5a654f2cda270849c3082a1eff76f"
+      "512e1ca2c2c6ff4c6f5cd43a04ee05b4"
     ],
     [
       "LambdaOmega.__proj__EqSymm__item__t2",
@@ -1417,7 +1417,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d1c2e9b19e4be2d169b319060dd0529"
       ],
       0,
-      "bb2ac64863db1bdcbf7e42d3ee11a0a9"
+      "23e5a14c56fae73e4904cf34b1bff41e"
     ],
     [
       "LambdaOmega.__proj__EqSymm__item__he",
@@ -1434,7 +1434,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d1c2e9b19e4be2d169b319060dd0529"
       ],
       0,
-      "825b2c13b6eed0c7a754c0ef56248b3c"
+      "fb38d48b2d15c27a4a3969f613c0a1f8"
     ],
     [
       "LambdaOmega.__proj__EqTran__item__t1",
@@ -1447,7 +1447,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
       ],
       0,
-      "496958d68fdaf90d7ed15639f522b03e"
+      "ee7747c61023dd3ae547e8475b7326de"
     ],
     [
       "LambdaOmega.__proj__EqTran__item__t2",
@@ -1460,7 +1460,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
       ],
       0,
-      "e1e2e7decf6751e71a0bdd55d7e1750b"
+      "88da81b556f537c54994dc2035426cc5"
     ],
     [
       "LambdaOmega.__proj__EqTran__item__t3",
@@ -1473,7 +1473,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
       ],
       0,
-      "a545e6fdf1d81b12be12a8cc15415199"
+      "6a02a173cb3e0f119d53bb97e160dfb0"
     ],
     [
       "LambdaOmega.__proj__EqTran__item__he12",
@@ -1490,7 +1490,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
       ],
       0,
-      "3b41bd28cc656f8cb8a56e485e40e438"
+      "db42f9c7f1e5973ee520b7475cfd1929"
     ],
     [
       "LambdaOmega.__proj__EqTran__item__he23",
@@ -1507,7 +1507,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
       ],
       0,
-      "2f96ddf15202cb11699d60a99c17fe12"
+      "a9c78f4977005a0fcceda72a9d4468c3"
     ],
     [
       "LambdaOmega.__proj__EqLam__item__t",
@@ -1520,7 +1520,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
       ],
       0,
-      "0c23cc640673448bfaf535a1736ac5fa"
+      "c9cd7912843ce35f2b49f9ee64cc55ef"
     ],
     [
       "LambdaOmega.__proj__EqLam__item__t'",
@@ -1533,7 +1533,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
       ],
       0,
-      "75466db0c5bd095fcb8e0f8286c761ed"
+      "2b6f2a1e275125cf97aa970d9400b05c"
     ],
     [
       "LambdaOmega.__proj__EqLam__item__k",
@@ -1546,7 +1546,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
       ],
       0,
-      "255356b96e7056431adee17fbf21777a"
+      "953be8acc0bc71b9138bb6059b8b9f8e"
     ],
     [
       "LambdaOmega.__proj__EqLam__item__he",
@@ -1563,7 +1563,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
       ],
       0,
-      "ccb06df21fb56ec96f5179e4522f706e"
+      "3475c7cd3536b7131d86255da9214219"
     ],
     [
       "LambdaOmega.__proj__EqApp__item__t1",
@@ -1576,7 +1576,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
       ],
       0,
-      "46958fdedad8b24303808883e971d247"
+      "3ebb93b61b371da661468b84edef84c8"
     ],
     [
       "LambdaOmega.__proj__EqApp__item__t1'",
@@ -1589,7 +1589,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
       ],
       0,
-      "954eec8b7df2f1375ad13a6625d3b7af"
+      "60e97cfa49a4dc15618a248c11e86db2"
     ],
     [
       "LambdaOmega.__proj__EqApp__item__t2",
@@ -1602,7 +1602,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
       ],
       0,
-      "54cbe3d69156216a484fbf5bed581eeb"
+      "16fa6acc449992a6a8bf2d344de3e72e"
     ],
     [
       "LambdaOmega.__proj__EqApp__item__t2'",
@@ -1615,7 +1615,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
       ],
       0,
-      "77134158862995180c7034de8913571d"
+      "f5ead206ea5523e4cb0a5b87ad7bb3e0"
     ],
     [
       "LambdaOmega.__proj__EqApp__item__he1",
@@ -1632,7 +1632,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
       ],
       0,
-      "185c0c7625f4fce6d0c377eae0a5c852"
+      "bde65c1daa6ad3b9548e56746b8dac76"
     ],
     [
       "LambdaOmega.__proj__EqApp__item__he2",
@@ -1649,7 +1649,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
       ],
       0,
-      "eef0fe8702f394584e8468454f9d2d75"
+      "0016a0483464ee42c2604bec2b9e0f9f"
     ],
     [
       "LambdaOmega.__proj__EqBeta__item__k",
@@ -1662,7 +1662,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f0f290e4aac7314f6a11c6ea9cceec2"
       ],
       0,
-      "b5493dd7e55ccb19bcf70641cc168665"
+      "94b5043a4dbf9f73c39b23ca133c248d"
     ],
     [
       "LambdaOmega.__proj__EqBeta__item__t1",
@@ -1675,7 +1675,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f0f290e4aac7314f6a11c6ea9cceec2"
       ],
       0,
-      "09a40b3006cd20061ce7fd084c56c4af"
+      "a815266ec2bc7cc713bb558f32ab23ac"
     ],
     [
       "LambdaOmega.__proj__EqBeta__item__t2",
@@ -1688,7 +1688,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f0f290e4aac7314f6a11c6ea9cceec2"
       ],
       0,
-      "6a1d69d5b402c69cf2ea17f602d8456d"
+      "2909f25a04fe252ed3fe9867b9892f71"
     ],
     [
       "LambdaOmega.__proj__EqArr__item__t1",
@@ -1701,7 +1701,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
       ],
       0,
-      "912fd7bb95f65e0c08d00e88ef05ea84"
+      "7c8ae7abcd75f8c657a226e737186a3b"
     ],
     [
       "LambdaOmega.__proj__EqArr__item__t1'",
@@ -1714,7 +1714,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
       ],
       0,
-      "a5fb885a1d61647a99ceec1978097e27"
+      "0e708fbe085e5134e35bdeebcfd5cee6"
     ],
     [
       "LambdaOmega.__proj__EqArr__item__t2",
@@ -1727,7 +1727,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
       ],
       0,
-      "1face6dd1bdefbeb44c1daf6b7585a46"
+      "e5b0bfe4d5f567984d46a573618c984a"
     ],
     [
       "LambdaOmega.__proj__EqArr__item__t2'",
@@ -1740,7 +1740,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
       ],
       0,
-      "6ebae42399cf4d0479192344fa5ded50"
+      "dcc540a90d575e3be88e8ded60f542e4"
     ],
     [
       "LambdaOmega.__proj__EqArr__item__he1",
@@ -1757,7 +1757,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
       ],
       0,
-      "9322adad64abf5284083340c42e93e20"
+      "7e8f0160bebc2b1140c1b8c2e4f3f3af"
     ],
     [
       "LambdaOmega.__proj__EqArr__item__he2",
@@ -1774,7 +1774,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
       ],
       0,
-      "8f43dff2e8628bc703774afd779b6d26"
+      "a242496cd5167fe92204970eb3ad9ce3"
     ],
     [
       "LambdaOmega.typing",
@@ -1787,7 +1787,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
       ],
       0,
-      "e21e5f04ac3e8a934107ef9139bc4a3e"
+      "16aad1128a9b8406230434763bcbebf5"
     ],
     [
       "LambdaOmega.typing",
@@ -1800,7 +1800,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
       ],
       0,
-      "e6971350d9574f9607afd3fb8855ff7d"
+      "3d1c581a8d0b8e6948a8ad4707ab41f9"
     ],
     [
       "LambdaOmega.uu___is_TyVar",
@@ -1813,7 +1813,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
       ],
       0,
-      "d4c553624b4cd8e0849b447fc397230e"
+      "1b1c395a7e9279bf21b0cdc260867256"
     ],
     [
       "LambdaOmega.__proj__TyVar__item__g",
@@ -1829,7 +1829,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_599765d78a2cbc9ec22b9c08427a1e7d"
       ],
       0,
-      "33af777c7c605d06c2cb0d65e7db2f6f"
+      "e08d1d875c5dbaf42d90ae719013a08c"
     ],
     [
       "LambdaOmega.__proj__TyVar__item__x",
@@ -1851,7 +1851,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_599765d78a2cbc9ec22b9c08427a1e7d"
       ],
       0,
-      "ae30adc1049e0def4c0f048aeb768128"
+      "51a152c681be483c34581b4c0ec8ae2f"
     ],
     [
       "LambdaOmega.__proj__TyVar__item__hk",
@@ -1865,7 +1865,7 @@
         "typing_LambdaOmega.__proj__TyVar__item__x"
       ],
       0,
-      "88a720591649d4ce57a52f014a52df7a"
+      "94840e693348ec54cc914f1450b49246"
     ],
     [
       "LambdaOmega.__proj__TyVar__item__hk",
@@ -1890,7 +1890,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_599765d78a2cbc9ec22b9c08427a1e7d"
       ],
       0,
-      "3a8c0067f28646b514b084d8cfeff530"
+      "a95fc88bfa6f4aaa130a96f037a97781"
     ],
     [
       "LambdaOmega.__proj__TyLam__item__g",
@@ -1903,7 +1903,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
       ],
       0,
-      "b7956876cd8cdb6531d717e4a57f98a4"
+      "cb76e9b367a251755b8ef4514b4a9d70"
     ],
     [
       "LambdaOmega.__proj__TyLam__item__t",
@@ -1916,7 +1916,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
       ],
       0,
-      "612f237bb4efad149ac0d04a9a54135f"
+      "cab0922d14a78229897c1cb8e42c9a95"
     ],
     [
       "LambdaOmega.__proj__TyLam__item__e1",
@@ -1929,7 +1929,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
       ],
       0,
-      "8b058941c3d880de701293a88d29a82f"
+      "b0852e62612725c8dd4f8bf42e8e79b0"
     ],
     [
       "LambdaOmega.__proj__TyLam__item__t'",
@@ -1942,7 +1942,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
       ],
       0,
-      "75e567d1d49783f99b7eb39c2a483ae0"
+      "54c57d4ce90ea56c3cea682247701980"
     ],
     [
       "LambdaOmega.__proj__TyLam__item__hk",
@@ -1960,7 +1960,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
       ],
       0,
-      "97689b793aaafa0c158c20ef86122f55"
+      "9d266b90c7dd44e72e2a929fd32e7d4e"
     ],
     [
       "LambdaOmega.__proj__TyLam__item__ht",
@@ -1982,7 +1982,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
       ],
       0,
-      "e2c521fa095c5d29aff813790aa32e4c"
+      "cc7e99d9f29827392f777d7d2d11d6ae"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__g",
@@ -1995,7 +1995,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "befcd6a733aa090ec0e9355c62f22195"
+      "2c2e8f6df5152e85db5e6a93280c2cab"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__e1",
@@ -2008,7 +2008,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "548f1af9936bfa293ea61088032cf43f"
+      "b945494259a1f28398f863985d360313"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__e2",
@@ -2021,7 +2021,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "840d5f505ecaf655a2688bc8e0f63a3b"
+      "c297c9a57ad2ffde07e93ed7998aafa7"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__t1",
@@ -2034,7 +2034,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "e6db400d4bdc0fb04908c3a653b959f4"
+      "6ae6bb8b0db96c74b54b88d3ed4d5004"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__t2",
@@ -2047,7 +2047,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "08567e55c5046c3011a7d763c02cd097"
+      "9003f09baa90ecb90b1d918cddd65cdc"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__ht1",
@@ -2070,7 +2070,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "b49d2fd1f603c1137cde39b40e5ebbf8"
+      "8722c541dcdf0a1b17c84836f400c119"
     ],
     [
       "LambdaOmega.__proj__TyApp__item__ht2",
@@ -2092,7 +2092,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
       ],
       0,
-      "9365c948520fbfbf7bfd219e00e20579"
+      "8165177449d3137326d083215b97e642"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__g",
@@ -2105,7 +2105,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "d1887a35a6deb4edf3f34306bcc22e9a"
+      "622bfdf750c7a0eafc877120736b9dcd"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__e",
@@ -2118,7 +2118,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "1e692a1758d77f7d35577807047d35d8"
+      "9ae260558680d08314aaddebe76dcecd"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__t1",
@@ -2131,7 +2131,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "2958a448d6a2d1efc63b32f92535cda1"
+      "043bd196ecfa8dd535cc28b0e38b352c"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__t2",
@@ -2144,7 +2144,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "1c3f1b3f1802286f7bb916018f1c0b69"
+      "330877def5d0bf5ef7bda747e80795cd"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__ht",
@@ -2164,7 +2164,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "4c0893cb885c9ae5ac1d71aeb4f6b801"
+      "813f15ea6acd7fe4fc27e5f6d982b9a2"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__he",
@@ -2182,7 +2182,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "fe4cdfa1c2c9d9c11cfea40e261a336f"
+      "1c1464b5b5e54235646af56af4adab0d"
     ],
     [
       "LambdaOmega.__proj__TyEqu__item__hk",
@@ -2200,7 +2200,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
       ],
       0,
-      "063679d2081cf5d609692fff4e7459b9"
+      "40525192b47e72df5aed4128ad6f280a"
     ],
     [
       "LambdaOmega.progress",
@@ -2244,7 +2244,7 @@
         "typing_LambdaOmega.is_value", "typing_LambdaOmega.uu___is_ELam"
       ],
       0,
-      "f6a9064765cb1373546083c0c661dbb6"
+      "a4214dec022f57e92a462dd90a2d07c9"
     ],
     [
       "LambdaOmega.tappears_free_in",
@@ -2270,7 +2270,7 @@
         "subterm_ordering_LambdaOmega.TLam"
       ],
       0,
-      "3f1d5d3d5ddb36f178936fa15e944e3e"
+      "7116fef627744ff9457ce9e67db1177a"
     ],
     [
       "LambdaOmega.envEqualT",
@@ -2283,7 +2283,7 @@
         "kinding_LambdaOmega.knd@tok"
       ],
       0,
-      "7ac186562532279960dadb23d130ee19"
+      "6084cb8a0f592dd4a1061e69c8f4c0a9"
     ],
     [
       "LambdaOmega.tcontext_invariance",
@@ -2348,7 +2348,7 @@
         "typing_tok_LambdaOmega.KTyp@tok"
       ],
       0,
-      "a30184815ac18f7e692e6813dd4fa9ef"
+      "41643d6037a1532d9537ce5096dceec8"
     ],
     [
       "LambdaOmega.kinding_extensional",
@@ -2399,7 +2399,7 @@
         "typing_tok_LambdaOmega.KTyp@tok"
       ],
       0,
-      "5e96a8968fd663ac8368a2ccdde9a580"
+      "e4544a662a963d4b84caaa79596c05ae"
     ],
     [
       "LambdaOmega.kinding_weakening_ebnd",
@@ -2418,7 +2418,7 @@
         "token_correspondence_LambdaOmega.__proj__MkEnv__item__a"
       ],
       0,
-      "0f82011e779c9f3b880bc2ef6c5d4a09"
+      "2eda562fc870aafc19a9c7ed243e60bb"
     ],
     [
       "LambdaOmega.tshift_up_above_lam",
@@ -2427,7 +2427,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "e641edf32f4104b1f01fcf11009c520c"
+      "04c735a19cc9ac475466b11d53616527"
     ],
     [
       "LambdaOmega.tshift_up_above_lam",
@@ -2440,7 +2440,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f4d2d1a30c86753d77b9d29df8e704bf"
+      "5330cb35b42773a2c25185c7edb49cc6"
     ],
     [
       "LambdaOmega.tshift_up_above_lam",
@@ -2484,7 +2484,7 @@
         "typing_LambdaOmega_Tm_abs_195f6a8a67aecb8d824ede39ebd0407d"
       ],
       0,
-      "0092d290e8c81ef4a8fdd04cdde86876"
+      "0b3866754753f34816eecb6b710f103a"
     ],
     [
       "LambdaOmega.kinding_weakening_tbnd",
@@ -2549,7 +2549,7 @@
         "typing_tok_LambdaOmega.KTyp@tok"
       ],
       0,
-      "2a0c32b6f2803bc21dfe3085b3733e1a"
+      "7bd49437d4279373e5ddf330667bd337"
     ],
     [
       "LambdaOmega.kinding_strengthening_ebnd",
@@ -2568,7 +2568,7 @@
         "token_correspondence_LambdaOmega.__proj__MkEnv__item__a"
       ],
       0,
-      "6ba38f35fe0606ddd491d46eaffb5b55"
+      "2470294a6e4ccf6272182271275796e1"
     ],
     [
       "LambdaOmega.kinding_inversion_arrow",
@@ -2592,7 +2592,7 @@
         "projection_inverse_LambdaOmega.TArr__1"
       ],
       0,
-      "849a86544f82125c39f63bcc4912baa9"
+      "5aba20ac471d73731f235581b36510e7"
     ],
     [
       "LambdaOmega.typing_to_kinding",
@@ -2615,7 +2615,7 @@
         "subterm_ordering_LambdaOmega.TyLam"
       ],
       0,
-      "27f8172225e19aacfe8f1c783c619071"
+      "5b71090fec1383ebfbbf0e0af85b31af"
     ],
     [
       "LambdaOmega.tshift_up_above_tsubst_beta_aux",
@@ -2624,7 +2624,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "53a167f44284cf49a0eaf1ed40ff570a"
+      "79b5168ee2001c819c818a0819df036b"
     ],
     [
       "LambdaOmega.tshift_up_above_tsubst_beta_aux",
@@ -2638,7 +2638,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1784d5b68d80070134b23e55f5a112b5"
+      "8352ff273d89023d566253e43db797da"
     ],
     [
       "LambdaOmega.tshift_up_above_tsubst_beta_aux",
@@ -2678,7 +2678,7 @@
         "typing_LambdaOmega_Tm_abs_eab6a019b4cbe8e316527198ab794bdd"
       ],
       0,
-      "d894b6f646ee9dc26bafe3fa1487bc8f"
+      "5bdc055108b1de7cc94a1c1cdef6e53d"
     ],
     [
       "LambdaOmega.tshift_up_above_tsubst_beta",
@@ -2687,7 +2687,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "de7e4978b536cbf51614357944208da6"
+      "7728b306fe1a3c085118a206002ced74"
     ],
     [
       "LambdaOmega.tshift_up_above_tsubst_beta",
@@ -2701,7 +2701,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5aac39c9aed92d320ff494c654d0b731"
+      "538203be8196f165adb1f4ac1761cde0"
     ],
     [
       "LambdaOmega.tshift_up_above_tsubst_beta",
@@ -2723,7 +2723,7 @@
         "token_correspondence_LambdaOmega.tsub_comp"
       ],
       0,
-      "a33ccc6f50266b72cb887c308c57c537"
+      "a0583196928821ded3f079bd9e8e98ce"
     ],
     [
       "LambdaOmega.tequiv_tshift",
@@ -2764,7 +2764,7 @@
         "subterm_ordering_LambdaOmega.EqTran"
       ],
       0,
-      "0f209454f1a545ccbc190e4269cdb4ee"
+      "b169cf78014653ed253ccc83b95121da"
     ],
     [
       "LambdaOmega.is_renaming",
@@ -2773,7 +2773,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "95bb227364838953c9469fb46f1e6b6f"
+      "ad9c75b28f6d66c2d7dfdd5ebb4888e2"
     ],
     [
       "LambdaOmega.is_renaming",
@@ -2782,7 +2782,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fc3b331d4bd5eb8bd2c74ba7f140c157"
+      "ee4156ef58c437baaf7fc210171ec54d"
     ],
     [
       "LambdaOmega.is_renaming",
@@ -2794,7 +2794,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_966672de449e8409105d41d366b3311c"
       ],
       0,
-      "b8b4e942e8d57a4829e1e4bf9741fa6c"
+      "90095856354854c1c79c88eba471095c"
     ],
     [
       "LambdaOmega.subst_typing",
@@ -2807,7 +2807,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
       ],
       0,
-      "d9391300592bd9d70530c60629bf047b"
+      "5acd01e2e6713b5bce3da13df3580a27"
     ],
     [
       "LambdaOmega.substitution",
@@ -2816,7 +2816,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "916c89be0584746dfb35fb866074afca"
+      "c229d66744d6140e34dc24eeeb421681"
     ],
     [
       "LambdaOmega.substitution",
@@ -2919,7 +2919,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6d1a7424d3b665da44d05219251316ba"
+      "db4d4da8f9c75aaa2d66850668b245cb"
     ],
     [
       "LambdaOmega.typing_substitution",
@@ -2964,7 +2964,7 @@
         "typing_LambdaOmega.esub_beta"
       ],
       0,
-      "79ad61262e7146ac20a26b36037259ae"
+      "c5534c520867588cf218e49704a0d988"
     ],
     [
       "LambdaOmega.tsubst_gen_tlam_aux",
@@ -2973,7 +2973,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "efdd8ae182a4fd8894b459d257abdf20"
+      "ba0ad920ee9bcc8130d75ad9b974d49e"
     ],
     [
       "LambdaOmega.tsubst_gen_tlam_aux",
@@ -2987,7 +2987,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2308ee78057bb9873c37baa9ac2da485"
+      "28bead28b8d41c792e26d9aa4d2e7e66"
     ],
     [
       "LambdaOmega.tsubst_gen_tlam_aux",
@@ -3028,7 +3028,7 @@
         "unit_typing"
       ],
       0,
-      "45407a69fd0df7e8ea989a7107fdb05e"
+      "e263b6a255c55a334cfff69b70c40748"
     ],
     [
       "LambdaOmega.tsubst_gen_tlam",
@@ -3037,7 +3037,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "fe1aa4c055845b50552d8a84126921c8"
+      "38aace7e8393f8927f3e557985a959ae"
     ],
     [
       "LambdaOmega.tsubst_gen_tlam",
@@ -3051,7 +3051,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "89108373fdd39b64c7c960b2348040da"
+      "28a13f0f16a16a1d5b42e3308bb6ae52"
     ],
     [
       "LambdaOmega.tsubst_gen_tlam",
@@ -3072,7 +3072,7 @@
         "token_correspondence_LambdaOmega.tsub_lam"
       ],
       0,
-      "ff1c07271aa5c9ca0dbcfeedbf4f2b3f"
+      "76b091505eb6908fbce422624ceef632"
     ],
     [
       "LambdaOmega.tred",
@@ -3084,7 +3084,7 @@
         "assumption_LambdaOmega.typ__uu___haseq"
       ],
       0,
-      "48864ce59a10e91b767d23047c8574c1"
+      "249f1b428447a77aa5ed5632ba99f070"
     ],
     [
       "LambdaOmega.__proj__TrRefl__item__t",
@@ -3097,7 +3097,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_ec02c1428e5505f04555fdddbba4f245"
       ],
       0,
-      "bed893cc856e45fb5f1ce80b6dad95a7"
+      "1c4fc9275332cc2e1ee7d7724ac2cd0b"
     ],
     [
       "LambdaOmega.__proj__TrArr__item__t1",
@@ -3110,7 +3110,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
       ],
       0,
-      "ac56353ef6567032ad9b140758539a99"
+      "df5e225d1495d685ac0a9919efc90f15"
     ],
     [
       "LambdaOmega.__proj__TrArr__item__t2",
@@ -3123,7 +3123,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
       ],
       0,
-      "2fefc9dbd682dbebeba7382a158d57b9"
+      "3ab4ad74b7aaa7045ca5d3b8027da21f"
     ],
     [
       "LambdaOmega.__proj__TrArr__item__t1'",
@@ -3136,7 +3136,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
       ],
       0,
-      "a089051f2003145a7287cec0cd524ac5"
+      "51804b09c9ca7b34e4aea6d967ca6a61"
     ],
     [
       "LambdaOmega.__proj__TrArr__item__t2'",
@@ -3149,7 +3149,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
       ],
       0,
-      "47bb9264d0a16329172de7db41e685e8"
+      "e8e86831d67fbc794ae26475e73710db"
     ],
     [
       "LambdaOmega.__proj__TrArr__item__hr1",
@@ -3166,7 +3166,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
       ],
       0,
-      "d0d48f2e71fc52e21b80855baadee850"
+      "65fc76b76fbd69b0d3bb89fcbc67462c"
     ],
     [
       "LambdaOmega.__proj__TrArr__item__hr2",
@@ -3183,7 +3183,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
       ],
       0,
-      "f3ac40a8a3a3a7a2953723d65308b79b"
+      "e6e91ffba503dd9dab1d5db98a1a116e"
     ],
     [
       "LambdaOmega.__proj__TrLam__item__t1",
@@ -3196,7 +3196,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
       ],
       0,
-      "8d96348a21b2d5e4f6adab380090af1e"
+      "95ff86ba349cf6432677813b35183e82"
     ],
     [
       "LambdaOmega.__proj__TrLam__item__t2",
@@ -3209,7 +3209,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
       ],
       0,
-      "24425a3a797761c7bb1c7cc6080a0873"
+      "18b186cfa58eb2392032a91342dfc42f"
     ],
     [
       "LambdaOmega.__proj__TrLam__item__k",
@@ -3222,7 +3222,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
       ],
       0,
-      "7f1d1e8a92040187969f61d2f0215a22"
+      "2eff21579bcfc8b6c3ca596e8e392194"
     ],
     [
       "LambdaOmega.__proj__TrLam__item__hr",
@@ -3239,7 +3239,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
       ],
       0,
-      "47738e7aec0eeb7839b56a9ee80ed7ac"
+      "241451cc1757ebdc4a6a4a6d5615928c"
     ],
     [
       "LambdaOmega.__proj__TrApp__item__t1",
@@ -3252,7 +3252,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
       ],
       0,
-      "60079617be326f88001bbbb13e6825d4"
+      "9bef78d407333819fd9c6fb6f1aaa699"
     ],
     [
       "LambdaOmega.__proj__TrApp__item__t2",
@@ -3265,7 +3265,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
       ],
       0,
-      "174feccd9e7ad024f05e4fe8efa2456c"
+      "3388ab620a4f4eec99c170f557e7631b"
     ],
     [
       "LambdaOmega.__proj__TrApp__item__t1'",
@@ -3278,7 +3278,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
       ],
       0,
-      "a13e87378bee4a100dfa5d99644ea43b"
+      "a295599a0af5927e99ba34d066de8c9a"
     ],
     [
       "LambdaOmega.__proj__TrApp__item__t2'",
@@ -3291,7 +3291,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
       ],
       0,
-      "e0f65dff3895eb29565549c2f6e33968"
+      "dc5f55e1c085ecf9b759d4291a9a6897"
     ],
     [
       "LambdaOmega.__proj__TrApp__item__hr1",
@@ -3308,7 +3308,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
       ],
       0,
-      "c6e8f9a44ba51f20484c9b1a87d30687"
+      "c1c1c53723bc470604255944fbc33238"
     ],
     [
       "LambdaOmega.__proj__TrApp__item__hr2",
@@ -3325,7 +3325,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
       ],
       0,
-      "30e655a53f3dafddd467570431f2f938"
+      "d41904bcc87203bc22a98fd75a52386a"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__t1",
@@ -3338,7 +3338,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "dbec636ca07528d763126544b34b79c3"
+      "2ab52d98cbd8dc84786c0b3ec1dc8068"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__t2",
@@ -3351,7 +3351,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "8e33b4ae42acd1df80f5db65e5e8e3ac"
+      "6b625425689f231ca3e7f42f7b17d6fa"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__t1'",
@@ -3364,7 +3364,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "ad1bf7955eec237a7277e19cda3ff1b0"
+      "4dd5af6722a0eab74943d568021f3c71"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__t2'",
@@ -3377,7 +3377,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "d115139157236740cc589d2328385bb6"
+      "05e52c6590e078c2f08e66f3fd1a72a1"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__k",
@@ -3390,7 +3390,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "786ecc0490f4c487c2091bfeaa104c8f"
+      "4199a54ff23f2712226f5a5f74585b65"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__hr1",
@@ -3407,7 +3407,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "9da7c9b531a53fc4dc685177bc5d3c3e"
+      "0cd9bae0a3d203716194f9f954a745e1"
     ],
     [
       "LambdaOmega.__proj__TrBeta__item__hr2",
@@ -3424,7 +3424,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
       ],
       0,
-      "e6d40320ac563e062205f1908ab9d7e1"
+      "ba283cea364bccf1340e73b743a691a1"
     ],
     [
       "LambdaOmega.tred_shiftup_above",
@@ -3461,7 +3461,7 @@
         "subterm_ordering_LambdaOmega.TrLam"
       ],
       0,
-      "076d1680b2c4e5f5e2656fb79eb79597"
+      "84d071062e912eccf255713e0fd3bdce"
     ],
     [
       "LambdaOmega.subst_of_tred",
@@ -3505,7 +3505,7 @@
         "typing_LambdaOmega.tsubst_beta_gen"
       ],
       0,
-      "ed34e19aedf7049bb05c9ce2d10bdf09"
+      "250ccf8369d3b36092472aad8befc14e"
     ],
     [
       "LambdaOmega.shift_above_and_subst",
@@ -3514,7 +3514,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "ad45b79177ce38c09cb2c8c70a41fbab"
+      "8dcd00154381229352548246a08f1d2d"
     ],
     [
       "LambdaOmega.shift_above_and_subst",
@@ -3555,7 +3555,7 @@
         "typing_LambdaOmega_Tm_abs_eab6a019b4cbe8e316527198ab794bdd"
       ],
       0,
-      "6a92abec7752876f52b90526838980ae"
+      "50a9c37502a2bea49198218baa90dd41"
     ],
     [
       "LambdaOmega.tsubst_commute_aux",
@@ -3564,7 +3564,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "ac6bc2b9897dee41b98b07f96d6e67bb"
+      "3ac8e60491c98c53b71f425d917f94dd"
     ],
     [
       "LambdaOmega.tsubst_commute_aux",
@@ -3578,7 +3578,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d408f4ecb168296032c7dcc48b66a335"
+      "9df121555db02729a4415d8e34fa675a"
     ],
     [
       "LambdaOmega.tsubst_commute_aux",
@@ -3619,7 +3619,7 @@
         "typing_LambdaOmega.tsubst", "typing_LambdaOmega.uu___is_TVar"
       ],
       0,
-      "19712ad183734173d5f84ba25be5eef9"
+      "1ae211de574562d78c6e7bd0070879c8"
     ],
     [
       "LambdaOmega.tsubst_commute",
@@ -3628,7 +3628,7 @@
       1,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "c251d291a9748539135481c3f4a269bc"
+      "82afb4b9da37732ab3d42ed66d54a59d"
     ],
     [
       "LambdaOmega.tsubst_commute",
@@ -3642,7 +3642,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6197f6376211690d3f0e1a14ea6b9c9d"
+      "b845ba6c0aacefea0193404896fc2a6e"
     ],
     [
       "LambdaOmega.tsubst_commute",
@@ -3666,7 +3666,7 @@
         "token_correspondence_LambdaOmega.tsub_comp"
       ],
       0,
-      "fc7f5a14202f5a3e5cdeeda8fdcbd65a"
+      "e8d41bdfe52a4fb43d004c915b5d3f64"
     ],
     [
       "LambdaOmega.subst_of_tred_tred",
@@ -3707,7 +3707,7 @@
         "subterm_ordering_LambdaOmega.TrLam"
       ],
       0,
-      "c36bf4b7436818f7b9c72478712b03a7"
+      "9c232439d586a3d93c17e5cf78d448c9"
     ],
     [
       "LambdaOmega.ltup",
@@ -3719,7 +3719,7 @@
         "assumption_LambdaOmega.typ__uu___haseq"
       ],
       0,
-      "c013200f4959f692a6dd45e42d19c25d"
+      "f3b72a09c9c9afa7a6a9bc783c1908fd"
     ],
     [
       "LambdaOmega.__proj__MkLTup__item__h1",
@@ -3733,7 +3733,7 @@
         "projection_inverse_LambdaOmega.MkLTup_t"
       ],
       0,
-      "25b08c85e1001da1baffe82a21e6c81f"
+      "6a0ab8004af0caa878d90051f97d4581"
     ],
     [
       "LambdaOmega.__proj__MkLTup__item__h2",
@@ -3747,7 +3747,7 @@
         "projection_inverse_LambdaOmega.MkLTup_u"
       ],
       0,
-      "7127fab2160c461a695d2f0d59e7ce49"
+      "6d8c005d3f3d2a57f016efcaeb53b811"
     ],
     [
       "LambdaOmega.tred_diamond",
@@ -3818,7 +3818,7 @@
         "subterm_ordering_LambdaOmega.TrLam"
       ],
       0,
-      "f6556fa3158258b6b0bb60aa4ff3e3de"
+      "d20e2a23f5b2339194ba5110ab762c4e"
     ],
     [
       "LambdaOmega.tred_star",
@@ -3830,7 +3830,7 @@
         "assumption_LambdaOmega.typ__uu___haseq"
       ],
       0,
-      "59865c1fb368e30c47d9e5d95a189721"
+      "c1f110e56500849af742271a7efd8d09"
     ],
     [
       "LambdaOmega.__proj__TsRefl__item__t",
@@ -3843,7 +3843,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_1a7575284e0bd4a4c04a45a4b9ef5e55"
       ],
       0,
-      "9231acaf4aa4f063665b091d4c7faa71"
+      "4ae9e08233747af903c78bcc7f16ce0f"
     ],
     [
       "LambdaOmega.__proj__TsStep__item__t1",
@@ -3856,7 +3856,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
       ],
       0,
-      "979ec37e99e3e76a7e0c434e2a5b3c5c"
+      "e1e273a100fcd84c89aaa103f7719d2f"
     ],
     [
       "LambdaOmega.__proj__TsStep__item__t2",
@@ -3869,7 +3869,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
       ],
       0,
-      "8af379758613ce338523e769f7a18724"
+      "a6268efa918a379777003626255f1ce4"
     ],
     [
       "LambdaOmega.__proj__TsStep__item__t3",
@@ -3882,7 +3882,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
       ],
       0,
-      "482d3652c76486c7983989ec1c8630ad"
+      "861ffb95902155f84ab8eef2ae12418d"
     ],
     [
       "LambdaOmega.__proj__TsStep__item__hr12",
@@ -3899,7 +3899,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
       ],
       0,
-      "9b51cf084bb4bfedcf881fefde2821fd"
+      "a251675620acbaa10bad4fb61fb288a4"
     ],
     [
       "LambdaOmega.__proj__TsStep__item__hr23",
@@ -3916,7 +3916,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
       ],
       0,
-      "c2c7bd66fec72982ca64eb6c69a11c7b"
+      "dc669df409bc3c03be0bf009829be36d"
     ],
     [
       "LambdaOmega.tred_star_one_loop",
@@ -3933,7 +3933,7 @@
         "subterm_ordering_LambdaOmega.TsStep"
       ],
       0,
-      "98ab98052125af849361331281736106"
+      "858f5872e19467ec874ad7b14faffea7"
     ],
     [
       "LambdaOmega.confluence",
@@ -3950,7 +3950,7 @@
         "subterm_ordering_LambdaOmega.TsStep"
       ],
       0,
-      "3a0200041c44fb41f57f4b6a5381c7e8"
+      "8c4d8cd248827181cc4dad6ddf2cb5f2"
     ],
     [
       "LambdaOmega.ts_tran",
@@ -3967,7 +3967,7 @@
         "subterm_ordering_LambdaOmega.TsStep"
       ],
       0,
-      "ecac1d459e731416c5b52a568111bba6"
+      "b61a4bcd23347c72ad5c784a82dcbde0"
     ],
     [
       "LambdaOmega.tred_star_sym",
@@ -3979,7 +3979,7 @@
         "assumption_LambdaOmega.typ__uu___haseq"
       ],
       0,
-      "0c3f775b6b7b19a23233ae75230caa2c"
+      "b008cf1735cab0c7a71074c2a24892e5"
     ],
     [
       "LambdaOmega.__proj__TssBase__item__t1",
@@ -3993,7 +3993,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_e774fb47cabdd53e6589874e05145da9"
       ],
       0,
-      "9c9444678a45fb82963229cfbb3418f7"
+      "002032ca90de23e23c71e544e3fa1523"
     ],
     [
       "LambdaOmega.__proj__TssBase__item__t2",
@@ -4007,7 +4007,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_e774fb47cabdd53e6589874e05145da9"
       ],
       0,
-      "7995bd76adff37da2acf8521db81110f"
+      "a7c16e044d36172cae95d475a245c183"
     ],
     [
       "LambdaOmega.__proj__TssBase__item__hr",
@@ -4025,7 +4025,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_e774fb47cabdd53e6589874e05145da9"
       ],
       0,
-      "3443f2fc0a4dbfa4b0385650d484386c"
+      "0e7556fee55b2c1306793ff974590991"
     ],
     [
       "LambdaOmega.__proj__TssSym__item__t1",
@@ -4038,7 +4038,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4a2ab3b3954c3e597f88e2dd1581f452"
       ],
       0,
-      "e5c0863f7f13fc75ab1c487276b50455"
+      "fdb9f5db834938a8bb9f341714dc17b4"
     ],
     [
       "LambdaOmega.__proj__TssSym__item__t2",
@@ -4051,7 +4051,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4a2ab3b3954c3e597f88e2dd1581f452"
       ],
       0,
-      "fdfec09f8d93847cfff0f760430997a4"
+      "93f6c128c1eb31cba0499440061f105f"
     ],
     [
       "LambdaOmega.__proj__TssSym__item__hr",
@@ -4068,7 +4068,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_4a2ab3b3954c3e597f88e2dd1581f452"
       ],
       0,
-      "f30d3865ec07209fd4832be3b21ccd5b"
+      "e0225eba55c47287bb0abd01e5ee72b7"
     ],
     [
       "LambdaOmega.__proj__TssTran__item__t1",
@@ -4082,7 +4082,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
       ],
       0,
-      "7a26004bf1ec987292960739b3bca823"
+      "6aac7885e7e375d7ca3bfa298be6be48"
     ],
     [
       "LambdaOmega.__proj__TssTran__item__t2",
@@ -4096,7 +4096,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
       ],
       0,
-      "6a3dd0ae00ee54ad9a405c4b63f7fa3d"
+      "8dc3c0bff6104517ec39f5495f53819a"
     ],
     [
       "LambdaOmega.__proj__TssTran__item__t3",
@@ -4110,7 +4110,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
       ],
       0,
-      "5057cfa70ae70d8d12d96b4bdfd53395"
+      "d37437699500457d1da06971eac91800"
     ],
     [
       "LambdaOmega.__proj__TssTran__item__hr12",
@@ -4128,7 +4128,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
       ],
       0,
-      "bb2ad5f7afb12a30031571eb7cf20c9c"
+      "9744b72020319a0a188663a46802bcee"
     ],
     [
       "LambdaOmega.__proj__TssTran__item__hr23",
@@ -4146,7 +4146,7 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
       ],
       0,
-      "7e43b745ccd8bde52a2c3b2e10764590"
+      "ed622f44c5961bf72f248f327f0ed7cd"
     ],
     [
       "LambdaOmega.tred_star_sym_confluent",
@@ -4165,7 +4165,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "c49e8ce1ec4eb24c8f04aa00254c4378"
+      "0e3a861e10a809984bf4e14d0dcfbb5a"
     ],
     [
       "LambdaOmega.trlam_tss",
@@ -4184,7 +4184,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "18a22a11e228b79025d0bed536f9525a"
+      "75ee22727876dd0a89be396ac98dbc23"
     ],
     [
       "LambdaOmega.trapp_tss_1",
@@ -4203,7 +4203,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "de4b0786ddcf118eee053dbceb720c77"
+      "142d3a2e0915def5a3579444e96ca886"
     ],
     [
       "LambdaOmega.trapp_tss_2",
@@ -4222,7 +4222,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "1582fd5ea6608215948e11a698b7415c"
+      "013464d6a0639408393236b9678f05e2"
     ],
     [
       "LambdaOmega.trarr_tss_1",
@@ -4241,7 +4241,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "b7ecedb2b0715ac6238e0421e0ba0788"
+      "9d4664cd49074e6fb3289756784ed978"
     ],
     [
       "LambdaOmega.trarr_tss_2",
@@ -4260,7 +4260,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "a511a452ca7d1635a3570c6e39d546d8"
+      "16af5a2b3f9e6a3aa01c17be51fa6f2e"
     ],
     [
       "LambdaOmega.tequiv_tss",
@@ -4288,7 +4288,7 @@
         "subterm_ordering_LambdaOmega.EqTran"
       ],
       0,
-      "dc121054e637dec8f318bd064239b141"
+      "5bffa03d32d394f21966c0364872eb85"
     ],
     [
       "LambdaOmega.tred_tequiv",
@@ -4312,7 +4312,7 @@
         "subterm_ordering_LambdaOmega.TrLam"
       ],
       0,
-      "2748eedd7cf81afe5c3cd06d434c9f4c"
+      "0e64679ac62fb00a5b29153a4dc54863"
     ],
     [
       "LambdaOmega.tred_star_tequiv",
@@ -4329,7 +4329,7 @@
         "subterm_ordering_LambdaOmega.TsStep"
       ],
       0,
-      "fcaff34362d85044d517a8fb42657c4e"
+      "a090d557ccbf5a2ecb1ea00ff5fc9e4d"
     ],
     [
       "LambdaOmega.tss_tequiv",
@@ -4348,7 +4348,7 @@
         "subterm_ordering_LambdaOmega.TssTran"
       ],
       0,
-      "8f03be49eda496bc79a29c5c17a29fb6"
+      "87099a28ba5617881b9fece19be3f921"
     ],
     [
       "LambdaOmega.tred_tarr_preserved",
@@ -4357,7 +4357,7 @@
       2,
       [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
       0,
-      "4cb6b354bf7fded0f4aac55945a70fb9"
+      "966c8694c48fadf30e3e0b6723cda2a1"
     ],
     [
       "LambdaOmega.tred_tarr_preserved",
@@ -4390,7 +4390,7 @@
         "subterm_ordering_LambdaOmega.TsStep"
       ],
       0,
-      "9e4b41ae57bcbd19dd8c946335d9c349"
+      "7b54fc0e92d65e3387a16d15f869a676"
     ],
     [
       "LambdaOmega.inversion_elam",
@@ -4426,7 +4426,7 @@
         "subterm_ordering_LambdaOmega.TyEqu"
       ],
       0,
-      "bd385f784667f48542819d0f3b55050c"
+      "91b7d18449f859493c997a91a9ebbe3b"
     ],
     [
       "LambdaOmega.preservation",
@@ -4458,7 +4458,2757 @@
         "subterm_ordering_LambdaOmega.TyEqu"
       ],
       0,
-      "6cf49680b4d1808bd950adc3be7433fb"
+      "3df9eaa5de6d29e17c2086e82211454e"
+    ],
+    [
+      "LambdaOmega.knd",
+      1,
+      1,
+      1,
+      [ "@query" ],
+      0,
+      "af8bc40e0e67bf128fd1b50945043034"
+    ],
+    [
+      "LambdaOmega.__proj__KArr__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8b48b9eeb2a347feedfef98eb374c34d"
+      ],
+      0,
+      "d300e27ec2756fb337ecab64699bfef9"
+    ],
+    [
+      "LambdaOmega.__proj__KArr__item___1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8b48b9eeb2a347feedfef98eb374c34d"
+      ],
+      0,
+      "e8e3a8379b060e46744d2e0a8cc9e322"
+    ],
+    [
+      "LambdaOmega.typ",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.knd__uu___haseq",
+        "assumption_Prims.HasEq_int", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "e9b376d2be0479c4c9a26c849b33fc6f"
+    ],
+    [
+      "LambdaOmega.__proj__TVar__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8454d7d4c32c3f232806dd6979b25988"
+      ],
+      0,
+      "84c52634a01d7a36a304322b92ad97d1"
+    ],
+    [
+      "LambdaOmega.__proj__TLam__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_5f11a138c840cc7111e27e944b2f32fa"
+      ],
+      0,
+      "1d1ea078acee14e28a0ebe7d3b92493c"
+    ],
+    [
+      "LambdaOmega.__proj__TLam__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_5f11a138c840cc7111e27e944b2f32fa"
+      ],
+      0,
+      "5e34f284d07d4e07b8433554a73b1c65"
+    ],
+    [
+      "LambdaOmega.__proj__TApp__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0e28fa2f56a31115ec481703c0cb0a1c"
+      ],
+      0,
+      "46714ebfca76ebb89644e87cfba806cd"
+    ],
+    [
+      "LambdaOmega.__proj__TApp__item___1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0e28fa2f56a31115ec481703c0cb0a1c"
+      ],
+      0,
+      "88fc5068e7dcbf5ac4612d5a6e8ed6b2"
+    ],
+    [
+      "LambdaOmega.__proj__TArr__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ebfacded5bfac7e16f0c4cf9d6c0a24b"
+      ],
+      0,
+      "a2b6e5d5fa2ca1c88cf491607016eba0"
+    ],
+    [
+      "LambdaOmega.__proj__TArr__item___1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ebfacded5bfac7e16f0c4cf9d6c0a24b"
+      ],
+      0,
+      "1d7a442589c8df1f71f86ac95b848d3e"
+    ],
+    [
+      "LambdaOmega.exp",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.typ__uu___haseq",
+        "assumption_Prims.HasEq_int", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "1ab97bbb84c3c07a5f9a6fc647341f39"
+    ],
+    [
+      "LambdaOmega.__proj__EVar__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_13c221c50ecb0c200f598116593dea3d"
+      ],
+      0,
+      "b49ef77132708128d5c0a457383279b4"
+    ],
+    [
+      "LambdaOmega.__proj__EApp__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e64f1650f71e059a934486674c4393f7"
+      ],
+      0,
+      "ebaa4ee8be7da73a344481412df419d1"
+    ],
+    [
+      "LambdaOmega.__proj__EApp__item___1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e64f1650f71e059a934486674c4393f7"
+      ],
+      0,
+      "f7a05d0839d201cd45baa1147141d857"
+    ],
+    [
+      "LambdaOmega.__proj__ELam__item___0",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.ELam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0c4cbaddf94de33c9fa2045e2ec86a00"
+      ],
+      0,
+      "51ef19f83237544701f241134d10f0ff"
+    ],
+    [
+      "LambdaOmega.__proj__ELam__item___1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.ELam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0c4cbaddf94de33c9fa2045e2ec86a00"
+      ],
+      0,
+      "47a3c2f4e6e34154ffccc9b3f753a8e5"
+    ],
+    [
+      "LambdaOmega.is_erenaming",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_LambdaOmega_Tm_refine_815c4eca866d1c7c736f480f60423fbe"
+      ],
+      0,
+      "5ac18a1026d5f4d55ada6457380d2358"
+    ],
+    [
+      "LambdaOmega.is_erenaming",
+      5,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "b2ef4fc491033b0fa16013153e37c53b"
+    ],
+    [
+      "LambdaOmega.esub_inc",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "20e7775a5240ccf75435f765e73d6b45"
+    ],
+    [
+      "LambdaOmega.esubst",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "LambdaOmega_interpretation_Tm_arrow_ce2fa2d8a9db962da6df6d27f9557c48",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_1c3eda042f75cb90bd281a839e46e47d_1",
+        "binder_x_72be33445e3cf5d60d578600fdf4ad4e_0", "bool_inversion",
+        "constructor_distinct_LambdaOmega.EVar",
+        "disc_equation_LambdaOmega.EApp", "disc_equation_LambdaOmega.ELam",
+        "disc_equation_LambdaOmega.EVar", "equality_tok_Prims.LexTop@tok",
+        "equation_LambdaOmega.erenaming", "equation_LambdaOmega.esub",
+        "equation_LambdaOmega.is_evar", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "fuel_guarded_inversion_LambdaOmega.exp",
+        "function_token_typing_LambdaOmega.esub_lam", "int_inversion",
+        "int_typing", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_LambdaOmega.EVar__0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_16db7d9e55ec639a8c277fda1d255e67",
+        "refinement_interpretation_LambdaOmega_Tm_refine_a69206d9dcf1e7961e2d4707087e0ac6",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e966d49e99bb259fb40f929bd1862f96",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_LambdaOmega.EApp",
+        "subterm_ordering_LambdaOmega.ELam",
+        "token_correspondence_LambdaOmega.esub_lam",
+        "typing_LambdaOmega.is_erenaming", "typing_LambdaOmega.is_evar",
+        "typing_LambdaOmega.uu___is_EVar", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "8d3c16ad46cc6b81c1445b8a237ccd59"
+    ],
+    [
+      "LambdaOmega.esubst",
+      5,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_72be33445e3cf5d60d578600fdf4ad4e_0",
+        "binder_x_fd2118004c9b4fcd0fcebc3eabc62881_1", "bool_inversion",
+        "constructor_distinct_LambdaOmega.EVar",
+        "disc_equation_LambdaOmega.EVar", "equation_LambdaOmega.erenaming",
+        "equation_LambdaOmega.esub", "equation_LambdaOmega.esub_inc",
+        "equation_LambdaOmega.is_evar", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "function_token_typing_LambdaOmega.esub_inc",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_LambdaOmega.EVar__0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e966d49e99bb259fb40f929bd1862f96",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_LambdaOmega.esub_inc",
+        "typing_LambdaOmega.is_erenaming", "typing_LambdaOmega.uu___is_EVar",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "469b219a08706d58682a60f41dc07a0e"
+    ],
+    [
+      "LambdaOmega.esubst_extensional",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.exp__uu___haseq" ],
+      0,
+      "5c239e77eec94ee6bc99bcd1b0bb512e"
+    ],
+    [
+      "LambdaOmega.esub_lam_hoist",
+      2,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.exp__uu___haseq" ],
+      0,
+      "654fae12a1778ca7b89568587c04b8d6"
+    ],
+    [
+      "LambdaOmega.esub_beta",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_LambdaOmega.var", "equation_Prims.nat", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "7a3cc3c6cc1f3348a8406a9766e2a70d"
+    ],
+    [
+      "LambdaOmega.is_trenaming",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_LambdaOmega_Tm_refine_724f68be0871f50df73ba6f499afda02"
+      ],
+      0,
+      "4ba07d25a0c3aad1c72663be434cbac0"
+    ],
+    [
+      "LambdaOmega.is_trenaming",
+      5,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6ad100b7ebd7c5c95854447d56656e97"
+    ],
+    [
+      "LambdaOmega.tsub_inc_above",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "7f37ecf86bd775980bb8cde7d89713e9"
+    ],
+    [
+      "LambdaOmega.tsubst",
+      3,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "LambdaOmega_interpretation_Tm_arrow_c0505f650c79f3614ced647875bfbcc2",
+        "LambdaOmega_interpretation_Tm_arrow_fadfd53a08e3b50953e7833d545e1393",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
+        "binder_x_18f4961c1d91234a8baf199895e17f88_1",
+        "binder_x_82c741e99312e71219473071e8fee127_0", "bool_inversion",
+        "constructor_distinct_LambdaOmega.TVar",
+        "disc_equation_LambdaOmega.TApp", "disc_equation_LambdaOmega.TArr",
+        "disc_equation_LambdaOmega.TLam", "disc_equation_LambdaOmega.TVar",
+        "equality_tok_Prims.LexTop@tok", "equation_LambdaOmega.is_trenaming",
+        "equation_LambdaOmega.is_tvar", "equation_LambdaOmega.trenaming",
+        "equation_LambdaOmega.tsub", "equation_LambdaOmega.tsub_inc",
+        "equation_LambdaOmega.tsub_inc_above", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "fuel_guarded_inversion_LambdaOmega.typ",
+        "function_token_typing_LambdaOmega.tsub_inc", "int_inversion",
+        "int_typing",
+        "interpretation_LambdaOmega_Tm_abs_b7283506e76ca1940c0d3bcadd093bdb",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_LambdaOmega.TVar__0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_b9286de32aeb68aee611dc4e1590ee03",
+        "refinement_interpretation_LambdaOmega_Tm_refine_f04322e656e90caea36e2bf316eed9a3",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_LambdaOmega.TApp",
+        "subterm_ordering_LambdaOmega.TArr",
+        "subterm_ordering_LambdaOmega.TLam",
+        "token_correspondence_LambdaOmega.tsub_inc",
+        "typing_LambdaOmega.is_trenaming", "typing_LambdaOmega.is_tvar",
+        "typing_LambdaOmega.uu___is_TVar", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "2e22353b2ccd291832d0905a51208be1"
+    ],
+    [
+      "LambdaOmega.tsub_lam",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_LambdaOmega.var", "equation_Prims.nat", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "400303781e943cc69d5bc6b5d114e971"
+    ],
+    [
+      "LambdaOmega.tsubst_extensional",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "1635f7169e9a337202c15056f16edfd5"
+    ],
+    [
+      "LambdaOmega.tsub_lam_hoist",
+      2,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "5f94b0494aff4cc281c9aacfaec172ef"
+    ],
+    [
+      "LambdaOmega.tsub_comp_inc",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "f2a939bbc007abfb609a2faf74f38a45"
+    ],
+    [
+      "LambdaOmega.tsubst_comp",
+      5,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "5d059a80ab43a1aa68b55c6406cd021a"
+    ],
+    [
+      "LambdaOmega.tsubst_comp",
+      6,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "b304c7f5393dbc7e8614acba8cb4aebf"
+    ],
+    [
+      "LambdaOmega.tsubst_comp",
+      7,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "d3638edc2388ee49641a7c09ce7df6d2"
+    ],
+    [
+      "LambdaOmega.tsub_lam_comp",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "bf0bba89022f09d6501e39a9e0a00778"
+    ],
+    [
+      "LambdaOmega.tsubst_id",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "be996e50b1ddd285f8923a6c7b4b7d79"
+    ],
+    [
+      "LambdaOmega.tsub_beta_gen",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "f7c0855f3938896149f991b98892a069"
+    ],
+    [
+      "LambdaOmega.step",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.exp__uu___haseq",
+        "assumption_LambdaOmega.typ__uu___haseq"
+      ],
+      0,
+      "afc0d3d0f6c0348c2cae875ff263390d"
+    ],
+    [
+      "LambdaOmega.__proj__SBeta__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_99225bc3a8ffd09f5f0e517f8cae3989"
+      ],
+      0,
+      "5bd9e602a099d51f8f50425a637ecb74"
+    ],
+    [
+      "LambdaOmega.__proj__SBeta__item__e1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_99225bc3a8ffd09f5f0e517f8cae3989"
+      ],
+      0,
+      "59b14634623789793c4bd95067e94d53"
+    ],
+    [
+      "LambdaOmega.__proj__SBeta__item__e2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_99225bc3a8ffd09f5f0e517f8cae3989"
+      ],
+      0,
+      "ad81546368dabd5517c2dd36cf605e78"
+    ],
+    [
+      "LambdaOmega.__proj__SApp1__item__e1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
+      ],
+      0,
+      "6d324dc39f7211dce6fa7552276091cf"
+    ],
+    [
+      "LambdaOmega.__proj__SApp1__item__e2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
+      ],
+      0,
+      "ce2cff725f2d3ce32c49e2353def9367"
+    ],
+    [
+      "LambdaOmega.__proj__SApp1__item__e1'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
+      ],
+      0,
+      "bb1fb633ee9f7649c63b27a3fb5842cc"
+    ],
+    [
+      "LambdaOmega.__proj__SApp1__item__hst",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp1",
+        "proj_equation_LambdaOmega.SApp1_e1",
+        "proj_equation_LambdaOmega.SApp1_e1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.SApp1_e1",
+        "projection_inverse_LambdaOmega.SApp1_e1_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_8ca22e0a04684e535639da52fb102962"
+      ],
+      0,
+      "73d0133e4fde20e1d8255a27bd331554"
+    ],
+    [
+      "LambdaOmega.__proj__SApp2__item__e1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
+      ],
+      0,
+      "86a595453d5de3c8d797d2b04979d60a"
+    ],
+    [
+      "LambdaOmega.__proj__SApp2__item__e2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
+      ],
+      0,
+      "b111f7e0ee1d31e95130a4b59c47deb3"
+    ],
+    [
+      "LambdaOmega.__proj__SApp2__item__e2'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
+      ],
+      0,
+      "dace05849e232434db96335263c508c7"
+    ],
+    [
+      "LambdaOmega.__proj__SApp2__item__hst",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.SApp2",
+        "proj_equation_LambdaOmega.SApp2_e2",
+        "proj_equation_LambdaOmega.SApp2_e2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.SApp2_e2",
+        "projection_inverse_LambdaOmega.SApp2_e2_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_fbd95a15e32b93105aba1f5f009224a6"
+      ],
+      0,
+      "ac37debc4dad4a334d0a29776cf6e46a"
+    ],
+    [
+      "LambdaOmega.extend_tvar",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_LambdaOmega.lookup_evar", "equation_Prims.nat",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "kinding_LambdaOmega.typ@tok",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_LambdaOmega.lookup_evar"
+      ],
+      0,
+      "429731c3d70ed12fb4157461b4fbd4e6"
+    ],
+    [
+      "LambdaOmega.extend_evar",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "d06a9aa1724b47f70419282bc3cb3abd"
+    ],
+    [
+      "LambdaOmega.kinding",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "refinement_interpretation_LambdaOmega_Tm_refine_47d81d21bda8f121fb1a16c8ff2d0c04"
+      ],
+      0,
+      "1d98007a771e52e6396bc89987bea5e0"
+    ],
+    [
+      "LambdaOmega.__proj__KiVar__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_728f5aba7f4b5dc37458445279a7deb5"
+      ],
+      0,
+      "a84ed30b3ea0bd934d3d247d0af8eaa1"
+    ],
+    [
+      "LambdaOmega.__proj__KiVar__item__a",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiVar",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.KiVar_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.KiVar_a",
+        "projection_inverse_LambdaOmega.KiVar_g",
+        "refinement_interpretation_LambdaOmega_Tm_refine_728f5aba7f4b5dc37458445279a7deb5"
+      ],
+      0,
+      "d6b3690e46b701fe8beaa418d1aa2a56"
+    ],
+    [
+      "LambdaOmega.__proj__KiLam__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
+      ],
+      0,
+      "e8d76542d19b46a3f95f2882d3d573e9"
+    ],
+    [
+      "LambdaOmega.__proj__KiLam__item__k",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
+      ],
+      0,
+      "4fd63599b100de207ca829fcde71f82b"
+    ],
+    [
+      "LambdaOmega.__proj__KiLam__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
+      ],
+      0,
+      "ba0329713788837feaafde2ea35fb0bf"
+    ],
+    [
+      "LambdaOmega.__proj__KiLam__item__k'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
+      ],
+      0,
+      "94f73b27e334b485a69c5920d1ab419f"
+    ],
+    [
+      "LambdaOmega.__proj__KiLam__item__hk",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiLam",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.KiLam_g",
+        "proj_equation_LambdaOmega.KiLam_k",
+        "proj_equation_LambdaOmega.KiLam_k_",
+        "proj_equation_LambdaOmega.KiLam_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.KiLam_g",
+        "projection_inverse_LambdaOmega.KiLam_k",
+        "projection_inverse_LambdaOmega.KiLam_k_",
+        "projection_inverse_LambdaOmega.KiLam_t",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0ccaeb80d2312b1d07fc61f18d9b4975"
+      ],
+      0,
+      "b02a6744725102e0b3e977fe81ca8d6f"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "ab3f4f570def0187fbaae504e1ac9c67"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "554e7311edf53187772104354bd7c48e"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "9e0669e6b2975336cdb019eec34c81ae"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__k11",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "2c6102d7623da36b92773d4c3b342f7b"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__k12",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "10348c606080c394f1b3c2bc96df276f"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__hk1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_LambdaOmega.KiApp",
+        "disc_equation_LambdaOmega.KiApp",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.KiApp_g",
+        "proj_equation_LambdaOmega.KiApp_k11",
+        "proj_equation_LambdaOmega.KiApp_k12",
+        "proj_equation_LambdaOmega.KiApp_t1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.KiApp_g",
+        "projection_inverse_LambdaOmega.KiApp_k11",
+        "projection_inverse_LambdaOmega.KiApp_k12",
+        "projection_inverse_LambdaOmega.KiApp_t1",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "9ea4128491686b1e4ba7ab67ded3a628"
+    ],
+    [
+      "LambdaOmega.__proj__KiApp__item__hk2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_LambdaOmega.KiApp",
+        "disc_equation_LambdaOmega.KiApp",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.KiApp_g",
+        "proj_equation_LambdaOmega.KiApp_k11",
+        "proj_equation_LambdaOmega.KiApp_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.KiApp_g",
+        "projection_inverse_LambdaOmega.KiApp_k11",
+        "projection_inverse_LambdaOmega.KiApp_k12",
+        "projection_inverse_LambdaOmega.KiApp_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_95db76a4bdc0ec03d5836cb67acc4676"
+      ],
+      0,
+      "3aba47a76626ebb00d5b2ab946e60f1e"
+    ],
+    [
+      "LambdaOmega.__proj__KiArr__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
+      ],
+      0,
+      "15ef44110bb821692c759731eaaf4c0d"
+    ],
+    [
+      "LambdaOmega.__proj__KiArr__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
+      ],
+      0,
+      "a08655e18238df8eedf7de8f0651f6a0"
+    ],
+    [
+      "LambdaOmega.__proj__KiArr__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.KiArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
+      ],
+      0,
+      "42572b464703afaee40376e0fa63809a"
+    ],
+    [
+      "LambdaOmega.__proj__KiArr__item__hk1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_LambdaOmega.KiArr",
+        "disc_equation_LambdaOmega.KiArr",
+        "equality_tok_LambdaOmega.KTyp@tok",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.KiArr_g",
+        "proj_equation_LambdaOmega.KiArr_t1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.KiArr_g",
+        "projection_inverse_LambdaOmega.KiArr_t1",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
+      ],
+      0,
+      "c13849da02f014d735253ae8e04c484f"
+    ],
+    [
+      "LambdaOmega.__proj__KiArr__item__hk2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_LambdaOmega.KiArr",
+        "disc_equation_LambdaOmega.KiArr",
+        "equality_tok_LambdaOmega.KTyp@tok",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.KiArr_g",
+        "proj_equation_LambdaOmega.KiArr_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.KiArr_g",
+        "projection_inverse_LambdaOmega.KiArr_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2071675d58081487290e627b4d9290ef"
+      ],
+      0,
+      "e1d65cdd8ad63a6d1745d799d9e71f3b"
+    ],
+    [
+      "LambdaOmega.tequiv",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.knd__uu___haseq",
+        "assumption_LambdaOmega.typ__uu___haseq"
+      ],
+      0,
+      "9f1fe9780c47df83d6315ed675d0795b"
+    ],
+    [
+      "LambdaOmega.__proj__EqRefl__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqRefl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_c9253dcb041a3b4f852211144c57ce7b"
+      ],
+      0,
+      "f8ec3b7c05d2ce98270fd8a755fb0b38"
+    ],
+    [
+      "LambdaOmega.__proj__EqSymm__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqSymm",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d1c2e9b19e4be2d169b319060dd0529"
+      ],
+      0,
+      "9af00cdd4110024708e48edc91cec0be"
+    ],
+    [
+      "LambdaOmega.__proj__EqSymm__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqSymm",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d1c2e9b19e4be2d169b319060dd0529"
+      ],
+      0,
+      "44f65d629ea8f628563d231ae3767f7e"
+    ],
+    [
+      "LambdaOmega.__proj__EqSymm__item__he",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqSymm",
+        "proj_equation_LambdaOmega.EqSymm_t1",
+        "proj_equation_LambdaOmega.EqSymm_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqSymm_t1",
+        "projection_inverse_LambdaOmega.EqSymm_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d1c2e9b19e4be2d169b319060dd0529"
+      ],
+      0,
+      "cefa067938804954d7267fb45d344be4"
+    ],
+    [
+      "LambdaOmega.__proj__EqTran__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqTran",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
+      ],
+      0,
+      "2c73229448e35f7e808b54200a590bdc"
+    ],
+    [
+      "LambdaOmega.__proj__EqTran__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqTran",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
+      ],
+      0,
+      "b214aef051a0ff6937257bbbb7df4dc2"
+    ],
+    [
+      "LambdaOmega.__proj__EqTran__item__t3",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqTran",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
+      ],
+      0,
+      "70dfbbc08adbc53eeefd808a093661ff"
+    ],
+    [
+      "LambdaOmega.__proj__EqTran__item__he12",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqTran",
+        "proj_equation_LambdaOmega.EqTran_t1",
+        "proj_equation_LambdaOmega.EqTran_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqTran_t1",
+        "projection_inverse_LambdaOmega.EqTran_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
+      ],
+      0,
+      "537b2834c08bf5ae386d895ca200c790"
+    ],
+    [
+      "LambdaOmega.__proj__EqTran__item__he23",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqTran",
+        "proj_equation_LambdaOmega.EqTran_t2",
+        "proj_equation_LambdaOmega.EqTran_t3",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqTran_t2",
+        "projection_inverse_LambdaOmega.EqTran_t3",
+        "refinement_interpretation_LambdaOmega_Tm_refine_98b723f05411806a0b5a903d296691a3"
+      ],
+      0,
+      "db0ee3b9f5167d028a96f45047199db0"
+    ],
+    [
+      "LambdaOmega.__proj__EqLam__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
+      ],
+      0,
+      "971f5cd8b1c374ac4de6377b1e1ddfe5"
+    ],
+    [
+      "LambdaOmega.__proj__EqLam__item__t'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
+      ],
+      0,
+      "7d90b36a62737663e3bd74661e488832"
+    ],
+    [
+      "LambdaOmega.__proj__EqLam__item__k",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
+      ],
+      0,
+      "14d7309f8be0413f3fa153f872d0b61e"
+    ],
+    [
+      "LambdaOmega.__proj__EqLam__item__he",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqLam",
+        "proj_equation_LambdaOmega.EqLam_t",
+        "proj_equation_LambdaOmega.EqLam_t_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqLam_t",
+        "projection_inverse_LambdaOmega.EqLam_t_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_505b365ca7baa7e12d5b92562c2c4e27"
+      ],
+      0,
+      "e6829ed2c6ae03b142fe7e621dc27ff6"
+    ],
+    [
+      "LambdaOmega.__proj__EqApp__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
+      ],
+      0,
+      "6315cee258bd567992c24e498e1ad5f5"
+    ],
+    [
+      "LambdaOmega.__proj__EqApp__item__t1'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
+      ],
+      0,
+      "b2409e31f02d3185cda8be77f067dbd0"
+    ],
+    [
+      "LambdaOmega.__proj__EqApp__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
+      ],
+      0,
+      "627f356ddeeef9ebfd536fad5d353d45"
+    ],
+    [
+      "LambdaOmega.__proj__EqApp__item__t2'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
+      ],
+      0,
+      "1c229497e157e676ea286c60c8280e30"
+    ],
+    [
+      "LambdaOmega.__proj__EqApp__item__he1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqApp",
+        "proj_equation_LambdaOmega.EqApp_t1",
+        "proj_equation_LambdaOmega.EqApp_t1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqApp_t1",
+        "projection_inverse_LambdaOmega.EqApp_t1_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
+      ],
+      0,
+      "64d8c8da3e575c3ee135d4dd206e25c1"
+    ],
+    [
+      "LambdaOmega.__proj__EqApp__item__he2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqApp",
+        "proj_equation_LambdaOmega.EqApp_t2",
+        "proj_equation_LambdaOmega.EqApp_t2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqApp_t2",
+        "projection_inverse_LambdaOmega.EqApp_t2_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_0669de1260cad1c4c35f757560649e69"
+      ],
+      0,
+      "ffb347ed7a8c3946339addb21b3a8998"
+    ],
+    [
+      "LambdaOmega.__proj__EqBeta__item__k",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f0f290e4aac7314f6a11c6ea9cceec2"
+      ],
+      0,
+      "9bc1897c3302425dbec64e3c207bb524"
+    ],
+    [
+      "LambdaOmega.__proj__EqBeta__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f0f290e4aac7314f6a11c6ea9cceec2"
+      ],
+      0,
+      "850e52b29be585ba82ae9337d280aa65"
+    ],
+    [
+      "LambdaOmega.__proj__EqBeta__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f0f290e4aac7314f6a11c6ea9cceec2"
+      ],
+      0,
+      "89b47804f92259867b944a31bfcd101a"
+    ],
+    [
+      "LambdaOmega.__proj__EqArr__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
+      ],
+      0,
+      "97bd3b4a22d95e74a1f74c6fd1f37509"
+    ],
+    [
+      "LambdaOmega.__proj__EqArr__item__t1'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
+      ],
+      0,
+      "92d75be6a5ce633f209c1171490eab93"
+    ],
+    [
+      "LambdaOmega.__proj__EqArr__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
+      ],
+      0,
+      "78388b53c5c897ce2297e4be9ff495c1"
+    ],
+    [
+      "LambdaOmega.__proj__EqArr__item__t2'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
+      ],
+      0,
+      "259cf51380d388ab59f5968b49662176"
+    ],
+    [
+      "LambdaOmega.__proj__EqArr__item__he1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqArr",
+        "proj_equation_LambdaOmega.EqArr_t1",
+        "proj_equation_LambdaOmega.EqArr_t1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqArr_t1",
+        "projection_inverse_LambdaOmega.EqArr_t1_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
+      ],
+      0,
+      "3cba8d0e3c9b02af23cb06be7ef9e158"
+    ],
+    [
+      "LambdaOmega.__proj__EqArr__item__he2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.EqArr",
+        "proj_equation_LambdaOmega.EqArr_t2",
+        "proj_equation_LambdaOmega.EqArr_t2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.EqArr_t2",
+        "projection_inverse_LambdaOmega.EqArr_t2_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_7825f3a7cbfda72e9afee28c350ccbd3"
+      ],
+      0,
+      "ff40a74913fdf908d57298d0f0bd5398"
+    ],
+    [
+      "LambdaOmega.typing",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
+      ],
+      0,
+      "2e2e42d4e91254cd87f54f4d828fe54c"
+    ],
+    [
+      "LambdaOmega.typing",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
+      ],
+      0,
+      "24efcbbc9f3f6736730b56f3b4745f5b"
+    ],
+    [
+      "LambdaOmega.uu___is_TyVar",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
+      ],
+      0,
+      "535e181adfca787c5070f33ad9fb79ef"
+    ],
+    [
+      "LambdaOmega.__proj__TyVar__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyVar",
+        "equation_LambdaOmega.var", "equation_Prims.nat",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae",
+        "refinement_interpretation_LambdaOmega_Tm_refine_599765d78a2cbc9ec22b9c08427a1e7d"
+      ],
+      0,
+      "2f3f737651cc3f41f1f36056416e6e2c"
+    ],
+    [
+      "LambdaOmega.__proj__TyVar__item__x",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "LambdaOmega_pretyping_18f4961c1d91234a8baf199895e17f88",
+        "data_elim_LambdaOmega.TyVar", "disc_equation_LambdaOmega.TyVar",
+        "equation_LambdaOmega.var", "equation_Prims.nat",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "proj_equation_LambdaOmega.TyVar_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyVar_g",
+        "projection_inverse_LambdaOmega.TyVar_x",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae",
+        "refinement_interpretation_LambdaOmega_Tm_refine_599765d78a2cbc9ec22b9c08427a1e7d"
+      ],
+      0,
+      "131317c1fbcf0604bc1fe4fde801ce4e"
+    ],
+    [
+      "LambdaOmega.__proj__TyVar__item__hk",
+      3,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat",
+        "refinement_interpretation_LambdaOmega_Tm_refine_9d03d55a0b054a335f4a9713bce16478",
+        "typing_LambdaOmega.__proj__TyVar__item__x"
+      ],
+      0,
+      "58af661ad543d41d80b3c1c7cc2a68b1"
+    ],
+    [
+      "LambdaOmega.__proj__TyVar__item__hk",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "LambdaOmega_pretyping_18f4961c1d91234a8baf199895e17f88",
+        "data_elim_LambdaOmega.TyVar",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_LambdaOmega.TyVar",
+        "equation_LambdaOmega.lookup_evar", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "proj_equation_LambdaOmega.TyVar_g",
+        "proj_equation_LambdaOmega.TyVar_x",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyVar_g",
+        "projection_inverse_LambdaOmega.TyVar_x",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae",
+        "refinement_interpretation_LambdaOmega_Tm_refine_599765d78a2cbc9ec22b9c08427a1e7d"
+      ],
+      0,
+      "7c0da7863ad6b3adc905c5a0778788d2"
+    ],
+    [
+      "LambdaOmega.__proj__TyLam__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
+      ],
+      0,
+      "9c4eb283dc1dd73f261b24af0830def7"
+    ],
+    [
+      "LambdaOmega.__proj__TyLam__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
+      ],
+      0,
+      "0a54113946f44a05b9bee1ee26111fbf"
+    ],
+    [
+      "LambdaOmega.__proj__TyLam__item__e1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
+      ],
+      0,
+      "2c06146b3c837033710118e224ca7959"
+    ],
+    [
+      "LambdaOmega.__proj__TyLam__item__t'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
+      ],
+      0,
+      "62f6fd71fc72cfbb46b4ed5a720f750e"
+    ],
+    [
+      "LambdaOmega.__proj__TyLam__item__hk",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyLam",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyLam_g",
+        "proj_equation_LambdaOmega.TyLam_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyLam_g",
+        "projection_inverse_LambdaOmega.TyLam_t",
+        "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
+      ],
+      0,
+      "27e0e89bece0ad36747f101c49864957"
+    ],
+    [
+      "LambdaOmega.__proj__TyLam__item__ht",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyLam",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyLam_e1",
+        "proj_equation_LambdaOmega.TyLam_g",
+        "proj_equation_LambdaOmega.TyLam_t",
+        "proj_equation_LambdaOmega.TyLam_t_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyLam_e1",
+        "projection_inverse_LambdaOmega.TyLam_g",
+        "projection_inverse_LambdaOmega.TyLam_t",
+        "projection_inverse_LambdaOmega.TyLam_t_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_3c8c856a3809d6cc76ee5793c4432bdb"
+      ],
+      0,
+      "6412330605933f15d526b71f3ad1691f"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "f7ec44e1aa4586bb4d3f60dbd8c17659"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__e1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "f777144643cf4632970ae6b88906fc2e"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__e2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "e20f36b0867381a69c01d88f3a82e0ef"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "38408ea7b11a6a84f182a184dfde33cd"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "c22f72a496f2805be19313412e6c2401"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__ht1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_LambdaOmega.TyApp",
+        "disc_equation_LambdaOmega.TyApp",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyApp_e1",
+        "proj_equation_LambdaOmega.TyApp_g",
+        "proj_equation_LambdaOmega.TyApp_t1",
+        "proj_equation_LambdaOmega.TyApp_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyApp_e1",
+        "projection_inverse_LambdaOmega.TyApp_g",
+        "projection_inverse_LambdaOmega.TyApp_t1",
+        "projection_inverse_LambdaOmega.TyApp_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "5cc9e27b6f095146c7fc562fdcd8dc7a"
+    ],
+    [
+      "LambdaOmega.__proj__TyApp__item__ht2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_LambdaOmega.TyApp",
+        "disc_equation_LambdaOmega.TyApp",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyApp_e2",
+        "proj_equation_LambdaOmega.TyApp_g",
+        "proj_equation_LambdaOmega.TyApp_t1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyApp_e2",
+        "projection_inverse_LambdaOmega.TyApp_g",
+        "projection_inverse_LambdaOmega.TyApp_t1",
+        "projection_inverse_LambdaOmega.TyApp_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ab4cb8fa197f45ed841906ed55823594"
+      ],
+      0,
+      "58ed0a3472b490729c32457e2a13de30"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__g",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "e7c90b2efd20e83ce7ebb6c2844958c0"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__e",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "2629b89d405bf4ca6c0b8de089828242"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "e8492e7e37ecdcdedb2b623ad876d012"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "842f9a95b4d555243d98567b19aa135d"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__ht",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyEqu_e",
+        "proj_equation_LambdaOmega.TyEqu_g",
+        "proj_equation_LambdaOmega.TyEqu_t1",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyEqu_e",
+        "projection_inverse_LambdaOmega.TyEqu_g",
+        "projection_inverse_LambdaOmega.TyEqu_t1",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "1926d54c85265e3ee07fb3f636d8d45b"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__he",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyEqu_t1",
+        "proj_equation_LambdaOmega.TyEqu_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyEqu_t1",
+        "projection_inverse_LambdaOmega.TyEqu_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "002a5fe1ebf820962139c919d2783c10"
+    ],
+    [
+      "LambdaOmega.__proj__TyEqu__item__hk",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TyEqu",
+        "fuel_guarded_inversion_LambdaOmega.env",
+        "proj_equation_LambdaOmega.TyEqu_g",
+        "proj_equation_LambdaOmega.TyEqu_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TyEqu_g",
+        "projection_inverse_LambdaOmega.TyEqu_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_2635e6877e41c9cf36c2d8ae57b4df9b"
+      ],
+      0,
+      "8a69f4c15d76a98ca0d9014fa67f2e81"
+    ],
+    [
+      "LambdaOmega.tappears_free_in",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
+        "binder_x_18f4961c1d91234a8baf199895e17f88_1",
+        "binder_x_fd2118004c9b4fcd0fcebc3eabc62881_0",
+        "disc_equation_LambdaOmega.TApp", "disc_equation_LambdaOmega.TArr",
+        "disc_equation_LambdaOmega.TLam", "disc_equation_LambdaOmega.TVar",
+        "equality_tok_Prims.LexTop@tok", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "fuel_guarded_inversion_LambdaOmega.typ",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_LambdaOmega.TApp",
+        "subterm_ordering_LambdaOmega.TArr",
+        "subterm_ordering_LambdaOmega.TLam"
+      ],
+      0,
+      "30cea5e533632ed4b873ea72966223fc"
+    ],
+    [
+      "LambdaOmega.envEqualT",
+      2,
+      1,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_LambdaOmega.knd__uu___haseq",
+        "kinding_LambdaOmega.knd@tok"
+      ],
+      0,
+      "9e59cf1d052c98852ae01206d3268f2a"
+    ],
+    [
+      "LambdaOmega.tshift_up_above_lam",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "620391487494dbc23791be6c1cd0229e"
+    ],
+    [
+      "LambdaOmega.tshift_up_above_tsubst_beta_aux",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "dab068d4948c164e5efab2c4692f7f23"
+    ],
+    [
+      "LambdaOmega.tshift_up_above_tsubst_beta",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "1bf369197432dce8ad473d00d4d97f0f"
+    ],
+    [
+      "LambdaOmega.is_renaming",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_LambdaOmega_Tm_refine_966672de449e8409105d41d366b3311c"
+      ],
+      0,
+      "22f75b49b6fa6e1b01e8f4c834e6bf09"
+    ],
+    [
+      "LambdaOmega.is_renaming",
+      5,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "892f7dc24aac941aaa21bcf6d8cde2b8"
+    ],
+    [
+      "LambdaOmega.subst_typing",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "fuel_guarded_inversion_LambdaOmega.env",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1f03a4667bab304b484fe08cfaa8deae"
+      ],
+      0,
+      "cff9b5fa1d0080054416740ccb432a7a"
+    ],
+    [
+      "LambdaOmega.substitution",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "a16a9e2f785d08067c8c6241e2a1dbfd"
+    ],
+    [
+      "LambdaOmega.tsubst_gen_tlam_aux",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "8631c8c8ebbb6d043444260ff18da1c9"
+    ],
+    [
+      "LambdaOmega.tsubst_gen_tlam",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_LambdaOmega.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "64f78e6601740d902f03eb480efa636f"
+    ],
+    [
+      "LambdaOmega.tred",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.knd__uu___haseq",
+        "assumption_LambdaOmega.typ__uu___haseq"
+      ],
+      0,
+      "ab307ac96ec178583589236e7f90c3a8"
+    ],
+    [
+      "LambdaOmega.__proj__TrRefl__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrRefl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_ec02c1428e5505f04555fdddbba4f245"
+      ],
+      0,
+      "881aebee95af80ddaf7e3e7f70c96492"
+    ],
+    [
+      "LambdaOmega.__proj__TrArr__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
+      ],
+      0,
+      "eeb0d9d75a00ecf8e93e70f34e44aac7"
+    ],
+    [
+      "LambdaOmega.__proj__TrArr__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
+      ],
+      0,
+      "b33169f477f9e6b9041ef9a146c433a6"
+    ],
+    [
+      "LambdaOmega.__proj__TrArr__item__t1'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
+      ],
+      0,
+      "5394b35b73c399a9ec40964ebb5762a7"
+    ],
+    [
+      "LambdaOmega.__proj__TrArr__item__t2'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
+      ],
+      0,
+      "bd35acf48c463b4230eacdae2a5af595"
+    ],
+    [
+      "LambdaOmega.__proj__TrArr__item__hr1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrArr",
+        "proj_equation_LambdaOmega.TrArr_t1",
+        "proj_equation_LambdaOmega.TrArr_t1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrArr_t1",
+        "projection_inverse_LambdaOmega.TrArr_t1_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
+      ],
+      0,
+      "f35ccfe17af5bfb84465f7377d5c09c7"
+    ],
+    [
+      "LambdaOmega.__proj__TrArr__item__hr2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrArr",
+        "proj_equation_LambdaOmega.TrArr_t2",
+        "proj_equation_LambdaOmega.TrArr_t2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrArr_t2",
+        "projection_inverse_LambdaOmega.TrArr_t2_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4d289fb60788d34abe668dc7e93589fa"
+      ],
+      0,
+      "bb33c9ee894ee68e2be0987548d27733"
+    ],
+    [
+      "LambdaOmega.__proj__TrLam__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
+      ],
+      0,
+      "f319c5760c03bbd6ee33ae8726ae50f0"
+    ],
+    [
+      "LambdaOmega.__proj__TrLam__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
+      ],
+      0,
+      "5081a222d9dbccf02241c719f463c2f1"
+    ],
+    [
+      "LambdaOmega.__proj__TrLam__item__k",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
+      ],
+      0,
+      "2b6996ab21c17b6aec90fe0be7ac3edd"
+    ],
+    [
+      "LambdaOmega.__proj__TrLam__item__hr",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrLam",
+        "proj_equation_LambdaOmega.TrLam_t1",
+        "proj_equation_LambdaOmega.TrLam_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrLam_t1",
+        "projection_inverse_LambdaOmega.TrLam_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_bf3a63a27ea0499fb041e30a446eb617"
+      ],
+      0,
+      "eed092fee82632e181ec93a1dfaf3792"
+    ],
+    [
+      "LambdaOmega.__proj__TrApp__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
+      ],
+      0,
+      "746397dbcc06c1d8dd9505e03575b021"
+    ],
+    [
+      "LambdaOmega.__proj__TrApp__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
+      ],
+      0,
+      "da262eb03f37843b95b77b17ad8282f2"
+    ],
+    [
+      "LambdaOmega.__proj__TrApp__item__t1'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
+      ],
+      0,
+      "0d431b28706ef2d62632845b03fc4f41"
+    ],
+    [
+      "LambdaOmega.__proj__TrApp__item__t2'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
+      ],
+      0,
+      "4b759d6186a08ffdd09bd206c4cbb1ae"
+    ],
+    [
+      "LambdaOmega.__proj__TrApp__item__hr1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrApp",
+        "proj_equation_LambdaOmega.TrApp_t1",
+        "proj_equation_LambdaOmega.TrApp_t1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrApp_t1",
+        "projection_inverse_LambdaOmega.TrApp_t1_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
+      ],
+      0,
+      "fbb8bf2a1db777ad081276b8935754f4"
+    ],
+    [
+      "LambdaOmega.__proj__TrApp__item__hr2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrApp",
+        "proj_equation_LambdaOmega.TrApp_t2",
+        "proj_equation_LambdaOmega.TrApp_t2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrApp_t2",
+        "projection_inverse_LambdaOmega.TrApp_t2_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_be3c1c969fb12afd258c2a6cdad94c02"
+      ],
+      0,
+      "f40f9f20a67e6113f910184065516a58"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "52971b8d2766ee4879d673e6f67d193e"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "76c530636b6cb6d3c3b65f8e1c101cb1"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__t1'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "c3f2bd0784754c16ac22bbe89708eb85"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__t2'",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "68455268d9dd48b86f4d3f0058de9741"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__k",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "e77f864960dc394f1de0ff8087aa312d"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__hr1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "proj_equation_LambdaOmega.TrBeta_t1",
+        "proj_equation_LambdaOmega.TrBeta_t1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrBeta_t1",
+        "projection_inverse_LambdaOmega.TrBeta_t1_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "72617932711e7ea9785b0e5aff3ad96a"
+    ],
+    [
+      "LambdaOmega.__proj__TrBeta__item__hr2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TrBeta",
+        "proj_equation_LambdaOmega.TrBeta_t2",
+        "proj_equation_LambdaOmega.TrBeta_t2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TrBeta_t2",
+        "projection_inverse_LambdaOmega.TrBeta_t2_",
+        "refinement_interpretation_LambdaOmega_Tm_refine_751053537ea8e71ce6fb8aa198bb367f"
+      ],
+      0,
+      "97c6a6ccaffd36d4a3b5990cfc0d2267"
+    ],
+    [
+      "LambdaOmega.shift_above_and_subst",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "4f1bad933a158a55418d0e9bfff083c9"
+    ],
+    [
+      "LambdaOmega.tsubst_commute_aux",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_47109dd5837e560f72664f314778a899",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "847545d79b3274834e6a44e7029d4495"
+    ],
+    [
+      "LambdaOmega.tsubst_commute",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_LambdaOmega.typ__uu___haseq", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_47109dd5837e560f72664f314778a899",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "818ce9ff89677b1824ee434bd0fc9ad1"
+    ],
+    [
+      "LambdaOmega.ltup",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.tred__uu___haseq",
+        "assumption_LambdaOmega.typ__uu___haseq"
+      ],
+      0,
+      "3909b16eac5c1e4cf402526770ddf1ef"
+    ],
+    [
+      "LambdaOmega.__proj__MkLTup__item__h1",
+      2,
+      1,
+      1,
+      [
+        "@query", "proj_equation_LambdaOmega.MkLTup_s",
+        "proj_equation_LambdaOmega.MkLTup_t",
+        "projection_inverse_LambdaOmega.MkLTup_s",
+        "projection_inverse_LambdaOmega.MkLTup_t"
+      ],
+      0,
+      "907a05b5af97941f6761a66474d02e3e"
+    ],
+    [
+      "LambdaOmega.__proj__MkLTup__item__h2",
+      2,
+      1,
+      1,
+      [
+        "@query", "proj_equation_LambdaOmega.MkLTup_s",
+        "proj_equation_LambdaOmega.MkLTup_u",
+        "projection_inverse_LambdaOmega.MkLTup_s",
+        "projection_inverse_LambdaOmega.MkLTup_u"
+      ],
+      0,
+      "0bff9352716bf04d8eb0eddc52f0f301"
+    ],
+    [
+      "LambdaOmega.tred_star",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.tred__uu___haseq",
+        "assumption_LambdaOmega.typ__uu___haseq"
+      ],
+      0,
+      "379b46b0d4ac3b19bbedf6141cfb69cd"
+    ],
+    [
+      "LambdaOmega.__proj__TsRefl__item__t",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TsRefl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_1a7575284e0bd4a4c04a45a4b9ef5e55"
+      ],
+      0,
+      "3fc0af36b08357231665d70fdf70ce1d"
+    ],
+    [
+      "LambdaOmega.__proj__TsStep__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TsStep",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
+      ],
+      0,
+      "7d861ca612948a08c019dda42c665ae6"
+    ],
+    [
+      "LambdaOmega.__proj__TsStep__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TsStep",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
+      ],
+      0,
+      "8daee629fa2c4502edb90fdfd6dedb6d"
+    ],
+    [
+      "LambdaOmega.__proj__TsStep__item__t3",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TsStep",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
+      ],
+      0,
+      "3d174444634005997f2b0013f0c17fc0"
+    ],
+    [
+      "LambdaOmega.__proj__TsStep__item__hr12",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TsStep",
+        "proj_equation_LambdaOmega.TsStep_t1",
+        "proj_equation_LambdaOmega.TsStep_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TsStep_t1",
+        "projection_inverse_LambdaOmega.TsStep_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
+      ],
+      0,
+      "eed7cc61606ddd062cf934d81582cf21"
+    ],
+    [
+      "LambdaOmega.__proj__TsStep__item__hr23",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TsStep",
+        "proj_equation_LambdaOmega.TsStep_t2",
+        "proj_equation_LambdaOmega.TsStep_t3",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TsStep_t2",
+        "projection_inverse_LambdaOmega.TsStep_t3",
+        "refinement_interpretation_LambdaOmega_Tm_refine_27c2ad5518b929beb45b7e301f23e06d"
+      ],
+      0,
+      "6680b7557bca786cd4b97335625753a7"
+    ],
+    [
+      "LambdaOmega.tred_star_sym",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_LambdaOmega.tred__uu___haseq",
+        "assumption_LambdaOmega.typ__uu___haseq"
+      ],
+      0,
+      "7066c10115ec1051354bcf2f0631d814"
+    ],
+    [
+      "LambdaOmega.__proj__TssBase__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssBase",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e774fb47cabdd53e6589874e05145da9"
+      ],
+      0,
+      "d7d5e18d0a65a46b125e3594bfac5bf5"
+    ],
+    [
+      "LambdaOmega.__proj__TssBase__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssBase",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e774fb47cabdd53e6589874e05145da9"
+      ],
+      0,
+      "c682a53da55fc3745c2b05d489176937"
+    ],
+    [
+      "LambdaOmega.__proj__TssBase__item__hr",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssBase",
+        "proj_equation_LambdaOmega.TssBase_t1",
+        "proj_equation_LambdaOmega.TssBase_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TssBase_t1",
+        "projection_inverse_LambdaOmega.TssBase_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_e774fb47cabdd53e6589874e05145da9"
+      ],
+      0,
+      "34bc7f53995b8e200513e575cde6a902"
+    ],
+    [
+      "LambdaOmega.__proj__TssSym__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TssSym",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4a2ab3b3954c3e597f88e2dd1581f452"
+      ],
+      0,
+      "607019f4481099fd38e0dd51cad093a3"
+    ],
+    [
+      "LambdaOmega.__proj__TssSym__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TssSym",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4a2ab3b3954c3e597f88e2dd1581f452"
+      ],
+      0,
+      "904646c2bc62c5a27ea10fa669eb0c50"
+    ],
+    [
+      "LambdaOmega.__proj__TssSym__item__hr",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_LambdaOmega.TssSym",
+        "proj_equation_LambdaOmega.TssSym_t1",
+        "proj_equation_LambdaOmega.TssSym_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TssSym_t1",
+        "projection_inverse_LambdaOmega.TssSym_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_4a2ab3b3954c3e597f88e2dd1581f452"
+      ],
+      0,
+      "e50e6968f3416635034d3ced695bcffd"
+    ],
+    [
+      "LambdaOmega.__proj__TssTran__item__t1",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssTran",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
+      ],
+      0,
+      "e6aab4b38759d175933cbe6da05a7a42"
+    ],
+    [
+      "LambdaOmega.__proj__TssTran__item__t2",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssTran",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
+      ],
+      0,
+      "7090df122a0bbe883b3b3c525e75a95d"
+    ],
+    [
+      "LambdaOmega.__proj__TssTran__item__t3",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssTran",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
+      ],
+      0,
+      "68d17f5572ec9a8aec8bab8227a894f7"
+    ],
+    [
+      "LambdaOmega.__proj__TssTran__item__hr12",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssTran",
+        "proj_equation_LambdaOmega.TssTran_t1",
+        "proj_equation_LambdaOmega.TssTran_t2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TssTran_t1",
+        "projection_inverse_LambdaOmega.TssTran_t2",
+        "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
+      ],
+      0,
+      "29ae20f5076dc0fed318ea3726919fe2"
+    ],
+    [
+      "LambdaOmega.__proj__TssTran__item__hr23",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_LambdaOmega.TssTran",
+        "proj_equation_LambdaOmega.TssTran_t2",
+        "proj_equation_LambdaOmega.TssTran_t3",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LambdaOmega.TssTran_t2",
+        "projection_inverse_LambdaOmega.TssTran_t3",
+        "refinement_interpretation_LambdaOmega_Tm_refine_a1fd090cddc71f2f00c2ff6c333e4a66"
+      ],
+      0,
+      "b64ff999f084740ffb84259fbf5bb7f2"
+    ],
+    [
+      "LambdaOmega.tred_tarr_preserved",
+      3,
+      1,
+      2,
+      [ "@query", "assumption_LambdaOmega.typ__uu___haseq" ],
+      0,
+      "fcdaee9163f22a5ef79ca201da71daa9"
     ]
   ]
 ]

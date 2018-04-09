@@ -1,14 +1,15 @@
 module FStar.TaggedUnion
 
 module P = FStar.Pointer
-module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
 (** Code of a tagged union *)
 
-let typ_l (l: P.union_typ) =
-  P.([("tag", TBase TUInt32); ("union", TUnion l)])
+let typ_l (l: P.union_typ) = {
+  P.name = "__tagged__" ^ l.P.name;
+  P.fields = P.([("tag", TBase TUInt32); ("union", TUnion l)]);
+}
 
 let tag_field (l: P.union_typ) : P.struct_field (typ_l l) = "tag"
 let union_field (l: P.union_typ) : P.struct_field (typ_l l) = "union"
@@ -27,21 +28,47 @@ let field_matches_tag
 : Tot Type0
 = tag_of_field tgs f == t
 
-let rec field_of_tag_of_field
-  (#l: P.union_typ)
-  (tgs: tags l)
-  (f: P.struct_field l)
-: Lemma (field_of_tag #l tgs (tag_of_field #l tgs f) == f)
-  [SMTPat (field_of_tag #l tgs (tag_of_field #l tgs f))]
+let rec field_of_tag_of_field'
+  (#l: P.struct_typ')
+  (tgs: tags' l)
+  (f: P.struct_field' l)
+: Lemma (field_of_tag' #l tgs (tag_of_field' #l tgs f) == f)
+  [SMTPat (field_of_tag' #l tgs (tag_of_field' #l tgs f))]
 = let ((f', _) :: l') = l in
   let (t' :: tgs') = tgs in
   if f = f' then ()
   else (
     let ff : string = f in
-    field_of_tag_of_field #l' tgs' ff
+    field_of_tag_of_field' #l' tgs' ff
   )
 
-let rec tag_of_field_of_tag
+let field_of_tag_of_field
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (f: P.struct_field l)
+: Lemma (field_of_tag #l tgs (tag_of_field #l tgs f) == f)
+  [SMTPat (field_of_tag #l tgs (tag_of_field #l tgs f))]
+= field_of_tag_of_field' tgs f
+
+let rec tag_of_field_of_tag'
+  (#l: P.struct_typ')
+  (tgs: tags' l)
+  (t: UInt32.t)
+: Lemma
+  (requires (List.Tot.mem t tgs))
+  (ensures (
+    List.Tot.mem t tgs /\
+    tag_of_field' #l tgs (field_of_tag' #l tgs t) == t
+  ))
+  [SMTPat (tag_of_field' #l tgs (field_of_tag' #l tgs t))]
+= let ((f', _) :: l') = l in
+  let (t' :: tgs') = tgs in
+  if t = t' then ()
+  else (
+    tag_of_field_of_tag' #l' tgs' t
+  )
+
+let tag_of_field_of_tag
   (#l: P.union_typ)
   (tgs: tags l)
   (t: UInt32.t)
@@ -52,12 +79,7 @@ let rec tag_of_field_of_tag
     tag_of_field #l tgs (field_of_tag #l tgs t) == t
   ))
   [SMTPat (tag_of_field #l tgs (field_of_tag #l tgs t))]
-= let ((f', _) :: l') = l in
-  let (t' :: tgs') = tgs in
-  if t = t' then ()
-  else (
-    tag_of_field_of_tag #l' tgs' t
-  )
+= tag_of_field_of_tag' tgs t
 
 let field_matches_tag_intro
   (#l: P.union_typ) (tgs: tags l)

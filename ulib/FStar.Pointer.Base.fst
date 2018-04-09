@@ -53,7 +53,7 @@ let step_typ_depth
 = match s with
   | StepUField l fd
   | StepField l fd ->
-    typ_depth_typ_of_struct_field l fd
+    typ_depth_typ_of_struct_field l.fields fd
   | _ -> ()
 
 let rec path_typ_depth
@@ -217,10 +217,60 @@ let gtdata_extensionality
   (ensures (u1 == u2))
 = ()
 
+(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+let rec type_of_typ'
+  (t: typ)
+: Tot Type0
+= match t with
+  | TBase b -> type_of_base_typ b
+  | TStruct l ->
+    struct l
+  | TUnion l ->
+    union l
+  | TArray length t ->
+    array length (type_of_typ' t)
+  | TPointer t ->
+    pointer t
+  | TNPointer t ->
+    npointer t
+  | TBuffer t ->
+    buffer t
+and struct (l: struct_typ) : Tot Type0 =
+  DM.t (struct_field l) (type_of_struct_field' l (fun x -> type_of_typ' x))
+and union (l: union_typ) : Tot Type0 =
+  gtdata (struct_field l) (type_of_struct_field' l (fun x -> type_of_typ' x))
+
+let rec type_of_typ'_eq (t: typ) : Lemma (type_of_typ' t == type_of_typ t)
+  [SMTPat (type_of_typ t)]
+=
+  match t with
+  | TArray _ t' -> type_of_typ'_eq t'
+  | TPointer t' -> type_of_typ'_eq t'
+  | TNPointer t' -> type_of_typ'_eq t'
+  | TBuffer t' -> type_of_typ'_eq t'
+  | _ -> ()
+
 (** Interpretation of unions, as ghostly-tagged data
     (see `gtdata` for more information).
 *)
 let _union_get_key (#l: union_typ) (v: union l) : Tot (struct_field l) = _gtdata_get_key v
+
+let struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f) =
+  DM.sel s f
+ 
+let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_struct_field l f) : Tot (struct l) =
+  DM.upd s f v
+
+let struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
+  DM.create #(struct_field l) #(type_of_struct_field' l (fun x -> type_of_typ' x)) f
+
+let struct_sel_struct_create_fun l f fd = ()
+
+let union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l) = gtdata_get_key v
+
+let union_get_value #l v fd = gtdata_get_value v fd
+
+let union_create l fd v = gtdata_create fd v
 
 (** For any `t: typ`, `dummy_val t` provides a default value of this type.
 
@@ -251,7 +301,7 @@ let rec dummy_val
       dummy_val (typ_of_struct_field l f)
     ))
   | TUnion l ->
-    let dummy_field : string = List.Tot.hd (List.Tot.map fst l) in
+    let dummy_field : string = List.Tot.hd (List.Tot.map fst l.fields) in
     union_create l dummy_field (dummy_val (typ_of_struct_field l dummy_field))
   | TArray length t -> Seq.create (UInt32.v length) (dummy_val t)
   | TPointer t -> Pointer t HS.dummy_aref PathBase
@@ -387,7 +437,7 @@ let struct_field_is_readable
   (v: ostruct l { Some? v } )
   (s: string)
 : Tot bool
-= if List.Tot.mem s (List.Tot.map fst l)
+= if List.Tot.mem s (List.Tot.map fst l.fields)
   then ovalue_is_readable (typ_of_struct_field l s) (ostruct_sel v s)
   else true
 
@@ -400,7 +450,7 @@ let rec ovalue_is_readable
   | TStruct l ->
     let (v: ostruct l) = v in
     Some? v && (
-      let keys = List.Tot.map fst l in
+      let keys = List.Tot.map fst l.fields in
       let pred
         (t': typ)
         (v: otype_of_typ t')
@@ -441,7 +491,7 @@ let ovalue_is_readable_struct_intro'
   (requires (
     let (v: ostruct l) = v in (
     Some? v /\
-    List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l)
+    List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields)
   )))
   (ensures (ovalue_is_readable (TStruct l) v))
 = assert_norm (ovalue_is_readable (TStruct l) v == true)
@@ -457,7 +507,7 @@ let ovalue_is_readable_struct_intro
     ovalue_is_readable (typ_of_struct_field l f) (ostruct_sel v f)
   ))))
   (ensures (ovalue_is_readable (TStruct l) v))
-= List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l);
+= List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields);
   ovalue_is_readable_struct_intro' l v
 
 let rec ovalue_is_readable_struct_elim
@@ -473,9 +523,9 @@ let rec ovalue_is_readable_struct_elim
   )))
   [SMTPat (ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd))]
 = let (v: ostruct l) = v in
-  assert_norm (ovalue_is_readable (TStruct l) v == List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l));
-  assert (List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l));
-  List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l);
+  assert_norm (ovalue_is_readable (TStruct l) v == List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields));
+  assert (List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields));
+  List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields);
   assert (ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd))
 
 let ovalue_is_readable_array_elim
@@ -725,7 +775,7 @@ let rec value_of_ovalue_of_value
     = value_of_ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
     in
     Classical.forall_intro phi;
-    DM.equal_elim #(struct_field l) #(type_of_struct_field l) v' v
+    DM.equal_elim #(struct_field l) #(type_of_struct_field' l (fun x -> type_of_typ' x)) v' v
   | TArray len t' ->
     let (v: array len (type_of_typ t')) = v in
     let ov : option (array len (otype_of_typ t')) = ovalue_of_value (TArray len t') v in
@@ -1249,7 +1299,10 @@ let path_includes_exists_concat
   (ensures (exists (r: path through to) . q == path_concat p r))
 = path_includes_ind
     (fun #to1_ #to2_ p1_ p2_ -> exists r . p2_ == path_concat p1_ r)
-    (fun #through #to_ p s -> FStar.Classical.exists_intro (fun r -> PathStep through to_ p s == path_concat p r) (PathStep through to_ PathBase s))
+    (fun #through #to_ p s -> 
+      let r = PathStep through to_ PathBase s in
+      assert_norm (PathStep through to_ p s == path_concat p r)
+    )
     (fun #to p -> FStar.Classical.exists_intro (fun r -> p == path_concat p r) PathBase)
     (fun #to1_ #to2_ #to3_ p1_ p2_ p3_ ->
       FStar.Classical.exists_elim  (exists r . p3_ == path_concat p1_ r) #_ #(fun r12 -> p2_ == path_concat p1_ r12) () (fun r12 ->
@@ -2369,7 +2422,7 @@ let readable_struct
   ))
   (ensures (readable h p))
 //  [SMTPat (readable #(TStruct l) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
-= let dummy_field : struct_field l = fst (List.Tot.hd l) in // struct is nonempty
+= let dummy_field : struct_field l = fst (List.Tot.hd l.fields) in // struct is nonempty
   let dummy_field_ptr = gfield p dummy_field in
   assert (readable h dummy_field_ptr);
   let content = greference_of p in
@@ -2412,7 +2465,7 @@ let rec readable_struct_fields'
   | [] -> True
   | f :: s' ->
     readable_struct_fields' h p s' /\ (
-      if List.Tot.mem f (List.Tot.map fst l)
+      if List.Tot.mem f (List.Tot.map fst l.fields)
       then
 	let f : struct_field l = f in
 	readable h (gfield p f)
@@ -2433,14 +2486,14 @@ let rec readable_struct_fields_elim
   (s: list string)
 : Lemma
   (requires (readable_struct_fields h p s))
-  (ensures (forall f . (List.Tot.mem f s /\ List.Tot.mem f (List.Tot.map fst l)) ==> (let f : struct_field l = f in readable h (gfield p f))))
+  (ensures (forall f . (List.Tot.mem f s /\ List.Tot.mem f (List.Tot.map fst l.fields)) ==> (let f : struct_field l = f in readable h (gfield p f))))
   (decreases s)
 = match s with
   | [] -> ()
   | _ :: q -> readable_struct_fields_elim h p q
 
 let readable_struct_fields_readable_struct #l h p =
-  readable_struct_fields_elim h p (List.Tot.map fst l);
+  readable_struct_fields_elim h p (List.Tot.map fst l.fields);
   readable_struct h p
 
 let readable_gcell
@@ -2646,6 +2699,17 @@ let buffer_live_gbuffer_of_array_pointer
   [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
 = ()
 
+let buffer_unused_in #t b h =
+  match b.broot with
+  | BufferRootSingleton p -> unused_in p h
+  | BufferRootArray #mlen p -> unused_in p h
+
+let buffer_live_not_unused_in #t b h = ()
+
+let buffer_unused_in_gsingleton_buffer_of_pointer #t p h = ()
+
+let buffer_unused_in_gbuffer_of_array_pointer #t #length p h = ()
+
 let frameOf_buffer
   (#t: typ)
   (b: buffer t)
@@ -2664,6 +2728,8 @@ let frameOf_buffer_gbuffer_of_array_pointer
   (#length: array_length_t)
   (p: pointer (TArray length t))
 = ()
+
+let live_region_frameOf_buffer #value h p = ()
 
 let buffer_as_addr #t b =
   match b.broot with
@@ -2693,7 +2759,7 @@ let sub_buffer
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
 
 let offset_buffer #t b i =
-  Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) (UInt32.sub (Buffer?.blength b) i)
+  sub_buffer b i (UInt32.sub (Buffer?.blength b) i)
 
 let buffer_length_gsub_buffer
   (#t: typ)
@@ -2717,6 +2783,8 @@ let buffer_live_gsub_buffer_intro
   len
   h
 = ()
+
+let buffer_unused_in_gsub_buffer #t b i len h = ()
 
 let gsub_buffer_gsub_buffer
   (#a: typ)
@@ -2953,6 +3021,8 @@ let buffer_readable_intro
   (h: HS.mem)
   (b: buffer t)
 = ()
+
+let buffer_readable_elim #t h b = ()
 
 (*** Disjointness of pointers *)
 
@@ -3280,6 +3350,9 @@ let loc_none = Loc
   (fun _ _ -> false_elim ())
 
 let loc_union s1 s2 =
+  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
+  then s1
+  else
   let addr_regions1 = Ghost.reveal (Loc?.addr_regions s1) in
   let addr_regions2 = Ghost.reveal (Loc?.addr_regions s2) in
   let addr_regions = Set.union addr_regions1 addr_regions2 in
@@ -3332,6 +3405,8 @@ let loc_union s1 s2 =
     (Ghost.hide aux_regions)
     aux_addrs
     aux
+
+let loc_union_idem s = ()
 
 let loc_pointer #t p =
   Loc
@@ -3403,6 +3478,8 @@ let rec loc_aux_syntactically_includes_trans
       (fun _ -> loc_aux_syntactically_includes_trans sl s2 s3)
       (fun _ -> loc_aux_syntactically_includes_trans sr s2 s3)
   | _ -> ()
+
+#set-options "--initial_fuel 2 --max_fuel 2"
 
 let loc_aux_syntactically_includes_union_r
   (s1 s2 s3: loc_aux)
@@ -3720,6 +3797,25 @@ let loc_includes_trans s1 s2 s3 =
 
 let loc_includes_union_r s s1 s2 = ()
 
+#set-options "--z3rlimit 32"
+
+let loc_includes_union_l s1 s2 s =
+  let u12 = loc_union s1 s2 in
+  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
+  then ()
+  else begin
+    Classical.forall_intro loc_aux_includes_refl';
+    Classical.forall_intro_2 loc_aux_includes_union_l_l;    
+    Classical.forall_intro_2 loc_aux_includes_union_l_r;
+    Classical.or_elim
+      #(loc_includes s1 s)
+      #(loc_includes s2 s)
+      #(fun _ -> loc_includes (loc_union s1 s2) s)
+      (fun _ -> loc_includes_trans u12 s1 s)
+      (fun _ -> loc_includes_trans u12 s2 s)
+  end
+
+(* Left to be merged from:  9b3bd6cce17e430a68409dbc838dc3314aef6b2a
 private let loc_includes_union_l_helper_l (s1 s2:loc)
   :Lemma (loc_includes (loc_union s1 s2) s1)
   = Classical.forall_intro loc_aux_includes_refl';
@@ -3742,6 +3838,7 @@ let loc_includes_union_l s1 s2 s =
   end
 
 #set-options "--z3rlimit 32"
+*)
 
 let loc_includes_none s = ()
 
@@ -4126,6 +4223,12 @@ let live_unused_in_disjoint #value1 #value2 h p1 p2 =
   live_unused_in_disjoint_strong h p1 p2;
   disjoint_root p1 p2
 
+let pointer_live_reference_unused_in_disjoint #value1 #value2 h p1 p2 =
+  disjoint_roots_intro_pointer_vs_reference h p1 p2
+
+let reference_live_pointer_unused_in_disjoint #value1 #value2 h p1 p2 =
+  disjoint_roots_intro_reference_vs_pointer h p1 p2
+
 let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 = ()
 
 let loc_disjoint_gpointer_of_buffer_cell #t b i1 i2 = ()
@@ -4133,6 +4236,8 @@ let loc_disjoint_gpointer_of_buffer_cell #t b i1 i2 = ()
 let loc_disjoint_addresses r1 r2 n1 n2 = ()
 
 let loc_disjoint_pointer_addresses #t p r n = ()
+
+let loc_disjoint_buffer_addresses #t p r n = ()
 
 let loc_disjoint_regions rs1 rs2 = ()
 
@@ -4195,7 +4300,26 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 
 #set-options "--z3rlimit 256"
 
-let modifies_buffer_elim #t1 b p h h' =
+val modifies_buffer_elim'
+  (#t1: typ)
+  (b: buffer t1)
+  (p: loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_buffer b) p /\
+    buffer_live h b /\
+    UInt32.v (buffer_length b) > 0 /\
+    modifies p h h'
+  ))
+  (ensures (
+    buffer_live h' b /\ (
+      buffer_readable h b ==> (
+	buffer_readable h' b /\
+	buffer_as_seq h b == buffer_as_seq h' b
+  ))))
+
+let modifies_buffer_elim' #t1 b p h h' =
   Classical.forall_intro_2 HS.lemma_tip_top;
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
@@ -4234,6 +4358,11 @@ let modifies_buffer_elim #t1 b p h h' =
     in
     Classical.move_requires g ()
   end
+
+let modifies_buffer_elim #t1 b p h h' =
+  if buffer_length b = 0ul
+  then ()
+  else modifies_buffer_elim' b p h h'
 
 let modifies_reference_elim #t b p h h' =
   Classical.forall_intro_2 HS.lemma_tip_top;
@@ -4666,8 +4795,11 @@ let modifies_fresh_frame_popped_weak
   Classical.forall_intro_2 h //AR: note
 
 let no_upd_popped #t h0 h1 b =
+  (* hint replayability *)
   let g = greference_of b in
   assert (HS.sel h1 g == HS.sel h0 g)
+
+let no_upd_popped_buffer #t h0 h1 b = ()
 
 (* Restrict a set of locations along a set of regions *)
 
@@ -4825,18 +4957,30 @@ let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
+		
+let read_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  i		
+= read (pointer_of_buffer_cell b i)		
+		
+let write_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  i v		
+= write (pointer_of_buffer_cell b i) v		
 
-let read_buffer
-  (#t: typ)
-  (b: buffer t)
-  i
-= read (pointer_of_buffer_cell b i)
+(* unused_in, cont'd *)
 
-let write_buffer
-  (#t: typ)
-  (b: buffer t)
-  i v
-= write (pointer_of_buffer_cell b i) v
+let buffer_live_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let pointer_live_buffer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let buffer_live_pointer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let reference_live_buffer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let buffer_live_reference_unused_in_disjoint #t1 #t2 h b1 b2 = ()
 
 (* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
 

@@ -651,6 +651,7 @@ let destruct typ lid =
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
+  | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
   | Sig_inductive_typ (lid, _,  _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
@@ -661,8 +662,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _
-  | Sig_splice _ -> []
+  | Sig_main _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -682,8 +682,11 @@ let range_of_args args r =
    args |> List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r
 
 let mk_app f args =
-  let r = range_of_args args f.pos in
-  mk (Tm_app(f, args)) None r
+  match args with
+  | [] -> f
+  | _ ->
+      let r = range_of_args args f.pos in
+      mk (Tm_app(f, args)) None r
 
 let mk_data l args =
   match args with
@@ -752,6 +755,16 @@ let mk_field_projector_name lid (x:bv) i =
              else x.ppname in
     let y = {x with ppname=nm} in
     mk_field_projector_name_from_ident lid nm, y
+
+let ses_of_sigbundle (se:sigelt) :list<sigelt> =
+  match se.sigel with
+  | Sig_bundle (ses, _) -> ses
+  | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
 
 let set_uvar uv t =
   match Unionfind.find uv with
@@ -1661,21 +1674,6 @@ let term_eq t1 t2 =
     debug_term_eq := false;
     r
 
-let rec bottom_fold (f : term -> term) (t : term) : term =
-    let ff = bottom_fold f in
-    let tn = (compress t).n in
-    let tn = match tn with
-             | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
-             // TODO: We ignore the types. Bug or feature?
-             | Tm_abs (bs, t, k) -> let bs, t' = open_term bs t in
-                                    let t'' = ff t' in
-                                    Tm_abs (bs, close bs t'', k)
-             | Tm_arrow (bs, k) -> tn //TODO
-             | Tm_uinst (t, us) ->
-                Tm_uinst (ff t, us)
-             | _ -> tn in
-    f ({ t with n = tn })
-
 // An estimation of the size of a term, only for debugging
 let rec sizeof (t:term) : int =
     match t.n with
@@ -1728,3 +1726,110 @@ let process_pragma p r =
       match sopt with
       | None -> ()
       | Some s -> set_options Options.Reset s
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+let rec unbound_variables tm :  list<bv> =
+    let t = Subst.compress tm in
+    match t.n with
+      | Tm_delayed _ -> failwith "Impossible"
+
+      | Tm_name x ->
+        []
+
+      | Tm_uvar (x, t) ->
+        []
+
+      | Tm_type u ->
+        []
+
+      | Tm_bvar x ->
+        [x]
+
+      | Tm_fvar _
+      | Tm_constant _
+      | Tm_lazy _
+      | Tm_unknown ->
+        []
+
+      | Tm_uinst(t, us) ->
+        unbound_variables t
+
+      | Tm_abs(bs, t, _) ->
+        let bs, t = Subst.open_term bs t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_arrow (bs, c) ->
+        let bs, c = Subst.open_comp bs c in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables_comp c
+
+      | Tm_refine(b, t) ->
+        let bs, t = Subst.open_term [b, None] t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_app(t, args) ->
+        List.collect (fun (x, _) -> unbound_variables x) args
+        @ unbound_variables t
+
+      | Tm_match(t, pats) ->
+        unbound_variables t
+        @ (pats |> List.collect (fun br ->
+                 let p, wopt, t = Subst.open_branch br in
+                 unbound_variables t
+                 @ (match wopt with None -> [] | Some t -> unbound_variables t)))
+
+      | Tm_ascribed(t1, asc, _) ->
+        unbound_variables t1
+        @ (match fst asc with
+           | Inl t2 -> unbound_variables t2
+           | Inr c2 -> unbound_variables_comp c2)
+        @ (match snd asc with
+           | None -> []
+           | Some tac -> unbound_variables tac)
+
+      | Tm_let ((false, [lb]), t) ->
+        unbound_variables lb.lbtyp
+        @ unbound_variables lb.lbdef
+        @ (match lb.lbname with
+           | Inr _ -> unbound_variables t
+           | Inl bv -> let _, t= Subst.open_term [bv, None] t in
+                       unbound_variables t)
+
+      | Tm_let ((_, lbs), t) ->
+        let lbs, t = Subst.open_let_rec lbs t in
+        unbound_variables t
+        @ List.collect (fun lb -> unbound_variables lb.lbtyp @ unbound_variables lb.lbdef) lbs
+
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static  -> []
+        | Quote_dynamic -> unbound_variables tm
+        end
+
+      | Tm_meta(t, m) ->
+        unbound_variables t
+        @ (match m with
+           | Meta_pattern args ->
+             List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
+
+           | Meta_monadic_lift(_, _, t')
+           | Meta_monadic(_, t') ->
+             unbound_variables t'
+
+           | Meta_labeled _
+           | Meta_desugared _
+           | Meta_named _ -> [])
+
+
+and unbound_variables_comp c =
+    match c.n with
+    | GTotal (t, _)
+    | Total (t, _) ->
+      unbound_variables t
+
+    | Comp ct ->
+      unbound_variables ct.result_typ
+      @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
+

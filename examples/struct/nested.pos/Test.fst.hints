@@ -1,5 +1,5 @@
 [
-  "yt$úQvšc¬~ô]oµì‡",
+  "ËŸ­¯ žw·òö8y\u0011ŠR¼",
   [
     [
       "Test.nested_st",
@@ -53,7 +53,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt32.v"
       ],
       0,
-      "58e15e1213ed4612d954b852f1d96504"
+      "3579c4bdee6c473cf5db6f4e02493b8e"
     ],
     [
       "Test.ty",
@@ -102,13 +102,13 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "1e0184ade157b133d29791963ef6f9a8"
+      "bfd6417478929cb71dfb36fee2883953"
     ],
     [
       "Test.f",
       1,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.assoc.fuel_instrumented",
@@ -129,6 +129,7 @@
         "bool_typing", "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TUInt32",
         "constructor_distinct_Prims.Cons",
+        "data_elim_FStar.Pointer.Base.Mkstruct_typ",
         "data_elim_FStar.Pointer.Base.TStruct", "data_elim_Prims.Cons",
         "data_typing_intro_FStar.Pointer.Base.TBase@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
@@ -149,8 +150,9 @@
         "equation_FStar.Pointer.Base.equal_values",
         "equation_FStar.Pointer.Base.modifies_1",
         "equation_FStar.Pointer.Base.struct_field",
-        "equation_FStar.Pointer.Base.struct_typ",
+        "equation_FStar.Pointer.Base.struct_field_",
         "equation_FStar.Pointer.Base.typ_of_struct_field",
+        "equation_FStar.Pointer.Base.typ_of_struct_field_",
         "equation_FStar.Pointer.Base.type_of_base_typ",
         "equation_FStar.Set.eqtype", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
@@ -210,12 +212,14 @@
         "proj_equation_FStar.Monotonic.HyperStack.HS_tip",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Some_v",
+        "proj_equation_FStar.Pointer.Base.Mkstruct_typ_fields",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Monotonic.HyperStack.HS_h",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FStar.Pointer.Base.Mkstruct_typ_fields",
         "projection_inverse_FStar.Pointer.Base.TBase_b",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
@@ -253,7 +257,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "142a501471694311325558c74de424ec"
+      "53b5c978f665600fe166d5d749517040"
     ]
   ]
 ]

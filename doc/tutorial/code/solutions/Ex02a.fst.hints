@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "553083268720fa7ce9d65e5c0da98a22"
+      "abe8eaf5a2f9f35c09aeef1975ef7bb1"
     ],
     [
       "Ex02a.canRead",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "4204b4f6f4bc8efc43e9818376f54145"
+      "3304ef111b66662149e8b2bf1d5ccf65"
     ]
   ]
 ]

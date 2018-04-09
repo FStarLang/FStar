@@ -1,4 +1,5 @@
 open Prims
+open FStar_Pervasives_Native
 open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
@@ -8,9 +9,6 @@ module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
 module RD = FStar_Reflection_Data
 module EMB = FStar_Syntax_Embeddings
-
-(* GM: most indirections here are super annoying, and seem to
- * be unneeded. Can we take them out? *)
 
 let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a __result =
   B.run t ps
@@ -59,119 +57,73 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
           let m = t x y z in
           interpret_tac m ps
 
-let __fail (msg : string) : 'a __tac = from_tac_1 B.fail msg
-let fail: string -> 'a __tac = fun msg -> __fail msg
+(* Pointing to the internal primitives *)
+let fail                    = from_tac_1 B.fail
+let top_env                 = from_tac_1 B.top_env
+let cur_env                 = from_tac_1 B.cur_env
+let cur_goal                = from_tac_1 B.cur_goal'
+let cur_witness             = from_tac_1 B.cur_witness
+let fresh                   = from_tac_1 B.fresh
+let ngoals                  = from_tac_1 B.ngoals
+let ngoals_smt              = from_tac_1 B.ngoals_smt
+let is_guard                = from_tac_1 B.is_guard
+let refine_intro            = from_tac_1 B.refine_intro
+let tc                      = from_tac_1 B.tc
+let unshelve                = from_tac_1 B.unshelve
+let unquote                 = fun t -> failwith "Sorry, unquote does not work in compiled tactics"
+let trivial                 = from_tac_1 B.trivial
+let norm                    = fun s ->   from_tac_1 B.norm (tr_repr_steps s) (* TODO: somehow avoid translating steps? *)
+let norm_term_env           = fun e s -> from_tac_3 B.norm_term_env e (tr_repr_steps s)
+let norm_binder_type        = fun s ->   from_tac_2 B.norm_binder_type (tr_repr_steps s)
+let intro                   = from_tac_1 B.intro
+let intro_rec               = from_tac_1 B.intro_rec
+let rename_to               = from_tac_2 B.rename_to
+let revert                  = from_tac_1 B.revert
+let binder_retype           = from_tac_1 B.binder_retype
+let clear_top               = from_tac_1 B.clear_top
+let clear                   = from_tac_1 B.clear
+let rewrite                 = from_tac_1 B.rewrite
+let smt                     = from_tac_1 B.smt
+let t_exact                 = from_tac_2 B.t_exact
+let apply                   = from_tac_1 (B.apply true)
+let apply_raw               = from_tac_1 (B.apply false)
+let apply_lemma             = from_tac_1 B.apply_lemma
+let print                   = from_tac_1 B.print
+let debug                   = from_tac_1 B.debug
+let dump                    = from_tac_1 B.print_proof_state
+let dump1                   = from_tac_1 B.print_proof_state1
+let trefl                   = from_tac_1 B.trefl
+let later                   = from_tac_1 B.later
+let dup                     = from_tac_1 B.dup
+let flip                    = from_tac_1 B.flip
+let qed                     = from_tac_1 B.qed
+let prune                   = from_tac_1 B.prune
+let addns                   = from_tac_1 B.addns
+let cases                   = from_tac_1 B.cases
+let set_options             = from_tac_1 B.set_options
+let uvar_env                = from_tac_2 B.uvar_env
+let unify                   = from_tac_2 B.unify
+let launch_process          = from_tac_3 B.launch_process
+let fresh_bv_named          = from_tac_2 B.fresh_bv_named
+let change                  = from_tac_1 B.change
+let get_guard_policy        = from_tac_1 B.get_guard_policy
+let set_guard_policy        = from_tac_1 B.set_guard_policy
+let dismiss                 = from_tac_1 B.dismiss
+let tadmit                  = from_tac_1 B.tadmit
+let inspect                 = from_tac_1 B.inspect
+let pack                    = from_tac_1 B.pack
 
-let __top_env: unit -> RT.env __tac = from_tac_1 B.top_env
-let top_env: unit -> RT.env __tac = __top_env
-
-let __cur_env: unit -> RT.env __tac = from_tac_1 B.cur_env
-let cur_env: unit -> RT.env __tac = __cur_env
-
-let __cur_goal: unit -> RT.term __tac = from_tac_1 B.cur_goal'
-let cur_goal: unit -> RT.term __tac = __cur_goal
-
-let __cur_witness: unit -> RT.term __tac = from_tac_1 B.cur_witness
-let cur_witness: unit -> RT.term __tac = __cur_witness
-
-let __fresh : unit -> int __tac = from_tac_1 B.fresh
-let fresh : unit -> int __tac = __fresh
-
-let __ngoals : unit -> int __tac = from_tac_1 B.ngoals
-let ngoals : unit -> int __tac = __ngoals
-
-let __ngoals_smt : unit -> int __tac = from_tac_1 B.ngoals_smt
-let ngoals_smt : unit -> int __tac = __ngoals_smt
-
-
-let __is_guard: unit -> bool __tac = from_tac_1 B.is_guard
-let is_guard: unit -> bool __tac = __is_guard
-
-let __refine_intro : unit -> unit __tac = from_tac_1 B.refine_intro
-let refine_intro: unit -> unit __tac = __refine_intro
-
-let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
-let tc: RT.term -> RT.term __tac = fun t -> __tc t
-
-let __unshelve (t:RT.term) : unit __tac = from_tac_1 B.unshelve t
-let unshelve : RT.term -> unit __tac = fun t -> __unshelve t
-
-let unquote : RT.term -> 'a __tac = fun tm ->
-        failwith "Sorry, unquote does not work in compiled tactics"
-
+(* Those that need some reification. Maybe we can do this somewhere else
+ * or automatically, but keep it for now *)
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: (unit -> 'a __tac) -> ('a option) __tac = fun t -> __trytac (E.reify_tactic t)
-
-let __trivial: unit -> unit __tac = from_tac_1 B.trivial
-let trivial: unit -> unit __tac = __trivial
-
-let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
-let norm: norm_step list -> unit __tac = fun s -> __norm s
-
-let __norm_term_env (e:RT.env) (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_3 B.norm_term_env e (tr_repr_steps s) t
-let norm_term_env: RT.env -> norm_step list -> RT.term -> RT.term __tac = fun e s t -> __norm_term_env e s t
-
-let __norm_binder_type (s: norm_step list) (b: RT.binder) : unit __tac = from_tac_2 B.norm_binder_type (tr_repr_steps s) b
-let norm_binder_type : norm_step list -> RT.binder -> unit __tac = fun s b -> __norm_binder_type s b
-
-let __intro: unit -> RT.binder __tac = from_tac_1 B.intro
-let intro: unit -> RT.binder __tac = __intro
-
-let __intro_rec: unit -> (RT.binder * RT.binder) __tac = from_tac_1 B.intro_rec
-let intro_rec: unit -> (RT.binder * RT.binder) __tac = __intro_rec
-
-let __rename_to (b: RT.binder) (nm : string) : unit __tac = from_tac_2 B.rename_to b nm
-let rename_to: RT.binder -> string -> unit __tac = fun b s -> __rename_to b s
-
-let __revert: unit -> unit __tac = from_tac_1 B.revert
-let revert: unit -> unit __tac = __revert
-
-let __binder_retype (b: RT.binder) : unit __tac = from_tac_1 B.binder_retype b
-let binder_retype: RT.binder -> unit __tac = fun b -> __binder_retype b
-
-let __clear_top: unit -> unit __tac = from_tac_1 B.clear_top
-let clear_top: unit -> unit __tac = __clear_top
-
-let __clear (h: RT.binder) : unit __tac = from_tac_1 B.clear h
-let clear: RT.binder -> unit __tac = fun b -> __clear b
-
-let __rewrite (h: RT.binder): unit __tac = from_tac_1 B.rewrite h
-let rewrite: RT.binder -> unit __tac = fun b  -> __rewrite b
-
-let __smt: unit -> unit __tac = from_tac_1 B.smt
-let smt: unit -> unit __tac = __smt
 
 let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
 let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =
     fun n f g -> __divide n (f ()) (g ())
 
 let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)
-let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac =
-    fun f -> fun g -> __seq (f ()) (g ())
-
-let __t_exact b1 (t: RT.term): unit __tac = from_tac_2 B.t_exact b1 t
-let t_exact: bool -> RT.term -> unit __tac = __t_exact
-
-let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
-let apply: RT.term -> unit __tac = __apply
-
-let __apply_raw (t: RT.term): unit __tac = from_tac_1 (B.apply false) t
-let apply_raw: RT.term -> unit __tac = __apply_raw
-
-let __apply_lemma (t: RT.term): unit __tac = from_tac_1 B.apply_lemma t
-let apply_lemma: RT.term -> unit __tac = __apply_lemma
-
-let __print (s: string): unit __tac = from_tac_1 (fun x -> B.ret (B.tacprint x)) s
-let print: string -> unit __tac = fun s -> __print s
-
-let __dump (s: string): unit __tac = from_tac_1 (B.print_proof_state) s
-let dump: string -> unit __tac = fun s -> __dump s
-
-let __dump1 (s: string): unit __tac = from_tac_1 (B.print_proof_state1) s
-let dump1: string -> unit __tac = fun s -> __dump1 s
-
-let __trefl: unit -> unit __tac = from_tac_1 B.trefl
-let trefl: unit -> unit __tac = __trefl
+let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac = fun f -> fun g -> __seq (f ()) (g ())
 
 let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
 let pointwise:  (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
@@ -181,60 +133,3 @@ let __topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit __tac) : u
         from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 t2)
 let topdown_rewrite : (RT.term -> (bool * int) __tac) -> (unit -> unit __tac) -> unit __tac =
         fun t1 t2 -> __topdown_rewrite t1 (E.reify_tactic t2)
-
-let __later: unit -> unit __tac = from_tac_1 B.later
-let later: unit -> unit __tac = __later
-
-let __dup: unit -> unit __tac = from_tac_1 B.dup
-let dup: unit -> unit __tac = __dup
-
-let __flip: unit -> unit __tac = from_tac_1 B.flip
-let flip: unit -> unit __tac = __flip
-
-let __qed: unit -> unit __tac = from_tac_1 B.qed
-let qed: unit -> unit __tac = __qed
-
-let __prune (s: string): unit __tac = from_tac_1 B.prune s
-let prune: string -> unit __tac = fun ns  -> __prune ns
-
-let __addns (s: string): unit __tac = from_tac_1 B.addns s
-let addns: string -> unit __tac = fun ns  -> __addns ns
-
-let __cases (t: RT.term): (RT.term * RT.term) __tac = from_tac_1 B.cases t
-let cases: RT.term -> (RT.term * RT.term) __tac = fun t  -> __cases t
-
-let __set_options (s: string) : unit __tac = from_tac_1 B.set_options s
-let set_options : string -> unit __tac = fun s -> __set_options s
-
-let __uvar_env (e : RT.env) (o : RT.term option) : RT.term __tac = from_tac_2 B.uvar_env e o
-let uvar_env : RT.env -> RT.term option -> RT.term __tac = fun e o -> __uvar_env e o
-
-let __unify (t1 : RT.term) (t2 : RT.term) : bool __tac = from_tac_2 B.unify t1 t2
-let unify : RT.term -> RT.term -> bool __tac = fun t1 t2 -> __unify t1 t2
-
-let __launch_process (prog : string) (args : string) (input : string) : string __tac = from_tac_3 B.launch_process prog args input
-let launch_process : string -> string -> string -> string __tac = fun prog args input -> __launch_process prog args input
-
-let __fresh_bv_named (nm : string) (ty : RT.term) : RT.bv __tac = from_tac_2 B.fresh_bv_named nm ty
-let fresh_bv_named : string -> RT.term -> RT.bv __tac = fun nm ty -> __fresh_bv_named nm ty
-
-let __change (ty : RT.typ) : unit __tac = from_tac_1 B.change ty
-let change : RT.typ -> unit __tac = fun ty -> __change ty
-
-let __get_guard_policy : unit -> guard_policy __tac = from_tac_1 B.get_guard_policy
-let get_guard_policy : unit -> guard_policy __tac = __get_guard_policy
-
-let __set_guard_policy : guard_policy -> unit __tac = from_tac_1 B.set_guard_policy
-let set_guard_policy : guard_policy -> unit __tac = __set_guard_policy
-
-let __dismiss : unit -> unit __tac = from_tac_1 B.dismiss
-let dismiss : unit -> unit __tac = __dismiss
-
-let __tadmit : unit -> unit __tac = from_tac_1 B.tadmit
-let tadmit : unit -> unit __tac = __tadmit
-
-let __inspect : RT.term -> RD.term_view __tac = from_tac_1 B.inspect
-let inspect   : RT.term -> RD.term_view __tac = __inspect
-
-let __pack : RD.term_view -> RT.term __tac = from_tac_1 B.pack
-let pack   : RD.term_view -> RT.term __tac = __pack

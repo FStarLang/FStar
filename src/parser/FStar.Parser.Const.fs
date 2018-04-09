@@ -21,6 +21,7 @@ open FStar.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Const
+open FStar.List
 module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
@@ -122,6 +123,7 @@ let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
+let order_lid       = p2l ["FStar"; "Order"; "order"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -221,23 +223,24 @@ let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
-let with_type_lid  = pconst "with_type"
+let with_type_lid  = psnconst "with_type"
 
 (* Constants for marking terms with normalization hints *)
-let normalize      = pconst "normalize"
-let normalize_term = pconst "normalize_term"
-let norm           = pconst "norm"
+let normalize      = psnconst "normalize"
+let normalize_term = psnconst "normalize_term"
+let norm           = psnconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl      = pconst "simplify"
-let steps_weak       = pconst "weak"
-let steps_hnf        = pconst "hnf"
-let steps_primops    = pconst "primops"
-let steps_zeta       = pconst "zeta"
-let steps_iota       = pconst "iota"
-let steps_delta      = pconst "delta"
-let steps_unfoldonly = pconst "delta_only"
-let steps_unfoldattr = pconst "delta_attr"
+let steps_simpl         = psnconst "simplify"
+let steps_weak          = psnconst "weak"
+let steps_hnf           = psnconst "hnf"
+let steps_primops       = psnconst "primops"
+let steps_zeta          = psnconst "zeta"
+let steps_iota          = psnconst "iota"
+let steps_delta         = psnconst "delta"
+let steps_unfoldonly    = psnconst "delta_only"
+let steps_unfoldfully   = psnconst "delta_fully"
+let steps_unfoldattr    = psnconst "delta_attr"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]

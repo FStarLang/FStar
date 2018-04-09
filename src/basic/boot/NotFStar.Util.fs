@@ -685,6 +685,7 @@ let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
   close_file fh
+let copy_file source_fn dest_fn = System.IO.File.Copy(source_fn, dest_fn)
 let flush_file (fh:file_handle) = fh.Flush()
 let file_get_contents f =
   File.ReadAllText f

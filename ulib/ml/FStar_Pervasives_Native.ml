@@ -100,3 +100,26 @@ let __proj__Mktuple8__item___7 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _7
 let __proj__Mktuple8__item___8 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
+
+type norm_step =
+    | Simpl
+    | Weak
+    | HNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly : string list -> norm_step
+    | UnfoldFully : string list -> norm_step
+
+let simplify : norm_step = Simpl
+let weak    : norm_step = Weak
+let hnf     : norm_step = HNF
+let primops : norm_step = Primops
+let delta   : norm_step = Delta
+let zeta    : norm_step = Zeta
+let iota    : norm_step = Iota
+let delta_only (s:string list) : norm_step = UnfoldOnly s
+let delta_fully (s:string list) : norm_step = UnfoldFully s
+                                            
+let singleton x = x

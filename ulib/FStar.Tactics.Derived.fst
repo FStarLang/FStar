@@ -27,6 +27,8 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact false t)
 
+let cur_module () : Tac (list string) =
+    moduleof (cur_env ())
 
 let focus (f : unit -> Tac 'a) : Tac 'a =
     let res, _ = divide 1 f (fun () -> ()) in
@@ -53,7 +55,6 @@ let exact_args (qs : list aqualv) (t : term) : Tac unit =
                         then unshelve uv
                         else ()) (L.rev uvs)
     )
-
 
 let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
@@ -138,7 +139,8 @@ private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
 let tcut (t:term) : Tac binder =
-    let tt = pack_ln (Tv_App (`__cut) (t, Q_Explicit)) in
+    let g = cur_goal () in
+    let tt = mk_e_app (`__cut) [t; g] in
     apply tt;
     intro ()
 
@@ -221,18 +223,12 @@ let rewrite_eqs_from_context () : Tac unit =
 let rewrite_equality (t:term) : Tac unit =
     try_rewrite_equality t (binders_of_env (cur_env ()))
 
-let unfold_point (t:term) : Tac unit =
-    let g : term = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l r ->
-        if term_eq l t
-        then (norm [delta]; trefl ())
-        else trefl ()
-    | _ ->
-        fail "impossible"
-
 let unfold_def (t:term) : Tac unit =
-    pointwise (fun () -> unfold_point t)
+    match inspect t with
+    | Tv_FVar fv ->
+        let n = String.concat "." (inspect_fv fv) in
+        norm [delta_fully [n]]
+    | _ -> fail "unfold_def: term is not a fv"
 
 let grewrite' (t1 t2 eq : term) : Tac unit =
     let g = cur_goal () in

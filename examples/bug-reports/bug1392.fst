@@ -2,8 +2,6 @@ module Bug1392
 
 open FStar.Tactics
 
-#set-options "--admit_smt_queries true"
-
 let unsquash #a : a -> squash a =
   fun _ -> ()
 
