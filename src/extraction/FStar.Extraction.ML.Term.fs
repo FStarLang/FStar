@@ -1331,8 +1331,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let e, ty = check_term_as_mlexpr env e f expected_t in
               let f = maybe_downgrade_eff env f expected_t in
               let meta =
-                  match ty with
-                  | MLTY_Erased -> [Erased]
+                  match f, ty with
+                  | E_PURE, MLTY_Erased
+                  | E_GHOST, MLTY_Erased -> [Erased]
                   | _ -> []
               in
               f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}

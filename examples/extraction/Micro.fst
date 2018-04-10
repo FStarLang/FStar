@@ -33,3 +33,7 @@ let h5 (x:nat) = f5 x && f5 x
 assume
 val f6 : string -> Dv string
 let h6 (s:string) c = c (f6 s)
+
+assume
+val f7: string -> Dv unit
+let h7:unit = f7 "hello"
