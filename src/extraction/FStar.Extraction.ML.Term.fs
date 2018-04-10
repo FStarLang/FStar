@@ -95,6 +95,9 @@ let err_ill_typed_application env (t : term) args (ty : mlty) =
                 (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")
                 (Code.string_of_mlty env.currentModule ty)))
 
+let err_ill_typed_erasure env pos (ty : mlty) =
+    fail pos (Fatal_IllTyped, (BU.format1 "Erased value found where a value of type %s was expected"
+                (Code.string_of_mlty env.currentModule ty)))
 
 let err_value_restriction t =
     fail t.pos (Fatal_ValueRestriction, (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
@@ -383,6 +386,29 @@ let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     let body = with_ty r <| MLE_App (e, vs_es) in
     with_ty t <| MLE_Fun (vs_ts, body)
 
+(* eta-expand `e` according to its type `t` *)
+let default_value_for_ty (g:env) (t : mlty) : option<mlexpr> =
+    let ts, r = doms_and_cod t in
+    let maybe_unit r =
+        let r =
+            match udelta_unfold g r with
+            | None -> r
+            | Some r -> r
+        in
+        match r with
+        | MLTY_Erased -> Some ml_unit
+        | _ ->
+          None
+    in
+    match maybe_unit r with
+    | None -> None
+    | Some body ->
+      if ts = []
+      then Some body
+      else let vs = List.map (fun _ -> fresh "a") ts in
+           let vs_ts = List.zip vs ts in
+           Some (with_ty t <| MLE_Fun (vs_ts, body))
+
 let maybe_eta_expand expect e =
     if Options.ml_no_eta_expand_coertions () ||
         Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
@@ -391,7 +417,7 @@ let maybe_eta_expand expect e =
 
 //maybe_coerce g e ty expect:
 //     Inserts an Obj.magic around e if ty </: expect
-let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
+let maybe_coerce pos (g:env) e ty (expect:mlty) : mlexpr  =
     let ty = eraseTypeDeep g ty in
     match type_leq_c g (Some e) ty expect with
         | true, Some e' -> e'
@@ -400,7 +426,14 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
                              (Code.string_of_mlexpr g.currentModule e)
                              (Code.string_of_mlty g.currentModule ty)
                              (Code.string_of_mlty g.currentModule expect));
-          maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
+          match ty with
+          | MLTY_Erased ->
+            //generate a default value suitable for the expected type
+            (match default_value_for_ty g expect with
+             | Some v -> v
+             | _ -> err_ill_typed_erasure g pos expect)
+          | _ ->
+            maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -875,13 +908,13 @@ and check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty)
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
       if eff_leq tag f
-      then maybe_coerce g ml_e t ty, ty
+      then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with
            | E_GHOST, E_PURE, MLTY_Erased -> //effect downgrading for erased results
-             maybe_coerce g ml_e t ty, ty
+             maybe_coerce e.pos g ml_e t ty, ty
            | _ ->
              err_unexpected_eff g e ty f tag;
-             maybe_coerce g ml_e t ty, ty
+             maybe_coerce e.pos g ml_e t ty, ty
 
 and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
@@ -1232,15 +1265,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let t = SS.compress t in
               let no_gen () =
                   let expected_t = term_as_mlty g t in
-                      (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
-                      (*                       (Print.lbname_to_string lbname) *)
-                      (*                       (Print.term_to_string t) *)
-                      (*                       (Code.string_of_mlty g.currentModule expected_t)); *)
                   (lbname_, f_e, (t, ([], ([],expected_t))), false, e)
               in
-              if not top_level
-              then no_gen()
-              else if must_erase g t
+              if must_erase g t
               then (lbname_, f_e, (t, ([], ([], MLTY_Erased))), false, e)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
                 match t.n with
@@ -1264,19 +1291,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         let bs, body = SS.open_term bs body in
                         if n_tbinders <= List.length bs
                         then let targs, rest_args = BU.first_N n_tbinders bs in
-//                             printfn "tbinders are %s\n" (tbinders |> (Print.binders_to_string ", "));
-//                             printfn "tbody is %s\n" (Print.typ_to_string tbody);
-//                             printfn "targs are %s\n" (targs |> Print.binders_to_string ", ");
                              let expected_source_ty =
                                 let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
                                 SS.subst s tbody in
-//                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
-                             (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
-                             (*                (Print.lbname_to_string lbname) *)
-                             (*                (Print.term_to_string expected_source_ty) *)
-                             (*                (Code.string_of_mlty g.currentModule expected_t)); *)
                              let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
                              let add_unit = match rest_args with
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
@@ -1387,8 +1406,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 let when_opt, f_when = match when_opt with
                     | None -> None, E_PURE
                     | Some w ->
+                        let w_pos = w.pos in
                         let w, f_w, t_w = term_as_mlexpr env w in
-                        let w = maybe_coerce env w t_w ml_bool_ty in
+                        let w = maybe_coerce w_pos env w t_w ml_bool_ty in
                         Some w, f_w in
                 let mlbranch, f_branch, t_branch = term_as_mlexpr env branch in
                 //Printf.printf "Extracted %s to %A\n" (Print.exp_to_string branch) mlbranch;
