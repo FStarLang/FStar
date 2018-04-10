@@ -275,9 +275,9 @@ and resugar_app f args es: expression =
              assert (length branches == 1);
              (match (hd branches) with
               | (_, _, x) -> build_expr x)
-          | _ -> failwith "Cannot resugar FStar.All.try_with"
+          | _ -> failwith "Cannot resugar FStar.All.try_with (1)"
          )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+      | _ -> failwith "Cannot resugar FStar.All.try_with (2)" in
     let variants = match cs.expr with
       | MLE_Fun (_, e) ->
          (match e.expr with
@@ -285,7 +285,7 @@ and resugar_app f args es: expression =
              map build_case branches
           | _ -> [build_case (MLP_Wild, None, e)]
          )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+      | _ -> failwith "Cannot resugar FStar.All.try_with (3)" in
     Exp.try_ body variants
   | _ -> Exp.apply f args
 
