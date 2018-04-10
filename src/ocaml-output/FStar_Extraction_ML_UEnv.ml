@@ -91,7 +91,7 @@ let (mkFvvar :
         FStar_Pervasives_Native.None
   
 let (erasedContent : FStar_Extraction_ML_Syntax.mlty) =
-  FStar_Extraction_ML_Syntax.ml_unit_ty 
+  FStar_Extraction_ML_Syntax.MLTY_Erased 
 let (erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty -> Prims.bool) =
   fun t  ->
     if t = FStar_Extraction_ML_Syntax.ml_unit_ty

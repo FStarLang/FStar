@@ -45,3 +45,14 @@ let h8 (x:int) = g8 ignore x; x + 1
 let h9 (x:int) (y:bool) =
   let id (#a:Type) (x:a) = x in
   id x, id y
+
+type my_squash (t:Type0) = squash t
+assume val f10: int -> Dv int
+assume val g10: int -> GTot int
+assume val h10: int -> my_squash int
+let test (x:int) =
+  let _ =
+    let y = g10 x in
+    h10 y
+  in
+  f10 x
