@@ -1,33 +1,31 @@
 module Micro
 
-let f (x:int) : Lemma (x == x) = ()
-let g (x:int) = f x; x + 1
+let f1 (x:int) : Lemma (x == x) = ()
+let g1 (x:int) = f1 x; x + 1
 
-let h #post ($f: (x:int -> Lemma (post x))) = f 0
-let i (x:int) = h f; x + 1
+let h2 #post ($f: (x:int -> Lemma (post x))) = f 0
+let i2 (x:int) = h2 f1; x + 1
 
-let h' #post ($f: (x:int -> Lemma (post x))) x = f 0; x + 1
-let i' (x:int) = h' f x
-
-
-let inversion (a:Type) = True
-let allow_inversion (a:Type) : Pure unit (requires True) (ensures (fun x -> inversion a)) = ()
-let invertOption (a:Type) = allow_inversion (list a)
+let h3 #post ($f: (x:int -> Lemma (post x))) x = f 0; x + 1
+let i3 (x:int) = h3 f1 x
 
 let weird0 (a:Type) : Pure a (requires (a == unit)) (ensures fun _ -> True) =
-  f 0
+  f1 0
 
 let weird1 (a:Type) (f: (int -> unit)) : Pure a (requires (a == unit)) (ensures fun _ -> True) =
-  f 0
+  f1 0
 
+#set-options "--lax"
 let weird2 (a:Type) (f: int -> unit) : Pure a (requires (a == (int -> unit))) (ensures fun _ -> True) =
-  f
+  f1
+#reset-options
 
-assume type t : Type -> Type
-assume val  f : nat -> GTot nat
-let ghost1 (#a:Type) (b:t a) (x:nat) : GTot nat = f x
+assume 
+val f4 : nat -> GTot nat
+let h4 (#a:Type) (x:nat) : GTot nat = f4 x
 
-let only (#a:Type0) (#rel:preorder a) (x:mref a rel) :GTot (set nat) = S.singleton (addr_of x)
-
-assume val f : nat -> Dv bool
-let test (x:nat) = f x && f x
+assume 
+val f5 : nat -> Dv bool
+#set-options "--lax"
+let h5 (x:nat) = f5 x && f5 x
+#reset-options

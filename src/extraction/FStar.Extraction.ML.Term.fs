@@ -1061,8 +1061,14 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                       //This is the main case of an actualy argument e0 provided to a function
                       //that expects an argument of type tExpected
                       let r = e0.pos in
-                      let e0, tInferred = check_term_as_mlexpr g e0 E_PURE tExpected in
-                      extract_app is_data (mlhead, (e0, E_PURE)::mlargs_f) (join_l r [f;f'], t) rest
+                      let expected_effect =
+                            if Options.lax()
+                            && FStar.TypeChecker.Util.short_circuit_head head
+                            then E_IMPURE
+                            else E_PURE in
+                      let e0, tInferred =
+                          check_term_as_mlexpr g e0 expected_effect tExpected in
+                      extract_app is_data (mlhead, (e0, expected_effect)::mlargs_f) (join_l r [f;f'], t) rest
 
                     | _ ->
                       begin match Util.udelta_unfold g t with
