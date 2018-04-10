@@ -59,7 +59,7 @@ let mkFvvar (l: lident) (t:typ) : fv = lid_as_fv l Delta_constant None
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice.
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = ml_unit_ty
+let erasedContent : mlty = MLTY_Erased
 
 let erasableTypeNoDelta (t:mlty) =
     if t = ml_unit_ty then true

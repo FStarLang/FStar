@@ -62,7 +62,6 @@ exception Un_extractable
 
 let type_leq g t1 t2 = Util.type_leq (Util.udelta_unfold g) t1 t2
 let type_leq_c g t1 t2 = Util.type_leq_c (Util.udelta_unfold g) t1 t2
-let erasableType g t = Util.erasableType (Util.udelta_unfold g) t
 let eraseTypeDeep g t = Util.eraseTypeDeep (Util.udelta_unfold g) t
 
 module Print = FStar.Syntax.Print
@@ -877,46 +876,20 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
 
         | _ -> mlAppExpr
 
-let maybe_downgrade_eff g f t =
-    let rec non_informative t =
-      if type_leq g t ml_unit_ty
-      || erasableType g t
-      then true
-      else match t with
-           | MLTY_Fun (_, E_PURE, t)
-           | MLTY_Fun (_, E_GHOST, t) ->
-             non_informative t
-           | _ -> false
-    in
-    if f = E_GHOST
-    && non_informative t
-    then E_PURE
-    else f
-
-let maybe_promote_effect tag t =
+let maybe_promote_effect ml_e tag t =
     match tag, t with
-    | E_GHOST, MLTY_Erased -> E_PURE
-    | _ -> tag
+    | E_GHOST, MLTY_Erased -> ml_unit, E_PURE
+    | _ -> ml_e, tag
 
 //The main extraction function
-let rec term_as_mlexpr (g:env) (t:term) : (mlexpr * e_tag * mlty) =
-    term_as_mlexpr' g t
-//    let tag = maybe_downgrade_eff g tag ty in
-//    (debug g (fun u -> BU.print_string (BU.format4 "term_as_mlexpr (%s) :  %s has ML type %s and effect %s\n"
-//        (Print.tag_of_term t)
-//        (Print.term_to_string t)
-//        (Code.string_of_mlty g.currentModule ty)
-//        (Util.eff_to_string tag))));
-//    erase g e ty tag
-
-and check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
+let rec check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     debug g (fun () -> BU.print2 "Checking %s at type %s\n" (Print.term_to_string e) (Code.string_of_mlty g.currentModule ty));
     match f, ty with
     | E_GHOST, _
     | E_PURE, MLTY_Erased -> ml_unit, MLTY_Erased
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
-      let tag = maybe_promote_effect tag t in
+      let ml_e, tag = maybe_promote_effect ml_e tag t in
       if eff_leq tag f
       then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with
@@ -926,7 +899,7 @@ and check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty)
              err_unexpected_eff g e ty f tag;
              maybe_coerce e.pos g ml_e t ty, ty
 
-and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
+and term_as_mlexpr (g:env) (top:term) : (mlexpr * e_tag * mlty) =
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
         (Print.tag_of_term top)
@@ -938,7 +911,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_uvar _
         | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
 
-        | Tm_lazy i -> term_as_mlexpr' g (U.unfold_lazy i)
+        | Tm_lazy i -> term_as_mlexpr g (U.unfold_lazy i)
 
         | Tm_type _
         | Tm_refine _
@@ -956,7 +929,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           | RD.Tv_Var bv ->
             begin match S.lookup_aq bv aqs with
             | Some (false, tm) ->
-              term_as_mlexpr' g tm
+              term_as_mlexpr g tm
 
             | Some (true, tm) ->
               let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
@@ -967,12 +940,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             | None ->
               let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos (RD.Tv_Var bv) in
               let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
-              term_as_mlexpr' g t
+              term_as_mlexpr g t
             end
           | tv ->
               let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos tv in
               let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
-              term_as_mlexpr' g t
+              term_as_mlexpr g t
           end
 
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
@@ -984,15 +957,15 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
               let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt g.tcenv m) in
               if qualifiers |> List.contains Reifiable |> not
-              then term_as_mlexpr' g t
+              then term_as_mlexpr g t
               else
                 failwith "This should not happen (should have been handled at Tm_abs level)"
-            | _ -> term_as_mlexpr' g t
+            | _ -> term_as_mlexpr g t
          end
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
-          term_as_mlexpr' g t
+          term_as_mlexpr g t
 
         | Tm_constant c ->
           let _, ty, _ = TcTerm.type_of_tot_term g.tcenv t in
@@ -1057,7 +1030,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
 
         | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); (r, _)]) ->
-          term_as_mlexpr' g t
+          term_as_mlexpr g t
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
@@ -1069,16 +1042,16 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           begin match head.n, (SS.compress head).n with
             | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
-              term_as_mlexpr' g t
+              term_as_mlexpr g t
 
             | _, Tm_abs(bs, _, Some rc) when is_total rc -> //this is a beta_redex --- also reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
-              term_as_mlexpr' g t
+              term_as_mlexpr g t
 
             | _, Tm_constant Const_reify ->
               let e = TcUtil.reify_body_with_arg g.tcenv head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
-              term_as_mlexpr' g tm
+              term_as_mlexpr g tm
 
             | _ ->
 
@@ -1358,7 +1331,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
-              let f = maybe_downgrade_eff env f expected_t in
+              let e, f = maybe_promote_effect e f expected_t in
               let meta =
                   match f, ty with
                   | E_PURE, MLTY_Erased
