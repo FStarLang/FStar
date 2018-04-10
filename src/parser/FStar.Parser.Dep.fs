@@ -964,12 +964,17 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
 
           // for building an executable from a given module:
           // foo.exe: dep1.krml dep2.krml etc.
-          smap_add transitive_krml 
+          let already_there =
+            match smap_try_find transitive_krml (norm_path (output_file ".krml" f)) with
+            | Some (_, already_there, _) -> already_there
+            | None -> []
+          in
+          smap_add transitive_krml
             (norm_path (output_file ".krml" f))
             (norm_path (output_file ".exe" f),
-              List.map
+              List.unique (already_there @ List.map
                 (fun x -> norm_path (output_file ".krml" x))
-                (deps_of (Mk (deps, file_system_map, all_cmd_line_files)) f),
+                (deps_of (Mk (deps, file_system_map, all_cmd_line_files)) f)),
               false);
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
