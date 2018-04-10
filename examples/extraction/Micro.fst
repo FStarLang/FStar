@@ -20,12 +20,16 @@ let weird2 (a:Type) (f: int -> unit) : Pure a (requires (a == (int -> unit))) (e
   f1
 #reset-options
 
-assume 
+assume
 val f4 : nat -> GTot nat
 let h4 (#a:Type) (x:nat) : GTot nat = f4 x
 
-assume 
+assume
 val f5 : nat -> Dv bool
 #set-options "--lax"
 let h5 (x:nat) = f5 x && f5 x
 #reset-options
+
+assume
+val f6 : string -> Dv string
+let h6 (s:string) c = c (f6 s)
