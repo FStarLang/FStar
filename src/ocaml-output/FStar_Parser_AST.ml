@@ -1418,19 +1418,17 @@ let focusBranches :
         FStar_Util.for_some FStar_Pervasives_Native.fst branches  in
       if should_filter
       then
-        let uu____4870 =
-          FStar_Errors.log_issue r
-            (FStar_Errors.Warning_Filtered, "Focusing on only some cases")
-           in
-        let focussed =
-          let uu____4882 =
-            FStar_List.filter FStar_Pervasives_Native.fst branches  in
-          FStar_All.pipe_right uu____4882
-            (FStar_List.map FStar_Pervasives_Native.snd)
-           in
-        let uu____4969 = let uu____4980 = mkWildAdmitMagic r  in [uu____4980]
-           in
-        FStar_List.append focussed uu____4969
+        (FStar_Errors.log_issue r
+           (FStar_Errors.Warning_Filtered, "Focusing on only some cases");
+         (let focussed =
+            let uu____4882 =
+              FStar_List.filter FStar_Pervasives_Native.fst branches  in
+            FStar_All.pipe_right uu____4882
+              (FStar_List.map FStar_Pervasives_Native.snd)
+             in
+          let uu____4969 =
+            let uu____4980 = mkWildAdmitMagic r  in [uu____4980]  in
+          FStar_List.append focussed uu____4969))
       else
         FStar_All.pipe_right branches
           (FStar_List.map FStar_Pervasives_Native.snd)
@@ -1448,20 +1446,18 @@ let focusLetBindings :
          in
       if should_filter
       then
-        let uu____5128 =
-          FStar_Errors.log_issue r
-            (FStar_Errors.Warning_Filtered,
-              "Focusing on only some cases in this (mutually) recursive definition")
-           in
-        FStar_List.map
-          (fun uu____5144  ->
-             match uu____5144 with
-             | (f,lb) ->
-                 if f
-                 then lb
-                 else
-                   (let uu____5172 = mkAdmitMagic r  in
-                    ((FStar_Pervasives_Native.fst lb), uu____5172))) lbs
+        (FStar_Errors.log_issue r
+           (FStar_Errors.Warning_Filtered,
+             "Focusing on only some cases in this (mutually) recursive definition");
+         FStar_List.map
+           (fun uu____5144  ->
+              match uu____5144 with
+              | (f,lb) ->
+                  if f
+                  then lb
+                  else
+                    (let uu____5172 = mkAdmitMagic r  in
+                     ((FStar_Pervasives_Native.fst lb), uu____5172))) lbs)
       else
         FStar_All.pipe_right lbs (FStar_List.map FStar_Pervasives_Native.snd)
   
@@ -1484,22 +1480,20 @@ let focusAttrLetBindings :
          in
       if should_filter
       then
-        let uu____5323 =
-          FStar_Errors.log_issue r
-            (FStar_Errors.Warning_Filtered,
-              "Focusing on only some cases in this (mutually) recursive definition")
-           in
-        FStar_List.map
-          (fun uu____5348  ->
-             match uu____5348 with
-             | (attr,(f,lb)) ->
-                 if f
-                 then (attr, lb)
-                 else
-                   (let uu____5401 =
-                      let uu____5406 = mkAdmitMagic r  in
-                      ((FStar_Pervasives_Native.fst lb), uu____5406)  in
-                    (attr, uu____5401))) lbs
+        (FStar_Errors.log_issue r
+           (FStar_Errors.Warning_Filtered,
+             "Focusing on only some cases in this (mutually) recursive definition");
+         FStar_List.map
+           (fun uu____5348  ->
+              match uu____5348 with
+              | (attr,(f,lb)) ->
+                  if f
+                  then (attr, lb)
+                  else
+                    (let uu____5401 =
+                       let uu____5406 = mkAdmitMagic r  in
+                       ((FStar_Pervasives_Native.fst lb), uu____5406)  in
+                     (attr, uu____5401))) lbs)
       else
         FStar_All.pipe_right lbs
           (FStar_List.map
@@ -1691,19 +1685,17 @@ let (as_frag :
                  let m1 = as_mlist ((m, d), []) ds2  in FStar_Util.Inl m1
              | uu____5948 ->
                  let ds2 = d :: ds1  in
-                 let uu____5952 =
-                   FStar_List.iter
-                     (fun uu___41_5959  ->
-                        match uu___41_5959 with
-                        | { d = TopLevelModule uu____5960; drange = r;
-                            doc = uu____5962; quals = uu____5963;
-                            attrs = uu____5964;_} ->
-                            FStar_Errors.raise_error
-                              (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
-                                "Unexpected module declaration") r
-                        | uu____5967 -> ()) ds2
-                    in
-                 FStar_Util.Inr ds2)
+                 (FStar_List.iter
+                    (fun uu___41_5959  ->
+                       match uu___41_5959 with
+                       | { d = TopLevelModule uu____5960; drange = r;
+                           doc = uu____5962; quals = uu____5963;
+                           attrs = uu____5964;_} ->
+                           FStar_Errors.raise_error
+                             (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
+                               "Unexpected module declaration") r
+                       | uu____5967 -> ()) ds2;
+                  FStar_Util.Inr ds2))
   
 let (compile_op :
   Prims.int -> Prims.string -> FStar_Range.range -> Prims.string) =

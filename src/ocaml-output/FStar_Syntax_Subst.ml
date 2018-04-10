@@ -150,13 +150,12 @@ let rec (try_read_memo_aux :
              let uu____743 = try_read_memo_aux t'  in
              (match uu____743 with
               | (t'1,shorten) ->
-                  let uu____762 =
-                    if shorten
-                    then
-                      FStar_ST.op_Colon_Equals m
-                        (FStar_Pervasives_Native.Some t'1)
-                    else ()  in
-                  (t'1, true)))
+                  (if shorten
+                   then
+                     FStar_ST.op_Colon_Equals m
+                       (FStar_Pervasives_Native.Some t'1)
+                   else ();
+                   (t'1, true))))
     | uu____821 -> (t, false)
   
 let (try_read_memo :
@@ -919,12 +918,11 @@ let rec (compress : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     let t1 = try_read_memo t  in
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_delayed ((t',s),memo) ->
-        let uu____3448 =
-          let uu____3449 =
+        ((let uu____3449 =
             let uu____3454 = push_subst s t'  in
             FStar_Pervasives_Native.Some uu____3454  in
-          FStar_ST.op_Colon_Equals memo uu____3449  in
-        compress t1
+          FStar_ST.op_Colon_Equals memo uu____3449);
+         compress t1)
     | uu____3512 ->
         let uu____3513 = force_uvar t1  in
         (match uu____3513 with

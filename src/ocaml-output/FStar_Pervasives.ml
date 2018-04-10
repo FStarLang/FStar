@@ -66,7 +66,7 @@ type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assert_p = unit[@@deriving show]
 type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assume_p = unit[@@deriving show]
 type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = unit[@@deriving show]
 type ('Aheap,'Aa,'Awp) all_trivial = unit[@@deriving show]
-type 'Aa inversion = Prims.l_True[@@deriving show]
+type 'Aa inversion = unit[@@deriving show]
 
 
 type ('a,'b) either =

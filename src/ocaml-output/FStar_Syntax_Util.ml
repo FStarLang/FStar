@@ -958,7 +958,6 @@ let rec (eq_tm :
         let uu____2523 = FStar_Syntax_Syntax.fv_eq f1 f2  in
         if uu____2523
         then
-          let uu____2524 = ()  in
           let uu____2525 = FStar_List.zip args1 args2  in
           FStar_All.pipe_left
             (FStar_List.fold_left
@@ -966,7 +965,6 @@ let rec (eq_tm :
                   fun uu____2583  ->
                     match uu____2583 with
                     | ((a1,q1),(a2,q2)) ->
-                        let uu____2608 = ()  in
                         let uu____2609 = eq_tm a1 a2  in
                         eq_inj acc uu____2609) Equal) uu____2525
         else NotEqual  in
@@ -3478,11 +3476,10 @@ let (check : Prims.string -> Prims.bool -> Prims.bool) =
       if cond
       then true
       else
-        (let uu____10652 =
-           let uu____10653 = FStar_ST.op_Bang debug_term_eq  in
-           if uu____10653
-           then FStar_Util.print1 ">>> term_eq failing: %s\n" msg
-           else ()  in
+        ((let uu____10653 = FStar_ST.op_Bang debug_term_eq  in
+          if uu____10653
+          then FStar_Util.print1 ">>> term_eq failing: %s\n" msg
+          else ());
          false)
   
 let (fail : Prims.string -> Prims.bool) = fun msg  -> check msg false 
@@ -3807,7 +3804,7 @@ let (term_eq :
       let r =
         let uu____11975 = FStar_ST.op_Bang debug_term_eq  in
         term_eq_dbg uu____11975 t1 t2  in
-      let uu____11999 = FStar_ST.op_Colon_Equals debug_term_eq false  in r
+      FStar_ST.op_Colon_Equals debug_term_eq false; r
   
 let rec (sizeof : FStar_Syntax_Syntax.term -> Prims.int) =
   fun t  ->
@@ -3894,14 +3891,13 @@ let (process_pragma :
           else ()
       | FStar_Syntax_Syntax.SetOptions o -> set_options1 FStar_Options.Set o
       | FStar_Syntax_Syntax.ResetOptions sopt ->
-          let uu____12215 =
-            let uu____12216 = FStar_Options.restore_cmd_line_options false
+          ((let uu____12216 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____12216 (fun a245  -> ())  in
-          (match sopt with
-           | FStar_Pervasives_Native.None  -> ()
-           | FStar_Pervasives_Native.Some s ->
-               set_options1 FStar_Options.Reset s)
+            FStar_All.pipe_right uu____12216 (fun a237  -> ()));
+           (match sopt with
+            | FStar_Pervasives_Native.None  -> ()
+            | FStar_Pervasives_Native.Some s ->
+                set_options1 FStar_Options.Reset s))
   
 let rec (unbound_variables :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv Prims.list) =

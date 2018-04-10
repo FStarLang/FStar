@@ -1581,22 +1581,18 @@ let (abs_ascription_to_string :
   =
   fun ascription  ->
     let strb = FStar_Util.new_string_builder ()  in
-    let uu____3011 =
-      match ascription with
-      | FStar_Pervasives_Native.None  ->
-          FStar_Util.string_builder_append strb "None"
-      | FStar_Pervasives_Native.Some (FStar_Util.Inl lc) ->
-          let uu____3021 = FStar_Util.string_builder_append strb "Some Inr "
-             in
-          let uu____3022 =
-            FStar_Ident.text_of_lid lc.FStar_Syntax_Syntax.eff_name  in
-          FStar_Util.string_builder_append strb uu____3022
-      | FStar_Pervasives_Native.Some (FStar_Util.Inr lid) ->
-          let uu____3028 = FStar_Util.string_builder_append strb "Some Inr "
-             in
-          let uu____3029 = FStar_Ident.text_of_lid lid  in
-          FStar_Util.string_builder_append strb uu____3029
-       in
+    (match ascription with
+     | FStar_Pervasives_Native.None  ->
+         FStar_Util.string_builder_append strb "None"
+     | FStar_Pervasives_Native.Some (FStar_Util.Inl lc) ->
+         (FStar_Util.string_builder_append strb "Some Inr ";
+          (let uu____3022 =
+             FStar_Ident.text_of_lid lc.FStar_Syntax_Syntax.eff_name  in
+           FStar_Util.string_builder_append strb uu____3022))
+     | FStar_Pervasives_Native.Some (FStar_Util.Inr lid) ->
+         (FStar_Util.string_builder_append strb "Some Inr ";
+          (let uu____3029 = FStar_Ident.text_of_lid lid  in
+           FStar_Util.string_builder_append strb uu____3029)));
     FStar_Util.string_of_string_builder strb
   
 let list_to_string :
@@ -1607,20 +1603,16 @@ let list_to_string :
       | [] -> "[]"
       | x::xs ->
           let strb = FStar_Util.new_string_builder ()  in
-          let uu____3061 = FStar_Util.string_builder_append strb "["  in
-          let uu____3062 =
-            let uu____3063 = f x  in
-            FStar_Util.string_builder_append strb uu____3063  in
-          let uu____3064 =
-            FStar_List.iter
-              (fun x1  ->
-                 let uu____3069 = FStar_Util.string_builder_append strb "; "
-                    in
-                 let uu____3070 = f x1  in
-                 FStar_Util.string_builder_append strb uu____3070) xs
-             in
-          let uu____3071 = FStar_Util.string_builder_append strb "]"  in
-          FStar_Util.string_of_string_builder strb
+          (FStar_Util.string_builder_append strb "[";
+           (let uu____3063 = f x  in
+            FStar_Util.string_builder_append strb uu____3063);
+           FStar_List.iter
+             (fun x1  ->
+                FStar_Util.string_builder_append strb "; ";
+                (let uu____3070 = f x1  in
+                 FStar_Util.string_builder_append strb uu____3070)) xs;
+           FStar_Util.string_builder_append strb "]";
+           FStar_Util.string_of_string_builder strb)
   
 let set_to_string :
   'a . ('a -> Prims.string) -> 'a FStar_Util.set -> Prims.string =
@@ -1631,20 +1623,16 @@ let set_to_string :
       | [] -> "{}"
       | x::xs ->
           let strb = FStar_Util.new_string_builder ()  in
-          let uu____3106 = FStar_Util.string_builder_append strb "{"  in
-          let uu____3107 =
-            let uu____3108 = f x  in
-            FStar_Util.string_builder_append strb uu____3108  in
-          let uu____3109 =
-            FStar_List.iter
-              (fun x1  ->
-                 let uu____3114 = FStar_Util.string_builder_append strb ", "
-                    in
-                 let uu____3115 = f x1  in
-                 FStar_Util.string_builder_append strb uu____3115) xs
-             in
-          let uu____3116 = FStar_Util.string_builder_append strb "}"  in
-          FStar_Util.string_of_string_builder strb
+          (FStar_Util.string_builder_append strb "{";
+           (let uu____3108 = f x  in
+            FStar_Util.string_builder_append strb uu____3108);
+           FStar_List.iter
+             (fun x1  ->
+                FStar_Util.string_builder_append strb ", ";
+                (let uu____3115 = f x1  in
+                 FStar_Util.string_builder_append strb uu____3115)) xs;
+           FStar_Util.string_builder_append strb "}";
+           FStar_Util.string_of_string_builder strb)
   
 let (bvs_to_string :
   Prims.string -> FStar_Syntax_Syntax.bv Prims.list -> Prims.string) =

@@ -214,76 +214,73 @@ let (disentangle_abbrevs_from_bundle :
                             failwith
                               "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
                          in
-                      let uu____641 =
-                        let uu____642 =
+                      ((let uu____642 =
                           let uu____645 = FStar_ST.op_Bang in_progress  in
                           lid :: uu____645  in
-                        FStar_ST.op_Colon_Equals in_progress uu____642  in
-                      (match uu____641 with
-                       | () ->
-                           let uu____746 = remove_not_unfolded lid  in
-                           (match uu____746 with
-                            | () ->
-                                let ty' =
-                                  FStar_Syntax_InstFV.inst unfold_abbrev_fv
-                                    lb.FStar_Syntax_Syntax.lbtyp
-                                   in
-                                let tm' =
-                                  FStar_Syntax_InstFV.inst unfold_abbrev_fv
-                                    lb.FStar_Syntax_Syntax.lbdef
-                                   in
-                                let lb' =
-                                  let uu___30_750 = lb  in
-                                  {
-                                    FStar_Syntax_Syntax.lbname =
-                                      (uu___30_750.FStar_Syntax_Syntax.lbname);
-                                    FStar_Syntax_Syntax.lbunivs =
-                                      (uu___30_750.FStar_Syntax_Syntax.lbunivs);
-                                    FStar_Syntax_Syntax.lbtyp = ty';
-                                    FStar_Syntax_Syntax.lbeff =
-                                      (uu___30_750.FStar_Syntax_Syntax.lbeff);
-                                    FStar_Syntax_Syntax.lbdef = tm';
-                                    FStar_Syntax_Syntax.lbattrs =
-                                      (uu___30_750.FStar_Syntax_Syntax.lbattrs);
-                                    FStar_Syntax_Syntax.lbpos =
-                                      (uu___30_750.FStar_Syntax_Syntax.lbpos)
-                                  }  in
-                                let sigelt' =
-                                  FStar_Syntax_Syntax.Sig_let
-                                    ((false, [lb']), [lid])
-                                   in
-                                let uu____762 =
-                                  let uu____763 =
-                                    let uu____766 =
-                                      FStar_ST.op_Bang
-                                        rev_unfolded_type_abbrevs
-                                       in
-                                    (let uu___31_819 = x  in
-                                     {
-                                       FStar_Syntax_Syntax.sigel = sigelt';
-                                       FStar_Syntax_Syntax.sigrng =
-                                         (uu___31_819.FStar_Syntax_Syntax.sigrng);
-                                       FStar_Syntax_Syntax.sigquals = quals1;
-                                       FStar_Syntax_Syntax.sigmeta =
-                                         (uu___31_819.FStar_Syntax_Syntax.sigmeta);
-                                       FStar_Syntax_Syntax.sigattrs =
-                                         (uu___31_819.FStar_Syntax_Syntax.sigattrs)
-                                     }) :: uu____766
+                        FStar_ST.op_Colon_Equals in_progress uu____642);
+                       (match () with
+                        | () ->
+                            (remove_not_unfolded lid;
+                             (match () with
+                              | () ->
+                                  let ty' =
+                                    FStar_Syntax_InstFV.inst unfold_abbrev_fv
+                                      lb.FStar_Syntax_Syntax.lbtyp
                                      in
-                                  FStar_ST.op_Colon_Equals
-                                    rev_unfolded_type_abbrevs uu____763
-                                   in
-                                (match uu____762 with
-                                 | () ->
-                                     let uu____869 =
-                                       let uu____870 =
-                                         let uu____873 =
-                                           FStar_ST.op_Bang in_progress  in
-                                         FStar_List.tl uu____873  in
-                                       FStar_ST.op_Colon_Equals in_progress
-                                         uu____870
-                                        in
-                                     (match uu____869 with | () -> tm'))))
+                                  let tm' =
+                                    FStar_Syntax_InstFV.inst unfold_abbrev_fv
+                                      lb.FStar_Syntax_Syntax.lbdef
+                                     in
+                                  let lb' =
+                                    let uu___30_750 = lb  in
+                                    {
+                                      FStar_Syntax_Syntax.lbname =
+                                        (uu___30_750.FStar_Syntax_Syntax.lbname);
+                                      FStar_Syntax_Syntax.lbunivs =
+                                        (uu___30_750.FStar_Syntax_Syntax.lbunivs);
+                                      FStar_Syntax_Syntax.lbtyp = ty';
+                                      FStar_Syntax_Syntax.lbeff =
+                                        (uu___30_750.FStar_Syntax_Syntax.lbeff);
+                                      FStar_Syntax_Syntax.lbdef = tm';
+                                      FStar_Syntax_Syntax.lbattrs =
+                                        (uu___30_750.FStar_Syntax_Syntax.lbattrs);
+                                      FStar_Syntax_Syntax.lbpos =
+                                        (uu___30_750.FStar_Syntax_Syntax.lbpos)
+                                    }  in
+                                  let sigelt' =
+                                    FStar_Syntax_Syntax.Sig_let
+                                      ((false, [lb']), [lid])
+                                     in
+                                  ((let uu____763 =
+                                      let uu____766 =
+                                        FStar_ST.op_Bang
+                                          rev_unfolded_type_abbrevs
+                                         in
+                                      (let uu___31_819 = x  in
+                                       {
+                                         FStar_Syntax_Syntax.sigel = sigelt';
+                                         FStar_Syntax_Syntax.sigrng =
+                                           (uu___31_819.FStar_Syntax_Syntax.sigrng);
+                                         FStar_Syntax_Syntax.sigquals =
+                                           quals1;
+                                         FStar_Syntax_Syntax.sigmeta =
+                                           (uu___31_819.FStar_Syntax_Syntax.sigmeta);
+                                         FStar_Syntax_Syntax.sigattrs =
+                                           (uu___31_819.FStar_Syntax_Syntax.sigattrs)
+                                       }) :: uu____766
+                                       in
+                                    FStar_ST.op_Colon_Equals
+                                      rev_unfolded_type_abbrevs uu____763);
+                                   (match () with
+                                    | () ->
+                                        ((let uu____870 =
+                                            let uu____873 =
+                                              FStar_ST.op_Bang in_progress
+                                               in
+                                            FStar_List.tl uu____873  in
+                                          FStar_ST.op_Colon_Equals
+                                            in_progress uu____870);
+                                         (match () with | () -> tm'))))))))
                   | uu____974 ->
                       failwith
                         "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"

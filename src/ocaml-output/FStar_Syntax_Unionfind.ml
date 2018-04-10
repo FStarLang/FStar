@@ -21,17 +21,16 @@ let (vops : vops_t) =
   let major = FStar_Util.mk_ref (Prims.parse_int "0")  in
   let minor = FStar_Util.mk_ref (Prims.parse_int "0")  in
   let next_major uu____68 =
-    let uu____69 = FStar_ST.op_Colon_Equals minor (Prims.parse_int "0")  in
-    let uu____115 =
-      let uu____116 = FStar_Util.incr major  in FStar_ST.op_Bang major  in
-    {
-      FStar_Syntax_Syntax.major = uu____115;
-      FStar_Syntax_Syntax.minor = (Prims.parse_int "0")
-    }  in
+    FStar_ST.op_Colon_Equals minor (Prims.parse_int "0");
+    (let uu____115 = FStar_Util.incr major; FStar_ST.op_Bang major  in
+     {
+       FStar_Syntax_Syntax.major = uu____115;
+       FStar_Syntax_Syntax.minor = (Prims.parse_int "0")
+     })
+     in
   let next_minor uu____200 =
     let uu____201 = FStar_ST.op_Bang major  in
-    let uu____247 =
-      let uu____248 = FStar_Util.incr minor  in FStar_ST.op_Bang minor  in
+    let uu____247 = FStar_Util.incr minor; FStar_ST.op_Bang minor  in
     {
       FStar_Syntax_Syntax.major = uu____201;
       FStar_Syntax_Syntax.minor = uu____247
@@ -96,16 +95,15 @@ let (reset : unit -> unit) =
 let (new_transaction : unit -> tx) =
   fun uu____486  ->
     let tx = let uu____488 = get ()  in TX uu____488  in
-    let uu____489 =
-      let uu____490 =
-        let uu___25_491 = get ()  in
-        let uu____492 = vops.next_minor ()  in
-        {
-          term_graph = (uu___25_491.term_graph);
-          univ_graph = (uu___25_491.univ_graph);
-          version = uu____492
-        }  in
-      set uu____490  in
+    (let uu____490 =
+       let uu___25_491 = get ()  in
+       let uu____492 = vops.next_minor ()  in
+       {
+         term_graph = (uu___25_491.term_graph);
+         univ_graph = (uu___25_491.univ_graph);
+         version = uu____492
+       }  in
+     set uu____490);
     tx
   
 let (commit : tx -> unit) = fun tx  -> () 

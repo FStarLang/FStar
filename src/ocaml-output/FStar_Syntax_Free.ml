@@ -299,16 +299,12 @@ and (free_names_and_uvars :
           let uu____986 = FStar_Syntax_Syntax.new_fv_set ()  in
           (n1, uu____986)
       | uu____991 ->
-          let uu____994 =
+          (FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
+             FStar_Pervasives_Native.None;
+           (let n1 = free_names_and_uvs' t1 use_cache  in
             FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
-              FStar_Pervasives_Native.None
-             in
-          let n1 = free_names_and_uvs' t1 use_cache  in
-          let uu____1023 =
-            FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
-              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1))
-             in
-          n1
+              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1));
+            n1))
 
 and (free_names_and_uvars_args :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
@@ -359,11 +355,9 @@ and (free_names_and_uvars_comp :
           let uu____1160 = should_invalidate_cache n1 use_cache  in
           if uu____1160
           then
-            let uu____1161 =
-              FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
-                FStar_Pervasives_Native.None
-               in
-            free_names_and_uvars_comp c use_cache
+            (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
+               FStar_Pervasives_Native.None;
+             free_names_and_uvars_comp c use_cache)
           else
             (let uu____1190 = FStar_Syntax_Syntax.new_fv_set ()  in
              (n1, uu____1190))
@@ -398,11 +392,9 @@ and (free_names_and_uvars_comp :
                        let uu____1247 = free_univs u  in union us1 uu____1247)
                   us ct.FStar_Syntax_Syntax.comp_univs
              in
-          let uu____1248 =
-            FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
-              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1))
-             in
-          n1
+          (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
+             (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1));
+           n1)
 
 and (should_invalidate_cache :
   FStar_Syntax_Syntax.free_vars -> Prims.bool -> Prims.bool) =

@@ -240,13 +240,12 @@ let (term_eq :
   fun t1  ->
     fun t2  ->
       let b = term_eq' t1 t2  in
-      let uu____1414 =
-        if Prims.op_Negation b
-        then
-          let uu____1415 = FStar_Syntax_Print.term_to_string t1  in
-          let uu____1416 = FStar_Syntax_Print.term_to_string t2  in
-          FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
-            uu____1415 uu____1416
-        else ()  in
+      if Prims.op_Negation b
+      then
+        (let uu____1415 = FStar_Syntax_Print.term_to_string t1  in
+         let uu____1416 = FStar_Syntax_Print.term_to_string t2  in
+         FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
+           uu____1415 uu____1416)
+      else ();
       b
   

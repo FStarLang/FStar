@@ -197,8 +197,7 @@ let rec (inspect_ln :
         FStar_Reflection_Data.Tv_Match (t3, brs1)
     | FStar_Syntax_Syntax.Tm_unknown  -> FStar_Reflection_Data.Tv_Unknown
     | uu____653 ->
-        let uu____654 =
-          let uu____655 =
+        ((let uu____655 =
             let uu____660 =
               let uu____661 = FStar_Syntax_Print.tag_of_term t2  in
               let uu____662 = FStar_Syntax_Print.term_to_string t2  in
@@ -207,8 +206,8 @@ let rec (inspect_ln :
                 uu____662
                in
             (FStar_Errors.Warning_CantInspect, uu____660)  in
-          FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu____655  in
-        FStar_Reflection_Data.Tv_Unknown
+          FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu____655);
+         FStar_Reflection_Data.Tv_Unknown)
   
 let (inspect_comp :
   FStar_Syntax_Syntax.comp -> FStar_Reflection_Data.comp_view) =

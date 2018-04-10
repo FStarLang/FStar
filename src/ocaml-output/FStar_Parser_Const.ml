@@ -196,8 +196,7 @@ let (dm4f_bind_range_attr : FStar_Ident.lident) =
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let gen1 uu____44 = let uu____45 = FStar_Util.incr x  in FStar_Util.read x
-     in
+  let gen1 uu____44 = FStar_Util.incr x; FStar_Util.read x  in
   let reset uu____106 = FStar_Util.write x (Prims.parse_int "0")  in
   (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 

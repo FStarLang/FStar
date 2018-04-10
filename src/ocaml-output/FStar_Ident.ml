@@ -55,19 +55,18 @@ let (reserved_prefix : Prims.string) = "uu___"
 let (_gen : FStar_Range.range -> ident) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
   fun r  ->
-    let uu____114 =
-      let uu____115 =
-        let uu____116 = FStar_ST.op_Bang x  in
-        uu____116 + (Prims.parse_int "1")  in
-      FStar_ST.op_Colon_Equals x uu____115  in
-    let uu____207 =
-      let uu____212 =
-        let uu____213 =
-          let uu____214 = FStar_ST.op_Bang x  in
-          Prims.string_of_int uu____214  in
-        Prims.strcat reserved_prefix uu____213  in
-      (uu____212, r)  in
-    mk_ident uu____207
+    (let uu____115 =
+       let uu____116 = FStar_ST.op_Bang x  in
+       uu____116 + (Prims.parse_int "1")  in
+     FStar_ST.op_Colon_Equals x uu____115);
+    (let uu____207 =
+       let uu____212 =
+         let uu____213 =
+           let uu____214 = FStar_ST.op_Bang x  in
+           Prims.string_of_int uu____214  in
+         Prims.strcat reserved_prefix uu____213  in
+       (uu____212, r)  in
+     mk_ident uu____207)
   
 let (gen : FStar_Range.range -> ident) = fun r  -> _gen r 
 let (id_of_text : Prims.string -> ident) =

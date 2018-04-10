@@ -13,12 +13,10 @@ let (generate : FStar_Parser_ParseIt.filename Prims.list -> unit) =
                in
             match uu____59 with
             | (doc1,comments2) ->
-                let uu____90 =
-                  FStar_Pprint.pretty_out_channel
-                    (FStar_Util.float_of_string "1.0")
-                    (Prims.parse_int "100") doc1 FStar_Util.stdout
-                   in
-                comments2
+                (FStar_Pprint.pretty_out_channel
+                   (FStar_Util.float_of_string "1.0") (Prims.parse_int "100")
+                   doc1 FStar_Util.stdout;
+                 comments2)
              in
           let left_over_doc =
             let uu____92 =

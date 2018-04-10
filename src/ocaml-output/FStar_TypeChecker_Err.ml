@@ -103,17 +103,16 @@ let (err_msg_type_strings :
         then
           FStar_Options.with_saved_options
             (fun uu____308  ->
-               let uu____309 =
-                 let uu____310 =
-                   FStar_Options.set_options FStar_Options.Set
-                     "--print_full_names --print_universes"
-                    in
-                 ()  in
-               let uu____311 =
-                 FStar_TypeChecker_Normalize.term_to_string env t1  in
-               let uu____312 =
-                 FStar_TypeChecker_Normalize.term_to_string env t2  in
-               (uu____311, uu____312))
+               (let uu____310 =
+                  FStar_Options.set_options FStar_Options.Set
+                    "--print_full_names --print_universes"
+                   in
+                ());
+               (let uu____311 =
+                  FStar_TypeChecker_Normalize.term_to_string env t1  in
+                let uu____312 =
+                  FStar_TypeChecker_Normalize.term_to_string env t2  in
+                (uu____311, uu____312)))
         else (s1, s2)
   
 let (exhaustiveness_check : Prims.string) = "Patterns are incomplete" 

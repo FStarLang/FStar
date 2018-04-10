@@ -2631,7 +2631,7 @@ let (default_handler : error_handler) =
     let sorted1 =
       let uu____3724 = FStar_ST.op_Bang errs  in
       FStar_List.sortWith compare_issues uu____3724  in
-    let uu____3776 = FStar_List.iter print_issue sorted1  in sorted1  in
+    FStar_List.iter print_issue sorted1; sorted1  in
   let clear1 uu____3782 = FStar_ST.op_Colon_Equals errs []  in
   {
     eh_add_one = add_one;
@@ -2699,8 +2699,8 @@ let (clear : unit -> unit) =
 let (set_handler : error_handler -> unit) =
   fun handler  ->
     let issues = report_all ()  in
-    let uu____4069 = clear ()  in
-    let uu____4070 = FStar_ST.op_Colon_Equals current_handler handler  in
+    clear ();
+    FStar_ST.op_Colon_Equals current_handler handler;
     add_many issues
   
 type error_message_prefix =
@@ -2978,12 +2978,11 @@ let (update_flags :
              in
           (match uu____5136 with
            | (l2,h) ->
-               let uu____5174 =
-                 if
-                   (l2 < (Prims.parse_int "0")) ||
-                     (h >= (FStar_List.length default_flags))
-                 then
-                   let uu____5179 =
+               (if
+                  (l2 < (Prims.parse_int "0")) ||
+                    (h >= (FStar_List.length default_flags))
+                then
+                  (let uu____5179 =
                      let uu____5184 =
                        let uu____5185 = FStar_Util.string_of_int l2  in
                        let uu____5186 = FStar_Util.string_of_int h  in
@@ -2991,9 +2990,9 @@ let (update_flags :
                          uu____5185 uu____5186
                         in
                      (Fatal_InvalidWarnErrorSetting, uu____5184)  in
-                   raise_err uu____5179
-                 else ()  in
-               compute_range (FStar_List.append result [(f, (l2, h))]) tl1)
+                   raise_err uu____5179)
+                else ();
+                compute_range (FStar_List.append result [(f, (l2, h))]) tl1))
        in
     let range = compute_range [] l  in
     let sorted1 = FStar_List.sortWith compare1 range  in

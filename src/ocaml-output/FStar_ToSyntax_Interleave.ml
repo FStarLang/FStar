@@ -238,7 +238,7 @@ let (check_initial_interface :
                   else ())
            | uu____792 -> ())
        in
-    let uu____793 = aux iface1  in
+    aux iface1;
     FStar_All.pipe_right iface1
       (FStar_List.filter
          (fun d  ->

@@ -86,17 +86,16 @@ let (e_unit : unit embedding) =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_unit ) ->
         FStar_Pervasives_Native.Some ()
     | uu____427 ->
-        let uu____428 =
-          if w
-          then
-            let uu____429 =
+        (if w
+         then
+           (let uu____429 =
               let uu____434 =
                 let uu____435 = FStar_Syntax_Print.term_to_string t  in
                 FStar_Util.format1 "Not an embedded unit: %s" uu____435  in
               (FStar_Errors.Warning_NotEmbedded, uu____434)  in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____429
-          else ()  in
-        FStar_Pervasives_Native.None
+            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____429)
+         else ();
+         FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_unit 
 let (e_bool : Prims.bool embedding) =
@@ -117,17 +116,16 @@ let (e_bool : Prims.bool embedding) =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool b) ->
         FStar_Pervasives_Native.Some b
     | uu____478 ->
-        let uu____479 =
-          if w
-          then
-            let uu____480 =
+        (if w
+         then
+           (let uu____480 =
               let uu____485 =
                 let uu____486 = FStar_Syntax_Print.term_to_string t0  in
                 FStar_Util.format1 "Not an embedded bool: %s" uu____486  in
               (FStar_Errors.Warning_NotEmbedded, uu____485)  in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____480
-          else ()  in
-        FStar_Pervasives_Native.None
+            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____480)
+         else ();
+         FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_bool 
 let (e_char : FStar_Char.char embedding) =
@@ -145,17 +143,16 @@ let (e_char : FStar_Char.char embedding) =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_char c) ->
         FStar_Pervasives_Native.Some c
     | uu____528 ->
-        let uu____529 =
-          if w
-          then
-            let uu____530 =
+        (if w
+         then
+           (let uu____530 =
               let uu____535 =
                 let uu____536 = FStar_Syntax_Print.term_to_string t0  in
                 FStar_Util.format1 "Not an embedded char: %s" uu____536  in
               (FStar_Errors.Warning_NotEmbedded, uu____535)  in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____530
-          else ()  in
-        FStar_Pervasives_Native.None
+            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____530)
+         else ();
+         FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_char 
 let (e_int : FStar_BigInt.t embedding) =
@@ -177,17 +174,16 @@ let (e_int : FStar_BigInt.t embedding) =
         let uu____588 = FStar_BigInt.big_int_of_string s  in
         FStar_Pervasives_Native.Some uu____588
     | uu____589 ->
-        let uu____590 =
-          if w
-          then
-            let uu____591 =
+        (if w
+         then
+           (let uu____591 =
               let uu____596 =
                 let uu____597 = FStar_Syntax_Print.term_to_string t0  in
                 FStar_Util.format1 "Not an embedded int: %s" uu____597  in
               (FStar_Errors.Warning_NotEmbedded, uu____596)  in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____591
-          else ()  in
-        FStar_Pervasives_Native.None
+            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____591)
+         else ();
+         FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_int 
 let (e_string : Prims.string embedding) =
@@ -202,17 +198,16 @@ let (e_string : Prims.string embedding) =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string
         (s,uu____631)) -> FStar_Pervasives_Native.Some s
     | uu____632 ->
-        let uu____633 =
-          if w
-          then
-            let uu____634 =
+        (if w
+         then
+           (let uu____634 =
               let uu____639 =
                 let uu____640 = FStar_Syntax_Print.term_to_string t0  in
                 FStar_Util.format1 "Not an embedded string: %s" uu____640  in
               (FStar_Errors.Warning_NotEmbedded, uu____639)  in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____634
-          else ()  in
-        FStar_Pervasives_Native.None
+            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____634)
+         else ();
+         FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_string 
 let e_option :
@@ -282,10 +277,9 @@ let e_option :
                     FStar_Pervasives_Native.Some
                       (FStar_Pervasives_Native.Some a1))
            | uu____864 ->
-               let uu____877 =
-                 if w
-                 then
-                   let uu____878 =
+               (if w
+                then
+                  (let uu____878 =
                      let uu____883 =
                        let uu____884 = FStar_Syntax_Print.term_to_string t0
                           in
@@ -294,9 +288,9 @@ let e_option :
                         in
                      (FStar_Errors.Warning_NotEmbedded, uu____883)  in
                    FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
-                     uu____878
-                 else ()  in
-               FStar_Pervasives_Native.None)
+                     uu____878)
+                else ();
+                FStar_Pervasives_Native.None))
        in
     let uu____888 =
       let uu____889 = type_of ea  in
@@ -367,10 +361,9 @@ let e_tuple2 :
                       FStar_Util.bind_opt uu____1145
                         (fun b1  -> FStar_Pervasives_Native.Some (a1, b1)))
              | uu____1158 ->
-                 let uu____1171 =
-                   if w
-                   then
-                     let uu____1172 =
+                 (if w
+                  then
+                    (let uu____1172 =
                        let uu____1177 =
                          let uu____1178 =
                            FStar_Syntax_Print.term_to_string t0  in
@@ -379,9 +372,9 @@ let e_tuple2 :
                           in
                        (FStar_Errors.Warning_NotEmbedded, uu____1177)  in
                      FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
-                       uu____1172
-                   else ()  in
-                 FStar_Pervasives_Native.None)
+                       uu____1172)
+                  else ();
+                  FStar_Pervasives_Native.None))
          in
       let uu____1184 =
         let uu____1185 = type_of ea  in
@@ -453,10 +446,9 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                     FStar_Util.bind_opt uu____1434
                       (fun tl2  -> FStar_Pervasives_Native.Some (hd3 :: tl2)))
            | uu____1449 ->
-               let uu____1462 =
-                 if w
-                 then
-                   let uu____1463 =
+               (if w
+                then
+                  (let uu____1463 =
                      let uu____1468 =
                        let uu____1469 = FStar_Syntax_Print.term_to_string t0
                           in
@@ -465,9 +457,9 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                         in
                      (FStar_Errors.Warning_NotEmbedded, uu____1468)  in
                    FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
-                     uu____1463
-                 else ()  in
-               FStar_Pervasives_Native.None)
+                     uu____1463)
+                else ();
+                FStar_Pervasives_Native.None))
        in
     let uu____1473 =
       let uu____1474 = type_of ea  in
@@ -652,10 +644,9 @@ let (e_norm_step : norm_step embedding) =
                FStar_Parser_Const.steps_unfoldattr
              -> FStar_Pervasives_Native.Some (UnfoldAttr a)
          | uu____1981 ->
-             let uu____1994 =
-               if w
-               then
-                 let uu____1995 =
+             (if w
+              then
+                (let uu____1995 =
                    let uu____2000 =
                      let uu____2001 = FStar_Syntax_Print.term_to_string t0
                         in
@@ -663,9 +654,9 @@ let (e_norm_step : norm_step embedding) =
                        uu____2001
                       in
                    (FStar_Errors.Warning_NotEmbedded, uu____2000)  in
-                 FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____1995
-               else ()  in
-             FStar_Pervasives_Native.None)
+                 FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____1995)
+              else ();
+              FStar_Pervasives_Native.None))
      in
   mk_emb em un FStar_Syntax_Syntax.t_norm_step 
 let (e_range : FStar_Range.range embedding) =
@@ -680,17 +671,16 @@ let (e_range : FStar_Range.range embedding) =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
         FStar_Pervasives_Native.Some r
     | uu____2035 ->
-        let uu____2036 =
-          if w
-          then
-            let uu____2037 =
+        (if w
+         then
+           (let uu____2037 =
               let uu____2042 =
                 let uu____2043 = FStar_Syntax_Print.term_to_string t0  in
                 FStar_Util.format1 "Not an embedded range: %s" uu____2043  in
               (FStar_Errors.Warning_NotEmbedded, uu____2042)  in
-            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____2037
-          else ()  in
-        FStar_Pervasives_Native.None
+            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____2037)
+         else ();
+         FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_range 
 let embed_arrow_1 :

@@ -56,11 +56,12 @@ let (fresh_label :
     fun range  ->
       fun t  ->
         let l =
-          let uu____255 = FStar_Util.incr ctr  in
-          let uu____289 =
-            let uu____290 = FStar_ST.op_Bang ctr  in
-            FStar_Util.string_of_int uu____290  in
-          FStar_Util.format1 "label_%s" uu____289  in
+          FStar_Util.incr ctr;
+          (let uu____289 =
+             let uu____290 = FStar_ST.op_Bang ctr  in
+             FStar_Util.string_of_int uu____290  in
+           FStar_Util.format1 "label_%s" uu____289)
+           in
         let lvar = (l, FStar_SMTEncoding_Term.Bool_sort)  in
         let label = (lvar, message, range)  in
         let lterm = FStar_SMTEncoding_Util.mkFreeV lvar  in
@@ -782,38 +783,36 @@ let (detail_errors :
                         FStar_SMTEncoding_Term.Assume a))
              in
           let rec linear_check eliminated errors active =
-            let uu____2257 = FStar_SMTEncoding_Z3.refresh ()  in
-            match active with
-            | [] ->
-                let results =
-                  let uu____2277 =
-                    FStar_List.map (fun x  -> (x, true)) eliminated  in
-                  let uu____2290 =
-                    FStar_List.map (fun x  -> (x, false)) errors  in
-                  FStar_List.append uu____2277 uu____2290  in
-                sort_labels results
-            | hd1::tl1 ->
-                let uu____2311 =
-                  let uu____2312 =
-                    FStar_Util.string_of_int (FStar_List.length active)  in
-                  FStar_Util.print1 "%s, " uu____2312  in
-                let decls =
-                  FStar_All.pipe_left elim
-                    (FStar_List.append eliminated
-                       (FStar_List.append errors tl1))
-                   in
-                let result = askZ3 decls  in
-                (match result.FStar_SMTEncoding_Z3.z3result_status with
-                 | FStar_SMTEncoding_Z3.UNSAT uu____2343 ->
-                     linear_check (hd1 :: eliminated) errors tl1
-                 | uu____2344 -> linear_check eliminated (hd1 :: errors) tl1)
+            FStar_SMTEncoding_Z3.refresh ();
+            (match active with
+             | [] ->
+                 let results =
+                   let uu____2277 =
+                     FStar_List.map (fun x  -> (x, true)) eliminated  in
+                   let uu____2290 =
+                     FStar_List.map (fun x  -> (x, false)) errors  in
+                   FStar_List.append uu____2277 uu____2290  in
+                 sort_labels results
+             | hd1::tl1 ->
+                 ((let uu____2312 =
+                     FStar_Util.string_of_int (FStar_List.length active)  in
+                   FStar_Util.print1 "%s, " uu____2312);
+                  (let decls =
+                     FStar_All.pipe_left elim
+                       (FStar_List.append eliminated
+                          (FStar_List.append errors tl1))
+                      in
+                   let result = askZ3 decls  in
+                   match result.FStar_SMTEncoding_Z3.z3result_status with
+                   | FStar_SMTEncoding_Z3.UNSAT uu____2343 ->
+                       linear_check (hd1 :: eliminated) errors tl1
+                   | uu____2344 ->
+                       linear_check eliminated (hd1 :: errors) tl1)))
              in
-          let uu____2345 = print_banner ()  in
-          let uu____2346 =
-            FStar_Options.set_option "z3rlimit"
-              (FStar_Options.Int (Prims.parse_int "5"))
-             in
-          let res = linear_check [] [] all_labels  in
-          let uu____2360 = FStar_Util.print_string "\n"  in
-          FStar_All.pipe_right res (FStar_List.iter print_result)
+          print_banner ();
+          FStar_Options.set_option "z3rlimit"
+            (FStar_Options.Int (Prims.parse_int "5"));
+          (let res = linear_check [] [] all_labels  in
+           FStar_Util.print_string "\n";
+           FStar_All.pipe_right res (FStar_List.iter print_result))
   

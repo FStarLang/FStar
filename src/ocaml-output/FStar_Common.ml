@@ -20,6 +20,6 @@ let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
           (match uu____33 with
            | (uu____40,out,uu____42) ->
                let out1 = FStar_Util.trim_string out  in
-               let uu____44 = FStar_Util.smap_add cache s out1  in out1)
+               (FStar_Util.smap_add cache s out1; out1))
     else s
   

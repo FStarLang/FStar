@@ -241,17 +241,15 @@ let (document_decl : (Prims.string -> unit) -> FStar_Parser_AST.decl -> unit)
             FStar_Parser_AST.doc = fsdoc;
             FStar_Parser_AST.quals = uu____1053;
             FStar_Parser_AST.attrs = uu____1054;_} ->
-            let uu____1057 =
-              let uu____1058 =
+            ((let uu____1058 =
                 let uu____1059 = string_of_decl' d.FStar_Parser_AST.d  in
                 code_wrap uu____1059  in
-              w uu____1058  in
-            let uu____1060 =
-              match fsdoc with
+              w uu____1058);
+             (match fsdoc with
               | FStar_Pervasives_Native.Some (doc1,_kw) ->
                   w (Prims.strcat "\n" doc1)
-              | uu____1085 -> ()  in
-            w ""
+              | uu____1085 -> ());
+             w "")
       else ()
   
 let document_toplevel :
@@ -317,20 +315,17 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
                     match comment with
                     | FStar_Pervasives_Native.Some s -> s
                     | FStar_Pervasives_Native.None  -> no_comment  in
-                  let uu____1306 =
-                    let uu____1307 =
+                  ((let uu____1307 =
                       FStar_Util.format "# module %s" [name.FStar_Ident.str]
                        in
-                    w uu____1307  in
-                  let uu____1308 =
-                    let uu____1309 = FStar_Util.format "%s\n" [summary1]  in
-                    w uu____1309  in
-                  let uu____1310 =
-                    let uu____1311 = FStar_Util.format "%s\n" [comment1]  in
-                    w uu____1311  in
-                  let uu____1312 =
-                    FStar_List.iter (document_decl w) other_decls  in
-                  let uu____1313 = FStar_Util.close_file fd  in name)
+                    w uu____1307);
+                   (let uu____1309 = FStar_Util.format "%s\n" [summary1]  in
+                    w uu____1309);
+                   (let uu____1311 = FStar_Util.format "%s\n" [comment1]  in
+                    w uu____1311);
+                   FStar_List.iter (document_decl w) other_decls;
+                   FStar_Util.close_file fd;
+                   name))
          | FStar_Pervasives_Native.None  ->
              let uu____1320 =
                let uu____1325 =
@@ -351,11 +346,9 @@ let (generate : Prims.string Prims.list -> unit) =
     let mods = FStar_List.map document_module modules  in
     let on = FStar_Options.prepend_output_dir "index.md"  in
     let fd = FStar_Util.open_file_for_writing on  in
-    let uu____1363 =
-      FStar_List.iter
-        (fun m  ->
-           let uu____1367 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in
-           FStar_Util.append_to_file fd uu____1367) mods
-       in
+    FStar_List.iter
+      (fun m  ->
+         let uu____1367 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in
+         FStar_Util.append_to_file fd uu____1367) mods;
     FStar_Util.close_file fd
   

@@ -566,11 +566,9 @@ let (free_variables : term -> fvs) =
         let fvs =
           let uu____1666 = freevars t  in
           FStar_Util.remove_dups fv_eq uu____1666  in
-        let uu____1669 =
-          FStar_ST.op_Colon_Equals t.freevars
-            (FStar_Pervasives_Native.Some fvs)
-           in
-        fvs
+        (FStar_ST.op_Colon_Equals t.freevars
+           (FStar_Pervasives_Native.Some fvs);
+         fvs)
   
 let (qop_to_string : qop -> Prims.string) =
   fun uu___50_1715  ->
@@ -1620,7 +1618,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
           let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
           fun depth  ->
             let n1 = FStar_ST.op_Bang ctr  in
-            let uu____5180 = FStar_Util.incr ctr  in
+            FStar_Util.incr ctr;
             if n1 = (Prims.parse_int "0")
             then enclosing_name
             else
@@ -1917,16 +1915,15 @@ let (__range_c : Prims.int FStar_ST.ref) =
 let (mk_Range_const : unit -> term) =
   fun uu____6277  ->
     let i = FStar_ST.op_Bang __range_c  in
-    let uu____6302 =
-      let uu____6303 =
-        let uu____6304 = FStar_ST.op_Bang __range_c  in
-        uu____6304 + (Prims.parse_int "1")  in
-      FStar_ST.op_Colon_Equals __range_c uu____6303  in
-    let uu____6351 =
-      let uu____6358 = let uu____6361 = mkInteger' i norng  in [uu____6361]
-         in
-      ("Range_const", uu____6358)  in
-    mkApp uu____6351 norng
+    (let uu____6303 =
+       let uu____6304 = FStar_ST.op_Bang __range_c  in
+       uu____6304 + (Prims.parse_int "1")  in
+     FStar_ST.op_Colon_Equals __range_c uu____6303);
+    (let uu____6351 =
+       let uu____6358 = let uu____6361 = mkInteger' i norng  in [uu____6361]
+          in
+       ("Range_const", uu____6358)  in
+     mkApp uu____6351 norng)
   
 let (mk_Term_type : term) = mkApp ("Tm_type", []) norng 
 let (mk_Term_app : term -> term -> FStar_Range.range -> term) =

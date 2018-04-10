@@ -1083,9 +1083,7 @@ let (lcomp_comp : lcomp -> comp) =
     match uu____4151 with
     | FStar_Util.Inl thunk ->
         let c = thunk ()  in
-        let uu____4224 =
-          FStar_ST.op_Colon_Equals lc.comp_thunk (FStar_Util.Inr c)  in
-        c
+        (FStar_ST.op_Colon_Equals lc.comp_thunk (FStar_Util.Inr c); c)
     | FStar_Util.Inr c -> c
   
 type tscheme = (univ_name Prims.list,typ) FStar_Pervasives_Native.tuple2
@@ -2243,8 +2241,7 @@ let (pat_bvs : pat -> bv Prims.list) =
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let gen1 uu____7482 =
-    let uu____7483 = FStar_Util.incr x  in FStar_ST.op_Bang x  in
+  let gen1 uu____7482 = FStar_Util.incr x; FStar_ST.op_Bang x  in
   let reset uu____7567 = FStar_ST.op_Colon_Equals x (Prims.parse_int "0")  in
   (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
@@ -2394,7 +2391,6 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
           let uu____7997 = fv_eq fv1 fv2  in
           if uu____7997
           then
-            let uu____7998 = ()  in
             let uu____7999 = FStar_List.zip as1 as2  in
             FStar_All.pipe_right uu____7999
               (FStar_List.for_all
