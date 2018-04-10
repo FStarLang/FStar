@@ -419,7 +419,8 @@ let must_erase (g:env) (t:typ) =
           let bs, c = U.arrow_formals_comp t in
           let env = FStar.TypeChecker.Env.push_binders env bs in
           if U.is_pure_comp c
-          then aux env (U.comp_result c)
+          then (//printfn "t is %s; %s is pure!" (Print.term_to_string t) (Print.comp_to_string c);
+                aux env (U.comp_result c))
           else U.is_pure_or_ghost_comp c //erase it if it is ghost
         | Tm_refine({sort=t}, _)
         | Tm_ascribed(t, _, _) ->
@@ -435,6 +436,7 @@ let must_erase (g:env) (t:typ) =
                              N.AllowUnboundUniverses;
                              N.Zeta;
                              N.Iota] env t in
+//        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
         let res = aux_whnf env t in
         debug g (fun () -> BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t));
         res
