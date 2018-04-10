@@ -47,8 +47,8 @@ let (combine : doc -> doc Prims.list -> doc) =
     fun docs  ->
       match uu____114 with
       | Doc sep ->
-          let select uu____125 =
-            match uu____125 with
+          let select uu____126 =
+            match uu____126 with
             | Doc d ->
                 if d = ""
                 then FStar_Pervasives_Native.None
@@ -61,12 +61,12 @@ let (cat1 : doc -> doc -> doc) =
   fun d1  -> fun d2  -> reduce [d1; break1; d2] 
 let (reduce1 : doc Prims.list -> doc) = fun docs  -> combine break1 docs 
 let (nest : Prims.int -> doc -> doc) =
-  fun i  -> fun uu____163  -> match uu____163 with | Doc d -> Doc d 
+  fun i  -> fun uu____164  -> match uu____164 with | Doc d -> Doc d 
 let (align : doc Prims.list -> doc) =
   fun docs  ->
-    let uu____174 = combine hardline docs  in
-    match uu____174 with | Doc doc -> Doc doc
+    let uu____175 = combine hardline docs  in
+    match uu____175 with | Doc doc -> Doc doc
   
 let (hbox : doc -> doc) = fun d  -> d 
 let (pretty : Prims.int -> doc -> Prims.string) =
-  fun sz  -> fun uu____190  -> match uu____190 with | Doc doc -> doc 
+  fun sz  -> fun uu____191  -> match uu____191 with | Doc doc -> doc 

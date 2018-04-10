@@ -37,3 +37,11 @@ let h6 (s:string) c = c (f6 s)
 assume
 val f7: string -> Dv unit
 let h7:unit = f7 "hello"
+
+let g8 (f:int -> 'b) (x:int) : Dv 'b = f x
+let ignore (x:int) : unit = ()
+let h8 (x:int) = g8 ignore x; x + 1
+
+let h9 (x:int) (y:bool) =
+  let id (#a:Type) (x:a) = x in
+  id x, id y
