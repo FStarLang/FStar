@@ -458,6 +458,10 @@ let must_erase (g:env) (t:typ) =
         | Tm_refine({sort=t}, _)
         | Tm_ascribed(t, _, _) ->
           aux env t
+        | Tm_app(head, [_]) ->
+          (match (U.un_uinst head).n with
+           | Tm_fvar fv -> fv_eq_lid fv PC.erased_lid
+           | _ -> false)
         | _ ->
           false
     and aux env t =
@@ -889,6 +893,11 @@ let maybe_downgrade_eff g f t =
     then E_PURE
     else f
 
+let maybe_promote_effect tag t =
+    match tag, t with
+    | E_GHOST, MLTY_Erased -> E_PURE
+    | _ -> tag
+
 //The main extraction function
 let rec term_as_mlexpr (g:env) (t:term) : (mlexpr * e_tag * mlty) =
     term_as_mlexpr' g t
@@ -907,6 +916,7 @@ and check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty)
     | E_PURE, MLTY_Erased -> ml_unit, MLTY_Erased
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
+      let tag = maybe_promote_effect tag t in
       if eff_leq tag f
       then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with

@@ -8,6 +8,8 @@ open FStar_HyperStack
 let push_frame () = ()
 let pop_frame () = ()
 
+let root = ()
+
 let def_rid = root
 
 let salloc (contents:'a) :('a reference) =
