@@ -275,7 +275,9 @@ and resugar_app f args es: expression =
              assert (length branches == 1);
              (match (hd branches) with
               | (_, _, x) -> build_expr x)
-          | _ -> failwith "Cannot resugar FStar.All.try_with (1)"
+          | _ -> failwith ("Cannot resugar FStar.All.try_with (1)" ^
+                           (FStar_Extraction_ML_Code.string_of_mlexpr ([], "?") s))
+
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with (2)" in
     let variants = match cs.expr with

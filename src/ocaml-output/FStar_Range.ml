@@ -71,8 +71,8 @@ let (set_use_range : range -> rng -> range) =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___25_98 = r2  in
-        { def_range = (uu___25_98.def_range); use_range = use_rng }
+        let uu___25_132 = r2  in
+        { def_range = (uu___25_132.def_range); use_range = use_rng }
       else r2
   
 let (set_def_range : range -> rng -> range) =
@@ -80,8 +80,8 @@ let (set_def_range : range -> rng -> range) =
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___26_106 = r2  in
-        { def_range = def_rng; use_range = (uu___26_106.use_range) }
+        let uu___26_144 = r2  in
+        { def_range = def_rng; use_range = (uu___26_144.use_range) }
       else r2
   
 let (mk_pos : Prims.int -> Prims.int -> pos) =
@@ -124,15 +124,15 @@ let (union_ranges : range -> range -> range) =
   
 let (string_of_pos : pos -> Prims.string) =
   fun pos  ->
-    let uu____153 = FStar_Util.string_of_int pos.line  in
-    let uu____154 = FStar_Util.string_of_int pos.col  in
-    FStar_Util.format2 "%s,%s" uu____153 uu____154
+    let uu____217 = FStar_Util.string_of_int pos.line  in
+    let uu____218 = FStar_Util.string_of_int pos.col  in
+    FStar_Util.format2 "%s,%s" uu____217 uu____218
   
 let (string_of_rng : rng -> Prims.string) =
   fun r  ->
-    let uu____158 = string_of_pos r.start_pos  in
-    let uu____159 = string_of_pos r.end_pos  in
-    FStar_Util.format3 "%s(%s-%s)" r.file_name uu____158 uu____159
+    let uu____224 = string_of_pos r.start_pos  in
+    let uu____225 = string_of_pos r.end_pos  in
+    FStar_Util.format3 "%s(%s-%s)" r.file_name uu____224 uu____225
   
 let (string_of_def_range : range -> Prims.string) =
   fun r  -> string_of_rng r.def_range 
@@ -175,20 +175,20 @@ let (compare_use_range : range -> range -> Prims.int) =
   fun r1  -> fun r2  -> compare_rng r1.use_range r2.use_range 
 let (range_before_pos : range -> pos -> Prims.bool) =
   fun m1  ->
-    fun p  -> let uu____226 = end_of_range m1  in pos_geq p uu____226
+    fun p  -> let uu____332 = end_of_range m1  in pos_geq p uu____332
   
 let (end_of_line : pos -> pos) =
   fun p  ->
-    let uu___27_230 = p  in
-    { line = (uu___27_230.line); col = FStar_Util.max_int }
+    let uu___27_338 = p  in
+    { line = (uu___27_338.line); col = FStar_Util.max_int }
   
 let (extend_to_end_of_line : range -> range) =
   fun r  ->
-    let uu____234 = file_of_range r  in
-    let uu____235 = start_of_range r  in
-    let uu____236 = let uu____237 = end_of_range r  in end_of_line uu____237
+    let uu____344 = file_of_range r  in
+    let uu____345 = start_of_range r  in
+    let uu____346 = let uu____347 = end_of_range r  in end_of_line uu____347
        in
-    mk_range uu____234 uu____235 uu____236
+    mk_range uu____344 uu____345 uu____346
   
 let (prims_to_fstar_range :
   ((Prims.string,(Prims.int,Prims.int) FStar_Pervasives_Native.tuple2,
@@ -201,14 +201,14 @@ let (prims_to_fstar_range :
     FStar_Pervasives_Native.tuple2 -> range)
   =
   fun r  ->
-    let uu____305 = r  in
-    match uu____305 with
+    let uu____417 = r  in
+    match uu____417 with
     | (r1,r2) ->
-        let uu____396 = r1  in
-        (match uu____396 with
+        let uu____508 = r1  in
+        (match uu____508 with
          | (f1,s1,e1) ->
-             let uu____430 = r2  in
-             (match uu____430 with
+             let uu____542 = r2  in
+             (match uu____542 with
               | (f2,s2,e2) ->
                   let s11 =
                     mk_pos (FStar_Pervasives_Native.fst s1)
@@ -232,43 +232,43 @@ let (prims_to_fstar_range :
   
 let (json_of_pos : pos -> FStar_Util.json) =
   fun pos  ->
-    let uu____473 =
-      let uu____476 =
-        let uu____477 = line_of_pos pos  in FStar_Util.JsonInt uu____477  in
-      let uu____478 =
-        let uu____481 =
-          let uu____482 = col_of_pos pos  in FStar_Util.JsonInt uu____482  in
-        [uu____481]  in
-      uu____476 :: uu____478  in
-    FStar_Util.JsonList uu____473
+    let uu____587 =
+      let uu____590 =
+        let uu____591 = line_of_pos pos  in FStar_Util.JsonInt uu____591  in
+      let uu____592 =
+        let uu____595 =
+          let uu____596 = col_of_pos pos  in FStar_Util.JsonInt uu____596  in
+        [uu____595]  in
+      uu____590 :: uu____592  in
+    FStar_Util.JsonList uu____587
   
 let (json_of_range_fields : Prims.string -> pos -> pos -> FStar_Util.json) =
   fun file  ->
     fun b  ->
       fun e  ->
-        let uu____492 =
-          let uu____499 =
-            let uu____506 =
-              let uu____511 = json_of_pos b  in ("beg", uu____511)  in
-            let uu____512 =
-              let uu____519 =
-                let uu____524 = json_of_pos e  in ("end", uu____524)  in
-              [uu____519]  in
-            uu____506 :: uu____512  in
-          ("fname", (FStar_Util.JsonStr file)) :: uu____499  in
-        FStar_Util.JsonAssoc uu____492
+        let uu____612 =
+          let uu____619 =
+            let uu____626 =
+              let uu____631 = json_of_pos b  in ("beg", uu____631)  in
+            let uu____632 =
+              let uu____639 =
+                let uu____644 = json_of_pos e  in ("end", uu____644)  in
+              [uu____639]  in
+            uu____626 :: uu____632  in
+          ("fname", (FStar_Util.JsonStr file)) :: uu____619  in
+        FStar_Util.JsonAssoc uu____612
   
 let (json_of_use_range : range -> FStar_Util.json) =
   fun r  ->
-    let uu____544 = file_of_use_range r  in
-    let uu____545 = start_of_use_range r  in
-    let uu____546 = end_of_use_range r  in
-    json_of_range_fields uu____544 uu____545 uu____546
+    let uu____666 = file_of_use_range r  in
+    let uu____667 = start_of_use_range r  in
+    let uu____668 = end_of_use_range r  in
+    json_of_range_fields uu____666 uu____667 uu____668
   
 let (json_of_def_range : range -> FStar_Util.json) =
   fun r  ->
-    let uu____550 = file_of_range r  in
-    let uu____551 = start_of_range r  in
-    let uu____552 = end_of_range r  in
-    json_of_range_fields uu____550 uu____551 uu____552
+    let uu____674 = file_of_range r  in
+    let uu____675 = start_of_range r  in
+    let uu____676 = end_of_range r  in
+    json_of_range_fields uu____674 uu____675 uu____676
   

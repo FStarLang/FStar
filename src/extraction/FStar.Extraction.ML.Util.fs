@@ -252,7 +252,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
         end
 
     | MLTY_Erased, MLTY_Erased ->
-      true, None
+      true, e
 
     | _ -> false, None
 

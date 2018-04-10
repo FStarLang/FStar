@@ -16,15 +16,15 @@ let int1 :
           fun r  ->
             fun args  ->
               match args with
-              | (a,uu____51)::[] ->
-                  let uu____68 = FStar_Syntax_Embeddings.unembed ea a  in
-                  FStar_Util.bind_opt uu____68
+              | (a,uu____65)::[] ->
+                  let uu____82 = FStar_Syntax_Embeddings.unembed ea a  in
+                  FStar_Util.bind_opt uu____82
                     (fun a1  ->
-                       let uu____74 =
-                         let uu____75 = f a1  in
-                         FStar_Syntax_Embeddings.embed er r uu____75  in
-                       FStar_Pervasives_Native.Some uu____74)
-              | uu____76 -> FStar_Pervasives_Native.None
+                       let uu____88 =
+                         let uu____89 = f a1  in
+                         FStar_Syntax_Embeddings.embed er r uu____89  in
+                       FStar_Pervasives_Native.Some uu____88)
+              | uu____90 -> FStar_Pervasives_Native.None
   
 let int2 :
   'a 'b 'r .
@@ -45,20 +45,20 @@ let int2 :
             fun r  ->
               fun args  ->
                 match args with
-                | (a,uu____143)::(b,uu____145)::[] ->
-                    let uu____172 = FStar_Syntax_Embeddings.unembed ea a  in
-                    FStar_Util.bind_opt uu____172
+                | (a,uu____174)::(b,uu____176)::[] ->
+                    let uu____203 = FStar_Syntax_Embeddings.unembed ea a  in
+                    FStar_Util.bind_opt uu____203
                       (fun a1  ->
-                         let uu____178 = FStar_Syntax_Embeddings.unembed eb b
+                         let uu____209 = FStar_Syntax_Embeddings.unembed eb b
                             in
-                         FStar_Util.bind_opt uu____178
+                         FStar_Util.bind_opt uu____209
                            (fun b1  ->
-                              let uu____184 =
-                                let uu____185 = f a1 b1  in
-                                FStar_Syntax_Embeddings.embed er r uu____185
+                              let uu____215 =
+                                let uu____216 = f a1 b1  in
+                                FStar_Syntax_Embeddings.embed er r uu____216
                                  in
-                              FStar_Pervasives_Native.Some uu____184))
-                | uu____186 -> FStar_Pervasives_Native.None
+                              FStar_Pervasives_Native.Some uu____215))
+                | uu____217 -> FStar_Pervasives_Native.None
   
 let (reflection_primops :
   FStar_TypeChecker_Normalize.primitive_step Prims.list) =
@@ -73,224 +73,224 @@ let (reflection_primops :
       FStar_TypeChecker_Normalize.interpretation =
         (fun ctxt  ->
            fun args  ->
-             let uu____222 = FStar_TypeChecker_Normalize.psc_range ctxt  in
-             fn uu____222 args)
+             let uu____257 = FStar_TypeChecker_Normalize.psc_range ctxt  in
+             fn uu____257 args)
     }  in
   let mk11 a b nm f u1 em =
     let l = mklid nm  in mk1 l (Prims.parse_int "1") (int1 l f u1 em)  in
   let mk2 a b c nm f u1 u2 em =
     let l = mklid nm  in mk1 l (Prims.parse_int "2") (int2 l f u1 u2 em)  in
-  let uu____304 =
+  let uu____353 =
     mk11 () () "inspect_ln"
-      (fun a393  -> (Obj.magic FStar_Reflection_Basic.inspect_ln) a393)
+      (fun a246  -> (Obj.magic FStar_Reflection_Basic.inspect_ln) a246)
       (Obj.magic FStar_Reflection_Embeddings.e_term)
       (Obj.magic FStar_Reflection_Embeddings.e_term_view)
      in
-  let uu____305 =
-    let uu____308 =
+  let uu____354 =
+    let uu____357 =
       mk11 () () "pack_ln"
-        (fun a394  -> (Obj.magic FStar_Reflection_Basic.pack_ln) a394)
+        (fun a247  -> (Obj.magic FStar_Reflection_Basic.pack_ln) a247)
         (Obj.magic FStar_Reflection_Embeddings.e_term_view)
         (Obj.magic FStar_Reflection_Embeddings.e_term)
        in
-    let uu____309 =
-      let uu____312 =
+    let uu____358 =
+      let uu____361 =
         mk11 () () "inspect_fv"
-          (fun a395  -> (Obj.magic FStar_Reflection_Basic.inspect_fv) a395)
+          (fun a248  -> (Obj.magic FStar_Reflection_Basic.inspect_fv) a248)
           (Obj.magic FStar_Reflection_Embeddings.e_fv)
           (Obj.magic FStar_Syntax_Embeddings.e_string_list)
          in
-      let uu____313 =
-        let uu____316 =
-          let uu____317 =
+      let uu____362 =
+        let uu____365 =
+          let uu____366 =
             FStar_Syntax_Embeddings.e_list FStar_Syntax_Embeddings.e_string
              in
           mk11 () () "pack_fv"
-            (fun a396  -> (Obj.magic FStar_Reflection_Basic.pack_fv) a396)
-            (Obj.magic uu____317)
+            (fun a249  -> (Obj.magic FStar_Reflection_Basic.pack_fv) a249)
+            (Obj.magic uu____366)
             (Obj.magic FStar_Reflection_Embeddings.e_fv)
            in
-        let uu____322 =
-          let uu____325 =
+        let uu____371 =
+          let uu____374 =
             mk11 () () "inspect_comp"
-              (fun a397  ->
-                 (Obj.magic FStar_Reflection_Basic.inspect_comp) a397)
+              (fun a250  ->
+                 (Obj.magic FStar_Reflection_Basic.inspect_comp) a250)
               (Obj.magic FStar_Reflection_Embeddings.e_comp)
               (Obj.magic FStar_Reflection_Embeddings.e_comp_view)
              in
-          let uu____326 =
-            let uu____329 =
+          let uu____375 =
+            let uu____378 =
               mk11 () () "pack_comp"
-                (fun a398  ->
-                   (Obj.magic FStar_Reflection_Basic.pack_comp) a398)
+                (fun a251  ->
+                   (Obj.magic FStar_Reflection_Basic.pack_comp) a251)
                 (Obj.magic FStar_Reflection_Embeddings.e_comp_view)
                 (Obj.magic FStar_Reflection_Embeddings.e_comp)
                in
-            let uu____330 =
-              let uu____333 =
+            let uu____379 =
+              let uu____382 =
                 mk11 () () "inspect_sigelt"
-                  (fun a399  ->
-                     (Obj.magic FStar_Reflection_Basic.inspect_sigelt) a399)
+                  (fun a252  ->
+                     (Obj.magic FStar_Reflection_Basic.inspect_sigelt) a252)
                   (Obj.magic FStar_Reflection_Embeddings.e_sigelt)
                   (Obj.magic FStar_Reflection_Embeddings.e_sigelt_view)
                  in
-              let uu____334 =
-                let uu____337 =
+              let uu____383 =
+                let uu____386 =
                   mk11 () () "pack_sigelt"
-                    (fun a400  ->
-                       (Obj.magic FStar_Reflection_Basic.pack_sigelt) a400)
+                    (fun a253  ->
+                       (Obj.magic FStar_Reflection_Basic.pack_sigelt) a253)
                     (Obj.magic FStar_Reflection_Embeddings.e_sigelt_view)
                     (Obj.magic FStar_Reflection_Embeddings.e_sigelt)
                    in
-                let uu____338 =
-                  let uu____341 =
+                let uu____387 =
+                  let uu____390 =
                     mk11 () () "inspect_bv"
-                      (fun a401  ->
-                         (Obj.magic FStar_Reflection_Basic.inspect_bv) a401)
+                      (fun a254  ->
+                         (Obj.magic FStar_Reflection_Basic.inspect_bv) a254)
                       (Obj.magic FStar_Reflection_Embeddings.e_bv)
                       (Obj.magic FStar_Reflection_Embeddings.e_bv_view)
                      in
-                  let uu____342 =
-                    let uu____345 =
+                  let uu____391 =
+                    let uu____394 =
                       mk11 () () "pack_bv"
-                        (fun a402  ->
-                           (Obj.magic FStar_Reflection_Basic.pack_bv) a402)
+                        (fun a255  ->
+                           (Obj.magic FStar_Reflection_Basic.pack_bv) a255)
                         (Obj.magic FStar_Reflection_Embeddings.e_bv_view)
                         (Obj.magic FStar_Reflection_Embeddings.e_bv)
                        in
-                    let uu____346 =
-                      let uu____349 =
+                    let uu____395 =
+                      let uu____398 =
                         mk11 () () "inspect_binder"
-                          (fun a403  ->
+                          (fun a256  ->
                              (Obj.magic FStar_Reflection_Basic.inspect_binder)
-                               a403)
+                               a256)
                           (Obj.magic FStar_Reflection_Embeddings.e_binder)
                           (Obj.magic
                              FStar_Reflection_Embeddings.e_binder_view)
                          in
-                      let uu____350 =
-                        let uu____353 =
+                      let uu____399 =
+                        let uu____402 =
                           mk2 () () () "pack_binder"
-                            (fun a404  ->
-                               fun a405  ->
+                            (fun a257  ->
+                               fun a258  ->
                                  (Obj.magic
-                                    FStar_Reflection_Basic.pack_binder) a404
-                                   a405)
+                                    FStar_Reflection_Basic.pack_binder) a257
+                                   a258)
                             (Obj.magic FStar_Reflection_Embeddings.e_bv)
                             (Obj.magic FStar_Reflection_Embeddings.e_aqualv)
                             (Obj.magic FStar_Reflection_Embeddings.e_binder)
                            in
-                        let uu____354 =
-                          let uu____357 =
+                        let uu____403 =
+                          let uu____406 =
                             mk2 () () () "compare_bv"
-                              (fun a406  ->
-                                 fun a407  ->
+                              (fun a259  ->
+                                 fun a260  ->
                                    (Obj.magic
-                                      FStar_Reflection_Basic.compare_bv) a406
-                                     a407)
+                                      FStar_Reflection_Basic.compare_bv) a259
+                                     a260)
                               (Obj.magic FStar_Reflection_Embeddings.e_bv)
                               (Obj.magic FStar_Reflection_Embeddings.e_bv)
                               (Obj.magic FStar_Reflection_Embeddings.e_order)
                              in
-                          let uu____358 =
-                            let uu____361 =
+                          let uu____407 =
+                            let uu____410 =
                               mk2 () () () "is_free"
-                                (fun a408  ->
-                                   fun a409  ->
+                                (fun a261  ->
+                                   fun a262  ->
                                      (Obj.magic
-                                        FStar_Reflection_Basic.is_free) a408
-                                       a409)
+                                        FStar_Reflection_Basic.is_free) a261
+                                       a262)
                                 (Obj.magic FStar_Reflection_Embeddings.e_bv)
                                 (Obj.magic FStar_Reflection_Embeddings.e_term)
                                 (Obj.magic FStar_Syntax_Embeddings.e_bool)
                                in
-                            let uu____362 =
-                              let uu____365 =
+                            let uu____411 =
+                              let uu____414 =
                                 mk2 () () () "term_eq"
-                                  (fun a410  ->
-                                     fun a411  ->
+                                  (fun a263  ->
+                                     fun a264  ->
                                        (Obj.magic
                                           FStar_Reflection_Basic.term_eq)
-                                         a410 a411)
+                                         a263 a264)
                                   (Obj.magic
                                      FStar_Reflection_Embeddings.e_term)
                                   (Obj.magic
                                      FStar_Reflection_Embeddings.e_term)
                                   (Obj.magic FStar_Syntax_Embeddings.e_bool)
                                  in
-                              let uu____366 =
-                                let uu____369 =
-                                  let uu____370 =
+                              let uu____415 =
+                                let uu____418 =
+                                  let uu____419 =
                                     FStar_Syntax_Embeddings.e_list
                                       FStar_Syntax_Embeddings.e_string
                                      in
                                   mk11 () () "moduleof"
-                                    (fun a412  ->
+                                    (fun a265  ->
                                        (Obj.magic
                                           FStar_Reflection_Basic.moduleof)
-                                         a412)
+                                         a265)
                                     (Obj.magic
                                        FStar_Reflection_Embeddings.e_env)
-                                    (Obj.magic uu____370)
+                                    (Obj.magic uu____419)
                                    in
-                                let uu____375 =
-                                  let uu____378 =
+                                let uu____424 =
+                                  let uu____427 =
                                     mk11 () () "term_to_string"
-                                      (fun a413  ->
+                                      (fun a266  ->
                                          (Obj.magic
                                             FStar_Reflection_Basic.term_to_string)
-                                           a413)
+                                           a266)
                                       (Obj.magic
                                          FStar_Reflection_Embeddings.e_term)
                                       (Obj.magic
                                          FStar_Syntax_Embeddings.e_string)
                                      in
-                                  let uu____379 =
-                                    let uu____382 =
+                                  let uu____428 =
+                                    let uu____431 =
                                       mk11 () () "binders_of_env"
-                                        (fun a414  ->
+                                        (fun a267  ->
                                            (Obj.magic
                                               FStar_Reflection_Basic.binders_of_env)
-                                             a414)
+                                             a267)
                                         (Obj.magic
                                            FStar_Reflection_Embeddings.e_env)
                                         (Obj.magic
                                            FStar_Reflection_Embeddings.e_binders)
                                        in
-                                    let uu____383 =
-                                      let uu____386 =
-                                        let uu____387 =
+                                    let uu____432 =
+                                      let uu____435 =
+                                        let uu____436 =
                                           FStar_Syntax_Embeddings.e_option
                                             FStar_Reflection_Embeddings.e_sigelt
                                            in
                                         mk2 () () () "lookup_typ"
-                                          (fun a415  ->
-                                             fun a416  ->
+                                          (fun a268  ->
+                                             fun a269  ->
                                                (Obj.magic
                                                   FStar_Reflection_Basic.lookup_typ)
-                                                 a415 a416)
+                                                 a268 a269)
                                           (Obj.magic
                                              FStar_Reflection_Embeddings.e_env)
                                           (Obj.magic
                                              FStar_Syntax_Embeddings.e_string_list)
-                                          (Obj.magic uu____387)
+                                          (Obj.magic uu____436)
                                          in
-                                      [uu____386]  in
-                                    uu____382 :: uu____383  in
-                                  uu____378 :: uu____379  in
-                                uu____369 :: uu____375  in
-                              uu____365 :: uu____366  in
-                            uu____361 :: uu____362  in
-                          uu____357 :: uu____358  in
-                        uu____353 :: uu____354  in
-                      uu____349 :: uu____350  in
-                    uu____345 :: uu____346  in
-                  uu____341 :: uu____342  in
-                uu____337 :: uu____338  in
-              uu____333 :: uu____334  in
-            uu____329 :: uu____330  in
-          uu____325 :: uu____326  in
-        uu____316 :: uu____322  in
-      uu____312 :: uu____313  in
-    uu____308 :: uu____309  in
-  uu____304 :: uu____305 
+                                      [uu____435]  in
+                                    uu____431 :: uu____432  in
+                                  uu____427 :: uu____428  in
+                                uu____418 :: uu____424  in
+                              uu____414 :: uu____415  in
+                            uu____410 :: uu____411  in
+                          uu____406 :: uu____407  in
+                        uu____402 :: uu____403  in
+                      uu____398 :: uu____399  in
+                    uu____394 :: uu____395  in
+                  uu____390 :: uu____391  in
+                uu____386 :: uu____387  in
+              uu____382 :: uu____383  in
+            uu____378 :: uu____379  in
+          uu____374 :: uu____375  in
+        uu____365 :: uu____371  in
+      uu____361 :: uu____362  in
+    uu____357 :: uu____358  in
+  uu____353 :: uu____354 
