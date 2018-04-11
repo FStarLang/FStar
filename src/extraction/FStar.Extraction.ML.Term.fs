@@ -846,7 +846,8 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
 
 let maybe_promote_effect ml_e tag t =
     match tag, t with
-    | E_GHOST, MLTY_Erased -> ml_unit, E_PURE
+    | E_GHOST, MLTY_Erased
+    | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
 //The main extraction function
