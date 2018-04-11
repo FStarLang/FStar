@@ -1,7 +1,7 @@
 open Prims
 type ident = {
   idText: Prims.string ;
-  idRange: FStar_Range.range }
+  idRange: FStar_Range.range }[@@deriving show]
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -14,13 +14,13 @@ let (__proj__Mkident__item__idRange : ident -> FStar_Range.range) =
     | { idText = __fname__idText; idRange = __fname__idRange;_} ->
         __fname__idRange
   
-type path = Prims.string Prims.list
+type path = Prims.string Prims.list[@@deriving show]
 type lident =
   {
   ns: ident Prims.list ;
   ident: ident ;
   nsstr: Prims.string ;
-  str: Prims.string }
+  str: Prims.string }[@@deriving show]
 let (__proj__Mklident__item__ns : lident -> ident Prims.list) =
   fun projectee  ->
     match projectee with
@@ -45,7 +45,7 @@ let (__proj__Mklident__item__str : lident -> Prims.string) =
     | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
         str = __fname__str;_} -> __fname__str
   
-type lid = lident
+type lid = lident[@@deriving show]
 let (mk_ident :
   (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 -> ident) =
   fun uu____105  ->
