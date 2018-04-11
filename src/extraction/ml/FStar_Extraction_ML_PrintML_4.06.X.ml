@@ -172,6 +172,7 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      Typ.mk (Ptyp_constr (p, c_tys))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
+  | MLTY_Erased -> Typ.mk (Ptyp_constr (mk_lident "unit", []))
   in
   if annots = []
   then t

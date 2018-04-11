@@ -308,6 +308,9 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
       then text "obj"
       else text "Obj.t"
 
+    | MLTY_Erased ->
+      text "unit"
+
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
 
@@ -600,7 +603,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 
 
 and doc_of_loc (lineno, file) =
-    if (Options.no_location_info()) || Util.codegen_fsharp () then
+    if (Options.no_location_info()) || Util.codegen_fsharp () || file="<dummy>" then
         empty
     else
         let file = BU.basename file in
