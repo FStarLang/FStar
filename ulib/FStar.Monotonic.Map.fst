@@ -15,6 +15,7 @@ type map' (a:Type) (b:a -> Type) =
 type map (a:Type) (b:a -> Type) (inv:map' a b -> Type0) =
   m:map' a b{inv m}
 
+inline_for_extraction
 let upd (#a:eqtype) #b (m:map' a b) (x:a) (y:b x)
   : Tot (map' a b)
   = fun z -> if x = z then Some y else m z
@@ -31,9 +32,10 @@ abstract let grows #a #b #inv :Preorder.preorder (map a b inv) =
 (* Monotone, partial, dependent maps, with a whole-map invariant *)
 type t r a b inv = m_rref r (map a b inv) grows  //maybe grows can include the inv?
 
-let empty_map a b
-  : Tot (map' a b)
-  = fun x -> None
+inline_for_extraction
+let empty_map (a:Type) (b:a -> Type)
+  : Tot (x:a -> Tot (option (b x)))
+  = fun (x:a) -> None
 
 type rid = HST.erid
 
