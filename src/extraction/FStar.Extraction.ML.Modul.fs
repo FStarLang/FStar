@@ -116,7 +116,7 @@ let extract_typ_abbrev env fv quals attrs def =
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env, ml_bs = binders_as_mlty_binders env bs in
-    let body = Term.translate_term_to_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
+    let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
     let mangled_projector =
          if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
          then let mname = mangle_projector_lid lid in
@@ -187,7 +187,7 @@ let extract_bundle env se =
     let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor):
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
-        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.translate_term_to_mlty env ctor.dtyp) in
+        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
         let steps = [ N.Inlining; N.UnfoldUntil S.Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
