@@ -1176,6 +1176,15 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
     in
+    //check that sub effecting is universe polymorphic in exactly one universe
+    if lift_wp |> fst |> List.length <> 1 then
+      raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                                             (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                             (lift_wp |> fst |> List.length |> string_of_int))) r;
+    if is_some lift && lift |> must |> fst |> List.length <> 1 then
+      raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                                             (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                             (lift |> must |> fst |> List.length |> string_of_int))) r;
     let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
     let se = { se with sigel = Sig_sub_effect(sub) } in
     [se], []
