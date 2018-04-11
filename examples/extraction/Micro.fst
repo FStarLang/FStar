@@ -71,3 +71,8 @@ let h12 (n:int) : Dv int =
   let x = f12 n in
   g12 nat;
   x
+
+assume val f13 : int -> Dv int
+let g13 (x:int) : Dv unit =
+  let x = f13 x in
+  admit()
