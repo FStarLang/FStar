@@ -1881,7 +1881,11 @@ let must_erase_for_extraction (g:env) (t:typ) =
     let rec aux_whnf env t = //t is expected to b in WHNF
         match (SS.compress t).n with
         | Tm_type _ -> true
-        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid
+        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid ||
+          (fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
+            match (SS.compress t).n with
+            | Tm_fvar fv when lid_equals fv.fv_name.v C.must_erase_for_extraction_attr -> true
+            | _ -> false)))
         | Tm_arrow _ ->
           let bs, c = U.arrow_formals_comp t in
           let env = FStar.TypeChecker.Env.push_binders env bs in
