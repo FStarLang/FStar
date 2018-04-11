@@ -110,9 +110,8 @@ let (ini_params : unit -> Prims.string) =
        FStar_List.append uu____262 uu____271  in
      FStar_String.concat " " uu____259)
   
-type label = Prims.string[@@deriving show]
+type label = Prims.string
 type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
-[@@deriving show]
 type z3status =
   | UNSAT of unsat_core 
   | SAT of
@@ -127,7 +126,7 @@ type z3status =
   (FStar_SMTEncoding_Term.error_labels,Prims.string
                                          FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2 
-  | KILLED [@@deriving show]
+  | KILLED 
 let (uu___is_UNSAT : z3status -> Prims.bool) =
   fun projectee  ->
     match projectee with | UNSAT _0 -> true | uu____322 -> false
@@ -168,7 +167,7 @@ let (uu___is_KILLED : z3status -> Prims.bool) =
   fun projectee  ->
     match projectee with | KILLED  -> true | uu____449 -> false
   
-type z3statistics = Prims.string FStar_Util.smap[@@deriving show]
+type z3statistics = Prims.string FStar_Util.smap
 let (status_tag : z3status -> Prims.string) =
   fun uu___39_456  ->
     match uu___39_456 with
@@ -232,7 +231,7 @@ type bgproc =
   grab: unit -> FStar_Util.proc ;
   release: unit -> unit ;
   refresh: unit -> unit ;
-  restart: unit -> unit }[@@deriving show]
+  restart: unit -> unit }
 let (__proj__Mkbgproc__item__grab : bgproc -> unit -> FStar_Util.proc) =
   fun projectee  ->
     match projectee with
@@ -267,7 +266,7 @@ type query_log =
   set_module_name: Prims.string -> unit ;
   write_to_log: Prims.string -> unit ;
   close_log: unit -> unit ;
-  log_file_name: unit -> Prims.string }[@@deriving show]
+  log_file_name: unit -> Prims.string }
 let (__proj__Mkquery_log__item__get_module_name :
   query_log -> unit -> Prims.string) =
   fun projectee  ->
@@ -480,15 +479,14 @@ let (at_log_file : unit -> Prims.string) =
       Prims.strcat "@" uu____2606
     else ""
   
-type smt_output_section = Prims.string Prims.list[@@deriving show]
+type smt_output_section = Prims.string Prims.list
 type smt_output =
   {
   smt_result: smt_output_section ;
   smt_reason_unknown: smt_output_section FStar_Pervasives_Native.option ;
   smt_unsat_core: smt_output_section FStar_Pervasives_Native.option ;
   smt_statistics: smt_output_section FStar_Pervasives_Native.option ;
-  smt_labels: smt_output_section FStar_Pervasives_Native.option }[@@deriving
-                                                                   show]
+  smt_labels: smt_output_section FStar_Pervasives_Native.option }
 let (__proj__Mksmt_output__item__smt_result :
   smt_output -> smt_output_section) =
   fun projectee  ->
@@ -791,7 +789,7 @@ let (z3_options : unit -> Prims.string) =
   
 type 'a job = {
   job: unit -> 'a ;
-  callback: 'a -> unit }[@@deriving show]
+  callback: 'a -> unit }
 let __proj__Mkjob__item__job : 'a . 'a job -> unit -> 'a =
   fun projectee  ->
     match projectee with
@@ -808,8 +806,7 @@ type z3result =
   z3result_status: z3status ;
   z3result_time: Prims.int ;
   z3result_statistics: z3statistics ;
-  z3result_query_hash: Prims.string FStar_Pervasives_Native.option }[@@deriving
-                                                                    show]
+  z3result_query_hash: Prims.string FStar_Pervasives_Native.option }
 let (__proj__Mkz3result__item__z3result_status : z3result -> z3status) =
   fun projectee  ->
     match projectee with
@@ -848,7 +845,7 @@ let (__proj__Mkz3result__item__z3result_query_hash :
         z3result_query_hash = __fname__z3result_query_hash;_} ->
         __fname__z3result_query_hash
   
-type z3job = z3result job[@@deriving show]
+type z3job = z3result job
 let (job_queue : z3job Prims.list FStar_ST.ref) = FStar_Util.mk_ref [] 
 let (pending_jobs : Prims.int FStar_ST.ref) =
   FStar_Util.mk_ref (Prims.parse_int "0") 
@@ -981,8 +978,7 @@ let (finish : unit -> unit) =
        in
     aux ()
   
-type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list[@@deriving
-                                                                  show]
+type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list
 let (fresh_scope :
   FStar_SMTEncoding_Term.decl Prims.list Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [[]] 
@@ -1141,7 +1137,7 @@ let (mk_input :
           if uu____5212 then query_logging.write_to_log r else ());
          (r, hash))
   
-type cb = z3result -> unit[@@deriving show]
+type cb = z3result -> unit
 let (cache_hit :
   Prims.string FStar_Pervasives_Native.option ->
     Prims.string FStar_Pervasives_Native.option -> cb -> Prims.bool)

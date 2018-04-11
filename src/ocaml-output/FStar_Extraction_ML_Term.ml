@@ -1697,6 +1697,10 @@ let (maybe_promote_effect :
            ,FStar_Extraction_ML_Syntax.MLTY_Erased ) ->
             (FStar_Extraction_ML_Syntax.ml_unit,
               FStar_Extraction_ML_Syntax.E_PURE)
+        | (FStar_Extraction_ML_Syntax.E_PURE
+           ,FStar_Extraction_ML_Syntax.MLTY_Erased ) ->
+            (FStar_Extraction_ML_Syntax.ml_unit,
+              FStar_Extraction_ML_Syntax.E_PURE)
         | uu____5477 -> (ml_e, tag)
   
 let rec (check_term_as_mlexpr :

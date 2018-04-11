@@ -512,7 +512,7 @@ let (head_and_args :
 type associativity =
   | Left 
   | Right 
-  | NonAssoc [@@deriving show]
+  | NonAssoc 
 let (uu___is_Left : associativity -> Prims.bool) =
   fun projectee  ->
     match projectee with | Left  -> true | uu____1125 -> false
@@ -525,11 +525,9 @@ let (uu___is_NonAssoc : associativity -> Prims.bool) =
   fun projectee  ->
     match projectee with | NonAssoc  -> true | uu____1137 -> false
   
-type token = (FStar_Char.char,Prims.string) FStar_Util.either[@@deriving
-                                                               show]
+type token = (FStar_Char.char,Prims.string) FStar_Util.either
 type associativity_level =
-  (associativity,token Prims.list) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                   show]
+  (associativity,token Prims.list) FStar_Pervasives_Native.tuple2
 let (token_to_string :
   (FStar_BaseTypes.char,Prims.string) FStar_Util.either -> Prims.string) =
   fun uu___54_1157  ->

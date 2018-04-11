@@ -301,7 +301,7 @@ type raw_error =
   | Error_NoSMTButNeeded 
   | Fatal_UnexpectedAntiquotation 
   | Fatal_SplicedUndef 
-  | Warning_ExtractionUnexpectedEffect [@@deriving show]
+  | Warning_ExtractionUnexpectedEffect 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -2090,7 +2090,7 @@ type flag =
   | CError 
   | CFatal 
   | CWarning 
-  | CSilent [@@deriving show]
+  | CSilent 
 let (uu___is_CError : flag -> Prims.bool) =
   fun projectee  ->
     match projectee with | CError  -> true | uu____1818 -> false
@@ -2453,7 +2453,7 @@ type issue_level =
   | ENotImplemented 
   | EInfo 
   | EWarning 
-  | EError [@@deriving show]
+  | EError 
 let (uu___is_ENotImplemented : issue_level -> Prims.bool) =
   fun projectee  ->
     match projectee with | ENotImplemented  -> true | uu____3206 -> false
@@ -2475,7 +2475,7 @@ type issue =
   issue_message: Prims.string ;
   issue_level: issue_level ;
   issue_range: FStar_Range.range FStar_Pervasives_Native.option ;
-  issue_number: Prims.int FStar_Pervasives_Native.option }[@@deriving show]
+  issue_number: Prims.int FStar_Pervasives_Native.option }
 let (__proj__Mkissue__item__issue_message : issue -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -2515,7 +2515,7 @@ type error_handler =
   eh_add_one: issue -> unit ;
   eh_count_errors: unit -> Prims.int ;
   eh_report: unit -> issue Prims.list ;
-  eh_clear: unit -> unit }[@@deriving show]
+  eh_clear: unit -> unit }
 let (__proj__Mkerror_handler__item__eh_add_one :
   error_handler -> issue -> unit) =
   fun projectee  ->
@@ -2707,7 +2707,7 @@ type error_message_prefix =
   {
   set_prefix: Prims.string -> unit ;
   append_prefix: Prims.string -> Prims.string ;
-  clear_prefix: unit -> unit }[@@deriving show]
+  clear_prefix: unit -> unit }
 let (__proj__Mkerror_message_prefix__item__set_prefix :
   error_message_prefix -> Prims.string -> unit) =
   fun projectee  ->
