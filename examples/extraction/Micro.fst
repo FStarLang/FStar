@@ -63,3 +63,11 @@ let test11 (x:int) =
   let y = g11 x in
   let z = f11 y in
   assert (z == y)
+
+
+let f12 (n:int) : Dv int = n
+let g12 (a:Type) : Dv unit = ()
+let h12 (n:int) : Dv int =
+  let x = f12 n in
+  g12 nat;
+  x

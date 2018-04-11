@@ -1253,8 +1253,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
                              let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
-                             let add_unit = match rest_args with
-                                | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
+                             let add_unit =
+                                match rest_args with
+                                | [] ->
+                                  not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
+                                  || not (U.is_pure_comp c)
                                 | _ -> false in
                              let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
