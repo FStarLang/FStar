@@ -4972,3 +4972,94 @@ let (check_sigelt_quals :
           | uu____12548 -> ()))
       else ()
   
+let (must_erase_for_extraction :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun g  ->
+    fun t  ->
+      let rec aux_whnf env t1 =
+        let uu____12582 =
+          let uu____12583 = FStar_Syntax_Subst.compress t1  in
+          uu____12583.FStar_Syntax_Syntax.n  in
+        match uu____12582 with
+        | FStar_Syntax_Syntax.Tm_type uu____12586 -> true
+        | FStar_Syntax_Syntax.Tm_fvar fv ->
+            (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
+              (let uu____12589 =
+                 let uu____12594 =
+                   FStar_All.pipe_right fv FStar_Syntax_Syntax.lid_of_fv  in
+                 FStar_All.pipe_right uu____12594
+                   (FStar_TypeChecker_Env.lookup_attrs_of_lid g)
+                  in
+               FStar_All.pipe_right uu____12589
+                 (fun l_opt  ->
+                    (FStar_Util.is_some l_opt) &&
+                      (let uu____12612 =
+                         FStar_All.pipe_right l_opt FStar_Util.must  in
+                       FStar_All.pipe_right uu____12612
+                         (FStar_List.existsb
+                            (fun t2  ->
+                               let uu____12629 =
+                                 let uu____12630 =
+                                   FStar_Syntax_Subst.compress t2  in
+                                 uu____12630.FStar_Syntax_Syntax.n  in
+                               match uu____12629 with
+                               | FStar_Syntax_Syntax.Tm_fvar fv1 when
+                                   FStar_Ident.lid_equals
+                                     (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                     FStar_Parser_Const.must_erase_for_extraction_attr
+                                   -> true
+                               | uu____12634 -> false)))))
+        | FStar_Syntax_Syntax.Tm_arrow uu____12635 ->
+            let uu____12648 = FStar_Syntax_Util.arrow_formals_comp t1  in
+            (match uu____12648 with
+             | (bs,c) ->
+                 let env1 = FStar_TypeChecker_Env.push_binders env bs  in
+                 let uu____12674 = FStar_Syntax_Util.is_pure_comp c  in
+                 if uu____12674
+                 then aux env1 (FStar_Syntax_Util.comp_result c)
+                 else FStar_Syntax_Util.is_pure_or_ghost_comp c)
+        | FStar_Syntax_Syntax.Tm_refine
+            ({ FStar_Syntax_Syntax.ppname = uu____12676;
+               FStar_Syntax_Syntax.index = uu____12677;
+               FStar_Syntax_Syntax.sort = t2;_},uu____12679)
+            -> aux env t2
+        | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____12687,uu____12688) ->
+            aux env t2
+        | FStar_Syntax_Syntax.Tm_app (head1,uu____12730::[]) ->
+            let uu____12761 =
+              let uu____12762 = FStar_Syntax_Util.un_uinst head1  in
+              uu____12762.FStar_Syntax_Syntax.n  in
+            (match uu____12761 with
+             | FStar_Syntax_Syntax.Tm_fvar fv ->
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.erased_lid
+             | uu____12766 -> false)
+        | uu____12767 -> false
+      
+      and aux env t1 =
+        let t2 =
+          FStar_TypeChecker_Normalize.normalize
+            [FStar_TypeChecker_Normalize.Primops;
+            FStar_TypeChecker_Normalize.Weak;
+            FStar_TypeChecker_Normalize.HNF;
+            FStar_TypeChecker_Normalize.UnfoldUntil
+              FStar_Syntax_Syntax.Delta_constant;
+            FStar_TypeChecker_Normalize.Beta;
+            FStar_TypeChecker_Normalize.AllowUnboundUniverses;
+            FStar_TypeChecker_Normalize.Zeta;
+            FStar_TypeChecker_Normalize.Iota] env t1
+           in
+        let res = aux_whnf env t2  in
+        (let uu____12775 =
+           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+             (FStar_Options.Other "Extraction")
+            in
+         if uu____12775
+         then
+           let uu____12776 = FStar_Syntax_Print.term_to_string t2  in
+           FStar_Util.print2 "must_erase=%s: %s\n"
+             (if res then "true" else "false") uu____12776
+         else ());
+        res
+       in aux g t
+  

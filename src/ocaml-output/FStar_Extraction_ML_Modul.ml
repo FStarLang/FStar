@@ -1273,7 +1273,10 @@ let rec (extract_sig :
              (FStar_All.pipe_right quals
                 (FStar_List.contains FStar_Syntax_Syntax.Assumption))
                &&
-               (let uu____2874 = FStar_Extraction_ML_Term.must_erase g t  in
+               (let uu____2874 =
+                  FStar_TypeChecker_Util.must_erase_for_extraction
+                    g.FStar_Extraction_ML_UEnv.tcenv t
+                   in
                 Prims.op_Negation uu____2874)
               in
            if uu____2870
