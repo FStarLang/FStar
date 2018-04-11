@@ -12,43 +12,43 @@ let (break_ : Prims.int -> doc) = fun i  -> Doc ""
 let (break0 : doc) = break_ (Prims.parse_int "0") 
 let (break1 : doc) = text " " 
 let (enclose : doc -> doc -> doc -> doc) =
-  fun uu____43  ->
-    fun uu____44  ->
-      fun uu____45  ->
-        match (uu____43, uu____44, uu____45) with
+  fun uu____44  ->
+    fun uu____45  ->
+      fun uu____46  ->
+        match (uu____44, uu____45, uu____46) with
         | (Doc l,Doc r,Doc x) -> Doc (Prims.strcat l (Prims.strcat x r))
   
 let (brackets : doc -> doc) =
-  fun uu____53  ->
-    match uu____53 with | Doc d -> enclose (text "[") (text "]") (Doc d)
+  fun uu____54  ->
+    match uu____54 with | Doc d -> enclose (text "[") (text "]") (Doc d)
   
 let (cbrackets : doc -> doc) =
-  fun uu____59  ->
-    match uu____59 with | Doc d -> enclose (text "{") (text "}") (Doc d)
+  fun uu____60  ->
+    match uu____60 with | Doc d -> enclose (text "{") (text "}") (Doc d)
   
 let (parens : doc -> doc) =
-  fun uu____65  ->
-    match uu____65 with | Doc d -> enclose (text "(") (text ")") (Doc d)
+  fun uu____66  ->
+    match uu____66 with | Doc d -> enclose (text "(") (text ")") (Doc d)
   
 let (cat : doc -> doc -> doc) =
-  fun uu____75  ->
-    fun uu____76  ->
-      match (uu____75, uu____76) with
+  fun uu____76  ->
+    fun uu____77  ->
+      match (uu____76, uu____77) with
       | (Doc d1,Doc d2) -> Doc (Prims.strcat d1 d2)
   
 let (reduce : doc Prims.list -> doc) =
   fun docs  -> FStar_List.fold_left cat empty docs 
 let (group : doc -> doc) =
-  fun uu____92  -> match uu____92 with | Doc d -> Doc d 
+  fun uu____93  -> match uu____93 with | Doc d -> Doc d 
 let (groups : doc Prims.list -> doc) =
-  fun docs  -> let uu____103 = reduce docs  in group uu____103 
+  fun docs  -> let uu____104 = reduce docs  in group uu____104 
 let (combine : doc -> doc Prims.list -> doc) =
-  fun uu____114  ->
+  fun uu____115  ->
     fun docs  ->
-      match uu____114 with
+      match uu____115 with
       | Doc sep ->
-          let select uu____126 =
-            match uu____126 with
+          let select uu____127 =
+            match uu____127 with
             | Doc d ->
                 if d = ""
                 then FStar_Pervasives_Native.None
@@ -61,12 +61,12 @@ let (cat1 : doc -> doc -> doc) =
   fun d1  -> fun d2  -> reduce [d1; break1; d2] 
 let (reduce1 : doc Prims.list -> doc) = fun docs  -> combine break1 docs 
 let (nest : Prims.int -> doc -> doc) =
-  fun i  -> fun uu____164  -> match uu____164 with | Doc d -> Doc d 
+  fun i  -> fun uu____165  -> match uu____165 with | Doc d -> Doc d 
 let (align : doc Prims.list -> doc) =
   fun docs  ->
-    let uu____175 = combine hardline docs  in
-    match uu____175 with | Doc doc -> Doc doc
+    let uu____176 = combine hardline docs  in
+    match uu____176 with | Doc doc -> Doc doc
   
 let (hbox : doc -> doc) = fun d  -> d 
 let (pretty : Prims.int -> doc -> Prims.string) =
-  fun sz  -> fun uu____191  -> match uu____191 with | Doc doc -> doc 
+  fun sz  -> fun uu____192  -> match uu____192 with | Doc doc -> doc 
