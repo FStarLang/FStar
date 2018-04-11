@@ -160,7 +160,7 @@
         "typing_CanonMonoid.mldenote", "unit_typing"
       ],
       0,
-      "ba29f032e7273fb9b7b77b1833e1a36f"
+      "7933f9a785bf1bd74f0e133ac470c0e7"
     ],
     [
       "CanonMonoid.flatten_correct",

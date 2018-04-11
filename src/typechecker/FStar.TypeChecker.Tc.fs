@@ -79,15 +79,13 @@ let tc_check_trivial_guard env t k =
   t
 
 // A helper to check that the terms elaborated by DMFF are well-typed
-let recheck_debug s env t =
+let recheck_debug s env t :term =
   if Env.debug env (Options.Other "ED") then
     BU.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
   let t', _, _ = tc_term env t in
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
-  // Return the original term (without universes unification variables);
-  // because [tc_eff_decl] will take care of these
-  t
+  t'
 
 
 let check_and_gen env t k =
@@ -593,7 +591,7 @@ let cps_and_elaborate env ed =
 
   let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
   let wp_type = DMFF.star_type dmff_env repr in
-  let wp_type = recheck_debug "*" env wp_type in
+  let _ = recheck_debug "*" env wp_type in
   let wp_a = N.normalize [ N.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
 
   // Building: [a -> wp a -> Effect]
@@ -602,7 +600,7 @@ let cps_and_elaborate env ed =
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
   in
-  let effect_signature = recheck_debug "turned into the effect signature" env effect_signature in
+  let _ = recheck_debug "turned into the effect signature" env effect_signature in
 
   let sigelts = BU.mk_ref [] in
   let mk_lid name : lident = U.dm4f_lid ed name in
@@ -617,8 +615,8 @@ let cps_and_elaborate env ed =
     if not (U.is_total_lcomp item_comp) then
       raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
-    let item_wp = recheck_debug "*" env item_wp in
-    let item_elab = recheck_debug "_" env item_elab in
+    let _ = recheck_debug "*" env item_wp in
+    let _ = recheck_debug "_" env item_elab in
     dmff_env, item_t, item_wp, item_elab
   in
 
@@ -792,7 +790,7 @@ let cps_and_elaborate env ed =
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
     U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
-  let repr = recheck_debug "FC" env repr in
+  let _ = recheck_debug "FC" env repr in
   let repr = register "repr" repr in
 
   (* We are still lacking a principled way to generate pre/post condition *)
@@ -1137,9 +1135,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
         (* TODO : Check that comp is pure ? *)
         let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
-        let _ = recheck_debug "lift-wp" env lift_wp in
-        let _ = recheck_debug "lift-elab" env lift_elab in
-        Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
+        let lift_wp = recheck_debug "lift-wp" env lift_wp in
+        let lift_elab = recheck_debug "lift-elab" env lift_elab in
+        if List.length uvs = 0 then Some (TcUtil.generalize_universes env lift_elab), TcUtil.generalize_universes env lift_wp
+        else Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
     in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)
@@ -1176,6 +1175,15 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
     in
+    //check that sub effecting is universe polymorphic in exactly one universe
+    if lift_wp |> fst |> List.length <> 1 then
+      raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                                             (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                             (lift_wp |> fst |> List.length |> string_of_int))) r;
+    if is_some lift && lift |> must |> fst |> List.length <> 1 then
+      raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                                             (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                             (lift |> must |> fst |> List.length |> string_of_int))) r;
     let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
     let se = { se with sigel = Sig_sub_effect(sub) } in
     [se], []
