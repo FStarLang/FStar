@@ -201,6 +201,10 @@ val loc_disjoint_includes
 : Lemma
   (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
   (ensures (loc_disjoint p1' p2'))
+  [SMTPatOr [
+    [SMTPat (loc_disjoint p1 p2); SMTPat (loc_disjoint p1' p2')];
+    [SMTPat (loc_includes p1 p1'); SMTPat (loc_includes p2 p2')];
+  ]]
 
 val loc_disjoint_buffer
   (#t1 #t2: Type)
@@ -209,6 +213,10 @@ val loc_disjoint_buffer
 : Lemma
   (requires (B.disjoint b1 b2))
   (ensures (loc_disjoint (loc_buffer b1) (loc_buffer b2)))
+  [SMTPatOr [
+    [SMTPat (B.disjoint b1 b2)];
+    [SMTPat (loc_disjoint (loc_buffer b1) (loc_buffer b2))];
+  ]]
 
 val loc_disjoint_gsub_buffer
   (#t: Type)
@@ -449,6 +457,10 @@ val modifies_1_modifies
 : Lemma
   (requires (B.modifies_1 b h1 h2))
   (ensures (modifies (loc_buffer b) h1 h2))
+  [SMTPatOr [
+    [SMTPat (B.modifies_1 b h1 h2)];
+    [SMTPat (modifies (loc_buffer b) h1 h2)];
+  ]]
 
 val modifies_2_modifies
   (#a1 #a2: Type)
