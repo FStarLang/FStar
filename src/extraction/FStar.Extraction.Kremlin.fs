@@ -396,44 +396,47 @@ and translate_let env flavor lb: option<decl> =
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) };
       mllb_meta = meta
     } ->
-      // Case 1: a possibly-polymorphic function.
-      let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) meta in
-      let env = if flavor = Rec then extend env name else env in
-      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
-      let rec find_return_type eff i = function
-        | MLTY_Fun (_, eff, t) when i > 0 ->
-            find_return_type eff (i - 1) t
-        | t ->
-            eff, t
-      in
-      let eff, t = find_return_type E_PURE (List.length args) t0 in
-      let t = translate_type env t in
-      let binders = translate_binders env args in
-      let env = add_binders env args in
-      let name = env.module_name, name in
-      let meta = match eff, t with
-        | E_GHOST, _
-        | E_PURE, TUnit -> MustDisappear :: translate_flags meta
-        | _ -> translate_flags meta
-      in
-      if assumed then
-        if List.length tvars = 0 then
-          Some (DExternal (None, meta, name, translate_type env t0))
+      if List.mem Syntax.NoExtract meta then
+        None
+      else
+        // Case 1: a possibly-polymorphic function.
+        let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) meta in
+        let env = if flavor = Rec then extend env name else env in
+        let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+        let rec find_return_type eff i = function
+          | MLTY_Fun (_, eff, t) when i > 0 ->
+              find_return_type eff (i - 1) t
+          | t ->
+              eff, t
+        in
+        let eff, t = find_return_type E_PURE (List.length args) t0 in
+        let t = translate_type env t in
+        let binders = translate_binders env args in
+        let env = add_binders env args in
+        let name = env.module_name, name in
+        let meta = match eff, t with
+          | E_GHOST, _
+          | E_PURE, TUnit -> MustDisappear :: translate_flags meta
+          | _ -> translate_flags meta
+        in
+        if assumed then
+          if List.length tvars = 0 then
+            Some (DExternal (None, meta, name, translate_type env t0))
+          else begin
+            BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (Syntax.string_of_mlpath name);
+            None
+          end
         else begin
-          BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (Syntax.string_of_mlpath name);
-          None
+          try
+            let body = translate_expr env body in
+            Some (DFunction (None, meta, List.length tvars, t, name, binders, body))
+          with e ->
+            // JP: TODO: figure out what are the remaining things we don't extract
+            let msg = BU.print_exn e in
+            Errors. log_issue Range.dummyRange (Errors.Warning_FunctionNotExtacted, (BU.format2 "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg));
+            let msg = "This function was not extracted:\n" ^ msg in
+            Some (DFunction (None, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
-      else begin
-        try
-          let body = translate_expr env body in
-          Some (DFunction (None, meta, List.length tvars, t, name, binders, body))
-        with e ->
-          // JP: TODO: figure out what are the remaining things we don't extract
-          let msg = BU.print_exn e in
-          Errors. log_issue Range.dummyRange (Errors.Warning_FunctionNotExtacted, (BU.format2 "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg));
-          let msg = "This function was not extracted:\n" ^ msg in
-          Some (DFunction (None, meta, List.length tvars, t, name, binders, EAbortS msg))
-      end
 
   | {
       mllb_name = name;
@@ -441,18 +444,21 @@ and translate_let env flavor lb: option<decl> =
       mllb_def = expr;
       mllb_meta = meta
     } ->
-      // Case 2: this is a global
-      let meta = translate_flags meta in
-      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
-      let t = translate_type env t in
-      let name = env.module_name, name in
-      begin try
-        let expr = translate_expr env expr in
-        Some (DGlobal (meta, name, List.length tvars, t, expr))
-      with e ->
-        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
-        Some (DGlobal (meta, name, List.length tvars, t, EAny))
-      end
+      if List.mem Syntax.NoExtract meta then
+        None
+      else
+        // Case 2: this is a global
+        let meta = translate_flags meta in
+        let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+        let t = translate_type env t in
+        let name = env.module_name, name in
+        begin try
+          let expr = translate_expr env expr in
+          Some (DGlobal (meta, name, List.length tvars, t, expr))
+        with e ->
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+        end
 
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?

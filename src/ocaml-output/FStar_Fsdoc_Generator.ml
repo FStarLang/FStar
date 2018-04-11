@@ -5,42 +5,42 @@ let (one_toplevel :
       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
   =
   fun decls  ->
-    let uu____18 =
+    let uu____16 =
       FStar_List.partition
         (fun d  ->
            match d.FStar_Parser_AST.d with
-           | FStar_Parser_AST.TopLevelModule uu____30 -> true
-           | uu____31 -> false) decls
+           | FStar_Parser_AST.TopLevelModule uu____28 -> true
+           | uu____29 -> false) decls
        in
-    match uu____18 with
+    match uu____16 with
     | (top,nontops) ->
         (match top with
          | t::[] -> FStar_Pervasives_Native.Some (t, nontops)
-         | uu____67 -> FStar_Pervasives_Native.None)
+         | uu____65 -> FStar_Pervasives_Native.None)
   
 type mforest =
   | Leaf of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 
   | Branch of mforest FStar_Util.smap [@@deriving show]
 let (uu___is_Leaf : mforest -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Leaf _0 -> true | uu____100 -> false
+    match projectee with | Leaf _0 -> true | uu____96 -> false
   
 let (__proj__Leaf__item___0 :
   mforest -> (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | Leaf _0 -> _0 
 let (uu___is_Branch : mforest -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Branch _0 -> true | uu____128 -> false
+    match projectee with | Branch _0 -> true | uu____122 -> false
   
 let (__proj__Branch__item___0 : mforest -> mforest FStar_Util.smap) =
   fun projectee  -> match projectee with | Branch _0 -> _0 
 let (htree : mforest FStar_Util.smap) =
   FStar_Util.smap_create (Prims.parse_int "50") 
 let string_of_optiont :
-  'Auu____154 'Auu____155 .
-    ('Auu____154 -> 'Auu____155) ->
-      'Auu____155 ->
-        'Auu____154 FStar_Pervasives_Native.option -> 'Auu____155
+  'Auu____143 'Auu____144 .
+    ('Auu____143 -> 'Auu____144) ->
+      'Auu____144 ->
+        'Auu____143 FStar_Pervasives_Native.option -> 'Auu____144
   =
   fun f  ->
     fun y  ->
@@ -58,10 +58,10 @@ let (string_of_fsdoco :
   fun d  ->
     string_of_optiont
       (fun x  ->
-         let uu____233 =
-           let uu____234 = FStar_Parser_AST.string_of_fsdoc x  in
-           Prims.strcat uu____234 "*)"  in
-         Prims.strcat "(*" uu____233) "" d
+         let uu____217 =
+           let uu____218 = FStar_Parser_AST.string_of_fsdoc x  in
+           Prims.strcat uu____218 "*)"  in
+         Prims.strcat "(*" uu____217) "" d
   
 let (string_of_termo :
   FStar_Parser_AST.term FStar_Pervasives_Native.option -> Prims.string) =
@@ -71,55 +71,55 @@ let (code_wrap : Prims.string -> Prims.string) =
 let (string_of_tycon : FStar_Parser_AST.tycon -> Prims.string) =
   fun tycon  ->
     match tycon with
-    | FStar_Parser_AST.TyconAbstract uu____254 -> "abstract"
-    | FStar_Parser_AST.TyconAbbrev uu____265 -> "abbrev"
+    | FStar_Parser_AST.TyconAbstract uu____232 -> "abstract"
+    | FStar_Parser_AST.TyconAbbrev uu____243 -> "abbrev"
     | FStar_Parser_AST.TyconRecord (id1,_bb,_ko,fields) ->
-        let uu____310 =
-          let uu____311 =
-            let uu____312 =
-              let uu____313 =
+        let uu____288 =
+          let uu____289 =
+            let uu____290 =
+              let uu____291 =
                 FStar_All.pipe_right fields
                   (FStar_List.map
-                     (fun uu____352  ->
-                        match uu____352 with
+                     (fun uu____330  ->
+                        match uu____330 with
                         | (id2,t,doco) ->
-                            let uu____398 = string_of_fsdoco doco  in
-                            let uu____399 =
-                              let uu____400 =
-                                let uu____401 =
+                            let uu____376 = string_of_fsdoco doco  in
+                            let uu____377 =
+                              let uu____378 =
+                                let uu____379 =
                                   FStar_Parser_AST.term_to_string t  in
-                                Prims.strcat ":" uu____401  in
-                              Prims.strcat id2.FStar_Ident.idText uu____400
+                                Prims.strcat ":" uu____379  in
+                              Prims.strcat id2.FStar_Ident.idText uu____378
                                in
-                            Prims.strcat uu____398 uu____399))
+                            Prims.strcat uu____376 uu____377))
                  in
-              FStar_All.pipe_right uu____313 (FStar_String.concat "; ")  in
-            Prims.strcat uu____312 " }"  in
-          Prims.strcat " = { " uu____311  in
-        Prims.strcat id1.FStar_Ident.idText uu____310
+              FStar_All.pipe_right uu____291 (FStar_String.concat "; ")  in
+            Prims.strcat uu____290 " }"  in
+          Prims.strcat " = { " uu____289  in
+        Prims.strcat id1.FStar_Ident.idText uu____288
     | FStar_Parser_AST.TyconVariant (id1,_bb,_ko,vars) ->
-        let uu____444 =
-          let uu____445 =
-            let uu____446 =
+        let uu____422 =
+          let uu____423 =
+            let uu____424 =
               FStar_All.pipe_right vars
                 (FStar_List.map
-                   (fun uu____494  ->
-                      match uu____494 with
+                   (fun uu____472  ->
+                      match uu____472 with
                       | (id2,trmo,doco,u) ->
-                          let uu____549 = string_of_fsdoco doco  in
-                          let uu____550 =
-                            let uu____551 =
-                              let uu____552 =
+                          let uu____527 = string_of_fsdoco doco  in
+                          let uu____528 =
+                            let uu____529 =
+                              let uu____530 =
                                 string_of_optiont
                                   FStar_Parser_AST.term_to_string "" trmo
                                  in
-                              Prims.strcat ":" uu____552  in
-                            Prims.strcat id2.FStar_Ident.idText uu____551  in
-                          Prims.strcat uu____549 uu____550))
+                              Prims.strcat ":" uu____530  in
+                            Prims.strcat id2.FStar_Ident.idText uu____529  in
+                          Prims.strcat uu____527 uu____528))
                in
-            FStar_All.pipe_right uu____446 (FStar_String.concat " | ")  in
-          Prims.strcat " = " uu____445  in
-        Prims.strcat id1.FStar_Ident.idText uu____444
+            FStar_All.pipe_right uu____424 (FStar_String.concat " | ")  in
+          Prims.strcat " = " uu____423  in
+        Prims.strcat id1.FStar_Ident.idText uu____422
   
 let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
   fun d  ->
@@ -132,129 +132,129 @@ let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
         Prims.strcat "module "
           (Prims.strcat i.FStar_Ident.idText
              (Prims.strcat " = " l.FStar_Ident.str))
-    | FStar_Parser_AST.TopLevelLet (uu____565,pats) ->
+    | FStar_Parser_AST.TopLevelLet (uu____541,pats) ->
         let termty =
           FStar_List.map
-            (fun uu____599  ->
-               match uu____599 with
+            (fun uu____575  ->
+               match uu____575 with
                | (p,t) ->
-                   let uu____610 = FStar_Parser_AST.pat_to_string p  in
-                   let uu____611 = FStar_Parser_AST.term_to_string t  in
-                   (uu____610, uu____611)) pats
+                   let uu____586 = FStar_Parser_AST.pat_to_string p  in
+                   let uu____587 = FStar_Parser_AST.term_to_string t  in
+                   (uu____586, uu____587)) pats
            in
         let termty' =
           FStar_List.map
-            (fun uu____622  ->
-               match uu____622 with
+            (fun uu____598  ->
+               match uu____598 with
                | (p,t) -> Prims.strcat p (Prims.strcat ":" t)) termty
            in
         Prims.strcat "let " (FStar_String.concat ", " termty')
-    | FStar_Parser_AST.Main uu____629 -> "main ..."
+    | FStar_Parser_AST.Main uu____605 -> "main ..."
     | FStar_Parser_AST.Assume (i,t) ->
-        let uu____632 =
-          let uu____633 =
-            let uu____634 = FStar_Parser_AST.term_to_string t  in
-            Prims.strcat ":" uu____634  in
-          Prims.strcat i.FStar_Ident.idText uu____633  in
-        Prims.strcat "assume " uu____632
-    | FStar_Parser_AST.Tycon (uu____635,tys) ->
-        let uu____653 =
-          let uu____654 =
+        let uu____608 =
+          let uu____609 =
+            let uu____610 = FStar_Parser_AST.term_to_string t  in
+            Prims.strcat ":" uu____610  in
+          Prims.strcat i.FStar_Ident.idText uu____609  in
+        Prims.strcat "assume " uu____608
+    | FStar_Parser_AST.Tycon (uu____611,tys) ->
+        let uu____629 =
+          let uu____630 =
             FStar_All.pipe_right tys
               (FStar_List.map
-                 (fun uu____688  ->
-                    match uu____688 with
+                 (fun uu____664  ->
+                    match uu____664 with
                     | (t,d1) ->
-                        let uu____731 = string_of_tycon t  in
-                        let uu____732 =
-                          let uu____733 = string_of_fsdoco d1  in
-                          Prims.strcat " " uu____733  in
-                        Prims.strcat uu____731 uu____732))
+                        let uu____707 = string_of_tycon t  in
+                        let uu____708 =
+                          let uu____709 = string_of_fsdoco d1  in
+                          Prims.strcat " " uu____709  in
+                        Prims.strcat uu____707 uu____708))
              in
-          FStar_All.pipe_right uu____654 (FStar_String.concat " and ")  in
-        Prims.strcat "type " uu____653
+          FStar_All.pipe_right uu____630 (FStar_String.concat " and ")  in
+        Prims.strcat "type " uu____629
     | FStar_Parser_AST.Val (i,t) ->
-        let uu____738 =
-          let uu____739 =
-            let uu____740 = FStar_Parser_AST.term_to_string t  in
-            Prims.strcat ":" uu____740  in
-          Prims.strcat i.FStar_Ident.idText uu____739  in
-        Prims.strcat "val " uu____738
-    | FStar_Parser_AST.Exception (i,uu____742) ->
+        let uu____714 =
+          let uu____715 =
+            let uu____716 = FStar_Parser_AST.term_to_string t  in
+            Prims.strcat ":" uu____716  in
+          Prims.strcat i.FStar_Ident.idText uu____715  in
+        Prims.strcat "val " uu____714
+    | FStar_Parser_AST.Exception (i,uu____718) ->
         Prims.strcat "exception " i.FStar_Ident.idText
     | FStar_Parser_AST.NewEffect (FStar_Parser_AST.DefineEffect
-        (i,uu____748,uu____749,uu____750)) ->
+        (i,uu____724,uu____725,uu____726)) ->
         Prims.strcat "new_effect " i.FStar_Ident.idText
     | FStar_Parser_AST.NewEffect (FStar_Parser_AST.RedefineEffect
-        (i,uu____760,uu____761)) ->
+        (i,uu____736,uu____737)) ->
         Prims.strcat "new_effect " i.FStar_Ident.idText
-    | FStar_Parser_AST.SubEffect uu____766 -> "sub_effect"
-    | FStar_Parser_AST.Pragma uu____767 -> "pragma"
+    | FStar_Parser_AST.SubEffect uu____742 -> "sub_effect"
+    | FStar_Parser_AST.Pragma uu____743 -> "pragma"
     | FStar_Parser_AST.Splice (ids,t) ->
-        let uu____774 = FStar_Parser_AST.term_to_string t  in
-        Prims.strcat "splice " uu____774
-    | FStar_Parser_AST.Fsdoc (comm,uu____776) -> comm
+        let uu____750 = FStar_Parser_AST.term_to_string t  in
+        Prims.strcat "splice " uu____750
+    | FStar_Parser_AST.Fsdoc (comm,uu____752) -> comm
   
 let (decl_documented : FStar_Parser_AST.decl -> Prims.bool) =
   fun d  ->
     let tycon_documented tt =
       let tyconvars_documented tycon =
         match tycon with
-        | FStar_Parser_AST.TyconAbstract uu____822 -> false
-        | FStar_Parser_AST.TyconAbbrev uu____833 -> false
-        | FStar_Parser_AST.TyconRecord (uu____846,uu____847,uu____848,fields)
+        | FStar_Parser_AST.TyconAbstract uu____792 -> false
+        | FStar_Parser_AST.TyconAbbrev uu____803 -> false
+        | FStar_Parser_AST.TyconRecord (uu____816,uu____817,uu____818,fields)
             ->
             FStar_List.existsb
-              (fun uu____890  ->
-                 match uu____890 with
+              (fun uu____860  ->
+                 match uu____860 with
                  | (_id,_t,doco) -> FStar_Util.is_some doco) fields
-        | FStar_Parser_AST.TyconVariant (uu____906,uu____907,uu____908,vars)
+        | FStar_Parser_AST.TyconVariant (uu____876,uu____877,uu____878,vars)
             ->
             FStar_List.existsb
-              (fun uu____963  ->
-                 match uu____963 with
+              (fun uu____933  ->
+                 match uu____933 with
                  | (_id,_t,doco,_u) -> FStar_Util.is_some doco) vars
          in
       FStar_List.existsb
-        (fun uu____997  ->
-           match uu____997 with
+        (fun uu____967  ->
+           match uu____967 with
            | (tycon,doco) ->
                (tyconvars_documented tycon) || (FStar_Util.is_some doco)) tt
        in
     match d.FStar_Parser_AST.doc with
-    | FStar_Pervasives_Native.Some uu____1010 -> true
-    | uu____1011 ->
+    | FStar_Pervasives_Native.Some uu____980 -> true
+    | uu____981 ->
         (match d.FStar_Parser_AST.d with
-         | FStar_Parser_AST.Fsdoc uu____1014 -> true
-         | FStar_Parser_AST.Tycon (uu____1015,ty) -> tycon_documented ty
-         | uu____1033 -> false)
+         | FStar_Parser_AST.Fsdoc uu____984 -> true
+         | FStar_Parser_AST.Tycon (uu____985,ty) -> tycon_documented ty
+         | uu____1003 -> false)
   
-let (document_decl : (Prims.string -> unit) -> FStar_Parser_AST.decl -> unit)
-  =
+let (document_decl :
+  (Prims.string -> Prims.unit) -> FStar_Parser_AST.decl -> Prims.unit) =
   fun w  ->
     fun d  ->
       if decl_documented d
       then
-        let uu____1049 = d  in
-        match uu____1049 with
-        | { FStar_Parser_AST.d = decl; FStar_Parser_AST.drange = uu____1051;
+        let uu____1015 = d  in
+        match uu____1015 with
+        | { FStar_Parser_AST.d = decl; FStar_Parser_AST.drange = uu____1017;
             FStar_Parser_AST.doc = fsdoc;
-            FStar_Parser_AST.quals = uu____1053;
-            FStar_Parser_AST.attrs = uu____1054;_} ->
-            ((let uu____1058 =
-                let uu____1059 = string_of_decl' d.FStar_Parser_AST.d  in
-                code_wrap uu____1059  in
-              w uu____1058);
+            FStar_Parser_AST.quals = uu____1019;
+            FStar_Parser_AST.attrs = uu____1020;_} ->
+            ((let uu____1024 =
+                let uu____1025 = string_of_decl' d.FStar_Parser_AST.d  in
+                code_wrap uu____1025  in
+              w uu____1024);
              (match fsdoc with
               | FStar_Pervasives_Native.Some (doc1,_kw) ->
                   w (Prims.strcat "\n" doc1)
-              | uu____1085 -> ());
+              | uu____1051 -> ());
              w "")
       else ()
   
 let document_toplevel :
-  'Auu____1095 .
-    'Auu____1095 ->
+  'Auu____1058 .
+    'Auu____1058 ->
       FStar_Parser_AST.decl ->
         (Prims.string FStar_Pervasives_Native.option,Prims.string
                                                        FStar_Pervasives_Native.option)
@@ -263,38 +263,38 @@ let document_toplevel :
   fun name  ->
     fun topdecl  ->
       match topdecl.FStar_Parser_AST.d with
-      | FStar_Parser_AST.TopLevelModule uu____1114 ->
+      | FStar_Parser_AST.TopLevelModule uu____1075 ->
           (match topdecl.FStar_Parser_AST.doc with
            | FStar_Pervasives_Native.Some (doc1,kw) ->
-               let uu____1147 =
+               let uu____1108 =
                  FStar_List.tryFind
-                   (fun uu____1161  ->
-                      match uu____1161 with | (k,v1) -> k = "summary") kw
+                   (fun uu____1122  ->
+                      match uu____1122 with | (k,v1) -> k = "summary") kw
                   in
-               (match uu____1147 with
+               (match uu____1108 with
                 | FStar_Pervasives_Native.None  ->
                     (FStar_Pervasives_Native.None,
                       (FStar_Pervasives_Native.Some doc1))
-                | FStar_Pervasives_Native.Some (uu____1184,summary) ->
+                | FStar_Pervasives_Native.Some (uu____1145,summary) ->
                     ((FStar_Pervasives_Native.Some summary),
                       (FStar_Pervasives_Native.Some doc1)))
            | FStar_Pervasives_Native.None  ->
                (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
-      | uu____1198 ->
+      | uu____1159 ->
           FStar_Errors.raise_err
             (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
   
 let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
   fun m  ->
-    let uu____1212 =
+    let uu____1171 =
       match m with
       | FStar_Parser_AST.Module (n1,d) -> (n1, d, "module")
-      | FStar_Parser_AST.Interface (n1,d,uu____1239) -> (n1, d, "interface")
+      | FStar_Parser_AST.Interface (n1,d,uu____1198) -> (n1, d, "interface")
        in
-    match uu____1212 with
+    match uu____1171 with
     | (name,decls,_mt) ->
-        let uu____1253 = one_toplevel decls  in
-        (match uu____1253 with
+        let uu____1212 = one_toplevel decls  in
+        (match uu____1212 with
          | FStar_Pervasives_Native.Some (top_decl,other_decls) ->
              let on =
                FStar_Options.prepend_output_dir
@@ -304,8 +304,8 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
              let w = FStar_Util.append_to_file fd  in
              let no_summary = "fsdoc: no-summary-found"  in
              let no_comment = "fsdoc: no-comment-found"  in
-             let uu____1283 = document_toplevel name top_decl  in
-             (match uu____1283 with
+             let uu____1240 = document_toplevel name top_decl  in
+             (match uu____1240 with
               | (summary,comment) ->
                   let summary1 =
                     match summary with
@@ -315,40 +315,40 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
                     match comment with
                     | FStar_Pervasives_Native.Some s -> s
                     | FStar_Pervasives_Native.None  -> no_comment  in
-                  ((let uu____1307 =
+                  ((let uu____1264 =
                       FStar_Util.format "# module %s" [name.FStar_Ident.str]
                        in
-                    w uu____1307);
-                   (let uu____1309 = FStar_Util.format "%s\n" [summary1]  in
-                    w uu____1309);
-                   (let uu____1311 = FStar_Util.format "%s\n" [comment1]  in
-                    w uu____1311);
+                    w uu____1264);
+                   (let uu____1266 = FStar_Util.format "%s\n" [summary1]  in
+                    w uu____1266);
+                   (let uu____1268 = FStar_Util.format "%s\n" [comment1]  in
+                    w uu____1268);
                    FStar_List.iter (document_decl w) other_decls;
                    FStar_Util.close_file fd;
                    name))
          | FStar_Pervasives_Native.None  ->
-             let uu____1320 =
-               let uu____1325 =
+             let uu____1277 =
+               let uu____1282 =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str
                   in
-               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1325)  in
-             FStar_Errors.raise_err uu____1320)
+               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1282)  in
+             FStar_Errors.raise_err uu____1277)
   
-let (generate : Prims.string Prims.list -> unit) =
+let (generate : Prims.string Prims.list -> Prims.unit) =
   fun files  ->
     let modules =
       FStar_List.map
         (fun fn  ->
-           let uu____1341 = FStar_Parser_Driver.parse_file fn  in
-           FStar_Pervasives_Native.fst uu____1341) files
+           let uu____1296 = FStar_Parser_Driver.parse_file fn  in
+           FStar_Pervasives_Native.fst uu____1296) files
        in
     let mods = FStar_List.map document_module modules  in
     let on = FStar_Options.prepend_output_dir "index.md"  in
     let fd = FStar_Util.open_file_for_writing on  in
     FStar_List.iter
       (fun m  ->
-         let uu____1367 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in
-         FStar_Util.append_to_file fd uu____1367) mods;
+         let uu____1322 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in
+         FStar_Util.append_to_file fd uu____1322) mods;
     FStar_Util.close_file fd
   
