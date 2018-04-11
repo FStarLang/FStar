@@ -1453,6 +1453,7 @@ and (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
             let uu____4690 = translate_type env t2  in
             (uu____4689, uu____4690)  in
           TArrow uu____4684
+      | FStar_Extraction_ML_Syntax.MLTY_Erased  -> TUnit
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],p) when
           let uu____4694 = FStar_Extraction_ML_Syntax.string_of_mlpath p  in
           uu____4694 = "Prims.unit" -> TUnit
