@@ -395,7 +395,10 @@ let default_value_for_ty (g:env) (t : mlty) : option<mlexpr> =
             | Some r -> r
         in
         match r with
-        | MLTY_Erased -> Some ml_unit
+        | MLTY_Erased ->
+          Some ml_unit
+        | MLTY_Top ->
+          Some (apply_obj_repr ml_unit MLTY_Erased)
         | _ ->
           None
     in
@@ -511,23 +514,26 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
     in
 
     let fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
-        let formals, _ =
-            let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid g.tcenv fv.fv_name.v in
-            let fvty = N.normalize [N.UnfoldUntil Delta_constant] g.tcenv fvty in
-            U.arrow_formals fvty in
-        let mlargs = List.map (arg_as_mlty g) args in
-        let mlargs =
-            let n_args = List.length args in
-            if List.length formals > n_args //it's not fully applied; so apply the rest to unit
-            then let _, rest = BU.first_N n_args formals in
-                 mlargs @ (List.map (fun _ -> erasedContent) rest)
-            else mlargs in
-        let nm = match maybe_mangle_type_projector g fv with
-                 | Some p ->
-                   p
-                 | None ->
-                   mlpath_of_lident fv.fv_name.v in
-        MLTY_Named (mlargs, nm)
+        if not (is_fv_type g fv)
+        then MLTY_Top //it was translated as an expression or erased
+        else
+            let formals, _ =
+                let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid g.tcenv fv.fv_name.v in
+                let fvty = N.normalize [N.UnfoldUntil Delta_constant] g.tcenv fvty in
+                U.arrow_formals fvty in
+            let mlargs = List.map (arg_as_mlty g) args in
+            let mlargs =
+                let n_args = List.length args in
+                if List.length formals > n_args //it's not fully applied; so apply the rest to unit
+                then let _, rest = BU.first_N n_args formals in
+                     mlargs @ (List.map (fun _ -> erasedContent) rest)
+                else mlargs in
+            let nm = match maybe_mangle_type_projector g fv with
+                     | Some p ->
+                       p
+                     | None ->
+                       mlpath_of_lident fv.fv_name.v in
+            MLTY_Named (mlargs, nm)
 
     in
 
@@ -827,7 +833,10 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
           let x = gensym () in
           eta_args (((x, t0), with_ty t0 <| MLE_Var x)::more_args) t1
         | MLTY_Named (_, _) -> List.rev more_args, t
-        | _ -> failwith "Impossible: Head type is not an arrow" in
+        | _ -> failwith (BU.format2 "Impossible: Head type is not an arrow: (%s : %s)"
+                                (Code.string_of_mlexpr g.currentModule mlAppExpr)
+                                (Code.string_of_mlty g.currentModule t))
+                                in
 
    let as_record qual e =
         match e.expr, qual with

@@ -44,7 +44,7 @@ type binding =
 type env = {
     tcenv: TypeChecker.Env.env;
     gamma:list<binding>;
-    tydefs:list<(list<mlsymbol> * mltydecl)>;
+    tydefs:list<(fv * list<mlsymbol> * mltydecl)>;
     type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
@@ -111,7 +111,7 @@ let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> = match bod
 
 //TODO: this two-level search is pretty inefficient: we should optimize it
 let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyscheme> =
-    BU.find_map env.tydefs  (fun (m, tds) ->
+    BU.find_map env.tydefs  (fun (_, m, tds) ->
         if module_name = m
         then BU.find_map tds (fun td ->
              let (_, n, _, _, _, _) = td in
@@ -125,7 +125,7 @@ let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idTex
 let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
-    BU.find_map env.tydefs  (fun (m, tds) ->
+    BU.find_map env.tydefs  (fun (_, m, tds) ->
         BU.find_map tds (fun (_, n, mangle_opt, _, _, _) ->
             if m = mname
             then if n=ty_name
@@ -298,12 +298,16 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
 
 let extend_tydef (g:env) (fv:fv) (td:mltydecl) : env =
     let m = module_name_of_fv fv in
-    {g with tydefs=(m,td)::g.tydefs; type_names=fv::g.type_names}
+    {g with tydefs=(fv,m,td)::g.tydefs; type_names=fv::g.type_names}
 
 let extend_type_name (g:env) (fv:fv) : env =
     {g with type_names=fv::g.type_names}
 
 let is_type_name g fv = g.type_names |> BU.for_some (fv_eq fv)
+
+let is_fv_type g fv =
+    is_type_name g fv ||
+    g.tydefs |> BU.for_some (fun (fv', _, _) -> fv_eq fv fv')
 
 let emptyMlPath : mlpath = ([],"")
 
