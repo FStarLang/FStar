@@ -39,6 +39,7 @@ module N  = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
+module TcUtil = FStar.TypeChecker.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -449,7 +450,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
-         && not (Term.must_erase g t)
+         && not (TcUtil.must_erase_for_extraction g.tcenv t)
          then let always_fail =
                   let imp = match U.arrow_formals t with
                     | [], t ->

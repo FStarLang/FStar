@@ -440,42 +440,6 @@ let bv_as_mlty (g:env) (bv:bv) =
         | Inl (_, t) -> t
         | _ -> MLTY_Top
 
-let must_erase (g:env) (t:typ) =
-    let rec aux_whnf env t = //t is expected to b in WHNF
-        match (SS.compress t).n with
-        | Tm_type _ -> true
-        | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
-        | Tm_arrow _ ->
-          let bs, c = U.arrow_formals_comp t in
-          let env = FStar.TypeChecker.Env.push_binders env bs in
-          if U.is_pure_comp c
-          then (//printfn "t is %s; %s is pure!" (Print.term_to_string t) (Print.comp_to_string c);
-                aux env (U.comp_result c))
-          else U.is_pure_or_ghost_comp c //erase it if it is ghost
-        | Tm_refine({sort=t}, _)
-        | Tm_ascribed(t, _, _) ->
-          aux env t
-        | Tm_app(head, [_]) ->
-          (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv PC.erased_lid
-           | _ -> false)
-        | _ ->
-          false
-    and aux env t =
-        let t = N.normalize [N.Primops;
-                             N.Weak;
-                             N.HNF;
-                             N.UnfoldUntil Delta_constant;
-                             N.Beta;
-                             N.AllowUnboundUniverses;
-                             N.Zeta;
-                             N.Iota] env t in
-//        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
-        let res = aux_whnf env t in
-        debug g (fun () -> BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t));
-        res
-    in
-    aux g.tcenv t
 
 (* term_as_mlty g t:
            Inspired by the \hat\epsilon function in the thesis (Sec. 3.3.5)
@@ -616,7 +580,7 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
           end
         | _ -> false
     in
-    if must_erase g t0 then MLTY_Erased
+    if TcUtil.must_erase_for_extraction g.tcenv t0 then MLTY_Erased
     else let mlt = aux g t0 in
          if is_top_ty mlt
          then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
@@ -1259,7 +1223,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   let expected_t = term_as_mlty g t in
                   (lbname_, f_e, (t, ([], ([],expected_t))), false, e)
               in
-              if must_erase g t
+              if TcUtil.must_erase_for_extraction g.tcenv t
               then (lbname_, f_e, (t, ([], ([], MLTY_Erased))), false, e)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
                 match t.n with

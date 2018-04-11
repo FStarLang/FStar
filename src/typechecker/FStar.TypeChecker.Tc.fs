@@ -1718,8 +1718,12 @@ let extract_interface (en:env) (m:modul) :modul =
     | _ -> failwith "Impossible!"
   in
 
-  let val_of_lb (s:sigelt) (lid:lident) ((uvs, t): (univ_names * typ)) :sigelt =
-    { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals) }
+  let val_of_lb (s:sigelt) (lid:lident) ((uvs, t): (univ_names * typ)) (lbdef:term) :sigelt =
+    let attrs =
+      if TcUtil.must_erase_for_extraction en lbdef then (lid_as_fv PC.must_erase_for_extraction_attr Delta_constant None |> fv_to_tm)::s.sigattrs
+      else s.sigattrs
+    in
+    { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals); sigattrs = attrs }
   in
 
   (*
@@ -1775,14 +1779,14 @@ let extract_interface (en:env) (m:modul) :modul =
       else
         //extract the type annotations from all the letbindings
         let flbs, slbs = lbs in
-        let typs = slbs |> List.map (fun lb -> lb.lbunivs, lb.lbtyp) in
+        let typs_and_defs = slbs |> List.map (fun lb -> lb.lbunivs, lb.lbtyp, lb.lbdef) in
 
-        let is_lemma = List.existsML (fun (_, t) -> t |> U.is_lemma) typs in
+        let is_lemma = List.existsML (fun (_, t, _) -> t |> U.is_lemma) typs_and_defs in
         //if is it abstract or irreducible or lemma, keep just the vals
-        let vals = List.map2 (fun lid (u, t) -> val_of_lb s lid (u, t)) lids typs in
+        let vals = List.map2 (fun lid (u, t, d) -> val_of_lb s lid (u, t) d) lids typs_and_defs in
         if is_abstract s.sigquals || is_irreducible s.sigquals || is_lemma then vals
         else
-          let should_keep_defs = List.existsML (fun (_, t) -> t |> should_keep_lbdef) typs in
+          let should_keep_defs = List.existsML (fun (_, t, _) -> t |> should_keep_lbdef) typs_and_defs in
           if should_keep_defs then [ s ]
           else vals
     | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
