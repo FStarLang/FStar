@@ -903,7 +903,12 @@ let rec check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * m
              err_unexpected_eff g e ty f tag;
              maybe_coerce e.pos g ml_e t ty, ty
 
-and term_as_mlexpr (g:env) (top:term) : (mlexpr * e_tag * mlty) =
+and term_as_mlexpr g e =
+    let e, f, t = term_as_mlexpr' g e in
+    let e, f = maybe_promote_effect e f t in
+    e, f, t
+
+and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
         (Print.tag_of_term top)

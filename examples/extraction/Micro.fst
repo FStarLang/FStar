@@ -56,3 +56,10 @@ let test (x:int) =
     h10 y
   in
   f10 x
+
+assume val f11: int -> GTot int
+assume val g11: int -> Dv int
+let test11 (x:int) =
+  let y = g11 x in
+  let z = f11 y in
+  assert (z == y)
