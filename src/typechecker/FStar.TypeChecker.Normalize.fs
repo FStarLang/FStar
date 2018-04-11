@@ -107,6 +107,7 @@ type fsteps = {
     unmeta : bool;
     unascribe : bool;
     in_full_norm_request: bool;
+    weakly_reduce_scrutinee:bool;
 }
 
 let default_steps : fsteps = {
@@ -133,6 +134,7 @@ let default_steps : fsteps = {
     unmeta = false;
     unascribe = false;
     in_full_norm_request = false;
+    weakly_reduce_scrutinee = true
 }
 
 let fstep_add_one s fs =
@@ -1147,18 +1149,13 @@ let rec maybe_weakly_reduced tm :  bool =
       | Tm_let _
       | Tm_abs _
       | Tm_arrow _
-      | Tm_refine _ ->
+      | Tm_refine _
+      | Tm_match _ ->
         true
 
       | Tm_app(t, args) ->
         maybe_weakly_reduced t
         || (args |> BU.for_some (fun (a, _) -> maybe_weakly_reduced a))
-
-      | Tm_match(t, pats) ->
-        maybe_weakly_reduced t
-        || (pats |> BU.for_some (fun (_, wopt, t) ->
-                 (match wopt with None -> false | Some t -> maybe_weakly_reduced t)
-                 || maybe_weakly_reduced t))
 
       | Tm_ascribed(t1, asc, _) ->
         maybe_weakly_reduced t1
@@ -1499,6 +1496,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let stack = Match(env, branches, cfg, t.pos)::stack in
             let cfg =
                 if cfg.steps.iota
+                && cfg.steps.weakly_reduce_scrutinee
+                && not cfg.steps.weak
                 then { cfg with steps={cfg.steps with weak=true} }
                 else cfg in
             norm cfg env stack head
@@ -2503,8 +2502,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.steps.iota
         && (not cfg.steps.weak)
         && (not cfg.steps.compress_uvars)
+        && cfg.steps.weakly_reduce_scrutinee
         && maybe_weakly_reduced scrutinee
-        then norm cfg scrutinee_env [] scrutinee //scrutinee was only reduced to wnf; reduce it fully
+        then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
+                  scrutinee_env
+                  []
+                  scrutinee //scrutinee was only reduced to wnf; reduce it fully
         else scrutinee
       in
       rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
