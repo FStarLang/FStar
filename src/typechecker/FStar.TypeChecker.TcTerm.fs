@@ -522,7 +522,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
-    let e, c, g = if not env.lax && TcUtil.short_circuit_head head
+    let e, c, g = if not env.lax && not (Options.lax()) && TcUtil.short_circuit_head head
                   then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
                        // //TODO: this is not efficient:
                        // //      It is quadratic in the size of boolean terms
@@ -1441,26 +1441,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
        match (N.unfold_whnf env tf).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
-            let rec tc_args env args : (Syntax.args * list<(Range.range * lcomp)> * guard_t) = match args with
-                | [] -> ([], [], Rel.trivial_guard)
-                | (e, imp)::tl ->
-                    let e, c, g_e = tc_term env e in
-                    let args, comps, g_rest = tc_args env tl in
-                    (e, imp)::args, (e.pos, c)::comps, Rel.conj_guard g_e g_rest in
-            (* Infer: t1 -> ... -> tn -> C ('u x1...xm),
-                    where ti are the result types of each arg
-                    and   xi are the free type/term variables in the environment
-               where C = Tot,
-                except when Options.ml_ish(), where C = ML (for compatibility with ML)
-            *)
-            let args, comps, g_args = tc_args env args in
-            let bs = null_binders_of_tks (comps |> List.map (fun (_, c) -> c.res_typ, None)) in
-            let ml_or_tot t r =
+            let bs = args |> List.map (fun _ -> null_binder (TcUtil.new_uvar env (U.type_u () |> fst))) in
+            let cres =
+                let t = TcUtil.new_uvar env (U.type_u() |> fst) in
                 if Options.ml_ish ()
                 then U.ml_comp t r
                 else S.mk_Total t
             in
-            let cres = ml_or_tot (TcUtil.new_uvar env (U.type_u () |> fst)) r in
             let bs_cres = U.arrow bs cres in
             if Env.debug env <| Options.Extreme
             then BU.print3 "Forcing the type of %s from %s to %s\n"
@@ -1468,12 +1455,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Print.term_to_string tf)
                             (Print.term_to_string bs_cres);
             Rel.force_trivial_guard env <| Rel.teq env tf bs_cres;
-            let comp =
-                  List.fold_right (fun (r1, c) out ->
-                       TcUtil.bind r1 env None c (None, out))
-                  ((head.pos, chead)::comps)
-                  (U.lcomp_of_comp <| cres) in
-            mk_Tm_app head args None r, comp, Rel.conj_guard ghead g_args
+            check_function_app bs_cres
 
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in

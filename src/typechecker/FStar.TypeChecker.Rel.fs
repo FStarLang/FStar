@@ -3089,8 +3089,8 @@ let resolve_implicits' must_total forcelax g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let g = 
-                 try 
+               let g =
+                 try
                    env.check_type_of must_total env tm k
                  with | e ->
                     Errors.add_errors [Error_BadImplicit,

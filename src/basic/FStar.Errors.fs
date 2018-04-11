@@ -308,6 +308,7 @@ type raw_error =
   | Error_NoSMTButNeeded
   | Fatal_UnexpectedAntiquotation
   | Fatal_SplicedUndef
+  | Warning_ExtractionUnexpectedEffect
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -618,6 +619,7 @@ let default_flags =
   (Error_NoSMTButNeeded                              , CError);
   (Fatal_UnexpectedAntiquotation                     , CFatal);
   (Fatal_SplicedUndef                                , CFatal);
+  (Warning_ExtractionUnexpectedEffect                , CWarning)
   ]
 
 exception Err of raw_error* string

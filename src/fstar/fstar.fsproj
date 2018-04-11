@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--lax FStar.List.Tot.Properties.fst</StartArguments>
+    <StartArguments>--codegen OCaml A.fst --debug yes --trace_error --debug A --debug_level Extraction</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\everest\FStar\ulib\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\test2\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
