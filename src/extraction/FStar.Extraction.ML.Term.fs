@@ -386,9 +386,9 @@ let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     with_ty t <| MLE_Fun (vs_ts, body)
 
 (* eta-expand `e` according to its type `t` *)
-let default_value_for_ty (g:env) (t : mlty) : option<mlexpr> =
+let default_value_for_ty (g:env) (t : mlty) : mlexpr =
     let ts, r = doms_and_cod t in
-    let maybe_unit r =
+    let body r =
         let r =
             match udelta_unfold g r with
             | None -> r
@@ -396,20 +396,17 @@ let default_value_for_ty (g:env) (t : mlty) : option<mlexpr> =
         in
         match r with
         | MLTY_Erased ->
-          Some ml_unit
+          ml_unit
         | MLTY_Top ->
-          Some (apply_obj_repr ml_unit MLTY_Erased)
+          apply_obj_repr ml_unit MLTY_Erased
         | _ ->
-          None
+          with_ty r <| MLE_Coerce (ml_unit, MLTY_Erased, r)
     in
-    match maybe_unit r with
-    | None -> None
-    | Some body ->
-      if ts = []
-      then Some body
-      else let vs = List.map (fun _ -> fresh "a") ts in
-           let vs_ts = List.zip vs ts in
-           Some (with_ty t <| MLE_Fun (vs_ts, body))
+    if ts = []
+    then body r
+    else let vs = List.map (fun _ -> fresh "a") ts in
+         let vs_ts = List.zip vs ts in
+         with_ty t <| MLE_Fun (vs_ts, body r)
 
 let maybe_eta_expand expect e =
     if Options.ml_no_eta_expand_coertions () ||
@@ -431,9 +428,7 @@ let maybe_coerce pos (g:env) e ty (expect:mlty) : mlexpr  =
           match ty with
           | MLTY_Erased ->
             //generate a default value suitable for the expected type
-            (match default_value_for_ty g expect with
-             | Some v -> v
-             | _ -> err_ill_typed_erasure g pos expect)
+            default_value_for_ty g expect
           | _ ->
             maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
