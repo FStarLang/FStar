@@ -1060,9 +1060,22 @@ and p_patternBranch pb (pat, when_opt, e) =
    * was true, then we parenthesized and there's a closing parenthesis coming
    * up, meaning we're not at risk of swallowing a semicolon; if ps was false,
    * then we can recursively call p_term with false. *)
-  group (
-      group (bar ^^ space ^^ p_disjunctivePattern pat ^/+^ p_maybeWhen when_opt ^^ rarrow )
+  let one_pattern_branch p =
+    group (
+      group (bar ^^ space ^^ (p_tuplePattern p) ^/+^ p_maybeWhen when_opt ^^ rarrow )
       ^/+^ p_term false pb e)
+  in
+  match pat.pat with
+  | PatOr pats ->
+    (match List.rev pats with
+     | hd::tl ->
+       (* group the last pattern with the branch so, if possible, they are kept on the same line in case of the disjunctive
+          pattern group being broken *)
+       let last_pat_branch = one_pattern_branch hd in
+       group (bar ^^ space ^^ (separate_map (break1 ^^ bar ^^ space) p_tuplePattern (List.rev tl)) ^^ break1 ^^ last_pat_branch)
+     | [] -> failwith "Impossible: disjunctive pattern can't be empty")
+  | _ ->
+    one_pattern_branch pat
 
 and p_maybeWhen = function
     | None -> empty
