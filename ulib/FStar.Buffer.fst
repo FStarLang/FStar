@@ -881,17 +881,25 @@ val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
+(** This predicate tells whether a buffer can be `rfree`d. The only
+    way to produce it should be `rcreate_mm`, and the only way to
+    consume it should be `rfree.` Rationale: a buffer can be `rfree`d
+    only if it is the result of `rcreate_mm`. Subbuffers should not. *)
+abstract
+let freeable (#a: Type) (b: buffer a) : GTot Type0 =
+  is_mm b.content /\ idx b == 0
+
 (** This function allocates a buffer into a manually-managed buffer in a heap
  * region, meaning that the client must call rfree in order to avoid memory
  * leaks. It translates to C as a straight malloc. *)
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
-                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content /\ freeable b))
   = rcreate_common r init len true
 
 (** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
 let rfree (#a:Type) (b:buffer a)
-  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
+  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b) /\ freeable b))
            (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
   = rfree b.content
 
