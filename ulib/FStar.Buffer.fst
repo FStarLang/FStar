@@ -887,7 +887,7 @@ let rcreate #a r init len = rcreate_common r init len false
     only if it is the result of `rcreate_mm`. Subbuffers should not. *)
 abstract
 let freeable (#a: Type) (b: buffer a) : GTot Type0 =
-  is_mm b.content /\ idx b == 0
+  is_mm b.content /\ is_eternal_region (frameOf b) /\ idx b == 0
 
 (** This function allocates a buffer into a manually-managed buffer in a heap
  * region, meaning that the client must call rfree in order to avoid memory
@@ -899,7 +899,7 @@ let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
 
 (** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
 let rfree (#a:Type) (b:buffer a)
-  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b) /\ freeable b))
+  :ST unit (requires (fun h0      -> live h0 b /\ freeable b))
            (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
   = rfree b.content
 
