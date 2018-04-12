@@ -157,15 +157,9 @@ let close_guard env binders g =
 (* --------------------------------------------------------- *)
 let new_uvar r binders k =
   let uv = UF.fresh () in
-  match binders with
-    | [] ->
-      let uv = mk (Tm_uvar(uv,k)) None r in
-      uv, uv
-    | _ ->
-      let args = binders |> List.map U.arg_of_non_null_binder in
-      let k' = U.arrow binders (mk_Total k) in
-      let uv = mk (Tm_uvar(uv,k')) None r in
-      mk (Tm_app(uv, args)) None r, uv
+  let uv = mk (Tm_uvar(uv,(binders,k))) None r in
+  uv, uv
+
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)

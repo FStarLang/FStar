@@ -93,7 +93,7 @@ let delay t s =
 *)
 let rec force_uvar' t =
   match t.n with
-  | Tm_uvar (uv,_) ->
+  | Tm_uvar (uv, _) ->
       (match Unionfind.find uv with
           | Some t' -> fst (force_uvar' t'), true
           | _ -> t, false)
@@ -202,11 +202,7 @@ let rec subst' (s:subst_ts) t =
     match t0.n with
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
-    | Tm_fvar _                          //fvars are never subject to substitution
-    | Tm_uvar _ -> tag_with_range t0 s   //uvars are always resolved to closed terms, AR: doesn't seem so
-                                         //there could be free universe names, and so universe substs need to be taken care of
-                                         //right now the problem is masked by using a normalization/compress pass
-                                         //AR: update, it happens that univ subst is applied to a uvar, see the example from commit: 3ac46a2a40dd97025522afb19b1437d0e4bbbe4a
+    | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
     | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
@@ -224,7 +220,11 @@ let rec subst' (s:subst_ts) t =
     | Tm_type u ->
         mk (Tm_type (subst_univ (fst s) u)) None (mk_range t0.pos s)
 
-    | _ -> mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
+    | _ ->
+      //NS: 04/12/2018
+      //    Substitutions on Tm_uvar just gets delayed
+      //    since its solution may eventually end up being an open term
+      mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
 
 and subst_flags' s flags =
     flags |> List.map (function
@@ -310,8 +310,14 @@ let push_subst s t =
 
     | Tm_constant _
     | Tm_fvar _
-    | Tm_uvar _
-    | Tm_unknown -> tag_with_range t s
+    | Tm_unknown -> tag_with_range t s //these are always closed
+
+    | Tm_uvar (uv, _) ->
+      begin
+      match (Unionfind.find uv) with
+      | None -> tag_with_range t s
+      | Some _ -> failwith "Should have been forced already; see compress below"
+      end
 
     | Tm_type _
     | Tm_bvar _
@@ -409,16 +415,13 @@ let push_subst s t =
 *)
 let rec compress (t:term) =
     let t = try_read_memo t in
+    let t, _ = force_uvar t in
     match t.n with
     | Tm_delayed((t', s), memo) ->
         memo := Some (push_subst s t');
         compress t
     | _ ->
-        let t', forced = force_uvar t in
-        match t'.n with
-        | Tm_delayed _ -> compress t'
-        | _ -> t'
-
+        t
 
 let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some (Range.set_def_range r (Range.use_range r))) t

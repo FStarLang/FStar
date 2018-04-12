@@ -131,13 +131,16 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * typ                                  (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of ctx_uvar                                    (* A unification variable ?u (aka meta-variable) *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
+and ctx_uvar = uvar * (binders * typ)                            (* (G |- ?u : t), a uvar introduced in context G at type t *)
+and uvar = Unionfind.p_uvar<option<term>> * version
+and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
@@ -146,7 +149,7 @@ and pat' =
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
-and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
+and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
@@ -190,7 +193,6 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.p_uvar<option<term>> * version
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -222,7 +224,6 @@ and subst_elt =
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
-and uvars     = set<(uvar*typ)>
 and syntax<'a> = {
     n:'a;
     pos:Range.range;
@@ -240,11 +241,11 @@ and fv = {
 }
 and free_vars = {
     free_names:list<bv>;
-    free_uvars:list<(uvar*typ)>;
+    free_uvars:list<ctx_uvar>;
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = {
+and lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
@@ -258,14 +259,14 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+and attribute = term
+
 and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
     typ   : typ;
     rng   : Range.range;
  }
-
-and attribute = term
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None

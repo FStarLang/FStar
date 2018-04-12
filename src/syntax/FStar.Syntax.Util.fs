@@ -1485,8 +1485,13 @@ let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
-let uvar_from_id (id : int) (t : typ)=
-    mk (Tm_uvar (Unionfind.from_id id, t)) None Range.dummyRange
+(* This function should rarely be used.
+   It magically reconstructs a uvar from its integer index into the unionfind graph.
+   It's only used from the reflection API.
+   BE CAREFUL!
+*)
+let uvar_from_id (id : int) (bs_t : (binders * typ))=
+    mk (Tm_uvar (Unionfind.from_id id, bs_t)) None Range.dummyRange
 
 // Some generic equalities
 let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
