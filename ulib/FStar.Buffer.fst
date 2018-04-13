@@ -894,13 +894,15 @@ let freeable (#a: Type) (b: buffer a) : GTot Type0 =
  * leaks. It translates to C as a straight malloc. *)
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
-                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content /\ freeable b))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm (content b) /\ freeable b))
   = rcreate_common r init len true
+
+#reset-options
 
 (** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
 let rfree (#a:Type) (b:buffer a)
   :ST unit (requires (fun h0      -> live h0 b /\ freeable b))
-           (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
+           (ensures  (fun h0 _ h1 -> is_mm (content b) /\ is_eternal_region (frameOf b) /\ h1 == HS.free (content b) h0))
   = rfree b.content
 
 (* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
