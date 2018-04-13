@@ -1,0 +1,27 @@
+[
+  "&xŒ>Õ³‘Ø/=\u00068æ}\u0017",
+  [
+    [
+      "Unfold.test1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "88612a43d1de325b984d7107120eea66"
+    ],
+    [
+      "Unfold.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Unfold.test2", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "13aabe93ce635668e0ee42e98da91f2a"
+    ]
+  ]
+]
