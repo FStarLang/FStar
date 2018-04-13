@@ -27,20 +27,10 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker
 open FStar.SMTEncoding.Term
 open FStar.Ident
-open FStar.Const
-open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
-module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util
 module U = FStar.Syntax.Util
-module TcUtil = FStar.TypeChecker.Util
-module Const = FStar.Parser.Const
-module R  = FStar.Reflection.Basic
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
-module RE = FStar.Reflection.Embeddings
 
 exception Inner_let_rec
 
