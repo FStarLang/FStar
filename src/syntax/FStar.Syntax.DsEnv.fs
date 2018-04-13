@@ -717,12 +717,15 @@ let try_lookup_doc (env: env) (l:lid) =
   BU.smap_try_find env.docs l.str
 
 let try_lookup_datacon env (lid:lident) =
-  let k_global_def lid = function
+  let k_global_def lid se =
+      match se with
       | ({ sigel = Sig_declare_typ(_, _, _); sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid Delta_constant None)
         else None
-      | ({ sigel = Sig_datacon _ }, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
+      | ({ sigel = Sig_datacon _ }, _) ->
+         let qual = fv_qual_of_se (fst se) in
+         Some (lid_as_fv lid Delta_constant qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
