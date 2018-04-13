@@ -81,6 +81,7 @@ let jump2 body =
 
 let infix2 = infix 2 1
 let infix0 = infix 0 1
+let infix0_group s l r = group (l ^^ space ^^ s ^^ space ^^ r)
 
 let break1 =
   break_ 1
@@ -840,7 +841,7 @@ and p_refinement aqual_opt binder t phi =
     | _ -> true
     in
     (* If t is atomic, don't put a space between t and phi *)
-    optional p_aqual aqual_opt ^^ binder ^^ colon ^^ break1 ^^
+    optional p_aqual aqual_opt ^^ binder ^^ colon ^/^
       p_appTerm t ^^ (if is_t_atomic then empty else break1) ^^
         soft_braces_with_nesting_tight (p_noSeqTerm false false phi)
 
@@ -1083,7 +1084,7 @@ and p_patternBranch pb (pat, when_opt, e) =
        (* group the last pattern with the branch so, if possible, they are kept on the same line in case of the disjunctive
           pattern group being broken *)
        let last_pat_branch = one_pattern_branch hd in
-       group (bar ^^ space ^^ (separate_map (break1 ^^ bar ^^ space) p_tuplePattern (List.rev tl)) ^^ break1 ^^ last_pat_branch)
+       group (bar ^^ space ^^ (separate_map (break1 ^^ bar ^^ space) p_tuplePattern (List.rev tl)) ^/^ last_pat_branch)
      | [] -> failwith "Impossible: disjunctive pattern can't be empty")
   | _ ->
     one_pattern_branch pat
@@ -1113,7 +1114,7 @@ and p_tmFormula e = match e.tm with
 
 and p_tmConjunction e = match e.tm with
   | Op({idText = "/\\"}, [e1;e2]) ->
-      infix0 (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
+      infix0_group (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
   | _ -> p_tmTuple e
 
 and p_tmTuple e = with_comment p_tmTuple' e e.range
