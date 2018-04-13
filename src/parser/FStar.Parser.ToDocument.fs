@@ -125,6 +125,9 @@ let braces_with_nesting contents =
 let soft_braces_with_nesting contents =
   soft_surround 2 1 lbrace contents rbrace
 
+let soft_braces_with_nesting_tight contents =
+  soft_surround 2 0 lbrace contents rbrace
+
 let brackets_with_nesting contents =
   surround 2 1 lbracket contents rbracket
 
@@ -598,7 +601,6 @@ and p_typeDecl = function
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
-        let p_constructorBranch decl = group (bar ^^ space ^^ p_constructorDecl decl) in
         with_comment p_constructorBranch (uid, t_opt, doc_opt, use_of) range
     in
     (* Beware of side effects with comments printing *)
@@ -619,11 +621,11 @@ and p_recordFieldDecl ps (lid, t, doc_opt) =
   (* TODO : Should we allow tagging individual field with a comment ? *)
   group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
 
-and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
+and p_constructorBranch (uid, t_opt, doc_opt, use_of) =
   let sep = if use_of then str "of" else colon in
-  let uid_doc = p_uident uid in
+  let uid_doc = group (bar ^^ space ^^ p_uident uid) in
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ false false t) t_opt
+  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep)) ^/+^ p_typ false false t) t_opt
 
 and p_letlhs (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
@@ -830,8 +832,8 @@ and p_binder is_atomic b = match b.b with
     end
 
 and p_refinement aqual_opt binder t phi =
-      optional p_aqual aqual_opt ^^ binder ^^ colon ^^
-      p_appTerm t ^^ soft_braces_with_nesting (p_noSeqTerm false false phi)
+      optional p_aqual aqual_opt ^^ binder ^^ colon ^^ break1 ^^
+      p_appTerm t ^^ break1 ^^ soft_braces_with_nesting_tight (p_noSeqTerm false false phi)
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
