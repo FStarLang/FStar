@@ -832,8 +832,17 @@ and p_binder is_atomic b = match b.b with
     end
 
 and p_refinement aqual_opt binder t phi =
-      optional p_aqual aqual_opt ^^ binder ^^ colon ^^ break1 ^^
-      p_appTerm t ^^ break1 ^^ soft_braces_with_nesting_tight (p_noSeqTerm false false phi)
+  let is_t_atomic =
+    match t.tm with
+    | Construct _
+    | App _
+    | Op _ -> false
+    | _ -> true
+    in
+    (* If t is atomic, don't put a space between t and phi *)
+    optional p_aqual aqual_opt ^^ binder ^^ colon ^^ break1 ^^
+      p_appTerm t ^^ (if is_t_atomic then empty else break1) ^^
+        soft_braces_with_nesting_tight (p_noSeqTerm false false phi)
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
@@ -1181,8 +1190,7 @@ and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
 
 and p_refinedBinder b phi =
     match b.b with
-    | Annotated (lid, t) ->
-        soft_parens_with_nesting (p_refinement b.aqual (p_lident lid) t phi)
+    | Annotated (lid, t) -> p_refinement b.aqual (p_lident lid) t phi
     | TAnnotated _ -> failwith "Is this still used ?"
     | Variable _
     | TVariable _
