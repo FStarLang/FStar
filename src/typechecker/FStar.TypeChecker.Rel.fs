@@ -3030,13 +3030,14 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 then begin
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options Options.Set "--no_tactics";
-                        env.solver.preprocess env vc
+                        let vcs = env.solver.preprocess env vc in
+                        vcs |> List.map (fun (env, goal, opts) ->
+                        env, N.normalize [N.Simplify; N.Primops] env goal, opts)
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
             vcs |> List.iter (fun (env, goal, opts) ->
-                    let goal = N.normalize [N.Simplify; N.Primops] env goal in
                     match check_trivial goal with
                     | Trivial ->
                         if debug
