@@ -1741,7 +1741,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "33560e7fc235bd6b4aa47a137f21b1fd"
+      "ab9f5f535240259f33cd2d70a7159326"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_clear_lower_2",
@@ -1794,7 +1794,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "e04920ad357aaeeacc4ad8fa7e487b88"
+      "4be07dd6bcfa7ac06b70d58678c6abc5"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_poly_constants",
@@ -1819,7 +1819,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "26556048fdac8b2564a79c66daf20a98"
+      "6f86a67998e28d1b4285712ec8040a86"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_commutes",
