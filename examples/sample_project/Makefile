@@ -68,7 +68,7 @@ clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) --extract '* -FStar -Prims' > .depend
 
 depend: .depend
 
@@ -77,3 +77,5 @@ include .depend
 # The default target is to verify all files, without extracting anything
 # It needs to be here, because it reads the variable ALL_FST_FILES in .depend
 verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
+
+extract-all: $(ALL_ML_FILES)
