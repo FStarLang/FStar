@@ -33,6 +33,7 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
+module Env = FStar.TypeChecker.Env
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)

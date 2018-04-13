@@ -33,7 +33,7 @@ open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Env
 
 val mk_Apply : e:term -> vars:list<(string * sort)> -> term
-val maybe_curry_app : rng:Range.range -> head:op -> arity:int -> args:term list -> term
+val maybe_curry_app : rng:Range.range -> head:op -> arity:int -> args:list<term> -> term
 val mkForall_fuel : (list<(list<pat>)> * fvs * term -> term)
 
 val head_normal : env_t -> Syntax.term -> bool
