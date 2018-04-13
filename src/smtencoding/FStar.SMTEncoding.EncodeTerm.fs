@@ -511,7 +511,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         t, []
 
       | Tm_fvar v ->
-        lookup_free_var env v.fv_name, []
+        if head_redex env t
+        then encode_term (whnf env t) env
+        else lookup_free_var env v.fv_name, []
 
       | Tm_type _ ->
         mk_Term_type, []
