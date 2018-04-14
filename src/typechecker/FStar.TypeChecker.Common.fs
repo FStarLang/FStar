@@ -40,7 +40,7 @@ type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
     relation:rel;
     rhs:'a;
     element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:(term * term);      //the condition under which this problem is solveable; (uv x1 ... xn, uv)
+    logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
     scope:binders;                    //the set of names permissible in the guard of this formula
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose

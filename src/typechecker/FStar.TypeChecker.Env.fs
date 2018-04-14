@@ -134,7 +134,7 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and implicits = list<(string * term * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> binding -> unit) }
 

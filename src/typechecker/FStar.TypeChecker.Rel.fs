@@ -156,9 +156,11 @@ let close_guard env binders g =
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar r binders k =
-  let uv = UF.fresh () in
-  let uv = mk (Tm_uvar(uv,(binders,k))) None r in
-  uv, uv
+ let t = mk (Tm_uvar(UF.fresh(),(binders,k))) None r in
+ let g = {trivial_guard with implicits=[("", t, r)]} in
+ t, g
+
+let discard_guard (tg : term * guard_t) = fst tg
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -209,8 +211,8 @@ let term_to_string t =
   let compact = Print.term_to_string t in
   let detail =
     match (SS.compress t).n with
-    | Tm_uvar(u, t) -> BU.format2 "%s : %s" (Print.uvar_to_string u) (Print.term_to_string t)
-    | Tm_app({n=Tm_uvar(u, ty)}, args) ->
+    | Tm_uvar(u, (_,t)) -> BU.format2 "%s : %s" (Print.uvar_to_string u) (Print.term_to_string t)
+    | Tm_app({n=Tm_uvar(u, (_,ty))}, args) ->
       BU.format3 "(%s : %s) %s" (Print.uvar_to_string u) (Print.term_to_string ty) (Print.args_to_string args)
     | _ -> "--" in
   BU.format3 "%s (%s)\t%s" compact (Print.tag_of_term t) detail
@@ -331,8 +333,7 @@ let def_check_scoped msg prob phi =
 let def_check_prob msg prob =
     if not (Options.defensive ()) then () else
     def_scope_wf (msg ^ ".scope") (p_loc prob) (p_scope prob);
-    def_check_scoped (msg ^ ".guard")      prob (fst <| p_guard prob);
-    def_check_scoped (msg ^ ".guard_type") prob (snd <| p_guard prob);
+    def_check_scoped (msg ^ ".guard")      prob (p_guard prob);
     match prob with
     | TProb p ->
         begin
@@ -359,19 +360,21 @@ let next_pid =
     let ctr = BU.mk_ref 0 in
     fun () -> incr ctr; !ctr
 
-let mk_problem scope orig lhs rel rhs elt reason = {
-     pid=next_pid();
-     lhs=lhs;
-     relation=rel;
-     rhs=rhs;
-     element=elt;
-     logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed;
-                                                             //their range is intentionally dummy
-     reason=reason::p_reason orig;
-     loc=p_loc orig;
-     rank=None;
-     scope=scope;
-}
+let mk_problem scope orig lhs rel rhs elt reason =
+        //logical guards are always squashed;
+        //their range is intentionally dummy
+    {
+         pid=next_pid();
+         lhs=lhs;
+         relation=rel;
+         rhs=rhs;
+         element=elt;
+         logical_guard=discard_guard <| new_uvar Range.dummyRange scope U.ktype0 ;
+         reason=reason::p_reason orig;
+         loc=p_loc orig;
+         rank=None;
+         scope=scope;
+    }
 let new_problem env lhs rel rhs elt loc reason =
   let scope = Env.all_binders env in
    {
@@ -380,7 +383,7 @@ let new_problem env lhs rel rhs elt loc reason =
     relation=rel;
     rhs=rhs;
     element=elt;
-    logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed?
+    logical_guard=discard_guard <| new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed?
                                                             //their range is intentionally dummy
     reason=[reason];
     loc=loc;
@@ -589,9 +592,9 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
       | None -> U.t_true
       | Some phi -> phi in
-    let _, uv = p_guard prob in
+    let uv = p_guard prob in
     let _ = match (Subst.compress uv).n with
-        | Tm_uvar(uvar, k) ->
+        | Tm_uvar(uvar, k) -> //FIXME
           let bs = p_scope prob in
           let phi = u_abs k bs phi in
           if Env.debug wl.tcenv <| Options.Other "Rel"
@@ -689,21 +692,23 @@ let rec pat_vars env seen args : option<binders> = match args with
             | Some x -> pat_vars env (x::seen) rest
         end
 
+type flex_t = (term * ctx_uvar * args)
+
 let is_flex t = match (SS.compress t).n with
     | Tm_uvar _
     | Tm_app({n=Tm_uvar _}, _) -> true
     | _ -> false
 
-let destruct_flex_t t = match t.n with
-    | Tm_uvar(uv, k) -> (t, uv, k, [])
-    | Tm_app({n=Tm_uvar(uv, k)}, args) -> (t, uv, k, args)
+let destruct_flex_t t : flex_t =
+    match t.n with
+    | Tm_uvar uv -> (t, uv, [])
+    | Tm_app({n=Tm_uvar uv}, args) -> (t, uv, args)
     | _ -> failwith "Not a flex-uvar"
 
-let destruct_flex_pattern env t =
-    let (t, uv, k, args) = destruct_flex_t t in
-    match pat_vars env [] args with
-        | Some vars -> (t, uv, k, args), Some vars
-        | _ -> (t, uv, k, args), None
+let destruct_flex_pattern env t  : flex_t * option<binders> =
+    let t, ctx_uv, args = destruct_flex_t t in
+    (t, ctx_uv, args), pat_vars env [] args
+
 (* ------------------------------------------------ *)
 (* </variable ops>                                  *)
 (* ------------------------------------------------ *)
@@ -995,87 +1000,87 @@ let arg_of_tc = function
     | T (t, _) -> as_arg t
     | _ -> failwith "Impossible"
 
-let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>)
-    : (list<prob> * list<tc> * formula) =
-   //U p1..pn REL h q1..qm
-   //if h is not a free variable
-   //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
-   //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
-    let r = p_loc orig in
-    let rel = p_rel orig in
-    let sub_prob scope args q =
-        match q with
-        | _, variance, T (ti, mk_kind) ->
-            let k = mk_kind scope r in
-            let gi_xs, gi = new_uvar r scope k in
-            let gi_ps = match args with
-                | [] -> gi
-                | _ -> mk (Tm_app(gi, args)) None r in
-            T (gi_xs, mk_kind),
-            TProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
-
-        | _, _, C _ -> failwith "impos" in
-
-    let rec aux scope args qs : (list<prob> * list<tc> * formula) =
-        match qs with
-            | [] -> [], [], U.t_true
-            | q::qs ->
-                let tc, probs =
-                     match q with
-                     | bopt, variance, C ({n=Total (ti, uopt)}) ->
-                       begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
-                            | T (gi_xs, _), prob -> C <| mk_Total' gi_xs uopt, [prob]
-                            | _ -> failwith "impossible"
-                       end
-
-                     | bopt, variance, C ({n=GTotal(ti, uopt)}) ->
-                       begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
-                            | T (gi_xs, _), prob -> C <| mk_GTotal' gi_xs uopt, [prob]
-                            | _ -> failwith "impossible"
-                       end
-
-                     |_, _, C ({n=Comp c}) ->
-                       let components = c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t, generic_kind))) in
-                       let components = (None, COVARIANT, T (c.result_typ, kind_type))::components in
-                       let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
-                       let gi_xs = mk_Comp <| {
-                            comp_univs=c.comp_univs;
-                            effect_name=c.effect_name;
-                            result_typ=List.hd tcs |> un_T;
-                            effect_args=List.tl tcs |> List.map arg_of_tc;
-                            flags=c.flags
-                        }  in
-                        C gi_xs, sub_probs
-
-                    | _ ->
-                      let ktec, prob = sub_prob scope args q in
-                      ktec, [prob] in
-
-                let bopt, scope, args =
-                    match q, tc with
-                    | (Some (b, imp), _, _), T (t, _) ->
-                      let b = ({b with sort=t}), imp in
-                      //THE PREVIOUS LINE IS IMPORTANT, using b as leads to unification introducing a cycle
-                      //see examples/bug-reports/UnificationCrash.fst
-                      Some b, b::scope, U.arg_of_non_null_binder b::args
-                    | _ -> None, scope, args in
-
-                let sub_probs, tcs, f = aux scope args qs in
-                let f = match bopt with
-                    | None ->
-                      let f = U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
-                      def_check_closed (p_loc orig) "imitation_sub_probs (1)" f;
-                      f
-                    | Some b ->
-                      let u_b = env.universe_of env (fst b).sort in
-                      let f = U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
-                      def_check_closed (p_loc orig) "imitation_sub_probs (2)" f;
-                      f
-                in
-
-                probs@sub_probs, tc::tcs, f in
-
-   aux scope ps qs
+//let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>)
+//    : (list<prob> * list<tc> * formula * guard_t) =
+//   //U p1..pn REL h q1..qm
+//   //if h is not a free variable
+//   //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
+//   //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
+//    let r = p_loc orig in
+//    let rel = p_rel orig in
+//    let sub_prob scope args q =
+//        match q with
+//        | _, variance, T (ti, mk_kind) ->
+//            let k = mk_kind scope r in
+//            let gi_xs, gi = new_uvar r scope k in
+//            let gi_ps = match args with
+//                | [] -> gi
+//                | _ -> mk (Tm_app(gi, args)) None r in
+//            T (gi_xs, mk_kind),
+//            TProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
+//
+//        | _, _, C _ -> failwith "impos" in
+//
+//    let rec aux scope args qs : (list<prob> * list<tc> * formula) =
+//        match qs with
+//            | [] -> [], [], U.t_true
+//            | q::qs ->
+//                let tc, probs =
+//                     match q with
+//                     | bopt, variance, C ({n=Total (ti, uopt)}) ->
+//                       begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
+//                            | T (gi_xs, _), prob -> C <| mk_Total' gi_xs uopt, [prob]
+//                            | _ -> failwith "impossible"
+//                       end
+//
+//                     | bopt, variance, C ({n=GTotal(ti, uopt)}) ->
+//                       begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
+//                            | T (gi_xs, _), prob -> C <| mk_GTotal' gi_xs uopt, [prob]
+//                            | _ -> failwith "impossible"
+//                       end
+//
+//                     |_, _, C ({n=Comp c}) ->
+//                       let components = c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t, generic_kind))) in
+//                       let components = (None, COVARIANT, T (c.result_typ, kind_type))::components in
+//                       let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
+//                       let gi_xs = mk_Comp <| {
+//                            comp_univs=c.comp_univs;
+//                            effect_name=c.effect_name;
+//                            result_typ=List.hd tcs |> un_T;
+//                            effect_args=List.tl tcs |> List.map arg_of_tc;
+//                            flags=c.flags
+//                        }  in
+//                        C gi_xs, sub_probs
+//
+//                    | _ ->
+//                      let ktec, prob = sub_prob scope args q in
+//                      ktec, [prob] in
+//
+//                let bopt, scope, args =
+//                    match q, tc with
+//                    | (Some (b, imp), _, _), T (t, _) ->
+//                      let b = ({b with sort=t}), imp in
+//                      //THE PREVIOUS LINE IS IMPORTANT, using b as leads to unification introducing a cycle
+//                      //see examples/bug-reports/UnificationCrash.fst
+//                      Some b, b::scope, U.arg_of_non_null_binder b::args
+//                    | _ -> None, scope, args in
+//
+//                let sub_probs, tcs, f = aux scope args qs in
+//                let f = match bopt with
+//                    | None ->
+//                      let f = U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+//                      def_check_closed (p_loc orig) "imitation_sub_probs (1)" f;
+//                      f
+//                    | Some b ->
+//                      let u_b = env.universe_of env (fst b).sort in
+//                      let f = U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+//                      def_check_closed (p_loc orig) "imitation_sub_probs (2)" f;
+//                      f
+//                in
+//
+//                probs@sub_probs, tc::tcs, f in
+//
+//   aux scope ps qs
 
 (* ------------------------------------------------ *)
 (* </decomposition>                                 *)
@@ -1084,7 +1089,6 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
 (* ----------------------------------------------------- *)
 (* Ranking problems for the order in which to solve them *)
 (* ----------------------------------------------------- *)
-type flex_t = (term * uvar * typ * args)
 type im_or_proj_t = ((uvar * typ) * binders * comp)
                     * list<arg>  //invariant: length args = length binders
                     * ((list<tc> -> typ) * (typ -> bool) * list<(option<binder> * variance * tc)>)
@@ -1633,7 +1637,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
               let rhs_prob = rhs scope env subst in
               if debug env <| Options.Other "Rel"
               then BU.print1 "rhs_prob = %s\n" (prob_to_string env rhs_prob);
-              let formula = p_guard rhs_prob |> fst in
+              let formula = p_guard rhs_prob in
               Inl ([rhs_prob], formula)
 
             | (hd1, imp)::xs, (hd2, imp')::ys when (imp=imp') ->
@@ -1646,7 +1650,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                begin match aux (scope @ [(hd1, imp)]) env subst xs ys with
                  | Inl (sub_probs, phi) ->
                    let phi =
-                        U.mk_conj (p_guard prob |> fst)
+                        U.mk_conj (p_guard prob)
                                   (close_forall env [(hd1,imp)] phi) in
                    if debug env <| Options.Other "Rel"
                    then BU.print2 "Formula is %s\n\thd1=%s\n" (Print.term_to_string phi) (Print.bv_to_string hd1);
@@ -1752,7 +1756,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                 | UDeferred wl -> solve env (defer "universe constraints" orig wl)
                                 | USolved wl ->
                                     let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
-                                    let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
+                                    let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
                                     let wl = solve_prob orig (Some formula) [] wl in
                                     solve env (attempt subprobs wl)
                               end
@@ -1873,154 +1877,90 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
           solve env wl
     in
 
-    (* <imitate> used in flex-rigid *)
-    let imitate orig (env:Env.env) (wl:worklist) (p:im_or_proj_t) : solution =
-        let ((u,k), xs, c), ps, (h, _, qs) = p in
-        let xs = sn_binders env xs in
-        //U p1..pn REL h q1..qm
-        //if h is not a free variable
-        //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
-        //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
-        let r = Env.get_range env in
-        let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print
-                "Imitating gs_xs=\n\t>%s\n\t binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
-                   [(List.map tc_to_string gs_xs |> String.concat "\n\t>");
-                    (Print.binders_to_string ", " xs);
-                    (Print.comp_to_string c);
-                    (Print.term_to_string im);
-                    (Print.tag_of_term im);
-                    (List.map (prob_to_string env) sub_probs |> String.concat ", ");
-                    (N.term_to_string env formula)];
-        def_check_closed (p_loc orig) "imitate" im;
-        let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
-        solve env (attempt sub_probs wl) in
-    (* </imitate> *)
-
-    let imitate' orig env wl = function
-        | None -> giveup env "unable to compute subterms" orig
-        | Some p ->imitate orig env wl p in
-
-    (* <project> used in flex_rigid *)
-    let project orig (env:Env.env) (wl:worklist) (i:int) (p:im_or_proj_t) : option<solution> =
-        let (u, xs, c), ps, (h, matches, qs) = p in
-        //U p1..pn REL h q1..qm
-        //extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
-        //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) REL h q1..qm
-        let r = Env.get_range env in
-        let pi, _ = List.nth ps i in
-        let xi, _ = List.nth xs i in
-
-        let rec gs k =
-            let bs, k = U.arrow_formals (N.unfold_whnf env k) in
-            let rec aux subst bs = match bs with
-                | [] -> [], []
-                | (a, _)::tl ->
-                    let k_a = SS.subst subst a.sort in
-                    let gi_xs, gi = new_uvar r xs k_a in
-                    let gi_xs = N.eta_expand env gi_xs in
-                    let gi_ps = mk_Tm_app gi ps None r in
-                    let subst = NT(a, gi_xs)::subst in
-                    let gi_xs', gi_ps' = aux subst tl in
-                    as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
-              aux [] bs in
-
-        if not <| matches pi
-        then None
-        else let g_xs, _ = gs xi.sort in
-             let xi = S.bv_to_name xi in
-             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.residual_comp_of_comp c |> Some) in
-             let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
-             if debug env <| Options.Other "Rel" then BU.print2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
-             let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
-             Some <| solve env (attempt [sub] wl) in
-    (* </project_t> *)
 
     (* <flex-rigid> *)
     let solve_t_flex_rigid (patterns_only:bool) (orig:prob)
                            (lhs:(flex_t * option<binders>)) (t2:typ) (wl:worklist)
         : solution =
         let (t1, uv, k_uv, args_lhs), maybe_pat_vars = lhs in
-        let subterms ps : option<im_or_proj_t> =
-            let xs, c = U.arrow_formals_comp k_uv in
-            if List.length xs = List.length ps //easy, common case
-            then Some (((uv,k_uv),xs,c), ps, decompose env t2)
-            else let rec elim k args : option<(binders * comp)> =
-                     let k = N.unfold_whnf env k in
-                     match (SS.compress k).n, args with
-                     | _, [] -> Some ([], S.mk_Total k)
-                     | Tm_uvar _, _
-                     | Tm_app _, _ -> //k=?u x1..xn
-                       let uv, uv_args = U.head_and_args k in
-                       begin match (SS.compress uv).n with
-                        | Tm_uvar (uvar, _) ->
-                          (match pat_vars env [] uv_args with
-                           | None -> None
-                           | Some scope ->
-                             let xs = args |> List.map (fun _ ->
-                                Syntax.mk_binder <|
-                                    Syntax.new_bv (Some k.pos)
-                                                  (fst (new_uvar k.pos scope (U.type_u () |> fst)))) in
-                             let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
-                             let k' = U.arrow xs c in
-                             let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
-                             def_check_closed (p_loc orig) "solve_t_flex_rigid.subterms" uv_sol;
-                             U.set_uvar uvar uv_sol;
-                             Some (xs, c))
-                        | _ -> None
-                       end
-                     | Tm_arrow(xs, c), _ ->
-                       let n_args = List.length args in
-                       let n_xs = List.length xs in
-                       if n_xs = n_args
-                       then SS.open_comp xs c |> Some
-                       else if n_xs < n_args
-                       then let args, rest = BU.first_N n_xs args in
-                            let xs, c = SS.open_comp xs c in
-                            BU.bind_opt
-                                   (elim (U.comp_result c) rest)
-                                   (fun (xs', c) -> Some (xs@xs', c))
-                       else //n_args < n_xs
-                            let xs, rest = BU.first_N n_args xs in
-                            let t = mk (Tm_arrow(rest, c)) None k.pos in
-                            SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> raise_error (Errors.Fatal_IllTyped, (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
-                                         (Print.uvar_to_string uv)
-                                         (Print.term_to_string k)
-                                         (Print.term_to_string k_uv))) t1.pos in
-                BU.bind_opt
-                    (elim k_uv ps)
-                    (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
-
-        let imitate_or_project (n:int)
-                               (lhs:flex_t)
-                               (rhs:term)
-                               (stopt:option<im_or_proj_t>) =
-            let fail () = giveup env "flex-rigid case failed all backtracking attempts" orig in
-            let rec try_project st i =
-                if i>=n
-                then fail ()
-                else let tx = UF.new_transaction () in
-                     match project orig env wl i st with
-                     | None
-                     | Some (Failed _) ->
-                       UF.rollback tx;
-                       try_project st (i + 1) //backtracking point
-                     | Some sol -> sol
-            in
-            if Option.isSome stopt
-            then let st = BU.must stopt in
-                 let tx = UF.new_transaction () in
-                 match imitate orig env wl st with
-                 | Failed _ ->
-                   UF.rollback tx;
-                   try_project st 0
-                 | sol -> //no need to commit; we'll commit the enclosing transaction at the top-level
-                   sol
-            else fail()
-        in
+//        let subterms ps : option<im_or_proj_t> =
+//            let xs, c = U.arrow_formals_comp k_uv in
+//            if List.length xs = List.length ps //easy, common case
+//            then Some (((uv,k_uv),xs,c), ps, decompose env t2)
+//            else let rec elim k args : option<(binders * comp)> =
+//                     let k = N.unfold_whnf env k in
+//                     match (SS.compress k).n, args with
+//                     | _, [] -> Some ([], S.mk_Total k)
+//                     | Tm_uvar _, _
+//                     | Tm_app _, _ -> //k=?u x1..xn
+//                       let uv, uv_args = U.head_and_args k in
+//                       begin match (SS.compress uv).n with
+//                        | Tm_uvar (uvar, _) ->
+//                          (match pat_vars env [] uv_args with
+//                           | None -> None
+//                           | Some scope ->
+//                             let xs = args |> List.map (fun _ ->
+//                                Syntax.mk_binder <|
+//                                    Syntax.new_bv (Some k.pos)
+//                                                  (fst (new_uvar k.pos scope (U.type_u () |> fst)))) in
+//                             let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
+//                             let k' = U.arrow xs c in
+//                             let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
+//                             def_check_closed (p_loc orig) "solve_t_flex_rigid.subterms" uv_sol;
+//                             U.set_uvar uvar uv_sol;
+//                             Some (xs, c))
+//                        | _ -> None
+//                       end
+//                     | Tm_arrow(xs, c), _ ->
+//                       let n_args = List.length args in
+//                       let n_xs = List.length xs in
+//                       if n_xs = n_args
+//                       then SS.open_comp xs c |> Some
+//                       else if n_xs < n_args
+//                       then let args, rest = BU.first_N n_xs args in
+//                            let xs, c = SS.open_comp xs c in
+//                            BU.bind_opt
+//                                   (elim (U.comp_result c) rest)
+//                                   (fun (xs', c) -> Some (xs@xs', c))
+//                       else //n_args < n_xs
+//                            let xs, rest = BU.first_N n_args xs in
+//                            let t = mk (Tm_arrow(rest, c)) None k.pos in
+//                            SS.open_comp xs (S.mk_Total t) |> Some
+//                     | _ -> raise_error (Errors.Fatal_IllTyped, (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+//                                         (Print.uvar_to_string uv)
+//                                         (Print.term_to_string k)
+//                                         (Print.term_to_string k_uv))) t1.pos in
+//                BU.bind_opt
+//                    (elim k_uv ps)
+//                    (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
+//
+//        let imitate_or_project (n:int)
+//                               (lhs:flex_t)
+//                               (rhs:term)
+//                               (stopt:option<im_or_proj_t>) =
+//            let fail () = giveup env "flex-rigid case failed all backtracking attempts" orig in
+//            let rec try_project st i =
+//                if i>=n
+//                then fail ()
+//                else let tx = UF.new_transaction () in
+//                     match project orig env wl i st with
+//                     | None
+//                     | Some (Failed _) ->
+//                       UF.rollback tx;
+//                       try_project st (i + 1) //backtracking point
+//                     | Some sol -> sol
+//            in
+//            if Option.isSome stopt
+//            then let st = BU.must stopt in
+//                 let tx = UF.new_transaction () in
+//                 match imitate orig env wl st with
+//                 | Failed _ ->
+//                   UF.rollback tx;
+//                   try_project st 0
+//                 | sol -> //no need to commit; we'll commit the enclosing transaction at the top-level
+//                   sol
+//            else fail()
+//        in
 
         let pattern_eq_imitate_or_project (n:int)
                                           (lhs:flex_t)

@@ -26,7 +26,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 
-val new_uvar: Range.range -> binders -> typ -> typ * typ
+val new_uvar: Range.range -> binders -> typ -> typ * guard_t
 
 val close_guard_univs         : universes -> binders -> guard_t -> guard_t
 val close_guard               : env -> binders -> guard_t -> guard_t
