@@ -14,7 +14,7 @@ type c_True =
   | T
 let (uu___is_T : c_True -> bool) = fun projectee  -> true
 type nonrec unit = unit
-type 'Ap squash_ = unit
+type 'Ap squash = unit
 type 'Ap auto_squash = unit
 type l_True = unit
 type l_False = unit
