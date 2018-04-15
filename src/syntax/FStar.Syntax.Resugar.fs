@@ -395,6 +395,20 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
            && S.fv_eq_lid fv C.b2p_lid ->
       resugar_term' env e
 
+    | Tm_app({n=Tm_fvar fv}, [(t_base, _); (f, _)])
+    | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [(t_base, _); (f, _)])
+      when S.fv_eq_lid fv C.t_refine_lid ->
+      begin
+      match (SS.compress f).n with
+      | Tm_abs([x], f, _) ->
+        let t = S.mk (Tm_refine(fst x, f)) None t.pos in
+        resugar_term' env t
+      | _ ->
+        let x = S.new_bv (Some t.pos) t_base in
+        let phi = S.mk_Tm_app f [S.as_arg (S.bv_to_name x)] None t.pos in
+        resugar_term' env (U.refine x phi)
+      end
+
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function

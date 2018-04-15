@@ -959,9 +959,19 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | (None, _) -> failwith "Missing binder in refinement"
 
         | b ->
-          let (x, _), env = as_binder env None b in
+          let x, env = as_binder env None b in
           let f = desugar_formula env f in
-          setpos <| U.refine x f, noaqs
+          let t =
+              match Env.try_lookup_lid env (FStar.Parser.Const.t_refine_lid) with
+              | None ->
+                setpos <| U.refine (fst x) f
+              | Some (t, b) ->
+                S.mk_Tm_app t [S.as_arg (fst x).sort;
+                               S.as_arg (U.abs [x] f None)]
+                              None
+                              top.range
+          in
+          t, noaqs
       end
 
     | Abs(binders, body) ->

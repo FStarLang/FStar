@@ -53,6 +53,7 @@ let smtpat_lid      = pconst "smt_pat"
 let smtpatOr_lid    = pconst "smt_pat_or"
 let monadic_lid     = pconst "M"
 let spinoff_lid     = pconst "spinoff"
+let t_refine_lid    = pconst "t_refine"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
