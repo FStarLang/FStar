@@ -1652,26 +1652,26 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
 //    let mk_false_interp : env -> string -> term -> decls_t = fun env nm false_tm ->
 //        let valid = mkApp("Valid", [false_tm]) in
 //        [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")] in
-    let mk_and_interp : env -> string -> term -> decls_t = fun env conj _ ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_and_a_b = mkApp(conj, [a;b]) in
-        let valid = mkApp("Valid", [l_and_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall([[l_and_a_b]], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation", "l_and-interp")] in
-    let mk_or_interp : env -> string -> term -> decls_t = fun env disj _ ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_or_a_b = mkApp(disj, [a;b]) in
-        let valid = mkApp("Valid", [l_or_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
+//    let mk_and_interp : env -> string -> term -> decls_t = fun env conj _ ->
+//        let aa = ("a", Term_sort) in
+//        let bb = ("b", Term_sort) in
+//        let a = mkFreeV aa in
+//        let b = mkFreeV bb in
+//        let l_and_a_b = mkApp(conj, [a;b]) in
+//        let valid = mkApp("Valid", [l_and_a_b]) in
+//        let valid_a = mkApp("Valid", [a]) in
+//        let valid_b = mkApp("Valid", [b]) in
+//        [Util.mkAssume(mkForall([[l_and_a_b]], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation", "l_and-interp")] in
+//    let mk_or_interp : env -> string -> term -> decls_t = fun env disj _ ->
+//        let aa = ("a", Term_sort) in
+//        let bb = ("b", Term_sort) in
+//        let a = mkFreeV aa in
+//        let b = mkFreeV bb in
+//        let l_or_a_b = mkApp(disj, [a;b]) in
+//        let valid = mkApp("Valid", [l_or_a_b]) in
+//        let valid_a = mkApp("Valid", [a]) in
+//        let valid_b = mkApp("Valid", [b]) in
+//        [Util.mkAssume(mkForall([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
     let mk_eq2_interp : string -> env -> string -> term -> decls_t = fun nm env eq2 tt ->
         let aa = ("a", Term_sort) in
         let xx = ("x", Term_sort) in
@@ -1694,33 +1694,33 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let eq3_x_y = mkApp(eq3, [a;b;x;y]) in
         let valid = mkApp("Valid", [eq3_x_y]) in
         [Util.mkAssume(mkForall([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
-    let mk_imp_interp : env -> string -> term -> decls_t = fun env imp tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_imp_a_b = mkApp(imp, [a;b]) in
-        let valid = mkApp("Valid", [l_imp_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation", "l_imp-interp")] in
-    let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_iff_a_b = mkApp(iff, [a;b]) in
-        let valid = mkApp("Valid", [l_iff_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
-    let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
-        let aa = ("a", Term_sort) in
-        let a = mkFreeV aa in
-        let l_not_a = mkApp(l_not, [a]) in
-        let valid = mkApp("Valid", [l_not_a]) in
-        let not_valid_a = mkNot <| mkApp("Valid", [a]) in
-        [Util.mkAssume(mkForall([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
+//    let mk_imp_interp : env -> string -> term -> decls_t = fun env imp tt ->
+//        let aa = ("a", Term_sort) in
+//        let bb = ("b", Term_sort) in
+//        let a = mkFreeV aa in
+//        let b = mkFreeV bb in
+//        let l_imp_a_b = mkApp(imp, [a;b]) in
+//        let valid = mkApp("Valid", [l_imp_a_b]) in
+//        let valid_a = mkApp("Valid", [a]) in
+//        let valid_b = mkApp("Valid", [b]) in
+//        [Util.mkAssume(mkForall([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation", "l_imp-interp")] in
+//    let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
+//        let aa = ("a", Term_sort) in
+//        let bb = ("b", Term_sort) in
+//        let a = mkFreeV aa in
+//        let b = mkFreeV bb in
+//        let l_iff_a_b = mkApp(iff, [a;b]) in
+//        let valid = mkApp("Valid", [l_iff_a_b]) in
+//        let valid_a = mkApp("Valid", [a]) in
+//        let valid_b = mkApp("Valid", [b]) in
+//        [Util.mkAssume(mkForall([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
+//    let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
+//        let aa = ("a", Term_sort) in
+//        let a = mkFreeV aa in
+//        let l_not_a = mkApp(l_not, [a]) in
+//        let valid = mkApp("Valid", [l_not_a]) in
+//        let not_valid_a = mkNot <| mkApp("Valid", [a]) in
+//        [Util.mkAssume(mkForall([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
     let mk_forall_interp : string -> env -> string -> term -> decls_t = fun nm env for_all tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1798,15 +1798,15 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.string_lid, mk_str);
 //                 (Const.true_lid,   mk_true_interp);
 //                 (Const.false_lid,  mk_false_interp);
-                 (Const.and_lid,    mk_and_interp);
-                 (Const.or_lid,     mk_or_interp);
-                 (Const.eq2_lid,    mk_eq2_interp "eq2-interp");
+//                 (Const.and_lid,    mk_and_interp);
+//                 (Const.or_lid,     mk_or_interp);
+//                 (Const.eq2_lid,    mk_eq2_interp "eq2-interp");
                  (Const.t_eq2_lid,  mk_eq2_interp "t_eq2-interp");
                  (Const.eq3_lid,    mk_eq3_interp);
-                 (Const.imp_lid,    mk_imp_interp);
-                 (Const.iff_lid,    mk_iff_interp);
-                 (Const.not_lid,    mk_not_interp);
-                 (Const.forall_lid, mk_forall_interp "forall-interp");
+//                 (Const.imp_lid,    mk_imp_interp);
+//                 (Const.iff_lid,    mk_iff_interp);
+//                 (Const.not_lid,    mk_not_interp);
+//                 (Const.forall_lid, mk_forall_interp "forall-interp");
                  (Const.t_forall_lid, mk_forall_interp "t_forall-interp");
                  (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
@@ -2123,7 +2123,7 @@ let encode_top_level_let :
                 (* Open binders *)
                 let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
                 let is_prop =
-                    match (SS.compress t_norm).n with
+                    match (SS.compress t_body).n with
                     | Tm_fvar fv -> S.fv_eq_lid fv (FStar.Parser.Const.prop_lid)
                     | _ -> false
                 in
@@ -2143,7 +2143,9 @@ let encode_top_level_let :
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
                     if is_prop
-                    then mk_Valid app, encode_formula body env'
+                    then (
+//                          BU.print1 "is_prop %s" (Print.lbname_to_string lbn);
+                          mk_Valid app, encode_formula body env')
                     else app, encode_term body env'
                 in
 
