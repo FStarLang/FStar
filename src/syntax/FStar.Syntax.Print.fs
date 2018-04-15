@@ -196,7 +196,6 @@ let qual_to_string = function
   | Abstract              -> "abstract"
   | Noeq                  -> "noeq"
   | Unopteq               -> "unopteq"
-  | Logic                 -> "logic"
   | TotalEffect           -> "total"
   | Discriminator l       -> U.format1 "(Discriminator %s)" (lid_to_string l)
   | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) x.idText

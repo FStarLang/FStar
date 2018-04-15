@@ -2119,6 +2119,11 @@ let encode_top_level_let :
 
                 (* Open binders *)
                 let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
+                let is_prop =
+                    match (SS.compress t_norm).n with
+                    | Tm_fvar fv -> S.fv_eq_lid fv (FStar.Parser.Const.prop_lid)
+                    | _ -> false
+                in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
@@ -2134,7 +2139,7 @@ let encode_top_level_let :
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
-                    if quals |> List.contains Logic
+                    if is_prop
                     then mk_Valid app, encode_formula body env'
                     else app, encode_term body env'
                 in
@@ -2459,9 +2464,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_inductive_typ(t, _, tps, k, _, datas) ->
         let quals = se.sigquals in
-        let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
+        //NS 04/15/18: Is this 'is_assumption' case even possible?
+        let is_assumption = quals |> BU.for_some (function Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
-            if is_logical
+            if is_assumption
             then let name, args, _, _, _ = c in
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl c in

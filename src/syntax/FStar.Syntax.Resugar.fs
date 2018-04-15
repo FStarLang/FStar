@@ -953,7 +953,6 @@ let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   | S.Unopteq -> Some A.Unopteq
   | S.TotalEffect -> Some A.TotalEffect
   (* TODO : Find the correct option to display this *)
-  | S.Logic -> if true then None else Some A.Logic
   | S.Reifiable -> Some A.Reifiable
   | S.Reflectable _ -> Some A.Reflectable
   | S.Discriminator _ -> None

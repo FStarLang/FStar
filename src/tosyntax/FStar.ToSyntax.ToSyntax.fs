@@ -45,30 +45,37 @@ let trans_aqual = function
   | Some AST.Equality -> Some S.Equality
   | _ -> None
 
-let trans_qual r maybe_effect_id = function
-  | AST.Private ->       S.Private
-  | AST.Assumption ->    S.Assumption
-  | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
-  | AST.Inline_for_extraction -> S.Inline_for_extraction
-  | AST.NoExtract ->     S.NoExtract
-  | AST.Irreducible ->   S.Irreducible
-  | AST.Logic ->         S.Logic
-  | AST.TotalEffect ->   S.TotalEffect
-  | AST.Effect_qual ->   S.Effect
-  | AST.New  ->          S.New
-  | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        Errors.log_issue r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
-  | AST.Reflectable ->
-    begin match maybe_effect_id with
-    | None -> raise_error (Errors.Fatal_ReflectOnlySupportedOnEffects, "Qualifier reflect only supported on effects") r
-    | Some effect_id ->  S.Reflectable effect_id
-    end
-  | AST.Reifiable ->     S.Reifiable
-  | AST.Noeq ->          S.Noeq
-  | AST.Unopteq ->       S.Unopteq
-  | AST.DefaultEffect -> raise_error (Errors.Fatal_DefaultQualifierNotAllowedOnEffects, "The 'default' qualifier on effects is no longer supported") r
-  | AST.Inline
-  | AST.Visible -> raise_error (Errors.Fatal_UnsupportedQualifier, "Unsupported qualifier") r
+let trans_qual r maybe_effect_id q =
+  match q with
+  | AST.Logic ->
+    FStar.Errors.log_issue r (Warning_DeprecatedDefinition, "The 'logic' qualifier is deprecated and redundant; please remove it");
+    []
+  | _ ->
+     [(match q with
+      | AST.Private ->       S.Private
+      | AST.Assumption ->    S.Assumption
+      | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
+      | AST.Inline_for_extraction -> S.Inline_for_extraction
+      | AST.NoExtract ->     S.NoExtract
+      | AST.Irreducible ->   S.Irreducible
+      | AST.TotalEffect ->   S.TotalEffect
+      | AST.Effect_qual ->   S.Effect
+      | AST.New  ->          S.New
+      | AST.Abstract ->      S.Abstract
+      | AST.Opaque ->        Errors.log_issue r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
+      | AST.Reflectable ->
+        begin match maybe_effect_id with
+        | None -> raise_error (Errors.Fatal_ReflectOnlySupportedOnEffects, "Qualifier reflect only supported on effects") r
+        | Some effect_id ->  S.Reflectable effect_id
+        end
+      | AST.Reifiable ->     S.Reifiable
+      | AST.Noeq ->          S.Noeq
+      | AST.Unopteq ->       S.Unopteq
+      | AST.DefaultEffect -> raise_error (Errors.Fatal_DefaultQualifierNotAllowedOnEffects, "The 'default' qualifier on effects is no longer supported") r
+      | AST.Inline
+      | AST.Visible
+      | AST.Logic -> raise_error (Errors.Fatal_UnsupportedQualifier, "Unsupported qualifier") r)
+     ]
 
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
@@ -1897,11 +1904,6 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
               else ktype
             | Some k -> desugar_term env' k in
         let t0 = t in
-        let quals = if quals |> BU.for_some (function S.Logic -> true | _ -> false)
-                    then quals
-                    else if t0.level = Formula
-                    then S.Logic::quals
-                    else quals in
         let qlid = qualify env id in
         let se =
             if quals |> List.contains S.Effect
@@ -2143,7 +2145,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
     let mname       =qualify env0 eff_name in
-    let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
+    let qualifiers  =List.collect (trans_qual d.drange (Some mname)) quals in
     let se =
       if for_free then
         let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
@@ -2286,7 +2288,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
       (* An effect for free has a type of the shape "a:Type -> Effect" *)
       let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
       { sigel = if for_free then Sig_new_effect_for_free (ed) else Sig_new_effect (ed);
-        sigquals = List.map (trans_qual (Some mname)) quals;
+        sigquals = List.collect (trans_qual (Some mname)) quals;
         sigrng = d.drange;
         sigmeta = default_sigmeta  ;
         sigattrs = [] }
@@ -2379,7 +2381,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | Tycon(is_effect, tcs) ->
     let quals = if is_effect then Effect_qual :: d.quals else d.quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
-    desugar_tycon env d (List.map (trans_qual None) quals) tcs
+    desugar_tycon env d (List.collect (trans_qual None) quals) tcs
 
   | TopLevelLet(isrec, lets) ->
     let quals = d.quals in
@@ -2406,14 +2408,10 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
           let quals = match quals with
-            | _::_ -> List.map (trans_qual None) quals
+            | _::_ -> List.collect (trans_qual None) quals
             | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr fv} -> Env.lookup_letbinding_quals env fv.fv_name.v) in
-          let quals =
-            if lets |> BU.for_some (fun (_, (_, t)) -> t.level=Formula)
-            then S.Logic::quals
-            else quals in
           let lbs = if quals |> List.contains S.Abstract
                     then fst lbs, snd lbs |> List.map (fun lb ->
                             let fv = right lb.lbname in
@@ -2506,7 +2504,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         else quals in
     let lid = qualify env id in
     let se = { sigel = Sig_declare_typ(lid, [], t);
-               sigquals = List.map (trans_qual None) quals;
+               sigquals = List.collect (trans_qual None) quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
                sigattrs = [] } in

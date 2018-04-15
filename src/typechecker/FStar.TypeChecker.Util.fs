@@ -1782,7 +1782,6 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Assumption ->
           quals
           |> List.for_all (fun x -> x=q
-                              || x=Logic
                               || inferred x
                               || visibility x
                               || assumption x
@@ -1794,7 +1793,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
           |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
 
         | Inline_for_extraction ->
-          quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x
+          quals |> List.for_all (fun x -> x=q || visibility x || reducibility x
                                               || reification x || inferred x
                                               || (env.is_iface && x=Assumption)
                                               || x=NoExtract)
@@ -1806,15 +1805,11 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Noeq
         | Unopteq ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
+          |> List.for_all (fun x -> x=q || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
 
         | TotalEffect ->
           quals
           |> List.for_all (fun x -> x=q || inferred x || visibility x || reification x)
-
-        | Logic ->
-          quals
-          |> List.for_all (fun x -> x=q || x=Assumption || inferred x || visibility x || reducibility x)
 
         | Reifiable
         | Reflectable _ ->
@@ -1941,9 +1936,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   || Options.dont_gen_projectors (Env.current_module env).str
             in
             let quals =
-                (* KM : What about Logic ? should it still be there even with an implementation *)
                 S.Discriminator lid ::
-                (if only_decl then [S.Logic; S.Assumption] else []) @
+                (if only_decl then [S.Assumption] else []) @
                 //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
                 List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
             in
@@ -2158,7 +2152,7 @@ let mk_data_operations iquals env tcs se =
 (* private *)
 let haseq_suffix = "__uu___haseq"
 
-let is_haseq_lid lid = 
+let is_haseq_lid lid =
   let str = lid.str in let len = String.length str in
   let haseq_suffix_len = String.length haseq_suffix in
   len > haseq_suffix_len &&
@@ -2215,7 +2209,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
-  
+
   //fold right with bs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
