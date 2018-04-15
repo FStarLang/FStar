@@ -51,6 +51,12 @@ abstract let is_prop (a:Type0) =
 (* The type of propositions (sub-singleton types) *)
 let prop = a:Type0{is_prop a}
 
+(* A predicate to express when a type supports decidable equality
+   The type-checker emits axioms for hasEq for each inductive type *)
+assume type hasEq: Type -> Tot prop
+
+type eqtype = a:Type{hasEq a}
+
 (* A coercion down to prop *)
 
 (* CH: squash only lax checks, and not sure we can do better
@@ -80,12 +86,6 @@ unfold let t_refine : a:Type -> (a->Tot prop) -> Tot Type = fun a p -> x:a{p x}
    It's marked `private` so that users cannot write it themselves.
 *)   
 private let auto_squash (p:Type) = squash p
-
-(* A predicate to express when a type supports decidable equality
-   The type-checker emits axioms for hasEq for each inductive type *)
-assume type hasEq: Type -> Tot prop
-
-type eqtype = a:Type{hasEq a}
 
 assume HasEq_bool: hasEq bool
 assume HasEq_unit: hasEq unit

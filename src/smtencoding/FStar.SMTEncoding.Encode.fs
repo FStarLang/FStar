@@ -925,9 +925,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let t_haseq_ref = mk_haseq t in
 
               let t_haseq =
-                Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                match try_lookup_lid env (FStar.Parser.Const.haseq_lid) with
+                | None -> []
+                | Some _ ->
+                  [Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
-                              "haseq" ^ tsym) in
+                              "haseq" ^ tsym)] in
               // let t_valid =
               //   let xx = (x, Term_sort) in
               //   let valid_t = mkApp ("Valid", [t]) in
@@ -953,7 +956,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @[tdecl;
                               t_kinding;
                               // t_valid;
-                              t_interp;t_haseq] in
+                              t_interp]@t_haseq in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
               t, t_decls
@@ -1643,12 +1646,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
          Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
-    let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
-        let valid = mkApp("Valid", [true_tm]) in
-        [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
-    let mk_false_interp : env -> string -> term -> decls_t = fun env nm false_tm ->
-        let valid = mkApp("Valid", [false_tm]) in
-        [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")] in
+//    let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
+//        let valid = mkApp("Valid", [true_tm]) in
+//        [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
+//    let mk_false_interp : env -> string -> term -> decls_t = fun env nm false_tm ->
+//        let valid = mkApp("Valid", [false_tm]) in
+//        [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")] in
     let mk_and_interp : env -> string -> term -> decls_t = fun env conj _ ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1669,7 +1672,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
         [Util.mkAssume(mkForall([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
-    let mk_eq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
+    let mk_eq2_interp : string -> env -> string -> term -> decls_t = fun nm env eq2 tt ->
         let aa = ("a", Term_sort) in
         let xx = ("x", Term_sort) in
         let yy = ("y", Term_sort) in
@@ -1678,7 +1681,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let y = mkFreeV yy in
         let eq2_x_y = mkApp(eq2, [a;x;y]) in
         let valid = mkApp("Valid", [eq2_x_y]) in
-        [Util.mkAssume(mkForall([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
+        [Util.mkAssume(mkForall([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", nm)] in
     let mk_eq3_interp : env -> string -> term -> decls_t = fun env eq3 tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1718,7 +1721,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-    let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
+    let mk_forall_interp : string -> env -> string -> term -> decls_t = fun nm env for_all tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let xx = ("x", Term_sort) in
@@ -1730,7 +1733,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
         [Util.mkAssume(mkForall([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
                      Some "forall interpretation",
-                     "forall-interp")] in
+                     nm)] in
     let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1793,18 +1796,18 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
-                 (Const.true_lid,   mk_true_interp);
-                 (Const.false_lid,  mk_false_interp);
+//                 (Const.true_lid,   mk_true_interp);
+//                 (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
-                 (Const.eq2_lid,    mk_eq2_interp);
-                 (Const.t_eq2_lid,  mk_eq2_interp);
+                 (Const.eq2_lid,    mk_eq2_interp "eq2-interp");
+                 (Const.t_eq2_lid,  mk_eq2_interp "t_eq2-interp");
                  (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
-                 (Const.forall_lid, mk_forall_interp);
-                 (Const.t_forall_lid, mk_forall_interp);
+                 (Const.forall_lid, mk_forall_interp "forall-interp");
+                 (Const.t_forall_lid, mk_forall_interp "t_forall-interp");
                  (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
