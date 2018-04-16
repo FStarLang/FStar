@@ -25,5 +25,7 @@ let elift1 #a #b f ga = f ga
 let elift2 #a #b #c f ga gc = f ga gc
 let elift3 #a #b #c #d f ga gc gd = f ga gc gd
 let elift1_p #a #b #p f ga = f ga
+let elift1_pq #a #b #p #q f ga = f ga
 let elift2_p #a #c #p #b f ga gc = f ga gc
+let elift2_pq #a #c #p #b #q f ga gc = f ga gc
 let lemma_haseq_erased a = ()

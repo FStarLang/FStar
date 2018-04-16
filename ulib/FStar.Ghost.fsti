@@ -84,6 +84,14 @@ val elift1_p : #a:Type
              -> r:erased a{p (reveal r)}
              -> Tot (z:erased b{reveal z == f (reveal r)})
 
+val elift1_pq : #a:Type
+              -> #b:Type
+              -> #p:(a -> Type)
+              -> #q:(x:a{p x} -> b -> Type)
+              -> $f:(x:a{p x} -> GTot (y:b{q x y}))
+              -> r:erased a{p (reveal r)}
+              -> Tot (z:erased b{reveal z == f (reveal r)})
+
 val elift2_p : #a:Type
              -> #c:Type
              -> #p: (a -> c -> Type)
@@ -92,6 +100,16 @@ val elift2_p : #a:Type
              -> ra:erased a
              -> rc:erased c{p (reveal ra) (reveal rc)}
              -> Tot (x:erased b{reveal x == f (reveal ra) (reveal rc)})
+
+val elift2_pq : #a:Type
+              -> #c:Type
+              -> #p: (a -> c -> Type)
+              -> #b:Type
+              -> #q: (xa:a -> xc:c{p xa xc} -> b -> Type)
+              -> $f:(xa:a -> xc:c{p xa xc} -> GTot (y:b{q xa xc y}))
+              -> ra:erased a
+              -> rc:erased c{p (reveal ra) (reveal rc)}
+              -> Tot (x:erased b{reveal x == f (reveal ra) (reveal rc)})
 
 val lemma_haseq_erased: a:Type -> Lemma (requires (hasEq a))
                                        (ensures (hasEq (erased a)))
