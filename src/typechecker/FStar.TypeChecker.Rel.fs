@@ -2515,6 +2515,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         else let t_base, _ = base_and_refinement env t1 in
              solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
+      | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, _), _
+      | Tm_app({n=Tm_fvar fv}, _), _
+        when S.fv_eq_lid fv FStar.Parser.Const.t_refine_lid
+         ||  S.fv_eq_lid fv FStar.Parser.Const.p_refine_lid ->
+        let t1 = N.normalize [N.Eager_unfolding] env t1 in
+        solve_t env ({problem with lhs=t1}) wl
+
+      | _, Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, _)
+      | _, Tm_app({n=Tm_fvar fv}, _)
+        when S.fv_eq_lid fv FStar.Parser.Const.t_refine_lid
+         ||  S.fv_eq_lid fv FStar.Parser.Const.p_refine_lid ->
+        let t2 = N.normalize [N.Eager_unfolding] env t2 in
+        solve_t env ({problem with rhs=t2}) wl
+
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
         solve_t env ({problem with rhs=t2}) wl
@@ -3047,8 +3061,8 @@ let resolve_implicits' must_total forcelax g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let g = 
-                 try 
+               let g =
+                 try
                    env.check_type_of must_total env tm k
                  with | e ->
                     Errors.add_errors [Error_BadImplicit,
