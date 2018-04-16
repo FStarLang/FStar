@@ -242,15 +242,6 @@ package: all
 	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
 	# Then the standard library.
 	$(call fexport,ulib)
-	# Do not provide ml/fs sources, however. From ulib/ml, only
-	# preserve Makefile.include
-	mv $(PREFIX)/ulib/ml/Makefile.include $(PREFIX)/ulib/ml_Makefile.include
-	rm -rf $(PREFIX)/ulib/ml $(PREFIX)/ulib/fs
-	mkdir -p $(PREFIX)/ulib/ml
-	mv $(PREFIX)/ulib/ml_Makefile.include $(PREFIX)/ulib/ml/Makefile.include
-	# Only provide the Makefile suited for verification
-	rm -f $(PREFIX)/ulib/Makefile
-	mv $(PREFIX)/ulib/Makefile.verify $(PREFIX)/ulib/Makefile
 	# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
