@@ -801,6 +801,7 @@ let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
+// GM: This is unused, maybe delete
 let and_match m1 m2 =
     match m1 with
     | MisMatch (i, j) -> MisMatch (i, j)
@@ -872,7 +873,7 @@ let rec head_matches env t1 t2 : match_result =
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
-(* Does t1 match t2, after some delta steps? *)
+(* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
         let head, _ = U.head_and_args t in
@@ -887,7 +888,11 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let fail r = (r, None) in
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
-
+        if Env.debug env <| Options.Other "RelDelta" then
+            BU.print3 "head_matches (%s, %s) = %s\n"
+                (Print.term_to_string t1)
+                (Print.term_to_string t2)
+                (string_of_match_result r);
         let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
           let t1, t2 = if d1_greater_than_d2
@@ -932,7 +937,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
             | _ -> success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
-        BU.print4 "head_matches (%s, %s) = %s (%s)\n"
+        BU.print4 "head_matches_delta (%s, %s) = %s (%s)\n"
             (Print.term_to_string t1)
             (Print.term_to_string t2)
             (string_of_match_result (fst r))
