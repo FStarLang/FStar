@@ -30,7 +30,7 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
 (* Actions *)
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
+let __tac_wp a = proofstate -> (__result a -> Tot prop) -> Tot prop
 
 (*
  * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"

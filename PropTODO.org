@@ -40,7 +40,9 @@ for porting more examples without lots of pain
 ** prims
 - normalize_spec started failing after Nik Apr 16 changes
 - squash' sanity check fails too now, maybe justified?
-** FStar.TSet.fst (strange! 1 out of 2 left)
+** FStar.TSet.fst
+lemma_mem_tset_of_set_l
+lemma_mem_tset_of_set_r
 ** FStar.Algebra.Monoid.fst (commented out the end)
 ** FStar.List.Tot.Properties.fst (everything related to memP, recursive prop)
 - mem_memP
