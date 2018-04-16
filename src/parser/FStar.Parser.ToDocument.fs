@@ -81,7 +81,6 @@ let jump2 body =
 
 let infix2 = infix 2 1
 let infix0 = infix 0 1
-let infix0_group s l r = group (l ^^ space ^^ s ^^ space ^^ r)
 
 let break1 =
   break_ 1
@@ -840,10 +839,14 @@ and p_refinement aqual_opt binder t phi =
     | Op _ -> false
     | _ -> true
     in
-    (* If t is atomic, don't put a space between t and phi *)
-    optional p_aqual aqual_opt ^^ binder ^^ colon ^/^
-      p_appTerm t ^^ (if is_t_atomic then empty else break1) ^^
-        soft_braces_with_nesting_tight (p_noSeqTerm false false phi)
+  let phi = p_noSeqTerm false false phi in
+  (* If t is atomic, don't put a space between t and phi
+   * If t can be displayed on a single line, tightly surround it with braces,
+   * otherwise pad with a space. *)
+  optional p_aqual aqual_opt ^^ binder ^^ colon ^/^
+    p_appTerm t ^^ (if is_t_atomic then empty else break1) ^^
+      group ((ifflat
+        (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi)))
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
@@ -1107,15 +1110,21 @@ and p_tmArrow p_Tm e = match e.tm with
       group (separate_map_or_flow empty (fun b -> p_binder false b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
   | _ -> p_Tm e
 
-and p_tmFormula e = match e.tm with
+and p_tmFormula e =
+    let conj = space ^^ (str "/\\") ^^ break1 in
+    let disj = space ^^ (str "\\/") ^^ break1 in
+    let formula = p_tmDisjunction e in
+    flow_map disj (fun d -> flow_map conj (fun x -> group x) d) formula
+
+and p_tmDisjunction e = match e.tm with
   | Op({idText = "\\/"}, [e1;e2]) ->
-      infix0 (str "\\/") (p_tmFormula e1) (p_tmConjunction e2)
-  | _ -> p_tmConjunction e
+      (p_tmDisjunction e1) @ [p_tmConjunction e2]
+  | _ -> [p_tmConjunction e]
 
 and p_tmConjunction e = match e.tm with
   | Op({idText = "/\\"}, [e1;e2]) ->
-      infix0_group (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
-  | _ -> p_tmTuple e
+      (p_tmConjunction e1) @ [p_tmTuple e2]
+  | _ -> [p_tmTuple e]
 
 and p_tmTuple e = with_comment p_tmTuple' e e.range
 
