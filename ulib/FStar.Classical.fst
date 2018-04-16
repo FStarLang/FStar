@@ -4,17 +4,21 @@ open FStar.Squash
 val give_witness: #a:prop -> a -> Lemma (ensures a)
 let give_witness #a x = return_squash x
 
-(* val get_squashed (#b:Type) (a:prop) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True)) *)
-(* let get_squashed #b a = *)
-(*   let p = get_proof a in *)
-(*   join_squash #b p *)
+val get_squashed (#b:Type) (a:prop) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
+let get_squashed #b a =
+  let p = get_proof a in
+  join_squash #b p
 
-(* val get_equality (#t:Type) (a b:t) : Pure (a == b) (requires (a == b)) (ensures (fun _ -> True)) *)
-(* let get_equality #t a b = get_squashed #(equals a b) (a == b) *)
+val get_equality (#t:Type) (a b:t) : Pure (a == b) (requires (a == b)) (ensures (fun _ -> True))
+let get_equality #t a b =
+  FStar.PropositionalExtensionality.apply (a == b) (squash (equals a b));
+  get_squashed #(equals a b) (a == b)
 
-(* val get_forall (#a:Type) (p:a -> GTot prop) : Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True)) *)
-(* let get_forall #a p = *)
-(*   get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x) *)
+val get_forall (#a:Type) (p:a -> GTot prop) : Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))
+let get_forall #a p =
+  FStar.PropositionalExtensionality.apply (forall (x:a). p x)
+                                          (squash (x:a -> GTot (p x)));
+  get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x)
 
 val impl_to_arrow : #a:prop -> #b:prop -> impl:(a ==> b) -> sx:squash a -> GTot (squash b)
 let impl_to_arrow #a #b impl sx =
