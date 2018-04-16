@@ -91,7 +91,7 @@ noeq type result (a:Type) =
 
 (* Effect EXCEPTION *)
 let ex_pre  = prop
-let ex_post' (a:Type) (pre:Type) = (_:result a{pre}) -> GTot prop
+let ex_post' (a:Type) (pre:prop) = (_:result a{pre}) -> GTot prop
 let ex_post  (a:Type) = ex_post' a True
 let ex_wp    (a:Type) = ex_post a -> GTot ex_pre
 unfold let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot prop = p (V x)
@@ -146,7 +146,7 @@ sub_effect DIV ~> EXN = lift_div_exn
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
 let all_pre_h   (h:Type)           = h -> GTot prop
-let all_post_h' (h:Type) (a:Type) (pre:Type)  = result a -> (_:h{pre}) -> GTot prop
+let all_post_h' (h:Type) (a:Type) (pre:prop)  = result a -> (_:h{pre}) -> GTot prop
 let all_post_h  (h:Type) (a:Type)  = all_post_h' h a True
 let all_wp_h    (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
 
@@ -322,4 +322,3 @@ irreducible
 let plugin : unit = ()
 
 let dm4f_bind_range : unit = ()
-

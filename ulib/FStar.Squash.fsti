@@ -5,7 +5,7 @@ Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
 http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
 *)
 
-(* This is a monad *)
+(* This assumed to be a monad *)
 val return_squash : #a:Type -> a -> Tot (squash a)
 
 val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot (squash b)) ->

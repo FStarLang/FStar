@@ -1,6 +1,6 @@
 module FStar.Squash
 
-(* This file shows that there is another natural model for some of the
+(* This file shows that there is a natural model for *some* of the
    squash things; for this one it doesn't seem to harm importing this
    file (exposing the implementation); it probably doesn't help either *)
 
@@ -10,9 +10,9 @@ let bind_squash (#a:Type) (#b:Type) f g = admit()
 
 let push_squash (#a:Type) (#b:(a->Type)) f = admit()
 
-let get_proof (p:Type) = ()
+let get_proof (p:prop) = ()
 
-let give_proof (#p:Type) _ = ()
+let give_proof (#p:prop) _ = ()
 
 let proof_irrelevance (p:Type) x y = ()
 
