@@ -2124,8 +2124,16 @@ let encode_top_level_let :
                 let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
                 let is_prop =
                     match (SS.compress t_body).n with
-                    | Tm_fvar fv -> S.fv_eq_lid fv (FStar.Parser.Const.prop_lid)
+                    | Tm_fvar fv ->
+                      S.fv_eq_lid fv (FStar.Parser.Const.prop_lid)
                     | _ -> false
+                in
+                let is_lbname_squash =
+                    match lbn with
+                    | BU.Inl _ -> false
+                    | BU.Inr fv ->
+                      S.fv_eq_lid fv FStar.Parser.Const.squash_lid
+                      || S.fv_eq_lid fv FStar.Parser.Const.auto_squash_lid
                 in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
@@ -2143,8 +2151,11 @@ let encode_top_level_let :
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
                     if is_prop
-                    then (
-//                          BU.print1 "is_prop %s" (Print.lbname_to_string lbn);
+                    && not is_lbname_squash
+                    //Prims.squash is very special!
+                    //Do not encode it as logical only even though it is a prop
+                    then ((if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+                           then BU.print1 "is_prop %s\n" (Print.lbname_to_string lbn));
                           mk_Valid app, encode_formula body env')
                     else app, encode_term body env'
                 in
