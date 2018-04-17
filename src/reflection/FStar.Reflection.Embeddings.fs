@@ -303,8 +303,11 @@ let e_term_view_aq aq =
             S.mk_Tm_app ref_Tv_Const.t [S.as_arg (embed e_const rng c)]
                         None rng
 
-        | Tv_Uvar (u, t) ->
-            S.mk_Tm_app ref_Tv_Uvar.t [S.as_arg (embed e_int rng u); S.as_arg (embed (e_term_aq aq) rng t)]
+        | Tv_Uvar (u, bs, t) ->
+            S.mk_Tm_app ref_Tv_Uvar.t
+                        [S.as_arg (embed e_int rng u);
+                         S.as_arg (embed (e_list e_binder) rng bs);
+                         S.as_arg (embed (e_term_aq aq) rng t)]
                         None rng
 
         | Tv_Let (r, b, t1, t2) ->
@@ -379,10 +382,11 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_const c) (fun c ->
             Some <| Tv_Const c)
 
-        | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
+        | Tm_fvar fv, [(u, _); (bs, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
             BU.bind_opt (unembed e_int u) (fun u ->
+            BU.bind_opt (unembed (e_list e_binder) bs) (fun bs ->
             BU.bind_opt (unembed e_term t) (fun t ->
-            Some <| Tv_Uvar (u, t)))
+            Some <| Tv_Uvar (u, bs, t))))
 
         | Tm_fvar fv, [(r, _); (b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed e_bool r) (fun r ->

@@ -498,9 +498,9 @@ and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac
     Some <| unembed_tactic_0 eb embedded_tac_b
 
 let report_implicits ps (is : Env.implicits) : unit =
-    let errs = List.map (fun (r, _, uv, _, ty, rng) ->
+    let errs = List.map (fun (r, ty, uv, rng) ->
                 (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (Print.uvar_to_string uv) (Print.term_to_string ty) r,
+                             (Print.uvar_to_string (fst uv)) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with
     | [] -> ()
@@ -555,7 +555,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
         let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
-        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac in
+        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac env in
         report_implicits ps g.implicits;
         (ps.goals@ps.smt_goals, w)
 

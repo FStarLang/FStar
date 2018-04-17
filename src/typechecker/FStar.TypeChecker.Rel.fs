@@ -34,7 +34,6 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.TypeChecker.Common
-open System.Runtime.InteropServices
 
 module BU = FStar.Util //basic util
 module U = FStar.Syntax.Util
@@ -2584,7 +2583,7 @@ let discharge_guard env g =
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits' env must_total forcelax g =
-  let unresolved u = 
+  let unresolved u =
     let hd, _ = U.head_and_args u in
     match (SS.compress u).n with
     | Tm_uvar _ -> true

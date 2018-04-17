@@ -73,8 +73,8 @@ let norm t = N.normalize [] (tcenv()) t
 let inst n tm =
    let rec aux out n =
     if n=0 then out
-    else let t, _ = Rel.new_uvar dummyRange [] U.ktype0 in
-         let u, _ = Rel.new_uvar dummyRange [] t in
+    else let t, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange (init()) U.ktype0 in
+         let u, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange (init()) t in
          aux (u::out) (n - 1) in
    let us = aux [] n in
    norm (app tm us), us
@@ -170,7 +170,8 @@ let run_all () =
 
         let l = tc ("fun (p:unit -> Type0) -> p") in
         let unit = tc "()" in
-        let u_p, _ = Rel.new_uvar dummyRange [S.mk_binder x; S.mk_binder q] typ in
+        let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
+        let u_p, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange env typ in
         let tm2 = app (norm (app l [u_p])) [unit] in
         tm1, tm2
     in
@@ -188,7 +189,8 @@ let run_all () =
 
         let l = tc ("fun (p:pure_post unit) -> p") in
         let unit = tc "()" in
-        let u_p, _ = Rel.new_uvar dummyRange [S.mk_binder x; S.mk_binder q] typ in
+        let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
+        let u_p, _, _ = FStar.TypeChecker.Util.new_implicit_var "" dummyRange env typ in
         let tm2 = app (norm (app l [u_p])) [unit] in
         tm1, tm2
     in

@@ -1428,16 +1428,23 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             aux false chead.res_typ
     in //end tc_args
 
-    let rec check_function_app tf =
+    let rec check_function_app tf guard =
        match (N.unfold_whnf env tf).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
-            let bs = args |> List.map (fun _ -> null_binder (TcUtil.new_uvar env (U.type_u () |> fst))) in
-            let cres =
-                let t = TcUtil.new_uvar env (U.type_u() |> fst) in
+            let bs, guard =
+                List.fold_right
+                    (fun _ (bs, guard) ->
+                         let t, _, g = TcUtil.new_implicit_var "formal parameter" tf.pos env (U.type_u () |> fst) in
+                         null_binder t::bs, Rel.conj_guard g guard)
+                    args
+                    ([], guard)
+            in
+            let cres, guard =
+                let t, _, g = TcUtil.new_implicit_var "result type" tf.pos env (U.type_u() |> fst) in
                 if Options.ml_ish ()
-                then U.ml_comp t r
-                else S.mk_Total t
+                then U.ml_comp t r, Rel.conj_guard guard g
+                else S.mk_Total t, Rel.conj_guard guard g
             in
             let bs_cres = U.arrow bs cres in
             if Env.debug env <| Options.Extreme
@@ -1445,24 +1452,25 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Print.term_to_string head)
                             (Print.term_to_string tf)
                             (Print.term_to_string bs_cres);
+            //Yes, force only the guard for this equation; the other uvars will not be solved yet
             Rel.force_trivial_guard env <| Rel.teq env tf bs_cres;
-            check_function_app bs_cres
+            check_function_app bs_cres guard
 
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
             let head_info = head, chead, ghead, U.lcomp_of_comp c in
-            tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
+            tc_args head_info ([], [], [], guard, []) bs args
 
         | Tm_refine (bv,_) ->
-            check_function_app bv.sort
+            check_function_app bv.sort guard
 
         | Tm_ascribed (t, _, _) ->
-            check_function_app t
+            check_function_app t guard
 
         | _ ->
             raise_error (Err.expected_function_typ env tf) head.pos in
 
-    check_function_app thead
+    check_function_app thead Rel.trivial_guard
 
 (******************************************************************************)
 (* SPECIAL CASE OF CHECKING APPLICATIONS:                                     *)
@@ -1577,7 +1585,7 @@ and tc_eqn scrutinee env branch
         if Rel.teq_nosmt env1 lc.res_typ expected_pat_t
         then let env1 = Env.set_range env1 exp.pos in
              Rel.discharge_guard_no_smt env1 g |>
-             Rel.resolve_implicits
+             Rel.resolve_implicits env1
         else raise_error (Errors.Fatal_MismatchedPatternType, BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
                                        (Print.term_to_string lc.res_typ)
                                        (Print.term_to_string expected_pat_t))
@@ -1824,7 +1832,7 @@ and check_top_level_let env e =
          let g1, e1, univ_vars, c1 =
             if annotated && not env.generalize
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
-            else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
+            else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits env in
                  assert (univ_vars = []) ;
                  let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, lcomp_comp c1]) in
                  let g1 = map_guard g1 <| N.normalize [N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
@@ -1940,7 +1948,7 @@ and check_top_level_let_rec env top =
            let lbs, rec_env = build_let_rec_env true env0 lbs in
            (* now we type check each let rec *)
            let lbs, g_lbs = check_let_recs rec_env lbs in
-           let g_lbs = Rel.solve_deferred_constraints env g_lbs |> Rel.resolve_implicits in
+           let g_lbs = Rel.solve_deferred_constraints env g_lbs |> Rel.resolve_implicits env in
 
            let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
 
@@ -2072,8 +2080,8 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
        quals |> List.contains TotalEffect
      )
    in
-   let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
-        let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
+   let lbs, env = List.fold_left (fun (lbs, env) lb ->
+        let univ_vars, t, check_t, guard = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
         let e = U.unascribe lb.lbdef in
         let t =
@@ -2081,7 +2089,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
             then t
             else (let env0 = Env.push_univ_vars env0 univ_vars in
                   let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
-                  let g = Rel.resolve_implicits g in
+                  let g = Rel.resolve_implicits env g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
         let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
@@ -2328,7 +2336,7 @@ let rec universe_of_aux env e =
    | Tm_abs(bs, t, _) ->
      level_of_type_fail env e "arrow type"
    //these next few cases are easy; we just use the type stored at the node
-   | Tm_uvar(_, t) -> t
+   | Tm_uvar(_, (_, t)) -> t
    | Tm_meta(t, _) -> universe_of_aux env t
    | Tm_name n -> n.sort
    | Tm_fvar fv ->
@@ -2527,7 +2535,7 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
 
   | Tm_ascribed(_, (Inl t, _), _) -> Some t
   | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
-  | Tm_uvar(_, t) -> Some t
+  | Tm_uvar(_, (_, t)) -> Some t
 
   | Tm_quoted (tm, qi) ->
     Some (S.t_term)

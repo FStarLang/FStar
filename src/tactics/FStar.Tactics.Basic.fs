@@ -840,13 +840,16 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ -> false
             end
         in
-        bind (implicits.implicits |> mapM (fun (_msg, env, _uvar, term, typ, _) ->
+        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range) -> //(_msg, env, _uvar, term, typ, _) ->
             let hd, _ = U.head_and_args term in
+            let tm_uvar, (ctx, typ) = ctx_uvar in
+            let env = FStar.TypeChecker.Env.set_binders goal.context ctx in
             match (SS.compress hd).n with
             | Tm_uvar _ ->
                 ret ([{ goal with
-                        witness = bnorm goal.context term;
-                        goal_ty = bnorm goal.context typ //NS: 01/24 ...expensive
+                        context = env;
+                        witness = bnorm env term;
+                        goal_ty = bnorm env typ //NS: 01/24 ...expensive
                        }], [])
             | _ ->
                 let g_typ =
@@ -1409,7 +1412,8 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
                | _ -> FStar.Options.peek ()
     in
     match U.head_and_args t with
-    | { n = Tm_uvar (_, typ) }, _ ->
+    | { n = Tm_uvar (_, (ctx,typ)) }, _ ->
+        let env = Env.set_binders env ctx in
         add_goals [{ witness  = bnorm env t;
                      goal_ty  = bnorm env typ;
                      is_guard = false;
@@ -1514,7 +1518,7 @@ let rec inspect (t:term) : tac<term_view> =
         end
 
     | Tm_type _ ->
-        ret <| Tv_Type () 
+        ret <| Tv_Type ()
 
     | Tm_arrow ([], k) ->
         failwith "inspect: empty binders on arrow"
@@ -1537,8 +1541,8 @@ let rec inspect (t:term) : tac<term_view> =
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
 
-    | Tm_uvar (u, t) ->
-        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id u), t)
+    | Tm_uvar (u, (bs, t)) ->
+        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id u), bs, t)
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
@@ -1620,8 +1624,8 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Const c ->
         ret <| S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
-    | Tv_Uvar (u, t) ->
-        ret <| U.uvar_from_id (Z.to_int_fs u) t
+    | Tv_Uvar (u, bs, t) ->
+        ret <| U.uvar_from_id (Z.to_int_fs u) (bs, t)
 
     | Tv_Let (false, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in
