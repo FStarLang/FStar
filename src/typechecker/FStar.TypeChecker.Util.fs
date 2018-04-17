@@ -65,6 +65,15 @@ let new_implicit_var reason r env k =
       let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
       t, [(ctx_uvar, r)], g
 
+let close_implicit (b:binder) (is:Env.implicits) =
+    let rec aux (_reason, _term, (u, (ctx, t)), _range) =
+        match FStar.Syntax.Unionfind.find u with
+        | Some _ -> () //already solved; nothing to do
+        | None -> ()
+
+    in
+    List.iter aux is
+
 let check_uvars r t =
   let uvs = Free.uvars t in
   if not (BU.set_is_empty uvs)
@@ -119,7 +128,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
       | Tm_abs(bs, body, _) ->
         let env, bs, must_check_ty, g =
-            bs |> List.fold_left 
+            bs |> List.fold_left
             (fun (env, bs, must_check_ty, g) (a, imp) ->
                   let tb, must_check_ty, g_a =
                     if must_check_ty
@@ -157,7 +166,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
        | Inr c ->
              if U.is_tot_or_gtot_comp c
              then U.comp_result c
-             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec, 
+             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
                                BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                            (Print.comp_to_string c))
                                rng

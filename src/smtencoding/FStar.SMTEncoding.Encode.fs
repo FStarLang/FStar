@@ -2764,7 +2764,6 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
 
-        | Env.Binding_sig_inst(_, se, _)
         | Env.Binding_sig (_, se) ->
             let g, env' = encode_sigelt env se in
             i+1, decls@g, env' in

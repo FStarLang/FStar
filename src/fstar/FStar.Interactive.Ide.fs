@@ -209,7 +209,6 @@ let update_names_from_event cur_mod_str table evt =
       match binding with
       | Binding_lid (lid, _) -> [lid]
       | Binding_sig (lids, _) -> lids
-      | Binding_sig_inst (lids, _, _) -> lids
       | _ -> [] in
     List.fold_left
       (fun tbl lid ->

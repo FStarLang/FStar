@@ -26,9 +26,8 @@ module BU = FStar.Util
 type binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
-  | Binding_sig      of list<lident> * sigelt
   | Binding_univ     of univ_name
-  | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
+type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
@@ -78,7 +77,7 @@ type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  gamma          :list<binding> * list<sig_binding>;                (* Local typing environment and signature elements *)
   gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
@@ -132,7 +131,7 @@ and guard_t = {
 }
 and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> binding -> unit) }
+  { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
 
@@ -215,7 +214,6 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
-val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env
 val push_bvs           : env -> list<bv> -> env
 val pop_bv             : env -> option<(bv * env)>
@@ -230,7 +228,6 @@ val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 val set_current_module : env -> lident -> env
 val finish_module      : (env -> modul -> env)
-val eq_gamma           : env -> env -> bool
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
@@ -240,7 +237,6 @@ val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
 val univnames    : env -> FStar.Util.set<univ_name>
 val lidents      : env -> list<lident>
-val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
 val identity_mlift      : mlift
