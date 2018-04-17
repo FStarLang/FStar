@@ -160,6 +160,8 @@ let separate_map_or_flow_last sep f l =
     then separate_map_last sep f l
     else flow_map_last sep f l
 
+let separate_or_flow sep l = separate_map_or_flow sep id l
+
 let soft_surround_separate_map n b void_ opening sep closing f xs =
   if xs = []
   then void_
@@ -530,11 +532,12 @@ and p_rawDecl d = match d.d with
     group(str "module" ^^ space ^^ p_quident uid)
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
-    surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ false false t
+    surround 2 1 effect_prefix_doc (p_typars tpars []) equals ^/+^ p_typ false false t
   | Tycon(false, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
     (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
-    precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs
+    (p_fsdocTypeDeclPairs (str "type") (List.hd tcdefs)) ^^
+      (concat_map (fun x -> break1 ^^ p_fsdocTypeDeclPairs (str "and") x) <| List.tl tcdefs)
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q ^^ space in
     separate_map_with_comments let_doc (str "and" ^^ space) p_letbinding lbs
@@ -575,29 +578,28 @@ and p_pragma = function
       str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
-and p_typars bs = p_binders true bs
+and p_typars bs suffix = p_binders true bs suffix
 
-and p_fsdocTypeDeclPairs (typedecl, fsdoc_opt) =
-  optional p_fsdoc fsdoc_opt ^^ p_typeDecl typedecl
+and p_fsdocTypeDeclPairs kw (typedecl, fsdoc_opt) =
+  let decl, body = p_typeDecl (kw, fsdoc_opt) typedecl in
+  decl ^^ (body ())
 
-and p_typeDecl = function
+and p_typeDecl pre = function
   | TyconAbstract (lid, bs, typ_opt) ->
     let empty' : unit -> document = fun () -> empty in
-    p_typeDeclPrefix lid bs typ_opt empty'
+    p_typeDeclPrefix pre lid bs typ_opt, empty'
   | TyconAbbrev (lid, bs, typ_opt, t) ->
-    let f () = prefix2 equals (p_typ false false t) in
-    p_typeDeclPrefix lid bs typ_opt f
+    let f () = jump2 (p_typ false false t) in
+    p_typeDeclPrefix pre lid bs typ_opt, f
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
     let p_recordFieldAndComments ps (lid, t, doc_opt) =
       with_comment (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range)
     in
     let p_fields () =
-        equals ^^ space ^^
-        braces_with_nesting (
-            separate_map_last (semi ^^ break1) p_recordFieldAndComments record_field_decls
-            )
+        space ^^ braces_with_nesting (
+          separate_map_last (semi ^^ break1) p_recordFieldAndComments record_field_decls)
     in
-    p_typeDeclPrefix lid bs typ_opt p_fields
+    p_typeDeclPrefix pre lid bs typ_opt, p_fields
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
@@ -607,15 +609,21 @@ and p_typeDecl = function
     let datacon_doc () =
         separate_map hardline p_constructorBranchAndComments ct_decls
     in
-    p_typeDeclPrefix lid bs typ_opt (fun () -> prefix2 equals (datacon_doc ()))
+    p_typeDeclPrefix pre lid bs typ_opt, (fun () -> jump2 (datacon_doc ()))
 
-and p_typeDeclPrefix lid bs typ_opt cont =
-  if bs = [] && typ_opt = None
-  then p_ident lid ^^ space ^^ cont ()
+and p_typeDeclPrefix (kw, fsdoc_opt) lid bs typ_opt =
+  if bs = []
+  then
+    match fsdoc_opt with
+    | None -> group (kw ^/^ group (p_ident lid ^/^ equals))
+    | Some fsdoc -> separate hardline [kw; p_fsdoc fsdoc; group (p_ident lid ^/^ equals)]
   else
-      let binders_doc =
-        p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ false false t) typ_opt
-      in surround 2 1 (p_ident lid) binders_doc (cont ())
+    let binders_doc =
+      p_typars bs [optional (fun t -> colon ^^ space ^^ p_typ false false t) typ_opt; equals]
+    in
+    match fsdoc_opt with
+    | None -> group (hang 2 <| (kw ^/^ p_ident lid) ^/^ binders_doc)
+    | Some fsdoc -> separate hardline [kw; p_fsdoc fsdoc; group (hang 2 (p_ident lid ^/^ binders_doc))]
 
 and p_recordFieldDecl ps (lid, t, doc_opt) =
   (* TODO : Should we allow tagging individual field with a comment ? *)
@@ -658,11 +666,11 @@ and p_newEffect = function
     p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
-    surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm false false t))
+    surround 2 1 (p_uident uid) (p_binders true bs []) (prefix2 equals (p_simpleTerm false false t))
 
 and p_effectDefinition uid bs t eff_decls =
   braces_with_nesting (
-    group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ false false t))) ^/^
+    group (surround 2 1 (p_uident uid) (p_binders true bs [])  (prefix2 colon (p_typ false false t))) ^/^
     prefix2 (str "with") (separate_break_map_last semi p_effectDecl eff_decls)
     )
 
@@ -813,7 +821,7 @@ and p_binder is_atomic b = match b.b with
         | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
           p_refinement b.aqual (p_ident lid) t phi
         | _ ->
-          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 0 ^^ p_tmFormula t
+          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 1 ^^ p_tmFormula t
       in
       if is_atomic
       then group (lparen ^^ doc ^^ rparen)
@@ -851,7 +859,9 @@ and p_refinement aqual_opt binder t phi =
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 (* Note: also skipping multiBinder here. *)
-and p_binders is_atomic bs = separate_map_or_flow break1 (p_binder is_atomic) bs
+and p_binders is_atomic bs suffix =
+    let suffix = List.filter (fun x -> x <> empty) suffix in
+    separate_or_flow break1 <| (List.map (p_binder is_atomic) bs) @ suffix
 
 
 (* ****************************************************************************)
@@ -1038,7 +1048,7 @@ and p_typ' ps pb e = match e.tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
       prefix2
-        (soft_surround 2 0 (p_quantifier e ^^ space) (p_binders true bs) dot)
+        (soft_surround 2 0 (p_quantifier e ^^ space) (p_binders true bs []) dot)
         (p_trigger trigger ^^ p_noSeqTerm ps pb e1)
   | _ -> p_simpleTerm ps pb e
 
