@@ -2044,6 +2044,8 @@ let (t_true : FStar_Syntax_Syntax.term) =
 let (tac_opaque_attr : FStar_Syntax_Syntax.term) = exp_string "tac_opaque" 
 let (dm4f_bind_range_attr : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.dm4f_bind_range_attr 
+let (fail_attr : FStar_Syntax_Syntax.term) =
+  fvar_const FStar_Parser_Const.fail_attr 
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.term ->
@@ -3893,7 +3895,7 @@ let (process_pragma :
       | FStar_Syntax_Syntax.ResetOptions sopt ->
           ((let uu____12219 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____12219 (fun a237  -> ()));
+            FStar_All.pipe_right uu____12219 (fun a238  -> ()));
            (match sopt with
             | FStar_Pervasives_Native.None  -> ()
             | FStar_Pervasives_Native.Some s ->

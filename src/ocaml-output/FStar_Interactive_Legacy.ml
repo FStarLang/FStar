@@ -137,7 +137,7 @@ let (push_with_kind :
           if restore_cmd_line_options1
           then
             (let uu____271 = FStar_Options.restore_cmd_line_options false  in
-             FStar_All.pipe_right uu____271 (fun a239  -> ()))
+             FStar_All.pipe_right uu____271 (fun a240  -> ()))
           else ();
           res
   
@@ -180,7 +180,7 @@ let (check_frag :
 let (report_fail : unit -> unit) =
   fun uu____457  ->
     (let uu____459 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right uu____459 (fun a240  -> ()));
+     FStar_All.pipe_right uu____459 (fun a241  -> ()));
     FStar_Errors.clear ()
   
 type input_chunks =

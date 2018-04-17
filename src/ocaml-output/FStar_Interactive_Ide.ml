@@ -887,7 +887,7 @@ let (run_repl_ld_transactions :
             (debug1 "Loading" task;
              (let uu____2206 = FStar_Options.restore_cmd_line_options false
                  in
-              FStar_All.pipe_right uu____2206 (fun a239  -> ()));
+              FStar_All.pipe_right uu____2206 (fun a240  -> ()));
              (let timestamped_task = update_task_timestamps task  in
               let push_kind =
                 let uu____2209 = FStar_Options.lax ()  in
@@ -2514,7 +2514,7 @@ let run_push_with_deps :
        | FStar_Util.Inl (st1,deps) ->
            ((let uu____5536 = FStar_Options.restore_cmd_line_options false
                 in
-             FStar_All.pipe_right uu____5536 (fun a240  -> ()));
+             FStar_All.pipe_right uu____5536 (fun a241  -> ()));
             (let names1 =
                add_module_completions st1.repl_fname deps st1.repl_names  in
              run_push_without_deps
