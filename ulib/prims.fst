@@ -250,6 +250,10 @@ effect GTot (a:Type) = GHOST a (pure_null_wp a)
 effect Ghost (a:Type) (pre:prop) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
+// Sanity check that the squash definition above is well-typed
+// once Pure and Tot are fully set up
+let squash' (p:Type) : Tot prop = p_refine unit (fun x -> p)
+
 assume new type int : Type0
 
 assume HasEq_int: hasEq int
@@ -426,15 +430,8 @@ irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
  *)
 let with_type (#t:Type) (e:t) = e
 
-// Sanity check that the squash definition above is well-typed
-// once Pure and Tot are fully set up
-// TODO: this doesn't currently work, if we bring it back could also
-// try to move it higher (now right after PURE getting strange error
-// that PURE is not around)
-(* let squash' (p:Type) : Tot prop = p_refine unit (fun x -> p) *)
-
 let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
-let normalize_spec (a: prop) : Lemma (normalize a == a) = admit() (* TODO was () *)
+let normalize_spec (a: prop) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
 
 // TODO: we might add a coercion to convert sub-singletons to prop,

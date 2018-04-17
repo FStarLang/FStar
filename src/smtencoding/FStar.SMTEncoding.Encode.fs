@@ -2149,23 +2149,27 @@ let encode_top_level_let :
                   else U.ascribe body (BU.Inl t_body, None)
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
-                let app, (body, decls2) =
-                    if is_prop
-                    && not is_lbname_squash
-                    //Prims.squash is very special!
-                    //Do not encode it as logical only even though it is a prop
-                    then ((if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-                           then BU.print1 "is_prop %s\n" (Print.lbname_to_string lbn));
-                          mk_Valid app, encode_formula body env')
-                    else app, encode_term body env'
-                in
+                let (body', decls2) = encode_term body env' in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                 //But the guard is unnecessary given the pattern
-                let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
+                let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body')),
                                     Some (BU.format1 "Equation for %s" flid.str),
                                     ("equation_"^fvb.smt_id)) in
-                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid fvb.smt_id app,
+
+                let eqns =
+                  if is_prop
+                  && not is_lbname_squash
+                  then ((if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+                        then BU.print1 "is_prop %s\n" (Print.lbname_to_string lbn));
+                    let app, (body', decls2) = mk_Valid app, encode_formula body env' in
+                    let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body')),
+                                        Some (BU.format1 "Valid Equation for %s" flid.str),
+                                        ("valid_equation_"^fvb.smt_id)) in
+                    [eqn])
+                  else [] in
+
+                decls@binder_decls@decls2@[eqn]@eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app,
                 env
             | _ -> failwith "Impossible"
         in

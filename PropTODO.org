@@ -37,12 +37,6 @@ for porting more examples without lots of pain
 * TODO P0 Replace the `logic` qualifier with `prop`
 
 * TODO P0 Get rid of all the newly introduced admits:
-** prims
-- normalize_spec started failing after Nik Apr 16 changes
-- squash' sanity check fails too now, maybe justified?
-** FStar.TSet.fst
-lemma_mem_tset_of_set_l
-lemma_mem_tset_of_set_r
 ** FStar.Algebra.Monoid.fst (commented out the end)
 ** FStar.List.Tot.Properties.fst (everything related to memP, recursive prop)
 - mem_memP
