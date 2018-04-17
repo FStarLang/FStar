@@ -1129,8 +1129,9 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
     | Some g, apply_guard ->
       match guard_form g with
         | Trivial ->
-          let lc = {lc with res_typ = t} in
-          (e, lc, g)
+          //AR: here we were just setting lc.res_typ to be t, but that's not sufficient, since what matters is the res_typ in its comp
+          if lid_equals env.curmodule C.prims_lid then e, { lc with res_typ = t }, g  //AR: in prims, if we force lcomp, that crashes
+          else e, U.set_result_typ_lc lc t, g
 
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
@@ -1145,7 +1146,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->
                         //it's trivial
-                        let lc = {lc with res_typ=t} in //NS: what's the point of this?
+                        let lc = {lc with res_typ=t} in //NS: what's the point of this?  //AR: nothing it seems
                         lcomp_comp lc
 
                       | _ ->

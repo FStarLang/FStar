@@ -378,6 +378,11 @@ let set_result_typ c t = match c.n with
   | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
+let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
+  let c = set_result_typ (lcomp_comp lc) t in
+  lc.comp_thunk := Inr c;  //AR: do we really need a thunk here?
+  { lc with res_typ = t }
+
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
