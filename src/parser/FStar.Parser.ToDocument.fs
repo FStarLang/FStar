@@ -622,7 +622,7 @@ and p_typeDeclPrefix (kw, fsdoc_opt) lid bs typ_opt =
       p_typars bs [optional (fun t -> colon ^^ space ^^ p_typ false false t) typ_opt; equals]
     in
     match fsdoc_opt with
-    | None -> group (hang 2 <| (kw ^/^ p_ident lid) ^/^ binders_doc)
+    | None -> group (hang 2 <| (group (kw ^/^ p_ident lid)) ^/^ binders_doc)
     | Some fsdoc -> separate hardline [kw; p_fsdoc fsdoc; group (hang 2 (p_ident lid ^/^ binders_doc))]
 
 and p_recordFieldDecl ps (lid, t, doc_opt) =
@@ -1086,9 +1086,14 @@ and p_patternBranch pb (pat, when_opt, e) =
    * up, meaning we're not at risk of swallowing a semicolon; if ps was false,
    * then we can recursively call p_term with false. *)
   let one_pattern_branch p =
-    group (
-      group (bar ^^ space ^^ (p_tuplePattern p) ^/+^ p_maybeWhen when_opt ^^ rarrow )
-      ^/+^ p_term false pb e)
+    let branch =
+      match when_opt with
+      | None -> group (bar ^^ space ^^ (p_tuplePattern p) ^^ space ^^ rarrow)
+      | Some f ->
+        hang 2 (bar ^^ space ^^ (group ((p_tuplePattern p) ^/^ (str "when"))) ^/^
+         (flow break1 [(p_tmFormula f); rarrow]))
+    in
+    group (branch ^/+^ p_term false pb e)
   in
   match pat.pat with
   | PatOr pats ->
@@ -1101,10 +1106,6 @@ and p_patternBranch pb (pat, when_opt, e) =
      | [] -> failwith "Impossible: disjunctive pattern can't be empty")
   | _ ->
     one_pattern_branch pat
-
-and p_maybeWhen = function
-    | None -> empty
-    | Some e -> str "when" ^/+^ p_tmFormula e ^^ space  (*always immediately followed by an arrow*)
 
 (* Nothing underneath tmIff is at risk of swallowing a semicolon. *)
 and p_tmIff e = match e.tm with
