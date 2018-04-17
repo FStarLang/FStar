@@ -1,4 +1,3 @@
-
 module Patterns
 
 let is_handshake13_signatureScheme =
@@ -21,3 +20,12 @@ let is_handshake13_signatureScheme =
       | _ -> false)
   | _ -> false
 
+let f =
+  function
+  | A when
+    (v <> 0x0401 /\ v <> 0x0501 /\ v <> 0x0601 /\ v <> 0x0403 /\ v <> 0x0503 /\ v <> 0x0603 /\
+      v <> 0x0804 /\ v <> 0x0805 /\ v <> 0x0806 /\ v <> 0x0201 /\ v <> 0x0203 /\ v <> 0x0202 /\
+      v <> 0x0402 /\ v <> 0x0502 /\ v <> 0x0602 /\ v <> 0xFFFF) ->
+    true
+  | B -> true
+  | C -> false
