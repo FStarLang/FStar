@@ -134,7 +134,7 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * term * Range.range)>
+and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> binding -> unit) }
 
@@ -1131,6 +1131,8 @@ let pop_bv env =
 
 let push_binders env (bs:binders) =
     List.fold_left (fun env (x, _) -> push_bv env x) env bs
+
+let set_binders env bs = push_binders ({env with gamma=[]}) bs
 
 let binding_of_lb (x:lbname) t = match x with
   | Inl x ->

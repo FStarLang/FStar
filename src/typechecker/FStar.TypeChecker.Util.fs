@@ -52,27 +52,6 @@ let report env errs =
 (************************************************************************)
 (* Unification variables *)
 (************************************************************************)
-let is_type t = match (compress t).n with
-    | Tm_type _ -> true
-    | _ -> false
-
-let t_binders env =
-    Env.all_binders env |> List.filter (fun (x, _) -> is_type x.sort)
-
-//new unification variable
-let new_uvar_aux env k =
-    let bs = if (Options.full_context_dependency())
-             || Ident.lid_equals C.prims_lid (Env.current_module env)
-             then Env.all_binders env
-             else t_binders env in
-    Rel.new_uvar (Env.get_range env) bs k
-
-let new_uvar env k = fst (new_uvar_aux env k)
-
-let as_uvar : typ -> uvar = function
-    | {n=Tm_uvar(uv, _)} -> uv
-    | _ -> failwith "Impossible"
-
 let new_implicit_var reason r env k =
     match U.destruct k C.range_of_lid with
      | Some [_; (tm, _)] ->
@@ -80,9 +59,11 @@ let new_implicit_var reason r env k =
        t, [], Rel.trivial_guard
 
      | _ ->
-       let t, u = new_uvar_aux env k in
-       let g = {Rel.trivial_guard with implicits=[(reason, env, as_uvar u, t, k, r)]} in
-       t, [(as_uvar u, r)], g
+      let binders = Env.all_binders env in
+      let ctx_uvar = FStar.Syntax.Unionfind.fresh(), (binders,k) in
+      let t = mk (Tm_uvar ctx_uvar) None r in
+      let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
+      t, [(ctx_uvar, r)], g
 
 let check_uvars r t =
   let uvs = Free.uvars t in
@@ -110,7 +91,8 @@ let check_uvars r t =
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
    * typ
-   * bool //true indicates that the type needs to be checked; false indicates that it is already checked
+   * bool
+   * guard_t //true indicates that the type needs to be checked; false indicates that it is already checked
    =
   let rng = S.range_of_lbname lbname in
   let t = SS.compress t in
@@ -120,33 +102,36 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
      let univ_vars, e = SS.open_univ_vars univ_vars e in
      let env = Env.push_univ_vars env univ_vars in
      let r = Env.get_range env in
-     let mk_binder scope a =
+     let mk_binder env a =
         match (SS.compress a.sort).n with
         | Tm_unknown ->
           let k, _ = U.type_u() in
-          let t =  Rel.new_uvar e.pos scope k |> fst in
-          {a with sort=t}, false
-        | _ -> a, true in
+          let t, _, guard = new_implicit_var "" e.pos env k in
+          {a with sort=t}, false, guard
+        | _ -> a, true, Rel.trivial_guard
+     in
 
-    let rec aux must_check_ty vars e : either<typ,comp> * bool =
+    let rec aux must_check_ty env e g : either<typ,comp> * bool * guard_t =
       let e = SS.compress e in
       match e.n with
-      | Tm_meta(e, _) -> aux must_check_ty vars e
-      | Tm_ascribed(e, t, _) -> fst t, true
+      | Tm_meta(e, _) -> aux must_check_ty env e g
+      | Tm_ascribed(e, t, _) -> fst t, true, g
 
       | Tm_abs(bs, body, _) ->
-        let scope, bs, must_check_ty = bs |> List.fold_left (fun (scope, bs, must_check_ty) (a, imp) ->
-              let tb, must_check_ty =
-                if must_check_ty
-                then a, true
-                else mk_binder scope a in
-              let b = (tb, imp) in
-              let bs = bs@[b] in
-              let scope = scope@[b] in
-              scope, bs, must_check_ty)
-           (vars,[], must_check_ty) in
+        let env, bs, must_check_ty, g =
+            bs |> List.fold_left 
+            (fun (env, bs, must_check_ty, g) (a, imp) ->
+                  let tb, must_check_ty, g_a =
+                    if must_check_ty
+                    then a, true, Rel.trivial_guard
+                    else mk_binder env a in
+                  let b = (tb, imp) in
+                  let bs = bs@[b] in
+                  let env = Env.push_binders env [b] in
+                  env, bs, must_check_ty, Rel.conj_guard g_a g)
+           (env, [], must_check_ty, g) in
 
-        let res, must_check_ty = aux must_check_ty scope body in
+        let res, must_check_ty, g = aux must_check_ty env body g in
         let c = match res with
             | Inl t ->
               if Options.ml_ish()
@@ -157,28 +142,31 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         if debug env Options.High
         then BU.print3 "(%s) Using type %s .... must check = %s\n"
                 (Range.string_of_range r) (Print.term_to_string t) (BU.string_of_bool must_check_ty);
-        Inl t, must_check_ty
+        Inl t, must_check_ty, g
 
       | _ ->
         if must_check_ty
-        then Inl S.tun, true
-        else Inl (Rel.new_uvar r vars U.ktype0 |> fst), false
+        then Inl S.tun, true, g
+        else let t, _, g' = new_implicit_var "" r env U.ktype0 in
+             Inl t, false, Rel.conj_guard g g'
     in
 
-    let t, b = aux false (t_binders env) e in
+    let t, b, g = aux false env e Rel.trivial_guard in
     let t =
        match t with
        | Inr c ->
              if U.is_tot_or_gtot_comp c
              then U.comp_result c
-             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec, (BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                                                        (Print.comp_to_string c))) rng
+             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec, 
+                               BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                           (Print.comp_to_string c))
+                               rng
        | Inl t -> t in
-    univ_vars, t, b
+    univ_vars, t, b, g
 
   | _ ->
     let univ_vars, t = open_univ_vars univ_vars t in
-    univ_vars, t, false
+    univ_vars, t, false, Rel.trivial_guard
 
 (************************************************************************)
 (* Utilities on patterns  *)
@@ -202,7 +190,8 @@ let pat_as_exp (allow_implicits:bool)
               match (SS.compress x.sort) with
               | {n=Tm_unknown} ->
                 let t, _ = U.type_u() in
-                new_uvar env t, Rel.trivial_guard
+                let t, _, g = new_implicit_var "" (S.range_of_bv x) env t in
+                t, g
               | t -> //user-decorated type
                 tc_annot env t
           in
@@ -229,11 +218,11 @@ let pat_as_exp (allow_implicits:bool)
 
            | Pat_dot_term(x, _) ->
              let k, _ = U.type_u () in
-             let t = new_uvar env k in
+             let t, _, g = new_implicit_var "" (S.range_of_bv x) env k in
              let x = {x with sort=t} in
-             let e, u = Rel.new_uvar p.p (Env.all_binders env) t in
+             let e, _,  g' = new_implicit_var "" (S.range_of_bv x) env t in
              let p = {p with v=Pat_dot_term(x, e)} in
-             ([], [], [], env, e, Rel.trivial_guard, p)
+             ([], [], [], env, e, Rel.conj_guard g g', p)
 
            | Pat_wild x ->
              let x, g = check_bv env x in
@@ -1414,19 +1403,19 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (BU.set_elements uvt |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
+                (BU.set_elements uvt |> List.map (fun (u,(_bs, t)) -> BU.format2 "(%s : %s)"
                                                                     (Print.uvar_to_string u)
                                                                     (Print.term_to_string t)) |> String.concat ", ");
           let univs =
             List.fold_left
-              (fun univs (_, t) -> BU.set_union univs (Free.univs t))
+              (fun univs (_u, (_bs, t)) -> BU.set_union univs (Free.univs t))
               univs
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
+                (uvs |> List.map (fun (u,(_bs,t)) -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u)
                                                         (N.term_to_string env t)) |> String.concat ", ");
 
@@ -1474,7 +1463,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types uvs =
+     let gen_types (uvs:list<ctx_uvar>) =
          let fail k =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument, (BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
@@ -1483,30 +1472,29 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                                        (Print.term_to_string (U.comp_result c))))
                             (Env.get_range env)
          in
-         uvs |> List.map (fun (u, k) ->
+         uvs |> List.map (fun (u, (bs, k)) ->
          match Unionfind.find u with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
            let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
-           let bs, kres = U.arrow_formals k in
            let _ =
              //we only generalize variables at type k = a:Type{phi}
              //where k is closed
              //this is in support of ML-style polymorphism, while also allowing generalizing
              //over things like eqtype, which is a common case
              //Otherwise, things go badly wrong: see #1091
-             match (U.unrefine (N.unfold_whnf env kres)).n with
+             match (U.unrefine (N.unfold_whnf env k)).n with
              | Tm_type _ ->
-                let free = FStar.Syntax.Free.names kres in
-                if not (BU.set_is_empty free) then fail kres
+                let free = FStar.Syntax.Free.names k in
+                if not (BU.set_is_empty free) then fail k
 
              | _ ->
-               fail kres
+               fail k
            in
-           let a = S.new_bv (Some <| Env.get_range env) kres in
-           let t = U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres)) in
+           let a = S.new_bv (Some <| Env.get_range env) k in
+           let t = S.bv_to_name a in
            U.set_uvar u t; //t clearly has a free variable; this is the one place we break the
-                           //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
+                           //invariant of a uvar always being resolved to a term well-typed in its given context
            a, Some S.imp_tag)
      in
 

@@ -130,10 +130,9 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * term * Range.range)>
+and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> binding -> unit) }
-
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
 
@@ -222,6 +221,7 @@ val push_bvs           : env -> list<bv> -> env
 val pop_bv             : env -> option<(bv * env)>
 val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
+val set_binders        : env -> binders -> env
 val push_module        : env -> modul -> env
 val push_univ_vars     : env -> univ_names -> env
 val open_universes_in  : env -> univ_names -> list<term> -> env * univ_names * list<term>

@@ -73,9 +73,9 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
                         | Some head -> BU.format2 "Bound variables '%s' in the type of '%s' escape because of impure applications; add explicit let-bindings"
                                         (Print.bv_to_string x) (N.term_to_string env head) in
                        raise_error (Errors.Fatal_EscapedBoundVar, msg) (Env.get_range env) in
-                   let s = TcUtil.new_uvar env (fst <| U.type_u()) in
+                   let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) in
                    match Rel.try_teq true env t s with
-                    | Some g -> Rel.force_trivial_guard env g; s
+                    | Some g -> Rel.force_trivial_guard env (Rel.conj_guard g g0); s
                     | _ -> fail ()
          end in
     aux false kt
@@ -537,13 +537,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in
-    let gimp =
-        match (SS.compress head).n with
-        | Tm_uvar(u, _) ->
-            let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
-            {Rel.trivial_guard with implicits=[imp]}
-        | _ -> Rel.trivial_guard in
-    let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
+    let gres = Rel.conj_guard g g' in
     if Env.debug env Options.Extreme
     then BU.print2 "Guard from application node %s is %s\n"
                 (Print.term_to_string e)
@@ -554,12 +548,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env1, topt = Env.clear_expected_typ env in
     let env1 = instantiate_both env1 in
     let e1, c1, g1 = tc_term env1 e1 in
-    let env_branches, res_t = match topt with
-      | Some t -> env, t
+    let env_branches, res_t, g1 =
+      match topt with
+      | Some t -> env, t, g1
       | None ->
         let k, _ = U.type_u() in
-        let res_t = TcUtil.new_uvar env k in
-        Env.set_expected_typ env res_t, res_t in
+        let res_t, _, g = TcUtil.new_implicit_var "match result" e.pos env k in
+        Env.set_expected_typ env res_t, res_t, Rel.conj_guard g1 g in
 
     if Env.debug env Options.Extreme
     then BU.print1 "Tm_match: expected type of branches is %s\n" (Print.term_to_string res_t);
@@ -707,13 +702,9 @@ and tc_value env (e:term) : term
   | Tm_bvar x ->
     failwith (BU.format1 "Impossible: Violation of locally nameless convention: %s" (Print.term_to_string top))
 
-  | Tm_uvar(u, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
-    let g = match (SS.compress t1).n with
-        | Tm_arrow _ -> Rel.trivial_guard
-        | _ -> let imp = ("uvar in term", env, u, top, t1, top.pos) in
-               {Rel.trivial_guard with implicits=[imp]} in
-//    let g = Rel.trivial_guard in
-    value_check_expected_typ env e (Inl t1) g
+  | Tm_uvar(u, (_bs, t1)) -> //the type of a uvar is given directly with it; we do not recheck the type
+    //FIXME: Check context inclusion?
+    value_check_expected_typ env e (Inl t1) Rel.trivial_guard
 
   | Tm_unknown -> //only occurs where type annotations are missing in source programs
     let r = Env.get_range env in
