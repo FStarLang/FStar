@@ -309,6 +309,8 @@ type raw_error =
   | Fatal_UnexpectedAntiquotation
   | Fatal_SplicedUndef
   | Warning_ExtractionUnexpectedEffect
+  | Error_DidNotFail
+  | Warning_UnappliedFail
 
 // Needs review: Do we need CFatal, or can we just use CError?
 type flag =
@@ -619,7 +621,9 @@ let default_flags =
   (Error_NoSMTButNeeded                              , CError);
   (Fatal_UnexpectedAntiquotation                     , CFatal);
   (Fatal_SplicedUndef                                , CFatal);
-  (Warning_ExtractionUnexpectedEffect                , CWarning)
+  (Warning_ExtractionUnexpectedEffect                , CWarning);
+  (Error_DidNotFail                                  , CError);
+  (Warning_UnappliedFail                             , CWarning);
   ]
 
 exception Err of raw_error* string
@@ -688,7 +692,7 @@ let compare_issues i1 i2 =
     | Some _, None -> 1
     | Some r1, Some r2 -> Range.compare_use_range r1 r2
 
-let default_handler =
+let mk_default_handler print =
     let errs : ref<list<issue>> = BU.mk_ref [] in
     let add_one (e: issue) =
         match e.issue_level with
@@ -698,7 +702,8 @@ let default_handler =
         List.length !errs in
     let report () =
         let sorted = List.sortWith compare_issues !errs in
-        List.iter print_issue sorted;
+        if print then
+            List.iter print_issue sorted;
         sorted in
     let clear () =
         errs := [] in
@@ -706,6 +711,8 @@ let default_handler =
       eh_count_errors = count_errors;
       eh_report = report;
       eh_clear = clear }
+
+let default_handler = mk_default_handler true
 
 let current_handler =
     BU.mk_ref default_handler
@@ -866,3 +873,14 @@ let update_flags l =
   let range = compute_range [] l in
   let sorted = List.sortWith compare range in
   flags := aux [] 0 !flags sorted
+
+let catch_errors (f : unit -> 'a) : list<issue> =
+    let newh = mk_default_handler false in
+    let old = !current_handler in
+    current_handler := newh;
+    let _ = try let _ = f () in ()
+            with | ex -> err_exn ex
+    in
+    let errs = newh.eh_report() in
+    current_handler := old;
+    errs

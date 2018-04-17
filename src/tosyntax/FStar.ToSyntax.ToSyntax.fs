@@ -36,6 +36,8 @@ module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Env = FStar.Syntax.DsEnv
 module P = FStar.Syntax.Print
+module EMB = FStar.Syntax.Embeddings
+module SS = FStar.Syntax.Subst
 
 let desugar_disjunctive_pattern pats when_opt branch =
     pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
@@ -2047,6 +2049,20 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
+let get_fail_attr warn (at : S.term) : option<list<int>> =
+    let hd, args = U.head_and_args at in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_errs_attr ->
+        BU.map_opt (EMB.unembed (EMB.e_list EMB.e_int) a1) (List.map FStar.BigInt.to_int_fs)
+    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_errs_attr ->
+        if warn then
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail_errs, did you forget to use parentheses?");
+        None
+    | _ ->
+        if U.attr_eq at U.fail_attr
+        then Some []
+        else None
+
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
@@ -2331,12 +2347,16 @@ and mk_comment_attr (d: decl) =
 and desugar_decl env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
+  // Not for the `fail` attribute though! We only keep that one on the first
+  // new decl.
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
   let attrs = mk_comment_attr d :: attrs in
-  (* let s = List.fold_left (fun s a -> s ^ "; " ^ (Print.term_to_string a)) "" attrs in *)
-  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
+  env, List.mapi (fun i sigelt -> if i = 0
+                                  then { sigelt with sigattrs = attrs }
+                                  else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr true at)) attrs })
+                 sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in

@@ -344,3 +344,6 @@ assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
 
 irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
+
+assume val fail : attribute
+assume val fail_errs : list int -> Tot attribute
