@@ -15,7 +15,7 @@ endif
 
 all: uall
 
-uall: all-pos all-neg
+uall: all-pos
 
 all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver \
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
