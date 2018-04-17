@@ -262,8 +262,7 @@ let empty_worklist env = {
     smt_ok=true;
     wl_implicits=[]
 }
-let singleton' env prob smt_ok   = {empty_worklist env with attempting=[prob]; smt_ok = smt_ok}
-let singleton env prob           = singleton' env prob true
+let singleton wl prob smt_ok     = {wl with attempting=[prob]; smt_ok = smt_ok}
 let wl_of_guard env g            = {empty_worklist env with defer_ok=false; attempting=List.map snd g}
 let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
 let attempt probs wl             = {wl with attempting=probs@wl.attempting}
@@ -2105,9 +2104,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
               // GM: shouldn't we fail immediately if `eq_tm` returns `NotEqual`?
               // GM: No. We could be in a contradictory environment.
-              then let guard = if U.eq_tm t1 t2 = U.Equal
-                               then None
-                               else Some <| mk_eq2 orig t1 t2 in
+              then let guard,wl = if U.eq_tm t1 t2 = U.Equal
+                               then None, wl
+                               else let g, wl = mk_eq2 wl orig t1 t2 in
+                                    Some g, wl
+                   in
                    solve env (solve_prob orig guard [] wl)
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
@@ -2198,11 +2199,11 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                            N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
-                       let prob =
-                           TProb (sub_prob c1_repr problem.relation c2_repr
-                                      (BU.format2 "sub effect repr: %s <: %s"
+                       let prob, wl =
+                           sub_prob wl c1_repr problem.relation c2_repr
+                                    (BU.format2 "sub effect repr: %s <: %s"
                                                     (Print.term_to_string c1_repr)
-                                                    (Print.term_to_string c2_repr)))
+                                                    (Print.term_to_string c2_repr))
                        in
                        let wl = solve_prob orig (Some (p_guard prob)) [] wl in
                        solve env (attempt [prob] wl)
@@ -2226,7 +2227,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                            as_arg wpc2;
                                            as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                    None r in
-                      let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
+                      let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
                       solve env (attempt [base_prob] wl)
     in
@@ -2323,20 +2324,20 @@ let guard_to_string (env:env) g =
       BU.format4 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t univ_ineqs={%s};\n\t implicits={%s}}\n"
         form carry (ineqs_to_string g.univ_ineqs) imps
 
-let new_t_problem env lhs rel rhs elt loc =
+let new_t_problem wl env lhs rel rhs elt loc =
  let reason = if debug env <| Options.Other "ExplainRel"
               then BU.format3 "Top-level:\n%s\n\t%s\n%s"
                         (N.term_to_string env lhs) (rel_to_string rel)
                         (N.term_to_string env rhs)
               else "TOP" in
- let p = new_problem env lhs rel rhs elt loc reason in
- p
+ let p, wl = new_problem wl env lhs rel rhs elt loc reason in
+ TProb p, wl
 
-let new_t_prob env t1 rel t2 =
+let new_t_prob wl env t1 rel t2 =
  let x = S.new_bv (Some <| Env.get_range env) t1 in
  let env = Env.push_bv env x in
- let p = new_t_problem env t1 rel t2 (Some <| S.bv_to_name x) (Env.get_range env) in
- TProb p, x
+ let p, wl = new_t_problem wl env t1 rel t2 (Some <| S.bv_to_name x) (Env.get_range env) in
+ p, x, wl
 
 let solve_and_commit env probs err =
   let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
@@ -2377,8 +2378,8 @@ let with_guard_no_simp env prob dopt = match dopt with
 let try_teq smt_ok env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
  then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
- let prob = TProb <| new_t_problem env t1 EQ t2 None (Env.get_range env) in
- let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
+ let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
+ let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
  g
 
 let teq env t1 t2 : guard_t =
@@ -2403,8 +2404,9 @@ let sub_comp env c1 c2 =
   let rel = if env.use_eq then EQ else SUB in
   if debug env <| Options.Other "Rel"
   then BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
-  let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
-  with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
+  let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
+  let prob = CProb prob in
+  with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None)
 
 let solve_universe_inequalities' tx env (variables, ineqs) =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
@@ -2660,8 +2662,8 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
 let check_subtyping env t1 t2 =
     if debug env <| Options.Other "Rel"
     then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
-    let prob, x = new_t_prob env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit env (singleton' env prob true) (fun _ -> None) in
+    let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
+    let g = with_guard env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
     if debug env <| Options.Other "Rel"
     && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
@@ -2687,8 +2689,8 @@ let get_subtyping_prop env t1 t2 =
 let subtype_nosmt env t1 t2 =
     if debug env <| Options.Other "Rel"
     then BU.print2 "try_subtype_no_smt of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
-    let prob, x = new_t_prob env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit env (singleton' env prob false) (fun _ -> None) in
+    let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
+    let g = with_guard env prob <| solve_and_commit env (singleton wl prob false) (fun _ -> None) in
     match g with
     | None -> false
     | Some g ->
