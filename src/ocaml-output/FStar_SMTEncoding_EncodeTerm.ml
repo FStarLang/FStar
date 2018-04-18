@@ -1075,7 +1075,7 @@ and (encode_term :
                             FStar_SMTEncoding_Term.kick_partial_app tok  in
                           let uu____3521 =
                             FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
-                              "kick_partial_app"
+                              "@kick_partial_app"
                              in
                           (uu____3520,
                             (FStar_Pervasives_Native.Some "kick_partial_app"),
