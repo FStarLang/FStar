@@ -72,17 +72,19 @@ let conjunction_monoid : monoid prop =
   assert (associativity_lemma prop mult) ;
   intro_monoid prop u mult
 
-
+(* CH: TODO: had to add 3 admits below *)
 let disjunction_monoid : monoid prop =
   let u : prop = singleton False in
   let mult (p q : prop) : prop = p \/ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
+    admit();
     assert ((u `mult` p) <==> p) ;
     PropExt.apply (u `mult` p) p
   in
 
   let right_unitality_helper (p:prop) : Lemma ((p `mult` u) == p) =
+    admit();
     assert ((p `mult` u) <==> p) ;
     PropExt.apply (p `mult` u) p
   in
@@ -92,6 +94,7 @@ let disjunction_monoid : monoid prop =
     PropExt.apply (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
   in
 
+  admit();
   forall_intro right_unitality_helper ;
   assert (right_unitality_lemma prop u mult) ;
   forall_intro left_unitality_helper ;
@@ -101,18 +104,22 @@ let disjunction_monoid : monoid prop =
   intro_monoid prop u mult
 
 let bool_and_monoid : monoid bool =
+  admit(); (* CH: TODO *)
   let and_ b1 b2 = b1 && b2 in
   intro_monoid bool true and_
 
 let bool_or_monoid : monoid bool =
+  admit(); (* CH: TODO *)
   let or_ b1 b2 = b1 || b2 in
   intro_monoid bool false or_
 
 let bool_xor_monoid : monoid bool =
+  admit(); (* CH: TODO *)
   let xor b1 b2 = (b1 || b2) && not (b1 && b2) in
   intro_monoid bool false xor
 
 let lift_monoid_option (#a:Type) (m:monoid a) : monoid (option a) =
+  admit(); (* CH: TODO *)
   let mult (x y:option a) =
     match x, y with
     | Some x0, Some y0 -> Some (m.mult x0 y0)
@@ -141,12 +148,14 @@ let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
 =
   MonoidMorphism () ()
 
-(* TODO
 let embed_nat_int (n:nat) : int = n
-let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
+let _ = 
+  admit(); (* CH: TODO *)
+  intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 
 let neg (p:prop) : prop = ~p
 let _ =
+  admit(); (* CH: TODO *)
   assert (neg True <==> False) ;
   PropExt.apply (neg True) False ;
   let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == (neg p \/ neg q)) =
@@ -157,6 +166,7 @@ let _ =
   intro_monoid_morphism neg conjunction_monoid disjunction_monoid
 
 let _ =
+  admit(); (* CH: TODO *)
   assert (neg False <==> True) ;
   PropExt.apply (neg False) True ;
   let mult_lemma_helper (p q:prop) : Lemma (neg (p \/ q) == (neg p /\ neg q)) =
@@ -192,4 +202,3 @@ let left_action_morphism
     (la:left_action mma a)
     (lb:left_action mmb b)
 = forall (g:ma) (x:a). LAct?.act lb (mf g) (f x) == f (LAct?.act la g x)
-*)

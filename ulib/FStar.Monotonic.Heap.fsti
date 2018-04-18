@@ -28,7 +28,7 @@ val compare_addrs:
   #a:Type0 -> #b:Type0 -> #rel1:preorder a -> #rel2:preorder b ->
   r1:mref a rel1 -> r2:mref b rel2 -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 
-logic val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Tot prop
+val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Tot prop
 
 val addr_unused_in: nat -> heap -> Tot prop
 

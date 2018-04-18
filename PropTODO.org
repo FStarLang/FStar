@@ -37,7 +37,11 @@ for porting more examples without lots of pain
 * TODO P0 Replace the `logic` qualifier with `prop`
 
 * TODO P0 Get rid of all the newly introduced admits:
-** FStar.Algebra.Monoid.fst (commented out the end)
+** FStar.Algebra.Monoid.fst (8 admits)
+- first 5 are post removing logical and stuff
+- last 3 are from the original prop changes
+- could consider redoing this without pattern-less quantifiers
+  (see CommMonoid)
 ** FStar.List.Tot.Properties.fst (everything related to memP, recursive prop)
 - mem_memP
 - memP_existsb

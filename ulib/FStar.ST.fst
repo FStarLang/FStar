@@ -77,33 +77,37 @@ let contains_pred (#a:Type0) (#rel:preorder a) (r:mref a rel) = fun h -> h `cont
 
 type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{is_mm r = false /\ witnessed (contains_pred r)}
 
-abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
-  = gst_recall (contains_pred r)
+(* CH: TODO needed to pass the #a #rel arguments explicitly to contains and contains_pred and everything else below;
+   otherwise was getting an error with a terrible error message:
+   Failed to resolve implicit argument of type 'FStar.Preorder.preorder uu___6720'
+   in the type of recall (r:FStar.ST.mref a rel -> FStar.ST.STATE Prims.unit) *)
+abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains #a #rel h r ==> p () h)
+  = gst_recall (contains_pred #a #rel r)
 
 abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
   :ST (mref a rel)
       (fun h -> True)
-      (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
+      (fun h0 r h1 -> fresh #a #rel r h0 h1 /\ modifies Set.empty h0 h1 /\ sel #a #rel h1 r == init)
   = let h0 = gst_get () in
     let r, h1 = alloc rel h0 init false in
     gst_put h1;
-    gst_witness (contains_pred r);
+    gst_witness (contains_pred #a #rel r);
     r
 
-abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -> p (sel h r) h)
+abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -> p (sel #a #rel h r) h)
   = let h0 = gst_get () in
-    gst_recall (contains_pred r);
-    sel_tot h0 r
+    gst_recall (contains_pred #a #rel r);
+    sel_tot #a #rel h0 r
 
 abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   : ST unit
-    (fun h -> rel (sel h r) v)
-    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
-                 modifies (Set.singleton (addr_of r)) h0 h1 /\ equal_dom h0 h1 /\
-                 sel h1 r == v)
+    (fun h -> rel (sel #a #rel h r) v)
+    (fun h0 x h1 -> rel (sel #a #rel h0 r) v /\ contains #a #rel h0 r /\
+                 modifies (Set.singleton (addr_of #a #rel r)) h0 h1 /\ equal_dom h0 h1 /\
+                 sel #a #rel h1 r == v)
   = let h0 = gst_get () in
-    gst_recall (contains_pred r);
-    let h1 = upd_tot h0 r v in
+    gst_recall (contains_pred #a #rel r);
+    let h1 = upd_tot #a #rel h0 r v in
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
     gst_put h1
@@ -112,15 +116,15 @@ abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==
 
 abstract
 let op_Bang (#a:Type) (#rel:preorder a) (r:mref a rel)
-  : STATE a (fun p h -> p (sel h r) h)
+  : STATE a (fun p h -> p (sel #a #rel h r) h)
 = read #a #rel r
 
 abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   : ST unit
-    (fun h -> rel (sel h r) v)
-    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
-                 modifies (Set.singleton (addr_of r)) h0 h1 /\ equal_dom h0 h1 /\
-                 sel h1 r == v)
+    (fun h -> rel (sel #a #rel h r) v)
+    (fun h0 x h1 -> rel (sel #a #rel h0 r) v /\ contains #a #rel h0 r /\
+                 modifies (Set.singleton (addr_of #a #rel r)) h0 h1 /\ equal_dom h0 h1 /\
+                 sel #a #rel h1 r == v)
 = write #a #rel r v
 
 type ref (a:Type0) = mref a (trivial_preorder a)
