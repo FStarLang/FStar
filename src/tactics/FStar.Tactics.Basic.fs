@@ -681,7 +681,7 @@ let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
 
 let uvar_free_in_goal (u:uvar) (g:goal) =
     if g.is_guard then false else
-    let free_uvars = List.map fst (BU.set_elements (SF.uvars g.goal_ty)) in
+    let free_uvars = List.map (fun u -> u.ctx_uvar_head) (BU.set_elements (SF.uvars g.goal_ty)) in
     List.existsML (UF.equiv u) free_uvars
 
 let uvar_free (u:uvar) (ps:proofstate) : bool =
@@ -731,7 +731,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
             bind (__apply uopt tm' typ') (fun _ ->
             let u = bnorm goal.context u in
             match (SS.compress (fst (U.head_and_args u))).n with
-            | Tm_uvar (uvar, _) ->
+            | Tm_uvar {ctx_uvar_head=uvar} ->
                 bind get (fun ps ->
                 if uopt && uvar_free uvar ps
                 then ret ()
@@ -829,27 +829,26 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
-            let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
+            let free_uvars = List.map (fun x -> x.ctx_uvar_head) (BU.set_elements (SF.uvars t)) in
             List.existsML (fun u -> UF.equiv u uv) free_uvars
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
         let checkone t goals =
             let hd, _ = U.head_and_args t in
             begin match hd.n with
-            | Tm_uvar (uv, _) -> appears uv goals
+            | Tm_uvar uv -> appears uv.ctx_uvar_head goals
             | _ -> false
             end
         in
         bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range) -> //(_msg, env, _uvar, term, typ, _) ->
             let hd, _ = U.head_and_args term in
-            let tm_uvar, (ctx, typ) = ctx_uvar in
-            let env = FStar.TypeChecker.Env.set_binders goal.context ctx in
+            let env = {goal.context with gamma=ctx_uvar.ctx_uvar_gamma} in
             match (SS.compress hd).n with
             | Tm_uvar _ ->
                 ret ([{ goal with
                         context = env;
                         witness = bnorm env term;
-                        goal_ty = bnorm env typ //NS: 01/24 ...expensive
+                        goal_ty = bnorm env ctx_uvar.ctx_uvar_typ //NS: 01/24 ...expensive
                        }], [])
             | _ ->
                 let g_typ =
@@ -857,9 +856,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                   then // NS:01/24: use the fast path instead, knowing that term is at least well-typed
                        // NS:05/25: protecting it under this option,
                        //           since it causes a regression in examples/vale/*Math_i.fst
-                       FStar.TypeChecker.TcTerm.check_type_of_well_typed_term false env term typ
+                       FStar.TypeChecker.TcTerm.check_type_of_well_typed_term false env term ctx_uvar.ctx_uvar_typ
                   else let term = bnorm env term in
-                       let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
+                       let _, _, g_typ = env.type_of (Env.set_expected_typ env ctx_uvar.ctx_uvar_typ) term in
                        g_typ
                 in
                 bind (goal_from_guard "apply_lemma solved arg" goal.context g_typ goal.opts) (function
@@ -1412,10 +1411,10 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
                | _ -> FStar.Options.peek ()
     in
     match U.head_and_args t with
-    | { n = Tm_uvar (_, (ctx,typ)) }, _ ->
-        let env = Env.set_binders env ctx in
+    | { n = Tm_uvar ctx_uvar }, _ ->
+        let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         add_goals [{ witness  = bnorm env t;
-                     goal_ty  = bnorm env typ;
+                     goal_ty  = bnorm env ctx_uvar.ctx_uvar_typ;
                      is_guard = false;
                      context  = env;
                      opts     = opts; }]
@@ -1541,8 +1540,8 @@ let rec inspect (t:term) : tac<term_view> =
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
 
-    | Tm_uvar (u, (bs, t)) ->
-        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id u), bs, t)
+    | Tm_uvar ctx_u ->
+        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head), ctx_u.ctx_uvar_gamma, ctx_u.ctx_uvar_binders, ctx_u.ctx_uvar_typ)
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
@@ -1624,8 +1623,8 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Const c ->
         ret <| S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
-    | Tv_Uvar (u, bs, t) ->
-        ret <| U.uvar_from_id (Z.to_int_fs u) (bs, t)
+    | Tv_Uvar (u, g, bs, t) ->
+        ret <| U.uvar_from_id (Z.to_int_fs u) (g, bs, t)
 
     | Tv_Let (false, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in

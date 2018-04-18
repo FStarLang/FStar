@@ -60,14 +60,19 @@ let new_implicit_var reason r env k =
 
      | _ ->
       let binders = Env.all_binders env in
-      let ctx_uvar = FStar.Syntax.Unionfind.fresh(), (binders,k) in
+      let ctx_uvar = {
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
+          ctx_uvar_gamma=env.gamma;
+          ctx_uvar_binders=binders;
+          ctx_uvar_typ=k
+      } in
       let t = mk (Tm_uvar ctx_uvar) None r in
       let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
       t, [(ctx_uvar, r)], g
 
 let close_implicit (b:binder) (is:Env.implicits) =
-    let rec aux (_reason, _term, (u, (ctx, t)), _range) =
-        match FStar.Syntax.Unionfind.find u with
+    let rec aux (_reason, _term, ctx_u, _range) =
+        match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
         | Some _ -> () //already solved; nothing to do
         | None -> ()
 
@@ -78,7 +83,7 @@ let check_uvars r t =
   let uvs = Free.uvars t in
   if not (BU.set_is_empty uvs)
   then
-    let us = List.map (fun (x, _) -> Print.uvar_to_string x) (BU.set_elements uvs) |> String.concat ", " in
+    let us = List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) (BU.set_elements uvs) |> String.concat ", " in
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
@@ -1412,21 +1417,21 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (BU.set_elements uvt |> List.map (fun (u,(_bs, t)) -> BU.format2 "(%s : %s)"
-                                                                    (Print.uvar_to_string u)
-                                                                    (Print.term_to_string t)) |> String.concat ", ");
+                (BU.set_elements uvt |> List.map (fun u -> BU.format2 "(%s : %s)"
+                                                                    (Print.uvar_to_string u.ctx_uvar_head)
+                                                                    (Print.term_to_string u.ctx_uvar_typ)) |> String.concat ", ");
           let univs =
             List.fold_left
-              (fun univs (_u, (_bs, t)) -> BU.set_union univs (Free.univs t))
+              (fun univs uv -> BU.set_union univs (Free.univs uv.ctx_uvar_typ))
               univs
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (uvs |> List.map (fun (u,(_bs,t)) -> BU.format2 "(%s : %s)"
-                                                        (Print.uvar_to_string u)
-                                                        (N.term_to_string env t)) |> String.concat ", ");
+                (uvs |> List.map (fun u -> BU.format2 "(%s : %s)"
+                                                        (Print.uvar_to_string u.ctx_uvar_head)
+                                                        (N.term_to_string env u.ctx_uvar_typ)) |> String.concat ", ");
 
          univs, uvs, (lbname, e, c)
      in
@@ -1443,10 +1448,10 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                             (Print.lbname_to_string lb2) in
              raise_error (Errors.Fatal_IncompatibleSetOfUniverse, msg) (Env.get_range env)
      in
-     let force_uvars_eq lec2 u1 u2 =
+     let force_uvars_eq lec2 (u1:list<ctx_uvar>) (u2:list<ctx_uvar>) =
         let uvars_subseteq u1 u2 =
-            u1 |> BU.for_all (fun (u, _) ->
-            u2 |> BU.for_some (fun (u', _) -> Unionfind.equiv u u'))
+            u1 |> BU.for_all (fun u ->
+            u2 |> BU.for_some (fun u' -> Unionfind.equiv u.ctx_uvar_head u'.ctx_uvar_head))
         in
         if uvars_subseteq u1 u2
         && uvars_subseteq u2 u1
@@ -1481,11 +1486,11 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                                        (Print.term_to_string (U.comp_result c))))
                             (Env.get_range env)
          in
-         uvs |> List.map (fun (u, (bs, k)) ->
-         match Unionfind.find u with
+         uvs |> List.map (fun u ->
+         match Unionfind.find u.ctx_uvar_head with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
-           let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
+           let k = N.normalize [N.Beta; N.Exclude N.Zeta] env u.ctx_uvar_typ in
            let _ =
              //we only generalize variables at type k = a:Type{phi}
              //where k is closed
@@ -1502,8 +1507,9 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
            in
            let a = S.new_bv (Some <| Env.get_range env) k in
            let t = S.bv_to_name a in
-           U.set_uvar u t; //t clearly has a free variable; this is the one place we break the
-                           //invariant of a uvar always being resolved to a term well-typed in its given context
+           U.set_uvar u.ctx_uvar_head t;
+            //t clearly has a free variable; this is the one place we break the
+            //invariant of a uvar always being resolved to a term well-typed in its given context
            a, Some S.imp_tag)
      in
 

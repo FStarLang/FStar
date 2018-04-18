@@ -702,9 +702,9 @@ and tc_value env (e:term) : term
   | Tm_bvar x ->
     failwith (BU.format1 "Impossible: Violation of locally nameless convention: %s" (Print.term_to_string top))
 
-  | Tm_uvar(u, (_bs, t1)) -> //the type of a uvar is given directly with it; we do not recheck the type
+  | Tm_uvar u -> //the type of a uvar is given directly with it; we do not recheck the type
     //FIXME: Check context inclusion?
-    value_check_expected_typ env e (Inl t1) Rel.trivial_guard
+    value_check_expected_typ env e (Inl u.ctx_uvar_typ) Rel.trivial_guard
 
   | Tm_unknown -> //only occurs where type annotations are missing in source programs
     let r = Env.get_range env in
@@ -1594,7 +1594,7 @@ and tc_eqn scrutinee env branch
     let norm_exp = N.normalize [N.Beta] env1 exp in
     let uvs_to_string uvs =
         BU.set_elements uvs |>
-        List.map (fun (u, _) -> Print.uvar_to_string u) |>
+        List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) |>
         String.concat ", "
     in
     let uvs1 = Free.uvars norm_exp in
@@ -2336,7 +2336,7 @@ let rec universe_of_aux env e =
    | Tm_abs(bs, t, _) ->
      level_of_type_fail env e "arrow type"
    //these next few cases are easy; we just use the type stored at the node
-   | Tm_uvar(_, (_, t)) -> t
+   | Tm_uvar u -> u.ctx_uvar_typ
    | Tm_meta(t, _) -> universe_of_aux env t
    | Tm_name n -> n.sort
    | Tm_fvar fv ->
@@ -2535,7 +2535,7 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
 
   | Tm_ascribed(_, (Inl t, _), _) -> Some t
   | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
-  | Tm_uvar(_, (_, t)) -> Some t
+  | Tm_uvar u -> Some u.ctx_uvar_typ
 
   | Tm_quoted (tm, qi) ->
     Some (S.t_term)

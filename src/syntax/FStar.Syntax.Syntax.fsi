@@ -120,7 +120,12 @@ type term' =
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
-and ctx_uvar = uvar * (binders * typ)                            (* (G |- ?u : t), a uvar introduced in context G at type t *)
+and ctx_uvar = {                                                 (* (G |- ?u : t), a uvar introduced in context G at type t *)
+    ctx_uvar_head:uvar;                                          (* ?u *)
+    ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
+    ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
+    ctx_uvar_typ:typ                                             (* t *)
+}
 and uvar = Unionfind.p_uvar<option<term>> * version
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
@@ -248,16 +253,19 @@ and lazyinfo = {
     lkind : lazy_kind;
     typ   : typ;
     rng   : Range.range;
- }
-
+}
+and binding =
+  | Binding_var      of bv
+  | Binding_lid      of lident * tscheme
+  | Binding_univ     of univ_name
+and tscheme = list<univ_name> * typ
+and gamma = list<binding>
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
 val lookup_aq : bv -> antiquotations -> option<(bool * term)>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
-
-type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>

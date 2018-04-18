@@ -23,10 +23,6 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 module BU = FStar.Util
 
-type binding =
-  | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
-  | Binding_univ     of univ_name
 type sig_binding = list<lident> * sigelt
 
 type delta_level =
@@ -77,7 +73,8 @@ type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding> * list<sig_binding>;                (* Local typing environment and signature elements *)
+  gamma          :list<binding>;                (* Local typing environment *)
+  gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)

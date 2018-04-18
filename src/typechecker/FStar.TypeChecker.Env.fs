@@ -37,10 +37,6 @@ module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
-type binding =
-  | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
-  | Binding_univ     of univ_name
 type sig_binding = list<lident> * sigelt
 
 type delta_level =
@@ -81,7 +77,8 @@ type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding> * list<sig_binding>;  (* Local typing environment and signature elements *)
+  gamma          :list<binding>;                (* Local typing environment *)
+  gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
@@ -138,7 +135,7 @@ and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
 let rename_gamma subst gamma =
-    fst gamma |> List.map (function
+    gamma |> List.map (function
       | Binding_var x -> begin
         let y = Subst.subst subst (S.bv_to_name x) in
         match (Subst.compress y).n with
@@ -147,8 +144,7 @@ let rename_gamma subst gamma =
             Binding_var ({ y with sort = Subst.subst subst x.sort })
         | _ -> failwith "Not a renaming"
         end
-      | b -> b),
-    snd gamma
+      | b -> b)
 let rename_env subst env = {env with gamma=rename_gamma subst env.gamma}
 let default_tc_hooks =
   { tc_push_in_gamma_hook = (fun _ _ -> ()) }
@@ -183,7 +179,8 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
-    gamma= [], [];
+    gamma= [];
+    gamma_sig = [];
     gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
@@ -383,11 +380,11 @@ let lookup_qname env (lid:lident) : qninfo =
     then match BU.smap_try_find (gamma_cache env) lid.str with
       | None ->
         BU.catch_opt
-            (BU.find_map (fst env.gamma) (function
+            (BU.find_map env.gamma (function
               | Binding_lid(l,t) ->
                 if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
               | _ -> None))
-            (fun () -> BU.find_map (snd env.gamma) (function
+            (fun () -> BU.find_map env.gamma_sig (function
               | (_, { sigel = Sig_bundle(ses, _) }) ->
                   BU.find_map ses (fun se ->
                     if lids_of_sigelt se |> BU.for_some (lid_equals lid)
@@ -430,7 +427,7 @@ and add_sigelts env ses =
 // Lookup up various kinds of identifiers                 //
 ////////////////////////////////////////////////////////////
 let try_lookup_bv env (bv:bv) =
-  BU.find_map (fst env.gamma) (function
+  BU.find_map env.gamma (function
     | Binding_var id when bv_eq id bv ->
       Some (id.sort, id.ppname.idRange)
     | _ -> None)
@@ -584,7 +581,7 @@ let lookup_lid env l =
 let lookup_univ env x =
     List.find (function
         | Binding_univ y -> x.idText=y.idText
-        | _ -> false) (fst env.gamma)
+        | _ -> false) env.gamma
     |> Option.isSome
 
 let try_lookup_val_decl env lid =
@@ -1106,14 +1103,12 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 // not capture any of the local bindings (duh).
 let push_sigelt env s =
   let sb = (lids_of_sigelt s, s) in
-  let gamma = fst env.gamma, sb::snd env.gamma in
-  let env = {env with gamma = gamma} in
+  let env = {env with gamma_sig = sb::env.gamma_sig} in
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
 let push_local_binding env b =
-  let gamma = b::fst env.gamma, snd env.gamma in
-  {env with gamma=gamma}
+  {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
@@ -1121,14 +1116,14 @@ let push_bvs env bvs =
     List.fold_left (fun env bv -> push_bv env bv) env bvs
 
 let pop_bv env =
-    match fst env.gamma with
-    | Binding_var x::rest -> Some (x, {env with gamma=rest, snd env.gamma})
+    match env.gamma with
+    | Binding_var x::rest -> Some (x, {env with gamma=rest})
     | _ -> None
 
 let push_binders env (bs:binders) =
     List.fold_left (fun env (x, _) -> push_bv env x) env bs
 
-let set_binders env bs = push_binders ({env with gamma=[], snd env.gamma}) bs
+let set_binders env bs = push_binders ({env with gamma=[]}) bs
 
 let binding_of_lb (x:lbname) t = match x with
   | Inl x ->
@@ -1144,7 +1139,8 @@ let push_module env (m:modul) =
     add_sigelts env m.exports;
     {env with
       modules=m::env.modules;
-      gamma=[], [];
+      gamma=[];
+      gamma_sig=[];
       expected_typ=None}
 
 let push_univ_vars (env:env_t) (xs:univ_names) : env_t =
@@ -1170,12 +1166,13 @@ let finish_module =
     fun env m ->
       let sigs =
         if lid_equals m.name Const.prims_lid
-        then snd env.gamma |> List.map snd |> List.rev
+        then env.gamma_sig |> List.map snd |> List.rev
         else m.exports  in
       add_sigelts env sigs;
       {env with
         curmodule=empty_lid;
-        gamma=[],[];
+        gamma=[];
+        gamma_sig=[];
         modules=m::env.modules}
 
 ////////////////////////////////////////////////////////////
@@ -1190,7 +1187,7 @@ let uvars_in_env env =
     | Binding_lid(_, (_, t))::tl
     | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
   in
-  aux no_uvs (fst env.gamma)
+  aux no_uvs env.gamma
 
 let univ_vars env =
     let no_univs = Free.new_universe_uvar_set () in
@@ -1201,7 +1198,7 @@ let univ_vars env =
       | Binding_lid(_, (_, t))::tl
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
     in
-    aux no_univs (fst env.gamma)
+    aux no_univs env.gamma
 
 let univnames env =
     let no_univ_names = Syntax.no_universe_names in
@@ -1212,7 +1209,7 @@ let univnames env =
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
     in
-    aux no_univ_names (fst env.gamma)
+    aux no_univ_names env.gamma
 
 let bound_vars_of_bindings bs =
   bs |> List.collect (function
@@ -1222,16 +1219,16 @@ let bound_vars_of_bindings bs =
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
 
-let bound_vars env = bound_vars_of_bindings (fst env.gamma)
+let bound_vars env = bound_vars_of_bindings env.gamma
 
-let all_binders env = binders_of_bindings (fst env.gamma)
+let all_binders env = binders_of_bindings env.gamma
 
 let print_gamma env =
-    (fst env.gamma |> List.map (function
+    (env.gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
         | Binding_univ u -> "Binding_univ " ^ u.idText
         | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l))) @
-    (snd env.gamma |> List.map (fun (ls, _) ->
+    (env.gamma_sig |> List.map (fun (ls, _) ->
         "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
     ))
     |> String.concat "::\n"
@@ -1245,7 +1242,7 @@ let string_of_delta_level = function
   | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
-  let keys = List.collect fst (snd env.gamma) in
+  let keys = List.collect fst env.gamma_sig in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
 let should_enc_path env path =

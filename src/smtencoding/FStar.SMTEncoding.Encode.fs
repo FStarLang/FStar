@@ -959,10 +959,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               t, t_decls
         end
 
-      | Tm_uvar (uv, (_, k)) ->
-        let ttm = mk_Term_uvar (Unionfind.uvar_id uv) in
-        let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
-        let d = Util.mkAssume(t_has_k, Some "Uvar typing", varops.mk_unique (BU.format1 "uvar_typing_%s" (BU.string_of_int <| Unionfind.uvar_id uv))) in
+      | Tm_uvar uv ->
+        let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
+        let t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
+        let d = Util.mkAssume(t_has_k, Some "Uvar typing", varops.mk_unique (BU.format1 "uvar_typing_%s" (BU.string_of_int <| Unionfind.uvar_id uv.ctx_uvar_head))) in
         ttm, decls@[d]
 
       | Tm_app _ ->
@@ -2706,7 +2706,7 @@ and encode_sigelts env ses =
       g@g', env) ([], env)
 
 
-let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * env_t) =
+let encode_env_bindings (env:env_t) (bindings:list<S.binding>) : (decls_t * env_t) =
      (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing.
 
                Consider:
@@ -2732,10 +2732,10 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
     *)
     let encode_binding b (i, decls, env) = match b with
-        | Binding_univ _ ->
+        | S.Binding_univ _ ->
           i+1, decls, env
 
-        | Env.Binding_var x ->
+        | S.Binding_var x ->
             let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
@@ -2757,17 +2757,13 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
                     @[ax] in
             i+1, decls@g, env'
 
-        | Env.Binding_lid(x, (_, t)) ->
+        | S.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
             let fv = S.lid_as_fv x Delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
-
-        | Env.Binding_sig (_, se) ->
-            let g, env' = encode_sigelt env se in
-            i+1, decls@g, env' in
-
+    in
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
     decls, env
 
@@ -2880,10 +2876,10 @@ let encode_query use_env_msg tcenv q
   * list<decl>  //suffix, evaluating labels in the model, etc.
   = Z3.query_logging.set_module_name (TypeChecker.Env.current_module tcenv).str;
     let env = get_env (Env.current_module tcenv) tcenv in
-    let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
+//    let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
     let q, bindings =
         let rec aux bindings = match bindings with
-            | Env.Binding_var x::rest ->
+            | S.Binding_var x::rest ->
                 let out, rest = aux rest in
                 let t =
                     match (FStar.Syntax.Util.destruct_typ_as_formula x.sort) with
@@ -2896,10 +2892,10 @@ let encode_query use_env_msg tcenv q
                 let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
-        let closing, bindings = aux bindings in
+        let closing, bindings = aux tcenv.gamma in
         U.close_forall_no_univs (List.rev closing) q, bindings
     in
-    let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
+    let env_decls, env = encode_env_bindings env bindings in
     if debug tcenv Options.Low
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"

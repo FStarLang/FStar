@@ -93,7 +93,7 @@ let delay t s =
 *)
 let rec force_uvar' t =
   match t.n with
-  | Tm_uvar (uv, _) ->
+  | Tm_uvar {ctx_uvar_head=uv} ->
       (match Unionfind.find uv with
           | Some t' -> fst (force_uvar' t'), true
           | _ -> t, false)
@@ -312,7 +312,7 @@ let push_subst s t =
     | Tm_fvar _
     | Tm_unknown -> tag_with_range t s //these are always closed
 
-    | Tm_uvar (uv, _) ->
+    | Tm_uvar {ctx_uvar_head=uv} ->
       begin
       match (Unionfind.find uv) with
       | None -> tag_with_range t s

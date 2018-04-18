@@ -174,9 +174,14 @@ type worklist = {
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar wl r binders k : term * worklist =
- let ctx_uvar = UF.fresh(), (binders,k) in
- let t = mk (Tm_uvar ctx_uvar) None r in
- t, {wl with wl_implicits=("", t, ctx_uvar, r)::wl.wl_implicits}
+    let ctx_uvar = {
+         ctx_uvar_head=UF.fresh();
+         ctx_uvar_gamma=wl.tcenv.gamma;
+         ctx_uvar_binders=binders;
+         ctx_uvar_typ=k
+       } in
+    let t = mk (Tm_uvar ctx_uvar) None r in
+    t, {wl with wl_implicits=("", t, ctx_uvar, r)::wl.wl_implicits}
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -212,9 +217,9 @@ let term_to_string t =
   let compact = Print.term_to_string t in
   let detail =
     match (SS.compress t).n with
-    | Tm_uvar(u, (_,t)) -> BU.format2 "%s : %s" (Print.uvar_to_string u) (Print.term_to_string t)
-    | Tm_app({n=Tm_uvar(u, (_,ty))}, args) ->
-      BU.format3 "(%s : %s) %s" (Print.uvar_to_string u) (Print.term_to_string ty) (Print.args_to_string args)
+    | Tm_uvar u -> BU.format2 "%s : %s" (Print.uvar_to_string u.ctx_uvar_head) (Print.term_to_string u.ctx_uvar_typ)
+    | Tm_app({n=Tm_uvar u}, args) ->
+      BU.format3 "(%s : %s) %s" (Print.uvar_to_string u.ctx_uvar_head) (Print.term_to_string u.ctx_uvar_typ) (Print.args_to_string args)
     | _ -> "--" in
   BU.format3 "%s (%s)\t%s" compact (Print.tag_of_term t) detail
 
@@ -239,8 +244,8 @@ let uvi_to_string env = function
       let x = if (Options.hide_uvar_nums()) then "?" else UF.univ_uvar_id u |> string_of_int in
       BU.format2 "UNIV %s %s" x (Print.univ_to_string t)
 
-    | TERM ((u,_), t) ->
-      let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u |> string_of_int in
+    | TERM (u, t) ->
+      let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u.ctx_uvar_head |> string_of_int in
       BU.format2 "TERM %s %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = List.map (uvi_to_string env) uvis |> String.concat  ", "
 let names_to_string nms = BU.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
@@ -454,14 +459,14 @@ let commit uvis = uvis |> List.iter (function
         | U_unif u' -> UF.univ_union u u'
         | _ -> UF.univ_change u t
       end
-    | TERM((u, _), t) ->
+    | TERM(u, t) ->
       def_check_closed t.pos "commit" t;
-      U.set_uvar u t
+      U.set_uvar u.ctx_uvar_head t
     )
 
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
-    | TERM((u,_), t) -> if UF.equiv uv u then Some t else None)
+    | TERM(u, t) -> if UF.equiv uv u.ctx_uvar_head then Some t else None)
 
 let find_univ_uvar u s = BU.find_map s (function
     | UNIV(u', t) -> if UF.univ_equiv u u' then Some t else None
@@ -608,14 +613,14 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
       | Some phi -> phi in
     let uv = p_guard prob in
     let _ = match (Subst.compress uv).n with
-        | Tm_uvar(uvar, (bs,k)) -> //FIXME
+        | Tm_uvar u -> //FIXME
           if Env.debug wl.tcenv <| Options.Other "Rel"
           then BU.print3 "Solving %s (%s) with formula %s\n"
                             (string_of_int (p_pid prob))
                             (Print.term_to_string uv)
                             (Print.term_to_string phi);
           def_check_closed (p_loc prob) "solve_prob'" phi;
-          U.set_uvar uvar phi
+          U.set_uvar u.ctx_uvar_head phi
         | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     commit uvis;
     {wl with ctr=wl.ctr + 1}
@@ -645,18 +650,18 @@ let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (
 (* ------------------------------------------------ *)
 (* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
-let rec occurs (wl:worklist) (uk:(uvar * 'b)) (t:typ) =
+let rec occurs (wl:worklist) (uk:ctx_uvar) (t:typ) =
     Free.uvars t
     |> BU.set_elements
-    |> BU.for_some (fun (uv, _) ->
-       UF.equiv uv (fst uk))
+    |> BU.for_some (fun uv ->
+       UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head)
 
-let occurs_check env wl uk t =
+let occurs_check env wl (uk:ctx_uvar) t =
     let occurs_ok = not (occurs wl uk t) in
     let msg =
         if occurs_ok then None
         else Some (BU.format2 "occurs-check failed (%s occurs in %s)"
-                        (Print.uvar_to_string (fst uk))
+                        (Print.uvar_to_string uk.ctx_uvar_head)
                         (Print.term_to_string t)) in
     occurs_ok, msg
 
@@ -864,7 +869,7 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
     | Tm_constant c, Tm_constant d -> if FStar.Const.eq_const c d then FullMatch else MisMatch(None, None)
-    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if UF.equiv uv uv' then FullMatch else MisMatch(None, None)
+    | Tm_uvar uv,  Tm_uvar uv' -> if UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head then FullMatch else MisMatch(None, None)
 
     | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
 
@@ -1164,7 +1169,7 @@ let rec maximal_prefix (bs:binders) (bs':binders) =
             else xi is a fresh variable
     *)
 let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
-    let _, (_hd, (ctx, t_hd)), args = f in
+    let _, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args = f in
     let name_exists_in x bs =
         BU.for_some (fun (y, _) -> S.bv_eq x y) bs
     in
@@ -1577,12 +1582,11 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
         let (_, ctx_u, _) = lhs in
-        let (_, (_, t)) = ctx_u in
         let sol =
           match bs with
           | [] -> rhs
           | _ ->
-            u_abs t (sn_binders env bs) rhs
+            u_abs ctx_u.ctx_uvar_typ (sn_binders env bs) rhs
         in
         [TERM(ctx_u, sol)]
     in
@@ -1599,8 +1603,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let occurs_ok, msg = occurs_check env wl ctx_u rhs in
           if not occurs_ok
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg))
-          else let (_u, (ctx, _t_u)) = ctx_u in
-               let fvs_lhs = Free.names_of_binders (ctx@bs) in
+          else let fvs_lhs = Free.names_of_binders (ctx_u.ctx_uvar_binders@bs) in
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS")
@@ -1614,11 +1617,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
     | EQ ->
       let (_t1, ctx_uv, args_lhs) = lhs in
-      let _uv, (ctx, _t)  = ctx_uv in
-      match pat_vars env ctx args_lhs with
+      match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
         let t2 = sn env t2 in
-        let fvs1 = Free.names_of_binders (ctx @ lhs_binders) in
+        let fvs1 = Free.names_of_binders (ctx_uv.ctx_uvar_binders @ lhs_binders) in
         let fvs2 = Free.names t2 in
         let occurs_ok, msg = occurs_check env wl ctx_uv t2 in
         if not occurs_ok
@@ -1651,7 +1653,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
         let ({pos=range}, u_lhs, _) = lhs in
         let (_, u_rhs, _) = rhs in
-        if UF.equiv (fst u_lhs) (fst u_rhs)
+        if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
         && binders_eq binders_lhs binders_rhs
         then solve env (solve_prob orig None [] wl)
         else (* Given a flex-flex instance:
@@ -1669,8 +1671,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                 //we don't in other cases
                   mk_t_problem wl (p_scope orig) orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
              in
-             let ctx_w = maximal_prefix (fst (snd u_lhs) @ binders_lhs)
-                                        (fst (snd u_rhs) @ binders_rhs) in
+             let ctx_w = maximal_prefix (u_lhs.ctx_uvar_binders @ binders_lhs)
+                                        (u_rhs.ctx_uvar_binders @ binders_rhs) in
              let w, wl = new_uvar wl range ctx_w t_res_lhs in
              let sol = [TERM(u_lhs, w); TERM(u_rhs, w)] in
              solve env (attempt [sub_prob] (solve_prob orig None sol wl))
@@ -2594,22 +2596,22 @@ let resolve_implicits' env must_total forcelax g =
     match implicits with
     | [] -> if not changed then out else until_fixpoint ([], false) out
     | hd::tl ->
-          let (_, tm, (u, (bs, k)), r) = hd in
+          let (_, tm, ctx_u, r) = hd in
           if unresolved tm
           then until_fixpoint (hd::out, changed) tl
-          else let env = Env.push_binders env bs in
+          else let env = Env.push_binders env ctx_u.ctx_uvar_binders in
                let tm = N.normalize [N.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print2 "Checking uvar resolved to %s at type %s\n"
-                               (Print.term_to_string tm) (Print.term_to_string k);
+                               (Print.term_to_string tm) (Print.term_to_string ctx_u.ctx_uvar_typ);
                let g =
                  try
-                   env.check_type_of must_total env tm k
+                   env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
                  with | e ->
                     Errors.add_errors [Error_BadImplicit,
                                        BU.format2 "Failed while checking implicit %s set to %s"
-                                               (Print.uvar_to_string u)
+                                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                                (N.term_to_string env tm), r];
                     raise e
                in
@@ -2631,10 +2633,11 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
-        | (_reason,e,(u, (bs, k)), r)::_ ->
-           raise_error (Errors.Fatal_FailToResolveImplicitArgument, (BU.format2 "Failed to resolve implicit argument %s of type %s"
-                                    (Print.uvar_to_string u)
-                                    (Print.term_to_string k))) r
+        | (_reason, e, ctx_u, r)::_ ->
+           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                        BU.format2 "Failed to resolve implicit argument %s of type %s"
+                                    (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                                    (Print.term_to_string ctx_u.ctx_uvar_typ)) r
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

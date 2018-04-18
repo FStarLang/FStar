@@ -2738,8 +2738,8 @@ let eta_expand (env:Env.env) (t:term) : term =
   | _ ->
       let head, args = U.head_and_args t in
       begin match (SS.compress head).n with
-      | Tm_uvar(_, (_,thead)) ->
-        let formals, tres = U.arrow_formals thead in
+      | Tm_uvar u ->
+        let formals, tres = U.arrow_formals u.ctx_uvar_typ in
         if List.length formals = List.length args
         then t
         else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
@@ -2825,8 +2825,8 @@ let rec elim_delayed_subst_term (t:term) : term =
       mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
                   elim_delayed_subst_term t))
 
-    | Tm_uvar(uv, (bs,t)) ->
-      mk (Tm_uvar(uv, (bs,t))) //explicitly don't descend into (bs,t) to not break sharing there
+    | Tm_uvar u ->
+      mk (Tm_uvar u) //explicitly don't descend into (bs,t) to not break sharing there
 
     | Tm_quoted (tm, qi) ->
       let qi = S.on_antiquoted elim_delayed_subst_term qi in

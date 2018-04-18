@@ -500,7 +500,7 @@ and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun (r, ty, uv, rng) ->
                 (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (Print.uvar_to_string (fst uv)) (Print.term_to_string ty) r,
+                             (Print.uvar_to_string uv.ctx_uvar_head) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with
     | [] -> ()

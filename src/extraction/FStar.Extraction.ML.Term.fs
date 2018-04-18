@@ -216,7 +216,7 @@ let rec is_type_aux env t =
     | Tm_fvar fv ->
       UEnv.is_type_name env fv
 
-    | Tm_uvar (_, (_, t))
+    | Tm_uvar {ctx_uvar_typ=t}
     | Tm_bvar ({sort=t})
     | Tm_name ({sort=t}) ->
       is_arity env t
