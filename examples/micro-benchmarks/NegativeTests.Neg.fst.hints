@@ -1,5 +1,5 @@
 [
-  "Ë!\u001eV\u0018IÂí–Q€¹y$%ê",
+  "WZûd?’à\u0007Ò§£·G×›R",
   [
     [
       "NegativeTests.Neg.test_label",
@@ -8,7 +8,25 @@
       1,
       [ "@query" ],
       0,
-      "abf3f49a07480ac3efcfff28b81bd5eb"
+      "509c72bd4d18f0cbbbbf75b044d35ed0"
+    ],
+    [
+      "NegativeTests.Neg.test",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "26c7cbdbce56ba4f5de42cacfc039a6b"
+    ],
+    [
+      "NegativeTests.Neg.test_label",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "692b6ee259ae7b98e7fb43bd17c54e0b"
     ]
   ]
 ]

@@ -1,0 +1,35 @@
+[
+  "¼\"›‡Le£\u001e#g’‹qè‚š",
+  [
+    [
+      "LemmaArgs.lemma_example1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_LemmaArgs_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01"
+      ],
+      0,
+      "4024f209cffd4832cddf6fbfb7be104b"
+    ],
+    [
+      "LemmaArgs.example1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "21675b92dbe75e0ce7ca439854d2c200"
+    ],
+    [
+      "LemmaArgs.lemma_example1",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "1c08d63ce2055a2c6207d61d81761c83"
+    ]
+  ]
+]
