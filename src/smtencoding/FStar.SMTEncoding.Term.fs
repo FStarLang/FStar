@@ -733,6 +733,7 @@ and mkPrelude z3options =
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
                 (declare-fun _mod (Int Int) Int)\n\
+                (declare-fun __uu__PartialApp () Term)\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))"
@@ -866,6 +867,7 @@ let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
+let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
 let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
 let mk_Precedes x1 x2 r = mkApp("Precedes", [x1;x2])  r|> mk_Valid
 let mk_LexCons x1 x2 r  = mkApp("LexCons", [x1;x2]) r
