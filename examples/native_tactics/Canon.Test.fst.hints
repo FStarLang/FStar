@@ -11,7 +11,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c4a06a6a503d1f141724a11d4fbcb750"
+      "545a3a6ce4435a27b1dc5a6a8d57a867"
     ],
     [
       "Canon.Test.lem9",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8ff58a5e075b2611d604e51a71b68d80"
+      "6471cd672cf1258b5ad3e969f646e7ed"
     ],
     [
       "Canon.Test.lem10",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "85aa73bb98f02357149e20951d71f70c"
+      "307b9fbb537cc1e6e4f4e8fb015405bb"
     ]
   ]
 ]

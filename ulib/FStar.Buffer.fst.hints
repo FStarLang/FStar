@@ -584,7 +584,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "74661e41ac421e5d54d39dd5b2e3aa51"
+      "68aac80234d24a058c67fce70f4d2e29"
     ],
     [
       "FStar.Buffer.__proj__Buff__item__b",
@@ -4200,7 +4200,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "beb1b437c55e2f1fa729783c1ffd3822"
+      "a93ab0937fc909cb4f55aea5221227fc"
     ],
     [
       "FStar.Buffer.rfree",
@@ -4469,7 +4469,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "13876c686ec6dd12e2a95a01e406cdcd"
+      "f3a7e739671b27764e14d58a6a7c0f43"
     ],
     [
       "FStar.Buffer.lemma_aux_1",
@@ -6869,7 +6869,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "da3af18a8ed25ab5aeb7d54803558a68"
+      "3baa97db89d08d15846b862035c2d161"
     ],
     [
       "FStar.Buffer.modifies_subbuffer_2_prime",

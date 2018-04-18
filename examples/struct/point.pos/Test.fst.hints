@@ -37,7 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "f9f600a5b171ca4d1b8cd2e73d63ae08"
+      "8807ebdfc635decf57e027921073ee57"
     ],
     [
       "Test.flip",
@@ -118,22 +118,22 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_4fcc3fcfa370630e5a1e6334aaf368bf",
+        "refinement_interpretation_Test_Tm_refine_26ea53032d32d503b218c75475da8f02",
+        "refinement_interpretation_Test_Tm_refine_628c74b485f154375dc11b03e6edb718",
         "refinement_interpretation_Test_Tm_refine_6f9aa66937ca4c204e459d01042299f6",
-        "refinement_interpretation_Test_Tm_refine_a67ed1aad413b26b3044410fe191488c",
-        "refinement_interpretation_Test_Tm_refine_c07d731f1f2e0ffed0b5267dbd071fd2",
+        "refinement_interpretation_Test_Tm_refine_ab9e39dfa749ba8ec9774c996f6b3352",
         "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
-        "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
+        "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "ec457303d8099a856706779ad13515d5"
+      "5ecdaaf705c252935303078c7c419d69"
     ],
     [
       "Test.flip'",
@@ -214,22 +214,22 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_4fcc3fcfa370630e5a1e6334aaf368bf",
+        "refinement_interpretation_Test_Tm_refine_26ea53032d32d503b218c75475da8f02",
+        "refinement_interpretation_Test_Tm_refine_628c74b485f154375dc11b03e6edb718",
         "refinement_interpretation_Test_Tm_refine_6f9aa66937ca4c204e459d01042299f6",
-        "refinement_interpretation_Test_Tm_refine_a67ed1aad413b26b3044410fe191488c",
-        "refinement_interpretation_Test_Tm_refine_c07d731f1f2e0ffed0b5267dbd071fd2",
+        "refinement_interpretation_Test_Tm_refine_ab9e39dfa749ba8ec9774c996f6b3352",
         "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
-        "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
+        "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "9f04dcc548a280f34a10153dbf4c4266"
+      "44c0f99922fe52e2e805406b56784328"
     ]
   ]
 ]
