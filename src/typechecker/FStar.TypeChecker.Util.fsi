@@ -33,6 +33,7 @@ val report: env -> list<string> -> unit
 //unification variables
 val new_implicit_var : string -> Range.range -> env -> typ -> (term * list<ctx_uvar * Range.range> * guard_t)
 val check_uvars: Range.range -> typ -> unit
+val close_guard_implicits: binders -> guard_t -> guard_t
 
 //extracting annotations from a term
 val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool * guard_t

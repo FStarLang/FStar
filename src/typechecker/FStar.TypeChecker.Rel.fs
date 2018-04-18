@@ -181,7 +181,7 @@ let new_uvar wl r binders k : term * worklist =
          ctx_uvar_typ=k
        } in
     let t = mk (Tm_uvar ctx_uvar) None r in
-    t, {wl with wl_implicits=("", t, ctx_uvar, r)::wl.wl_implicits}
+    t, {wl with wl_implicits=("", t, ctx_uvar, r, false)::wl.wl_implicits}
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -2279,7 +2279,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
-let print_pending_implicits g = g.implicits |> List.map (fun (_, tm, _, _) -> Print.term_to_string tm) |> String.concat ", "
+let print_pending_implicits g = g.implicits |> List.map (fun (_, tm, _, _, _) -> Print.term_to_string tm) |> String.concat ", "
 
 let ineqs_to_string ineqs =
     let vars =
@@ -2596,10 +2596,12 @@ let resolve_implicits' env must_total forcelax g =
     match implicits with
     | [] -> if not changed then out else until_fixpoint ([], false) out
     | hd::tl ->
-          let (_, tm, ctx_u, r) = hd in
+          let (_, tm, ctx_u, r, should_check) = hd in
           if unresolved tm
           then until_fixpoint (hd::out, changed) tl
-          else let env = Env.push_binders env ctx_u.ctx_uvar_binders in
+          else if not should_check
+          then until_fixpoint(out, true) tl
+          else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
                let tm = N.normalize [N.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
                if Env.debug env <| Options.Other "RelCheck"
@@ -2633,7 +2635,7 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
-        | (_reason, e, ctx_u, r)::_ ->
+        | (_reason, e, ctx_u, r, _)::_ ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format2 "Failed to resolve implicit argument %s of type %s"
                                     (Print.uvar_to_string ctx_u.ctx_uvar_head)

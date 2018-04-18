@@ -301,7 +301,7 @@ let push_subst_lcomp s lopt = match lopt with
     | None -> None
     | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
 
-let push_subst s t =
+let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' None (mk_range t.pos s) in
     match t.n with
@@ -316,7 +316,7 @@ let push_subst s t =
       begin
       match (Unionfind.find uv) with
       | None -> tag_with_range t s
-      | Some _ -> failwith "Should have been forced already; see compress below"
+      | Some t -> push_subst s t
       end
 
     | Tm_type _

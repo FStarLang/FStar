@@ -783,6 +783,7 @@ and tc_value env (e:term) : term
     (* create a universe of level u *)
     let t = mk (Tm_type u) None top.pos in
     let g = Rel.conj_guard g (Rel.close_guard_univs us bs f) in
+    let g = TcUtil.close_guard_implicits bs g in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_type u ->
@@ -804,6 +805,7 @@ and tc_value env (e:term) : term
     let e = {U.refine (fst x) phi with pos=top.pos} in
     let t = mk (Tm_type u) None top.pos in
     let g = Rel.conj_guard f1 (Rel.close_guard_univs [u] [x] f2) in
+    let g = TcUtil.close_guard_implicits [x] g in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_abs(bs, body, _) ->
@@ -1139,6 +1141,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 else let guard = Rel.close_guard env (bs@letrec_binders) (Rel.conj_guard g guard) in
                      guard in
 
+    let guard = TcUtil.close_guard_implicits bs guard in
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
     let e, tfun, guard = match tfun_opt with
@@ -1791,7 +1794,9 @@ and tc_eqn scrutinee env branch
              then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
              else let t = U.mk_conj_l <| build_branch_guard scrutinee_tm pat in
                   let k, _ = U.type_u() in
-                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in //NS: discarding the guard here means that the VC is not fully type-checked and may contain unresolved unification variables, e.g. FIXME!
+                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
+                  //NS: discarding the guard here means that the VC is not fully type-checked
+                  //    and may contain unresolved unification variables, e.g. FIXME!
                   t in
 
           (* 6 (c) *)
@@ -1816,7 +1821,7 @@ and tc_eqn scrutinee env branch
   effect_label,
   cflags,
   maybe_return_c, //closed already---does not contain free pattern-bound variables
-  guard
+  TcUtil.close_guard_implicits (List.map S.mk_binder pat_bvs) guard
 
 (******************************************************************************)
 (* Checking a top-level, non-recursive let-binding:                           *)
@@ -1911,6 +1916,7 @@ and check_inner_let env e =
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Rel.close_guard env xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
+       let g2 = TcUtil.close_guard_implicits xb g2 in
        let guard = Rel.conj_guard g1 g2 in
 
        if Option.isSome (Env.expected_typ env)
@@ -2016,6 +2022,11 @@ and check_inner_let_rec env top =
           let cres = TcUtil.close_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
+
+          let guard =
+            let bs = lbs |> List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) in
+            TcUtil.close_guard_implicits bs guard
+          in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
           let e = mk (Tm_let((true, lbs), e2)) None top.pos in

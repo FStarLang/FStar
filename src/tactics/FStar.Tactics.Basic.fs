@@ -840,7 +840,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ -> false
             end
         in
-        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range) -> //(_msg, env, _uvar, term, typ, _) ->
+        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range, _) -> //(_msg, env, _uvar, term, typ, _) ->
             let hd, _ = U.head_and_args term in
             let env = {goal.context with gamma=ctx_uvar.ctx_uvar_gamma} in
             match (SS.compress hd).n with

@@ -52,6 +52,15 @@ let report env errs =
 (************************************************************************)
 (* Unification variables *)
 (************************************************************************)
+let new_implicit_var_aux reason r gamma binders k =
+      let ctx_uvar = {
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
+          ctx_uvar_gamma=gamma;
+          ctx_uvar_binders=binders;
+          ctx_uvar_typ=k
+      } in
+      ctx_uvar, mk (Tm_uvar ctx_uvar) None r
+
 let new_implicit_var reason r env k =
     match U.destruct k C.range_of_lid with
      | Some [_; (tm, _)] ->
@@ -60,24 +69,38 @@ let new_implicit_var reason r env k =
 
      | _ ->
       let binders = Env.all_binders env in
-      let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
-          ctx_uvar_gamma=env.gamma;
-          ctx_uvar_binders=binders;
-          ctx_uvar_typ=k
-      } in
-      let t = mk (Tm_uvar ctx_uvar) None r in
-      let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
+      let ctx_uvar, t = new_implicit_var_aux reason r env.gamma binders k in
+      let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r, true)]} in
       t, [(ctx_uvar, r)], g
 
-let close_implicit (b:binder) (is:Env.implicits) =
-    let rec aux (_reason, _term, ctx_u, _range) =
+let close_guard_implicits (xs:binders) (g:guard_t) : guard_t =
+    let rec aux x i =
+        let (reason, term, ctx_u, range, should_check) = i in
         match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
-        | Some _ -> () //already solved; nothing to do
-        | None -> ()
+        | Some _ -> i //already solved; nothing to do
+        | None ->
+          begin
+          match BU.prefix_until (function Binding_var _ -> true | _ -> false) ctx_u.ctx_uvar_gamma with
+          | None -> i
+          | Some (_, hd, gamma_tail) ->
+            match hd with
+            | Binding_var x' when S.bv_eq x x' ->
+              let binders_pfx, x' = BU.prefix ctx_u.ctx_uvar_binders in
+              if not (S.bv_eq x (fst x'))
+              then failwith "Invariant violation: ctx_uvar.gamma and binders are out of sync";
+              let typ = U.arrow [S.mk_binder x] (S.mk_Total ctx_u.ctx_uvar_typ) in
+              let ctx_v, t_v = new_implicit_var_aux reason range gamma_tail binders_pfx typ in
+              let sol = S.mk_Tm_app t_v [S.as_arg (S.bv_to_name x)] None range in
+              Unionfind.change ctx_u.ctx_uvar_head sol;
+              (reason, t_v, ctx_v, range, should_check)
 
+            | _ -> i
+          end
     in
-    List.iter aux is
+    let is =
+      List.fold_left (fun is (x, _) -> List.map (aux x) is) g.implicits xs
+    in
+    {g with implicits=is}
 
 let check_uvars r t =
   let uvs = Free.uvars t in
