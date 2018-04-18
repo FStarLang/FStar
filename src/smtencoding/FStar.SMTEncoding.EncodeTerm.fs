@@ -525,7 +525,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                then //kick partial application axioms if arity > 0; see #613
                    [Util.mkAssume(kick_partial_app tok,
                                   Some "kick_partial_app",
-                                  varops.mk_unique "kick_partial_app")]
+                                  varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
                else [] in
              tok, aux_decls
 
