@@ -259,10 +259,10 @@ abstract let append_empty_r
 
 
 abstract
-val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
+val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (i:nat{i < len})
   : Lemma (requires True)
-    (ensures (forall (i:nat{i < len}). index (init len contents) i == contents i))
-    [SMTPat (index (init len contents))]
+    (ensures (index (init len contents) i == contents i))
+    [SMTPat (index (init len contents) i)]
 
 private
 let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
@@ -279,5 +279,5 @@ let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i
       else index (init_aux len k contents) i == index (init_aux len (k+1) contents) (i-1))
   end
 
-let init_index #a len contents =
+let init_index #a len contents i =
   if len = 0 then () else init_index_aux #a len 0 contents
