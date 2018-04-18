@@ -34,8 +34,6 @@ open FStar.TypeChecker.Common
 
 type lcomp_with_binder = option<bv> * lcomp
 
-
-
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
 module BU = FStar.Util
@@ -59,6 +57,7 @@ let new_implicit_var_aux reason r gamma binders k =
           ctx_uvar_binders=binders;
           ctx_uvar_typ=k
       } in
+      check_uvar_ctx_invariant reason r true gamma binders;
       ctx_uvar, mk (Tm_uvar ctx_uvar) None r
 
 let new_implicit_var reason r env k =
@@ -83,11 +82,10 @@ let close_guard_implicits (xs:binders) (g:guard_t) : guard_t =
           match BU.prefix_until (function Binding_var _ -> true | _ -> false) ctx_u.ctx_uvar_gamma with
           | None -> i
           | Some (_, hd, gamma_tail) ->
+            check_uvar_ctx_invariant reason range should_check ctx_u.ctx_uvar_gamma ctx_u.ctx_uvar_binders;
             match hd with
             | Binding_var x' when S.bv_eq x x' ->
-              let binders_pfx, x' = BU.prefix ctx_u.ctx_uvar_binders in
-              if not (S.bv_eq x (fst x'))
-              then failwith "Invariant violation: ctx_uvar.gamma and binders are out of sync";
+              let binders_pfx, _ = BU.prefix ctx_u.ctx_uvar_binders in
               let typ = U.arrow [S.mk_binder x] (S.mk_Total ctx_u.ctx_uvar_typ) in
               let ctx_v, t_v = new_implicit_var_aux reason range gamma_tail binders_pfx typ in
               let sol = S.mk_Tm_app t_v [S.as_arg (S.bv_to_name x)] None range in

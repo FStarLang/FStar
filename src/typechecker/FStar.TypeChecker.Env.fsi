@@ -272,3 +272,5 @@ val closed          : env -> term -> bool
 val closed'         : term -> bool
 
 val mk_copy: env -> env
+
+val print_gamma : gamma -> string

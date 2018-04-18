@@ -173,15 +173,16 @@ type worklist = {
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar wl r binders k : term * worklist =
+let new_uvar reason wl r binders k : term * worklist =
     let ctx_uvar = {
          ctx_uvar_head=UF.fresh();
          ctx_uvar_gamma=wl.tcenv.gamma;
          ctx_uvar_binders=binders;
          ctx_uvar_typ=k
        } in
+    check_uvar_ctx_invariant reason r false wl.tcenv.gamma binders;
     let t = mk (Tm_uvar ctx_uvar) None r in
-    t, {wl with wl_implicits=("", t, ctx_uvar, r, false)::wl.wl_implicits}
+    t, {wl with wl_implicits=(reason, t, ctx_uvar, r, false)::wl.wl_implicits}
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -355,7 +356,7 @@ let mk_eq2 wl prob t1 t2 =
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let tt, wl = new_uvar wl t1.pos (p_scope prob) t_type in
+    let tt, wl = new_uvar "eq2" wl t1.pos (p_scope prob) t_type in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -367,7 +368,7 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
-    let lg, wl = new_uvar wl Range.dummyRange scope U.ktype0 in
+    let lg, wl = new_uvar ("mk_problem: logical guard for " ^ reason) wl Range.dummyRange scope U.ktype0 in
     //logical guards are always squashed;
     //their range is intentionally dummy
     {
@@ -394,7 +395,7 @@ let mk_c_problem wl scope orig lhs rel rhs elt reason =
 
 let new_problem wl env lhs rel rhs elt loc reason =
   let scope = Env.all_binders env in
-  let lg, wl = new_uvar wl Range.dummyRange scope U.ktype0 in
+  let lg, wl = new_uvar ("new_problem: logical guard for " ^ reason) ({wl with tcenv=env}) Range.dummyRange scope U.ktype0 in
    {
     pid=next_pid();
     lhs=lhs;
@@ -1580,6 +1581,11 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                               (t2:typ)
     : solution =
 
+    let binders_as_bv_set (bs:binders) =
+        FStar.Util.as_set (List.map fst bs)
+                          Syntax.order_bv
+    in
+
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
         let (_, ctx_u, _) = lhs in
         let sol =
@@ -1603,7 +1609,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let occurs_ok, msg = occurs_check env wl ctx_u rhs in
           if not occurs_ok
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg))
-          else let fvs_lhs = Free.names_of_binders (ctx_u.ctx_uvar_binders@bs) in
+          else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS")
@@ -1620,7 +1626,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
         let t2 = sn env t2 in
-        let fvs1 = Free.names_of_binders (ctx_uv.ctx_uvar_binders @ lhs_binders) in
+        let names_to_string fvs =
+            List.map Print.bv_to_string (BU.set_elements fvs) |> String.concat ", "
+        in
+        let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
         let fvs2 = Free.names t2 in
         let occurs_ok, msg = occurs_check env wl ctx_uv t2 in
         if not occurs_ok
@@ -1628,7 +1637,12 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders t2 in
              solve env (solve_prob orig None sol wl)
-        else giveup_or_defer env orig wl "free names in the RHS are out of scope for the LHS"
+        else giveup_or_defer env orig wl
+                             (BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
+                                              (names_to_string fvs2)
+                                              (names_to_string fvs1)
+                                              (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders)))
+
 
       | _ -> //Not a pattern
         if wl.defer_ok
@@ -1673,7 +1687,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
              in
              let ctx_w = maximal_prefix (u_lhs.ctx_uvar_binders @ binders_lhs)
                                         (u_rhs.ctx_uvar_binders @ binders_rhs) in
-             let w, wl = new_uvar wl range ctx_w t_res_lhs in
+             let w, wl = new_uvar "flex-flex quasi" wl range ctx_w t_res_lhs in
              let sol = [TERM(u_lhs, w); TERM(u_rhs, w)] in
              solve env (attempt [sub_prob] (solve_prob orig None sol wl))
 

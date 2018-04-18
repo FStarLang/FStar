@@ -1221,16 +1221,15 @@ let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
 
-let print_gamma env =
-    (env.gamma |> List.map (function
+let print_gamma gamma =
+    (gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
         | Binding_univ u -> "Binding_univ " ^ u.idText
-        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l))) @
-    (env.gamma_sig |> List.map (fun (ls, _) ->
-        "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
-    ))
+        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
+    // (env.gamma_sig |> List.map (fun (ls, _) ->
+    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+    // ))
     |> String.concat "::\n"
-    |> BU.print1 "%s\n"
 
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
