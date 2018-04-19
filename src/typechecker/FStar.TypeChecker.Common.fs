@@ -221,7 +221,8 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
                                (print_gamma g)
                                (FStar.Syntax.Print.binders_to_string ", " bs))
      in
-     match BU.prefix_until (function Binding_var _ -> true | _ -> false) g, bs with
+     if not should_check then ()
+     else match BU.prefix_until (function Binding_var _ -> true | _ -> false) g, bs with
      | None, [] -> ()
      | Some (_, hd, gamma_tail), _::_ ->
        let _, (x, _) = BU.prefix bs in

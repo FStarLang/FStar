@@ -75,7 +75,8 @@ let new_implicit_var reason r env k =
 let close_guard_implicits (xs:binders) (g:guard_t) : guard_t =
     let rec aux x i =
         let (reason, term, ctx_u, range, should_check) = i in
-        match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
+        if not should_check then i
+        else match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
         | Some _ -> i //already solved; nothing to do
         | None ->
           begin
