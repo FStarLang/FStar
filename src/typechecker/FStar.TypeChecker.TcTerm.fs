@@ -842,7 +842,11 @@ and tc_value env (e:term) : term
     if debug env Options.High
     then BU.print3 "(%s) Checking refinement formula %s; binder is %s\n"
         (Range.string_of_range top.pos) (Print.term_to_string phi) (Print.bv_to_string (fst x));
-    let t_phi, _ = U.type_u () in
+    let t_phi, _ =
+        match Env.try_lookup_lid env (FStar.Parser.Const.t_refine_lid) with
+        | None -> U.type_u ()
+        | Some _ -> U.kprop, U_zero
+    in
     let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_phi in
     let e = {U.refine (fst x) phi with pos=top.pos} in
     let t = mk (Tm_type u) None top.pos in
