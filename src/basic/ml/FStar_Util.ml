@@ -259,9 +259,9 @@ type 'value psmap = (string, 'value) BatMap.t
 let psmap_empty (_: unit) : 'value psmap = BatMap.empty
 let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
 let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  try BatMap.find key map with Not_found -> dflt
+  BatMap.find_default dflt key map
 let psmap_try_find (map: 'value psmap) (key: string) =
-  try Some (BatMap.find key map) with Not_found -> None
+  BatMap.Exceptionless.find key map
 let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
 let psmap_find_map (m:'value psmap) f =
   let res = ref None in
@@ -292,9 +292,9 @@ type 'value pimap = (Z.t, 'value) BatMap.t
 let pimap_empty (_: unit) : 'value pimap = BatMap.empty
 let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
 let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  try BatMap.find key map with Not_found -> dflt
+  BatMap.find_default dflt key map
 let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  try Some (BatMap.find key map) with Not_found -> None
+  BatMap.Exceptionless.find key map
 let pimap_fold (m:'value pimap) f a = BatMap.foldi f m a
 
 let format (fmt:string) (args:string list) =
@@ -541,7 +541,7 @@ let rec find_map l f =
      | None -> find_map tl f
      | y -> y
 
-let try_find f l = try Some (List.find f l) with Not_found -> None
+let try_find f l = BatList.find_opt f l
 
 let try_find_index f l =
   let rec aux i = function
