@@ -74,6 +74,9 @@ let default_or_map n f x =
 // changing PPrint's ^//^ to ^/+^ since '//' wouldn't work in F#
 let prefix2 prefix_ body = prefix 2 1 prefix_ body
 
+let prefix2_nonempty prefix_ body =
+  if body = empty then prefix_ else prefix2 prefix_ body
+
 let ( ^/+^ ) prefix_ body = prefix2 prefix_ body
 
 let jump2 body =
@@ -478,6 +481,28 @@ let separate_map_with_comments prefix sep f xs extract_range =
   in
   snd (List.fold_left fold_fun init xs)
 
+(* [separate_map_with_comments_kw prefix sep f xs extract_range] is the same  *)
+(* as separate_map_with_comments but the keyword is also passed as an         *)
+(* argument to f, resulting in                                                *)
+(*                                                                            *)
+(*   (f prefix xs[0]) *)
+(*   comments[0] *)
+(*   f spe xs[1]) *)
+(*   comments[1] *)
+(*   ... *)
+(*   (f sep xs[n]) *)
+let separate_map_with_comments_kw prefix sep f xs extract_range =
+  let fold_fun (last_line, doc) x =
+    let r = extract_range x in
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) doc in
+    line_of_pos (end_of_range r), doc ^^ f sep x
+  in
+  let x, xs = List.hd xs, List.tl xs in
+  let init =
+    line_of_pos (end_of_range (extract_range x)), f prefix x
+  in
+  snd (List.fold_left fold_fun init xs)
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -516,7 +541,7 @@ and p_justSig d = match d.d with
   | Val (lid, t) ->
       (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ false false t
   | TopLevelLet (_, lbs) ->
-      separate_map hardline (fun lb -> group (str "let" ^/^ p_letlhs lb)) lbs
+      separate_map hardline (fun lb -> group (p_letlhs (str "let") lb)) lbs
   | _ ->
       empty
 
@@ -539,8 +564,8 @@ and p_rawDecl d = match d.d with
     (p_fsdocTypeDeclPairs (str "type") (List.hd tcdefs)) ^^
       (concat_map (fun x -> break1 ^^ p_fsdocTypeDeclPairs (str "and") x) <| List.tl tcdefs)
   | TopLevelLet(q, lbs) ->
-    let let_doc = str "let" ^^ p_letqualifier q ^^ space in
-    separate_map_with_comments let_doc (str "and" ^^ space) p_letbinding lbs
+    let let_doc = str "let" ^^ p_letqualifier q in
+    separate_map_with_comments_kw let_doc (str "and") p_letbinding lbs
       (fun (p, t) -> Range.union_ranges p.prange t.range)
   | Val(lid, t) ->
     (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ false false t
@@ -644,23 +669,26 @@ and p_constructorBranch (uid, t_opt, doc_opt, use_of) =
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
   optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep)) ^/+^ p_typ false false t) t_opt
 
-and p_letlhs (pat, _) =
+and p_letlhs kw (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr_doc =
     match pat.pat with
-    | PatAscribed (pat, (t, None)) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
-    | PatAscribed (pat, (t, Some tac)) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t) ^^ group (str "by" ^^ space ^^ p_atomicTerm tac)
+    | PatAscribed (pat, (t, None)) -> pat, group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
+    | PatAscribed (pat, (t, Some tac)) -> pat, group (colon ^^ space ^^ p_tmArrow p_tmNoEq t) ^^ group (str "by" ^^ space ^^ p_atomicTerm tac)
     | _ -> pat, empty
   in
   match pat.pat with
   | PatApp ({pat=PatVar (x, _)}, pats) ->
-      group (p_lident x ^/^ separate_map_or_flow break1 p_atomicPattern pats ^^ ascr_doc)
+      (* has binders *)
+      prefix2_nonempty (prefix2 (group (kw ^/^ p_lident x)) (flow_map break1 p_atomicPattern pats)) ascr_doc
   | _ ->
-      group (p_tuplePattern pat ^^ ascr_doc)
+      (* doesn't have binders *)
+      group (group (kw ^/^ p_tuplePattern pat) ^^ ascr_doc)
 
-and p_letbinding (pat, e) =
-  let pat_doc = p_letlhs (pat, e) in
-  prefix2 (group (pat_doc ^/^ equals)) (p_term false false e)
+and p_letbinding kw (pat, e) =
+  let doc_pat = p_letlhs kw (pat, e) in
+  let doc_expr = p_term false false e in
+  ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1017,13 +1045,13 @@ and p_noSeqTerm' ps pb e = match e.tm with
         | Some NoLetQualifier -> str "let"
         | _ -> str "and"
       in
-      let doc_pat = p_letlhs (pat, e) in
+      let doc_pat = p_letlhs doc_let_or_and (pat, e) in
       let doc_expr = p_term false false e in
       attrs ^^
       (if is_last then
-        group (surround 2 1 (surround 2 1 doc_let_or_and doc_pat equals) doc_expr (str "in"))
+       surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
       else
-        group (prefix 2 1 (surround 2 1 doc_let_or_and doc_pat equals) doc_expr))
+        hang 2 (flow break1 [doc_pat; equals; doc_expr]))
     in
     let l = List.length lbs in
     let lbs_docs = List.mapi (fun i lb ->
