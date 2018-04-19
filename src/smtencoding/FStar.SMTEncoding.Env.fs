@@ -286,9 +286,7 @@ let lookup_free_var_sym env a =
         end
 
 let tok_of_name env nm =
-  BU.bind_opt
-    (BU.psmap_find_map env.fvar_bindings (fun _ fvb ->
-         if fvb.smt_id = nm then Some fvb else None))
-    (fun fvb -> fvb.smt_token)
+  BU.psmap_find_map env.fvar_bindings (fun _ fvb ->
+      if fvb.smt_id = nm then fvb.smt_token else None)
 
 (* </Environment> *)

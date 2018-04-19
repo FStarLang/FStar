@@ -254,6 +254,7 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
+exception PSMap_Found
 type 'value psmap = (string, 'value) BatMap.t
 let psmap_empty (_: unit) : 'value psmap = BatMap.empty
 let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
@@ -263,8 +264,12 @@ let psmap_try_find (map: 'value psmap) (key: string) =
   try Some (BatMap.find key map) with Not_found -> None
 let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
 let psmap_find_map (m:'value psmap) f =
-  try Some (BatEnum.find_map (fun (k, v) -> f k v) (BatMap.enum m))
-  with Not_found -> None
+  let res = ref None in
+  let upd k v =
+    let r = f k v in
+    if r <> None then (res := r; raise PSMap_Found) in
+  (try BatMap.iter upd m with PSMap_Found -> ());
+  !res
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
