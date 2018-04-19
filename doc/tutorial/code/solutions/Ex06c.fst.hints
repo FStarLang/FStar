@@ -549,7 +549,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "a081e34ebd4d4946820eedb71eb9d44d"
+      "e5490622e6481c9680c0ac3efa088451"
     ],
     [
       "Ex06c.mem",
@@ -774,7 +774,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "51fe6dd50b8202c21d79792be6dae075"
+      "75d4d9d5e5c7f8e2e158290d89d2bf25"
     ]
   ]
 ]

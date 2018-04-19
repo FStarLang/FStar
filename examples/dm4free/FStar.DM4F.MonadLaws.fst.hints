@@ -19,7 +19,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
-      "a540660ca02e27e8b8e9e9d0b4f410eb"
+      "1a5c558dbc997e62a9d01db3da372ddd"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -135,7 +135,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "993342c74d47217a02ddb88e646dfc54"
+      "8e4f8c7a36ad379381ac071c1698cbe3"
     ],
     [
       "FStar.DM4F.MonadLaws.associativity",

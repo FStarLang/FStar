@@ -260,7 +260,7 @@
         "typing_BinaryTrees.find", "typing_BinaryTrees.map"
       ],
       0,
-      "10ad9a0386a8280845bc9dddc3a660da"
+      "50d8889d02891f223cd2dabf309ee8f2"
     ],
     [
       "BinaryTrees.in_tree",
@@ -334,7 +334,7 @@
         "token_correspondence_BinaryTrees.compose"
       ],
       0,
-      "550074df40f77de1360eb67a61ec21d2"
+      "aa9155749d569a8c187ab42f164336ef"
     ],
     [
       "BinaryTrees.size_fold",
