@@ -100,7 +100,7 @@ let build_constant (c: mlconstant): Parsetree.constant =
   | MLC_Int (v, None) ->
      let i =
        if Z.leq (Z.abs (Z.of_string v)) (Z.of_int 1073741823 (* 2^30 *)) then
-         "(Prims.lift_native_int " ^ v ^ ")"
+         "(Prims.lift_native_int (" ^ v ^ "))"
        else
          "(Prims.parse_int \"" ^ v ^ "\")" in
      Const.integer i

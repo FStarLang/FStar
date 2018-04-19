@@ -251,7 +251,7 @@ let string_of_mlconstant (sctt : mlconstant) =
     let threshold = 1073741823 (* 2^30 *) in
     let is = int_of_string s in
     if -threshold <= is && is <= threshold then
-      "(Prims.lift_native_int " ^s^ ")"
+      "(Prims.lift_native_int (" ^s^ "))"
     else
       "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float d -> string_of_float d
