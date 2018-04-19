@@ -271,12 +271,12 @@ val xor_idempotent:
   -> Lemma (ensures (xor n (xor n b1 b2) b2 == b1))
 
 val utf8_encode:
-    s:string{Str.length s < pow2 30}
+    s:string{Str.maxlen s (pow2 30)}
   -> b:bytes{length b <= op_Multiply 4 (Str.length s)}
 
 val iutf8_opt:
     m:bytes
-  -> (option (s:string{Str.length s < pow2 30 /\ utf8_encode s = m}))
+  -> (option (s:string{Str.maxlen s (pow2 30) /\ utf8_encode s == m}))
 
 val string_of_hex: string -> Tot string
 
