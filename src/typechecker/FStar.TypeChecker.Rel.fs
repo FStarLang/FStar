@@ -179,7 +179,7 @@ type worklist = {
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check : term * worklist =
+let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * worklist =
     let ctx_uvar = {
          ctx_uvar_head=UF.fresh();
          ctx_uvar_gamma=gamma;
@@ -188,7 +188,7 @@ let new_uvar reason wl r gamma binders k should_check : term * worklist =
        } in
     check_uvar_ctx_invariant reason r should_check gamma binders;
     let t = mk (Tm_uvar ctx_uvar) None r in
-    t, {wl with wl_implicits=(reason, t, ctx_uvar, r, should_check)::wl.wl_implicits}
+    ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r, should_check)::wl.wl_implicits}
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -204,9 +204,9 @@ type variance =
     | CONTRAVARIANT
     | INVARIANT
 
-type tprob = problem<typ, term>
-type cprob = problem<comp, unit>
-type problem_t<'a,'b> = problem<'a,'b>
+type tprob = problem<typ>
+type cprob = problem<comp>
+type problem_t<'a> = problem<'a>
 
 (* --------------------------------------------------------- *)
 (* </type defs>                                              *)
@@ -226,7 +226,7 @@ let term_to_string t =
     | Tm_app({n=Tm_uvar u}, args) ->
       BU.format2 "%s [%s]" (print_ctx_uvar u) (Print.args_to_string args)
     | _ -> Print.term_to_string t
- 
+
 let prob_to_string env = function
   | TProb p ->
     BU.format "\n%s:\t%s \n\t\t%s\n\t%s" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
@@ -315,6 +315,9 @@ let p_loc = function
 let p_guard = function
    | TProb p -> p.logical_guard
    | CProb p -> p.logical_guard
+let p_guard_uvar = function
+   | TProb p -> p.logical_guard_uvar
+   | CProb p -> p.logical_guard_uvar
 
 let def_scope_wf msg rng r =
     if not (Options.defensive ()) then () else
@@ -359,7 +362,7 @@ let mk_eq2 wl prob t1 t2 =
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma (p_scope prob) t_type false in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma (p_scope prob) t_type false in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -371,7 +374,15 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
-    let lg, wl = new_uvar ("mk_problem: logical guard for " ^ reason) wl Range.dummyRange wl.tcenv.gamma scope U.ktype0 false in
+    let ctx_uvar, lg, wl =
+        new_uvar ("mk_problem: logical guard for " ^ reason)
+                 wl
+                 Range.dummyRange
+                 wl.tcenv.gamma
+                 scope
+                 U.ktype0
+                 false
+    in
     //logical guards are always squashed;
     //their range is intentionally dummy
     {
@@ -381,6 +392,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
          rhs=rhs;
          element=elt;
          logical_guard=lg;
+         logical_guard_uvar=(None, ctx_uvar);
          reason=reason::p_reason orig;
          loc=p_loc orig;
          rank=None;
@@ -396,9 +408,29 @@ let mk_c_problem wl scope orig lhs rel rhs elt reason =
   let p, wl = mk_problem wl scope orig lhs rel rhs elt reason in
   CProb p, wl
 
-let new_problem wl env lhs rel rhs elt loc reason =
+let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
   let scope = Env.all_binders env in
-  let lg, wl = new_uvar ("new_problem: logical guard for " ^ reason) ({wl with tcenv=env}) Range.dummyRange env.gamma scope U.ktype0 false in
+  let lg_ty, elt =
+    match subject with
+    | None -> U.ktype0, None
+    | Some x ->
+      U.arrow [S.mk_binder x] (S.mk_Total U.ktype0),
+      Some (S.bv_to_name x)
+  in
+  let ctx_uvar, lg, wl =
+      new_uvar ("new_problem: logical guard for " ^ reason)
+               ({wl with tcenv=env})
+               loc
+               env.gamma
+               scope
+               lg_ty
+               false
+  in
+  let lg =
+    match elt with
+    | None -> lg
+    | Some x -> S.mk_Tm_app lg [S.as_arg x] None loc
+  in
    {
     pid=next_pid();
     lhs=lhs;
@@ -406,6 +438,7 @@ let new_problem wl env lhs rel rhs elt loc reason =
     rhs=rhs;
     element=elt;
     logical_guard=lg;
+    logical_guard_uvar=(subject, ctx_uvar);
     reason=[reason];
     loc=loc;
     rank=None;
@@ -420,6 +453,7 @@ let problem_using_guard orig lhs rel rhs elt reason = {
      rhs=rhs;
      element=elt;
      logical_guard=p_guard orig;
+     logical_guard_uvar=p_guard_uvar orig;
      reason=reason::p_reason orig;
      loc=p_loc orig;
      rank=None;
@@ -606,7 +640,9 @@ let u_abs (k : typ) (ys : binders) (t : term) : term =
         | _ -> (ys, t), ([], S.mk_Total k) in
     if List.length xs <> List.length ys
     (* TODO : not putting any cflags here on the annotation... *)
-    then U.abs ys t (Some (U.mk_residual_comp Const.effect_Tot_lid None [])) //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.; causing a loss in precision for the SMT encoding
+    then //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.;
+         //causing a loss in precision for the SMT encoding
+         U.abs ys t (Some (U.mk_residual_comp Const.effect_Tot_lid None []))
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
          U.abs ys t (Some (U.residual_comp_of_comp c))
 
@@ -615,17 +651,21 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
       | None -> U.t_true
       | Some phi -> phi in
-    let uv = p_guard prob in
-    let _ = match (Subst.compress uv).n with
-        | Tm_uvar u -> //FIXME
+    let xopt, uv = p_guard_uvar prob in
+    let _ = match Unionfind.find uv.ctx_uvar_head with
+        | None ->
           if Env.debug wl.tcenv <| Options.Other "Rel"
           then BU.print3 "Solving %s (%s) with formula %s\n"
                             (string_of_int (p_pid prob))
-                            (Print.term_to_string uv)
+                            (print_ctx_uvar uv)
                             (Print.term_to_string phi);
+          let phi =
+            match xopt with
+            | None -> phi
+            | Some x -> U.abs [S.mk_binder x] phi (Some (U.residual_tot U.ktype0)) in
           def_check_closed (p_loc prob) "solve_prob'" phi;
-          U.set_uvar u.ctx_uvar_head phi
-        | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
+          U.set_uvar uv.ctx_uvar_head phi
+        | Some _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     commit uvis;
     {wl with ctr=wl.ctr + 1}
 
@@ -674,7 +714,7 @@ let occurs_and_freevars_check env wl uk fvs t =
     let occurs_ok, msg = occurs_check env wl uk t in
     (occurs_ok, BU.set_is_subset_of fvs_t fvs, (msg, fvs, fvs_t))
 
-let intersect_vars v1 v2 =
+let intersect_binders (v1:binders) (v2:binders) : binders =
     let as_set v =
         v |> List.fold_left (fun out x -> BU.set_add (fst x) out) S.no_names in
     let v1_set = as_set v1 in
@@ -1158,13 +1198,14 @@ let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
     in
     aux bs1 bs2
 
-let rec maximal_prefix (bs:binders) (bs':binders) : binders =
+let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
   match bs, bs' with
-  | (b, i)::bs, (b', i')::bs' ->
+  | (b, i)::bs_tail, (b', i')::bs'_tail ->
     if S.bv_eq b b'
-    then (b,i)::maximal_prefix bs bs'
-    else []
-  | _ -> []
+    then let pfx, rest = maximal_prefix bs_tail bs'_tail in
+         (b, i)::pfx, rest
+    else [], (bs, bs')
+  | _ -> [], (bs, bs')
 
 let extend_gamma (g:gamma) (bs:binders) =
     List.fold_left (fun g (x, _) -> Binding_var x::g) g bs
@@ -1176,7 +1217,7 @@ let gamma_until (g:gamma) (bs:binders) =
       match BU.prefix_until (function Binding_var x' -> S.bv_eq x x' | _  -> false) g with
       | None -> []
       | Some (_, bx, rest) -> bx::rest
-    
+
 (* <quasi_pattern>:
         Given a term (?u_(bs;t) e1..en)
         returns None in case the arity of the type t is less than n
@@ -1687,32 +1728,38 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
         && binders_eq binders_lhs binders_rhs
         then solve env (solve_prob orig None [] wl)
         else (* Given a flex-flex instance:
-                ?u_(G;t) xs : t_res_lhs ~ ?v_(F;s) ys : t_res_rhs
+                (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
+             ~  (x1..xn ..X'| - ?v : ts' -> tres) [y1' ... ym']
 
-                Solve by:
-                    let H = maximal_prefix (G,xs) (F,ys)
-                    let r = apply t xs in
-                    (r == apply s ys);
-                    ?u := ?w_(H,r)
-                    ?v := ?w_(H,r)
-                *)
+                let ctx_w = x1..xn in
+                let z1..zk = (..X..y1..ym intersect ...X'...y1'..ym') in
+                (ctx_w |- ?w : z1..zk -> tres) [z1..zk]
+
+                ?u := (fun y1..ym -> ?w z1...zk)
+                ?v := (fun y1'..ym' -> ?w z1...zk)
+             *)
              let sub_prob, wl =
                 //is it strictly necessary to add this sub problem?
                 //we don't in other cases
                   mk_t_problem wl (p_scope orig) orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
              in
-             let ctx_w = maximal_prefix (u_lhs.ctx_uvar_binders @ binders_lhs)
-                                        (u_rhs.ctx_uvar_binders @ binders_rhs) in
-             let gamma_w = gamma_until (extend_gamma u_lhs.ctx_uvar_gamma binders_lhs) ctx_w in
-             let w, wl = new_uvar "flex-flex quasi" wl range gamma_w ctx_w t_res_lhs true in
-             let _ = 
+             let ctx_w, (ctx_l, ctx_r) =
+                maximal_prefix u_lhs.ctx_uvar_binders
+                               u_rhs.ctx_uvar_binders
+             in
+             let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
+             let zs = intersect_binders (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
+             let _, w, wl = new_uvar "flex-flex quasi" wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs)) true in
+             let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
+             let _ =
                 if Env.debug env <| Options.Other "RelCheck"
                 then printfn "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
                         (flex_t_to_string lhs)
                         (flex_t_to_string rhs)
                         (flex_t_to_string (destruct_flex_t w))
              in
-             let sol = [TERM(u_lhs, U.abs binders_lhs w None); TERM(u_rhs, U.abs binders_rhs w None)] in
+             let sol = [TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs)));
+                        TERM(u_rhs, U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs)))] in
              solve env (attempt [sub_prob] (solve_prob orig None sol wl))
 
       | _ ->
@@ -2155,7 +2202,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
       | _ -> giveup env "head tag mismatch" orig
 
-and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution =
+and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let c1 = problem.lhs in
     let c2 = problem.rhs in
     let orig = CProb problem in
@@ -2363,8 +2410,7 @@ let new_t_problem wl env lhs rel rhs elt loc =
 
 let new_t_prob wl env t1 rel t2 =
  let x = S.new_bv (Some <| Env.get_range env) t1 in
- let env = Env.push_bv env x in
- let p, wl = new_t_problem wl env t1 rel t2 (Some <| S.bv_to_name x) (Env.get_range env) in
+ let p, wl = new_t_problem wl env t1 rel t2 (Some x) (Env.get_range env) in
  p, x, wl
 
 let solve_and_commit env probs err =
@@ -2636,10 +2682,10 @@ let resolve_implicits' env must_total forcelax g =
     | [] -> if not changed then out else until_fixpoint ([], false) out
     | hd::tl ->
           let (reason, tm, ctx_u, r, should_check) = hd in
-          if unresolved tm
-          then until_fixpoint (hd::out, changed) tl
-          else if not should_check
+          if not should_check
           then until_fixpoint(out, true) tl
+          else if unresolved tm
+          then until_fixpoint (hd::out, changed) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
                let tm = N.normalize [N.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
@@ -2678,11 +2724,13 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
-        | (_reason, e, ctx_u, r, _)::_ ->
+        | (reason, e, ctx_u, r, should_check)::_ ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                        BU.format2 "Failed to resolve implicit argument %s of type %s"
+                        BU.format4 "Failed to resolve implicit argument %s of type %s introduced for %s (should check=%s)"
                                     (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                    (Print.term_to_string ctx_u.ctx_uvar_typ)) r
+                                    (Print.term_to_string ctx_u.ctx_uvar_typ)
+                                    reason
+                                    (BU.string_of_bool should_check)) r
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

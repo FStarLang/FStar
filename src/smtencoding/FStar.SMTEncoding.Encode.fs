@@ -168,7 +168,12 @@ let mk_cache_entry env tsym cvar_sorts t_decls =
 let use_cache_entry ce =
     [Term.RetainAssumptions ce.cache_symbol_assumption_names]
 let print_env e =
-    e.bindings |> List.map (function
+    let vars =
+        match BU.prefix_until (function Binding_fvar _ -> true | _ -> false) e.bindings with
+        | None -> e.bindings
+        | Some (vars, fv, _) -> vars @ [fv]
+    in
+    vars |> List.map (function
         | Binding_var  (x, _) -> Print.bv_to_string x
         | Binding_fvar fvb -> Print.lid_to_string fvb.fvar_lid) |> String.concat ", "
 
@@ -204,7 +209,9 @@ let lookup_term_var env a =
         //AR: this is a temporary fix, use reserved u__ for mangling names
         let a2 = unmangle a in
         (match aux a2 with
-            | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s" (Print.bv_to_string a2) (print_env env))
+            | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s"
+                            (Print.bv_to_string a2)
+                            (print_env env))
             | Some (b,t) -> t)
     | Some (b,t) -> t
 
@@ -216,13 +223,22 @@ let mk_fvb lid fname arity ftok fuel_partial_app = {
         smt_token = ftok;
         smt_fuel_partial_app = fuel_partial_app
 }
+let aux_check_push_fvar env fvb =
+//    let _ =
+//        match env.bindings with
+//        | Binding_fvar fvb'::_ ->
+//          if Ident.lid_equals fvb'.fvar_lid fvb.fvar_lid
+//          then failwith ("DUPLICATE FVAR PUSH for " ^ (Ident.string_of_lid fvb.fvar_lid))
+//        | _ -> ()
+//    in
+    {env with bindings=Binding_fvar fvb::env.bindings}
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
     let fname = varops.new_fvar x in
     let ftok_name = fname^"@tok" in
     let ftok = mkApp(ftok_name, []) in
     let fvb = mk_fvb x fname arity (Some ftok) None in
 //    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
-    fname, ftok_name, {env with bindings=(Binding_fvar fvb)::env.bindings}
+    fname, ftok_name, aux_check_push_fvar env fvb
 let try_lookup_lid env a =
     lookup_binding env (function
       | Binding_fvar fvb
@@ -241,12 +257,21 @@ let lookup_lid env a =
     | Some s -> s
 let push_free_var env (x:lident) arity fname ftok =
     let fvb = mk_fvb x fname arity ftok None in
-    {env with bindings=Binding_fvar fvb::env.bindings}
+    aux_check_push_fvar env fvb
+let replace_free_var env (x:lident) arity fname ftok =
+    let fvb = mk_fvb x fname arity ftok None in
+    let env =
+        match env.bindings with
+        | Binding_fvar fvb::bs when Ident.lid_equals fvb.fvar_lid x ->
+          {env with bindings=bs}
+        | _ -> failwith "replace_free_var: unexpected binding at the head"
+    in
+    aux_check_push_fvar env fvb
 let push_zfuel_name env (x:lident) f =
     let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
     let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) in
-    {env with bindings=Binding_fvar fvb::env.bindings}
+    aux_check_push_fvar env fvb
 let try_lookup_free_var env l =
     match try_lookup_lid env l with
     | None -> None
@@ -1910,7 +1935,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     | _ ->
                       Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname)) in
                 let tok_decl, env = match formals with
-                        | [] -> decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
+                        | [] -> decls2@[tok_typing], replace_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
@@ -2522,7 +2547,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                              false) in
             let tok_decls, env =
                 match vars with
-                | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
+                | [] -> [], replace_free_var env t arity tname (Some <| mkApp(tname, []))
                 | _ ->
                         let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
                         let ttok_fresh = Term.fresh_token (ttok, Term_sort) (varops.next_id()) in

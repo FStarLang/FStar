@@ -1502,10 +1502,11 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let gen_types (uvs:list<ctx_uvar>) =
          let fail k =
              let lbname, e, c = lec_hd in
-               raise_error (Errors.Fatal_FailToResolveImplicitArgument, (BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
+               raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                            BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
                                        (Print.term_to_string k)
                                        (Print.lbname_to_string lbname)
-                                       (Print.term_to_string (U.comp_result c))))
+                                       (Print.term_to_string (U.comp_result c)))
                             (Env.get_range env)
          in
          uvs |> List.map (fun u ->

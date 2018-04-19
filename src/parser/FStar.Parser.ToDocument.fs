@@ -1305,7 +1305,9 @@ and p_projectionLHS e = match e.tm with
   | Op (op, args) when not (handleable_op op args) ->
     failwith ("Operation " ^ Ident.text_of_id op ^ " with " ^ string_of_int (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
-  | Uvar _ -> failwith "Unexpected universe variable out of universe context"
+  | Uvar id ->
+    str "u#" ^^ str id.idText
+//    failwith "Unexpected universe variable out of universe context"
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
