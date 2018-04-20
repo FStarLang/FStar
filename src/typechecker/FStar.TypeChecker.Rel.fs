@@ -1766,7 +1766,9 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
              in
              let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
              let zs = intersect_binders (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
-             let _, w, wl = new_uvar "flex-flex quasi" wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs)) true in
+             let _, w, wl = new_uvar ("flex-flex quasi: lhs=" ^u_lhs.ctx_uvar_reason^ ", rhs=" ^u_rhs.ctx_uvar_reason)
+                                     wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
+                                     (u_lhs.ctx_uvar_should_check || u_rhs.ctx_uvar_should_check) in
              let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
              let _ =
                 if Env.debug env <| Options.Other "RelCheck"

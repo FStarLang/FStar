@@ -22,9 +22,9 @@ INCLUDE_PATHS = \
 	tests
 
 FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules	        	\
-        --eager_inference --lax --MLish --no_location_info              \
+        --lax --MLish --no_location_info              \
 	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))   \
-        --warn_error -272-241
+        --warn_error -272-241 --__temp_fast_implicits
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
