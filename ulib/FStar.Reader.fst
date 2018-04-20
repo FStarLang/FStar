@@ -1,6 +1,6 @@
 module FStar.Reader
-let reader_pre_h  (heap:Type)          = heap -> GTot Type0
-let reader_post_h (a:Type)             = a -> GTot Type0
+let reader_pre_h  (heap:Type)          = heap -> GTot prop
+let reader_post_h (a:Type)             = a -> GTot prop
 let reader_wp_h   (heap:Type) (a:Type) = reader_post_h a -> Tot (reader_pre_h heap)
 
 unfold let reader_return        (heap:Type) (a:Type)
@@ -11,11 +11,11 @@ unfold let reader_bind_wp   (heap:Type)
                             (wp1:reader_wp_h heap a)
                             (wp2:(a -> GTot (reader_wp_h heap b)))
                             (p:reader_post_h b) (h0:heap) =
-     labeled r1 "push" unit
+     labeled r1 "push" True
      /\ wp1 (fun a ->
-       labeled r1 "pop" unit
+       labeled r1 "pop" True
        /\ wp2 a p h0) h0
-unfold let reader_if_then_else  (heap:Type) (a:Type) (p:Type)
+unfold let reader_if_then_else  (heap:Type) (a:Type) (p:prop)
                              (wp_then:reader_wp_h heap a) (wp_else:reader_wp_h heap a)
                              (post:reader_post_h a) (h0:heap) =
      l_ITE p
@@ -35,11 +35,11 @@ unfold let reader_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (reader_wp_h heap a)))
                              (p:reader_post_h a) (h:heap) =
      (forall (b:b). wp b p h)
-unfold let reader_assert_p      (heap:Type) (a:Type) (p:Type)
+unfold let reader_assert_p      (heap:Type) (a:Type) (p:prop)
                              (wp:reader_wp_h heap a)
                              (q:reader_post_h a) (h:heap) =
      p /\ wp q h
-unfold let reader_assume_p      (heap:Type) (a:Type) (p:Type)
+unfold let reader_assume_p      (heap:Type) (a:Type) (p:prop)
                              (wp:reader_wp_h heap a)
                              (q:reader_post_h a) (h:heap) =
      p ==> wp q h
@@ -66,7 +66,7 @@ new_effect {
 open FStar.Heap
 new_effect READER = READER_h FStar.Heap.heap
 
-effect STRead (a:Type) (pre: (heap -> Type0)) (post:heap -> a -> Type0) = 
+effect STRead (a:Type) (pre: (heap -> prop)) (post:heap -> a -> prop) = 
   READER a (fun (p:reader_post_h a) h0 -> pre h0 /\ (forall (x:a). post h0 x ==> p x))
 
 open FStar.ST

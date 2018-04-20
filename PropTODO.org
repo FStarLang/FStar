@@ -158,6 +158,9 @@ let shift_left (a:t) (s:t) : Pure t
   (requires (b2p (v s < n)))
   (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
   = Mk (shift_left (v a) (v s))
+
+This is especially bad in FStar.UInt128.fst
+
 * TODO P1 Bootstrapping works for `... -> Type` but not `... -> prop`
 Needed to explicitly add a `... -> Tot prop`
 Need more unfolding in maybe_coerce_bool_to_prop,
@@ -173,13 +176,3 @@ FStar.BV.fst(8,4-8,11): (Error 19) Subtyping check failed; expected type Prims.p
 FStar.BV.fsti(14,60-14,72): (Error 19) Subtyping check failed; expected type Prims.prop; got type (t:Type0{ Prims.hasEq t }) (see also prims.fst(52,19-52,28))
 Verified module: FStar.BV (34020 milliseconds)
 2 errors were reported (see above)
-
-Fixed by sed?
-FStar.Int128.fst
-FStar.Int31.fst
-FStar.Int63.fst
-FStar.UInt31.fst
-FStar.UInt63.fst
-
-FStar.Reader.fst
-FStar.UInt128.fsti

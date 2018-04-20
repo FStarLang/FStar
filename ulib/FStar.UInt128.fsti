@@ -78,11 +78,11 @@ let __uint_to_t (x:int) : Tot t =
 
 (* Shift operators *)
 val shift_left: a:t -> s:UInt32.t -> Pure t
-  (requires (U32.v s < n))
+  (requires (b2p (U32.v s < n)))
   (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) % pow2 n)))
 
 val shift_right: a:t -> s:UInt32.t -> Pure t
-  (requires (U32.v s < n))
+  (requires (b2p (U32.v s < n)))
   (ensures (fun c -> v c = (v a / (pow2 (UInt32.v s)))))
 
 (* Comparison operators *)
