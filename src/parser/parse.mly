@@ -990,7 +990,7 @@ warn_error:
 
 flag:
   | op=OPINFIX1
-    { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
+    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
   | op=OPINFIX2
     { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
   | MINUS
