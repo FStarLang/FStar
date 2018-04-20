@@ -526,7 +526,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     //and if the head symbol is just a variable
                     //rather than maybe a fuel-instrumented name (cf. #1433)
                    match tok.tm with
-                   | FreeV _ ->
+                   | FreeV _
+                   | App(_, []) ->
                      [Util.mkAssume(kick_partial_app tok,
                                     Some "kick_partial_app",
                                     varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
