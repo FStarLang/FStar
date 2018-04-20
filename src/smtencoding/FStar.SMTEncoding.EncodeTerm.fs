@@ -523,9 +523,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let aux_decls =
                if arity > 0
                then //kick partial application axioms if arity > 0; see #613
-                   [Util.mkAssume(kick_partial_app tok,
-                                  Some "kick_partial_app",
-                                  varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
+                    //and if the head symbol is just a variable
+                    //rather than maybe a fuel-instrumented name (cf. #1433)
+                   match tok.tm with
+                   | FreeV _ ->
+                     [Util.mkAssume(kick_partial_app tok,
+                                    Some "kick_partial_app",
+                                    varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
+                   | _ -> []
                else [] in
              tok, aux_decls
 
