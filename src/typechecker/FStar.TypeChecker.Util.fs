@@ -1094,10 +1094,16 @@ let maybe_coerce_bool_to_prop env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         | Tm_fvar fv -> S.fv_eq_lid fv C.prop_lid
         | _ -> false
     in
+    let is_type t =
+        let t = N.unfold_whnf env t in
+        match (SS.compress t).n with
+        | Tm_type _ -> true
+        | _ -> false
+    in
     match (U.unrefine lc.res_typ).n with
     | Tm_fvar fv
         when S.fv_eq_lid fv C.bool_lid
-          && is_prop t ->
+          && (is_prop t || is_type t) ->
       let _ = Env.lookup_lid env C.b2p_lid in  //check that we have Prims.b2p in the context
       let b2p = fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_defined_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (if is_prop t then U.kprop else U.ktype0)) in
