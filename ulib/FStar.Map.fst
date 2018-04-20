@@ -109,7 +109,7 @@ let lemma_InDomRestrict #key #value m ks k = ()
 let lemma_ContainsDom #key #value m k      = ()
 let lemma_UpdDomain #key #value m k v      = ()
 
-abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) :Type0 =
+abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) : prop =
     feq m1.mappings m2.mappings /\ equal m1.domain m2.domain
 
 

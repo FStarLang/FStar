@@ -57,6 +57,8 @@ for porting more examples without lots of pain
 ** FStar.Monotonic.Heap.fst (admit in aref_live_at_aref_of)
 ** FStar.SquashProperties.fst (3 new admits)
 Should this actually be moved to examples/paradoxes?
+https://coq.inria.fr/library/Coq.Logic.Berardi.html
+https://github.com/FStarLang/FStar/issues/360
 ** FStar.Ref.fst (new admit in write; assertion failed)
 * TODO P1 Fix Z3 errors related to reshuffling in prims:
 <dummy>(0,0-0,0): (Warning 276) Prims: Unexpected output from Z3:
@@ -161,4 +163,5 @@ Needed to explicitly add a `... -> Tot prop`
 Need more unfolding in maybe_coerce_bool_to_prop,
 but not for prop itself
 
-* Minimize prims to end once we've defined GTot
+* TODO Minimize prims to end once we've defined GTot
+* TODO Some severe performance degradation in FStar.Array.fst

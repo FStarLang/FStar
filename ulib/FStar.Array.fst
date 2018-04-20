@@ -92,6 +92,7 @@ let index #a x n =
   let s = to_seq x in
   Seq.index s n
 
+#set-options "--z3rlimit 10"
 abstract val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
@@ -102,6 +103,7 @@ let upd #a x n v =
   let s = !x in
   let s' = Seq.upd s n v in
   x:= s'
+#set-options "--z3rlimit 5"
 
 abstract val length: #a:Type -> x:array a -> ST nat
   (requires (fun h -> contains h x))
@@ -117,6 +119,7 @@ let op #a f x =
   let s' = f s in
   x := s'
 
+#set-options "--z3rlimit 20"
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                  -> ST unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
                             (ensures (fun h0 _u h1 ->
@@ -129,8 +132,10 @@ let swap #a x i j =
   let tmpj = index x j in
   upd x j tmpi;
   upd x i tmpj
+#set-options "--z3rlimit 5"
 
 (* Helper functions for stateful array manipulation *)
+#set-options "--z3rlimit 20"
 val copy_aux:
   #a:Type -> s:array a -> cpy:array a -> ctr:nat ->
      ST unit
@@ -146,7 +151,9 @@ let rec copy_aux #a s cpy ctr =
   | 0 -> ()
   | _ -> upd cpy ctr (index s ctr);
 	 copy_aux s cpy (ctr+1)
+#set-options "--z3rlimit 5"
 
+#set-options "--z3rlimit 10"
 val copy:
   #a:Type -> s:array a ->
   ST (array a)
@@ -160,6 +167,7 @@ let copy #a s =
   let cpy = create (length s) (index s 0) in
   copy_aux s cpy 0;
   cpy
+#set-options "--z3rlimit 5"
 
 val blit_aux:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat -> ctr:nat ->
@@ -184,7 +192,7 @@ val blit_aux:
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
 
-#set-options "--z3rlimit 60"
+#set-options "--z3rlimit 500"
 let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()
@@ -232,7 +240,7 @@ val sub :
       /\ (idx + len <= Seq.length (sel h0 s))
       /\ (Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
 
-#set-options "--z3rlimit 120"
+#set-options "--z3rlimit 200"
 let sub #a s idx len =
   let t = create len (index s 0) in
   blit s idx t 0 len;
