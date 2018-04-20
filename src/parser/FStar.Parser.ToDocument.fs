@@ -539,7 +539,7 @@ and p_fsdoc (doc, kwd_args) =
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
-      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ false false t
+      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^^ p_typ false false t
   | TopLevelLet (_, lbs) ->
       separate_map hardline (fun lb -> group (p_letlhs (str "let") lb)) lbs
   | _ ->
@@ -568,7 +568,7 @@ and p_rawDecl d = match d.d with
     separate_map_with_comments_kw let_doc (str "and") p_letbinding lbs
       (fun (p, t) -> Range.union_ranges p.prange t.range)
   | Val(lid, t) ->
-    (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ false false t
+    str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ (p_typ false false t))
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -576,7 +576,7 @@ and p_rawDecl d = match d.d with
       then empty
       else str "val" ^^ space
     in
-    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ false false t
+    decl_keyword ^^ p_ident id ^^ space ^^ group (colon ^^ space ^^ (p_typ false false t))
   | Exception(uid, t_opt) ->
     str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> break1 ^^ str "of" ^/+^ p_typ false false t) t_opt
   | NewEffect(ne) ->
@@ -667,7 +667,7 @@ and p_constructorBranch (uid, t_opt, doc_opt, use_of) =
   let sep = if use_of then str "of" else colon in
   let uid_doc = group (bar ^^ space ^^ p_uident uid) in
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep)) ^/+^ p_typ false false t) t_opt
+  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
 
 and p_letlhs kw (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
@@ -818,7 +818,7 @@ and p_atomicPattern p = match p.pat with
       soft_parens_with_nesting (p_refinement None underscore t phi)
     | _ ->
         (* TODO implement p_simpleArrow *)
-        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_tmEqNoRefinement t)
+        soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
     end
   | PatList pats ->
     surround 2 0 lbracket (separate_break_map semi p_tuplePattern pats) rbracket
@@ -858,7 +858,7 @@ and p_binder is_atomic b = match b.b with
         | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
           p_refinement b.aqual (p_ident lid) t phi
         | _ ->
-          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 1 ^^ p_tmFormula t
+          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^/^ p_tmFormula t
       in
       if is_atomic
       then group (lparen ^^ doc ^^ rparen)
@@ -1153,10 +1153,24 @@ and p_tmImplies e = match e.tm with
     | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow p_tmFormula e1) (p_tmImplies e2)
     | _ -> p_tmArrow p_tmFormula e
 
-and p_tmArrow p_Tm e = match e.tm with
-  | Product(bs, tgt) ->
-      group (separate_map_or_flow empty (fun b -> p_binder false b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
-  | _ -> p_Tm e
+(* This function is somewhat convoluted because it is used in a few different contexts and it's trying to properly  *)
+(* indent for each of them. For signatures, it is trying to print the whole arrow on one line. If this fails, it    *)
+(* tries to print everything except the last term on the same line and push the last term on a new line. If this    *)
+(* fails, it prints every term on a separate line. This seems consistent with the current style used in most cases. *)
+(* A trailing space may sometimes be introduced, which we should trim.                                              *)
+and p_tmArrow p_Tm e =
+  let terms = p_tmArrow' p_Tm e in
+  let terms', last = List.splitAt (List.length terms - 1) terms in
+  let last_op = if List.length terms > 1 then space ^^ rarrow else empty in
+  match List.length terms with
+  | 1 -> List.hd terms
+  | _ -> group (ifflat (separate (space ^^ rarrow ^^ break1) terms)
+         (group ((ifflat ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op)
+                  (jump2 ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op)))) ^^ (jump2 <| List.hd last)))
+
+and p_tmArrow' p_Tm e = match e.tm with
+  | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
+  | _ -> [p_Tm e]
 
 and p_tmFormula e =
     let conj = space ^^ (str "/\\") ^^ break1 in
