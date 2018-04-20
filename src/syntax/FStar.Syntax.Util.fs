@@ -1495,7 +1495,10 @@ let uvar_from_id (id : int) (gamma, bs, t) =
         ctx_uvar_head = Unionfind.from_id id;
         ctx_uvar_gamma = gamma;
         ctx_uvar_binders = bs;
-        ctx_uvar_typ = t
+        ctx_uvar_typ = t;
+        ctx_uvar_reason = "";
+        ctx_uvar_range = Range.dummyRange;
+        ctx_uvar_should_check = true
     } in
     mk (Tm_uvar ctx_u) None Range.dummyRange
 

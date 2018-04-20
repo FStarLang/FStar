@@ -55,7 +55,10 @@ let new_implicit_var_aux reason r gamma binders k =
           ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
           ctx_uvar_gamma=gamma;
           ctx_uvar_binders=binders;
-          ctx_uvar_typ=k
+          ctx_uvar_typ=k;
+          ctx_uvar_reason=reason;
+          ctx_uvar_should_check=true;
+          ctx_uvar_range=r
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       ctx_uvar, mk (Tm_uvar ctx_uvar) None r

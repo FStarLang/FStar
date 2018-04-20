@@ -184,7 +184,10 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_head=UF.fresh();
          ctx_uvar_gamma=gamma;
          ctx_uvar_binders=binders;
-         ctx_uvar_typ=k
+         ctx_uvar_typ=k;
+         ctx_uvar_reason=reason;
+         ctx_uvar_should_check=should_check;
+         ctx_uvar_range=r
        } in
     check_uvar_ctx_invariant reason r should_check gamma binders;
     let t = mk (Tm_uvar ctx_uvar) None r in
@@ -296,6 +299,9 @@ let maybe_invert p = if p.relation = SUBINV then invert p else p
 let maybe_invert_p = function
     | TProb p -> maybe_invert p |> TProb
     | CProb p -> maybe_invert p |> CProb
+let make_prob_eq = function
+    | TProb p -> TProb ({p with relation=EQ})
+    | CProb p -> CProb ({p with relation=EQ})
 let vary_rel rel = function
     | INVARIANT -> EQ
     | CONTRAVARIANT -> invert_rel rel
@@ -694,25 +700,53 @@ let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (
 (* ------------------------------------------------ *)
 (* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
-let rec occurs (wl:worklist) (uk:ctx_uvar) (t:typ) =
-    Free.uvars t
-    |> BU.set_elements
-    |> BU.for_some (fun uv ->
-       UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head)
-
-let occurs_check env wl (uk:ctx_uvar) t =
-    let occurs_ok = not (occurs wl uk t) in
+let occurs_check (uk:ctx_uvar) t =
+    let uvars =
+        Free.uvars t
+        |> BU.set_elements
+    in
+    let occurs_ok = 
+        not (uvars 
+             |> BU.for_some (fun uv ->
+                UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
+    in
     let msg =
         if occurs_ok then None
         else Some (BU.format2 "occurs-check failed (%s occurs in %s)"
                         (Print.uvar_to_string uk.ctx_uvar_head)
                         (Print.term_to_string t)) in
-    occurs_ok, msg
+    uvars, occurs_ok, msg
 
-let occurs_and_freevars_check env wl uk fvs t =
-    let fvs_t = Free.names t in
-    let occurs_ok, msg = occurs_check env wl uk t in
-    (occurs_ok, BU.set_is_subset_of fvs_t fvs, (msg, fvs, fvs_t))
+let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
+  match bs, bs' with
+  | (b, i)::bs_tail, (b', i')::bs'_tail ->
+    if S.bv_eq b b'
+    then let pfx, rest = maximal_prefix bs_tail bs'_tail in
+         (b, i)::pfx, rest
+    else [], (bs, bs')
+  | _ -> [], (bs, bs')
+
+let extend_gamma (g:gamma) (bs:binders) =
+    List.fold_left (fun g (x, _) -> Binding_var x::g) g bs
+
+let gamma_until (g:gamma) (bs:binders) =
+    match List.last bs with
+    | None -> []
+    | Some (x, _) ->
+      match BU.prefix_until (function Binding_var x' -> S.bv_eq x x' | _  -> false) g with
+      | None -> []
+      | Some (_, bx, rest) -> bx::rest
+
+
+let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
+    let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
+    let g = gamma_until src.ctx_uvar_gamma pfx in
+    let _, src', wl = new_uvar src.ctx_uvar_reason wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check in
+    Unionfind.change src.ctx_uvar_head src';
+    wl
+
+let restrict_all_uvars (tgt:ctx_uvar) (sources:list<ctx_uvar>) wl  =
+    List.fold_right (restrict_ctx tgt) sources wl
 
 let intersect_binders (v1:binders) (v2:binders) : binders =
     let as_set v =
@@ -1198,26 +1232,6 @@ let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
     in
     aux bs1 bs2
 
-let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
-  match bs, bs' with
-  | (b, i)::bs_tail, (b', i')::bs'_tail ->
-    if S.bv_eq b b'
-    then let pfx, rest = maximal_prefix bs_tail bs'_tail in
-         (b, i)::pfx, rest
-    else [], (bs, bs')
-  | _ -> [], (bs, bs')
-
-let extend_gamma (g:gamma) (bs:binders) =
-    List.fold_left (fun g (x, _) -> Binding_var x::g) g bs
-
-let gamma_until (g:gamma) (bs:binders) =
-    match List.last bs with
-    | None -> []
-    | Some (x, _) ->
-      match BU.prefix_until (function Binding_var x' -> S.bv_eq x x' | _  -> false) g with
-      | None -> []
-      | Some (_, bx, rest) -> bx::rest
-
 (* <quasi_pattern>:
         Given a term (?u_(bs;t) e1..en)
         returns None in case the arity of the type t is less than n
@@ -1656,21 +1670,21 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
     let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
                           (lhs:flex_t)
-                          (rhs:term) : either<string, list<uvi>> =
+                          (rhs:term) : either<string, list<uvi>> * worklist =
         match quasi_pattern env lhs with
         | None ->
-          Inl "Not a quasi-pattern"
+          Inl "Not a quasi-pattern", wl
 
         | Some (bs, _) ->
           let (t_lhs, ctx_u, args) = lhs in
-          let occurs_ok, msg = occurs_check env wl ctx_u rhs in
+          let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
           if not occurs_ok
-          then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg))
+          then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)), wl
           else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
-               then Inl ("quasi-pattern, free names on the RHS are not included in the LHS")
-               else Inr (mk_solution env lhs bs rhs)
+               then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
+               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars wl
     in
 
     match p_rel orig with
@@ -1688,11 +1702,12 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         in
         let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
         let fvs2 = Free.names t2 in
-        let occurs_ok, msg = occurs_check env wl ctx_uv t2 in
+        let uvars, occurs_ok, msg = occurs_check ctx_uv t2 in
         if not occurs_ok
         then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders t2 in
+             let wl = restrict_all_uvars ctx_uv uvars wl in
              solve env (solve_prob orig None sol wl)
         else giveup_or_defer env orig wl
                              (BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
@@ -1705,8 +1720,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         if wl.defer_ok
         then giveup_or_defer env orig wl "Not a pattern"
         else match try_quasi_pattern orig env wl lhs t2 with
-                | Inr sol -> solve env (solve_prob orig None sol wl)
-                | Inl msg -> //try first-order
+                | Inr sol, wl -> solve env (solve_prob orig None sol wl)
+                | Inl msg, _ -> //try first-order
                   failwith "NYI: first-order"
 
 (* solve_t_flex-flex:
@@ -1717,7 +1732,9 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     match p_rel orig with
     | SUB
     | SUBINV ->
-      giveup_or_defer env orig wl "flex-flex subtyping"
+      if wl.defer_ok
+      then giveup_or_defer env orig wl "flex-flex subtyping"
+      else solve_t_flex_flex env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
       match quasi_pattern env lhs, quasi_pattern env rhs with

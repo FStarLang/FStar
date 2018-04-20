@@ -142,7 +142,10 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_head:uvar;                                          (* ?u *)
     ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
     ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
-    ctx_uvar_typ:typ                                             (* t *)
+    ctx_uvar_typ:typ;                                            (* t *)
+    ctx_uvar_reason:string;
+    ctx_uvar_should_check:bool;
+    ctx_uvar_range:Range.range
 }
 and uvar = Unionfind.p_uvar<option<term>> * version
 and uvars = set<ctx_uvar>
