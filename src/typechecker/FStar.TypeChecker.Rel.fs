@@ -1735,7 +1735,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     match p_rel orig with
     | SUB
     | SUBINV ->
-      giveup_or_defer env orig wl "flex-rigid subtyping"
+      if wl.defer_ok
+      then giveup_or_defer env orig wl "flex-rigid subtyping"
+      else solve_t_flex_rigid_eq env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
       let (_t1, ctx_uv, args_lhs) = lhs in
