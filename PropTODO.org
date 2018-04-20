@@ -165,3 +165,21 @@ but not for prop itself
 
 * TODO Minimize prims to end once we've defined GTot
 * TODO Some severe performance degradation in FStar.Array.fst
+* TODO Scratch
+
+/home/hritcu/Projects/fstar/pub/bin/fstar.exe --use_two_phase_tc true --use_extracted_interfaces --use_hints --use_hint_hashes --cache_checked_modules --odir _output FStar.BV.fst
+FStar.BV.fst(0,0-0,0): (Warning 241) Absent cache file FStar.BV.fst.checked; will recheck FStar.BV.fst and all subsequent files
+FStar.BV.fst(8,4-8,11): (Error 19) Subtyping check failed; expected type Prims.prop; got type (t:Type0{ Prims.hasEq t }) (see also prims.fst(52,19-52,28))
+FStar.BV.fsti(14,60-14,72): (Error 19) Subtyping check failed; expected type Prims.prop; got type (t:Type0{ Prims.hasEq t }) (see also prims.fst(52,19-52,28))
+Verified module: FStar.BV (34020 milliseconds)
+2 errors were reported (see above)
+
+Fixed by sed?
+FStar.Int128.fst
+FStar.Int31.fst
+FStar.Int63.fst
+FStar.UInt31.fst
+FStar.UInt63.fst
+
+FStar.Reader.fst
+FStar.UInt128.fsti
