@@ -1,3 +1,4 @@
+
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -43,11 +44,7 @@ module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
-let print_ctx_uvar ctx_uvar =
-    BU.format3 "(%s |- %s : %s)"
-            (Print.binders_to_string ", " ctx_uvar.ctx_uvar_binders)
-            (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
-            (Print.term_to_string ctx_uvar.ctx_uvar_typ)
+let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -324,7 +321,6 @@ let p_guard = function
 let p_guard_uvar = function
    | TProb p -> p.logical_guard_uvar
    | CProb p -> p.logical_guard_uvar
-
 let def_scope_wf msg rng r =
     if not (Options.defensive ()) then () else
     let rec aux prev next =
@@ -705,8 +701,8 @@ let occurs_check (uk:ctx_uvar) t =
         Free.uvars t
         |> BU.set_elements
     in
-    let occurs_ok = 
-        not (uvars 
+    let occurs_ok =
+        not (uvars
              |> BU.for_some (fun uv ->
                 UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
     in
@@ -1035,17 +1031,18 @@ let flex_rigid_eq     = 1
 let flex_rigid        = 4
 let rigid_flex        = 5
 let flex_flex         = 7
-let compress_tprob wl p = {p with lhs=whnf wl.tcenv p.lhs; rhs=whnf wl.tcenv p.rhs}
+let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
 
-let compress_prob wl p = match p with
-    | TProb p -> compress_tprob wl p |> TProb
+let compress_prob tcenv p =
+    match p with
+    | TProb p -> compress_tprob tcenv p |> TProb
     | CProb _ -> p
 
 
-let rank wl pr : int    //the rank
+let rank tcenv pr : int    //the rank
                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
                  =
-   let prob = compress_prob wl pr |> maybe_invert_p in
+   let prob = compress_prob tcenv pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
       let lh, _ = U.head_and_args tp.lhs in
@@ -1080,7 +1077,7 @@ let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem 
     let rec aux (min_rank, min, out) probs = match probs with
         | [] -> min, out, min_rank
         | hd::tl ->
-          let rank, hd = rank wl hd in
+          let rank, hd = rank wl.tcenv hd in
           if rank <= flex_rigid_eq
           then match min with
             | None -> Some hd, out@tl, rank
@@ -1092,6 +1089,21 @@ let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem 
           else aux (min_rank, min, hd::out) tl in
 
    aux (flex_flex + 1, None, []) wl.attempting
+
+let force_eq_before_closing tcenv (bs:binders) (p:prob) =
+    let r, p = rank tcenv p in
+    if r <> rigid_flex && r <> flex_rigid
+    then p
+    else match p with
+         | CProb _ -> p
+         | TProb p ->
+           let p = if r = rigid_flex then invert p else p in
+           let (_, u, _) = destruct_flex_t p.lhs in
+           if u.ctx_uvar_binders |> BU.for_some (fun (y, _) ->
+              bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
+           then TProb ({p with relation=EQ})
+           else TProb p
+
 
 
 (* ----------------------------------------------------- *)
@@ -1645,11 +1657,11 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
 
 and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t" (TProb problem);
-    solve_t' env (compress_tprob wl problem) wl
+    solve_t' env (compress_tprob wl.tcenv problem) wl
 
 and solve_t_flex_rigid_eq env (orig:prob) wl
                               (lhs:flex_t)
-                              (t2:typ)
+                              (rhs:term)
     : solution =
 
     let binders_as_bv_set (bs:binders) =
@@ -1669,8 +1681,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     in
 
     let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
-                          (lhs:flex_t)
-                          (rhs:term) : either<string, list<uvi>> * worklist =
+                          (lhs:flex_t) (rhs:term)
+        : either<string, list<uvi>> * worklist =
         match quasi_pattern env lhs with
         | None ->
           Inl "Not a quasi-pattern", wl
@@ -1687,6 +1699,39 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars wl
     in
 
+    let first_order (orig:prob) (env:Env.env) (wl:worklist)
+                    (lhs:flex_t) (rhs:term)
+        : solution =
+        let copy_uvar u t wl =
+            new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range u.ctx_uvar_gamma
+                     u.ctx_uvar_binders t u.ctx_uvar_should_check
+        in
+        let rhs_hd, args = U.head_and_args rhs in
+        match args with
+        | [] ->
+          giveup_or_defer env orig wl (BU.format1 "first_order heursitic cannot solve %s" (prob_to_string env orig))
+        | _ ->
+          let args_rhs, last_arg_rhs = BU.prefix args in
+          let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
+          let t_lhs, u_lhs, _ = lhs in
+          let lhs', lhs'_last_arg =
+            let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
+            //FIXME: this may be an implicit arg ... fix qualifier
+            let _, lhs', wl = copy_uvar u_lhs (U.arrow [S.null_binder t_last_arg] (S.mk_Total u_lhs.ctx_uvar_typ)) wl in
+            let _, lhs'_last_arg, wl = copy_uvar u_lhs t_last_arg wl in
+            lhs', lhs'_last_arg
+          in
+          let sol = [TERM(u_lhs, S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)] in
+          let sub_probs, wl =
+            let p1, wl =
+               mk_t_problem wl (p_scope orig) orig lhs' EQ rhs' None "first-order lhs" in
+            let p2, wl =
+              mk_t_problem wl (p_scope orig) orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
+            [p1; p2], wl
+          in
+          solve env (attempt sub_probs (solve_prob orig None sol wl))
+    in
+
     match p_rel orig with
     | SUB
     | SUBINV ->
@@ -1696,33 +1741,35 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       let (_t1, ctx_uv, args_lhs) = lhs in
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
-        let t2 = sn env t2 in
+        let rhs = sn env rhs in
         let names_to_string fvs =
             List.map Print.bv_to_string (BU.set_elements fvs) |> String.concat ", "
         in
         let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
-        let fvs2 = Free.names t2 in
-        let uvars, occurs_ok, msg = occurs_check ctx_uv t2 in
+        let fvs2 = Free.names rhs in
+        let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
         then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
-        then let sol = mk_solution env lhs lhs_binders t2 in
+        then let sol = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars ctx_uv uvars wl in
              solve env (solve_prob orig None sol wl)
-        else giveup_or_defer env orig wl
+        else if wl.defer_ok
+        then giveup_or_defer env orig wl
                              (BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
                                               (names_to_string fvs2)
                                               (names_to_string fvs1)
                                               (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders)))
+        else first_order orig env wl lhs rhs
 
 
       | _ -> //Not a pattern
         if wl.defer_ok
         then giveup_or_defer env orig wl "Not a pattern"
-        else match try_quasi_pattern orig env wl lhs t2 with
+        else match try_quasi_pattern orig env wl lhs rhs with
                 | Inr sol, wl -> solve env (solve_prob orig None sol wl)
                 | Inl msg, _ -> //try first-order
-                  failwith "NYI: first-order"
+                  first_order orig env wl lhs rhs
 
 (* solve_t_flex-flex:
        Always delay flex-flex constraints, if possible.

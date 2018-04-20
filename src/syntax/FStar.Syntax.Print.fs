@@ -756,3 +756,10 @@ let set_to_string f s =
             U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
+
+
+let ctx_uvar_to_string ctx_uvar =
+    format3 "(%s |- %s : %s)"
+            (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
+            (uvar_to_string ctx_uvar.ctx_uvar_head)
+            (term_to_string ctx_uvar.ctx_uvar_typ)

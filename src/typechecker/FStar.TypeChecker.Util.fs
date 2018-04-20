@@ -75,7 +75,7 @@ let new_implicit_var reason r env k =
       let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r, true)]} in
       t, [(ctx_uvar, r)], g
 
-let close_guard_implicits (xs:binders) (g:guard_t) : guard_t =
+let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     let rec aux x i =
         let (reason, term, ctx_u, range, should_check) = i in
         if not should_check then i
@@ -93,16 +93,26 @@ let close_guard_implicits (xs:binders) (g:guard_t) : guard_t =
               let typ = U.arrow [S.mk_binder x] (S.mk_Total ctx_u.ctx_uvar_typ) in
               let ctx_v, t_v = new_implicit_var_aux reason range gamma_tail binders_pfx typ in
               let sol = S.mk_Tm_app t_v [S.as_arg (S.bv_to_name x)] None range in
+              if Env.debug env <| Options.Other "Rel"
+              then BU.print2 "Closing implicits %s to %s"
+                            (Print.ctx_uvar_to_string ctx_u)
+                            (Print.term_to_string sol);
               Unionfind.change ctx_u.ctx_uvar_head sol;
               (reason, t_v, ctx_v, range, should_check)
 
             | _ -> i
           end
     in
+    let g = {g with deferred= List.map (fun (msg, prob) -> msg, Rel.force_eq_before_closing env xs prob) g.deferred} in
+    let g = Rel.solve_deferred_constraints env g in
     let is =
       List.fold_left (fun is (x, _) -> List.map (aux x) is) g.implicits xs
     in
-    {g with implicits=is}
+    let g = {g with implicits=is} in
+    if Env.debug env <| Options.Other "Rel"
+    then BU.print1 "Closed implicits, guard is\n\t%s\n"
+                           (guard_to_string env g);
+    g
 
 let check_uvars r t =
   let uvs = Free.uvars t in
