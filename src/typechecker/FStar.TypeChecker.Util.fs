@@ -1527,22 +1527,27 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
            let k = N.normalize [N.Beta; N.Exclude N.Zeta] env u.ctx_uvar_typ in
+           let bs, kres = U.arrow_formals k in
            let _ =
              //we only generalize variables at type k = a:Type{phi}
              //where k is closed
              //this is in support of ML-style polymorphism, while also allowing generalizing
              //over things like eqtype, which is a common case
              //Otherwise, things go badly wrong: see #1091
-             match (U.unrefine (N.unfold_whnf env k)).n with
+             match (U.unrefine (N.unfold_whnf env kres)).n with
              | Tm_type _ ->
-                let free = FStar.Syntax.Free.names k in
-                if not (BU.set_is_empty free) then fail k
+                let free = FStar.Syntax.Free.names kres in
+                if not (BU.set_is_empty free) then fail kres
 
              | _ ->
-               fail k
+               fail kres
            in
-           let a = S.new_bv (Some <| Env.get_range env) k in
-           let t = S.bv_to_name a in
+           let a = S.new_bv (Some <| Env.get_range env) kres in
+           let t =
+               match bs with
+               | [] -> S.bv_to_name a
+               | _ -> U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres))
+           in
            U.set_uvar u.ctx_uvar_head t;
             //t clearly has a free variable; this is the one place we break the
             //invariant of a uvar always being resolved to a term well-typed in its given context

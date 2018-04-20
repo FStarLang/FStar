@@ -56,14 +56,14 @@ let is_eq = function
 let steps env = [N.Beta; N.Eager_unfolding; N.NoFullNorm]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
-let check_no_escape head_opt env (fvs:list<bv>) kt =
+let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
     let rec aux try_norm t = match fvs with
-        | [] -> t
+        | [] -> t, Rel.trivial_guard
         | _ ->
           let t = if try_norm then norm env t else t in
           let fvs' = Free.names t in
           begin match List.tryFind (fun x -> BU.set_mem x fvs') fvs with
-            | None -> t
+            | None -> t, Rel.trivial_guard
             | Some x ->
               if not try_norm
               then aux true t
@@ -75,7 +75,9 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
                        raise_error (Errors.Fatal_EscapedBoundVar, msg) (Env.get_range env) in
                    let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) in
                    match Rel.try_teq true env t s with
-                    | Some g -> Rel.force_trivial_guard env (Rel.conj_guard g g0); s
+                    | Some g -> 
+                      Rel.force_trivial_guard env g;
+                      s, g0
                     | _ -> fail ()
          end in
     aux false kt
@@ -1202,7 +1204,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
     =
-      let rt = check_no_escape (Some head) env fvs cres.res_typ in
+      let rt, g0 = check_no_escape (Some head) env fvs cres.res_typ in
       let cres = {cres with res_typ=rt} in
       let cres, guard =
           match bs with
@@ -1214,11 +1216,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                   then refine the result to be equal to f x1 x2,
                   where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
               *)
-              let g = Rel.conj_guard ghead guard in
+              let g = Rel.conj_guard g0 <| Rel.conj_guard ghead guard in
               cres, g
 
           | _ ->  (* partial app *)
-              let g = Rel.conj_guard ghead guard |> Rel.solve_deferred_constraints env in
+              let g = Rel.conj_guard g0 (Rel.conj_guard ghead guard |> Rel.solve_deferred_constraints env) in
               U.lcomp_of_comp <| mk_Total  (U.arrow bs (lcomp_comp cres)), g
       in
       if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
@@ -1367,11 +1369,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         match bs, args with
         | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
             let t = SS.subst subst x.sort in
-            let t = check_no_escape (Some head) env fvs t in
+            let t, g_ex = check_no_escape (Some head) env fvs t in
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            tc_args head_info (subst, (arg, None, S.mk_Total t |> U.lcomp_of_comp)::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
+            tc_args head_info (subst, (arg, None, S.mk_Total t |> U.lcomp_of_comp)::outargs, arg::arg_rets, Rel.conj_guard implicits (Rel.conj_guard g_ex g), fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
             let _ =
@@ -1388,12 +1390,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
             if debug env Options.Extreme then  BU.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
-            let targ = check_no_escape (Some head) env fvs targ in
+            let targ, g_ex = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ env targ in
             let env = {env with use_eq=is_eq aqual} in
             if debug env Options.High then  BU.print3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ);
             let e, c, g_e = tc_term env e in
-            let g = Rel.conj_guard g g_e in
+            let g = Rel.conj_guard g_ex <| Rel.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
             let xterm = (fst (S.as_arg (S.bv_to_name x)), aq) in  //AR: fix for #1123, we were dropping the qualifiers
@@ -1456,8 +1458,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Print.term_to_string tf)
                             (Print.term_to_string bs_cres);
             //Yes, force only the guard for this equation; the other uvars will not be solved yet
-            Rel.force_trivial_guard env <| Rel.teq env tf bs_cres;
-            check_function_app bs_cres guard
+            let g = Rel.solve_deferred_constraints env (Rel.teq env tf bs_cres) in
+            check_function_app bs_cres (Rel.conj_guard g guard)
 
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
@@ -1927,12 +1929,12 @@ and check_inner_let env e =
                         (Print.term_to_string cres.res_typ);
              e, cres, guard)
        else (* no expected type; check that x doesn't escape it's scope *)
-            (let t = check_no_escape None env [x] cres.res_typ in
+            (let t, g_ex = check_no_escape None env [x] cres.res_typ in
              if Env.debug env <| Options.Other "Exports"
              then BU.print2 "Checked %s has no escaping types; normalized to %s\n"
                         (Print.term_to_string cres.res_typ)
                         (Print.term_to_string t);
-             e, ({cres with res_typ=t}), guard)
+             e, ({cres with res_typ=t}), Rel.conj_guard g_ex guard)
 
     | _ -> failwith "Impossible"
 
@@ -2034,9 +2036,9 @@ and check_inner_let_rec env top =
           begin match topt with
               | Some _ -> e, cres, guard //we have an annotation
               | None ->
-                let tres = check_no_escape None env bvs tres in
+                let tres, g_ex = check_no_escape None env bvs tres in
                 let cres = {cres with res_typ=tres} in
-                e, cres, guard
+                e, cres, Rel.conj_guard g_ex guard
           end
 
         | _ -> failwith "Impossible"

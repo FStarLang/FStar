@@ -1819,7 +1819,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
              let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
              let _ =
                 if Env.debug env <| Options.Other "RelCheck"
-                then printfn "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
+                then BU.print3 "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
                         (flex_t_to_string lhs)
                         (flex_t_to_string rhs)
                         (flex_t_to_string (destruct_flex_t w))
