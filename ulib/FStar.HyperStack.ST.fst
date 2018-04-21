@@ -12,12 +12,12 @@ open FStar.Preorder
 (* Starting the predicates that constitute the preorder *)
 
 (* Eternal regions remain contained *)
-private abstract let eternal_region_pred (m1 m2:mem) :Type0
+private abstract let eternal_region_pred (m1 m2:mem) :prop
   = forall (r:HS.rid).{:pattern (HS.is_eternal_color (color r)); (m1.h `Map.contains` r)}
                  (HS.is_eternal_color (color r) /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
 (* rid counter increases monotonically *)
-private abstract let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
+private abstract let rid_ctr_pred (m1 m2:mem) :prop = m1.rid_ctr <= m2.rid_ctr
 
 (*
  * A region r, that is:
@@ -26,14 +26,15 @@ private abstract let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
  * 
  * remains not contained in m2
  *)
-private abstract let rid_last_component_pred (m1 m2:mem) :Type0
+private abstract let rid_last_component_pred (m1 m2:mem) :prop
   = forall (r:HS.rid).{:pattern (m1.h `Map.contains` r)}
                  ((~ (m1.h `Map.contains` r)) /\ rid_last_component r < m1.rid_ctr) ==>
 		 (~ (m2.h `Map.contains` r))
 
 (* Predicate for refs *)
-private abstract let eternal_refs_pred (m1 m2:mem) :Type0
-  = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
+private abstract let eternal_refs_pred (m1 m2:mem) :prop
+  = admit();
+    forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
       {:pattern (m1 `HS.contains` r)}
       if is_mm r then True
       else
@@ -51,7 +52,7 @@ private abstract let mem_pre :preorder mem =
   HS.lemma_rid_ctr_pred ();
   mem_rel
 
-type mem_predicate = mem -> Type0
+type mem_predicate = mem -> prop
 
 (* Predicates that we will witness with regions and refs *)
 abstract let region_contains_pred (r:HS.rid) :mem_predicate
@@ -66,7 +67,7 @@ abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a re
 new_effect GST = STATE_h mem
 
 let gst_pre           = st_pre_h mem
-let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
+let gst_post' (a:Type) (pre:prop) = st_post_h' mem a pre
 let gst_post (a:Type) = st_post_h mem a
 let gst_wp (a:Type)   = st_wp_h mem a
 
@@ -84,11 +85,11 @@ sub_effect DIV ~> GST = lift_div_gst
  *       Our metatheory ensures that this is sound (without requiring stability of `q`)
  *       This form is useful in defining the MRRef interface (see mr_witness)
  *)
-       
-abstract let stable (p:mem_predicate) :Type0 =
+
+abstract let stable (p:mem_predicate) :prop =
   forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
-abstract let witnessed (p:mem_predicate) :Type0 = W.witnessed mem_rel p
+abstract let witnessed (p:mem_predicate) :prop = W.witnessed mem_rel p
 
 (* TODO: we should derive these using DM4F *)
 assume private val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
@@ -141,37 +142,37 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))
 //  * marking these opaque, since expect them to be unfolded away beforehand
 //  *)
 [@"opaque_to_smt"]
-unfold private let equal_heap_dom (r:rid) (m0 m1:mem) :Type0
+unfold private let equal_heap_dom (r:rid) (m0 m1:mem) :prop
   = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
 
 [@"opaque_to_smt"]
-unfold private let contained_region :mem -> mem -> rid -> Type0
+unfold private let contained_region :mem -> mem -> rid -> prop
   = fun m0 m1 r -> m0.h `Map.contains` r /\ m1.h `Map.contains` r
 
 [@"opaque_to_smt"]
-unfold private let contained_stack_region :mem -> mem -> rid -> Type0
+unfold private let contained_stack_region :mem -> mem -> rid -> prop
   = fun m0 m1 r -> is_stack_region r /\ contained_region m0 m1 r
 
 [@"opaque_to_smt"]
-unfold private let contained_non_tip_region :mem -> mem -> rid -> Type0
+unfold private let contained_non_tip_region :mem -> mem -> rid -> prop
   = fun m0 m1 r -> r =!= m0.tip /\ r =!= m1.tip /\ contained_region m0 m1 r
 
 [@"opaque_to_smt"]
-unfold private let contained_non_tip_stack_region :mem -> mem -> rid -> Type0
+unfold private let contained_non_tip_stack_region :mem -> mem -> rid -> prop
   = fun m0 m1 r -> is_stack_region r /\ contained_non_tip_region m0 m1 r
 
 [@"opaque_to_smt"]
-unfold private let same_refs_common (p:mem -> mem -> rid -> Type0) (m0 m1:mem) =
+unfold private let same_refs_common (p:mem -> mem -> rid -> prop) (m0 m1:mem) =
   forall (r:rid). p m0 m1 r ==> equal_heap_dom r m0 m1
 
 (* predicates *)
-abstract let same_refs_in_all_regions (m0 m1:mem) :Type0
+abstract let same_refs_in_all_regions (m0 m1:mem) :prop
   = same_refs_common contained_region m0 m1
-abstract let same_refs_in_stack_regions (m0 m1:mem) :Type0
+abstract let same_refs_in_stack_regions (m0 m1:mem) :prop
   = same_refs_common contained_stack_region m0 m1
-abstract let same_refs_in_non_tip_regions (m0 m1:mem) :Type0
+abstract let same_refs_in_non_tip_regions (m0 m1:mem) :prop
   = same_refs_common contained_non_tip_region m0 m1
-abstract let same_refs_in_non_tip_stack_regions (m0 m1:mem) :Type0
+abstract let same_refs_in_non_tip_stack_regions (m0 m1:mem) :prop
   = same_refs_common contained_non_tip_stack_region m0 m1
 
 (* intro and elim forms *)
@@ -212,16 +213,18 @@ let lemma_same_refs_in_non_tip_stack_regions_elim (m0 m1:mem) (r:rid)
 
 (******)
 
-let equal_domains (m0 m1:mem) =
+let equal_domains (m0 m1:mem) : prop =
   m0.tip == m1.tip                              /\
   Set.equal (Map.domain m0.h) (Map.domain m1.h) /\
   same_refs_in_all_regions m0 m1
 
+#set-options "--z3rlimit 20"
 let lemma_equal_domains_trans (m0 m1 m2:mem)
   :Lemma (requires (equal_domains m0 m1 /\ equal_domains m1 m2))
          (ensures  (equal_domains m0 m2))
          [SMTPat (equal_domains m0 m1); SMTPat (equal_domains m1 m2)]
   = ()
+#set-options "--z3rlimit 5"
 
 (**
 //    Effect of stacked based code: the 'equal_domains' clause enforces that
@@ -259,7 +262,7 @@ effect ST (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
 
 effect St (a:Type) = ST a (fun _ -> True) (fun _ _ _ -> True)
 
-let inline_stack_inv h h' : GTot Type0 =
+let inline_stack_inv h h' : GTot prop =
   (* The frame invariant is enforced *)
   h.tip == h'.tip /\
   (* The heap structure is unchanged *)
@@ -277,7 +280,7 @@ effect StackInline (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre 
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
 
-let inline_inv h h' : GTot Type0 =
+let inline_inv h h' : GTot prop =
   (* The stack invariant is enforced *)
   h.tip == h'.tip /\
   (* No frame may have received an allocation but the tip *)
@@ -334,7 +337,7 @@ type mmstackref (a:Type) = mmmstackref a (Heap.trivial_preorder a)
 type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 
-let is_eternal_region (r:rid) :Type0
+let is_eternal_region (r:rid) :prop
   = HS.is_eternal_color (color r) /\ (r == HS.root \/ witnessed (region_contains_pred r))
 
 (*
@@ -347,10 +350,12 @@ let is_eternal_region (r:rid) :Type0
 (**
 //    Pushes a new empty frame on the stack
 //    *)
+#set-options "--z3rlimit 20"
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
     let m1 = HS.hs_push_frame m0 in
     gst_put m1
+#set-options "--z3rlimit 5"
 
 (**
 //    Removes old frame from the stack
@@ -371,6 +376,7 @@ let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
     HS.fresh_ref s m0 m1                /\  //it's a fresh reference in the top frame
     m1 == HyperStack.upd m0 s init  //and it's been initialized
 
+#set-options "--z3rlimit 200"
 private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
   :StackInline (mreference a rel)
   (requires (fun m       -> is_stack_region m.tip))
@@ -383,6 +389,7 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred (HS.frameOf r));
     r
+#set-options "--z3rlimit 5"
 
 (**
 //      Allocates on the top-most stack frame
@@ -410,6 +417,7 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
+#set-options "--z3rlimit 20"
 let new_region (r0:rid)
   :ST rid
       (requires (fun m        -> is_eternal_region r0))
@@ -427,9 +435,11 @@ let new_region (r0:rid)
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
+#set-options "--z3rlimit 5"
 
 let is_eternal_color = HS.is_eternal_color
 
+#set-options "--z3rlimit 20"
 let new_colored_region (r0:rid) (c:int)
   :ST rid
       (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0))
@@ -447,7 +457,9 @@ let new_colored_region (r0:rid) (c:int)
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
+#set-options "--z3rlimit 5"
 
+#set-options "--z3rlimit 20"
 unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
                        (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
     let region_i = Map.sel m0.h i in
@@ -455,7 +467,9 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
     i `is_in` m0.h                     /\
     i = frameOf x                      /\
     m1 == upd m0 x init                      
+#set-options "--z3rlimit 5"
 
+#set-options "--z3rlimit 20"
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
       (requires (fun m       -> is_eternal_region i))
@@ -469,6 +483,7 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred i);
     r
+#set-options "--z3rlimit 5"
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
@@ -487,7 +502,7 @@ let ralloc_mm (#a:Type) (#rel:preorder a) (i:rid) (init:a)
 //  *            the client can either prove contains
 //  *            or give us enough so that we can use monotonicity to derive contains
 //  *)
-let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :Type0 =
+let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :prop =
   (m `contains` r) \/
     (let i = HS.frameOf r in
      (is_eternal_region i \/ i `HS.is_above` m.tip) /\
@@ -514,6 +529,7 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) m0
 //    Assigns, provided that the reference exists.
 //    Guaranties the strongest low-level effect: Stack
 //    *)
+#set-options "--z3rlimit 50"
 let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit
        (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
@@ -525,6 +541,7 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
+#set-options "--z3rlimit 5"
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
   m1 == m0 /\ m0 `contains` r /\ x == HyperStack.sel m0 r
@@ -570,10 +587,12 @@ let recall_region (i:rid{is_eternal_region i})
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
   = if i <> HS.root then gst_recall (region_contains_pred i)
 
+#set-options "--z3rlimit 20"
 let witness_region (i:rid)
   :Stack unit (requires (fun m0      -> is_eternal_color (color i) ==> i `is_in` m0.h))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
   = gst_witness (region_contains_pred i)
+#set-options "--z3rlimit 5"
 
 let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
   :ST unit (fun h0      -> h0 `HS.contains` r)
@@ -591,10 +610,11 @@ type erid = r:rid{is_eternal_region r}
 type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
 
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
-                        (r:m_rref i a b) (p:mem_predicate)
+                        (r:m_rref i a b) (p:mem_predicate) : prop
   = forall h0 h1.{:pattern (p h0); b (HS.sel h0 r) (HS.sel h1 r)}
             (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
+#set-options "--z3rlimit 20"
 let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
@@ -607,6 +627,7 @@ let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
     in
     gst_witness (p_pred m p);
     lemma_functoriality (p_pred m p) p
+#set-options "--z3rlimit 5"
 
 let weaken_witness
   (p q:mem_predicate)
@@ -621,7 +642,7 @@ let testify (p:mem_predicate)
            (ensures (fun h0 _ h1 -> h0==h1 /\ p h1))
   = gst_recall p
 
-let testify_forall (#c:Type) (#p:(c -> mem -> Type0))
+let testify_forall (#c:Type) (#p:(c -> mem -> prop))
   ($s:squash (forall (x:c). witnessed (p x)))
   :ST unit (requires (fun h      -> True))
            (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:c). p x h1)))
@@ -642,7 +663,7 @@ type ex_rid = erid
 
 (****** logical properties of witnessed ******)
 
-let lemma_witnessed_constant (p:Type0)
+let lemma_witnessed_constant (p:prop)
   :Lemma (witnessed (fun (m:mem) -> p) <==> p)
   = W.lemma_witnessed_constant mem_rel p
 
