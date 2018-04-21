@@ -1421,11 +1421,11 @@ let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
     do_unify ps.main_context t1 t2)
 
-let launch_process (prog : string) (args : string) (input : string) : tac<string> =
+let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
     bind idtac (fun () ->
     if Options.unsafe_tactic_exec () then
-        let s = BU.launch_process true "tactic_launch" prog args input (fun _ _ -> false) in
+        let s = BU.run_process "tactic_launch" prog args (Some input) in // FIXME
         ret s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
