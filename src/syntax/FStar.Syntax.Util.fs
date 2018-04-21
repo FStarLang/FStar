@@ -379,8 +379,7 @@ let set_result_typ c t = match c.n with
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
 let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
-  let c = set_result_typ (lcomp_comp lc) t in
-  mk_lcomp lc.eff_name t lc.cflags (fun _ -> c)
+  Syntax.mk_lcomp lc.eff_name t lc.cflags (fun () -> set_result_typ (lcomp_comp lc) t)
 
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
