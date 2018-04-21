@@ -1410,27 +1410,37 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
         | [], arg::_ -> (* too many args, except maybe c returns a function *)
             let head, chead, ghead = monadic_application head_info subst outargs arg_rets g fvs [] in
-            let rec aux norm tres =
+            let rec aux norm solve ghead tres =
                 let tres = SS.compress tres |> U.unrefine in
                 match tres.n with
-                    | Tm_arrow(bs, cres') ->
+                | Tm_arrow(bs, cres') ->
                         let bs, cres' = SS.open_comp bs cres' in
                         let head_info = (head, chead, ghead, U.lcomp_of_comp cres') in
                         if debug env Options.Low
                         then FStar.Errors.log_issue tres.pos
                                (Errors.Warning_RedundantExplicitCurrying, "Potentially redundant explicit currying of a function type");
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
-                    | _ when not norm ->
+                | _ when not norm ->
                       let rec norm_tres (tres:term) :term =
                         let tres = N.unfold_whnf env tres in
                         match (SS.compress tres).n with
                         | Tm_refine ( { sort = tres }, _) -> norm_tres tres
                         | _                               -> tres
                       in
-                      aux true (norm_tres tres)
-                    | _ -> raise_error (Errors.Fatal_ToManyArgumentToFunction, (BU.format2 "Too many arguments to function of type %s; got %s arguments"
-                                            (N.term_to_string env thead) (BU.string_of_int n_args))) (argpos arg) in
-            aux false chead.res_typ
+                      aux true solve ghead (norm_tres tres)
+
+                | _ when not solve ->
+                    let ghead = Rel.solve_deferred_constraints env ghead in
+                    aux norm solve ghead tres
+                
+                | _ ->
+                    raise_error (Errors.Fatal_ToManyArgumentToFunction,
+                                        BU.format3 "Too many arguments to function of type %s; got %s arguments, remaining type is %s"
+                                                      (N.term_to_string env thead)
+                                                      (BU.string_of_int n_args)
+                                                      (Print.term_to_string tres))
+                                       (argpos arg) in
+            aux false false ghead chead.res_typ
     in //end tc_args
 
     let rec check_function_app tf guard =
