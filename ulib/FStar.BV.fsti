@@ -11,7 +11,7 @@ val bv_t: (n : nat) -> t:Type0{hasEq t}
 // let size (x:int) (n:nat) : Tot Type0 = b2p(fits x n)
 // type uint_t' (n:nat) = x:int{size x n}
 
-val bv_uext: #n:pos -> #m:pos -> a:bv_t n -> Tot (normalize (bv_t (m+n)))
+val bv_uext: #n:pos -> #m:pos -> a:bv_t n -> Tot (normalize_term (bv_t (m+n)))
 
 val bvand: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 

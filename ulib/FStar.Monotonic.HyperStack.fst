@@ -25,29 +25,28 @@ let is_strictly_below r1 r2 = r1 `is_below` r2 && r1 <> r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1 <> r2
 
 [@"opaque_to_smt"]
-unfold private let map_invariant_predicate (m:hmap) :Type0 =
+unfold private let map_invariant_predicate (m:hmap) : prop =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 
 //All regions above a contained region are contained
-//AR: logic qualifier here ensures that quantifiers are shallowly encoded
-abstract logic let map_invariant (m:hmap) :Type0 = map_invariant_predicate m
+abstract let map_invariant (m:hmap) : prop = map_invariant_predicate m
 
 [@"opaque_to_smt"]
-unfold private let downward_closed_predicate (h:hmap) :Type0 =
+unfold private let downward_closed_predicate (h:hmap) : prop =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
             \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-abstract logic let downward_closed (h:hmap) :Type0 = downward_closed_predicate h
+abstract let downward_closed (h:hmap) : prop = downward_closed_predicate h
 
 [@"opaque_to_smt"]
-unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
+unfold private let tip_top_predicate (tip:rid) (h:hmap) : prop =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
-abstract logic let tip_top (tip:rid) (h:hmap) :Type0 = tip_top_predicate tip h
+abstract let tip_top (tip:rid) (h:hmap) : prop = tip_top_predicate tip h
 
 let is_tip (tip:rid) (h:hmap) =
   (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
@@ -61,16 +60,16 @@ let rid_last_component (r:rid) :GTot int
     else snd (hd r)
 
 [@"opaque_to_smt"]
-unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
+unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) : prop =
   forall (r:rid). h `Map.contains` r ==> rid_last_component r < n
 
 (*
  * AR: all live regions have last component less than the rid_ctr
  *     marking it abstract, else it has a high-chance of firing even with a pattern
  *)
-abstract logic let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
+abstract let rid_ctr_pred (h:hmap) (n:int) : prop = rid_ctr_pred_predicate h n
 
-let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
+let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) : prop
   = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
 
 noeq type mem =
@@ -264,11 +263,11 @@ let contains_ref_in_its_region (#a:Type) (#rel:preorder a) (h:mem) (r:mreference
   let i = frameOf r in
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel h.h i) (as_ref r))
 
-let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem) :Type0 =
+let fresh_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) (m1:mem) : prop =
   let i = frameOf r in
   Heap.fresh (as_ref r) (Map.sel m0.h i) (Map.sel m1.h i)
 
-let fresh_region (i:rid) (m0 m1:mem) =
+let fresh_region (i:rid) (m0 m1:mem) : prop =
   not (m0.h `Map.contains` i) /\ m1.h `Map.contains` i
 
 private val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
@@ -450,7 +449,7 @@ private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
               (refs_in_region r tl)
 
 [@"opaque_to_smt"]
-private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot Type0 =
+private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot prop =
   match i with
   | []         -> True
   | (Ref x)::tl ->
@@ -466,7 +465,7 @@ unfold private let norm_steps :list norm_step =
    primops]
 
 [@"opaque_to_smt"]
-unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
+unfold let mods (rs:some_refs) (h0 h1:mem) :GTot prop =
   (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
   (norm norm_steps (modifies_some_refs rs rs h0 h1))
 
@@ -555,7 +554,7 @@ abstract let is_mm_aref_of
 abstract let aref_unused_in
   (a: aref)
   (h: mem)
-: GTot Type0
+: GTot prop
 = ~ (live_region h a.aref_region) \/
   Heap.aref_unused_in a.aref_aref (Map.sel h.h a.aref_region)
 
@@ -588,7 +587,7 @@ let aref_live_at
   (a: aref)
   (v: Type)
   (rel: preorder v)
-: GTot Type0
+: GTot prop
 = live_region h a.aref_region
   /\ Heap.aref_live_at (Map.sel h.h a.aref_region) a.aref_aref v rel
 

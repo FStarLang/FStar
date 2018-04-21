@@ -556,7 +556,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#set-options "--z3rlimit 500"
+#set-options "--z3rlimit 800"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (b2p (U32.v s < 64)))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -799,7 +799,7 @@ let mul32_digits x y = ()
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
 let u32_combine (hi lo: U64.t) : Pure U64.t
-  (requires (U64.v lo < pow2 32))
+  (requires (b2p (U64.v lo < pow2 32)))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
 
@@ -907,11 +907,11 @@ let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
 
 // similar to u32_combine, but use % 2^64 * 2^32
 let u32_combine' (hi lo: U64.t) : Pure U64.t
-  (requires (U64.v lo < pow2 32))
+  (requires (b2p (U64.v lo < pow2 32)))
   (ensures (fun r -> U64.v r = U64.v hi * pow2 32 % pow2 64 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 30"
 let mul_wide_impl (x: U64.t) (y: U64.t) :
     Tot (r:t{U64.v r.low == mul_wide_low x y /\
              U64.v r.high == mul_wide_high x y % pow2 64}) =
@@ -942,6 +942,7 @@ let mul_wide_impl (x: U64.t) (y: U64.t) :
 let product_sums (a b c d:nat) :
   Lemma ((a + b) * (c + d) == a * c + a * d + b * c + b * d) = ()
 
+#set-options "--z3rlimit 20"
 val u64_32_product (xl xh yl yh:UInt.uint_t 32) :
   Lemma ((xl + xh * pow2 32) * (yl + yh * pow2 32) ==
   xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64)
@@ -951,6 +952,7 @@ let u64_32_product xl xh yl yh =
   assert (xl * (yh * pow2 32) == (xl * yh) * pow2 32);
   Math.pow2_plus 32 32;
   assert ((xh * pow2 32) * (yh * pow2 32) == (xh * yh) * pow2 64)
+#set-options "--z3rlimit 5"
 
 let product_expand (x y: U64.t) :
   Lemma (U64.v x * U64.v y == phh x y * pow2 64 +
@@ -989,6 +991,7 @@ let mul_wide_low_ok (x y: U64.t) :
   assert (mul_wide_low x y == ((plh x y + phl x y + pll_h x y) * pow2 32 + pll_l x y) % pow2 64);
   product_low_expand x y
 
+#set-options "--z3rlimit 20"
 val product_high32 : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
 let product_high32 x y =
@@ -998,11 +1001,12 @@ let product_high32 x y =
   mul_div_cancel (phh x y * pow2 32) (pow2 32);
   mul_div_cancel (plh x y + phl x y + pll_h x y) (pow2 32);
   Math.small_division_lemma_1 (pll_l x y) (pow2 32)
+#set-options "--z3rlimit 5"
 
 val product_high_expand : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 30"
 let product_high_expand x y =
   Math.pow2_plus 32 32;
   div_product (mul_wide_high x y) (pow2 32) (pow2 32);
