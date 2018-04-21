@@ -75,9 +75,9 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
                        raise_error (Errors.Fatal_EscapedBoundVar, msg) (Env.get_range env) in
                    let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) in
                    match Rel.try_teq true env t s with
-                    | Some g -> 
-                      Rel.force_trivial_guard env g;
-                      s, g0
+                    | Some g ->
+                      let g = Rel.solve_deferred_constraints env (Rel.conj_guard g g0) in
+                      s, g
                     | _ -> fail ()
          end in
     aux false kt
