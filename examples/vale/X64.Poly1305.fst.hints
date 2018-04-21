@@ -25,7 +25,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "945d7a1cde90573950ad5b8f8f5ad8cd"
+      "8c495d43dc0246f9ac7c8cd2c45492af"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_multiply",
@@ -51,7 +51,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fab12d82ba9cdcf881f71b62b3653015"
+      "2c7790513d31ea4b4d5610a049de5091"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_multiply",
@@ -148,7 +148,7 @@
         "typing_tok_X64.Machine_s.R8@tok"
       ],
       0,
-      "ecde659f86cbdf478deaf0c67edeb51a"
+      "eaf435d3ad98039139b9facd3b2ea92c"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce",
@@ -162,7 +162,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d68563527f458d96bf926a059c310ae6"
+      "fb48b056b8585305815eca453b01cfec"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce",
@@ -174,7 +174,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_237e76257ba97fd030dbba9c80e8eca9"
       ],
       0,
-      "ae0747726940e493202afdaeddc0b698"
+      "abee3ee0c4e997a8748520fa121ddcc8"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce",
@@ -270,7 +270,7 @@
         "typing_X64.Vale.State_i_Tm_abs_c13f5ac4d0679321550e1b89bf974331"
       ],
       0,
-      "19c1115639333464b3f5b141a880c004"
+      "a2ea60272965a7fb16fe7541d09147c5"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce",
@@ -282,7 +282,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_237e76257ba97fd030dbba9c80e8eca9"
       ],
       0,
-      "4f97c18bdacbb17ae8b0e9dca804ff7d"
+      "d67d41e26086b792a417b9cd95dea2de"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce_regs",
@@ -304,7 +304,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "797e0e67d0ae8712028a46e3099af0c3"
+      "5f6c937e4feeeed314a42b4e9da30fc7"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_regs",
@@ -316,7 +316,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_29d6fa3f135bff80d1786b1f95591cfa"
       ],
       0,
-      "b20b655950ef02b91394644991af0b5a"
+      "90b533639ba5ebca2391485bf86cf6e9"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_regs",
@@ -423,7 +423,7 @@
         "typing_tok_X64.Machine_s.Rbx@tok"
       ],
       0,
-      "ee26e1bf9beaa88dd9974e8a35d87163"
+      "e8c288c6fd699dc1bac10cfcd72e140e"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs",
@@ -435,7 +435,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_29d6fa3f135bff80d1786b1f95591cfa"
       ],
       0,
-      "3ccef629dcc38d3fae7351f98c0af7eb"
+      "d8f325230d73e565663479e2143918ca"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce_regs_fast_block",
@@ -457,7 +457,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "53ca3d3e978f451264458b7e5c505d5e"
+      "919f96b1792162b286da863c2da9b7c9"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_reduce_regs_fast_block",
@@ -479,7 +479,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "65ee03a3f0c01c9423387437681b697b"
+      "566d3cc5ed807016101f31b5c6d58742"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_regs_fast_block",
@@ -491,7 +491,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_dc232d26289557d5093adde0e0c5195b"
       ],
       0,
-      "cf40a75b95b889a76745fb50c8bd1f19"
+      "c62d487356bef3f127c68775cf6538b0"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_regs_fast_block",
@@ -595,7 +595,7 @@
         "typing_tok_X64.Machine_s.Rbx@tok"
       ],
       0,
-      "d707edd4141a7c2dd28afafae0c9bc68"
+      "954e573d82ac57f1d7b9d241af008171"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs_fast_block",
@@ -607,7 +607,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_dc232d26289557d5093adde0e0c5195b"
       ],
       0,
-      "7ae2fda9aa5b04269328d6a7a1362d55"
+      "3228e5dc5b5d5497c1f044e5a4458f97"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_iteration",
@@ -704,7 +704,7 @@
         "typing_X64.Vale.State_i_Tm_abs_c13f5ac4d0679321550e1b89bf974331"
       ],
       0,
-      "007d0a49aa74d5766bc6421d4bba24f7"
+      "fae553e24c9325ef9424384eb2f5a71a"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_blocks",
@@ -742,7 +742,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3e8e9f2541d7b428ef1f25ae92c148b7"
+      "a833e93d32e4812a2457d66e17ac91bd"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_blocks",
@@ -772,7 +772,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "90870b9fa09a89796fe0efa7111cbbd5"
+      "39dba63fd55bd06c56c4972aa04b1651"
     ],
     [
       "X64.Poly1305.va_ins_2_poly1305_blocks",
@@ -788,7 +788,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "91ac322630851b60b3f7d9e676515d45"
+      "b8e2af2914796f3f343603555650d22e"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -797,7 +797,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f482402909fce493bec268dec41d9698"
+      "d500156ff747f4b09ab9d60acc7a4729"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -806,7 +806,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4ae6a3387d753c02a3cdc3cd8b0a4da8"
+      "81b143a0cbc6ed49a671108dc6d5d253"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -815,7 +815,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4de238ffef3a623b104c9f908c330f8d"
+      "dd497c60b2b65ec1fd543847d60fcd97"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -824,7 +824,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c84a3d2db7fa50563a8f383b22228a0b"
+      "a748c3a1dc29a56290d1c788bf225881"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -833,7 +833,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c8aa8a003cda2f76f1800e1c93c70b32"
+      "650ba3b51de899e45ea886ee6599ee22"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -842,7 +842,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "33315596acc5070b4464bd608cfa558c"
+      "10c2d88a36dbc6b8822eeb60079ed8a9"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -851,7 +851,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4380633c328b28b95829b7afaa4ace7b"
+      "b9dd0d94abd28eff80dec32a6868d918"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -860,7 +860,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ae3f305576d4a3103d932759d88574ec"
+      "171c17023f9d1eb24ffb370fd6a6ae77"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -869,7 +869,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "64bd4dbecba566c4616dbe42c4e5d22a"
+      "48d89c6e1c19987b929ad922e6fd31fa"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -878,7 +878,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "40a39bcdb8073ee258235b928a2e0f9c"
+      "1e037d4f4bd7385aa607fe719d2988b2"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -887,7 +887,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b85dab734fc263fec58029fd21d86d70"
+      "05eabdd167b828ac1aa3faae727c9e88"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -896,7 +896,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "629d8457b5530cc128ad6fdd13d938f0"
+      "f1bedbb9afad9a34d80e7808a131df07"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -905,7 +905,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c5d9feafb52d0cbffef26ec9266a487f"
+      "5e16d2ecf30ff194b5d2149fbdcc9a54"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -914,7 +914,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f433c409b823894cd76c2890966ef130"
+      "b8e3000d543447072f63b440637b9043"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -934,7 +934,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "4adc1b2f6efb887c5bcdc6326ea7841a"
+      "b9736487d2c613c7646dd8ac766416ba"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -948,7 +948,7 @@
         "X64.Machine_s_interpretation_Tm_arrow_196f8dfca6d67b0bd046e19b6a5a08e6",
         "X64.Vale.State_i_interpretation_Tm_arrow_a30edd2b9b023ec7ffc4a530ec9c7d0b",
         "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
-        "constructor_distinct_Prims.Cons",
+        "bool_typing", "constructor_distinct_Prims.Cons",
         "constructor_distinct_X64.Machine_s.Block",
         "constructor_distinct_X64.Machine_s.OConst",
         "constructor_distinct_X64.Machine_s.OReg",
@@ -1062,7 +1062,6 @@
         "token_correspondence_X64.Vale.State_i.__proj__Mkstate__item__regs",
         "true_interp", "typing_FStar.Map.contains", "typing_FStar.Map.sel",
         "typing_FStar.Map.upd", "typing_X64.Machine_s.int_to_nat64",
-        "typing_X64.Poly1305_Tm_abs_83ffc691808909a50fa6ce4ba89db77a",
         "typing_X64.Vale.Decls.va_lemma_Store64",
         "typing_X64.Vale.Decls.va_update_operand",
         "typing_X64.Vale.State_i.__proj__Mkstate__item__mem",
@@ -1076,12 +1075,13 @@
         "typing_tok_X64.Machine_s.R15@tok",
         "typing_tok_X64.Machine_s.Rbp@tok",
         "typing_tok_X64.Machine_s.Rbx@tok",
+        "typing_tok_X64.Machine_s.Rcx@tok",
         "typing_tok_X64.Machine_s.Rdi@tok",
         "typing_tok_X64.Machine_s.Rdx@tok",
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "51b316bbe40d1b6b573f80538c7bd086"
+      "12f90fe65c119edf220e08db5d3c9609"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1090,7 +1090,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ccde925f7e97c49d1d9f6bf91e98eadf"
+      "69bd317d520f726b72d04690e48f3747"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1099,7 +1099,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6345cf676bccdaaa91e45e5280c7b025"
+      "1d6a688f4c6e8450ebba88253ba4c680"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1108,7 +1108,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "886035ad9757196f4699cd39b1c96d66"
+      "5144975834cbf206a556b1e13b72380d"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1117,7 +1117,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a8ba6b7f6fc7d12ce2ed57bed389f3b0"
+      "c200e6a1b07ecb75299e43db284d1280"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1126,7 +1126,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e4136c8d7aec29ba7a3a7562826edd62"
+      "2656ca3e3a214ea9b5ec317e8aa47b92"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1135,7 +1135,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f5a917be82b91778dcb954dde4612e92"
+      "c95e55bc183cffd70a3c91da08585b18"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1144,7 +1144,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "35116c5283ac560d014e3b7434c2006a"
+      "efcbf75e3df208a5286fc9fa759a5d16"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1153,7 +1153,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3c3edbde9a4891bfed90c3be5042fbb7"
+      "f7f5b58eb2cee68ae69bb33a98c04a5c"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1162,7 +1162,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dc5d5213751c0176ba172c01d8635e3b"
+      "33abc977dd7a8fdc1d42fd4b95b3a1eb"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1171,7 +1171,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "34c1b2ced5a0353b9ea9d45fdc4e4d02"
+      "eed1b6a37d6a5af894514bdadca4b52e"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1180,7 +1180,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7338d414fd88df4005ea9652ec326441"
+      "ab4f282cdffda0b6c2380a25f0235c67"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1189,7 +1189,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4c542cdc106feabe9156199f911834be"
+      "6906abc25f06bc03d039d16e3131734b"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1198,7 +1198,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1b61ba2e6e31418ed62552ea5ae31b31"
+      "90b9dcbc4c0d66b8ec5ce8e25c268006"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1207,7 +1207,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e9ab6d97e836c58831a1f9d944d533e6"
+      "b3c62cb3a31d30e38a47bbb8f17f6461"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1227,7 +1227,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "017a1d428e597bb26491def7591b885d"
+      "8a99a422f27685e132457b42a3fbabda"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_last_block",
@@ -1249,7 +1249,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6cd6bb07ec88c6c4023818a338b1a63d"
+      "eb01b5236fe71e9a2c7f3bd7d10109cb"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_last_block",
@@ -1268,7 +1268,7 @@
         "typing_X64.Vale.State_i.eval_operand"
       ],
       0,
-      "55730af5895a3ce40a9767cf5e752664"
+      "964501c021f259f81448813a71e1c26b"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_last_block",
@@ -1425,7 +1425,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "8181314982e2bcadb313dca00f08f298"
+      "9af591623f69fdd4f0d16986bd50306e"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_last_block",
@@ -1444,7 +1444,7 @@
         "typing_X64.Vale.State_i.eval_operand"
       ],
       0,
-      "0b1a0c1b74f67a6526bd0713c32c03a3"
+      "0bccff02efb1106d09d0aa973ff405b2"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce_last",
@@ -1464,7 +1464,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e6816dfa44d5da6aae44241756d04a5b"
+      "69d4d1d823b65b1797ce99656ceb3948"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_last",
@@ -1588,7 +1588,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "ca344177fa73ea880286d1342251a719"
+      "e61648159fd319c915265168a2d65d10"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_add_key_s",
@@ -1673,7 +1673,7 @@
         "typing_X64.Vale.State_i.__proj__Mkstate__item__regs"
       ],
       0,
-      "11ea1ea90cbb04cc276a5b8838e7a327"
+      "41c1c8ee4d4c2a1addc1b1aef0beede9"
     ],
     [
       "X64.Poly1305.modp_0",
@@ -1689,7 +1689,7 @@
         "token_correspondence_X64.Poly1305.Spec_s.modp_"
       ],
       0,
-      "2d770abd7840a8340b62cd0442d4a15d"
+      "f118d01cea6c684ef9f77d91c6304541"
     ],
     [
       "X64.Poly1305.bare_r",
@@ -1713,7 +1713,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "101fd5112877bb060a530280a9dcf6cc"
+      "3e02a076774fe02d62962aae078b17ac"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_impl",
@@ -1747,7 +1747,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "487ca6418643ea52de02c17dd147c6f1"
+      "bc79fe41b899b3864a8804a9fb9579cc"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_impl",
@@ -1767,7 +1767,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a316e0dbc66113d3eff8d20c6ee5131e"
+      "a21d0ae765e44e75cbb5d7dc3597417f"
     ],
     [
       "X64.Poly1305.va_ins_2_poly1305_impl",
@@ -1785,7 +1785,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e2b91ede527a58b1997e34d51965c768"
+      "1e3de28d065dff0b96908c68b64adf55"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_impl",
@@ -1794,7 +1794,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6cdd38e4b120008e9eda43a83ad2140e"
+      "ebed48f9253cb6151e98afee9076c4c4"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_impl",
@@ -1803,7 +1803,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8ed147d70f55f19e1707f2842c35bade"
+      "658ddfd3aeb9db36e54744b98c6f53ea"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_impl",
@@ -1812,7 +1812,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fdfcd220967bbc5ea7303e94393091c2"
+      "36b87a72544cf30b3c79f901b9080cc9"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_impl",
@@ -1821,7 +1821,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8f8b4be967a114a4216f54a192702a68"
+      "03231f44a2b2d0edc27394110f3e5f6d"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_impl",
@@ -2013,7 +2013,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "14ee286740cd4c7a3307135aab293165"
+      "22366d833e096a29f0a97489bbeaf11e"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -2022,7 +2022,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2186eaff7b78f652821f1a1d27d6770e"
+      "b8ae81aff4eb6a83f6a6e145b9f6a221"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -2031,7 +2031,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9ad0fcd9682b3f0a75627da987198cec"
+      "86e8c3d38654916b9f4bcfbe8683569c"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -2040,7 +2040,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0cba8aaaf26c663a4edf009bfde2205a"
+      "e027d6bc62ae363ae1bec9cfbe51cdf7"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -2049,7 +2049,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ab6fc85dfbb1fc9e51ebdca094aede76"
+      "338bccf3f74143f855fb5485f9fb633d"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305",
@@ -2083,7 +2083,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c840c9f0e9d35543a69ce93a3d39efc4"
+      "17d923c98a5acee1c65b9ae85a78e8b3"
     ],
     [
       "X64.Poly1305.va_ins_2_poly1305",
@@ -2113,7 +2113,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ce52acbd7b3f412f1d415ea706c7f598"
+      "3ef553b552de0750159d870c2d5f7fd9"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2122,7 +2122,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "cb4b4a1e8b7c34faa8f34f6dd56e1ea6"
+      "02457be07ce26327bc3082e425eca443"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2131,7 +2131,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f7a87b6878c573aaa8ec6e35bc0aeae1"
+      "fba38cb676817f4758deb6f0a3d10deb"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2140,7 +2140,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "15f046fbc7f389fd94ee0d929bc3d092"
+      "61f508220f92bf71570f404cdee6445e"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2149,7 +2149,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2c04a8b80458de24a8d4bf860f9d4976"
+      "ef88e47308f14be112576e7bdc1e98f9"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2158,7 +2158,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1c437d972724eb3eeee1621ea5f9ed25"
+      "9cca433c09077ec55c0dbaa319ba681d"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2167,7 +2167,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3f6d8fb9d564f93e2de6d20abc15fdff"
+      "ddf3ff50ab5e17bf76383f4dc8f7004c"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -2311,7 +2311,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "d0010a01af2ac786e690204197372fba"
+      "efa91a8d77f85e928663f8918bf9f217"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -2320,7 +2320,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "214093bc5f8011b96d543eefd56e11c0"
+      "65344e8f435663043c8fa80543e55505"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -2329,7 +2329,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4ab34006bba7c17291b3539a54e4b143"
+      "42182be3c25f91fc76855cc185ca11b7"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -2338,7 +2338,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f79aaebc9afc87fef26580b262711c6a"
+      "d33e55fdbf82fa564ae04362ece2083a"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -2347,7 +2347,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "70cced33eea1c1842bc322543b448284"
+      "bee35bf1c118724b030563a9bc7064cf"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -2356,7 +2356,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b4c053004bdd11be1a54710b1e2c48a1"
+      "5895408e2a18a5b08c66c1661913f549"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -2365,7 +2365,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0cbe3f38f3cea9f3d078df3196570d81"
+      "0485563636326fd2083a35cfd6cc59ef"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_multiply",
@@ -2391,7 +2391,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0270a5953dcab44a27fe27dd1329d46b"
+      "99efdd128a2408e28dd3a9fee8477e03"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_multiply",
@@ -2417,7 +2417,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fd34a25ff86d6c2256dc4cfd2b3b16b3"
+      "21290948744bcdaa3d184e6ff097d805"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce",
@@ -2435,7 +2435,7 @@
         "refinement_interpretation_X64.Machine_s_Tm_refine_e85c4468bd6fa895770a44e5ae1526dc"
       ],
       0,
-      "ab1638ab3eebadbf4311f9fcc98e35ca"
+      "12811654ad30e982b6dcbef501f7003b"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce",
@@ -2447,7 +2447,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_237e76257ba97fd030dbba9c80e8eca9"
       ],
       0,
-      "8f61a719dbd2d198760ef74946cddce5"
+      "475f7ccaf35f2039634cd157595d4601"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce",
@@ -2459,7 +2459,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_237e76257ba97fd030dbba9c80e8eca9"
       ],
       0,
-      "35de7232f8f9fcefec900e211c6a887f"
+      "5f8bf60806ddf4345a9cca78e9979fcb"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce_regs",
@@ -2481,7 +2481,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "377e9505da25b4a63f22da31e179ee54"
+      "210ba0884d7eb7d63a1daf9b2c13c1d7"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_regs",
@@ -2493,7 +2493,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_29d6fa3f135bff80d1786b1f95591cfa"
       ],
       0,
-      "dd5e6a34981cecca18c1932398684da6"
+      "c0dcd1c925c17748a2058c9e5f9a93ae"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs",
@@ -2505,7 +2505,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_29d6fa3f135bff80d1786b1f95591cfa"
       ],
       0,
-      "c8c0b9e2f149cd3a2b00e89ee9e1e0b6"
+      "2cc5e882400bf0a3aa049dfb02f36a0a"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce_regs_fast_block",
@@ -2527,7 +2527,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "09ff75e8f489380c4fafd9cf7da8b9ba"
+      "7513838fa766575eae03bb12582a0c6f"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_reduce_regs_fast_block",
@@ -2549,7 +2549,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "887ae48030c58e022ba0d4e685099d2f"
+      "05fe4609cca16dae0bd2b35b2e719d9e"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_reduce_regs_fast_block",
@@ -2561,7 +2561,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_dc232d26289557d5093adde0e0c5195b"
       ],
       0,
-      "abb19273cf786570a6c4f7dead49c0a2"
+      "839918d38ee8db136a5fdaf12460586b"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs_fast_block",
@@ -2573,7 +2573,7 @@
         "refinement_interpretation_X64.Poly1305_Tm_refine_dc232d26289557d5093adde0e0c5195b"
       ],
       0,
-      "5c55754fc6f811f790b6516e73e3fd32"
+      "6e4226f3cb02c0159af61006201c3bcb"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_blocks",
@@ -2611,7 +2611,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6ec3144e22e9655f726586c1a80a3194"
+      "07112886a786f31ed5a42da5ff29e038"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_blocks",
@@ -2641,7 +2641,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "505d2e97f92b3adcd2425a70d10a1bbf"
+      "1094058ac59e16ca2e9d0446c34ac0fb"
     ],
     [
       "X64.Poly1305.va_ins_2_poly1305_blocks",
@@ -2657,7 +2657,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e315c57fb567bc49cebc91bd41223640"
+      "ed9ae17684c0393404c777e60a930a4c"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -2678,7 +2678,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "0cafb89eead5fd53087d7885a24a702c"
+      "a8c263f1e81de39c71a4ce51ce74b081"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -2699,7 +2699,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "c0d38099066a2cb30130771e8032cafe"
+      "2c4a8c1266234897357a7f6e48eed682"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_last_block",
@@ -2725,7 +2725,7 @@
         "refinement_interpretation_X64.Machine_s_Tm_refine_e85c4468bd6fa895770a44e5ae1526dc"
       ],
       0,
-      "8d95c8a4fb9603ecc32e71b5c23aaa75"
+      "fa6b25daa7e1d792888d5ac2255ea3d0"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_last_block",
@@ -2744,7 +2744,7 @@
         "typing_X64.Vale.State_i.eval_operand"
       ],
       0,
-      "7428681c496e7d835e3fc638444430ee"
+      "54901c9b5bf19ac5679aa8f11c994ddf"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_last_block",
@@ -2763,7 +2763,7 @@
         "typing_X64.Vale.State_i.eval_operand"
       ],
       0,
-      "c480bdbaf81ee063829a62033130165d"
+      "0f16eb3c99778bf21f037532bec8e0ff"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce_last",
@@ -2787,7 +2787,7 @@
         "refinement_interpretation_X64.Machine_s_Tm_refine_e85c4468bd6fa895770a44e5ae1526dc"
       ],
       0,
-      "06589b32d76644f4ac0cc8f63bd6440c"
+      "0047f941bda1c439c80c020dda7bb018"
     ],
     [
       "X64.Poly1305.bare_r",
@@ -2811,7 +2811,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "502c85f1ba86fa12af894e9abb2dad6a"
+      "c3fb76ae3bd4c951fdae7334a7b1fb93"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_impl",
@@ -2845,7 +2845,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ec7c699368dec873c9c6be69a1674a93"
+      "534f04702d6275a6332e4f91c280ed46"
     ],
     [
       "X64.Poly1305.va_ins_1_poly1305_impl",
@@ -2865,7 +2865,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "cd61d01d000257d65c0e349987ebb66b"
+      "dd39ccdf3c617c9165a3575730159fcb"
     ],
     [
       "X64.Poly1305.va_ins_2_poly1305_impl",
@@ -2883,7 +2883,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c9b6abd93978423781e9795a3352c82d"
+      "e009eb01f6c37b6e641697588309808b"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_impl",
@@ -2892,7 +2892,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0d55018b7c249ffa85d1d0b7e7f06ef1"
+      "7f6acf6a08161404ee33f4ae8b0e829a"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -2901,7 +2901,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7028e5a634b098452500963ad52f2259"
+      "c3d34d3fd61d1ca258d8858f23e6e3a4"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305",
@@ -2935,7 +2935,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "9a560f3f5e87cf749c78633f28b820d9"
+      "c2bc7f4e753c70b51767c3118f2d0985"
     ],
     [
       "X64.Poly1305.va_ins_2_poly1305",
@@ -2965,7 +2965,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "80e0b60fe8bd7430e30c0efef5847654"
+      "0dbb73d20ce1751e3790ba213874c75f"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305",
@@ -3107,7 +3107,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "d831ad42b84914e2dec3289c6b7da668"
+      "e53ddc2f3d419acd6e87ea7c4ba2099f"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
@@ -3116,7 +3116,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8c8565e4ce2979ff602fa3c55e5d913c"
+      "337ad7c3a71494ac49a2faba6a6d1247"
     ]
   ]
 ]
