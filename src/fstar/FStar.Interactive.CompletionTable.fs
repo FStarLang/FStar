@@ -179,7 +179,7 @@ let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
       matches in
   aux bt prefix []
 
-let rec btree_fold (bt: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
+let rec btree_fold (bt: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) : 'b =
   match bt with
   | StrEmpty -> acc
   | StrBranch (k, v, lbt, rbt) ->
@@ -240,7 +240,7 @@ let names_insert (name_collections: names<'a>) (id: string) (v: 'a) : names<'a> 
 let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string) (q: query)
                           (rev_acc: query)
                           (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
-                          (mut_leaf: trie<'a> -> query -> trie<'a>)=
+                          (mut_leaf: trie<'a> -> query -> trie<'a>) : names<trie<'a>> =
   let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie q rev_acc mut_node mut_leaf)
 
