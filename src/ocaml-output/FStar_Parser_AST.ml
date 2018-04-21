@@ -1375,7 +1375,7 @@ let (mkExplicitApp : term -> term Prims.list -> FStar_Range.range -> term) =
 let (mkAdmitMagic : FStar_Range.range -> term) =
   fun r  ->
     let unit_const = mk_term (Const FStar_Const.Const_unit) r Expr  in
-    let admit1 =
+    let admit =
       let admit_name =
         let uu____4855 =
           let uu____4856 =
@@ -1391,7 +1391,7 @@ let (mkAdmitMagic : FStar_Range.range -> term) =
           Var uu____4860  in
         mk_term uu____4859 r Expr  in
       mkExplicitApp magic_name [unit_const] r  in
-    let admit_magic = mk_term (Seq (admit1, magic1)) r Expr  in admit_magic
+    let admit_magic = mk_term (Seq (admit, magic1)) r Expr  in admit_magic
   
 let mkWildAdmitMagic :
   'Auu____4866 .

@@ -932,7 +932,7 @@ let (pop_context : FStar_TypeChecker_Env.env -> Prims.string -> unit) =
   fun env  ->
     fun msg  ->
       let uu____2057 = FStar_TypeChecker_Tc.pop_context env msg  in
-      FStar_All.pipe_right uu____2057 (fun a239  -> ())
+      FStar_All.pipe_right uu____2057 (fun a238  -> ())
   
 let (push_context :
   FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =

@@ -4,7 +4,7 @@ let main : 'Auu____7 'Auu____8 . 'Auu____7 -> 'Auu____8 =
     FStar_Util.print_string "Initializing ...\n";
     (try
        (let uu____21 = FStar_Tests_Pars.init ()  in
-        FStar_All.pipe_right uu____21 (fun a249  -> ()));
+        FStar_All.pipe_right uu____21 (fun a248  -> ()));
        FStar_Tests_Norm.run_all ();
        FStar_Tests_Unif.run_all ();
        FStar_All.exit (Prims.parse_int "0")
