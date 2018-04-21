@@ -304,1795 +304,1784 @@ type raw_error =
   | Warning_ExtractionUnexpectedEffect 
   | Error_DidNotFail 
   | Warning_UnappliedFail [@@deriving show]
-let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
+let uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_DependencyAnalysisFailed  -> true
     | uu____6 -> false
   
-let (uu___is_Error_IDETooManyPops : raw_error -> Prims.bool) =
+let uu___is_Error_IDETooManyPops : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_IDETooManyPops  -> true | uu____12 -> false
   
-let (uu___is_Error_IDEUnrecognized : raw_error -> Prims.bool) =
+let uu___is_Error_IDEUnrecognized : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_IDEUnrecognized  -> true | uu____18 -> false
   
-let (uu___is_Error_InductiveTypeNotSatisfyPositivityCondition :
-  raw_error -> Prims.bool) =
+let uu___is_Error_InductiveTypeNotSatisfyPositivityCondition :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_InductiveTypeNotSatisfyPositivityCondition  -> true
     | uu____24 -> false
   
-let (uu___is_Error_InvalidUniverseVar : raw_error -> Prims.bool) =
+let uu___is_Error_InvalidUniverseVar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_InvalidUniverseVar  -> true
     | uu____30 -> false
   
-let (uu___is_Error_MissingFileName : raw_error -> Prims.bool) =
+let uu___is_Error_MissingFileName : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_MissingFileName  -> true | uu____36 -> false
   
-let (uu___is_Error_ModuleFileNameMismatch : raw_error -> Prims.bool) =
+let uu___is_Error_ModuleFileNameMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_ModuleFileNameMismatch  -> true
     | uu____42 -> false
   
-let (uu___is_Error_OpPlusInUniverse : raw_error -> Prims.bool) =
+let uu___is_Error_OpPlusInUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_OpPlusInUniverse  -> true
     | uu____48 -> false
   
-let (uu___is_Error_OutOfRange : raw_error -> Prims.bool) =
+let uu___is_Error_OutOfRange : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_OutOfRange  -> true | uu____54 -> false
   
-let (uu___is_Error_ProofObligationFailed : raw_error -> Prims.bool) =
+let uu___is_Error_ProofObligationFailed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_ProofObligationFailed  -> true
     | uu____60 -> false
   
-let (uu___is_Error_TooManyFiles : raw_error -> Prims.bool) =
+let uu___is_Error_TooManyFiles : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_TooManyFiles  -> true | uu____66 -> false
   
-let (uu___is_Error_TypeCheckerFailToProve : raw_error -> Prims.bool) =
+let uu___is_Error_TypeCheckerFailToProve : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_TypeCheckerFailToProve  -> true
     | uu____72 -> false
   
-let (uu___is_Error_TypeError : raw_error -> Prims.bool) =
+let uu___is_Error_TypeError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_TypeError  -> true | uu____78 -> false
   
-let (uu___is_Error_UncontrainedUnificationVar : raw_error -> Prims.bool) =
+let uu___is_Error_UncontrainedUnificationVar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_UncontrainedUnificationVar  -> true
     | uu____84 -> false
   
-let (uu___is_Error_UnexpectedGTotComputation : raw_error -> Prims.bool) =
+let uu___is_Error_UnexpectedGTotComputation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_UnexpectedGTotComputation  -> true
     | uu____90 -> false
   
-let (uu___is_Error_UnexpectedInstance : raw_error -> Prims.bool) =
+let uu___is_Error_UnexpectedInstance : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_UnexpectedInstance  -> true
     | uu____96 -> false
   
-let (uu___is_Error_UnknownFatal_AssertionFailure : raw_error -> Prims.bool) =
+let uu___is_Error_UnknownFatal_AssertionFailure : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_UnknownFatal_AssertionFailure  -> true
     | uu____102 -> false
   
-let (uu___is_Error_Z3InvocationError : raw_error -> Prims.bool) =
+let uu___is_Error_Z3InvocationError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_Z3InvocationError  -> true
     | uu____108 -> false
   
-let (uu___is_Error_IDEAssertionFailure : raw_error -> Prims.bool) =
+let uu___is_Error_IDEAssertionFailure : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_IDEAssertionFailure  -> true
     | uu____114 -> false
   
-let (uu___is_Error_Z3SolverError : raw_error -> Prims.bool) =
+let uu___is_Error_Z3SolverError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_Z3SolverError  -> true | uu____120 -> false
   
-let (uu___is_Fatal_AbstractTypeDeclarationInInterface :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_AbstractTypeDeclarationInInterface :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_AbstractTypeDeclarationInInterface  -> true
     | uu____126 -> false
   
-let (uu___is_Fatal_ActionMustHaveFunctionType : raw_error -> Prims.bool) =
+let uu___is_Fatal_ActionMustHaveFunctionType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ActionMustHaveFunctionType  -> true
     | uu____132 -> false
   
-let (uu___is_Fatal_AlreadyDefinedTopLevelDeclaration :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_AlreadyDefinedTopLevelDeclaration : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_AlreadyDefinedTopLevelDeclaration  -> true
     | uu____138 -> false
   
-let (uu___is_Fatal_ArgumentLengthMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_ArgumentLengthMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ArgumentLengthMismatch  -> true
     | uu____144 -> false
   
-let (uu___is_Fatal_AssertionFailure : raw_error -> Prims.bool) =
+let uu___is_Fatal_AssertionFailure : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_AssertionFailure  -> true
     | uu____150 -> false
   
-let (uu___is_Fatal_AssignToImmutableValues : raw_error -> Prims.bool) =
+let uu___is_Fatal_AssignToImmutableValues : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_AssignToImmutableValues  -> true
     | uu____156 -> false
   
-let (uu___is_Fatal_AssumeValInInterface : raw_error -> Prims.bool) =
+let uu___is_Fatal_AssumeValInInterface : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_AssumeValInInterface  -> true
     | uu____162 -> false
   
-let (uu___is_Fatal_BadlyInstantiatedSynthByTactic : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_BadlyInstantiatedSynthByTactic : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_BadlyInstantiatedSynthByTactic  -> true
     | uu____168 -> false
   
-let (uu___is_Fatal_BadSignatureShape : raw_error -> Prims.bool) =
+let uu___is_Fatal_BadSignatureShape : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_BadSignatureShape  -> true
     | uu____174 -> false
   
-let (uu___is_Fatal_BinderAndArgsLengthMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_BinderAndArgsLengthMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_BinderAndArgsLengthMismatch  -> true
     | uu____180 -> false
   
-let (uu___is_Fatal_BothValAndLetInInterface : raw_error -> Prims.bool) =
+let uu___is_Fatal_BothValAndLetInInterface : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_BothValAndLetInInterface  -> true
     | uu____186 -> false
   
-let (uu___is_Fatal_CardinalityConstraintViolated : raw_error -> Prims.bool) =
+let uu___is_Fatal_CardinalityConstraintViolated : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_CardinalityConstraintViolated  -> true
     | uu____192 -> false
   
-let (uu___is_Fatal_ComputationNotTotal : raw_error -> Prims.bool) =
+let uu___is_Fatal_ComputationNotTotal : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ComputationNotTotal  -> true
     | uu____198 -> false
   
-let (uu___is_Fatal_ComputationTypeNotAllowed : raw_error -> Prims.bool) =
+let uu___is_Fatal_ComputationTypeNotAllowed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ComputationTypeNotAllowed  -> true
     | uu____204 -> false
   
-let (uu___is_Fatal_ComputedTypeNotMatchAnnotation : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_ComputedTypeNotMatchAnnotation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ComputedTypeNotMatchAnnotation  -> true
     | uu____210 -> false
   
-let (uu___is_Fatal_ConstructorArgLengthMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_ConstructorArgLengthMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ConstructorArgLengthMismatch  -> true
     | uu____216 -> false
   
-let (uu___is_Fatal_ConstructorFailedCheck : raw_error -> Prims.bool) =
+let uu___is_Fatal_ConstructorFailedCheck : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ConstructorFailedCheck  -> true
     | uu____222 -> false
   
-let (uu___is_Fatal_ConstructorNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_ConstructorNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ConstructorNotFound  -> true
     | uu____228 -> false
   
-let (uu___is_Fatal_ConstsructorBuildWrongType : raw_error -> Prims.bool) =
+let uu___is_Fatal_ConstsructorBuildWrongType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ConstsructorBuildWrongType  -> true
     | uu____234 -> false
   
-let (uu___is_Fatal_CycleInRecTypeAbbreviation : raw_error -> Prims.bool) =
+let uu___is_Fatal_CycleInRecTypeAbbreviation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_CycleInRecTypeAbbreviation  -> true
     | uu____240 -> false
   
-let (uu___is_Fatal_DataContructorNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_DataContructorNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DataContructorNotFound  -> true
     | uu____246 -> false
   
-let (uu___is_Fatal_DefaultQualifierNotAllowedOnEffects :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_DefaultQualifierNotAllowedOnEffects :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DefaultQualifierNotAllowedOnEffects  -> true
     | uu____252 -> false
   
-let (uu___is_Fatal_DefinitionNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_DefinitionNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DefinitionNotFound  -> true
     | uu____258 -> false
   
-let (uu___is_Fatal_DisjuctivePatternVarsMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_DisjuctivePatternVarsMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DisjuctivePatternVarsMismatch  -> true
     | uu____264 -> false
   
-let (uu___is_Fatal_DivergentComputationCannotBeIncludedInTotal :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_DivergentComputationCannotBeIncludedInTotal :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DivergentComputationCannotBeIncludedInTotal  -> true
     | uu____270 -> false
   
-let (uu___is_Fatal_DuplicateInImplementation : raw_error -> Prims.bool) =
+let uu___is_Fatal_DuplicateInImplementation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateInImplementation  -> true
     | uu____276 -> false
   
-let (uu___is_Fatal_DuplicateModuleOrInterface : raw_error -> Prims.bool) =
+let uu___is_Fatal_DuplicateModuleOrInterface : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateModuleOrInterface  -> true
     | uu____282 -> false
   
-let (uu___is_Fatal_DuplicateTopLevelNames : raw_error -> Prims.bool) =
+let uu___is_Fatal_DuplicateTopLevelNames : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateTopLevelNames  -> true
     | uu____288 -> false
   
-let (uu___is_Fatal_DuplicateTypeAnnotationAndValDecl :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_DuplicateTypeAnnotationAndValDecl : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateTypeAnnotationAndValDecl  -> true
     | uu____294 -> false
   
-let (uu___is_Fatal_EffectCannotBeReified : raw_error -> Prims.bool) =
+let uu___is_Fatal_EffectCannotBeReified : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_EffectCannotBeReified  -> true
     | uu____300 -> false
   
-let (uu___is_Fatal_EffectConstructorNotFullyApplied :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_EffectConstructorNotFullyApplied : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_EffectConstructorNotFullyApplied  -> true
     | uu____306 -> false
   
-let (uu___is_Fatal_EffectfulAndPureComputationMismatch :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_EffectfulAndPureComputationMismatch :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_EffectfulAndPureComputationMismatch  -> true
     | uu____312 -> false
   
-let (uu___is_Fatal_EffectNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_EffectNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_EffectNotFound  -> true | uu____318 -> false
   
-let (uu___is_Fatal_EffectsCannotBeComposed : raw_error -> Prims.bool) =
+let uu___is_Fatal_EffectsCannotBeComposed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_EffectsCannotBeComposed  -> true
     | uu____324 -> false
   
-let (uu___is_Fatal_ErrorInSolveDeferredConstraints : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_ErrorInSolveDeferredConstraints : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ErrorInSolveDeferredConstraints  -> true
     | uu____330 -> false
   
-let (uu___is_Fatal_ErrorsReported : raw_error -> Prims.bool) =
+let uu___is_Fatal_ErrorsReported : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_ErrorsReported  -> true | uu____336 -> false
   
-let (uu___is_Fatal_EscapedBoundVar : raw_error -> Prims.bool) =
+let uu___is_Fatal_EscapedBoundVar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_EscapedBoundVar  -> true
     | uu____342 -> false
   
-let (uu___is_Fatal_ExpectedArrowAnnotatedType : raw_error -> Prims.bool) =
+let uu___is_Fatal_ExpectedArrowAnnotatedType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectedArrowAnnotatedType  -> true
     | uu____348 -> false
   
-let (uu___is_Fatal_ExpectedGhostExpression : raw_error -> Prims.bool) =
+let uu___is_Fatal_ExpectedGhostExpression : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectedGhostExpression  -> true
     | uu____354 -> false
   
-let (uu___is_Fatal_ExpectedPureExpression : raw_error -> Prims.bool) =
+let uu___is_Fatal_ExpectedPureExpression : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectedPureExpression  -> true
     | uu____360 -> false
   
-let (uu___is_Fatal_ExpectNormalizedEffect : raw_error -> Prims.bool) =
+let uu___is_Fatal_ExpectNormalizedEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectNormalizedEffect  -> true
     | uu____366 -> false
   
-let (uu___is_Fatal_ExpectTermGotFunction : raw_error -> Prims.bool) =
+let uu___is_Fatal_ExpectTermGotFunction : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectTermGotFunction  -> true
     | uu____372 -> false
   
-let (uu___is_Fatal_ExpectTrivialPreCondition : raw_error -> Prims.bool) =
+let uu___is_Fatal_ExpectTrivialPreCondition : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectTrivialPreCondition  -> true
     | uu____378 -> false
   
-let (uu___is_Fatal_FailToCompileNativeTactic : raw_error -> Prims.bool) =
+let uu___is_Fatal_FailToCompileNativeTactic : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FailToCompileNativeTactic  -> true
     | uu____384 -> false
   
-let (uu___is_Fatal_FailToExtractNativeTactic : raw_error -> Prims.bool) =
+let uu___is_Fatal_FailToExtractNativeTactic : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FailToExtractNativeTactic  -> true
     | uu____390 -> false
   
-let (uu___is_Fatal_FailToProcessPragma : raw_error -> Prims.bool) =
+let uu___is_Fatal_FailToProcessPragma : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FailToProcessPragma  -> true
     | uu____396 -> false
   
-let (uu___is_Fatal_FailToResolveImplicitArgument : raw_error -> Prims.bool) =
+let uu___is_Fatal_FailToResolveImplicitArgument : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FailToResolveImplicitArgument  -> true
     | uu____402 -> false
   
-let (uu___is_Fatal_FailToSolveUniverseInEquality : raw_error -> Prims.bool) =
+let uu___is_Fatal_FailToSolveUniverseInEquality : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FailToSolveUniverseInEquality  -> true
     | uu____408 -> false
   
-let (uu___is_Fatal_FieldsNotBelongToSameRecordType : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_FieldsNotBelongToSameRecordType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FieldsNotBelongToSameRecordType  -> true
     | uu____414 -> false
   
-let (uu___is_Fatal_ForbiddenReferenceToCurrentModule :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_ForbiddenReferenceToCurrentModule : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_ForbiddenReferenceToCurrentModule  -> true
     | uu____420 -> false
   
-let (uu___is_Fatal_FreeVariables : raw_error -> Prims.bool) =
+let uu___is_Fatal_FreeVariables : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_FreeVariables  -> true | uu____426 -> false
   
-let (uu___is_Fatal_FunctionTypeExpected : raw_error -> Prims.bool) =
+let uu___is_Fatal_FunctionTypeExpected : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_FunctionTypeExpected  -> true
     | uu____432 -> false
   
-let (uu___is_Fatal_IdentifierNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_IdentifierNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IdentifierNotFound  -> true
     | uu____438 -> false
   
-let (uu___is_Fatal_IllAppliedConstant : raw_error -> Prims.bool) =
+let uu___is_Fatal_IllAppliedConstant : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IllAppliedConstant  -> true
     | uu____444 -> false
   
-let (uu___is_Fatal_IllegalCharInByteArray : raw_error -> Prims.bool) =
+let uu___is_Fatal_IllegalCharInByteArray : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IllegalCharInByteArray  -> true
     | uu____450 -> false
   
-let (uu___is_Fatal_IllegalCharInOperatorName : raw_error -> Prims.bool) =
+let uu___is_Fatal_IllegalCharInOperatorName : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IllegalCharInOperatorName  -> true
     | uu____456 -> false
   
-let (uu___is_Fatal_IllTyped : raw_error -> Prims.bool) =
+let uu___is_Fatal_IllTyped : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_IllTyped  -> true | uu____462 -> false
   
-let (uu___is_Fatal_ImpossibleAbbrevLidBundle : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossibleAbbrevLidBundle : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleAbbrevLidBundle  -> true
     | uu____468 -> false
   
-let (uu___is_Fatal_ImpossibleAbbrevRenameBundle : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossibleAbbrevRenameBundle : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleAbbrevRenameBundle  -> true
     | uu____474 -> false
   
-let (uu___is_Fatal_ImpossibleInductiveWithAbbrev : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossibleInductiveWithAbbrev : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleInductiveWithAbbrev  -> true
     | uu____480 -> false
   
-let (uu___is_Fatal_ImpossiblePrePostAbs : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossiblePrePostAbs : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossiblePrePostAbs  -> true
     | uu____486 -> false
   
-let (uu___is_Fatal_ImpossiblePrePostArrow : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossiblePrePostArrow : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossiblePrePostArrow  -> true
     | uu____492 -> false
   
-let (uu___is_Fatal_ImpossibleToGenerateDMEffect : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossibleToGenerateDMEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleToGenerateDMEffect  -> true
     | uu____498 -> false
   
-let (uu___is_Fatal_ImpossibleTypeAbbrevBundle : raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossibleTypeAbbrevBundle : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleTypeAbbrevBundle  -> true
     | uu____504 -> false
   
-let (uu___is_Fatal_ImpossibleTypeAbbrevSigeltBundle :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_ImpossibleTypeAbbrevSigeltBundle : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleTypeAbbrevSigeltBundle  -> true
     | uu____510 -> false
   
-let (uu___is_Fatal_IncludeModuleNotPrepared : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncludeModuleNotPrepared : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncludeModuleNotPrepared  -> true
     | uu____516 -> false
   
-let (uu___is_Fatal_IncoherentInlineUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncoherentInlineUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncoherentInlineUniverse  -> true
     | uu____522 -> false
   
-let (uu___is_Fatal_IncompatibleKinds : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncompatibleKinds : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleKinds  -> true
     | uu____528 -> false
   
-let (uu___is_Fatal_IncompatibleNumberOfTypes : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncompatibleNumberOfTypes : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleNumberOfTypes  -> true
     | uu____534 -> false
   
-let (uu___is_Fatal_IncompatibleSetOfUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncompatibleSetOfUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleSetOfUniverse  -> true
     | uu____540 -> false
   
-let (uu___is_Fatal_IncompatibleUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncompatibleUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleUniverse  -> true
     | uu____546 -> false
   
-let (uu___is_Fatal_InconsistentImplicitArgumentAnnotation :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_InconsistentImplicitArgumentAnnotation :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InconsistentImplicitArgumentAnnotation  -> true
     | uu____552 -> false
   
-let (uu___is_Fatal_InconsistentImplicitQualifier : raw_error -> Prims.bool) =
+let uu___is_Fatal_InconsistentImplicitQualifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InconsistentImplicitQualifier  -> true
     | uu____558 -> false
   
-let (uu___is_Fatal_InconsistentQualifierAnnotation : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_InconsistentQualifierAnnotation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InconsistentQualifierAnnotation  -> true
     | uu____564 -> false
   
-let (uu___is_Fatal_InferredTypeCauseVarEscape : raw_error -> Prims.bool) =
+let uu___is_Fatal_InferredTypeCauseVarEscape : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InferredTypeCauseVarEscape  -> true
     | uu____570 -> false
   
-let (uu___is_Fatal_InlineRenamedAsUnfold : raw_error -> Prims.bool) =
+let uu___is_Fatal_InlineRenamedAsUnfold : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InlineRenamedAsUnfold  -> true
     | uu____576 -> false
   
-let (uu___is_Fatal_InsufficientPatternArguments : raw_error -> Prims.bool) =
+let uu___is_Fatal_InsufficientPatternArguments : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InsufficientPatternArguments  -> true
     | uu____582 -> false
   
-let (uu___is_Fatal_InterfaceAlreadyProcessed : raw_error -> Prims.bool) =
+let uu___is_Fatal_InterfaceAlreadyProcessed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InterfaceAlreadyProcessed  -> true
     | uu____588 -> false
   
-let (uu___is_Fatal_InterfaceNotImplementedByModule : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_InterfaceNotImplementedByModule : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InterfaceNotImplementedByModule  -> true
     | uu____594 -> false
   
-let (uu___is_Fatal_InterfaceWithTypeImplementation : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_InterfaceWithTypeImplementation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InterfaceWithTypeImplementation  -> true
     | uu____600 -> false
   
-let (uu___is_Fatal_InvalidFloatingPointNumber : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidFloatingPointNumber : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidFloatingPointNumber  -> true
     | uu____606 -> false
   
-let (uu___is_Fatal_InvalidFSDocKeyword : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidFSDocKeyword : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidFSDocKeyword  -> true
     | uu____612 -> false
   
-let (uu___is_Fatal_InvalidIdentifier : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidIdentifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidIdentifier  -> true
     | uu____618 -> false
   
-let (uu___is_Fatal_InvalidLemmaArgument : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidLemmaArgument : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidLemmaArgument  -> true
     | uu____624 -> false
   
-let (uu___is_Fatal_InvalidNumericLiteral : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidNumericLiteral : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidNumericLiteral  -> true
     | uu____630 -> false
   
-let (uu___is_Fatal_InvalidRedefinitionOfLexT : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidRedefinitionOfLexT : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidRedefinitionOfLexT  -> true
     | uu____636 -> false
   
-let (uu___is_Fatal_InvalidUnicodeInStringLiteral : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidUnicodeInStringLiteral : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidUnicodeInStringLiteral  -> true
     | uu____642 -> false
   
-let (uu___is_Fatal_InvalidUTF8Encoding : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidUTF8Encoding : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidUTF8Encoding  -> true
     | uu____648 -> false
   
-let (uu___is_Fatal_InvalidWarnErrorSetting : raw_error -> Prims.bool) =
+let uu___is_Fatal_InvalidWarnErrorSetting : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidWarnErrorSetting  -> true
     | uu____654 -> false
   
-let (uu___is_Fatal_LetBoundMonadicMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_LetBoundMonadicMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_LetBoundMonadicMismatch  -> true
     | uu____660 -> false
   
-let (uu___is_Fatal_LetMutableForVariablesOnly : raw_error -> Prims.bool) =
+let uu___is_Fatal_LetMutableForVariablesOnly : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_LetMutableForVariablesOnly  -> true
     | uu____666 -> false
   
-let (uu___is_Fatal_LetOpenModuleOnly : raw_error -> Prims.bool) =
+let uu___is_Fatal_LetOpenModuleOnly : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_LetOpenModuleOnly  -> true
     | uu____672 -> false
   
-let (uu___is_Fatal_LetRecArgumentMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_LetRecArgumentMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_LetRecArgumentMismatch  -> true
     | uu____678 -> false
   
-let (uu___is_Fatal_MalformedActionDeclaration : raw_error -> Prims.bool) =
+let uu___is_Fatal_MalformedActionDeclaration : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MalformedActionDeclaration  -> true
     | uu____684 -> false
   
-let (uu___is_Fatal_MismatchedPatternType : raw_error -> Prims.bool) =
+let uu___is_Fatal_MismatchedPatternType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MismatchedPatternType  -> true
     | uu____690 -> false
   
-let (uu___is_Fatal_MismatchUniversePolymorphic : raw_error -> Prims.bool) =
+let uu___is_Fatal_MismatchUniversePolymorphic : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MismatchUniversePolymorphic  -> true
     | uu____696 -> false
   
-let (uu___is_Fatal_MissingDataConstructor : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingDataConstructor : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingDataConstructor  -> true
     | uu____702 -> false
   
-let (uu___is_Fatal_MissingExposeInterfacesOption : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingExposeInterfacesOption : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingExposeInterfacesOption  -> true
     | uu____708 -> false
   
-let (uu___is_Fatal_MissingFieldInRecord : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingFieldInRecord : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingFieldInRecord  -> true
     | uu____714 -> false
   
-let (uu___is_Fatal_MissingImplementation : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingImplementation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingImplementation  -> true
     | uu____720 -> false
   
-let (uu___is_Fatal_MissingImplicitArguments : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingImplicitArguments : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingImplicitArguments  -> true
     | uu____726 -> false
   
-let (uu___is_Fatal_MissingInterface : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingInterface : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingInterface  -> true
     | uu____732 -> false
   
-let (uu___is_Fatal_MissingNameInBinder : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingNameInBinder : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingNameInBinder  -> true
     | uu____738 -> false
   
-let (uu___is_Fatal_MissingPrimsModule : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingPrimsModule : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingPrimsModule  -> true
     | uu____744 -> false
   
-let (uu___is_Fatal_MissingQuantifierBinder : raw_error -> Prims.bool) =
+let uu___is_Fatal_MissingQuantifierBinder : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MissingQuantifierBinder  -> true
     | uu____750 -> false
   
-let (uu___is_Fatal_ModuleExpected : raw_error -> Prims.bool) =
+let uu___is_Fatal_ModuleExpected : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_ModuleExpected  -> true | uu____756 -> false
   
-let (uu___is_Fatal_ModuleFileNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_ModuleFileNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleFileNotFound  -> true
     | uu____762 -> false
   
-let (uu___is_Fatal_ModuleFirstStatement : raw_error -> Prims.bool) =
+let uu___is_Fatal_ModuleFirstStatement : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleFirstStatement  -> true
     | uu____768 -> false
   
-let (uu___is_Fatal_ModuleNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_ModuleNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_ModuleNotFound  -> true | uu____774 -> false
   
-let (uu___is_Fatal_ModuleOrFileNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_ModuleOrFileNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleOrFileNotFound  -> true
     | uu____780 -> false
   
-let (uu___is_Fatal_MonadAlreadyDefined : raw_error -> Prims.bool) =
+let uu___is_Fatal_MonadAlreadyDefined : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MonadAlreadyDefined  -> true
     | uu____786 -> false
   
-let (uu___is_Fatal_MoreThanOneDeclaration : raw_error -> Prims.bool) =
+let uu___is_Fatal_MoreThanOneDeclaration : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MoreThanOneDeclaration  -> true
     | uu____792 -> false
   
-let (uu___is_Fatal_MultipleLetBinding : raw_error -> Prims.bool) =
+let uu___is_Fatal_MultipleLetBinding : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_MultipleLetBinding  -> true
     | uu____798 -> false
   
-let (uu___is_Fatal_NameNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_NameNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_NameNotFound  -> true | uu____804 -> false
   
-let (uu___is_Fatal_NameSpaceNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_NameSpaceNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NameSpaceNotFound  -> true
     | uu____810 -> false
   
-let (uu___is_Fatal_NegativeUniverseConstFatal_NotSupported :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_NegativeUniverseConstFatal_NotSupported :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NegativeUniverseConstFatal_NotSupported  -> true
     | uu____816 -> false
   
-let (uu___is_Fatal_NoFileProvided : raw_error -> Prims.bool) =
+let uu___is_Fatal_NoFileProvided : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_NoFileProvided  -> true | uu____822 -> false
   
-let (uu___is_Fatal_NonInductiveInMutuallyDefinedType :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_NonInductiveInMutuallyDefinedType : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_NonInductiveInMutuallyDefinedType  -> true
     | uu____828 -> false
   
-let (uu___is_Fatal_NonLinearPatternNotPermitted : raw_error -> Prims.bool) =
+let uu___is_Fatal_NonLinearPatternNotPermitted : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NonLinearPatternNotPermitted  -> true
     | uu____834 -> false
   
-let (uu___is_Fatal_NonLinearPatternVars : raw_error -> Prims.bool) =
+let uu___is_Fatal_NonLinearPatternVars : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NonLinearPatternVars  -> true
     | uu____840 -> false
   
-let (uu___is_Fatal_NonSingletonTopLevel : raw_error -> Prims.bool) =
+let uu___is_Fatal_NonSingletonTopLevel : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NonSingletonTopLevel  -> true
     | uu____846 -> false
   
-let (uu___is_Fatal_NonSingletonTopLevelModule : raw_error -> Prims.bool) =
+let uu___is_Fatal_NonSingletonTopLevelModule : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NonSingletonTopLevelModule  -> true
     | uu____852 -> false
   
-let (uu___is_Fatal_NonTopRecFunctionNotFullyEncoded :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_NonTopRecFunctionNotFullyEncoded : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_NonTopRecFunctionNotFullyEncoded  -> true
     | uu____858 -> false
   
-let (uu___is_Fatal_NonTrivialPreConditionInPrims : raw_error -> Prims.bool) =
+let uu___is_Fatal_NonTrivialPreConditionInPrims : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NonTrivialPreConditionInPrims  -> true
     | uu____864 -> false
   
-let (uu___is_Fatal_NonVariableInductiveTypeParameter :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_NonVariableInductiveTypeParameter : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_NonVariableInductiveTypeParameter  -> true
     | uu____870 -> false
   
-let (uu___is_Fatal_NotApplicationOrFv : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotApplicationOrFv : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotApplicationOrFv  -> true
     | uu____876 -> false
   
-let (uu___is_Fatal_NotEnoughArgsToEffect : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotEnoughArgsToEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotEnoughArgsToEffect  -> true
     | uu____882 -> false
   
-let (uu___is_Fatal_NotEnoughArgumentsForEffect : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotEnoughArgumentsForEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotEnoughArgumentsForEffect  -> true
     | uu____888 -> false
   
-let (uu___is_Fatal_NotFunctionType : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotFunctionType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotFunctionType  -> true
     | uu____894 -> false
   
-let (uu___is_Fatal_NotSupported : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotSupported : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_NotSupported  -> true | uu____900 -> false
   
-let (uu___is_Fatal_NotTopLevelModule : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotTopLevelModule : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotTopLevelModule  -> true
     | uu____906 -> false
   
-let (uu___is_Fatal_NotValidFStarFile : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotValidFStarFile : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotValidFStarFile  -> true
     | uu____912 -> false
   
-let (uu___is_Fatal_NotValidIncludeDirectory : raw_error -> Prims.bool) =
+let uu___is_Fatal_NotValidIncludeDirectory : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_NotValidIncludeDirectory  -> true
     | uu____918 -> false
   
-let (uu___is_Fatal_OneModulePerFile : raw_error -> Prims.bool) =
+let uu___is_Fatal_OneModulePerFile : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_OneModulePerFile  -> true
     | uu____924 -> false
   
-let (uu___is_Fatal_OpenGoalsInSynthesis : raw_error -> Prims.bool) =
+let uu___is_Fatal_OpenGoalsInSynthesis : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_OpenGoalsInSynthesis  -> true
     | uu____930 -> false
   
-let (uu___is_Fatal_OptionsNotCompatible : raw_error -> Prims.bool) =
+let uu___is_Fatal_OptionsNotCompatible : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_OptionsNotCompatible  -> true
     | uu____936 -> false
   
-let (uu___is_Fatal_OutOfOrder : raw_error -> Prims.bool) =
+let uu___is_Fatal_OutOfOrder : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_OutOfOrder  -> true | uu____942 -> false
   
-let (uu___is_Fatal_ParseErrors : raw_error -> Prims.bool) =
+let uu___is_Fatal_ParseErrors : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_ParseErrors  -> true | uu____948 -> false
   
-let (uu___is_Fatal_ParseItError : raw_error -> Prims.bool) =
+let uu___is_Fatal_ParseItError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_ParseItError  -> true | uu____954 -> false
   
-let (uu___is_Fatal_PolyTypeExpected : raw_error -> Prims.bool) =
+let uu___is_Fatal_PolyTypeExpected : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_PolyTypeExpected  -> true
     | uu____960 -> false
   
-let (uu___is_Fatal_PossibleInfiniteTyp : raw_error -> Prims.bool) =
+let uu___is_Fatal_PossibleInfiniteTyp : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_PossibleInfiniteTyp  -> true
     | uu____966 -> false
   
-let (uu___is_Fatal_PreModuleMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_PreModuleMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_PreModuleMismatch  -> true
     | uu____972 -> false
   
-let (uu___is_Fatal_QulifierListNotPermitted : raw_error -> Prims.bool) =
+let uu___is_Fatal_QulifierListNotPermitted : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_QulifierListNotPermitted  -> true
     | uu____978 -> false
   
-let (uu___is_Fatal_RecursiveFunctionLiteral : raw_error -> Prims.bool) =
+let uu___is_Fatal_RecursiveFunctionLiteral : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_RecursiveFunctionLiteral  -> true
     | uu____984 -> false
   
-let (uu___is_Fatal_ReflectOnlySupportedOnEffects : raw_error -> Prims.bool) =
+let uu___is_Fatal_ReflectOnlySupportedOnEffects : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ReflectOnlySupportedOnEffects  -> true
     | uu____990 -> false
   
-let (uu___is_Fatal_ReservedPrefix : raw_error -> Prims.bool) =
+let uu___is_Fatal_ReservedPrefix : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_ReservedPrefix  -> true | uu____996 -> false
   
-let (uu___is_Fatal_SMTOutputParseError : raw_error -> Prims.bool) =
+let uu___is_Fatal_SMTOutputParseError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_SMTOutputParseError  -> true
     | uu____1002 -> false
   
-let (uu___is_Fatal_SMTSolverError : raw_error -> Prims.bool) =
+let uu___is_Fatal_SMTSolverError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_SMTSolverError  -> true
     | uu____1008 -> false
   
-let (uu___is_Fatal_SyntaxError : raw_error -> Prims.bool) =
+let uu___is_Fatal_SyntaxError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_SyntaxError  -> true | uu____1014 -> false
   
-let (uu___is_Fatal_SynthByTacticError : raw_error -> Prims.bool) =
+let uu___is_Fatal_SynthByTacticError : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_SynthByTacticError  -> true
     | uu____1020 -> false
   
-let (uu___is_Fatal_TacticGotStuck : raw_error -> Prims.bool) =
+let uu___is_Fatal_TacticGotStuck : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TacticGotStuck  -> true
     | uu____1026 -> false
   
-let (uu___is_Fatal_TcOneFragmentFailed : raw_error -> Prims.bool) =
+let uu___is_Fatal_TcOneFragmentFailed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TcOneFragmentFailed  -> true
     | uu____1032 -> false
   
-let (uu___is_Fatal_TermOutsideOfDefLanguage : raw_error -> Prims.bool) =
+let uu___is_Fatal_TermOutsideOfDefLanguage : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TermOutsideOfDefLanguage  -> true
     | uu____1038 -> false
   
-let (uu___is_Fatal_ToManyArgumentToFunction : raw_error -> Prims.bool) =
+let uu___is_Fatal_ToManyArgumentToFunction : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ToManyArgumentToFunction  -> true
     | uu____1044 -> false
   
-let (uu___is_Fatal_TooManyOrTooFewFileMatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_TooManyOrTooFewFileMatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TooManyOrTooFewFileMatch  -> true
     | uu____1050 -> false
   
-let (uu___is_Fatal_TooManyPatternArguments : raw_error -> Prims.bool) =
+let uu___is_Fatal_TooManyPatternArguments : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TooManyPatternArguments  -> true
     | uu____1056 -> false
   
-let (uu___is_Fatal_TooManyUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_TooManyUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TooManyUniverse  -> true
     | uu____1062 -> false
   
-let (uu___is_Fatal_TypeMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_TypeMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_TypeMismatch  -> true | uu____1068 -> false
   
-let (uu___is_Fatal_TypeWithinPatternsAllowedOnVariablesOnly :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_TypeWithinPatternsAllowedOnVariablesOnly :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TypeWithinPatternsAllowedOnVariablesOnly  -> true
     | uu____1074 -> false
   
-let (uu___is_Fatal_UnableToReadFile : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnableToReadFile : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnableToReadFile  -> true
     | uu____1080 -> false
   
-let (uu___is_Fatal_UnepxectedOrUnboundOperator : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnepxectedOrUnboundOperator : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnepxectedOrUnboundOperator  -> true
     | uu____1086 -> false
   
-let (uu___is_Fatal_UnexpectedBinder : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedBinder : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedBinder  -> true
     | uu____1092 -> false
   
-let (uu___is_Fatal_UnexpectedBindShape : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedBindShape : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedBindShape  -> true
     | uu____1098 -> false
   
-let (uu___is_Fatal_UnexpectedChar : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedChar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedChar  -> true
     | uu____1104 -> false
   
-let (uu___is_Fatal_UnexpectedComputationTypeForLetRec :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedComputationTypeForLetRec :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedComputationTypeForLetRec  -> true
     | uu____1110 -> false
   
-let (uu___is_Fatal_UnexpectedConstructorType : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedConstructorType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedConstructorType  -> true
     | uu____1116 -> false
   
-let (uu___is_Fatal_UnexpectedDataConstructor : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedDataConstructor : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedDataConstructor  -> true
     | uu____1122 -> false
   
-let (uu___is_Fatal_UnexpectedEffect : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedEffect  -> true
     | uu____1128 -> false
   
-let (uu___is_Fatal_UnexpectedEmptyRecord : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedEmptyRecord : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedEmptyRecord  -> true
     | uu____1134 -> false
   
-let (uu___is_Fatal_UnexpectedExpressionType : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedExpressionType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedExpressionType  -> true
     | uu____1140 -> false
   
-let (uu___is_Fatal_UnexpectedFunctionParameterType : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_UnexpectedFunctionParameterType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedFunctionParameterType  -> true
     | uu____1146 -> false
   
-let (uu___is_Fatal_UnexpectedGeneralizedUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedGeneralizedUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedGeneralizedUniverse  -> true
     | uu____1152 -> false
   
-let (uu___is_Fatal_UnexpectedGTotForLetRec : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedGTotForLetRec : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedGTotForLetRec  -> true
     | uu____1158 -> false
   
-let (uu___is_Fatal_UnexpectedGuard : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedGuard : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedGuard  -> true
     | uu____1164 -> false
   
-let (uu___is_Fatal_UnexpectedIdentifier : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedIdentifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedIdentifier  -> true
     | uu____1170 -> false
   
-let (uu___is_Fatal_UnexpectedImplicitArgument : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedImplicitArgument : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedImplicitArgument  -> true
     | uu____1176 -> false
   
-let (uu___is_Fatal_UnexpectedImplictArgument : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedImplictArgument : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedImplictArgument  -> true
     | uu____1182 -> false
   
-let (uu___is_Fatal_UnexpectedInductivetype : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedInductivetype : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedInductivetype  -> true
     | uu____1188 -> false
   
-let (uu___is_Fatal_UnexpectedLetBinding : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedLetBinding : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedLetBinding  -> true
     | uu____1194 -> false
   
-let (uu___is_Fatal_UnexpectedModuleDeclaration : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedModuleDeclaration : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedModuleDeclaration  -> true
     | uu____1200 -> false
   
-let (uu___is_Fatal_UnexpectedNumberOfUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedNumberOfUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedNumberOfUniverse  -> true
     | uu____1206 -> false
   
-let (uu___is_Fatal_UnexpectedNumericLiteral : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedNumericLiteral : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedNumericLiteral  -> true
     | uu____1212 -> false
   
-let (uu___is_Fatal_UnexpectedOperatorSymbol : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedOperatorSymbol : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedOperatorSymbol  -> true
     | uu____1218 -> false
   
-let (uu___is_Fatal_UnexpectedPattern : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedPattern : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedPattern  -> true
     | uu____1224 -> false
   
-let (uu___is_Fatal_UnexpectedPosition : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedPosition : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedPosition  -> true
     | uu____1230 -> false
   
-let (uu___is_Fatal_UnExpectedPreCondition : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnExpectedPreCondition : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnExpectedPreCondition  -> true
     | uu____1236 -> false
   
-let (uu___is_Fatal_UnexpectedReturnShape : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedReturnShape : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedReturnShape  -> true
     | uu____1242 -> false
   
-let (uu___is_Fatal_UnexpectedSignatureForMonad : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedSignatureForMonad : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedSignatureForMonad  -> true
     | uu____1248 -> false
   
-let (uu___is_Fatal_UnexpectedTerm : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedTerm : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTerm  -> true
     | uu____1254 -> false
   
-let (uu___is_Fatal_UnexpectedTermInUniverse : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedTermInUniverse : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTermInUniverse  -> true
     | uu____1260 -> false
   
-let (uu___is_Fatal_UnexpectedTermType : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedTermType : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTermType  -> true
     | uu____1266 -> false
   
-let (uu___is_Fatal_UnexpectedTermVQuote : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedTermVQuote : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTermVQuote  -> true
     | uu____1272 -> false
   
-let (uu___is_Fatal_UnexpectedUniversePolymorphicReturn :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedUniversePolymorphicReturn :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedUniversePolymorphicReturn  -> true
     | uu____1278 -> false
   
-let (uu___is_Fatal_UnexpectedUniverseVariable : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedUniverseVariable : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedUniverseVariable  -> true
     | uu____1284 -> false
   
-let (uu___is_Fatal_UnfoldableDeprecated : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnfoldableDeprecated : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnfoldableDeprecated  -> true
     | uu____1290 -> false
   
-let (uu___is_Fatal_UnificationNotWellFormed : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnificationNotWellFormed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnificationNotWellFormed  -> true
     | uu____1296 -> false
   
-let (uu___is_Fatal_Uninstantiated : raw_error -> Prims.bool) =
+let uu___is_Fatal_Uninstantiated : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_Uninstantiated  -> true
     | uu____1302 -> false
   
-let (uu___is_Fatal_UninstantiatedUnificationVarInTactic :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_UninstantiatedUnificationVarInTactic :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UninstantiatedUnificationVarInTactic  -> true
     | uu____1308 -> false
   
-let (uu___is_Fatal_UninstantiatedVarInTactic : raw_error -> Prims.bool) =
+let uu___is_Fatal_UninstantiatedVarInTactic : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UninstantiatedVarInTactic  -> true
     | uu____1314 -> false
   
-let (uu___is_Fatal_UniverseMightContainSumOfTwoUnivVars :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_UniverseMightContainSumOfTwoUnivVars :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UniverseMightContainSumOfTwoUnivVars  -> true
     | uu____1320 -> false
   
-let (uu___is_Fatal_UniversePolymorphicInnerLetBound :
-  raw_error -> Prims.bool) =
+let uu___is_Fatal_UniversePolymorphicInnerLetBound : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Fatal_UniversePolymorphicInnerLetBound  -> true
     | uu____1326 -> false
   
-let (uu___is_Fatal_UnknownAttribute : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnknownAttribute : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnknownAttribute  -> true
     | uu____1332 -> false
   
-let (uu___is_Fatal_UnknownToolForDep : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnknownToolForDep : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnknownToolForDep  -> true
     | uu____1338 -> false
   
-let (uu___is_Fatal_UnrecognizedExtension : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnrecognizedExtension : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnrecognizedExtension  -> true
     | uu____1344 -> false
   
-let (uu___is_Fatal_UnresolvedPatternVar : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnresolvedPatternVar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnresolvedPatternVar  -> true
     | uu____1350 -> false
   
-let (uu___is_Fatal_UnsupportedConstant : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnsupportedConstant : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnsupportedConstant  -> true
     | uu____1356 -> false
   
-let (uu___is_Fatal_UnsupportedDisjuctivePatterns : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnsupportedDisjuctivePatterns : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnsupportedDisjuctivePatterns  -> true
     | uu____1362 -> false
   
-let (uu___is_Fatal_UnsupportedQualifier : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnsupportedQualifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnsupportedQualifier  -> true
     | uu____1368 -> false
   
-let (uu___is_Fatal_UserTacticFailure : raw_error -> Prims.bool) =
+let uu___is_Fatal_UserTacticFailure : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UserTacticFailure  -> true
     | uu____1374 -> false
   
-let (uu___is_Fatal_ValueRestriction : raw_error -> Prims.bool) =
+let uu___is_Fatal_ValueRestriction : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_ValueRestriction  -> true
     | uu____1380 -> false
   
-let (uu___is_Fatal_VariableNotFound : raw_error -> Prims.bool) =
+let uu___is_Fatal_VariableNotFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_VariableNotFound  -> true
     | uu____1386 -> false
   
-let (uu___is_Fatal_WrongBodyTypeForReturnWP : raw_error -> Prims.bool) =
+let uu___is_Fatal_WrongBodyTypeForReturnWP : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_WrongBodyTypeForReturnWP  -> true
     | uu____1392 -> false
   
-let (uu___is_Fatal_WrongDataAppHeadFormat : raw_error -> Prims.bool) =
+let uu___is_Fatal_WrongDataAppHeadFormat : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_WrongDataAppHeadFormat  -> true
     | uu____1398 -> false
   
-let (uu___is_Fatal_WrongDefinitionOrder : raw_error -> Prims.bool) =
+let uu___is_Fatal_WrongDefinitionOrder : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_WrongDefinitionOrder  -> true
     | uu____1404 -> false
   
-let (uu___is_Fatal_WrongResultTypeAfterConstrutor : raw_error -> Prims.bool)
-  =
+let uu___is_Fatal_WrongResultTypeAfterConstrutor : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_WrongResultTypeAfterConstrutor  -> true
     | uu____1410 -> false
   
-let (uu___is_Fatal_WrongTerm : raw_error -> Prims.bool) =
+let uu___is_Fatal_WrongTerm : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_WrongTerm  -> true | uu____1416 -> false
   
-let (uu___is_Fatal_WhenClauseNotSupported : raw_error -> Prims.bool) =
+let uu___is_Fatal_WhenClauseNotSupported : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_WhenClauseNotSupported  -> true
     | uu____1422 -> false
   
-let (uu___is_Unused01 : raw_error -> Prims.bool) =
+let uu___is_Unused01 : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Unused01  -> true | uu____1428 -> false
   
-let (uu___is_Warning_AddImplicitAssumeNewQualifier : raw_error -> Prims.bool)
-  =
+let uu___is_Warning_AddImplicitAssumeNewQualifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_AddImplicitAssumeNewQualifier  -> true
     | uu____1434 -> false
   
-let (uu___is_Warning_AdmitWithoutDefinition : raw_error -> Prims.bool) =
+let uu___is_Warning_AdmitWithoutDefinition : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_AdmitWithoutDefinition  -> true
     | uu____1440 -> false
   
-let (uu___is_Warning_CachedFile : raw_error -> Prims.bool) =
+let uu___is_Warning_CachedFile : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning_CachedFile  -> true | uu____1446 -> false
   
-let (uu___is_Warning_DefinitionNotTranslated : raw_error -> Prims.bool) =
+let uu___is_Warning_DefinitionNotTranslated : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_DefinitionNotTranslated  -> true
     | uu____1452 -> false
   
-let (uu___is_Warning_DependencyFound : raw_error -> Prims.bool) =
+let uu___is_Warning_DependencyFound : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_DependencyFound  -> true
     | uu____1458 -> false
   
-let (uu___is_Warning_DeprecatedEqualityOnBinder : raw_error -> Prims.bool) =
+let uu___is_Warning_DeprecatedEqualityOnBinder : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_DeprecatedEqualityOnBinder  -> true
     | uu____1464 -> false
   
-let (uu___is_Warning_DeprecatedOpaqueQualifier : raw_error -> Prims.bool) =
+let uu___is_Warning_DeprecatedOpaqueQualifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_DeprecatedOpaqueQualifier  -> true
     | uu____1470 -> false
   
-let (uu___is_Warning_DocOverwrite : raw_error -> Prims.bool) =
+let uu___is_Warning_DocOverwrite : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_DocOverwrite  -> true
     | uu____1476 -> false
   
-let (uu___is_Warning_FileNotWritten : raw_error -> Prims.bool) =
+let uu___is_Warning_FileNotWritten : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_FileNotWritten  -> true
     | uu____1482 -> false
   
-let (uu___is_Warning_Filtered : raw_error -> Prims.bool) =
+let uu___is_Warning_Filtered : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning_Filtered  -> true | uu____1488 -> false
   
-let (uu___is_Warning_FunctionLiteralPrecisionLoss : raw_error -> Prims.bool)
-  =
+let uu___is_Warning_FunctionLiteralPrecisionLoss : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_FunctionLiteralPrecisionLoss  -> true
     | uu____1494 -> false
   
-let (uu___is_Warning_FunctionNotExtacted : raw_error -> Prims.bool) =
+let uu___is_Warning_FunctionNotExtacted : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_FunctionNotExtacted  -> true
     | uu____1500 -> false
   
-let (uu___is_Warning_HintFailedToReplayProof : raw_error -> Prims.bool) =
+let uu___is_Warning_HintFailedToReplayProof : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_HintFailedToReplayProof  -> true
     | uu____1506 -> false
   
-let (uu___is_Warning_HitReplayFailed : raw_error -> Prims.bool) =
+let uu___is_Warning_HitReplayFailed : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_HitReplayFailed  -> true
     | uu____1512 -> false
   
-let (uu___is_Warning_IDEIgnoreCodeGen : raw_error -> Prims.bool) =
+let uu___is_Warning_IDEIgnoreCodeGen : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_IDEIgnoreCodeGen  -> true
     | uu____1518 -> false
   
-let (uu___is_Warning_IllFormedGoal : raw_error -> Prims.bool) =
+let uu___is_Warning_IllFormedGoal : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_IllFormedGoal  -> true
     | uu____1524 -> false
   
-let (uu___is_Warning_InaccessibleArgument : raw_error -> Prims.bool) =
+let uu___is_Warning_InaccessibleArgument : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_InaccessibleArgument  -> true
     | uu____1530 -> false
   
-let (uu___is_Warning_IncoherentImplicitQualifier : raw_error -> Prims.bool) =
+let uu___is_Warning_IncoherentImplicitQualifier : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_IncoherentImplicitQualifier  -> true
     | uu____1536 -> false
   
-let (uu___is_Warning_IrrelevantQualifierOnArgumentToReflect :
-  raw_error -> Prims.bool) =
+let uu___is_Warning_IrrelevantQualifierOnArgumentToReflect :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_IrrelevantQualifierOnArgumentToReflect  -> true
     | uu____1542 -> false
   
-let (uu___is_Warning_IrrelevantQualifierOnArgumentToReify :
-  raw_error -> Prims.bool) =
+let uu___is_Warning_IrrelevantQualifierOnArgumentToReify :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_IrrelevantQualifierOnArgumentToReify  -> true
     | uu____1548 -> false
   
-let (uu___is_Warning_MalformedWarnErrorList : raw_error -> Prims.bool) =
+let uu___is_Warning_MalformedWarnErrorList : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_MalformedWarnErrorList  -> true
     | uu____1554 -> false
   
-let (uu___is_Warning_MetaAlienNotATmUnknown : raw_error -> Prims.bool) =
+let uu___is_Warning_MetaAlienNotATmUnknown : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_MetaAlienNotATmUnknown  -> true
     | uu____1560 -> false
   
-let (uu___is_Warning_MultipleAscriptions : raw_error -> Prims.bool) =
+let uu___is_Warning_MultipleAscriptions : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_MultipleAscriptions  -> true
     | uu____1566 -> false
   
-let (uu___is_Warning_NondependentUserDefinedDataType :
-  raw_error -> Prims.bool) =
+let uu___is_Warning_NondependentUserDefinedDataType : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Warning_NondependentUserDefinedDataType  -> true
     | uu____1572 -> false
   
-let (uu___is_Warning_NonListLiteralSMTPattern : raw_error -> Prims.bool) =
+let uu___is_Warning_NonListLiteralSMTPattern : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_NonListLiteralSMTPattern  -> true
     | uu____1578 -> false
   
-let (uu___is_Warning_NormalizationFailure : raw_error -> Prims.bool) =
+let uu___is_Warning_NormalizationFailure : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_NormalizationFailure  -> true
     | uu____1584 -> false
   
-let (uu___is_Warning_NotDependentArrow : raw_error -> Prims.bool) =
+let uu___is_Warning_NotDependentArrow : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_NotDependentArrow  -> true
     | uu____1590 -> false
   
-let (uu___is_Warning_NotEmbedded : raw_error -> Prims.bool) =
+let uu___is_Warning_NotEmbedded : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning_NotEmbedded  -> true | uu____1596 -> false
   
-let (uu___is_Warning_PatternMissingBoundVar : raw_error -> Prims.bool) =
+let uu___is_Warning_PatternMissingBoundVar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_PatternMissingBoundVar  -> true
     | uu____1602 -> false
   
-let (uu___is_Warning_RecursiveDependency : raw_error -> Prims.bool) =
+let uu___is_Warning_RecursiveDependency : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_RecursiveDependency  -> true
     | uu____1608 -> false
   
-let (uu___is_Warning_RedundantExplicitCurrying : raw_error -> Prims.bool) =
+let uu___is_Warning_RedundantExplicitCurrying : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_RedundantExplicitCurrying  -> true
     | uu____1614 -> false
   
-let (uu___is_Warning_SMTPatTDeprecated : raw_error -> Prims.bool) =
+let uu___is_Warning_SMTPatTDeprecated : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_SMTPatTDeprecated  -> true
     | uu____1620 -> false
   
-let (uu___is_Warning_SMTPatternMissingBoundVar : raw_error -> Prims.bool) =
+let uu___is_Warning_SMTPatternMissingBoundVar : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_SMTPatternMissingBoundVar  -> true
     | uu____1626 -> false
   
-let (uu___is_Warning_TopLevelEffect : raw_error -> Prims.bool) =
+let uu___is_Warning_TopLevelEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_TopLevelEffect  -> true
     | uu____1632 -> false
   
-let (uu___is_Warning_UnboundModuleReference : raw_error -> Prims.bool) =
+let uu___is_Warning_UnboundModuleReference : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnboundModuleReference  -> true
     | uu____1638 -> false
   
-let (uu___is_Warning_UnexpectedFile : raw_error -> Prims.bool) =
+let uu___is_Warning_UnexpectedFile : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnexpectedFile  -> true
     | uu____1644 -> false
   
-let (uu___is_Warning_UnexpectedFsTypApp : raw_error -> Prims.bool) =
+let uu___is_Warning_UnexpectedFsTypApp : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnexpectedFsTypApp  -> true
     | uu____1650 -> false
   
-let (uu___is_Warning_UnexpectedZ3Output : raw_error -> Prims.bool) =
+let uu___is_Warning_UnexpectedZ3Output : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnexpectedZ3Output  -> true
     | uu____1656 -> false
   
-let (uu___is_Warning_UnprotectedTerm : raw_error -> Prims.bool) =
+let uu___is_Warning_UnprotectedTerm : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnprotectedTerm  -> true
     | uu____1662 -> false
   
-let (uu___is_Warning_UnrecognizedAttribute : raw_error -> Prims.bool) =
+let uu___is_Warning_UnrecognizedAttribute : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnrecognizedAttribute  -> true
     | uu____1668 -> false
   
-let (uu___is_Warning_UpperBoundCandidateAlreadyVisited :
-  raw_error -> Prims.bool) =
+let uu___is_Warning_UpperBoundCandidateAlreadyVisited :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UpperBoundCandidateAlreadyVisited  -> true
     | uu____1674 -> false
   
-let (uu___is_Warning_UseDefaultEffect : raw_error -> Prims.bool) =
+let uu___is_Warning_UseDefaultEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UseDefaultEffect  -> true
     | uu____1680 -> false
   
-let (uu___is_Warning_WrongErrorLocation : raw_error -> Prims.bool) =
+let uu___is_Warning_WrongErrorLocation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_WrongErrorLocation  -> true
     | uu____1686 -> false
   
-let (uu___is_Warning_Z3InvocationWarning : raw_error -> Prims.bool) =
+let uu___is_Warning_Z3InvocationWarning : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_Z3InvocationWarning  -> true
     | uu____1692 -> false
   
-let (uu___is_Warning_CallNotImplementedAsWarning : raw_error -> Prims.bool) =
+let uu___is_Warning_CallNotImplementedAsWarning : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_CallNotImplementedAsWarning  -> true
     | uu____1698 -> false
   
-let (uu___is_Warning_MissingInterfaceOrImplementation :
-  raw_error -> Prims.bool) =
+let uu___is_Warning_MissingInterfaceOrImplementation :
+  raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_MissingInterfaceOrImplementation  -> true
     | uu____1704 -> false
   
-let (uu___is_Warning_ConstructorBuildsUnexpectedType :
-  raw_error -> Prims.bool) =
+let uu___is_Warning_ConstructorBuildsUnexpectedType : raw_error -> Prims.bool
+  =
   fun projectee  ->
     match projectee with
     | Warning_ConstructorBuildsUnexpectedType  -> true
     | uu____1710 -> false
   
-let (uu___is_Warning_ModuleOrFileNotFoundWarning : raw_error -> Prims.bool) =
+let uu___is_Warning_ModuleOrFileNotFoundWarning : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_ModuleOrFileNotFoundWarning  -> true
     | uu____1716 -> false
   
-let (uu___is_Error_NoLetMutable : raw_error -> Prims.bool) =
+let uu___is_Error_NoLetMutable : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_NoLetMutable  -> true | uu____1722 -> false
   
-let (uu___is_Error_BadImplicit : raw_error -> Prims.bool) =
+let uu___is_Error_BadImplicit : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_BadImplicit  -> true | uu____1728 -> false
   
-let (uu___is_Warning_DeprecatedDefinition : raw_error -> Prims.bool) =
+let uu___is_Warning_DeprecatedDefinition : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_DeprecatedDefinition  -> true
     | uu____1734 -> false
   
-let (uu___is_Fatal_SMTEncodingArityMismatch : raw_error -> Prims.bool) =
+let uu___is_Fatal_SMTEncodingArityMismatch : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_SMTEncodingArityMismatch  -> true
     | uu____1740 -> false
   
-let (uu___is_Warning_Defensive : raw_error -> Prims.bool) =
+let uu___is_Warning_Defensive : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning_Defensive  -> true | uu____1746 -> false
   
-let (uu___is_Warning_CantInspect : raw_error -> Prims.bool) =
+let uu___is_Warning_CantInspect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning_CantInspect  -> true | uu____1752 -> false
   
-let (uu___is_Warning_NilGivenExplicitArgs : raw_error -> Prims.bool) =
+let uu___is_Warning_NilGivenExplicitArgs : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_NilGivenExplicitArgs  -> true
     | uu____1758 -> false
   
-let (uu___is_Warning_ConsAppliedExplicitArgs : raw_error -> Prims.bool) =
+let uu___is_Warning_ConsAppliedExplicitArgs : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_ConsAppliedExplicitArgs  -> true
     | uu____1764 -> false
   
-let (uu___is_Warning_UnembedBinderKnot : raw_error -> Prims.bool) =
+let uu___is_Warning_UnembedBinderKnot : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnembedBinderKnot  -> true
     | uu____1770 -> false
   
-let (uu___is_Fatal_TacticProofRelevantGoal : raw_error -> Prims.bool) =
+let uu___is_Fatal_TacticProofRelevantGoal : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_TacticProofRelevantGoal  -> true
     | uu____1776 -> false
   
-let (uu___is_Warning_TacAdmit : raw_error -> Prims.bool) =
+let uu___is_Warning_TacAdmit : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning_TacAdmit  -> true | uu____1782 -> false
   
-let (uu___is_Fatal_IncoherentPatterns : raw_error -> Prims.bool) =
+let uu___is_Fatal_IncoherentPatterns : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_IncoherentPatterns  -> true
     | uu____1788 -> false
   
-let (uu___is_Error_NoSMTButNeeded : raw_error -> Prims.bool) =
+let uu___is_Error_NoSMTButNeeded : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Error_NoSMTButNeeded  -> true
     | uu____1794 -> false
   
-let (uu___is_Fatal_UnexpectedAntiquotation : raw_error -> Prims.bool) =
+let uu___is_Fatal_UnexpectedAntiquotation : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedAntiquotation  -> true
     | uu____1800 -> false
   
-let (uu___is_Fatal_SplicedUndef : raw_error -> Prims.bool) =
+let uu___is_Fatal_SplicedUndef : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Fatal_SplicedUndef  -> true | uu____1806 -> false
   
-let (uu___is_Warning_ExtractionUnexpectedEffect : raw_error -> Prims.bool) =
+let uu___is_Warning_ExtractionUnexpectedEffect : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_ExtractionUnexpectedEffect  -> true
     | uu____1812 -> false
   
-let (uu___is_Error_DidNotFail : raw_error -> Prims.bool) =
+let uu___is_Error_DidNotFail : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with | Error_DidNotFail  -> true | uu____1818 -> false
   
-let (uu___is_Warning_UnappliedFail : raw_error -> Prims.bool) =
+let uu___is_Warning_UnappliedFail : raw_error -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Warning_UnappliedFail  -> true
@@ -2104,28 +2093,28 @@ type flag =
   | CError 
   | CWarning 
   | CSilent [@@deriving show]
-let (uu___is_CFatal : flag -> Prims.bool) =
+let uu___is_CFatal : flag -> Prims.bool =
   fun projectee  ->
     match projectee with | CFatal  -> true | uu____1830 -> false
   
-let (uu___is_CAlwaysError : flag -> Prims.bool) =
+let uu___is_CAlwaysError : flag -> Prims.bool =
   fun projectee  ->
     match projectee with | CAlwaysError  -> true | uu____1836 -> false
   
-let (uu___is_CError : flag -> Prims.bool) =
+let uu___is_CError : flag -> Prims.bool =
   fun projectee  ->
     match projectee with | CError  -> true | uu____1842 -> false
   
-let (uu___is_CWarning : flag -> Prims.bool) =
+let uu___is_CWarning : flag -> Prims.bool =
   fun projectee  ->
     match projectee with | CWarning  -> true | uu____1848 -> false
   
-let (uu___is_CSilent : flag -> Prims.bool) =
+let uu___is_CSilent : flag -> Prims.bool =
   fun projectee  ->
     match projectee with | CSilent  -> true | uu____1854 -> false
   
-let (default_flags :
-  (raw_error,flag) FStar_Pervasives_Native.tuple2 Prims.list) =
+let default_flags :
+  (raw_error,flag) FStar_Pervasives_Native.tuple2 Prims.list =
   [(Error_DependencyAnalysisFailed, CAlwaysError);
   (Error_IDETooManyPops, CAlwaysError);
   (Error_IDEUnrecognized, CAlwaysError);
@@ -2431,40 +2420,40 @@ let (default_flags :
   (Error_DidNotFail, CAlwaysError);
   (Warning_UnappliedFail, CWarning)] 
 exception Err of (raw_error,Prims.string) FStar_Pervasives_Native.tuple2 
-let (uu___is_Err : Prims.exn -> Prims.bool) =
+let uu___is_Err : Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Err uu____3094 -> true | uu____3099 -> false
   
-let (__proj__Err__item__uu___ :
-  Prims.exn -> (raw_error,Prims.string) FStar_Pervasives_Native.tuple2) =
+let __proj__Err__item__uu___ :
+  Prims.exn -> (raw_error,Prims.string) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | Err uu____3114 -> uu____3114 
 exception Error of (raw_error,Prims.string,FStar_Range.range)
   FStar_Pervasives_Native.tuple3 
-let (uu___is_Error : Prims.exn -> Prims.bool) =
+let uu___is_Error : Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Error uu____3134 -> true | uu____3141 -> false
   
-let (__proj__Error__item__uu___ :
+let __proj__Error__item__uu___ :
   Prims.exn ->
-    (raw_error,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3)
+    (raw_error,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Error uu____3160 -> uu____3160 
 exception Warning of (raw_error,Prims.string,FStar_Range.range)
   FStar_Pervasives_Native.tuple3 
-let (uu___is_Warning : Prims.exn -> Prims.bool) =
+let uu___is_Warning : Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Warning uu____3182 -> true | uu____3189 -> false
   
-let (__proj__Warning__item__uu___ :
+let __proj__Warning__item__uu___ :
   Prims.exn ->
-    (raw_error,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3)
+    (raw_error,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Warning uu____3208 -> uu____3208 
 exception Stop 
-let (uu___is_Stop : Prims.exn -> Prims.bool) =
+let uu___is_Stop : Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Stop  -> true | uu____3220 -> false
   
 exception Empty_frag 
-let (uu___is_Empty_frag : Prims.exn -> Prims.bool) =
+let uu___is_Empty_frag : Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Empty_frag  -> true | uu____3226 -> false
   
@@ -2473,19 +2462,19 @@ type issue_level =
   | EInfo 
   | EWarning 
   | EError [@@deriving show]
-let (uu___is_ENotImplemented : issue_level -> Prims.bool) =
+let uu___is_ENotImplemented : issue_level -> Prims.bool =
   fun projectee  ->
     match projectee with | ENotImplemented  -> true | uu____3232 -> false
   
-let (uu___is_EInfo : issue_level -> Prims.bool) =
+let uu___is_EInfo : issue_level -> Prims.bool =
   fun projectee  ->
     match projectee with | EInfo  -> true | uu____3238 -> false
   
-let (uu___is_EWarning : issue_level -> Prims.bool) =
+let uu___is_EWarning : issue_level -> Prims.bool =
   fun projectee  ->
     match projectee with | EWarning  -> true | uu____3244 -> false
   
-let (uu___is_EError : issue_level -> Prims.bool) =
+let uu___is_EError : issue_level -> Prims.bool =
   fun projectee  ->
     match projectee with | EError  -> true | uu____3250 -> false
   
@@ -2495,7 +2484,7 @@ type issue =
   issue_level: issue_level ;
   issue_range: FStar_Range.range FStar_Pervasives_Native.option ;
   issue_number: Prims.int FStar_Pervasives_Native.option }[@@deriving show]
-let (__proj__Mkissue__item__issue_message : issue -> Prims.string) =
+let __proj__Mkissue__item__issue_message : issue -> Prims.string =
   fun projectee  ->
     match projectee with
     | { issue_message = __fname__issue_message;
@@ -2503,7 +2492,7 @@ let (__proj__Mkissue__item__issue_message : issue -> Prims.string) =
         issue_range = __fname__issue_range;
         issue_number = __fname__issue_number;_} -> __fname__issue_message
   
-let (__proj__Mkissue__item__issue_level : issue -> issue_level) =
+let __proj__Mkissue__item__issue_level : issue -> issue_level =
   fun projectee  ->
     match projectee with
     | { issue_message = __fname__issue_message;
@@ -2511,8 +2500,8 @@ let (__proj__Mkissue__item__issue_level : issue -> issue_level) =
         issue_range = __fname__issue_range;
         issue_number = __fname__issue_number;_} -> __fname__issue_level
   
-let (__proj__Mkissue__item__issue_range :
-  issue -> FStar_Range.range FStar_Pervasives_Native.option) =
+let __proj__Mkissue__item__issue_range :
+  issue -> FStar_Range.range FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
     | { issue_message = __fname__issue_message;
@@ -2520,8 +2509,8 @@ let (__proj__Mkissue__item__issue_range :
         issue_range = __fname__issue_range;
         issue_number = __fname__issue_number;_} -> __fname__issue_range
   
-let (__proj__Mkissue__item__issue_number :
-  issue -> Prims.int FStar_Pervasives_Native.option) =
+let __proj__Mkissue__item__issue_number :
+  issue -> Prims.int FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
     | { issue_message = __fname__issue_message;
@@ -2535,8 +2524,8 @@ type error_handler =
   eh_count_errors: unit -> Prims.int ;
   eh_report: unit -> issue Prims.list ;
   eh_clear: unit -> unit }[@@deriving show]
-let (__proj__Mkerror_handler__item__eh_add_one :
-  error_handler -> issue -> unit) =
+let __proj__Mkerror_handler__item__eh_add_one :
+  error_handler -> issue -> unit =
   fun projectee  ->
     match projectee with
     | { eh_add_one = __fname__eh_add_one;
@@ -2544,8 +2533,8 @@ let (__proj__Mkerror_handler__item__eh_add_one :
         eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
         __fname__eh_add_one
   
-let (__proj__Mkerror_handler__item__eh_count_errors :
-  error_handler -> unit -> Prims.int) =
+let __proj__Mkerror_handler__item__eh_count_errors :
+  error_handler -> unit -> Prims.int =
   fun projectee  ->
     match projectee with
     | { eh_add_one = __fname__eh_add_one;
@@ -2553,8 +2542,8 @@ let (__proj__Mkerror_handler__item__eh_count_errors :
         eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
         __fname__eh_count_errors
   
-let (__proj__Mkerror_handler__item__eh_report :
-  error_handler -> unit -> issue Prims.list) =
+let __proj__Mkerror_handler__item__eh_report :
+  error_handler -> unit -> issue Prims.list =
   fun projectee  ->
     match projectee with
     | { eh_add_one = __fname__eh_add_one;
@@ -2562,8 +2551,7 @@ let (__proj__Mkerror_handler__item__eh_report :
         eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
         __fname__eh_report
   
-let (__proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit)
-  =
+let __proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit =
   fun projectee  ->
     match projectee with
     | { eh_add_one = __fname__eh_add_one;
@@ -2571,7 +2559,7 @@ let (__proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit)
         eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
         __fname__eh_clear
   
-let (format_issue : issue -> Prims.string) =
+let format_issue : issue -> Prims.string =
   fun issue  ->
     let level_header =
       match issue.issue_level with
@@ -2611,7 +2599,7 @@ let (format_issue : issue -> Prims.string) =
         FStar_Util.format5 "%s(%s%s) %s%s\n" range_str level_header
           issue_number issue.issue_message see_also_str
   
-let (print_issue : issue -> unit) =
+let print_issue : issue -> unit =
   fun issue  ->
     let printer =
       match issue.issue_level with
@@ -2621,20 +2609,20 @@ let (print_issue : issue -> unit) =
       | ENotImplemented  -> FStar_Util.print_error  in
     let uu____3543 = format_issue issue  in printer uu____3543
   
-let (compare_issues : issue -> issue -> Prims.int) =
+let compare_issues : issue -> issue -> Prims.int =
   fun i1  ->
     fun i2  ->
       match ((i1.issue_range), (i2.issue_range)) with
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) ->
-          (Prims.parse_int "0")
+          (Prims.lift_native_int (0))
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
-         uu____3562) -> ~- (Prims.parse_int "1")
+         uu____3562) -> ~- (Prims.lift_native_int (1))
       | (FStar_Pervasives_Native.Some uu____3567,FStar_Pervasives_Native.None
-         ) -> (Prims.parse_int "1")
+         ) -> (Prims.lift_native_int (1))
       | (FStar_Pervasives_Native.Some r1,FStar_Pervasives_Native.Some r2) ->
           FStar_Range.compare_use_range r1 r2
   
-let (mk_default_handler : Prims.bool -> error_handler) =
+let mk_default_handler : Prims.bool -> error_handler =
   fun print7  ->
     let errs = FStar_Util.mk_ref []  in
     let add_one e =
@@ -2660,13 +2648,13 @@ let (mk_default_handler : Prims.bool -> error_handler) =
       eh_clear = clear1
     }
   
-let (default_handler : error_handler) = mk_default_handler true 
-let (current_handler : error_handler FStar_ST.ref) =
+let default_handler : error_handler = mk_default_handler true 
+let current_handler : error_handler FStar_ST.ref =
   FStar_Util.mk_ref default_handler 
-let (mk_issue :
+let mk_issue :
   issue_level ->
     FStar_Range.range FStar_Pervasives_Native.option ->
-      Prims.string -> Prims.int FStar_Pervasives_Native.option -> issue)
+      Prims.string -> Prims.int FStar_Pervasives_Native.option -> issue
   =
   fun level  ->
     fun range  ->
@@ -2679,14 +2667,14 @@ let (mk_issue :
             issue_number = n1
           }
   
-let (get_err_count : unit -> Prims.int) =
+let get_err_count : unit -> Prims.int =
   fun uu____3928  ->
     let uu____3929 =
       let uu____3934 = FStar_ST.op_Bang current_handler  in
       uu____3934.eh_count_errors  in
     uu____3929 ()
   
-let (add_one : issue -> unit) =
+let add_one : issue -> unit =
   fun issue  ->
     FStar_Util.atomically
       (fun uu____3965  ->
@@ -2695,7 +2683,7 @@ let (add_one : issue -> unit) =
            uu____3971.eh_add_one  in
          uu____3966 issue)
   
-let (add_many : issue Prims.list -> unit) =
+let add_many : issue Prims.list -> unit =
   fun issues  ->
     FStar_Util.atomically
       (fun uu____4006  ->
@@ -2704,21 +2692,21 @@ let (add_many : issue Prims.list -> unit) =
            uu____4012.eh_add_one  in
          FStar_List.iter uu____4007 issues)
   
-let (report_all : unit -> issue Prims.list) =
+let report_all : unit -> issue Prims.list =
   fun uu____4042  ->
     let uu____4043 =
       let uu____4050 = FStar_ST.op_Bang current_handler  in
       uu____4050.eh_report  in
     uu____4043 ()
   
-let (clear : unit -> unit) =
+let clear : unit -> unit =
   fun uu____4078  ->
     let uu____4079 =
       let uu____4084 = FStar_ST.op_Bang current_handler  in
       uu____4084.eh_clear  in
     uu____4079 ()
   
-let (set_handler : error_handler -> unit) =
+let set_handler : error_handler -> unit =
   fun handler  ->
     let issues = report_all ()  in
     clear ();
@@ -2730,31 +2718,31 @@ type error_message_prefix =
   set_prefix: Prims.string -> unit ;
   append_prefix: Prims.string -> Prims.string ;
   clear_prefix: unit -> unit }[@@deriving show]
-let (__proj__Mkerror_message_prefix__item__set_prefix :
-  error_message_prefix -> Prims.string -> unit) =
+let __proj__Mkerror_message_prefix__item__set_prefix :
+  error_message_prefix -> Prims.string -> unit =
   fun projectee  ->
     match projectee with
     | { set_prefix = __fname__set_prefix;
         append_prefix = __fname__append_prefix;
         clear_prefix = __fname__clear_prefix;_} -> __fname__set_prefix
   
-let (__proj__Mkerror_message_prefix__item__append_prefix :
-  error_message_prefix -> Prims.string -> Prims.string) =
+let __proj__Mkerror_message_prefix__item__append_prefix :
+  error_message_prefix -> Prims.string -> Prims.string =
   fun projectee  ->
     match projectee with
     | { set_prefix = __fname__set_prefix;
         append_prefix = __fname__append_prefix;
         clear_prefix = __fname__clear_prefix;_} -> __fname__append_prefix
   
-let (__proj__Mkerror_message_prefix__item__clear_prefix :
-  error_message_prefix -> unit -> unit) =
+let __proj__Mkerror_message_prefix__item__clear_prefix :
+  error_message_prefix -> unit -> unit =
   fun projectee  ->
     match projectee with
     | { set_prefix = __fname__set_prefix;
         append_prefix = __fname__append_prefix;
         clear_prefix = __fname__clear_prefix;_} -> __fname__clear_prefix
   
-let (message_prefix : error_message_prefix) =
+let message_prefix : error_message_prefix =
   let pfx = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let set_prefix s =
     FStar_ST.op_Colon_Equals pfx (FStar_Pervasives_Native.Some s)  in
@@ -2781,16 +2769,16 @@ let findIndex :
               | (e,uu____4470) when e = v1 -> true
               | uu____4471 -> false))
   
-let (errno_of_error : raw_error -> Prims.int) =
+let errno_of_error : raw_error -> Prims.int =
   fun e  -> findIndex default_flags e 
-let (flags : flag Prims.list FStar_ST.ref) = FStar_Util.mk_ref [] 
-let (init_warn_error_flags : unit) =
+let flags : flag Prims.list FStar_ST.ref = FStar_Util.mk_ref [] 
+let init_warn_error_flags : unit =
   let rec aux r l =
     match l with | [] -> r | (e,f)::tl1 -> aux (FStar_List.append r [f]) tl1
      in
   let uu____4546 = aux [] default_flags  in
   FStar_ST.op_Colon_Equals flags uu____4546 
-let (diag : FStar_Range.range -> Prims.string -> unit) =
+let diag : FStar_Range.range -> Prims.string -> unit =
   fun r  ->
     fun msg  ->
       let uu____4586 = FStar_Options.debug_any ()  in
@@ -2801,17 +2789,17 @@ let (diag : FStar_Range.range -> Prims.string -> unit) =
              FStar_Pervasives_Native.None)
       else ()
   
-let (defensive_errno : Prims.int) = errno_of_error Warning_Defensive 
-let (lookup : flag Prims.list -> Prims.int -> flag) =
+let defensive_errno : Prims.int = errno_of_error Warning_Defensive 
+let lookup : flag Prims.list -> Prims.int -> flag =
   fun flags1  ->
     fun errno  ->
       let uu____4602 =
         (errno = defensive_errno) && (FStar_Options.defensive_fail ())  in
       if uu____4602 then CAlwaysError else FStar_List.nth flags1 errno
   
-let (log_issue :
+let log_issue :
   FStar_Range.range ->
-    (raw_error,Prims.string) FStar_Pervasives_Native.tuple2 -> unit)
+    (raw_error,Prims.string) FStar_Pervasives_Native.tuple2 -> unit
   =
   fun r  ->
     fun uu____4617  ->
@@ -2852,9 +2840,9 @@ let (log_issue :
                      in
                   failwith uu____4659))
   
-let (add_errors :
+let add_errors :
   (raw_error,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3
-    Prims.list -> unit)
+    Prims.list -> unit
   =
   fun errs  ->
     FStar_Util.atomically
@@ -2868,7 +2856,7 @@ let (add_errors :
                     (e, uu____4710)  in
                   log_issue r uu____4705) errs)
   
-let (issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option) =
+let issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option =
   fun uu___29_4717  ->
     match uu___29_4717 with
     | Error (e,msg,r) ->
@@ -2896,7 +2884,7 @@ let (issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option) =
         FStar_Pervasives_Native.Some uu____4732
     | uu____4734 -> FStar_Pervasives_Native.None
   
-let (err_exn : Prims.exn -> unit) =
+let err_exn : Prims.exn -> unit =
   fun exn  ->
     if exn = Stop
     then ()
@@ -2906,7 +2894,7 @@ let (err_exn : Prims.exn -> unit) =
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
   
-let (handleable : Prims.exn -> Prims.bool) =
+let handleable : Prims.exn -> Prims.bool =
   fun uu___30_4749  ->
     match uu___30_4749 with
     | Error uu____4750 -> true
@@ -2915,11 +2903,11 @@ let (handleable : Prims.exn -> Prims.bool) =
     | Err uu____4758 -> true
     | uu____4763 -> false
   
-let (stop_if_err : unit -> unit) =
+let stop_if_err : unit -> unit =
   fun uu____4768  ->
     let uu____4769 =
       let uu____4770 = get_err_count ()  in
-      uu____4770 > (Prims.parse_int "0")  in
+      uu____4770 > (Prims.lift_native_int (0))  in
     if uu____4769 then FStar_Exn.raise Stop else ()
   
 let raise_error :
@@ -2938,16 +2926,18 @@ let raise_err :
   fun uu____4812  ->
     match uu____4812 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
   
-let (update_flags :
-  (flag,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list -> unit) =
+let update_flags :
+  (flag,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list -> unit =
   fun l  ->
     let compare1 uu____4861 uu____4862 =
       match (uu____4861, uu____4862) with
       | ((uu____4895,(a,uu____4897)),(uu____4898,(b,uu____4900))) ->
           if a > b
-          then (Prims.parse_int "1")
+          then (Prims.lift_native_int (1))
           else
-            if a < b then ~- (Prims.parse_int "1") else (Prims.parse_int "0")
+            if a < b
+            then ~- (Prims.lift_native_int (1))
+            else (Prims.lift_native_int (0))
        in
     let set_one_flag f d =
       match (f, d) with
@@ -2986,7 +2976,7 @@ let (update_flags :
             let uu____5102 =
               let uu____5105 = set_flag i sorted1  in [uu____5105]  in
             FStar_List.append f uu____5102  in
-          aux uu____5099 (i + (Prims.parse_int "1")) tl1 sorted1
+          aux uu____5099 (i + (Prims.lift_native_int (1))) tl1 sorted1
        in
     let rec compute_range result l1 =
       match l1 with
@@ -3009,7 +2999,7 @@ let (update_flags :
           (match uu____5189 with
            | (l2,h) ->
                (if
-                  (l2 < (Prims.parse_int "0")) ||
+                  (l2 < (Prims.lift_native_int (0))) ||
                     (h >= (FStar_List.length default_flags))
                 then
                   (let uu____5232 =
@@ -3028,7 +3018,7 @@ let (update_flags :
     let sorted1 = FStar_List.sortWith compare1 range  in
     let uu____5307 =
       let uu____5310 = FStar_ST.op_Bang flags  in
-      aux [] (Prims.parse_int "0") uu____5310 sorted1  in
+      aux [] (Prims.lift_native_int (0)) uu____5310 sorted1  in
     FStar_ST.op_Colon_Equals flags uu____5307
   
 let catch_errors : 'a . (unit -> 'a) -> issue Prims.list =

@@ -7,7 +7,7 @@ let main : 'Auu____7 'Auu____8 . 'Auu____7 -> 'Auu____8 =
         FStar_All.pipe_right uu____21 (fun a249  -> ()));
        FStar_Tests_Norm.run_all ();
        FStar_Tests_Unif.run_all ();
-       FStar_All.exit (Prims.parse_int "0")
+       FStar_All.exit (Prims.lift_native_int (0))
      with
      | FStar_Errors.Error (err,msg,r) when
          let uu____33 = FStar_Options.trace_error ()  in
@@ -17,5 +17,5 @@ let main : 'Auu____7 'Auu____8 . 'Auu____7 -> 'Auu____8 =
           else
             (let uu____36 = FStar_Range.string_of_range r  in
              FStar_Util.print2 "%s: %s\n" uu____36 msg);
-          FStar_All.exit (Prims.parse_int "1")))
+          FStar_All.exit (Prims.lift_native_int (1))))
   

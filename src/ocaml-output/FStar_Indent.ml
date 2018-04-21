@@ -1,5 +1,5 @@
 open Prims
-let (generate : FStar_Parser_ParseIt.filename Prims.list -> unit) =
+let generate : FStar_Parser_ParseIt.filename Prims.list -> unit =
   fun filenames  ->
     let parse_and_indent filename =
       let uu____16 = FStar_Parser_Driver.parse_file filename  in
@@ -14,8 +14,8 @@ let (generate : FStar_Parser_ParseIt.filename Prims.list -> unit) =
             match uu____59 with
             | (doc1,comments2) ->
                 (FStar_Pprint.pretty_out_channel
-                   (FStar_Util.float_of_string "1.0") (Prims.parse_int "100")
-                   doc1 FStar_Util.stdout;
+                   (FStar_Util.float_of_string "1.0")
+                   (Prims.lift_native_int (100)) doc1 FStar_Util.stdout;
                  comments2)
              in
           let left_over_doc =
@@ -31,7 +31,7 @@ let (generate : FStar_Parser_ParseIt.filename Prims.list -> unit) =
               FStar_Pprint.hardline :: uu____95  in
             FStar_Pprint.concat uu____92  in
           FStar_Pprint.pretty_out_channel (FStar_Util.float_of_string "1.0")
-            (Prims.parse_int "100") left_over_doc FStar_Util.stdout
+            (Prims.lift_native_int (100)) left_over_doc FStar_Util.stdout
        in
     FStar_List.iter parse_and_indent filenames
   

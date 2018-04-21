@@ -1,9 +1,9 @@
 open Prims
-let (id_eq_lid : FStar_Ident.ident -> FStar_Ident.lident -> Prims.bool) =
+let id_eq_lid : FStar_Ident.ident -> FStar_Ident.lident -> Prims.bool =
   fun i  ->
     fun l  -> i.FStar_Ident.idText = (l.FStar_Ident.ident).FStar_Ident.idText
   
-let (is_val : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
+let is_val : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool =
   fun x  ->
     fun d  ->
       match d.FStar_Parser_AST.d with
@@ -11,7 +11,7 @@ let (is_val : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
           x.FStar_Ident.idText = y.FStar_Ident.idText
       | uu____23 -> false
   
-let (is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
+let is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool =
   fun x  ->
     fun d  ->
       match d.FStar_Parser_AST.d with
@@ -24,7 +24,7 @@ let (is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
                       (FStar_Parser_AST.id_of_tycon t) = x.FStar_Ident.idText))
       | uu____82 -> false
   
-let (definition_lids : FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list) =
+let definition_lids : FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
   fun d  ->
     match d.FStar_Parser_AST.d with
     | FStar_Parser_AST.TopLevelLet (uu____92,defs) ->
@@ -49,18 +49,18 @@ let (definition_lids : FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list) =
                 | uu____258 -> []))
     | uu____265 -> []
   
-let (is_definition_of :
-  FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
+let is_definition_of :
+  FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool =
   fun x  ->
     fun d  ->
       let uu____276 = definition_lids d  in
       FStar_Util.for_some (id_eq_lid x) uu____276
   
-let rec (prefix_with_iface_decls :
+let rec prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun iface1  ->
     fun impl  ->
@@ -188,8 +188,8 @@ let rec (prefix_with_iface_decls :
                (match uu____659 with
                 | (iface2,ds) -> (iface2, (iface_hd :: ds))))
   
-let (check_initial_interface :
-  FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list) =
+let check_initial_interface :
+  FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list =
   fun iface1  ->
     let rec aux iface2 =
       match iface2 with
@@ -246,11 +246,11 @@ let (check_initial_interface :
             | FStar_Parser_AST.TopLevelModule uu____801 -> false
             | uu____802 -> true))
   
-let rec (ml_mode_prefix_with_iface_decls :
+let rec ml_mode_prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun iface1  ->
     fun impl  ->
@@ -269,8 +269,8 @@ let rec (ml_mode_prefix_with_iface_decls :
                (rest_iface, (FStar_List.append val_xs [impl])))
       | uu____887 -> (iface1, [impl])
   
-let (ml_mode_check_initial_interface :
-  FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list) =
+let ml_mode_check_initial_interface :
+  FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list =
   fun iface1  ->
     FStar_All.pipe_right iface1
       (FStar_List.filter
@@ -279,11 +279,11 @@ let (ml_mode_check_initial_interface :
             | FStar_Parser_AST.Val uu____910 -> true
             | uu____915 -> false))
   
-let (prefix_one_decl :
+let prefix_one_decl :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun iface1  ->
     fun impl  ->
@@ -295,9 +295,9 @@ let (prefix_one_decl :
           then ml_mode_prefix_with_iface_decls iface1 impl
           else prefix_with_iface_decls iface1 impl
   
-let (initialize_interface :
+let initialize_interface :
   FStar_Ident.lident ->
-    FStar_Parser_AST.decl Prims.list -> unit FStar_Syntax_DsEnv.withenv)
+    FStar_Parser_AST.decl Prims.list -> unit FStar_Syntax_DsEnv.withenv
   =
   fun mname  ->
     fun l  ->
@@ -324,9 +324,9 @@ let (initialize_interface :
               FStar_Syntax_DsEnv.set_iface_decls env mname decls  in
             ((), uu____1022)
   
-let (prefix_with_interface_decls :
+let prefix_with_interface_decls :
   FStar_Parser_AST.decl ->
-    FStar_Parser_AST.decl Prims.list FStar_Syntax_DsEnv.withenv)
+    FStar_Parser_AST.decl Prims.list FStar_Syntax_DsEnv.withenv
   =
   fun impl  ->
     fun env  ->
@@ -344,9 +344,9 @@ let (prefix_with_interface_decls :
                  FStar_Syntax_DsEnv.set_iface_decls env uu____1090 iface2  in
                (impl1, env1))
   
-let (interleave_module :
+let interleave_module :
   FStar_Parser_AST.modul ->
-    Prims.bool -> FStar_Parser_AST.modul FStar_Syntax_DsEnv.withenv)
+    Prims.bool -> FStar_Parser_AST.modul FStar_Syntax_DsEnv.withenv
   =
   fun a  ->
     fun expect_complete_modul  ->

@@ -1,5 +1,5 @@
 open Prims
-let (always : Prims.int -> Prims.bool -> unit) =
+let always : Prims.int -> Prims.bool -> unit =
   fun id1  ->
     fun b  ->
       if b
@@ -12,23 +12,23 @@ let (always : Prims.int -> Prims.bool -> unit) =
            (FStar_Errors.Fatal_AssertionFailure, uu____17)  in
          FStar_Errors.raise_error uu____12 FStar_Range.dummyRange)
   
-let (x : FStar_Syntax_Syntax.bv) =
+let x : FStar_Syntax_Syntax.bv =
   FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
-let (y : FStar_Syntax_Syntax.bv) =
+let y : FStar_Syntax_Syntax.bv =
   FStar_Syntax_Syntax.gen_bv "y" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
-let (n : FStar_Syntax_Syntax.bv) =
+let n : FStar_Syntax_Syntax.bv =
   FStar_Syntax_Syntax.gen_bv "n" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
-let (h : FStar_Syntax_Syntax.bv) =
+let h : FStar_Syntax_Syntax.bv =
   FStar_Syntax_Syntax.gen_bv "h" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
-let (m : FStar_Syntax_Syntax.bv) =
+let m : FStar_Syntax_Syntax.bv =
   FStar_Syntax_Syntax.gen_bv "m" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
@@ -37,12 +37,12 @@ let tm : 'Auu____23 . 'Auu____23 -> 'Auu____23 FStar_Syntax_Syntax.syntax =
     FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
       FStar_Range.dummyRange
   
-let (nm : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term) =
+let nm : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term =
   fun x1  -> FStar_Syntax_Syntax.bv_to_name x1 
-let (app :
+let app :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term Prims.list ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
   fun x1  ->
     fun ts  ->
@@ -55,8 +55,8 @@ let (app :
         FStar_Syntax_Syntax.mk uu____63  in
       uu____56 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let rec (term_eq' :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
+let rec term_eq' :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool =
   fun t1  ->
     fun t2  ->
       let t11 = FStar_Syntax_Subst.compress t1  in
@@ -235,8 +235,8 @@ let rec (term_eq' :
           true
       | uu____1398 -> false
   
-let (term_eq :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
+let term_eq :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool =
   fun t1  ->
     fun t2  ->
       let b = term_eq' t1 t2  in

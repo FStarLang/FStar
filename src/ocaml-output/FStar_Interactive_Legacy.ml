@@ -1,11 +1,11 @@
 open Prims
-let (tc_one_file :
+let tc_one_file :
   Prims.string Prims.list ->
     FStar_TypeChecker_Env.env ->
       ((Prims.string FStar_Pervasives_Native.option,Prims.string)
          FStar_Pervasives_Native.tuple2,FStar_TypeChecker_Env.env,Prims.string
                                                                     Prims.list)
-        FStar_Pervasives_Native.tuple3)
+        FStar_Pervasives_Native.tuple3
   =
   fun remaining  ->
     fun env  ->
@@ -43,13 +43,13 @@ type modul_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
 [@@deriving show]
 type stack_t = (env_t,modul_t) FStar_Pervasives_Native.tuple2 Prims.list
 [@@deriving show]
-let (pop : FStar_TypeChecker_Env.env -> Prims.string -> unit) =
+let pop : FStar_TypeChecker_Env.env -> Prims.string -> unit =
   fun env  ->
     fun msg  -> FStar_Universal.pop_context env msg; FStar_Options.pop ()
   
-let (push_with_kind :
+let push_with_kind :
   FStar_TypeChecker_Env.env ->
-    Prims.bool -> Prims.bool -> Prims.string -> FStar_TypeChecker_Env.env)
+    Prims.bool -> Prims.bool -> Prims.string -> FStar_TypeChecker_Env.env
   =
   fun env  ->
     fun lax1  ->
@@ -141,13 +141,13 @@ let (push_with_kind :
           else ();
           res
   
-let (check_frag :
+let check_frag :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
       FStar_Parser_ParseIt.input_frag ->
         (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option,FStar_TypeChecker_Env.env,
           Prims.int) FStar_Pervasives_Native.tuple3
-          FStar_Pervasives_Native.option)
+          FStar_Pervasives_Native.option
   =
   fun env  ->
     fun curmod  ->
@@ -177,7 +177,7 @@ let (check_frag :
               FStar_TypeChecker_Err.add_errors env uu____416);
              FStar_Pervasives_Native.None)
   
-let (report_fail : unit -> unit) =
+let report_fail : unit -> unit =
   fun uu____457  ->
     (let uu____459 = FStar_Errors.report_all ()  in
      FStar_All.pipe_right uu____459 (fun a241  -> ()));
@@ -195,45 +195,45 @@ type input_chunks =
                              FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple3 
   | Completions of Prims.string [@@deriving show]
-let (uu___is_Push : input_chunks -> Prims.bool) =
+let uu___is_Push : input_chunks -> Prims.bool =
   fun projectee  ->
     match projectee with | Push _0 -> true | uu____529 -> false
   
-let (__proj__Push__item___0 :
+let __proj__Push__item___0 :
   input_chunks ->
-    (Prims.bool,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3)
+    (Prims.bool,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Push _0 -> _0 
-let (uu___is_Pop : input_chunks -> Prims.bool) =
+let uu___is_Pop : input_chunks -> Prims.bool =
   fun projectee  ->
     match projectee with | Pop _0 -> true | uu____561 -> false
   
-let (__proj__Pop__item___0 : input_chunks -> Prims.string) =
+let __proj__Pop__item___0 : input_chunks -> Prims.string =
   fun projectee  -> match projectee with | Pop _0 -> _0 
-let (uu___is_Code : input_chunks -> Prims.bool) =
+let uu___is_Code : input_chunks -> Prims.bool =
   fun projectee  ->
     match projectee with | Code _0 -> true | uu____583 -> false
   
-let (__proj__Code__item___0 :
+let __proj__Code__item___0 :
   input_chunks ->
     (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2)
-      FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | Code _0 -> _0 
-let (uu___is_Info : input_chunks -> Prims.bool) =
+let uu___is_Info : input_chunks -> Prims.bool =
   fun projectee  ->
     match projectee with | Info _0 -> true | uu____635 -> false
   
-let (__proj__Info__item___0 :
+let __proj__Info__item___0 :
   input_chunks ->
     (Prims.string,Prims.bool,(Prims.string,Prims.int,Prims.int)
                                FStar_Pervasives_Native.tuple3
                                FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple3)
+      FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Info _0 -> _0 
-let (uu___is_Completions : input_chunks -> Prims.bool) =
+let uu___is_Completions : input_chunks -> Prims.bool =
   fun projectee  ->
     match projectee with | Completions _0 -> true | uu____691 -> false
   
-let (__proj__Completions__item___0 : input_chunks -> Prims.string) =
+let __proj__Completions__item___0 : input_chunks -> Prims.string =
   fun projectee  -> match projectee with | Completions _0 -> _0 
 type interactive_state =
   {
@@ -242,39 +242,39 @@ type interactive_state =
   buffer: input_chunks Prims.list FStar_ST.ref ;
   log: FStar_Util.file_handle FStar_Pervasives_Native.option FStar_ST.ref }
 [@@deriving show]
-let (__proj__Mkinteractive_state__item__chunk :
-  interactive_state -> FStar_Util.string_builder) =
+let __proj__Mkinteractive_state__item__chunk :
+  interactive_state -> FStar_Util.string_builder =
   fun projectee  ->
     match projectee with
     | { chunk = __fname__chunk; stdin = __fname__stdin;
         buffer = __fname__buffer; log = __fname__log;_} -> __fname__chunk
   
-let (__proj__Mkinteractive_state__item__stdin :
+let __proj__Mkinteractive_state__item__stdin :
   interactive_state ->
-    FStar_Util.stream_reader FStar_Pervasives_Native.option FStar_ST.ref)
+    FStar_Util.stream_reader FStar_Pervasives_Native.option FStar_ST.ref
   =
   fun projectee  ->
     match projectee with
     | { chunk = __fname__chunk; stdin = __fname__stdin;
         buffer = __fname__buffer; log = __fname__log;_} -> __fname__stdin
   
-let (__proj__Mkinteractive_state__item__buffer :
-  interactive_state -> input_chunks Prims.list FStar_ST.ref) =
+let __proj__Mkinteractive_state__item__buffer :
+  interactive_state -> input_chunks Prims.list FStar_ST.ref =
   fun projectee  ->
     match projectee with
     | { chunk = __fname__chunk; stdin = __fname__stdin;
         buffer = __fname__buffer; log = __fname__log;_} -> __fname__buffer
   
-let (__proj__Mkinteractive_state__item__log :
+let __proj__Mkinteractive_state__item__log :
   interactive_state ->
-    FStar_Util.file_handle FStar_Pervasives_Native.option FStar_ST.ref)
+    FStar_Util.file_handle FStar_Pervasives_Native.option FStar_ST.ref
   =
   fun projectee  ->
     match projectee with
     | { chunk = __fname__chunk; stdin = __fname__stdin;
         buffer = __fname__buffer; log = __fname__log;_} -> __fname__log
   
-let (the_interactive_state : interactive_state) =
+let the_interactive_state : interactive_state =
   let uu____1001 = FStar_Util.new_string_builder ()  in
   let uu____1002 = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let uu____1009 = FStar_Util.mk_ref []  in
@@ -285,7 +285,7 @@ let (the_interactive_state : interactive_state) =
     buffer = uu____1009;
     log = uu____1016
   } 
-let rec (read_chunk : unit -> input_chunks) =
+let rec read_chunk : unit -> input_chunks =
   fun uu____1093  ->
     let s = the_interactive_state  in
     let log1 =
@@ -319,7 +319,8 @@ let rec (read_chunk : unit -> input_chunks) =
     let line =
       let uu____1231 = FStar_Util.read_line stdin  in
       match uu____1231 with
-      | FStar_Pervasives_Native.None  -> FStar_All.exit (Prims.parse_int "0")
+      | FStar_Pervasives_Native.None  ->
+          FStar_All.exit (Prims.lift_native_int (0))
       | FStar_Pervasives_Native.Some l -> l  in
     log1 line;
     (let l = FStar_Util.trim_string line  in
@@ -359,7 +360,8 @@ let rec (read_chunk : unit -> input_chunks) =
                         (Prims.strcat
                            "Error locations may be wrong, unrecognized string after #push: "
                            lc_lax));
-                    (false, (Prims.parse_int "1"), (Prims.parse_int "0")))
+                    (false, (Prims.lift_native_int (1)),
+                      (Prims.lift_native_int (0))))
                 in
              Push lc))
          else
@@ -384,7 +386,7 @@ let rec (read_chunk : unit -> input_chunks) =
                   (FStar_Errors.log_issue FStar_Range.dummyRange
                      (FStar_Errors.Error_IDEUnrecognized,
                        (Prims.strcat "Unrecognized \"#info\" request: " l));
-                   FStar_All.exit (Prims.parse_int "1")))
+                   FStar_All.exit (Prims.lift_native_int (1))))
            else
              if FStar_Util.starts_with l "#completions "
              then
@@ -397,16 +399,16 @@ let rec (read_chunk : unit -> input_chunks) =
                        (FStar_Errors.Error_IDEUnrecognized,
                          (Prims.strcat
                             "Unrecognized \"#completions\" request: " l));
-                     FStar_All.exit (Prims.parse_int "1")))
+                     FStar_All.exit (Prims.lift_native_int (1))))
              else
                if l = "#finish"
-               then FStar_All.exit (Prims.parse_int "0")
+               then FStar_All.exit (Prims.lift_native_int (0))
                else
                  (FStar_Util.string_builder_append s.chunk line;
                   FStar_Util.string_builder_append s.chunk "\n";
                   read_chunk ()))
   
-let (shift_chunk : unit -> input_chunks) =
+let shift_chunk : unit -> input_chunks =
   fun uu____1380  ->
     let s = the_interactive_state  in
     let uu____1382 = FStar_ST.op_Bang s.buffer  in
@@ -414,7 +416,7 @@ let (shift_chunk : unit -> input_chunks) =
     | [] -> read_chunk ()
     | chunk::chunks -> (FStar_ST.op_Colon_Equals s.buffer chunks; chunk)
   
-let (fill_buffer : unit -> unit) =
+let fill_buffer : unit -> unit =
   fun uu____1448  ->
     let s = the_interactive_state  in
     let uu____1450 =
@@ -423,10 +425,10 @@ let (fill_buffer : unit -> unit) =
       FStar_List.append uu____1453 uu____1483  in
     FStar_ST.op_Colon_Equals s.buffer uu____1450
   
-let (deps_of_our_file :
+let deps_of_our_file :
   Prims.string ->
     (Prims.string Prims.list,Prims.string FStar_Pervasives_Native.option,
-      FStar_Parser_Dep.deps) FStar_Pervasives_Native.tuple3)
+      FStar_Parser_Dep.deps) FStar_Pervasives_Native.tuple3
   =
   fun filename  ->
     let uu____1529 = FStar_Dependencies.find_deps_if_needed [filename]  in
@@ -486,14 +488,14 @@ type m_timestamps =
                                                               FStar_Pervasives_Native.option,
     FStar_Util.time) FStar_Pervasives_Native.tuple4 Prims.list[@@deriving
                                                                 show]
-let rec (tc_deps :
+let rec tc_deps :
   modul_t ->
     stack_t ->
       FStar_TypeChecker_Env.env ->
         Prims.string Prims.list ->
           m_timestamps ->
             (stack_t,FStar_TypeChecker_Env.env,m_timestamps)
-              FStar_Pervasives_Native.tuple3)
+              FStar_Pervasives_Native.tuple3
   =
   fun m  ->
     fun stack  ->
@@ -532,13 +534,13 @@ let rec (tc_deps :
                           tc_deps m stack1 env2 remaining1
                             ((intf, impl, intf_t, impl_t) :: ts)))
   
-let (update_deps :
+let update_deps :
   Prims.string ->
     modul_t ->
       stack_t ->
         env_t ->
           m_timestamps ->
-            (stack_t,env_t,m_timestamps) FStar_Pervasives_Native.tuple3)
+            (stack_t,env_t,m_timestamps) FStar_Pervasives_Native.tuple3
   =
   fun filename  ->
     fun m  ->
@@ -629,12 +631,12 @@ let (update_deps :
                 iterate filenames (FStar_List.rev_append stk []) env
                   (FStar_List.rev_append ts []) [] []
   
-let (format_info :
+let format_info :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
       FStar_Syntax_Syntax.term ->
         FStar_Range.range ->
-          Prims.string FStar_Pervasives_Native.option -> Prims.string)
+          Prims.string FStar_Pervasives_Native.option -> Prims.string
   =
   fun env  ->
     fun name  ->
@@ -652,9 +654,9 @@ let (format_info :
             FStar_Util.format4 "(defined at %s) %s: %s%s" uu____2502 name
               uu____2503 uu____2504
   
-let rec (go :
+let rec go :
   (Prims.int,Prims.int) FStar_Pervasives_Native.tuple2 ->
-    Prims.string -> stack_t -> modul_t -> env_t -> m_timestamps -> unit)
+    Prims.string -> stack_t -> modul_t -> env_t -> m_timestamps -> unit
   =
   fun line_col  ->
     fun filename  ->
@@ -741,7 +743,7 @@ let rec (go :
                     match (search_term1, candidate) with
                     | ([],uu____2913) ->
                         FStar_Pervasives_Native.Some
-                          ([], (Prims.parse_int "0"))
+                          ([], (Prims.lift_native_int (0)))
                     | (uu____2928,[]) -> FStar_Pervasives_Native.None
                     | (hs::ts1,hc::tc1) ->
                         let hc_text = FStar_Ident.text_of_id hc  in
@@ -761,7 +763,8 @@ let rec (go :
                                        | (matched,len) ->
                                            ((hc :: matched),
                                              (((FStar_String.length hc_text)
-                                                 + (Prims.parse_int "1"))
+                                                 +
+                                                 (Prims.lift_native_int (1)))
                                                 + len)))))
                         else FStar_Pervasives_Native.None
                      in
@@ -820,7 +823,7 @@ let rec (go :
                           ((Prims.strcat prefix1 (Prims.strcat "." matched)),
                             stripped_ns,
                             (((FStar_String.length prefix1) + match_len) +
-                               (Prims.parse_int "1")))
+                               (Prims.lift_native_int (1))))
                      in
                   let needle = FStar_Util.split search_term "."  in
                   let all_lidents_in_env = FStar_TypeChecker_Env.lidents env
@@ -836,7 +839,7 @@ let rec (go :
                           (fun out  ->
                              fun s  ->
                                ((FStar_String.length s) + out) +
-                                 (Prims.parse_int "1"))
+                                 (Prims.lift_native_int (1)))
                           (FStar_String.length id1) orig_ns
                          in
                       FStar_All.pipe_right exported_names
@@ -930,8 +933,9 @@ let rec (go :
                              match (uu____3846, uu____3847) with
                              | ((cd1,ns1,uu____3874),(cd2,ns2,uu____3877)) ->
                                  (match FStar_String.compare cd1 cd2 with
-                                  | _0_17 when _0_17 = (Prims.parse_int "0")
-                                      -> FStar_String.compare ns1 ns2
+                                  | _0_17 when
+                                      _0_17 = (Prims.lift_native_int (0)) ->
+                                      FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches
                        in
                     FStar_List.iter
@@ -952,7 +956,7 @@ let rec (go :
                           (FStar_Errors.log_issue FStar_Range.dummyRange
                              (FStar_Errors.Error_IDETooManyPops,
                                "too many pops");
-                           FStar_All.exit (Prims.parse_int "1"))
+                           FStar_All.exit (Prims.lift_native_int (1)))
                       | hd1::tl1 -> (hd1, tl1)  in
                     match uu____3916 with
                     | ((env1,curmod1),stack1) ->
@@ -989,14 +993,14 @@ let rec (go :
                   let res = check_frag env curmod frag  in
                   (match res with
                    | FStar_Pervasives_Native.Some (curmod1,env1,n_errs) ->
-                       if n_errs = (Prims.parse_int "0")
+                       if n_errs = (Prims.lift_native_int (0))
                        then
                          (FStar_Util.print1 "\n%s\n" ok;
                           go line_col filename stack curmod1 env1 ts)
                        else fail2 curmod1 env1
                    | uu____4140 -> fail2 curmod env)
   
-let (interactive_mode : Prims.string -> unit) =
+let interactive_mode : Prims.string -> unit =
   fun filename  ->
     (let uu____4157 =
        let uu____4158 = FStar_Options.codegen ()  in
@@ -1017,12 +1021,12 @@ let (interactive_mode : Prims.string -> unit) =
           | (stack,env1,ts) ->
               let initial_range =
                 let uu____4212 =
-                  FStar_Range.mk_pos (Prims.parse_int "1")
-                    (Prims.parse_int "0")
+                  FStar_Range.mk_pos (Prims.lift_native_int (1))
+                    (Prims.lift_native_int (0))
                    in
                 let uu____4213 =
-                  FStar_Range.mk_pos (Prims.parse_int "1")
-                    (Prims.parse_int "0")
+                  FStar_Range.mk_pos (Prims.lift_native_int (1))
+                    (Prims.lift_native_int (0))
                    in
                 FStar_Range.mk_range "<input>" uu____4212 uu____4213  in
               let env2 = FStar_TypeChecker_Env.set_range env1 initial_range
@@ -1043,9 +1047,11 @@ let (interactive_mode : Prims.string -> unit) =
                   FStar_List.hd uu____4219  in
                 FStar_SMTEncoding_Solver.with_hints_db uu____4218
                   (fun uu____4223  ->
-                     go ((Prims.parse_int "1"), (Prims.parse_int "0"))
-                       filename stack FStar_Pervasives_Native.None env3 ts)
+                     go
+                       ((Prims.lift_native_int (1)),
+                         (Prims.lift_native_int (0))) filename stack
+                       FStar_Pervasives_Native.None env3 ts)
               else
-                go ((Prims.parse_int "1"), (Prims.parse_int "0")) filename
-                  stack FStar_Pervasives_Native.None env3 ts))
+                go ((Prims.lift_native_int (1)), (Prims.lift_native_int (0)))
+                  filename stack FStar_Pervasives_Native.None env3 ts))
   

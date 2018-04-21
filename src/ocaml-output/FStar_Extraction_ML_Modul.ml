@@ -1,8 +1,8 @@
 open Prims
-let (fail_exp :
+let fail_exp :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
   fun lid  ->
     fun t  ->
@@ -43,10 +43,10 @@ let (fail_exp :
         FStar_Syntax_Syntax.mk uu____20  in
       uu____13 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let (mangle_projector_lid : FStar_Ident.lident -> FStar_Ident.lident) =
+let mangle_projector_lid : FStar_Ident.lident -> FStar_Ident.lident =
   fun x  -> x 
-let (lident_as_mlsymbol :
-  FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol) =
+let lident_as_mlsymbol :
+  FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol =
   fun id1  ->
     FStar_Extraction_ML_Syntax.avoid_keyword
       (id1.FStar_Ident.ident).FStar_Ident.idText
@@ -61,9 +61,9 @@ let as_pair :
     | a::b::[] -> (a, b)
     | uu____100 -> failwith "Expected a list with 2 elements"
   
-let rec (extract_meta :
+let rec extract_meta :
   FStar_Syntax_Syntax.term ->
-    FStar_Extraction_ML_Syntax.meta FStar_Pervasives_Native.option)
+    FStar_Extraction_ML_Syntax.meta FStar_Pervasives_Native.option
   =
   fun x  ->
     let uu____114 = FStar_Syntax_Subst.compress x  in
@@ -145,9 +145,9 @@ let rec (extract_meta :
         FStar_Syntax_Syntax.vars = uu____190;_} -> extract_meta x1
     | uu____197 -> FStar_Pervasives_Native.None
   
-let (extract_metadata :
+let extract_metadata :
   FStar_Syntax_Syntax.term Prims.list ->
-    FStar_Extraction_ML_Syntax.meta Prims.list)
+    FStar_Extraction_ML_Syntax.meta Prims.list
   = fun metas  -> FStar_List.choose extract_meta metas 
 let binders_as_mlty_binders :
   'Auu____215 .
@@ -176,7 +176,7 @@ let binders_as_mlty_binders :
                     in
                  (uu____266, uu____272)) env bs
   
-let (extract_typ_abbrev :
+let extract_typ_abbrev :
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.fv ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
@@ -184,7 +184,7 @@ let (extract_typ_abbrev :
           FStar_Syntax_Syntax.term ->
             (FStar_Extraction_ML_UEnv.env,FStar_Extraction_ML_Syntax.mlmodule1
                                             Prims.list)
-              FStar_Pervasives_Native.tuple2)
+              FStar_Pervasives_Native.tuple2
   =
   fun env  ->
     fun fv  ->
@@ -281,14 +281,14 @@ type data_constructor =
   {
   dname: FStar_Ident.lident ;
   dtyp: FStar_Syntax_Syntax.typ }[@@deriving show]
-let (__proj__Mkdata_constructor__item__dname :
-  data_constructor -> FStar_Ident.lident) =
+let __proj__Mkdata_constructor__item__dname :
+  data_constructor -> FStar_Ident.lident =
   fun projectee  ->
     match projectee with
     | { dname = __fname__dname; dtyp = __fname__dtyp;_} -> __fname__dname
   
-let (__proj__Mkdata_constructor__item__dtyp :
-  data_constructor -> FStar_Syntax_Syntax.typ) =
+let __proj__Mkdata_constructor__item__dtyp :
+  data_constructor -> FStar_Syntax_Syntax.typ =
   fun projectee  ->
     match projectee with
     | { dname = __fname__dname; dtyp = __fname__dtyp;_} -> __fname__dtyp
@@ -301,8 +301,8 @@ type inductive_family =
   idatas: data_constructor Prims.list ;
   iquals: FStar_Syntax_Syntax.qualifier Prims.list ;
   imetadata: FStar_Extraction_ML_Syntax.metadata }[@@deriving show]
-let (__proj__Mkinductive_family__item__iname :
-  inductive_family -> FStar_Ident.lident) =
+let __proj__Mkinductive_family__item__iname :
+  inductive_family -> FStar_Ident.lident =
   fun projectee  ->
     match projectee with
     | { iname = __fname__iname; iparams = __fname__iparams;
@@ -310,8 +310,8 @@ let (__proj__Mkinductive_family__item__iname :
         iquals = __fname__iquals; imetadata = __fname__imetadata;_} ->
         __fname__iname
   
-let (__proj__Mkinductive_family__item__iparams :
-  inductive_family -> FStar_Syntax_Syntax.binders) =
+let __proj__Mkinductive_family__item__iparams :
+  inductive_family -> FStar_Syntax_Syntax.binders =
   fun projectee  ->
     match projectee with
     | { iname = __fname__iname; iparams = __fname__iparams;
@@ -319,8 +319,8 @@ let (__proj__Mkinductive_family__item__iparams :
         iquals = __fname__iquals; imetadata = __fname__imetadata;_} ->
         __fname__iparams
   
-let (__proj__Mkinductive_family__item__ityp :
-  inductive_family -> FStar_Syntax_Syntax.term) =
+let __proj__Mkinductive_family__item__ityp :
+  inductive_family -> FStar_Syntax_Syntax.term =
   fun projectee  ->
     match projectee with
     | { iname = __fname__iname; iparams = __fname__iparams;
@@ -328,8 +328,8 @@ let (__proj__Mkinductive_family__item__ityp :
         iquals = __fname__iquals; imetadata = __fname__imetadata;_} ->
         __fname__ityp
   
-let (__proj__Mkinductive_family__item__idatas :
-  inductive_family -> data_constructor Prims.list) =
+let __proj__Mkinductive_family__item__idatas :
+  inductive_family -> data_constructor Prims.list =
   fun projectee  ->
     match projectee with
     | { iname = __fname__iname; iparams = __fname__iparams;
@@ -337,8 +337,8 @@ let (__proj__Mkinductive_family__item__idatas :
         iquals = __fname__iquals; imetadata = __fname__imetadata;_} ->
         __fname__idatas
   
-let (__proj__Mkinductive_family__item__iquals :
-  inductive_family -> FStar_Syntax_Syntax.qualifier Prims.list) =
+let __proj__Mkinductive_family__item__iquals :
+  inductive_family -> FStar_Syntax_Syntax.qualifier Prims.list =
   fun projectee  ->
     match projectee with
     | { iname = __fname__iname; iparams = __fname__iparams;
@@ -346,8 +346,8 @@ let (__proj__Mkinductive_family__item__iquals :
         iquals = __fname__iquals; imetadata = __fname__imetadata;_} ->
         __fname__iquals
   
-let (__proj__Mkinductive_family__item__imetadata :
-  inductive_family -> FStar_Extraction_ML_Syntax.metadata) =
+let __proj__Mkinductive_family__item__imetadata :
+  inductive_family -> FStar_Extraction_ML_Syntax.metadata =
   fun projectee  ->
     match projectee with
     | { iname = __fname__iname; iparams = __fname__iparams;
@@ -355,7 +355,7 @@ let (__proj__Mkinductive_family__item__imetadata :
         iquals = __fname__iquals; imetadata = __fname__imetadata;_} ->
         __fname__imetadata
   
-let (print_ifamily : inductive_family -> unit) =
+let print_ifamily : inductive_family -> unit =
   fun i  ->
     let uu____703 = FStar_Syntax_Print.lid_to_string i.iname  in
     let uu____704 = FStar_Syntax_Print.binders_to_string " " i.iparams  in
@@ -490,11 +490,11 @@ let bundle_as_inductive_families :
           | (env1,ifams) -> (env1, (FStar_List.flatten ifams))
   
 type env_t = FStar_Extraction_ML_UEnv.env[@@deriving show]
-let (extract_bundle :
+let extract_bundle :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (env_t,FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun env  ->
     fun se  ->
@@ -638,10 +638,10 @@ let (extract_bundle :
                 | (env2,td) -> (env2, [FStar_Extraction_ML_Syntax.MLM_Ty td])))
       | uu____1811 -> failwith "Unexpected signature element"
   
-let (maybe_register_plugin :
+let maybe_register_plugin :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
-      FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
+      FStar_Extraction_ML_Syntax.mlmodule1 Prims.list
   =
   fun g  ->
     fun se  ->
@@ -719,11 +719,11 @@ let (maybe_register_plugin :
                (FStar_Pervasives_Native.snd lbs)
          | uu____1946 -> [])
   
-let rec (extract_sig :
+let rec extract_sig :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (env_t,FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun g  ->
     fun se  ->
@@ -1402,8 +1402,8 @@ let rec (extract_sig :
            (FStar_Syntax_Util.process_pragma p se.FStar_Syntax_Syntax.sigrng;
             (g, [])))
   
-let (extract_iface :
-  FStar_Extraction_ML_UEnv.env -> FStar_Syntax_Syntax.modul -> env_t) =
+let extract_iface :
+  FStar_Extraction_ML_UEnv.env -> FStar_Syntax_Syntax.modul -> env_t =
   fun g  ->
     fun m  ->
       let uu____3130 =
@@ -1411,12 +1411,12 @@ let (extract_iface :
          in
       FStar_All.pipe_right uu____3130 FStar_Pervasives_Native.fst
   
-let (extract' :
+let extract' :
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Extraction_ML_UEnv.env,FStar_Extraction_ML_Syntax.mllib
                                       Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun g  ->
     fun m  ->
@@ -1474,12 +1474,12 @@ let (extract' :
                       (FStar_Extraction_ML_Syntax.MLLib []))]]))
            else (g2, []))
   
-let (extract :
+let extract :
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Extraction_ML_UEnv.env,FStar_Extraction_ML_Syntax.mllib
                                       Prims.list)
-        FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple2
   =
   fun g  ->
     fun m  ->

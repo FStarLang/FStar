@@ -1,5 +1,5 @@
 open Prims
-let (is_cache_file : Prims.string -> Prims.bool) =
+let is_cache_file : Prims.string -> Prims.bool =
   fun fn  ->
     let uu____6 = FStar_Util.get_file_extension fn  in uu____6 = ".cache"
   
@@ -7,21 +7,21 @@ type fragment =
   | Empty 
   | Modul of FStar_Parser_AST.modul 
   | Decls of FStar_Parser_AST.decl Prims.list [@@deriving show]
-let (uu___is_Empty : fragment -> Prims.bool) =
+let uu___is_Empty : fragment -> Prims.bool =
   fun projectee  -> match projectee with | Empty  -> true | uu____24 -> false 
-let (uu___is_Modul : fragment -> Prims.bool) =
+let uu___is_Modul : fragment -> Prims.bool =
   fun projectee  ->
     match projectee with | Modul _0 -> true | uu____31 -> false
   
-let (__proj__Modul__item___0 : fragment -> FStar_Parser_AST.modul) =
+let __proj__Modul__item___0 : fragment -> FStar_Parser_AST.modul =
   fun projectee  -> match projectee with | Modul _0 -> _0 
-let (uu___is_Decls : fragment -> Prims.bool) =
+let uu___is_Decls : fragment -> Prims.bool =
   fun projectee  ->
     match projectee with | Decls _0 -> true | uu____47 -> false
   
-let (__proj__Decls__item___0 : fragment -> FStar_Parser_AST.decl Prims.list)
-  = fun projectee  -> match projectee with | Decls _0 -> _0 
-let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
+let __proj__Decls__item___0 : fragment -> FStar_Parser_AST.decl Prims.list =
+  fun projectee  -> match projectee with | Decls _0 -> _0 
+let parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment =
   fun frag  ->
     let uu____66 =
       FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Toplevel frag)  in
@@ -37,11 +37,11 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
         failwith
           "Impossible: parsing a Toplevel always results in an ASTFragment"
   
-let (parse_file :
+let parse_file :
   FStar_Parser_ParseIt.filename ->
     (FStar_Parser_AST.file,(Prims.string,FStar_Range.range)
                              FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2
   =
   fun fn  ->
     let uu____153 =
