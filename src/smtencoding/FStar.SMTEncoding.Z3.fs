@@ -415,9 +415,9 @@ let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : 
   let start = BU.now() in
   let status, statistics =
     try doZ3Exe r fresh input label_messages
-    with _ when not (Options.trace_error()) ->
+    with e when not (Options.trace_error()) ->
          (!bg_z3_proc).refresh();
-         UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
+         raise e
   in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
