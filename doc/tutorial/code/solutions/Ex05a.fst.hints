@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bacc7209913792d069e54537ae3e747d"
+      "3e470a5603535748f6f0e29a8445316c"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "87d7367e9814bea700658797340d01b0"
+      "0545a6bfd25dc620cd214b7a998b6ff9"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "154c6d42b2b95908fe5d15e9947c445f"
+      "1b62876aa63fd99db5beb01e3f785523"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e5c52266de6b7c8a33f9edb6928add27"
+      "8e2411183b49539865b7bc66b1f042d3"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8d5ec343d5efd158962da5c68e7f5331"
+      "12f7d56e63db9b112e874dc0b16d19ee"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a9b2683bdfecaa0efc4da6296ccefe0f"
+      "a648a5cb65e79d9678cf5f475d579645"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "0f37c4bc7d51dd951ec1ab000c43dee4"
+      "0399bc3f3a4a697141fdeed58c03ab78"
     ],
     [
       "Ex05a.append",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "03834a6665f5b0b13e327dcbd66062f3"
+      "0edf380c16f043aa37a70a3ee49a3eed"
     ],
     [
       "Ex05a.reverse",
@@ -150,7 +150,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b55e12d996ee05195500bd5df84d0c9e"
+      "a2686edbbc34c26eecf159779e9e2b62"
     ],
     [
       "Ex05a.rev",
@@ -165,7 +165,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "10a80975cc16e28c344b77e234774f4b"
+      "ddc8458d1d960418b8254a705aeb8cef"
     ]
   ]
 ]

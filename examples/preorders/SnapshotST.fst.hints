@@ -12,7 +12,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_abc8984d7fb6dc87dbd65572f74bda11"
       ],
       0,
-      "13e05634ca1d579d02da27d9e121756c"
+      "d0ff99e5ed4faa98d187e55dac008383"
     ],
     [
       "SnapshotST.__proj__Tmp__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "801877798c754492d39cba0b1ff9dd06"
+      "b8bf41b2c67c64f54ba2d96c3ec10fc9"
     ],
     [
       "SnapshotST.__proj__Tmp__item___1",
@@ -38,7 +38,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "7f72e39a0e63df86d8eb7c5bf9813642"
+      "b5eef878752b123593564044bdc4c749"
     ],
     [
       "SnapshotST.rel_t",
@@ -56,7 +56,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "022312981815cc6592f6d99f0d3717a5"
+      "ad829819418e13674ee8918b7079de66"
     ],
     [
       "SnapshotST.lift_predicate",
@@ -68,7 +68,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "5f13e38b2e2124dd943865645164baf9"
+      "104de3b0513d381b319541c0acea9196"
     ],
     [
       "SnapshotST.lift_stability",
@@ -87,7 +87,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_99f53608a2d93ee6ac1800c4e882081f"
       ],
       0,
-      "7a276b1024d2d84efafae7c94cf27202"
+      "cb490f58e1b5d27523ca29501e3dc2a5"
     ],
     [
       "SnapshotST.witnessed",
@@ -108,7 +108,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "cfffbe31a0347f3c915e19172a1f9fe8"
+      "fba650d3962715d0f0b005d9c6b75cb4"
     ],
     [
       "SnapshotST.witness",
@@ -129,7 +129,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "c024266322b6ee6147143f29ef4b242d"
+      "83803f9378432e93365547a30ecb82de"
     ],
     [
       "SnapshotST.recall",
@@ -150,7 +150,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "d1745871f2dec0fbb72700046bce13ac"
+      "b4b3369574fd639a9e65ab9869d8c354"
     ],
     [
       "SnapshotST.get_s",
@@ -162,7 +162,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "819c4244946203f2e4416f25869d2b1a"
+      "6ab6bf92d19a0fc84058988cca634ed4"
     ],
     [
       "SnapshotST.get_s",
@@ -180,7 +180,7 @@
         "projection_inverse_SnapshotST.Tmp__1"
       ],
       0,
-      "137b22c64aa073f165f7bd70061949a9"
+      "c81248e83f4e915fd6a52ab720140198"
     ],
     [
       "SnapshotST.put_s",
@@ -192,7 +192,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "744bc4caec87f9c0dc396c9bf85a2811"
+      "dbf090146a2dba88ece6bdae0873d8f8"
     ],
     [
       "SnapshotST.put_s",
@@ -216,7 +216,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "07cad91e05e6ea3bf9739b494335564e"
+      "d21b1e1f48b4b940437f7319cced9f18"
     ],
     [
       "SnapshotST.witness_s",
@@ -228,7 +228,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "c1fcedf224a0d1b4c4b33393f405760c"
+      "dab831a5f348c784be25b522adb13fc4"
     ],
     [
       "SnapshotST.witness_s",
@@ -250,7 +250,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "0beed9f87ee1bb67ce63cf292710ec9c"
+      "f781a9721a90ff8ae24d1bccb7d9770a"
     ],
     [
       "SnapshotST.recall_s",
@@ -262,7 +262,7 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "caf91825f180898be2df91563fd14405"
+      "1aad759c891f79540f45c039dcf478f9"
     ],
     [
       "SnapshotST.recall_s",
@@ -285,7 +285,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "9922ba625b8c202307fc5bd822a42d7c"
+      "5c75b401a48731aebbf40b2e070d4f40"
     ],
     [
       "SnapshotST.break",
@@ -297,7 +297,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "4cd72b78ea11425ffa3733c8bdbd4fcf"
+      "fad775ab29013d5bc9f4c9c1bda42fc1"
     ],
     [
       "SnapshotST.break",
@@ -321,7 +321,7 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "a7e82c6a4abf97051c6e046e337cf96a"
+      "dafb0bdeee4fd685b2d4bf7852a9bf54"
     ],
     [
       "SnapshotST.restore",
@@ -333,7 +333,7 @@
         "disc_equation_SnapshotST.Tmp", "typing_SnapshotST.uu___is_Tmp"
       ],
       0,
-      "27d7438b0c4896dea1036c80547ca13a"
+      "6c84e04be1424d790fdec43ea119eb6a"
     ],
     [
       "SnapshotST.restore",
@@ -351,7 +351,7 @@
         "projection_inverse_SnapshotST.Tmp__1"
       ],
       0,
-      "f2395981ac9ec0b28a17995cc671a94d"
+      "34f4fcdbabdb8036b28abb666c5a38a7"
     ],
     [
       "SnapshotST.__proj__Ok__item___0",
@@ -364,7 +364,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_abc8984d7fb6dc87dbd65572f74bda11"
       ],
       0,
-      "21eee650f7bfe4fb50cc3362ec74bd7d"
+      "5f4f7e4ff3be116898b7560971a88ab5"
     ],
     [
       "SnapshotST.__proj__Tmp__item___0",
@@ -377,7 +377,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "88c409e0303dd96335aafa7ae42ca98b"
+      "c6fdfd6fb8a06b5e7f5fadc568ed1575"
     ],
     [
       "SnapshotST.__proj__Tmp__item___1",
@@ -390,7 +390,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "c140a3df8df17d93f9478fb42af292e7"
+      "adf590197c976439eab78fdf3bde9fc6"
     ],
     [
       "SnapshotST.rel_t",
@@ -408,7 +408,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "3556ef70a83d7f97f0df6f04f35aa903"
+      "223e6481413b0b8d54221f5b6be7b17a"
     ],
     [
       "SnapshotST.lift_predicate",
@@ -420,7 +420,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "155c4f04307e24acba3664d4d905fe28"
+      "19ac20aa50ba8c614bc00de4e9cb1d42"
     ],
     [
       "SnapshotST.witnessed",
@@ -441,7 +441,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "5cc6c0b7a201c00cd6f14579f2a61961"
+      "7709b36e0b1ee1fc4b24a11fe3153ee3"
     ],
     [
       "SnapshotST.witness",
@@ -462,7 +462,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "667e8d9af840a908aea2a16ad6c773e8"
+      "6e0b2fceed098c3bc4961cbfabe9e167"
     ],
     [
       "SnapshotST.recall",
@@ -483,7 +483,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "9daa076fcecdee9c1d6911dc4af91c46"
+      "c4e62fa1f21e66c2b76309c6bf90ab8e"
     ],
     [
       "SnapshotST.get_s",
@@ -495,7 +495,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "c709f6a9e9f50dcbc609a1f1bfa4dee5"
+      "ba65495590dbad86f0074eb85396a225"
     ],
     [
       "SnapshotST.put_s",
@@ -507,7 +507,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "9c50e0be1f063de6d4770e57e1943880"
+      "f4d245b9558a21fd9659678c5d8a6a80"
     ],
     [
       "SnapshotST.witness_s",
@@ -519,7 +519,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "d1279e1e8d7149b0796b2bf8bf6e7f88"
+      "c694612dff2baac1705aef4c01090b7d"
     ],
     [
       "SnapshotST.recall_s",
@@ -531,7 +531,7 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "976d18daee4fb8ef2507589b2ae81944"
+      "15734040c77a0c879bef3a8b453df65b"
     ],
     [
       "SnapshotST.break",
@@ -543,7 +543,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "0a817c03f0f3fc429ac098b9a8757bcb"
+      "2697b66a2fe8c908db577c329957b1b4"
     ],
     [
       "SnapshotST.restore",
@@ -555,7 +555,7 @@
         "disc_equation_SnapshotST.Tmp", "typing_SnapshotST.uu___is_Tmp"
       ],
       0,
-      "278d9c02264191d8690eeb0d2fc8f2ef"
+      "9932cd9659413baca81291ceaa4315c9"
     ]
   ]
 ]

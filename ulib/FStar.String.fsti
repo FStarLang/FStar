@@ -17,9 +17,20 @@ module FStar.String
 
 type char = FStar.Char.char
 
+val list_of_string : string -> Tot (list char)
+val string_of_list : list char -> Tot string
+
 (* Not much in here; we should extend and refine this interface *)
-val strlen:  string -> Tot nat
+let strlen s = List.length (list_of_string s)
 unfold let length s = strlen s
+
+(**
+ When applied to a literal s of less than n characters, this predicate
+ reduces to True before going to the SMT solver.
+ Otherwise, the left disjunct reduces partially but the right disjunct
+ remains as is, allowing to keep `strlen s <= n` in the context.
+*)
+unfold let maxlen s n = b2t (normalize_term (strlen s <= n)) \/ strlen s <= n
 
 val make: l:nat -> char -> Tot (s:string {length s = l})
 val split:   list char -> string -> Tot (list string)
@@ -41,8 +52,5 @@ val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot char
 val substring: string -> int -> int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
-
-val list_of_string : string -> Tot (list char)
-val string_of_list : list char -> Tot string
 
 let string_of_char (c:char) : Tot string = make 1 c

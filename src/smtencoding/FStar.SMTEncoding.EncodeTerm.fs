@@ -481,7 +481,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
     then BU.print3 "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
     match t0.n with
       | Tm_delayed  _
-      | Tm_unknown    -> failwith (BU.format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
+      | Tm_unknown    ->
+        failwith (BU.format4 "(%s) Impossible: %s\n%s\n%s\n"
+                             (Range.string_of_range <| t.pos)
+                             (Print.tag_of_term t0)
+                             (Print.term_to_string t0)
+                             (Print.term_to_string t))
 
       | Tm_lazy i -> encode_term (U.unfold_lazy i) env
 
@@ -513,7 +518,22 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_fvar v ->
         if head_redex env t
         then encode_term (whnf env t) env
-        else lookup_free_var env v.fv_name, []
+        else let _, arity = lookup_free_var_name env v.fv_name in
+             let tok = lookup_free_var env v.fv_name in
+             let aux_decls =
+               if arity > 0
+               then //kick partial application axioms if arity > 0; see #613
+                    //and if the head symbol is just a variable
+                    //rather than maybe a fuel-instrumented name (cf. #1433)
+                   match tok.tm with
+                   | FreeV _
+                   | App(_, []) ->
+                     [Util.mkAssume(kick_partial_app tok,
+                                    Some "kick_partial_app",
+                                    varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
+                   | _ -> []
+               else [] in
+             tok, aux_decls
 
       | Tm_type _ ->
         mk_Term_type, []

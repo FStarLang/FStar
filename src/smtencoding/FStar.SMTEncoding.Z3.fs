@@ -269,7 +269,7 @@ type smt_output = {
   smt_labels:         option<smt_output_section>;
 }
 
-let smt_output_sections (lines:list<string>) : smt_output =
+let smt_output_sections (r:Range.range) (lines:list<string>) : smt_output =
     let rec until tag lines =
         match lines with
         | [] -> None
@@ -303,9 +303,8 @@ let smt_output_sections (lines:list<string>) : smt_output =
         | [] -> ()
         | _ ->
             FStar.Errors.log_issue
-                    Range.dummyRange
-                    (Errors.Warning_UnexpectedZ3Output, (BU.format2 "%s: Unexpected output from Z3: %s\n"
-                                    (query_logging.get_module_name())
+                     r
+                     (Errors.Warning_UnexpectedZ3Output, (BU.format1 "Unexpected output from Z3: %s\n"
                                     (String.concat "\n" remaining))) in
     {smt_result = BU.must result_opt;
      smt_reason_unknown = reason_unknown;
@@ -313,10 +312,10 @@ let smt_output_sections (lines:list<string>) : smt_output =
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
+let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let smt_output = smt_output_sections lines in
+    let smt_output = smt_output_sections r lines in
     let unsat_core =
         match smt_output.smt_unsat_core with
         | None -> None
@@ -426,10 +425,10 @@ let with_monitor m f =
     BU.monitor_exit(m);
     res
 
-let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
+let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
-    try doZ3Exe fresh input label_messages
+    try doZ3Exe r fresh input label_messages
     with _ when not (Options.trace_error()) ->
          bg_z3_proc.refresh();
          UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
@@ -611,6 +610,7 @@ let cache_hit
         false
 
 let ask_1_core
+    (r:Range.range)
     (filter_theory:decls_t -> decls_t * bool)
     (cache:option<string>)
     (label_messages:error_labels)
@@ -621,9 +621,10 @@ let ask_1_core
     let input, qhash = mk_input theory in
     bg_scope := [] ; // Now consumed.
     if not (cache_hit cache qhash cb) then
-        run_job ({job=z3_job false label_messages input qhash; callback=cb})
+        run_job ({job=z3_job r false label_messages input qhash; callback=cb})
 
 let ask_n_cores
+    (r:Range.range)
     (filter_theory:decls_t -> decls_t * bool)
     (cache:option<string>)
     (label_messages:error_labels)
@@ -638,9 +639,10 @@ let ask_n_cores
     let theory, used_unsat_core = filter_theory theory in
     let input, qhash = mk_input theory in
     if not (cache_hit cache qhash cb) then
-        enqueue ({job=z3_job true label_messages input qhash; callback=cb})
+        enqueue ({job=z3_job r true label_messages input qhash; callback=cb})
 
 let ask
+    (r:Range.range)
     (filter:decls_t -> decls_t * bool)
     (cache:option<string>)
     (label_messages:error_labels)
@@ -648,6 +650,6 @@ let ask
     (scope:option<scope_t>)
     (cb:cb)
   = if Options.n_cores() = 1 then
-        ask_1_core filter cache label_messages qry cb
+        ask_1_core r filter cache label_messages qry cb
     else
-        ask_n_cores filter cache label_messages qry scope cb
+        ask_n_cores r filter cache label_messages qry scope cb

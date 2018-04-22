@@ -642,7 +642,7 @@ let (detail_hint_replay :
               let res = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
               (let uu____1424 =
                  with_fuel_and_diagnostics settings label_assumptions  in
-               FStar_SMTEncoding_Z3.ask
+               FStar_SMTEncoding_Z3.ask settings.query_range
                  (filter_assertions settings.query_env settings.query_hint)
                  settings.query_hash settings.query_all_labels uu____1424
                  FStar_Pervasives_Native.None
@@ -701,7 +701,7 @@ let (report_errors : query_settings -> unit) =
         let res = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
         (let uu____1607 =
            with_fuel_and_diagnostics initial_fuel1 label_assumptions  in
-         FStar_SMTEncoding_Z3.ask
+         FStar_SMTEncoding_Z3.ask settings.query_range
            (filter_facts_without_core settings.query_env) settings.query_hash
            settings.query_all_labels uu____1607 FStar_Pervasives_Native.None
            (fun r  ->
@@ -1167,7 +1167,7 @@ let (ask_and_report_errors :
                       let uu____2355 = FStar_SMTEncoding_Z3.mk_fresh_scope ()
                          in
                       FStar_Pervasives_Native.Some uu____2355  in
-                    FStar_SMTEncoding_Z3.ask
+                    FStar_SMTEncoding_Z3.ask config.query_range
                       (filter_assertions config.query_env config.query_hint)
                       config.query_hash config.query_all_labels uu____2349
                       uu____2352 k)

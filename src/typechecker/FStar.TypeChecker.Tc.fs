@@ -43,6 +43,8 @@ module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module TcInductive = FStar.TypeChecker.TcInductive
 module PC = FStar.Parser.Const
+module EMB = FStar.Syntax.Embeddings
+module ToSyntax = FStar.ToSyntax.ToSyntax
 
 
 //set the name of the query so that we can correlate hints to source program fragments
@@ -1017,11 +1019,87 @@ let z3_reset_options (en:env) :env =
   env.solver.refresh ();
   env
 
+
+let get_fail_se (se:sigelt) : option<list<int>> =
+    List.tryPick (ToSyntax.get_fail_attr false) se.sigattrs
+
+let list_of_option = function
+    | None -> []
+    | Some x -> [x]
+
+(* Checks that all of the elements of l1 appear in l2 in the exact
+ * same amount. Returns None when everything is OK, and Some (e, n1, n2)
+ * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
+let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
+    let rec collect (l : list<'a>) : list<('a * int)> =
+        match l with
+        | [] -> []
+        | hd :: tl ->
+            begin match collect tl with
+            | [] -> [(hd, 1)]
+            | (h, n) :: t ->
+                if h = hd
+                then (h, n+1) :: t
+                else (hd, 1) :: (h, n) :: t
+            end
+    in
+    let summ l =
+        let l = List.sortWith (fun x y -> x - y) l in
+        collect l
+    in
+    let l1 = summ l1 in
+    let l2 = summ l2 in
+    let rec aux l1 l2 =
+        match l1, l2 with
+        | [], _ -> None
+
+        | (e, n) :: _, [] ->
+            Some (e, n, 0)
+
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 > hd2 ->
+            aux l1 tl2
+
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 < hd2 ->
+            Some (hd1, n1, 0)
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
+            if n1 <> n2
+            then Some (hd1, n1, n2)
+            else aux tl1 tl2
+    in
+    aux l1 l2
+
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
-let tc_decl env se: list<sigelt> * list<sigelt> =
+let rec tc_decl env se: list<sigelt> * list<sigelt> =
   let env = set_hint_correlator env se in
+  if Env.debug env Options.Low
+  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   TcUtil.check_sigelt_quals env se;
+  match get_fail_se se with
+  | Some errnos ->
+    if Env.debug env Options.Low then
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
+    let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
+    if Env.debug env Options.Low then begin
+        BU.print_string ">> Got issues:\n";
+        List.iter Errors.print_issue errs;
+        BU.print_string ">> //Got issues:\n"
+    end;
+    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
+    | [], _ ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
+    | _, Some (e, n1, n2) ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
+                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
+    | _, None -> [], []
+    end
+
+  | None ->
+    tc_decl' env se
+
+and tc_decl' env se: list<sigelt> * list<sigelt> =
   let r = se.sigrng in
   match se.sigel with
   | Sig_inductive_typ _

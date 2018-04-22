@@ -401,35 +401,52 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     if not(head_normal env tt)
                     then encode_term_pred None tt env vtok_tm
                     else encode_term_pred None t_norm env vtok_tm in //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
-                let tok_typing =
+                let tok_decl, env =
                     match formals with
-                    | _::_ -> //this is a token for a function type
-                      let ff = ("ty", Term_sort) in
-                      let f = mkFreeV ff in
-                      let vtok_app_l = mk_Apply vtok_tm [ff] in
-                      let vtok_app_r = mk_Apply f [(vtok, Term_sort)] in
-                      //guard the token typing assumption with a Apply(tok, f) or Apply(f, tok)
-                      //Additionally, the body of the term becomes NoHoist f (HasType tok ...)
-                      //   to prevent the Z3 simplifier from hoisting the (HasType tok ...) part out
-                      //Since the top-levels of modules are full of function typed terms
-                      //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
-                      //regardless of whether or not the function is used ... leading to bloat
-                      //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
-                      let guarded_tok_typing =
-                        mkForall([[vtok_app_l]; [vtok_app_r]],
-                                  [ff],
-                                  (Term.mk_NoHoist f tok_typing)) in
-                      Util.mkAssume(guarded_tok_typing, Some "function token typing", ("function_token_typing_"^vname))
+                    | [] ->
+                      let tok_typing =
+                        Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname))
+                      in
+                      decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
                     | _ ->
-                      Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname)) in
-                let tok_decl, env = match formals with
-                        | [] -> decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
-                        | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
-                                let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
-                                                                Some "Name-token correspondence",
-                                                                ("token_correspondence_"^vname)) in
-                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
+                     (* Generate a token and a function symbol;
+                        equate the two, and use the function symbol for full applications *)
+                      let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
+                      let vtok_app_0 = mk_Apply vtok_tm [List.hd vars] in
+                      let name_tok_corr_formula pat =
+                          mkForall([[pat]], vars, mkEq(vtok_app, vapp))
+                      in
+                      //See issue #613 for the choice of patterns here
+                      let name_tok_corr =
+                          //this allows rewriting (ApplyTT tok ... x1..xn) to f x1...xn
+                          Util.mkAssume(name_tok_corr_formula vtok_app,
+                                        Some "Name-token correspondence",
+                                        ("token_correspondence_"^vname)) in
+                      let tok_typing =
+                        let ff = ("ty", Term_sort) in
+                        let f = mkFreeV ff in
+                        let vtok_app_l = mk_Apply vtok_tm [ff] in
+                        let vtok_app_r = mk_Apply f [(vtok, Term_sort)] in
+                        //guard the token typing assumption with a Apply(f, tok), where f is typically __uu__PartialApp
+                        //Additionally, the body of the term becomes
+                        //                NoHoist f (and (HasType tok ...)
+                        //                               (forall (x1..xn).{:pattern (f x1..xn)} f x1..xn=ApplyTT (ApplyTT tok x1) ... xn
+                        //which provides a typing hypothesis for the token
+                        //and a rule to rewrite f x1..xn to ApplyTT tok ... x1..xn
+                        //The NoHoist prevents the Z3 simplifier from hoisting the (HasType tok ...) part out
+                        //Since the top-levels of modules are full of function typed terms
+                        //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
+                        //regardless of whether or not the function is used ... leading to bloat
+                        //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
+                        let guarded_tok_typing =
+                          mkForall([[vtok_app_r]],
+                                    [ff],
+                                    mkAnd(Term.mk_NoHoist f tok_typing,
+                                          name_tok_corr_formula vapp)) in
+                        Util.mkAssume(guarded_tok_typing, Some "function token typing", ("function_token_typing_"^vname))
+                      in
+                      decls2@[vtok_decl;name_tok_corr;tok_typing], env
+                in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in

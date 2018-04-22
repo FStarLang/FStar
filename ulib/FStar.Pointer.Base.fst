@@ -1514,6 +1514,7 @@ let path_disjoint_ind
        h_includes p1 p2 p1' p2')
      p1 p2 h)
 
+#set-options "--use_two_phase_tc false --max_fuel 1 --max_ifuel 1"
 let path_disjoint_step
   (#from: typ)
   (#through: typ)
@@ -1521,12 +1522,12 @@ let path_disjoint_step
   (#to2: typ)
   (p: path from through)
   (s1: step through to1)
-  (s2: step through to2 { step_disjoint s1 s2 } )
+  (s2: step through to2 { step_disjoint #through #to1 #to2 s1 s2 } )
 : Lemma
   (requires True)
-  (ensures (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2)))
-  [SMTPat (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2))]
-= FStar.Squash.return_squash (PathDisjointStep p s1 s2)
+  (ensures (path_disjoint #from #to1 #to2 (PathStep through to1 p s1) (PathStep through to2 p s2)))
+  [SMTPat (path_disjoint #from #to1 #to2 (PathStep through to1 p s1) (PathStep through to2 p s2))]
+= FStar.Squash.return_squash (PathDisjointStep #from #_ #_ p s1 s2)
 
 let path_disjoint_includes
   (#from: typ)

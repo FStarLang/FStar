@@ -42,7 +42,8 @@ type z3result = {
 }
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
-val ask: filter:(decls_t -> decls_t * bool)
+val ask: r:Range.range
+       -> filter:(decls_t -> decls_t * bool)
        -> cache:(option<string>) // hash
        -> label_messages:error_labels
        -> qry:list<decl>
