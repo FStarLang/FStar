@@ -3093,7 +3093,7 @@ let resolve_implicits' must_total forcelax g =
                let g =
                  try
                    env.check_type_of must_total env tm k
-                 with | e ->
+                 with e when Errors.handleable e ->
                     Errors.add_errors [Error_BadImplicit,
                                        BU.format2 "Failed while checking implicit %s set to %s"
                                                (Print.uvar_to_string u)
