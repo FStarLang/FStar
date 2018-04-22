@@ -103,8 +103,11 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
             | _ -> i
           end
     in
-    let g = {g with deferred= List.map (fun (msg, prob) -> msg, Rel.force_eq_before_closing env xs prob) g.deferred} in
-    let g = Rel.solve_deferred_constraints env g in
+    let solve_now, defer =
+        g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
+    in
+    let g = Rel.solve_deferred_constraints env ({g with deferred=solve_now}) in
+    let g = {g with deferred=defer} in
     let is =
       List.fold_left (fun is (x, _) -> List.map (aux x) is) g.implicits xs
     in

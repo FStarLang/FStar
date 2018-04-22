@@ -27,7 +27,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 
 //val new_uvar: Range.range -> binders -> typ -> typ * guard_t
-val force_eq_before_closing   : env -> binders -> prob -> prob
+val flex_prob_closing         : env -> binders -> prob -> bool
 val close_guard_univs         : universes -> binders -> guard_t -> guard_t
 val close_guard               : env -> binders -> guard_t -> guard_t
 val apply_guard               : guard_t -> term -> guard_t
@@ -43,6 +43,7 @@ val guard_form                : guard_t -> guard_formula
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
+val solve_some_deferred_constraints: env -> guard_t -> guard_t
 val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit

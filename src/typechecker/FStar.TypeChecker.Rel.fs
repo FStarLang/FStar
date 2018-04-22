@@ -1,4 +1,3 @@
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -272,7 +271,7 @@ let empty_worklist env = {
     wl_implicits=[]
 }
 let singleton wl prob smt_ok     = {wl with attempting=[prob]; smt_ok = smt_ok}
-let wl_of_guard env g            = {empty_worklist env with defer_ok=false; attempting=List.map snd g}
+let wl_of_guard env g            = {empty_worklist env with attempting=List.map snd g}
 let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
 let attempt probs wl             = {wl with attempting=probs@wl.attempting}
 
@@ -1090,19 +1089,25 @@ let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem 
 
    aux (flex_flex + 1, None, []) wl.attempting
 
-let force_eq_before_closing tcenv (bs:binders) (p:prob) =
+let flex_prob_closing tcenv (bs:binders) (p:prob) =
+    let flex_will_be_closed t =
+        let (_, u, _) = destruct_flex_t t in
+        u.ctx_uvar_binders |> BU.for_some (fun (y, _) ->
+        bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
+    in
     let r, p = rank tcenv p in
-    if r <> rigid_flex && r <> flex_rigid
-    then p
+    if r <> rigid_flex
+    && r <> flex_rigid
+    && r <> flex_flex
+    then false
     else match p with
-         | CProb _ -> p
+         | CProb _ -> false
          | TProb p ->
-           let p = if r = rigid_flex then invert p else p in
-           let (_, u, _) = destruct_flex_t p.lhs in
-           if u.ctx_uvar_binders |> BU.for_some (fun (y, _) ->
-              bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
-           then TProb ({p with relation=EQ})
-           else TProb p
+           if r=flex_flex
+           then flex_will_be_closed p.lhs || flex_will_be_closed p.rhs
+           else if r=flex_rigid
+           then flex_will_be_closed p.lhs
+           else flex_will_be_closed p.rhs
 
 
 
@@ -1709,27 +1714,35 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let rhs_hd, args = U.head_and_args rhs in
         match args with
         | [] ->
-          giveup_or_defer env orig wl (BU.format1 "first_order heursitic cannot solve %s" (prob_to_string env orig))
+          giveup_or_defer env orig wl (BU.format1 "first_order heursitic cannot solve %s; rhs not an app" (prob_to_string env orig))
         | _ ->
-          let args_rhs, last_arg_rhs = BU.prefix args in
-          let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
-          let t_lhs, u_lhs, _ = lhs in
-          let lhs', lhs'_last_arg =
-            let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
-            //FIXME: this may be an implicit arg ... fix qualifier
-            let _, lhs', wl = copy_uvar u_lhs (U.arrow [S.null_binder t_last_arg] (S.mk_Total u_lhs.ctx_uvar_typ)) wl in
-            let _, lhs'_last_arg, wl = copy_uvar u_lhs t_last_arg wl in
-            lhs', lhs'_last_arg
-          in
-          let sol = [TERM(u_lhs, S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)] in
-          let sub_probs, wl =
-            let p1, wl =
-               mk_t_problem wl (p_scope orig) orig lhs' EQ rhs' None "first-order lhs" in
-            let p2, wl =
-              mk_t_problem wl (p_scope orig) orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
-            [p1; p2], wl
-          in
-          solve env (attempt sub_probs (solve_prob orig None sol wl))
+          match quasi_pattern env lhs with
+          | None ->
+            giveup_or_defer env orig wl
+              (BU.format1 "first_order heursitic cannot solve %s; lhs not a quasi-pattern"
+                          (prob_to_string env orig))
+
+          | Some (bs_lhs, t_res_lhs) ->
+            let args_rhs, last_arg_rhs = BU.prefix args in
+            let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
+            let t_lhs, u_lhs, lhs_args = lhs in
+            let lhs', lhs'_last_arg =
+              let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
+              //FIXME: this may be an implicit arg ... fix qualifier
+              let _, lhs', wl = copy_uvar u_lhs (U.arrow [S.null_binder t_last_arg] (S.mk_Total t_res_lhs)) wl in
+              let _, lhs'_last_arg, wl = copy_uvar u_lhs t_last_arg wl in
+              lhs', lhs'_last_arg
+            in
+            let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
+                                                (Some (U.residual_tot t_res_lhs)))] in
+            let sub_probs, wl =
+              let p1, wl =
+                mk_t_problem wl (p_scope orig) orig lhs' EQ rhs' None "first-order lhs" in
+              let p2, wl =
+                mk_t_problem wl (p_scope orig) orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
+              [p1; p2], wl
+            in
+            solve env (attempt sub_probs (solve_prob orig None sol wl))
     in
 
     match p_rel orig with
@@ -1826,7 +1839,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                         (flex_t_to_string rhs)
                         (flex_t_to_string (destruct_flex_t w))
              in
-             let sol = 
+             let sol =
                  let s1 = TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs))) in
                  if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
                  then [s1]
@@ -2634,18 +2647,35 @@ let solve_universe_inequalities env ineqs =
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
 
-let rec solve_deferred_constraints env (g:guard_t) =
+let try_solve_deferred_constraints defer_ok env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
-      raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d) in
-   let wl = wl_of_guard env g.deferred in
+      raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
+   in
+   let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok} in
    if Env.debug env <| Options.Other "RelCheck"
-   then BU.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n"  (wl_to_string wl) (string_of_int (List.length g.implicits));
-   let g = match solve_and_commit env wl fail with
-    | Some ([], imps)-> {g with deferred=[]; implicits=g.implicits@imps}
-    | _ -> failwith "impossible: Unexpected deferred constraints remain" in
+   then BU.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n"
+                  (wl_to_string wl)
+                  (string_of_int (List.length g.implicits));
+   let g =
+     match solve_and_commit env wl fail with
+     | Some (_::_, _) when not defer_ok ->
+       failwith "Impossible: Unexpected deferred constraints remain"
+
+     | Some (deferred, imps) ->
+       {g with deferred=deferred; implicits=g.implicits@imps}
+
+     | _ ->
+       failwith "Impossible: should have raised a failure already"
+   in
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=([], [])}
+
+let solve_deferred_constraints env (g:guard_t) =
+    try_solve_deferred_constraints false env g
+
+let solve_some_deferred_constraints env (g:guard_t) =
+    try_solve_deferred_constraints true env g
 
 let last_proof_ns : ref<option<Env.proof_namespace>> = BU.mk_ref None
 
