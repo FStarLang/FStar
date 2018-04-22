@@ -230,28 +230,20 @@ let bg_z3_proc =
         the_z3proc := Some (new_proc ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
-    let grab () = BU.monitor_enter x; z3proc () in
-    let release () = BU.monitor_exit(x) in
     let ask input =
-        let proc = grab() in
         let kill_handler () = "\nkilled\n" in
-        let stdout = BU.ask_process proc input !handle_sigints kill_handler in
-        release (); stdout in
+        BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
-        let proc = grab() in
-        BU.kill_process proc;
+        BU.kill_process (z3proc ());
         the_z3proc := Some (new_proc ());
-        query_logging.close_log();
-        release() in
+        query_logging.close_log() in
     let restart () =
-        BU.monitor_enter();
         query_logging.close_log();
         the_z3proc := None;
-        the_z3proc := Some (new_proc ());
-        BU.monitor_exit() in
-    BU.mk_ref ({ask=ask;
-                refresh=refresh;
-                restart=restart})
+        the_z3proc := Some (new_proc ()) in
+    BU.mk_ref ({ask = BU.with_monitor x ask;
+                refresh = BU.with_monitor x refresh;
+                restart = BU.with_monitor x restart})
 
 let set_bg_z3_proc bgp =
     bg_z3_proc := bgp
@@ -418,11 +410,6 @@ type z3job = job<z3result>
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
-let with_monitor m f =
-    BU.monitor_enter(m);
-    let res = f () in
-    BU.monitor_exit(m);
-    res
 
 let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
@@ -450,7 +437,7 @@ let rec dequeue' () =
     incr pending_jobs;
     BU.monitor_exit job_queue;
     run_job j;
-    with_monitor job_queue (fun () -> decr pending_jobs); dequeue (); ()
+    BU.with_monitor job_queue (fun () -> decr pending_jobs) (); dequeue (); ()
 
 and dequeue () = match !running with
   | true ->
@@ -480,14 +467,13 @@ let init () =
     else ()
 
 let enqueue j =
-    BU.monitor_enter job_queue;
-    job_queue := !job_queue@[j];
-    BU.monitor_pulse job_queue;
-    BU.monitor_exit job_queue
+    BU.with_monitor job_queue (fun () ->
+        job_queue := !job_queue@[j];
+        BU.monitor_pulse job_queue) ()
 
 let finish () =
     let rec aux () =
-        let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
+        let n, m = BU.with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue) () in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
         then running := false
