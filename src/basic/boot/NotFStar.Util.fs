@@ -71,11 +71,14 @@ let monitor_wait m = ignore <| System.Threading.Monitor.Wait(m)
 let monitor_pulse m = System.Threading.Monitor.Pulse(m)
 let current_tid () = System.Threading.Thread.CurrentThread.ManagedThreadId
 let sleep n = System.Threading.Thread.Sleep(0+n)
+let with_monitor m f x =
+    try
+        System.Threading.Monitor.Enter(m);
+        f x
+    finally
+        System.Threading.Monitor.Exit(m)
 let atomically (f:unit -> 'a) =
-    System.Threading.Monitor.Enter(global_lock);
-    let result = f () in
-    System.Threading.Monitor.Exit(global_lock);
-    result
+    with_monitor global_lock f ()
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 

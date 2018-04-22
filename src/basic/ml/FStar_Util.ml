@@ -81,6 +81,10 @@ let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
+let with_monitor _ f x =
+  monitor_enter ();
+  BatPervasives.finally monitor_exit f x
+
 let atomically =
   (* let mutex = Mutex.create () in *)
   fun f -> f ()

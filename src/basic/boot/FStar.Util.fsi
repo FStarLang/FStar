@@ -399,6 +399,7 @@ val monitor_enter: 'a -> unit
 val monitor_exit:  'a -> unit
 val monitor_wait: 'a -> unit
 val monitor_pulse:  'a -> unit
+val with_monitor: 'a -> ('b -> 'c) -> 'b -> 'c
 val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
