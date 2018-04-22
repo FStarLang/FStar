@@ -401,8 +401,11 @@ current file's interface comes last.
 The original value of the ``repl_deps_stack`` field in ``st`` is used to skip
 already completed tasks.
 
-This function is stateful: it uses ``push_repl`` and ``pop_repl``. **)
-let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
+This function is stateful: it uses ``push_repl`` and ``pop_repl``.
+
+`progress_callback` is called once per task, right before the task is run. **)
+let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
+                             (progress_callback: repl_task -> unit) =
   let debug verb task =
     if Options.debug_any () then
       Util.print2 "%s %s" verb (string_of_repl_task task) in
@@ -429,6 +432,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
     // run ``task`` and record the updated dependency stack in ``st``.
     | task :: tasks, [] ->
       debug "Loading" task;
+      progress_callback task;
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
       let push_kind = if Options.lax () then LaxCheck else FullCheck in
@@ -571,7 +575,7 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"; "tactic-ranges"; "interrupt"]
+   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -932,6 +936,18 @@ let run_pop st =
     let st' = pop_repl st in
     ((QueryOK, JsonNull), Inl st')
 
+let write_progress stage contents_alist =
+  let stage = match stage with Some s -> JsonStr s | None -> JsonNull in
+  let js_contents = ("stage", stage) :: contents_alist in
+  write_json (json_of_message "progress" (JsonAssoc js_contents))
+
+let write_repl_ld_task_progress task =
+  match task with
+  | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
+    let modname = Parser.Dep.module_name_of_file tf.tf_fname in
+    write_progress (Some "loading-dependency") [("modname", JsonStr modname)]
+  | PushFragment frag -> ()
+
 (** Compute and load all dependencies of `filename`.
 
 Return an new REPL state wrapped in ``Inr`` in case of failure, and a new REPL
@@ -942,9 +958,9 @@ let load_deps st =
   | None -> Inr st
   | Some (deps, tasks, dep_graph) ->
     let st = {st with repl_env=FStar.TypeChecker.Env.set_dep_graph st.repl_env dep_graph} in
-    match run_repl_ld_transactions st tasks with
-    | Inr st -> Inr st
-    | Inl st -> Inl (st, deps)
+    match run_repl_ld_transactions st tasks write_repl_ld_task_progress with
+    | Inr st -> write_progress None []; Inr st
+    | Inl st -> write_progress None []; Inl (st, deps)
 
 let rephrase_dependency_error issue =
   { issue with issue_message =
