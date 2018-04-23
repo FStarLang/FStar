@@ -1316,7 +1316,7 @@ let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
                                    fvar_bindings=BU.psmap_empty ();
                                    tcenv=tcenv; warn=true; depth=0;
                                    cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
-                                   encode_non_total_function_typ=true;
+                                   encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
