@@ -9,25 +9,25 @@ type prims_t =
           FStar_Pervasives_Native.tuple3
     ;
   is: FStar_Ident.lident -> Prims.bool }[@@deriving show]
-let __proj__Mkprims_t__item__mk :
+let (__proj__Mkprims_t__item__mk :
   prims_t ->
     FStar_Ident.lident ->
       Prims.string ->
         (FStar_SMTEncoding_Term.term,Prims.int,FStar_SMTEncoding_Term.decl
                                                  Prims.list)
-          FStar_Pervasives_Native.tuple3
+          FStar_Pervasives_Native.tuple3)
   =
   fun projectee  ->
     match projectee with
     | { mk = __fname__mk; is = __fname__is;_} -> __fname__mk
   
-let __proj__Mkprims_t__item__is : prims_t -> FStar_Ident.lident -> Prims.bool
-  =
+let (__proj__Mkprims_t__item__is :
+  prims_t -> FStar_Ident.lident -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { mk = __fname__mk; is = __fname__is;_} -> __fname__is
   
-let prims : prims_t =
+let (prims : prims_t) =
   let uu____119 =
     FStar_SMTEncoding_Env.fresh_fvar "a" FStar_SMTEncoding_Term.Term_sort  in
   match uu____119 with
@@ -469,12 +469,12 @@ let prims : prims_t =
                    in
                 { mk = mk1; is }))
   
-let pretype_axiom :
+let (pretype_axiom :
   FStar_SMTEncoding_Env.env_t ->
     FStar_SMTEncoding_Term.term ->
       (Prims.string,FStar_SMTEncoding_Term.sort)
         FStar_Pervasives_Native.tuple2 Prims.list ->
-        FStar_SMTEncoding_Term.decl
+        FStar_SMTEncoding_Term.decl)
   =
   fun env  ->
     fun tapp  ->
@@ -532,11 +532,11 @@ let pretype_axiom :
                     in
                  FStar_SMTEncoding_Util.mkAssume uu____2002)
   
-let primitive_type_axioms :
+let (primitive_type_axioms :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       Prims.string ->
-        FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.decl Prims.list
+        FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.decl Prims.list)
   =
   let xx = ("x", FStar_SMTEncoding_Term.Term_sort)  in
   let x = FStar_SMTEncoding_Util.mkFreeV xx  in
@@ -1188,10 +1188,10 @@ let primitive_type_axioms :
           | FStar_Pervasives_Native.None  -> []
           | FStar_Pervasives_Native.Some (uu____4486,f) -> f env s tt
   
-let encode_smt_lemma :
+let (encode_smt_lemma :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.fv ->
-      FStar_Syntax_Syntax.typ -> FStar_SMTEncoding_Term.decl Prims.list
+      FStar_Syntax_Syntax.typ -> FStar_SMTEncoding_Term.decl Prims.list)
   =
   fun env  ->
     fun fv  ->
@@ -1209,7 +1209,7 @@ let encode_smt_lemma :
                       (Prims.strcat "Lemma: " lid.FStar_Ident.str)),
                    (Prims.strcat "lemma_" lid.FStar_Ident.str))]
   
-let encode_free_var :
+let (encode_free_var :
   Prims.bool ->
     FStar_SMTEncoding_Env.env_t ->
       FStar_Syntax_Syntax.fv ->
@@ -1217,7 +1217,7 @@ let encode_free_var :
           FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.qualifier Prims.list ->
               (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-                FStar_Pervasives_Native.tuple2
+                FStar_Pervasives_Native.tuple2)
   =
   fun uninterpreted  ->
     fun env  ->
@@ -1894,14 +1894,14 @@ let encode_free_var :
                                                     in
                                                  (g, env2))))))))
   
-let declare_top_level_let :
+let (declare_top_level_let :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.fv ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
           (FStar_SMTEncoding_Env.fvar_binding,FStar_SMTEncoding_Term.decl
                                                 Prims.list,FStar_SMTEncoding_Env.env_t)
-            FStar_Pervasives_Native.tuple3
+            FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun x  ->
@@ -1923,14 +1923,14 @@ let declare_top_level_let :
                    (fvb, decls, env1))
           | FStar_Pervasives_Native.Some fvb -> (fvb, [], env)
   
-let encode_top_level_val :
+let (encode_top_level_val :
   Prims.bool ->
     FStar_SMTEncoding_Env.env_t ->
       FStar_Syntax_Syntax.fv ->
         FStar_Syntax_Syntax.term ->
           FStar_Syntax_Syntax.qualifier Prims.list ->
             (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-              FStar_Pervasives_Native.tuple2
+              FStar_Pervasives_Native.tuple2)
   =
   fun uninterpreted  ->
     fun env  ->
@@ -1951,12 +1951,12 @@ let encode_top_level_val :
                   (uu____5645, env1)
                 else (decls, env1)
   
-let encode_top_level_vals :
+let (encode_top_level_vals :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.letbinding Prims.list ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-          FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun bindings  ->
@@ -1978,7 +1978,7 @@ let encode_top_level_vals :
                            ((FStar_List.append decls decls'), env2)))
              ([], env))
   
-let is_tactic : FStar_Syntax_Syntax.term -> Prims.bool =
+let (is_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t  ->
     let fstar_tactics_tactic_lid =
       FStar_Parser_Const.p2l ["FStar"; "Tactics"; "tactic"]  in
@@ -1999,19 +1999,19 @@ let is_tactic : FStar_Syntax_Syntax.term -> Prims.bool =
          | uu____5817 -> false)
   
 exception Let_rec_unencodeable 
-let uu___is_Let_rec_unencodeable : Prims.exn -> Prims.bool =
+let (uu___is_Let_rec_unencodeable : Prims.exn -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Let_rec_unencodeable  -> true
     | uu____5823 -> false
   
-let encode_top_level_let :
+let (encode_top_level_let :
   FStar_SMTEncoding_Env.env_t ->
     (Prims.bool,FStar_Syntax_Syntax.letbinding Prims.list)
       FStar_Pervasives_Native.tuple2 ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-          FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun uu____5851  ->
@@ -3269,11 +3269,11 @@ let encode_top_level_let :
                     in
                  ([decl], env))
   
-let rec encode_sigelt :
+let rec (encode_sigelt :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_SMTEncoding_Term.decls_t,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun se  ->
@@ -3309,11 +3309,11 @@ let rec encode_sigelt :
              in
           (g1, env1)
 
-and encode_sigelt' :
+and (encode_sigelt' :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_SMTEncoding_Term.decls_t,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun se  ->
@@ -5432,11 +5432,11 @@ and encode_sigelt' :
                                                   ((FStar_List.append
                                                       datacons g), env1)))))))))
 
-and encode_sigelts :
+and (encode_sigelts :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
       (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun ses  ->
@@ -5451,11 +5451,11 @@ and encode_sigelts :
                      | (g',env2) -> ((FStar_List.append g g'), env2)))
            ([], env))
 
-let encode_env_bindings :
+let (encode_env_bindings :
   FStar_SMTEncoding_Env.env_t ->
     FStar_TypeChecker_Env.binding Prims.list ->
       (FStar_SMTEncoding_Term.decls_t,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun bindings  ->
@@ -5626,9 +5626,9 @@ let encode_labels :
        in
     (prefix1, suffix)
   
-let last_env : FStar_SMTEncoding_Env.env_t Prims.list FStar_ST.ref =
+let (last_env : FStar_SMTEncoding_Env.env_t Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
-let init_env : FStar_TypeChecker_Env.env -> unit =
+let (init_env : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv  ->
     let uu____13610 =
       let uu____13613 =
@@ -5654,9 +5654,9 @@ let init_env : FStar_TypeChecker_Env.env -> unit =
       [uu____13613]  in
     FStar_ST.op_Colon_Equals last_env uu____13610
   
-let get_env :
+let (get_env :
   FStar_Ident.lident ->
-    FStar_TypeChecker_Env.env -> FStar_SMTEncoding_Env.env_t
+    FStar_TypeChecker_Env.env -> FStar_SMTEncoding_Env.env_t)
   =
   fun cmn  ->
     fun tcenv  ->
@@ -5687,14 +5687,14 @@ let get_env :
             FStar_SMTEncoding_Env.current_module_name = uu____13709
           }
   
-let set_env : FStar_SMTEncoding_Env.env_t -> unit =
+let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
   fun env  ->
     let uu____13715 = FStar_ST.op_Bang last_env  in
     match uu____13715 with
     | [] -> failwith "Empty env stack"
     | uu____13745::tl1 -> FStar_ST.op_Colon_Equals last_env (env :: tl1)
   
-let push_env : unit -> unit =
+let (push_env : unit -> unit) =
   fun uu____13780  ->
     let uu____13781 = FStar_ST.op_Bang last_env  in
     match uu____13781 with
@@ -5726,38 +5726,38 @@ let push_env : unit -> unit =
           }  in
         FStar_ST.op_Colon_Equals last_env (top :: hd1 :: tl1)
   
-let pop_env : unit -> unit =
+let (pop_env : unit -> unit) =
   fun uu____13851  ->
     let uu____13852 = FStar_ST.op_Bang last_env  in
     match uu____13852 with
     | [] -> failwith "Popping an empty stack"
     | uu____13882::tl1 -> FStar_ST.op_Colon_Equals last_env tl1
   
-let init : FStar_TypeChecker_Env.env -> unit =
+let (init : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv  ->
     init_env tcenv;
     FStar_SMTEncoding_Z3.init ();
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
   
-let push : Prims.string -> unit =
+let (push : Prims.string -> unit) =
   fun msg  ->
     push_env ();
     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.push ();
     FStar_SMTEncoding_Z3.push msg
   
-let pop : Prims.string -> unit =
+let (pop : Prims.string -> unit) =
   fun msg  ->
     pop_env ();
     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.pop ();
     FStar_SMTEncoding_Z3.pop msg
   
-let open_fact_db_tags :
-  FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Term.fact_db_id Prims.list
+let (open_fact_db_tags :
+  FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Term.fact_db_id Prims.list)
   = fun env  -> [] 
-let place_decl_in_fact_dbs :
+let (place_decl_in_fact_dbs :
   FStar_SMTEncoding_Env.env_t ->
     FStar_SMTEncoding_Term.fact_db_id Prims.list ->
-      FStar_SMTEncoding_Term.decl -> FStar_SMTEncoding_Term.decl
+      FStar_SMTEncoding_Term.decl -> FStar_SMTEncoding_Term.decl)
   =
   fun env  ->
     fun fact_db_ids  ->
@@ -5777,9 +5777,9 @@ let place_decl_in_fact_dbs :
                })
         | uu____13974 -> d
   
-let fact_dbs_for_lid :
+let (fact_dbs_for_lid :
   FStar_SMTEncoding_Env.env_t ->
-    FStar_Ident.lid -> FStar_SMTEncoding_Term.fact_db_id Prims.list
+    FStar_Ident.lid -> FStar_SMTEncoding_Term.fact_db_id Prims.list)
   =
   fun env  ->
     fun lid  ->
@@ -5792,11 +5792,11 @@ let fact_dbs_for_lid :
          in
       (FStar_SMTEncoding_Term.Name lid) :: uu____13993
   
-let encode_top_level_facts :
+let (encode_top_level_facts :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun se  ->
@@ -5813,8 +5813,8 @@ let encode_top_level_facts :
              in
           (g1, env1)
   
-let encode_sig :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit =
+let (encode_sig :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun tcenv  ->
     fun se  ->
       let caption decls =
@@ -5851,8 +5851,8 @@ let encode_sig :
             (let uu____14102 = caption decls  in
              FStar_SMTEncoding_Z3.giveZ3 uu____14102)))
   
-let encode_modul :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.modul -> unit =
+let (encode_modul :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.modul -> unit) =
   fun tcenv  ->
     fun modul  ->
       let name =
@@ -5954,14 +5954,14 @@ let encode_modul :
             (let decls1 = caption decls  in
              FStar_SMTEncoding_Z3.giveZ3 decls1)))
   
-let encode_query :
+let (encode_query :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_ErrorReporting.label
                                                   Prims.list,FStar_SMTEncoding_Term.decl,
           FStar_SMTEncoding_Term.decl Prims.list)
-          FStar_Pervasives_Native.tuple4
+          FStar_Pervasives_Native.tuple4)
   =
   fun use_env_msg  ->
     fun tcenv  ->

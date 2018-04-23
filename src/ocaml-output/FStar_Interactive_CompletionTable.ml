@@ -1,5 +1,5 @@
 open Prims
-let string_compare : Prims.string -> Prims.string -> Prims.int =
+let (string_compare : Prims.string -> Prims.string -> Prims.int) =
   fun s1  -> fun s2  -> FStar_String.compare s1 s2 
 type 'a heap =
   | EmptyHeap 
@@ -308,14 +308,15 @@ type prefix_match =
   {
   prefix: Prims.string FStar_Pervasives_Native.option ;
   completion: Prims.string }[@@deriving show]
-let __proj__Mkprefix_match__item__prefix :
-  prefix_match -> Prims.string FStar_Pervasives_Native.option =
+let (__proj__Mkprefix_match__item__prefix :
+  prefix_match -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
     | { prefix = __fname__prefix; completion = __fname__completion;_} ->
         __fname__prefix
   
-let __proj__Mkprefix_match__item__completion : prefix_match -> Prims.string =
+let (__proj__Mkprefix_match__item__completion : prefix_match -> Prims.string)
+  =
   fun projectee  ->
     match projectee with
     | { prefix = __fname__prefix; completion = __fname__completion;_} ->
@@ -324,23 +325,23 @@ let __proj__Mkprefix_match__item__completion : prefix_match -> Prims.string =
 type path_elem = {
   imports: Prims.string Prims.list ;
   segment: prefix_match }[@@deriving show]
-let __proj__Mkpath_elem__item__imports : path_elem -> Prims.string Prims.list
-  =
+let (__proj__Mkpath_elem__item__imports :
+  path_elem -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
     | { imports = __fname__imports; segment = __fname__segment;_} ->
         __fname__imports
   
-let __proj__Mkpath_elem__item__segment : path_elem -> prefix_match =
+let (__proj__Mkpath_elem__item__segment : path_elem -> prefix_match) =
   fun projectee  ->
     match projectee with
     | { imports = __fname__imports; segment = __fname__segment;_} ->
         __fname__segment
   
-let matched_prefix_of_path_elem :
-  path_elem -> Prims.string FStar_Pervasives_Native.option =
+let (matched_prefix_of_path_elem :
+  path_elem -> Prims.string FStar_Pervasives_Native.option) =
   fun elem  -> (elem.segment).prefix 
-let mk_path_el : Prims.string Prims.list -> prefix_match -> path_elem =
+let (mk_path_el : Prims.string Prims.list -> prefix_match -> path_elem) =
   fun imports  -> fun segment  -> { imports; segment } 
 let rec btree_find_prefix :
   'a .
@@ -390,7 +391,7 @@ let rec btree_fold :
   
 type path = path_elem Prims.list[@@deriving show]
 type query = Prims.string Prims.list[@@deriving show]
-let query_to_string : Prims.string Prims.list -> Prims.string =
+let (query_to_string : Prims.string Prims.list -> Prims.string) =
   fun q  -> FStar_String.concat "." q 
 type 'a name_collection =
   | Names of 'a btree 
@@ -670,19 +671,19 @@ type name_search_term =
   | NSTAll 
   | NSTNone 
   | NSTPrefix of Prims.string [@@deriving show]
-let uu___is_NSTAll : name_search_term -> Prims.bool =
+let (uu___is_NSTAll : name_search_term -> Prims.bool) =
   fun projectee  ->
     match projectee with | NSTAll  -> true | uu____3486 -> false
   
-let uu___is_NSTNone : name_search_term -> Prims.bool =
+let (uu___is_NSTNone : name_search_term -> Prims.bool) =
   fun projectee  ->
     match projectee with | NSTNone  -> true | uu____3492 -> false
   
-let uu___is_NSTPrefix : name_search_term -> Prims.bool =
+let (uu___is_NSTPrefix : name_search_term -> Prims.bool) =
   fun projectee  ->
     match projectee with | NSTPrefix _0 -> true | uu____3499 -> false
   
-let __proj__NSTPrefix__item___0 : name_search_term -> Prims.string =
+let (__proj__NSTPrefix__item___0 : name_search_term -> Prims.string) =
   fun projectee  -> match projectee with | NSTPrefix _0 -> _0 
 let names_find_rev :
   'a .
@@ -766,13 +767,13 @@ let trie_find_prefix :
 type ns_info = {
   ns_name: Prims.string ;
   ns_loaded: Prims.bool }[@@deriving show]
-let __proj__Mkns_info__item__ns_name : ns_info -> Prims.string =
+let (__proj__Mkns_info__item__ns_name : ns_info -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { ns_name = __fname__ns_name; ns_loaded = __fname__ns_loaded;_} ->
         __fname__ns_name
   
-let __proj__Mkns_info__item__ns_loaded : ns_info -> Prims.bool =
+let (__proj__Mkns_info__item__ns_loaded : ns_info -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { ns_name = __fname__ns_name; ns_loaded = __fname__ns_loaded;_} ->
@@ -783,74 +784,74 @@ type mod_info =
   mod_name: Prims.string ;
   mod_path: Prims.string ;
   mod_loaded: Prims.bool }[@@deriving show]
-let __proj__Mkmod_info__item__mod_name : mod_info -> Prims.string =
+let (__proj__Mkmod_info__item__mod_name : mod_info -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
         mod_loaded = __fname__mod_loaded;_} -> __fname__mod_name
   
-let __proj__Mkmod_info__item__mod_path : mod_info -> Prims.string =
+let (__proj__Mkmod_info__item__mod_path : mod_info -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
         mod_loaded = __fname__mod_loaded;_} -> __fname__mod_path
   
-let __proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool =
+let (__proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
         mod_loaded = __fname__mod_loaded;_} -> __fname__mod_loaded
   
-let mod_name : mod_info -> Prims.string = fun md  -> md.mod_name 
+let (mod_name : mod_info -> Prims.string) = fun md  -> md.mod_name 
 type mod_symbol =
   | Module of mod_info 
   | Namespace of ns_info [@@deriving show]
-let uu___is_Module : mod_symbol -> Prims.bool =
+let (uu___is_Module : mod_symbol -> Prims.bool) =
   fun projectee  ->
     match projectee with | Module _0 -> true | uu____4015 -> false
   
-let __proj__Module__item___0 : mod_symbol -> mod_info =
+let (__proj__Module__item___0 : mod_symbol -> mod_info) =
   fun projectee  -> match projectee with | Module _0 -> _0 
-let uu___is_Namespace : mod_symbol -> Prims.bool =
+let (uu___is_Namespace : mod_symbol -> Prims.bool) =
   fun projectee  ->
     match projectee with | Namespace _0 -> true | uu____4029 -> false
   
-let __proj__Namespace__item___0 : mod_symbol -> ns_info =
+let (__proj__Namespace__item___0 : mod_symbol -> ns_info) =
   fun projectee  -> match projectee with | Namespace _0 -> _0 
 type lid_symbol = FStar_Ident.lid[@@deriving show]
 type symbol =
   | ModOrNs of mod_symbol 
   | Lid of lid_symbol [@@deriving show]
-let uu___is_ModOrNs : symbol -> Prims.bool =
+let (uu___is_ModOrNs : symbol -> Prims.bool) =
   fun projectee  ->
     match projectee with | ModOrNs _0 -> true | uu____4053 -> false
   
-let __proj__ModOrNs__item___0 : symbol -> mod_symbol =
+let (__proj__ModOrNs__item___0 : symbol -> mod_symbol) =
   fun projectee  -> match projectee with | ModOrNs _0 -> _0 
-let uu___is_Lid : symbol -> Prims.bool =
+let (uu___is_Lid : symbol -> Prims.bool) =
   fun projectee  ->
     match projectee with | Lid _0 -> true | uu____4067 -> false
   
-let __proj__Lid__item___0 : symbol -> lid_symbol =
+let (__proj__Lid__item___0 : symbol -> lid_symbol) =
   fun projectee  -> match projectee with | Lid _0 -> _0 
 type table = {
   tbl_lids: lid_symbol trie ;
   tbl_mods: mod_symbol trie }[@@deriving show]
-let __proj__Mktable__item__tbl_lids : table -> lid_symbol trie =
+let (__proj__Mktable__item__tbl_lids : table -> lid_symbol trie) =
   fun projectee  ->
     match projectee with
     | { tbl_lids = __fname__tbl_lids; tbl_mods = __fname__tbl_mods;_} ->
         __fname__tbl_lids
   
-let __proj__Mktable__item__tbl_mods : table -> mod_symbol trie =
+let (__proj__Mktable__item__tbl_mods : table -> mod_symbol trie) =
   fun projectee  ->
     match projectee with
     | { tbl_lids = __fname__tbl_lids; tbl_mods = __fname__tbl_mods;_} ->
         __fname__tbl_mods
   
-let empty : table =
+let (empty : table) =
   { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) } 
-let insert : table -> query -> Prims.string -> lid_symbol -> table =
+let (insert : table -> query -> Prims.string -> lid_symbol -> table) =
   fun tbl  ->
     fun host_query  ->
       fun id1  ->
@@ -859,7 +860,7 @@ let insert : table -> query -> Prims.string -> lid_symbol -> table =
           let uu____4140 = trie_insert tbl.tbl_lids host_query id1 c  in
           { tbl_lids = uu____4140; tbl_mods = (uu___41_4139.tbl_mods) }
   
-let register_alias : table -> Prims.string -> query -> query -> table =
+let (register_alias : table -> Prims.string -> query -> query -> table) =
   fun tbl  ->
     fun key  ->
       fun host_query  ->
@@ -869,7 +870,7 @@ let register_alias : table -> Prims.string -> query -> query -> table =
             trie_add_alias tbl.tbl_lids key host_query included_query  in
           { tbl_lids = uu____4164; tbl_mods = (uu___42_4163.tbl_mods) }
   
-let register_include : table -> query -> query -> table =
+let (register_include : table -> query -> query -> table) =
   fun tbl  ->
     fun host_query  ->
       fun included_query  ->
@@ -878,7 +879,7 @@ let register_include : table -> query -> query -> table =
            in
         { tbl_lids = uu____4183; tbl_mods = (uu___43_4182.tbl_mods) }
   
-let register_open : table -> Prims.bool -> query -> query -> table =
+let (register_open : table -> Prims.bool -> query -> query -> table) =
   fun tbl  ->
     fun is_module  ->
       fun host_query  ->
@@ -891,8 +892,8 @@ let register_open : table -> Prims.bool -> query -> query -> table =
                trie_open_namespace tbl.tbl_lids host_query included_query  in
              { tbl_lids = uu____4208; tbl_mods = (uu___44_4207.tbl_mods) })
   
-let register_module_path :
-  table -> Prims.bool -> Prims.string -> query -> table =
+let (register_module_path :
+  table -> Prims.bool -> Prims.string -> query -> table) =
   fun tbl  ->
     fun loaded  ->
       fun path  ->
@@ -944,13 +945,13 @@ let register_module_path :
              in
           { tbl_lids = (uu___45_4386.tbl_lids); tbl_mods = uu____4387 }
   
-let string_of_path : path -> Prims.string =
+let (string_of_path : path -> Prims.string) =
   fun path  ->
     let uu____4431 = FStar_List.map (fun el  -> (el.segment).completion) path
        in
     FStar_String.concat "." uu____4431
   
-let match_length_of_path : path -> Prims.int =
+let (match_length_of_path : path -> Prims.int) =
   fun path  ->
     let uu____4441 =
       FStar_List.fold_left
@@ -973,25 +974,25 @@ let match_length_of_path : path -> Prims.int =
         ((length1 - (Prims.lift_native_int (1))) - last_completion_length) +
           (FStar_String.length last_prefix)
   
-let first_import_of_path :
-  path -> Prims.string FStar_Pervasives_Native.option =
+let (first_import_of_path :
+  path -> Prims.string FStar_Pervasives_Native.option) =
   fun path  ->
     match path with
     | [] -> FStar_Pervasives_Native.None
     | { imports; segment = uu____4549;_}::uu____4550 ->
         FStar_List.last imports
   
-let alist_of_ns_info :
+let (alist_of_ns_info :
   ns_info ->
-    (Prims.string,FStar_Util.json) FStar_Pervasives_Native.tuple2 Prims.list
+    (Prims.string,FStar_Util.json) FStar_Pervasives_Native.tuple2 Prims.list)
   =
   fun ns_info  ->
     [("name", (FStar_Util.JsonStr (ns_info.ns_name)));
     ("loaded", (FStar_Util.JsonBool (ns_info.ns_loaded)))]
   
-let alist_of_mod_info :
+let (alist_of_mod_info :
   mod_info ->
-    (Prims.string,FStar_Util.json) FStar_Pervasives_Native.tuple2 Prims.list
+    (Prims.string,FStar_Util.json) FStar_Pervasives_Native.tuple2 Prims.list)
   =
   fun mod_info  ->
     [("name", (FStar_Util.JsonStr (mod_info.mod_name)));
@@ -1003,8 +1004,8 @@ type completion_result =
   completion_match_length: Prims.int ;
   completion_candidate: Prims.string ;
   completion_annotation: Prims.string }[@@deriving show]
-let __proj__Mkcompletion_result__item__completion_match_length :
-  completion_result -> Prims.int =
+let (__proj__Mkcompletion_result__item__completion_match_length :
+  completion_result -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { completion_match_length = __fname__completion_match_length;
@@ -1012,8 +1013,8 @@ let __proj__Mkcompletion_result__item__completion_match_length :
         completion_annotation = __fname__completion_annotation;_} ->
         __fname__completion_match_length
   
-let __proj__Mkcompletion_result__item__completion_candidate :
-  completion_result -> Prims.string =
+let (__proj__Mkcompletion_result__item__completion_candidate :
+  completion_result -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { completion_match_length = __fname__completion_match_length;
@@ -1021,8 +1022,8 @@ let __proj__Mkcompletion_result__item__completion_candidate :
         completion_annotation = __fname__completion_annotation;_} ->
         __fname__completion_candidate
   
-let __proj__Mkcompletion_result__item__completion_annotation :
-  completion_result -> Prims.string =
+let (__proj__Mkcompletion_result__item__completion_annotation :
+  completion_result -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { completion_match_length = __fname__completion_match_length;
@@ -1030,7 +1031,7 @@ let __proj__Mkcompletion_result__item__completion_annotation :
         completion_annotation = __fname__completion_annotation;_} ->
         __fname__completion_annotation
   
-let json_of_completion_result : completion_result -> FStar_Util.json =
+let (json_of_completion_result : completion_result -> FStar_Util.json) =
   fun result  ->
     FStar_Util.JsonList
       [FStar_Util.JsonInt (result.completion_match_length);
@@ -1055,8 +1056,8 @@ let completion_result_of_lid :
           completion_annotation = uu____4671
         }
   
-let completion_result_of_mod :
-  Prims.string -> Prims.bool -> path -> completion_result =
+let (completion_result_of_mod :
+  Prims.string -> Prims.bool -> path -> completion_result) =
   fun annot  ->
     fun loaded  ->
       fun path  ->
@@ -1070,8 +1071,8 @@ let completion_result_of_mod :
           completion_annotation = uu____4692
         }
   
-let completion_result_of_ns_or_mod :
-  (path,mod_symbol) FStar_Pervasives_Native.tuple2 -> completion_result =
+let (completion_result_of_ns_or_mod :
+  (path,mod_symbol) FStar_Pervasives_Native.tuple2 -> completion_result) =
   fun uu____4702  ->
     match uu____4702 with
     | (path,symb) ->
@@ -1083,22 +1084,22 @@ let completion_result_of_ns_or_mod :
          | Namespace { ns_name = uu____4712; ns_loaded = loaded;_} ->
              completion_result_of_mod "ns" loaded path)
   
-let find_module_or_ns :
-  table -> query -> mod_symbol FStar_Pervasives_Native.option =
+let (find_module_or_ns :
+  table -> query -> mod_symbol FStar_Pervasives_Native.option) =
   fun tbl  -> fun query  -> trie_find_exact tbl.tbl_mods query 
-let autocomplete_lid : table -> query -> completion_result Prims.list =
+let (autocomplete_lid : table -> query -> completion_result Prims.list) =
   fun tbl  ->
     fun query  ->
       let uu____4738 = trie_find_prefix tbl.tbl_lids query  in
       FStar_List.map completion_result_of_lid uu____4738
   
-let autocomplete_mod_or_ns :
+let (autocomplete_mod_or_ns :
   table ->
     query ->
       ((path,mod_symbol) FStar_Pervasives_Native.tuple2 ->
          (path,mod_symbol) FStar_Pervasives_Native.tuple2
            FStar_Pervasives_Native.option)
-        -> completion_result Prims.list
+        -> completion_result Prims.list)
   =
   fun tbl  ->
     fun query  ->

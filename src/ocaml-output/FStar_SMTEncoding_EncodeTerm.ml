@@ -54,13 +54,13 @@ let mkForall_fuel' :
                     in
                  FStar_SMTEncoding_Util.mkForall (pats1, vars1, body1))
   
-let mkForall_fuel :
+let (mkForall_fuel :
   (FStar_SMTEncoding_Term.pat Prims.list Prims.list,FStar_SMTEncoding_Term.fvs,
     FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
-    FStar_SMTEncoding_Term.term
+    FStar_SMTEncoding_Term.term)
   = mkForall_fuel' (Prims.lift_native_int (1)) 
-let head_normal :
-  FStar_SMTEncoding_Env.env_t -> FStar_Syntax_Syntax.term -> Prims.bool =
+let (head_normal :
+  FStar_SMTEncoding_Env.env_t -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun env  ->
     fun t  ->
       let t1 = FStar_Syntax_Util.unmeta t  in
@@ -93,8 +93,8 @@ let head_normal :
           FStar_All.pipe_right uu____269 FStar_Option.isNone
       | uu____286 -> false
   
-let head_redex :
-  FStar_SMTEncoding_Env.env_t -> FStar_Syntax_Syntax.term -> Prims.bool =
+let (head_redex :
+  FStar_SMTEncoding_Env.env_t -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun env  ->
     fun t  ->
       let uu____297 =
@@ -124,9 +124,9 @@ let head_redex :
           FStar_All.pipe_right uu____326 FStar_Option.isSome
       | uu____343 -> false
   
-let whnf :
+let (whnf :
   FStar_SMTEncoding_Env.env_t ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun env  ->
     fun t  ->
@@ -144,9 +144,9 @@ let whnf :
           FStar_TypeChecker_Normalize.EraseUniverses]
           env.FStar_SMTEncoding_Env.tcenv t
   
-let norm :
+let (norm :
   FStar_SMTEncoding_Env.env_t ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun env  ->
     fun t  ->
@@ -157,7 +157,7 @@ let norm :
         FStar_TypeChecker_Normalize.EraseUniverses]
         env.FStar_SMTEncoding_Env.tcenv t
   
-let trivial_post : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
+let (trivial_post : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t  ->
     let uu____371 =
       let uu____372 = FStar_Syntax_Syntax.null_binder t  in [uu____372]  in
@@ -167,10 +167,10 @@ let trivial_post : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
        in
     FStar_Syntax_Util.abs uu____371 uu____373 FStar_Pervasives_Native.None
   
-let mk_Apply :
+let (mk_Apply :
   FStar_SMTEncoding_Term.term ->
     (Prims.string,FStar_SMTEncoding_Term.sort) FStar_Pervasives_Native.tuple2
-      Prims.list -> FStar_SMTEncoding_Term.term
+      Prims.list -> FStar_SMTEncoding_Term.term)
   =
   fun e  ->
     fun vars  ->
@@ -186,9 +186,9 @@ let mk_Apply :
                     let uu____418 = FStar_SMTEncoding_Util.mkFreeV var  in
                     FStar_SMTEncoding_Util.mk_ApplyTT out uu____418) e)
   
-let mk_Apply_args :
+let (mk_Apply_args :
   FStar_SMTEncoding_Term.term ->
-    FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term
+    FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term)
   =
   fun e  ->
     fun args  ->
@@ -212,11 +212,11 @@ let raise_arity_mismatch :
             (FStar_Errors.Fatal_SMTEncodingArityMismatch, uu____471)  in
           FStar_Errors.raise_error uu____466 rng
   
-let maybe_curry_app :
+let (maybe_curry_app :
   FStar_Range.range ->
     FStar_SMTEncoding_Term.op ->
       Prims.int ->
-        FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term
+        FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term)
   =
   fun rng  ->
     fun head1  ->
@@ -238,18 +238,18 @@ let maybe_curry_app :
               (let uu____535 = FStar_SMTEncoding_Term.op_to_string head1  in
                raise_arity_mismatch uu____535 arity n_args rng)
   
-let is_app : FStar_SMTEncoding_Term.op -> Prims.bool =
+let (is_app : FStar_SMTEncoding_Term.op -> Prims.bool) =
   fun uu___66_544  ->
     match uu___66_544 with
     | FStar_SMTEncoding_Term.Var "ApplyTT" -> true
     | FStar_SMTEncoding_Term.Var "ApplyTF" -> true
     | uu____545 -> false
   
-let is_an_eta_expansion :
+let (is_an_eta_expansion :
   FStar_SMTEncoding_Env.env_t ->
     FStar_SMTEncoding_Term.fv Prims.list ->
       FStar_SMTEncoding_Term.term ->
-        FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option
+        FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun vars  ->
@@ -318,10 +318,10 @@ type pattern =
       (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
         FStar_Pervasives_Native.tuple2 Prims.list
     }[@@deriving show]
-let __proj__Mkpattern__item__pat_vars :
+let (__proj__Mkpattern__item__pat_vars :
   pattern ->
     (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.fv)
-      FStar_Pervasives_Native.tuple2 Prims.list
+      FStar_Pervasives_Native.tuple2 Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -329,11 +329,11 @@ let __proj__Mkpattern__item__pat_vars :
         guard = __fname__guard; projections = __fname__projections;_} ->
         __fname__pat_vars
   
-let __proj__Mkpattern__item__pat_term :
+let (__proj__Mkpattern__item__pat_term :
   pattern ->
     unit ->
       (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun projectee  ->
     match projectee with
@@ -341,19 +341,19 @@ let __proj__Mkpattern__item__pat_term :
         guard = __fname__guard; projections = __fname__projections;_} ->
         __fname__pat_term
   
-let __proj__Mkpattern__item__guard :
-  pattern -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+let (__proj__Mkpattern__item__guard :
+  pattern -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   fun projectee  ->
     match projectee with
     | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
         guard = __fname__guard; projections = __fname__projections;_} ->
         __fname__guard
   
-let __proj__Mkpattern__item__projections :
+let (__proj__Mkpattern__item__projections :
   pattern ->
     FStar_SMTEncoding_Term.term ->
       (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
-        FStar_Pervasives_Native.tuple2 Prims.list
+        FStar_Pervasives_Native.tuple2 Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -361,10 +361,10 @@ let __proj__Mkpattern__item__projections :
         guard = __fname__guard; projections = __fname__projections;_} ->
         __fname__projections
   
-let as_function_typ :
+let (as_function_typ :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      FStar_Syntax_Syntax.term
+      FStar_Syntax_Syntax.term)
   =
   fun env  ->
     fun t0  ->
@@ -390,10 +390,10 @@ let as_function_typ :
          in
       aux true t0
   
-let rec curried_arrow_formals_comp :
+let rec (curried_arrow_formals_comp :
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.comp)
-      FStar_Pervasives_Native.tuple2
+      FStar_Pervasives_Native.tuple2)
   =
   fun k  ->
     let k1 = FStar_Syntax_Subst.compress k  in
@@ -429,14 +429,14 @@ let is_arithmetic_primitive :
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.op_Minus
       | uu____1045 -> false
   
-let isInteger : FStar_Syntax_Syntax.term' -> Prims.bool =
+let (isInteger : FStar_Syntax_Syntax.term' -> Prims.bool) =
   fun tm  ->
     match tm with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
         (n1,FStar_Pervasives_Native.None )) -> true
     | uu____1068 -> false
   
-let getInteger : FStar_Syntax_Syntax.term' -> Prims.int =
+let (getInteger : FStar_Syntax_Syntax.term' -> Prims.int) =
   fun tm  ->
     match tm with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
@@ -495,11 +495,11 @@ let is_BitVector_primitive :
             && (isInteger sz_arg.FStar_Syntax_Syntax.n)
       | uu____1224 -> false
   
-let rec encode_const :
+let rec (encode_const :
   FStar_Const.sconst ->
     FStar_SMTEncoding_Env.env_t ->
       (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decl Prims.list)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun c  ->
     fun env  ->
@@ -555,14 +555,14 @@ let rec encode_const :
             FStar_Util.format1 "Unhandled constant: %s" uu____1596  in
           failwith uu____1595
 
-and encode_binders :
+and (encode_binders :
   FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binders ->
       FStar_SMTEncoding_Env.env_t ->
         (FStar_SMTEncoding_Term.fv Prims.list,FStar_SMTEncoding_Term.term
                                                 Prims.list,FStar_SMTEncoding_Env.env_t,
           FStar_SMTEncoding_Term.decls_t,FStar_Syntax_Syntax.bv Prims.list)
-          FStar_Pervasives_Native.tuple5
+          FStar_Pervasives_Native.tuple5)
   =
   fun fuel_opt  ->
     fun bs  ->
@@ -614,13 +614,13 @@ and encode_binders :
              ((FStar_List.rev vars), (FStar_List.rev guards), env1, decls,
                (FStar_List.rev names1)))
 
-and encode_term_pred :
+and (encode_term_pred :
   FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.typ ->
       FStar_SMTEncoding_Env.env_t ->
         FStar_SMTEncoding_Term.term ->
           (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun fuel_opt  ->
     fun t  ->
@@ -633,13 +633,13 @@ and encode_term_pred :
                 FStar_SMTEncoding_Term.mk_HasTypeWithFuel fuel_opt e t1  in
               (uu____2006, decls)
 
-and encode_term_pred' :
+and (encode_term_pred' :
   FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.typ ->
       FStar_SMTEncoding_Env.env_t ->
         FStar_SMTEncoding_Term.term ->
           (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-            FStar_Pervasives_Native.tuple2
+            FStar_Pervasives_Native.tuple2)
   =
   fun fuel_opt  ->
     fun t  ->
@@ -658,12 +658,12 @@ and encode_term_pred' :
                      FStar_SMTEncoding_Term.mk_HasTypeFuel f e t1  in
                    (uu____2034, decls))
 
-and encode_arith_term :
+and (encode_arith_term :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.args ->
         (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-          FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun head1  ->
@@ -757,12 +757,12 @@ and encode_arith_term :
              | (uu____2460,op) ->
                  let uu____2472 = op arg_tms  in (uu____2472, decls))
 
-and encode_BitVector_term :
+and (encode_BitVector_term :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.arg Prims.list ->
         (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decl Prims.list)
-          FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun head1  ->
@@ -965,11 +965,11 @@ and encode_BitVector_term :
                            let uu____3308 = op arg_tms1  in
                            (uu____3308, (FStar_List.append sz_decls decls)))))
 
-and encode_term :
+and (encode_term :
   FStar_Syntax_Syntax.typ ->
     FStar_SMTEncoding_Env.env_t ->
       (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun t  ->
     fun env  ->
@@ -2500,7 +2500,7 @@ and encode_term :
            encode_match e pats FStar_SMTEncoding_Term.mk_Term_unit env
              encode_term)
 
-and encode_let :
+and (encode_let :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term ->
@@ -2512,7 +2512,7 @@ and encode_let :
                    FStar_Pervasives_Native.tuple2)
               ->
               (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-                FStar_Pervasives_Native.tuple2
+                FStar_Pervasives_Native.tuple2)
   =
   fun x  ->
     fun t1  ->
@@ -2545,7 +2545,7 @@ and encode_let :
                              | (ee2,decls2) ->
                                  (ee2, (FStar_List.append decls1 decls2)))))
 
-and encode_match :
+and (encode_match :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.branch Prims.list ->
       FStar_SMTEncoding_Term.term ->
@@ -2556,7 +2556,7 @@ and encode_match :
                  FStar_Pervasives_Native.tuple2)
             ->
             (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-              FStar_Pervasives_Native.tuple2
+              FStar_Pervasives_Native.tuple2)
   =
   fun e  ->
     fun pats  ->
@@ -2655,10 +2655,10 @@ and encode_match :
                              in
                           (uu____6488, decls1)))
 
-and encode_pat :
+and (encode_pat :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.pat ->
-      (FStar_SMTEncoding_Env.env_t,pattern) FStar_Pervasives_Native.tuple2
+      (FStar_SMTEncoding_Env.env_t,pattern) FStar_Pervasives_Native.tuple2)
   =
   fun env  ->
     fun pat  ->
@@ -2791,11 +2791,11 @@ and encode_pat :
                   }  in
                 (env1, pattern)))
 
-and encode_args :
+and (encode_args :
   FStar_Syntax_Syntax.args ->
     FStar_SMTEncoding_Env.env_t ->
       (FStar_SMTEncoding_Term.term Prims.list,FStar_SMTEncoding_Term.decls_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun l  ->
     fun env  ->
@@ -2814,11 +2814,11 @@ and encode_args :
          in
       match uu____7056 with | (l1,decls) -> ((FStar_List.rev l1), decls)
 
-and encode_function_type_as_formula :
+and (encode_function_type_as_formula :
   FStar_Syntax_Syntax.typ ->
     FStar_SMTEncoding_Env.env_t ->
       (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun t  ->
     fun env  ->
@@ -3021,11 +3021,11 @@ and encode_function_type_as_formula :
                                  in
                               (uu____8160, decls1)))))
 
-and encode_smt_pattern :
+and (encode_smt_pattern :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_SMTEncoding_Env.env_t ->
       (FStar_SMTEncoding_Term.pat,FStar_SMTEncoding_Term.decl Prims.list)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun t  ->
     fun env  ->
@@ -3050,11 +3050,11 @@ and encode_smt_pattern :
                          (uu____8327, (FStar_List.append decls decls'))))
            | uu____8330 -> encode_term t env)
 
-and encode_formula :
+and (encode_formula :
   FStar_Syntax_Syntax.typ ->
     FStar_SMTEncoding_Env.env_t ->
       (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decls_t)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun phi  ->
     fun env  ->

@@ -12,13 +12,13 @@ let z3_result_as_replay_result :
     | FStar_Util.Inl l -> FStar_Util.Inl l
     | FStar_Util.Inr (r,uu____47) -> FStar_Util.Inr r
   
-let recorded_hints :
-  FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref =
+let (recorded_hints :
+  FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let replaying_hints :
-  FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref =
+let (replaying_hints :
+  FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
-let format_hints_file_name : Prims.string -> Prims.string =
+let (format_hints_file_name : Prims.string -> Prims.string) =
   fun src_filename  -> FStar_Util.format1 "%s.hints" src_filename 
 let initialize_hints_db : 'Auu____97 . Prims.string -> 'Auu____97 -> unit =
   fun src_filename  ->
@@ -71,7 +71,7 @@ let initialize_hints_db : 'Auu____97 . Prims.string -> 'Auu____97 -> unit =
               else ())
        else ())
   
-let finalize_hints_db : Prims.string -> unit =
+let (finalize_hints_db : Prims.string -> unit) =
   fun src_filename  ->
     (let uu____204 = FStar_Options.record_hints ()  in
      if uu____204
@@ -103,9 +103,9 @@ let with_hints_db : 'a . Prims.string -> (unit -> 'a) -> 'a =
       initialize_hints_db fname false;
       (let result = f ()  in finalize_hints_db fname; result)
   
-let filter_using_facts_from :
+let (filter_using_facts_from :
   FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Term.decl Prims.list
+    FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Term.decl Prims.list)
   =
   fun e  ->
     fun theory  ->
@@ -152,12 +152,12 @@ let filter_using_facts_from :
          in
       pruned_theory
   
-let filter_assertions :
+let (filter_assertions :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Z3.unsat_core ->
       FStar_SMTEncoding_Term.decls_t ->
         (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
-          FStar_Pervasives_Native.tuple2
+          FStar_Pervasives_Native.tuple2)
   =
   fun e  ->
     fun core  ->
@@ -213,11 +213,11 @@ let filter_assertions :
                    FStar_List.append theory' uu____543  in
                  (uu____540, true))
   
-let filter_facts_without_core :
+let (filter_facts_without_core :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.decls_t ->
       (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun e  ->
     fun x  ->
@@ -233,7 +233,7 @@ type errors =
     (FStar_Errors.raw_error,Prims.string,FStar_Range.range)
       FStar_Pervasives_Native.tuple3 Prims.list
     }[@@deriving show]
-let __proj__Mkerrors__item__error_reason : errors -> Prims.string =
+let (__proj__Mkerrors__item__error_reason : errors -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
@@ -241,7 +241,7 @@ let __proj__Mkerrors__item__error_reason : errors -> Prims.string =
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_reason
   
-let __proj__Mkerrors__item__error_fuel : errors -> Prims.int =
+let (__proj__Mkerrors__item__error_fuel : errors -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
@@ -249,7 +249,7 @@ let __proj__Mkerrors__item__error_fuel : errors -> Prims.int =
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_fuel
   
-let __proj__Mkerrors__item__error_ifuel : errors -> Prims.int =
+let (__proj__Mkerrors__item__error_ifuel : errors -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
@@ -257,8 +257,8 @@ let __proj__Mkerrors__item__error_ifuel : errors -> Prims.int =
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_ifuel
   
-let __proj__Mkerrors__item__error_hint :
-  errors -> Prims.string Prims.list FStar_Pervasives_Native.option =
+let (__proj__Mkerrors__item__error_hint :
+  errors -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
@@ -266,10 +266,10 @@ let __proj__Mkerrors__item__error_hint :
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_hint
   
-let __proj__Mkerrors__item__error_messages :
+let (__proj__Mkerrors__item__error_messages :
   errors ->
     (FStar_Errors.raw_error,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list
+      FStar_Pervasives_Native.tuple3 Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -279,7 +279,7 @@ let __proj__Mkerrors__item__error_messages :
         error_messages = __fname__error_messages;_} ->
         __fname__error_messages
   
-let error_to_short_string : errors -> Prims.string =
+let (error_to_short_string : errors -> Prims.string) =
   fun err  ->
     let uu____750 = FStar_Util.string_of_int err.error_fuel  in
     let uu____751 = FStar_Util.string_of_int err.error_ifuel  in
@@ -302,8 +302,8 @@ type query_settings =
   query_all_labels: FStar_SMTEncoding_Term.error_labels ;
   query_suffix: FStar_SMTEncoding_Term.decl Prims.list ;
   query_hash: Prims.string FStar_Pervasives_Native.option }[@@deriving show]
-let __proj__Mkquery_settings__item__query_env :
-  query_settings -> FStar_TypeChecker_Env.env =
+let (__proj__Mkquery_settings__item__query_env :
+  query_settings -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -317,8 +317,8 @@ let __proj__Mkquery_settings__item__query_env :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_env
   
-let __proj__Mkquery_settings__item__query_decl :
-  query_settings -> FStar_SMTEncoding_Term.decl =
+let (__proj__Mkquery_settings__item__query_decl :
+  query_settings -> FStar_SMTEncoding_Term.decl) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -332,8 +332,8 @@ let __proj__Mkquery_settings__item__query_decl :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_decl
   
-let __proj__Mkquery_settings__item__query_name :
-  query_settings -> Prims.string =
+let (__proj__Mkquery_settings__item__query_name :
+  query_settings -> Prims.string) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -347,8 +347,8 @@ let __proj__Mkquery_settings__item__query_name :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_name
   
-let __proj__Mkquery_settings__item__query_index : query_settings -> Prims.int
-  =
+let (__proj__Mkquery_settings__item__query_index :
+  query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -362,8 +362,8 @@ let __proj__Mkquery_settings__item__query_index : query_settings -> Prims.int
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_index
   
-let __proj__Mkquery_settings__item__query_range :
-  query_settings -> FStar_Range.range =
+let (__proj__Mkquery_settings__item__query_range :
+  query_settings -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -377,8 +377,8 @@ let __proj__Mkquery_settings__item__query_range :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_range
   
-let __proj__Mkquery_settings__item__query_fuel : query_settings -> Prims.int
-  =
+let (__proj__Mkquery_settings__item__query_fuel :
+  query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -392,8 +392,8 @@ let __proj__Mkquery_settings__item__query_fuel : query_settings -> Prims.int
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_fuel
   
-let __proj__Mkquery_settings__item__query_ifuel : query_settings -> Prims.int
-  =
+let (__proj__Mkquery_settings__item__query_ifuel :
+  query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -407,8 +407,8 @@ let __proj__Mkquery_settings__item__query_ifuel : query_settings -> Prims.int
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_ifuel
   
-let __proj__Mkquery_settings__item__query_rlimit :
-  query_settings -> Prims.int =
+let (__proj__Mkquery_settings__item__query_rlimit :
+  query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -422,8 +422,8 @@ let __proj__Mkquery_settings__item__query_rlimit :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_rlimit
   
-let __proj__Mkquery_settings__item__query_hint :
-  query_settings -> FStar_SMTEncoding_Z3.unsat_core =
+let (__proj__Mkquery_settings__item__query_hint :
+  query_settings -> FStar_SMTEncoding_Z3.unsat_core) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -437,8 +437,8 @@ let __proj__Mkquery_settings__item__query_hint :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_hint
   
-let __proj__Mkquery_settings__item__query_errors :
-  query_settings -> errors Prims.list =
+let (__proj__Mkquery_settings__item__query_errors :
+  query_settings -> errors Prims.list) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -452,8 +452,8 @@ let __proj__Mkquery_settings__item__query_errors :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_errors
   
-let __proj__Mkquery_settings__item__query_all_labels :
-  query_settings -> FStar_SMTEncoding_Term.error_labels =
+let (__proj__Mkquery_settings__item__query_all_labels :
+  query_settings -> FStar_SMTEncoding_Term.error_labels) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -467,8 +467,8 @@ let __proj__Mkquery_settings__item__query_all_labels :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_all_labels
   
-let __proj__Mkquery_settings__item__query_suffix :
-  query_settings -> FStar_SMTEncoding_Term.decl Prims.list =
+let (__proj__Mkquery_settings__item__query_suffix :
+  query_settings -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -482,8 +482,8 @@ let __proj__Mkquery_settings__item__query_suffix :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_suffix
   
-let __proj__Mkquery_settings__item__query_hash :
-  query_settings -> Prims.string FStar_Pervasives_Native.option =
+let (__proj__Mkquery_settings__item__query_hash :
+  query_settings -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -497,10 +497,10 @@ let __proj__Mkquery_settings__item__query_hash :
         query_suffix = __fname__query_suffix;
         query_hash = __fname__query_hash;_} -> __fname__query_hash
   
-let with_fuel_and_diagnostics :
+let (with_fuel_and_diagnostics :
   query_settings ->
     FStar_SMTEncoding_Term.decl Prims.list ->
-      FStar_SMTEncoding_Term.decl Prims.list
+      FStar_SMTEncoding_Term.decl Prims.list)
   =
   fun settings  ->
     fun label_assumptions  ->
@@ -575,10 +575,10 @@ let with_fuel_and_diagnostics :
         FStar_List.append label_assumptions uu____1225  in
       FStar_List.append uu____1169 uu____1222
   
-let used_hint : query_settings -> Prims.bool =
+let (used_hint : query_settings -> Prims.bool) =
   fun s  -> FStar_Option.isSome s.query_hint 
-let get_hint_for :
-  Prims.string -> Prims.int -> FStar_Util.hint FStar_Pervasives_Native.option
+let (get_hint_for :
+  Prims.string -> Prims.int -> FStar_Util.hint FStar_Pervasives_Native.option)
   =
   fun qname  ->
     fun qindex  ->
@@ -595,9 +595,9 @@ let get_hint_for :
                | uu____1320 -> FStar_Pervasives_Native.None)
       | uu____1323 -> FStar_Pervasives_Native.None
   
-let query_errors :
+let (query_errors :
   query_settings ->
-    FStar_SMTEncoding_Z3.z3result -> errors FStar_Pervasives_Native.option
+    FStar_SMTEncoding_Z3.z3result -> errors FStar_Pervasives_Native.option)
   =
   fun settings  ->
     fun z3result  ->
@@ -628,8 +628,8 @@ let query_errors :
                  }  in
                FStar_Pervasives_Native.Some err)
   
-let detail_hint_replay :
-  query_settings -> FStar_SMTEncoding_Z3.z3result -> unit =
+let (detail_hint_replay :
+  query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings  ->
     fun z3result  ->
       let uu____1403 =
@@ -657,20 +657,20 @@ let detail_hint_replay :
               settings.query_env settings.query_all_labels ask_z3
       else ()
   
-let find_localized_errors :
-  errors Prims.list -> errors FStar_Pervasives_Native.option =
+let (find_localized_errors :
+  errors Prims.list -> errors FStar_Pervasives_Native.option) =
   fun errs  ->
     FStar_All.pipe_right errs
       (FStar_List.tryFind
          (fun err  ->
             match err.error_messages with | [] -> false | uu____1554 -> true))
   
-let has_localized_errors : errors Prims.list -> Prims.bool =
+let (has_localized_errors : errors Prims.list -> Prims.bool) =
   fun errs  ->
     let uu____1572 = find_localized_errors errs  in
     FStar_Option.isSome uu____1572
   
-let report_errors : query_settings -> unit =
+let (report_errors : query_settings -> unit) =
   fun settings  ->
     let uu____1580 =
       (FStar_Options.detail_errors ()) &&
@@ -747,7 +747,7 @@ let report_errors : query_settings -> unit =
              [uu____1749]  in
            FStar_TypeChecker_Err.add_errors settings.query_env uu____1740)
   
-let query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit =
+let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings  ->
     fun z3result  ->
       let uu____1779 =
@@ -850,7 +850,7 @@ let query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit =
                              (Prims.strcat tag1 msg)))))
       else ()
   
-let record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit =
+let (record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings  ->
     fun z3result  ->
       let uu____1885 =
@@ -894,9 +894,9 @@ let record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit =
              else store_hint (mk_hint unsat_core)
          | uu____1993 -> ())
   
-let process_result :
+let (process_result :
   query_settings ->
-    FStar_SMTEncoding_Z3.z3result -> errors FStar_Pervasives_Native.option
+    FStar_SMTEncoding_Z3.z3result -> errors FStar_Pervasives_Native.option)
   =
   fun settings  ->
     fun result  ->
@@ -912,13 +912,13 @@ let process_result :
        detail_hint_replay settings result;
        errs)
   
-let fold_queries :
+let (fold_queries :
   query_settings Prims.list ->
     (query_settings -> (FStar_SMTEncoding_Z3.z3result -> unit) -> unit) ->
       (query_settings ->
          FStar_SMTEncoding_Z3.z3result ->
            errors FStar_Pervasives_Native.option)
-        -> (errors Prims.list -> unit) -> unit
+        -> (errors Prims.list -> unit) -> unit)
   =
   fun qs  ->
     fun ask1  ->
@@ -938,12 +938,12 @@ let fold_queries :
              in
           aux [] qs
   
-let ask_and_report_errors :
+let (ask_and_report_errors :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.error_labels ->
       FStar_SMTEncoding_Term.decl Prims.list ->
         FStar_SMTEncoding_Term.decl ->
-          FStar_SMTEncoding_Term.decl Prims.list -> unit
+          FStar_SMTEncoding_Term.decl Prims.list -> unit)
   =
   fun env  ->
     fun all_labels  ->
@@ -1228,9 +1228,9 @@ let ask_and_report_errors :
                       then check_all_configs all_configs
                       else ()))
   
-let solve :
+let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
-    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit
+    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
   =
   fun use_env_msg  ->
     fun tcenv  ->
@@ -1295,7 +1295,7 @@ let solve :
                       pop1 ())
                  | uu____2534 -> failwith "Impossible")))
   
-let solver : FStar_TypeChecker_Env.solver_t =
+let (solver : FStar_TypeChecker_Env.solver_t) =
   {
     FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init;
     FStar_TypeChecker_Env.push = FStar_SMTEncoding_Encode.push;
@@ -1314,7 +1314,7 @@ let solver : FStar_TypeChecker_Env.solver_t =
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   } 
-let dummy : FStar_TypeChecker_Env.solver_t =
+let (dummy : FStar_TypeChecker_Env.solver_t) =
   {
     FStar_TypeChecker_Env.init = (fun uu____2562  -> ());
     FStar_TypeChecker_Env.push = (fun uu____2564  -> ());

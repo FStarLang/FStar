@@ -1,8 +1,8 @@
 open Prims
-let tcenv : unit -> FStar_TypeChecker_Env.env =
+let (tcenv : unit -> FStar_TypeChecker_Env.env) =
   fun uu____5  -> FStar_Tests_Pars.init () 
-let guard_to_string : FStar_TypeChecker_Common.guard_formula -> Prims.string
-  =
+let (guard_to_string :
+  FStar_TypeChecker_Common.guard_formula -> Prims.string) =
   fun g  ->
     match g with
     | FStar_TypeChecker_Common.Trivial  -> "trivial"
@@ -10,10 +10,10 @@ let guard_to_string : FStar_TypeChecker_Common.guard_formula -> Prims.string
         let uu____12 = tcenv ()  in
         FStar_TypeChecker_Normalize.term_to_string uu____12 f
   
-let guard_eq :
+let (guard_eq :
   Prims.int ->
     FStar_TypeChecker_Common.guard_formula ->
-      FStar_TypeChecker_Common.guard_formula -> unit
+      FStar_TypeChecker_Common.guard_formula -> unit)
   =
   fun i  ->
     fun g  ->
@@ -55,11 +55,11 @@ let guard_eq :
                 FStar_Range.dummyRange
             else ()
   
-let unify :
+let (unify :
   Prims.int ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
-        FStar_TypeChecker_Common.guard_formula -> (unit -> unit) -> unit
+        FStar_TypeChecker_Common.guard_formula -> (unit -> unit) -> unit)
   =
   fun i  ->
     fun x1  ->
@@ -86,8 +86,8 @@ let unify :
              check1 ();
              FStar_Options.init ())
   
-let should_fail : FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit
-  =
+let (should_fail :
+  FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit) =
   fun x1  ->
     fun y1  ->
       try
@@ -116,7 +116,7 @@ let should_fail : FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit
               uu____149 uu____150
       with | FStar_Errors.Error (e,msg,r) -> FStar_Util.print1 "%s\n" msg
   
-let unify' : Prims.string -> Prims.string -> unit =
+let (unify' : Prims.string -> Prims.string -> unit) =
   fun x1  ->
     fun y1  ->
       let x2 = FStar_Tests_Pars.pars x1  in
@@ -135,16 +135,16 @@ let unify' : Prims.string -> Prims.string -> unit =
       FStar_Util.print3 "%s and %s are unifiable with guard %s\n" uu____180
         uu____181 uu____182
   
-let norm : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
+let (norm : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t  ->
     let uu____188 = tcenv ()  in
     FStar_TypeChecker_Normalize.normalize [] uu____188 t
   
-let inst :
+let (inst :
   Prims.int ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ Prims.list)
-        FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.tuple2)
   =
   fun n1  ->
     fun tm1  ->
@@ -170,7 +170,7 @@ let inst :
         let uu____259 = FStar_Tests_Util.app tm1 us  in norm uu____259  in
       (uu____258, us)
   
-let run_all : unit -> unit =
+let (run_all : unit -> unit) =
   fun uu____266  ->
     FStar_Util.print_string "Testing the unifier\n";
     FStar_Options.__set_unit_tests ();
