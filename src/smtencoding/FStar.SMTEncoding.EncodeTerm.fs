@@ -579,7 +579,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let cvar_sorts = List.map snd cvars in
                   let caption =
                     if Options.log_queries()
-                    then Some (N.term_to_string env.tcenv t0)
+                    then Some (BU.replace_char (N.term_to_string env.tcenv t0) '\n' ' ')
                     else None in
 
                   let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
@@ -703,7 +703,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               in
               let t_interp =
                 Util.mkAssume(mkForall([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
-                              Some (Print.term_to_string t0),
+                              Some "refinement_interpretation",
                               "refinement_interpretation_"^tsym) in
 
               let t_decls = decls
