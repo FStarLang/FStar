@@ -129,7 +129,8 @@ let kill_process (p: proc) =
          potentially forcing us to wait until p starts reading again *)
       Unix.close (Unix.descr_of_in_channel p.inc);
       Unix.close (Unix.descr_of_out_channel p.outc);
-      Unix.kill p.pid Sys.sigkill;
+      (try Unix.kill p.pid Sys.sigkill
+       with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
       waitpid_ignore_signals p.pid;
       p.killed <- true
