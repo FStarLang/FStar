@@ -1704,45 +1704,125 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars wl
     in
 
-    let first_order (orig:prob) (env:Env.env) (wl:worklist)
-                    (lhs:flex_t) (rhs:term)
-        : solution =
-        let copy_uvar u t wl =
-            new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range u.ctx_uvar_gamma
-                     u.ctx_uvar_binders t u.ctx_uvar_should_check
-        in
-        let rhs_hd, args = U.head_and_args rhs in
-        match args with
-        | [] ->
-          giveup_or_defer env orig wl (BU.format1 "first_order heursitic cannot solve %s; rhs not an app" (prob_to_string env orig))
-        | _ ->
-          match quasi_pattern env lhs with
-          | None ->
-            giveup_or_defer env orig wl
-              (BU.format1 "first_order heursitic cannot solve %s; lhs not a quasi-pattern"
-                          (prob_to_string env orig))
+    let copy_uvar u t wl =
+        new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range u.ctx_uvar_gamma
+                 u.ctx_uvar_binders t u.ctx_uvar_should_check
+    in
 
-          | Some (bs_lhs, t_res_lhs) ->
-            let args_rhs, last_arg_rhs = BU.prefix args in
-            let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
-            let t_lhs, u_lhs, lhs_args = lhs in
-            let lhs', lhs'_last_arg =
+    let imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
+                      (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
+                      (arrow:term)
+        : solution =
+        let _, u_lhs, _ = lhs in
+        let imitate_comp bs bs_terms c wl =
+            let imitate_tot_or_gtot t uopt f wl =
+              let k, univ =
+                  match uopt with
+                  | None ->
+                    U.type_u()
+                  | Some univ ->
+                    S.mk (Tm_type univ) None t.pos, univ
+              in
+              let _, u, wl = copy_uvar u_lhs (U.arrow bs (S.mk_Total k)) wl in
+              f (S.mk_Tm_app u bs_terms None c.pos) (Some univ), wl
+           in
+           match c.n with
+           | Total (t, uopt) ->
+             imitate_tot_or_gtot t uopt S.mk_Total' wl
+           | GTotal (t, uopt) ->
+             imitate_tot_or_gtot t uopt S.mk_GTotal' wl
+           | Comp ct ->
+             let out_args, wl =
+               List.fold_right
+                 (fun (a, i) (out_args, wl) ->
+                   let _, t_a, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
+                   let _, a', wl = copy_uvar u_lhs (U.arrow bs (S.mk_Total t_a)) wl in
+                   let a' = S.mk_Tm_app a' bs_terms None a.pos in
+                   (a',i)::out_args, wl)
+                 ((S.as_arg ct.result_typ)::ct.effect_args)
+                 ([], wl)
+             in
+             let ct' = {ct with result_typ=fst (List.hd out_args);
+                                effect_args=List.tl out_args} in
+             {c with n=Comp ct'}, wl
+        in
+        let formals, c = U.arrow_formals_comp arrow in
+        let rec aux (bs:binders) (bs_terms:list<arg>) (formals:binders) wl =
+            match formals with
+            | [] ->
+              let c', wl = imitate_comp bs bs_terms c wl in
+              let lhs' = U.arrow bs c' in
+              let sol = TERM (u_lhs, U.abs bs_lhs lhs' (Some (U.residual_tot t_res_lhs))) in
+              let sub_prob, wl =
+                  mk_t_problem wl (p_scope orig) orig lhs' EQ rhs None "arrow imitation" in
+              //printfn "Arrow imitation: %s =?= %s" (Print.term_to_string lhs') (Print.term_to_string rhs);
+              solve env (attempt [sub_prob] (solve_prob orig None [sol] wl))
+
+            | (x, imp)::formals ->
+              let ctx_u_x, u_x, wl = copy_uvar u_lhs (U.arrow bs (S.mk_Total (U.type_u() |> fst))) wl in
+              let t_y = S.mk_Tm_app u_x bs_terms None x.sort.pos in
+              //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
+              let y = S.new_bv (Some (S.range_of_bv x)) t_y in
+              aux (bs@[y, imp]) (bs_terms@[S.bv_to_name y, imp]) formals wl
+         in
+         aux [] [] formals wl
+    in
+
+    let imitate_app (orig:prob) (env:Env.env) (wl:worklist)
+                    (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
+                    (rhs:term)
+        : solution =
+        let rhs_hd, args = U.head_and_args rhs in
+        let args_rhs, last_arg_rhs = BU.prefix args in
+        let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
+        let t_lhs, u_lhs, _lhs_args = lhs in
+        let lhs', lhs'_last_arg, _wl = //FIXME! dropping the wl here
               let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
               let _, lhs', wl = copy_uvar u_lhs (U.arrow [S.null_binder t_last_arg] (S.mk_Total t_res_lhs)) wl in
               let _, lhs'_last_arg, wl = copy_uvar u_lhs t_last_arg wl in
-              lhs', lhs'_last_arg
-            in
-            let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
-                                                (Some (U.residual_tot t_res_lhs)))] in
-            let sub_probs, wl =
-              let p1, wl =
-                mk_t_problem wl (p_scope orig) orig lhs' EQ rhs' None "first-order lhs" in
-              let p2, wl =
-                mk_t_problem wl (p_scope orig) orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
-              [p1; p2], wl
-            in
-            solve env (attempt sub_probs (solve_prob orig None sol wl))
+              lhs', lhs'_last_arg, wl
+        in
+        let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
+                                            (Some (U.residual_tot t_res_lhs)))]
+        in
+        let sub_probs, wl =
+            let p1, wl = mk_t_problem wl (p_scope orig) orig lhs' EQ rhs' None "first-order lhs" in
+            let p2, wl = mk_t_problem wl (p_scope orig) orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
+            [p1; p2], wl
+        in
+        solve env (attempt sub_probs (solve_prob orig None sol wl))
+    in
+
+    let first_order (orig:prob) (env:Env.env) (wl:worklist)
+                    (lhs:flex_t) (rhs:term)
+        : solution =
+        let is_app rhs =
+           let _, args = U.head_and_args rhs in
+           match args with
+           | [] -> false
+           | _ -> true
+        in
+        let is_arrow rhs =
+            match (SS.compress rhs).n with
+            | Tm_arrow _ -> true
+            | _ -> false
+        in
+        match quasi_pattern env lhs with
+        | None ->
+           giveup_or_defer env orig wl
+              (BU.format1 "first_order heursitic cannot solve %s; lhs not a quasi-pattern"
+                          (prob_to_string env orig))
+
+        | Some (bs_lhs, t_res_lhs) ->
+          if is_app rhs
+          then imitate_app orig env wl lhs bs_lhs t_res_lhs rhs
+          else if is_arrow rhs
+          then imitate_arrow orig env wl lhs bs_lhs t_res_lhs rhs
+          else giveup_or_defer env orig wl
+                               (BU.format1 "first_order heursitic cannot solve %s; \
+                                            rhs not an app or arrow"
+                                            (prob_to_string env orig))
     in
 
     match p_rel orig with
@@ -1782,9 +1862,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         if wl.defer_ok
         then giveup_or_defer env orig wl "Not a pattern"
         else match try_quasi_pattern orig env wl lhs rhs with
-                | Inr sol, wl -> solve env (solve_prob orig None sol wl)
-                | Inl msg, _ -> //try first-order
-                  first_order orig env wl lhs rhs
+            | Inr sol, wl ->
+              solve env (solve_prob orig None sol wl)
+            | Inl msg, _ -> //try first-order
+              first_order orig env wl lhs rhs
 
 (* solve_t_flex-flex:
        Always delay flex-flex constraints, if possible.
