@@ -900,7 +900,8 @@ and paren_if b =
   if b then
     soft_parens_with_nesting
   else
-    fun x -> x
+    let id : document -> document = fun x -> x in
+    id
 
 and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->
