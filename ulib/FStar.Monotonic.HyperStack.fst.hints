@@ -1696,7 +1696,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "922a5a416b72ae6a39cd78e7bb5a9c64"
+      "a80feb6bf1e060266680042946035148"
     ],
     [
       "FStar.Monotonic.HyperStack.reference_of",
@@ -1737,7 +1737,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "d2b1ea997ea8676cb1e92a9fc6e224d5"
+      "885f8c8ff784209d3e23fd04b69e5fc0"
     ],
     [
       "FStar.Monotonic.HyperStack.aref_live_at_aref_of",

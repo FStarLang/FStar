@@ -284,7 +284,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "d1ee18789fcdee23dac63a5e24c89216"
+      "6b158863095f2ca732551b93af41df51"
     ],
     [
       "FStar.Monotonic.HyperHeap.extends",
@@ -1161,7 +1161,7 @@
         "typing_FStar.Monotonic.HyperHeap_Tm_abs_c2643c58d919caa3aa7a116cded9db8f"
       ],
       0,
-      "ee03c81661dc462f82125edaae0a3105"
+      "66d7988d1ab6703dc852f0f2aef49e7b"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend_monochrome",
@@ -1208,7 +1208,7 @@
         "typing_FStar.Monotonic.HyperHeap_Tm_abs_bbcc2101356b843cb0fb0ea43dec6ac3"
       ],
       0,
-      "0b249fd9ba4f0b9799b7ed5884d107cb"
+      "33009f2b4d7989913cf7b9e21d3adaff"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_root_has_color_zero",

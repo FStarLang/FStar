@@ -344,7 +344,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.union"
       ],
       0,
-      "625a7450b7989bbf5e73d24865794877"
+      "28238b356f8503267b0779daff377370"
     ],
     [
       "CntProtocol.send",
@@ -417,7 +417,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "81e7603c1ffebba467946a089caadfd7"
+      "70bfc21b94456df15f04ad4c68b7026d"
     ],
     [
       "CntProtocol.recv",
@@ -491,7 +491,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "e3204e2154666a064d7a29c9e88bdb84"
+      "16027243d23fe4c05292c5f5fb8e7ee8"
     ],
     [
       "CntProtocol.req",
@@ -546,7 +546,7 @@
         "typing_FStar.Ref.sel"
       ],
       0,
-      "d49ba7bb44cb1c94089ca1adcffaa5da"
+      "8c7a04e4ed411002792b9c52ce5a5736"
     ],
     [
       "CntProtocol.client",
@@ -629,7 +629,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "943e0e5ae89c1e22dca8adceb7f06fbb"
+      "19b0fa4c7e924913d5cc5e479e93d7ec"
     ],
     [
       "CntProtocol.server",
@@ -740,12 +740,13 @@
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_FStar.ST.mref",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt8.n", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.length", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos", "equation_SHA1.key",
-        "equation_SHA1.macsize", "function_token_typing_CntFormat.uint16",
+        "equation_FStar.ST.ref", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt8.n",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_SHA1.key", "equation_SHA1.macsize",
+        "function_token_typing_CntFormat.uint16",
         "function_token_typing_CntProtocol.client_cnt",
         "function_token_typing_CntProtocol.k",
         "function_token_typing_CntProtocol.log_prot",
@@ -779,6 +780,7 @@
         "refinement_interpretation_CntProtocol_Tm_refine_3033b3d2758d197e87183efef8cfb391",
         "refinement_interpretation_CntProtocol_Tm_refine_9812ed779421e2c69d2de9a3d5c66ce1",
         "refinement_interpretation_CntProtocol_Tm_refine_e3d03a4142785f346269498c28f891f2",
+        "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
         "refinement_interpretation_Platform.Bytes_Tm_refine_df45e13378b64cfc3cd23f54e8657bfc",
@@ -788,13 +790,13 @@
         "token_correspondence_CntProtocol.req",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of",
-        "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Seq.Base.eq",
-        "typing_FStar.Set.empty", "typing_FStar.Set.singleton",
-        "typing_FStar.Set.union", "typing_FStar.UInt.fits",
-        "typing_Prims.pow2"
+        "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Ref.addr_of",
+        "typing_FStar.Seq.Base.eq", "typing_FStar.Set.empty",
+        "typing_FStar.Set.singleton", "typing_FStar.Set.union",
+        "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "a7eb2b62dd5e8f97394fdf064a8860af"
+      "11f40223b096aabab470ee989c6b1e2c"
     ],
     [
       "CntProtocol.main",
@@ -855,7 +857,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "fc037ce7b4750cfa9cc931f2273ae2e7"
+      "8d7ad15b3e143d432eaba38042b62f9c"
     ]
   ]
 ]
