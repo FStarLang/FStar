@@ -674,7 +674,10 @@ let (is_fv_type : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
                  | (fv',uu____1726,uu____1727) ->
                      FStar_Syntax_Syntax.fv_eq fv fv')))
   
-let (emptyMlPath : FStar_Extraction_ML_Syntax.mlpath) = ([], "") 
+let (emptyMlPath :
+  (FStar_Extraction_ML_Syntax.mlsymbol Prims.list,Prims.string)
+    FStar_Pervasives_Native.tuple2)
+  = ([], "") 
 let (mkContext : FStar_TypeChecker_Env.env -> env) =
   fun e  ->
     let env =
@@ -694,17 +697,17 @@ let (mkContext : FStar_TypeChecker_Env.env -> env) =
              FStar_Extraction_ML_Syntax.E_IMPURE,
              (FStar_Extraction_ML_Syntax.MLTY_Var a))))
        in
-    let uu____1768 =
-      let uu____1773 =
-        let uu____1774 =
+    let uu____1774 =
+      let uu____1779 =
+        let uu____1780 =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
             FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None
            in
-        FStar_Util.Inr uu____1774  in
-      extend_lb env uu____1773 FStar_Syntax_Syntax.tun failwith_ty false
+        FStar_Util.Inr uu____1780  in
+      extend_lb env uu____1779 FStar_Syntax_Syntax.tun failwith_ty false
         false
        in
-    FStar_All.pipe_right uu____1768 FStar_Pervasives_Native.fst
+    FStar_All.pipe_right uu____1774 FStar_Pervasives_Native.fst
   
 let (monad_op_name :
   FStar_Syntax_Syntax.eff_decl ->
@@ -715,12 +718,12 @@ let (monad_op_name :
   fun ed  ->
     fun nm  ->
       let lid =
-        let uu____1794 = FStar_Ident.id_of_text nm  in
+        let uu____1800 = FStar_Ident.id_of_text nm  in
         FStar_Syntax_Util.mk_field_projector_name_from_ident
-          ed.FStar_Syntax_Syntax.mname uu____1794
+          ed.FStar_Syntax_Syntax.mname uu____1800
          in
-      let uu____1795 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
-      (uu____1795, lid)
+      let uu____1801 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
+      (uu____1801, lid)
   
 let (action_name :
   FStar_Syntax_Syntax.eff_decl ->
@@ -735,11 +738,11 @@ let (action_name :
          in
       let module_name = (ed.FStar_Syntax_Syntax.mname).FStar_Ident.ns  in
       let lid =
-        let uu____1815 =
-          let uu____1818 =
-            let uu____1821 = FStar_Ident.id_of_text nm  in [uu____1821]  in
-          FStar_List.append module_name uu____1818  in
-        FStar_Ident.lid_of_ids uu____1815  in
-      let uu____1822 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
-      (uu____1822, lid)
+        let uu____1821 =
+          let uu____1824 =
+            let uu____1827 = FStar_Ident.id_of_text nm  in [uu____1827]  in
+          FStar_List.append module_name uu____1824  in
+        FStar_Ident.lid_of_ids uu____1821  in
+      let uu____1828 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid  in
+      (uu____1828, lid)
   
