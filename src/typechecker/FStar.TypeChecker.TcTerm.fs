@@ -1828,10 +1828,10 @@ and check_top_level_let env e =
    let env = instantiate_both env in
    match e.n with
       | Tm_let((false, [lb]), e2) ->
-(*open*) let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
+(*open*) let e1, univ_vars, c1, g1, topt = check_let_bound_def true env lb in
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 =
-            if annotated && not env.generalize
+            if is_some topt && not env.generalize
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
@@ -1864,7 +1864,7 @@ and check_top_level_let env e =
          (* the result has the same effect as c1, except it returns unit *)
          let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
 
-(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
+(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (if is_some topt then topt |> must else U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
          mk (Tm_let((false, [lb]), e2))
             None
             e.pos,
@@ -2133,11 +2133,11 @@ and check_let_recs env lbs =
 (* Several utility functions follow                                           *)
 (******************************************************************************)
 and check_let_bound_def top_level env lb
-                               : term       (* checked lbdef                   *)
-                               * univ_names (* univ_vars, if any               *)
-                               * lcomp      (* type of lbdef                   *)
-                               * guard_t    (* well-formedness of lbtyp        *)
-                               * bool       (* true iff lbtyp was annotated    *)
+                               : term        (* checked lbdef                   *)
+                               * univ_names  (* univ_vars, if any               *)
+                               * lcomp       (* type of lbdef                   *)
+                               * guard_t     (* well-formedness of lbtyp        *)
+                               * option<typ> (* optional annotated lbtyp        *)
                                =
     let env1, _ = Env.clear_expected_typ env in
     let e1 = lb.lbdef in
@@ -2166,7 +2166,7 @@ and check_let_bound_def top_level env lb
             (Print.lcomp_to_string c1)
             (Rel.guard_to_string env g1);
 
-    e1, univ_vars, c1, g1, Option.isSome topt
+    e1, univ_vars, c1, g1, topt
 
 
 (* Extracting the type of non-recursive let binding *)
