@@ -10478,7 +10478,7 @@ let (resolve_implicits' :
                                 env1.FStar_TypeChecker_Env.check_type_of
                                   must_total env1 tm1 k
                               with
-                              | e ->
+                              | e when FStar_Errors.handleable e ->
                                   ((let uu____25264 =
                                       let uu____25273 =
                                         let uu____25280 =
