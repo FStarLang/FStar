@@ -1624,7 +1624,10 @@ let (encode_free_var :
                                                  encode_non_total_function_typ;
                                                FStar_SMTEncoding_Env.current_module_name
                                                  =
-                                                 (uu___83_5194.FStar_SMTEncoding_Env.current_module_name)
+                                                 (uu___83_5194.FStar_SMTEncoding_Env.current_module_name);
+                                               FStar_SMTEncoding_Env.encoding_quantifier
+                                                 =
+                                                 (uu___83_5194.FStar_SMTEncoding_Env.encoding_quantifier)
                                              }  in
                                            let uu____5195 =
                                              let uu____5196 =
@@ -2447,7 +2450,10 @@ let (encode_top_level_let :
                                              (uu___88_7542.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                                            FStar_SMTEncoding_Env.current_module_name
                                              =
-                                             (uu___88_7542.FStar_SMTEncoding_Env.current_module_name)
+                                             (uu___88_7542.FStar_SMTEncoding_Env.current_module_name);
+                                           FStar_SMTEncoding_Env.encoding_quantifier
+                                             =
+                                             (uu___88_7542.FStar_SMTEncoding_Env.encoding_quantifier)
                                          }), e1, t_norm1))
                                in
                             (match uu____7484 with
@@ -2715,7 +2721,10 @@ let (encode_top_level_let :
                                                    (uu___89_8148.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                                                  FStar_SMTEncoding_Env.current_module_name
                                                    =
-                                                   (uu___89_8148.FStar_SMTEncoding_Env.current_module_name)
+                                                   (uu___89_8148.FStar_SMTEncoding_Env.current_module_name);
+                                                 FStar_SMTEncoding_Env.encoding_quantifier
+                                                   =
+                                                   (uu___89_8148.FStar_SMTEncoding_Env.encoding_quantifier)
                                                }), e1, t_norm1))
                                      in
                                   (match uu____8086 with
@@ -5647,7 +5656,8 @@ let (init_env : FStar_TypeChecker_Env.env -> unit) =
           FStar_SMTEncoding_Env.nolabels = false;
           FStar_SMTEncoding_Env.use_zfuel_name = false;
           FStar_SMTEncoding_Env.encode_non_total_function_typ = true;
-          FStar_SMTEncoding_Env.current_module_name = uu____13635
+          FStar_SMTEncoding_Env.current_module_name = uu____13635;
+          FStar_SMTEncoding_Env.encoding_quantifier = false
         }  in
       [uu____13613]  in
     FStar_ST.op_Colon_Equals last_env uu____13610
@@ -5682,7 +5692,9 @@ let (get_env :
               (uu___94_13708.FStar_SMTEncoding_Env.use_zfuel_name);
             FStar_SMTEncoding_Env.encode_non_total_function_typ =
               (uu___94_13708.FStar_SMTEncoding_Env.encode_non_total_function_typ);
-            FStar_SMTEncoding_Env.current_module_name = uu____13709
+            FStar_SMTEncoding_Env.current_module_name = uu____13709;
+            FStar_SMTEncoding_Env.encoding_quantifier =
+              (uu___94_13708.FStar_SMTEncoding_Env.encoding_quantifier)
           }
   
 let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
@@ -5720,7 +5732,9 @@ let (push_env : unit -> unit) =
             FStar_SMTEncoding_Env.encode_non_total_function_typ =
               (uu___95_13819.FStar_SMTEncoding_Env.encode_non_total_function_typ);
             FStar_SMTEncoding_Env.current_module_name =
-              (uu___95_13819.FStar_SMTEncoding_Env.current_module_name)
+              (uu___95_13819.FStar_SMTEncoding_Env.current_module_name);
+            FStar_SMTEncoding_Env.encoding_quantifier =
+              (uu___95_13819.FStar_SMTEncoding_Env.encoding_quantifier)
           }  in
         FStar_ST.op_Colon_Equals last_env (top :: hd1 :: tl1)
   
@@ -5907,7 +5921,9 @@ let (encode_modul :
               FStar_SMTEncoding_Env.encode_non_total_function_typ =
                 (uu___97_14210.FStar_SMTEncoding_Env.encode_non_total_function_typ);
               FStar_SMTEncoding_Env.current_module_name =
-                (uu___97_14210.FStar_SMTEncoding_Env.current_module_name)
+                (uu___97_14210.FStar_SMTEncoding_Env.current_module_name);
+              FStar_SMTEncoding_Env.encoding_quantifier =
+                (uu___97_14210.FStar_SMTEncoding_Env.encoding_quantifier)
             }) modul.FStar_Syntax_Syntax.exports
           in
        match uu____14201 with
@@ -5942,7 +5958,9 @@ let (encode_modul :
                  FStar_SMTEncoding_Env.encode_non_total_function_typ =
                    (uu___98_14237.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                  FStar_SMTEncoding_Env.current_module_name =
-                   (uu___98_14237.FStar_SMTEncoding_Env.current_module_name)
+                   (uu___98_14237.FStar_SMTEncoding_Env.current_module_name);
+                 FStar_SMTEncoding_Env.encoding_quantifier =
+                   (uu___98_14237.FStar_SMTEncoding_Env.encoding_quantifier)
                });
             (let uu____14239 =
                FStar_TypeChecker_Env.debug tcenv FStar_Options.Low  in
