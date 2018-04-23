@@ -670,7 +670,8 @@ let lemma_witnessed_constant (p:prop)
 let lemma_witnessed_nested (p:mem_predicate)
   :Lemma (witnessed (fun (m:mem) -> witnessed p) <==> witnessed p)
   = W.lemma_witnessed_nested mem_rel p;
-    assert (FStar.FunctionalExtensionality.feq (fun (m:mem) -> witnessed p) (fun (m:mem) -> W.witnessed mem_rel p))
+    FStar.PredicateExtensionality.predicateExtensionality mem
+      (fun (m:mem) -> witnessed p) (fun (m:mem) -> W.witnessed mem_rel p)
 
 let lemma_witnessed_and (p q:mem_predicate)
   :Lemma (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))

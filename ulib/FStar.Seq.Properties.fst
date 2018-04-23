@@ -653,7 +653,7 @@ let rec lemma_list_seq_bij #a l =
     lemma_eq_intro (seq_of_list tl) (slice (seq_of_list l) 1 (length (seq_of_list l)))
   )
 
-unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : GTot Type0 =
+unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : GTot prop =
   normalize (L.length l = length s) /\ seq_to_list s == l /\ seq_of_list l == s
 
 val createL: #a:Type0 -> l:list a -> Pure (seq a)
