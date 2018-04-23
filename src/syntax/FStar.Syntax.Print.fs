@@ -382,8 +382,12 @@ and attrs_to_string = function
     | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
 and lcomp_to_string lc =
-    if Options.print_effect_args () then
-        comp_to_string (lcomp_comp lc)
+    if Options.print_effect_args () then begin
+        let c = lcomp_comp lc in  //lcomp_comp reduces the thunk and sets it in lc, resetting it to a thunk
+        let f :unit -> ML<comp> = fun () -> c in
+        lc.comp_thunk := Inl f;
+        comp_to_string c
+    end
     else
         U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
 
