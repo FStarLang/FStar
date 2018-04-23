@@ -170,6 +170,3 @@ Need more unfolding in maybe_coerce_bool_to_prop,
 but not for prop itself
 
 * TODO Minimize prims to end once we've defined GTot
-* TODO Some severe performance degradation in FStar.Array.fst
-Z3 takes 6GB+ of RAM here!
-Verified module: FStar.UInt128 (215850 milliseconds)

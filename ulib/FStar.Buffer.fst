@@ -248,14 +248,13 @@ let modifies_buf_4 (#t:Type) (#t':Type) (#t'':Type) (#t''':Type) rid (b:buffer t
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb == rid /\ live h bb /\ disjoint b bb /\ disjoint b' bb /\ disjoint b'' bb /\ disjoint b''' bb)
        ==> equal h bb h' bb /\ live h' bb)
 
-#set-options "--z3rlimit 20"
+
 (* General lemmas for the modifies_bufs clause *)
 let lemma_modifies_bufs_trans rid bufs h0 h1 h2 :
   Lemma (requires (modifies_bufs rid bufs h0 h1 /\ modifies_bufs rid bufs h1 h2))
 	(ensures (modifies_bufs rid bufs h0 h2))
 	[SMTPat (modifies_bufs rid bufs h0 h1); SMTPat (modifies_bufs rid bufs h1 h2)]
  = ()
-#set-options "--z3rlimit 5"
 
 let lemma_modifies_bufs_sub rid bufs subbufs h0 h1 :
   Lemma
@@ -277,7 +276,6 @@ val lemma_modifies_bufs_superset: #a:Type -> #a':Type -> h0:mem -> h1:mem -> buf
 let lemma_modifies_bufs_superset #a #a' h0 h1 bufs b b' = ()
 
 (* Specialized lemmas *)
-#set-options "--z3rlimit 20"
 let modifies_trans_0_0 (rid:rid) (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_0 rid h1 h2))
 	(ensures (modifies_buf_0 rid h0 h2))
@@ -302,7 +300,6 @@ let modifies_trans_1_1 (#t:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
 	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
-#set-options "--z3rlimit 50"
 let modifies_trans_1_1' (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid b' h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
@@ -351,13 +348,11 @@ let modifies_trans_3_3 (#t #t' #t'':Type) (rid:rid) (b:buffer t) (b':buffer t') 
 	[SMTPat (modifies_buf_3 rid b b' b'' h0 h1); SMTPat (modifies_buf_3 rid b b' b'' h1 h2)]
  = ()
 
-#set-options "--z3rlimit 100"
 let modifies_trans_4_4 (#t #t' #t'' #t''':Type) (rid:rid) (b:buffer t) (b':buffer t') (b'':buffer t'') (b''':buffer t''') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_4 rid b b' b'' b''' h0 h1 /\ modifies_buf_4 rid b b' b'' b''' h1 h2))
 	(ensures (modifies_buf_4 rid b b' b'' b''' h0 h2))
 	[SMTPat (modifies_buf_4 rid b b' b'' b''' h0 h1); SMTPat (modifies_buf_4 rid b b' b'' b''' h1 h2)]
  = ()
-#set-options "--z3rlimit 5"
 
 (* TODO: complete with specialized versions of every general lemma *)
 
@@ -576,7 +571,6 @@ let lemma_stack_1 (#a:Type) (b:buffer a) h0 h1 h2 h3 : Lemma
     [SMTPat (modifies_1 b h1 h2); SMTPat (fresh_frame h0 h1); SMTPat (popped h2 h3)]
   = ()
 
-#set-options "--z3rlimit 200"
 let lemma_stack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3 : Lemma
   (requires (live h0 b /\ live h0 b' /\ fresh_frame h0 h1 /\ modifies_2 b b' h1 h2 /\ popped h2 h3))
   (ensures  (modifies_2 b b' h0 h3))
@@ -594,7 +588,6 @@ let lemma_modifies_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1
   [SMTPat (modifies_2 b b' h0 h1)]
   = ()
 
-#reset-options "--z3rlimit 300"
 let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 : Lemma
   (requires True)
   (ensures  (modifies_3_2 b b' h0 h1 <==> modifies_3_2 b' b h0 h1))
@@ -602,7 +595,7 @@ let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   = ()
 (* TODO: add commutativity lemmas for modifies_3 *)
 
-#reset-options "--z3rlimit 50"
+#reset-options "--z3rlimit 20"
 
 (** Transitivity lemmas *)
 let lemma_modifies_0_trans h0 h1 h2 : Lemma
@@ -611,15 +604,11 @@ let lemma_modifies_0_trans h0 h1 h2 : Lemma
   [SMTPat (modifies_0 h0 h1); SMTPat (modifies_0 h1 h2)]
   = ()
 
-#reset-options "--z3rlimit 100"
-
 let lemma_modifies_1_trans (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   (requires (modifies_1 b h0 h1 /\ modifies_1 b h1 h2))
   (ensures (modifies_1 b h0 h2))
   [SMTPat (modifies_1 b h0 h1); SMTPat (modifies_1 b h1 h2)]
   = ()
-
-#reset-options "--z3rlimit 50"
 
 let lemma_modifies_2_1_trans (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   (requires (modifies_2_1 b h0 h1 /\ modifies_2_1 b h1 h2))
