@@ -991,71 +991,73 @@ let (finish : unit -> unit) =
   
 type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list[@@deriving
                                                                   show]
-let (fresh_scope : scope_t FStar_ST.ref) = FStar_Util.mk_ref [[]] 
+let (fresh_scope :
+  FStar_SMTEncoding_Term.decl Prims.list Prims.list FStar_ST.ref) =
+  FStar_Util.mk_ref [[]] 
 let (mk_fresh_scope : unit -> scope_t) =
-  fun uu____4411  -> FStar_ST.op_Bang fresh_scope 
+  fun uu____4415  -> FStar_ST.op_Bang fresh_scope 
 let (bg_scope : FStar_SMTEncoding_Term.decl Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
 let (push : Prims.string -> unit) =
   fun msg  ->
-    (let uu____4458 =
-       let uu____4459 = FStar_ST.op_Bang fresh_scope  in
+    (let uu____4470 =
+       let uu____4475 = FStar_ST.op_Bang fresh_scope  in
        [FStar_SMTEncoding_Term.Caption msg; FStar_SMTEncoding_Term.Push] ::
-         uu____4459
+         uu____4475
         in
-     FStar_ST.op_Colon_Equals fresh_scope uu____4458);
-    (let uu____4512 =
-       let uu____4515 = FStar_ST.op_Bang bg_scope  in
-       FStar_List.append uu____4515
+     FStar_ST.op_Colon_Equals fresh_scope uu____4470);
+    (let uu____4544 =
+       let uu____4547 = FStar_ST.op_Bang bg_scope  in
+       FStar_List.append uu____4547
          [FStar_SMTEncoding_Term.Push; FStar_SMTEncoding_Term.Caption msg]
         in
-     FStar_ST.op_Colon_Equals bg_scope uu____4512)
+     FStar_ST.op_Colon_Equals bg_scope uu____4544)
   
 let (pop : Prims.string -> unit) =
   fun msg  ->
-    (let uu____4578 =
-       let uu____4579 = FStar_ST.op_Bang fresh_scope  in
-       FStar_List.tl uu____4579  in
-     FStar_ST.op_Colon_Equals fresh_scope uu____4578);
-    (let uu____4632 =
-       let uu____4635 = FStar_ST.op_Bang bg_scope  in
-       FStar_List.append uu____4635
+    (let uu____4610 =
+       let uu____4615 = FStar_ST.op_Bang fresh_scope  in
+       FStar_List.tl uu____4615  in
+     FStar_ST.op_Colon_Equals fresh_scope uu____4610);
+    (let uu____4684 =
+       let uu____4687 = FStar_ST.op_Bang bg_scope  in
+       FStar_List.append uu____4687
          [FStar_SMTEncoding_Term.Caption msg; FStar_SMTEncoding_Term.Pop]
         in
-     FStar_ST.op_Colon_Equals bg_scope uu____4632)
+     FStar_ST.op_Colon_Equals bg_scope uu____4684)
   
 let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___40_4705  ->
-            match uu___40_4705 with
+         (fun uu___40_4757  ->
+            match uu___40_4757 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
-            | uu____4706 -> ()));
-    (let uu____4708 = FStar_ST.op_Bang fresh_scope  in
-     match uu____4708 with
+            | uu____4758 -> ()));
+    (let uu____4760 = FStar_ST.op_Bang fresh_scope  in
+     match uu____4760 with
      | hd1::tl1 ->
          FStar_ST.op_Colon_Equals fresh_scope ((FStar_List.append hd1 decls)
            :: tl1)
-     | uu____4767 -> failwith "Impossible");
-    (let uu____4768 =
-       let uu____4771 = FStar_ST.op_Bang bg_scope  in
-       FStar_List.append uu____4771 decls  in
-     FStar_ST.op_Colon_Equals bg_scope uu____4768)
+     | uu____4839 -> failwith "Impossible");
+    (let uu____4844 =
+       let uu____4847 = FStar_ST.op_Bang bg_scope  in
+       FStar_List.append uu____4847 decls  in
+     FStar_ST.op_Colon_Equals bg_scope uu____4844)
   
 let (refresh : unit -> unit) =
-  fun uu____4832  ->
-    (let uu____4834 =
-       let uu____4835 = FStar_Options.n_cores ()  in
-       uu____4835 < (Prims.parse_int "2")  in
-     if uu____4834 then bg_z3_proc.refresh () else ());
-    (let uu____4837 =
-       let uu____4840 =
-         let uu____4845 = FStar_ST.op_Bang fresh_scope  in
-         FStar_List.rev uu____4845  in
-       FStar_List.flatten uu____4840  in
-     FStar_ST.op_Colon_Equals bg_scope uu____4837)
+  fun uu____4908  ->
+    (let uu____4910 =
+       let uu____4911 = FStar_Options.n_cores ()  in
+       uu____4911 < (Prims.parse_int "2")  in
+     if uu____4910 then bg_z3_proc.refresh () else ());
+    (let uu____4913 =
+       let uu____4916 =
+         let uu____4921 = FStar_ST.op_Bang fresh_scope  in
+         FStar_List.rev uu____4921  in
+       FStar_List.flatten uu____4916  in
+     FStar_ST.op_Colon_Equals bg_scope uu____4913)
   
 let (mk_input :
   FStar_SMTEncoding_Term.decl Prims.list ->
@@ -1064,24 +1066,24 @@ let (mk_input :
   =
   fun theory  ->
     let options = z3_options ()  in
-    let uu____4918 =
-      let uu____4925 =
+    let uu____5002 =
+      let uu____5009 =
         (FStar_Options.record_hints ()) ||
           ((FStar_Options.use_hints ()) && (FStar_Options.use_hint_hashes ()))
          in
-      if uu____4925
+      if uu____5009
       then
-        let uu____4932 =
-          let uu____4943 =
+        let uu____5016 =
+          let uu____5027 =
             FStar_All.pipe_right theory
               (FStar_Util.prefix_until
-                 (fun uu___41_4971  ->
-                    match uu___41_4971 with
+                 (fun uu___41_5055  ->
+                    match uu___41_5055 with
                     | FStar_SMTEncoding_Term.CheckSat  -> true
-                    | uu____4972 -> false))
+                    | uu____5056 -> false))
              in
-          FStar_All.pipe_right uu____4943 FStar_Option.get  in
-        match uu____4932 with
+          FStar_All.pipe_right uu____5027 FStar_Option.get  in
+        match uu____5016 with
         | (prefix1,check_sat,suffix) ->
             let pp =
               FStar_List.map (FStar_SMTEncoding_Term.declToSmt options)  in
@@ -1094,57 +1096,57 @@ let (mk_input :
             let ss_lines = pp suffix1  in
             let ps = FStar_String.concat "\n" ps_lines  in
             let ss = FStar_String.concat "\n" ss_lines  in
-            let uncaption uu___42_5056 =
-              match uu___42_5056 with
-              | FStar_SMTEncoding_Term.Caption uu____5057 ->
+            let uncaption uu___42_5140 =
+              match uu___42_5140 with
+              | FStar_SMTEncoding_Term.Caption uu____5141 ->
                   FStar_SMTEncoding_Term.Caption ""
               | FStar_SMTEncoding_Term.Assume a ->
                   FStar_SMTEncoding_Term.Assume
-                    (let uu___47_5061 = a  in
+                    (let uu___47_5145 = a  in
                      {
                        FStar_SMTEncoding_Term.assumption_term =
-                         (uu___47_5061.FStar_SMTEncoding_Term.assumption_term);
+                         (uu___47_5145.FStar_SMTEncoding_Term.assumption_term);
                        FStar_SMTEncoding_Term.assumption_caption =
                          FStar_Pervasives_Native.None;
                        FStar_SMTEncoding_Term.assumption_name =
-                         (uu___47_5061.FStar_SMTEncoding_Term.assumption_name);
+                         (uu___47_5145.FStar_SMTEncoding_Term.assumption_name);
                        FStar_SMTEncoding_Term.assumption_fact_ids =
-                         (uu___47_5061.FStar_SMTEncoding_Term.assumption_fact_ids)
+                         (uu___47_5145.FStar_SMTEncoding_Term.assumption_fact_ids)
                      })
-              | FStar_SMTEncoding_Term.DeclFun (n1,a,s,uu____5065) ->
+              | FStar_SMTEncoding_Term.DeclFun (n1,a,s,uu____5149) ->
                   FStar_SMTEncoding_Term.DeclFun
                     (n1, a, s, FStar_Pervasives_Native.None)
-              | FStar_SMTEncoding_Term.DefineFun (n1,a,s,b,uu____5078) ->
+              | FStar_SMTEncoding_Term.DefineFun (n1,a,s,b,uu____5162) ->
                   FStar_SMTEncoding_Term.DefineFun
                     (n1, a, s, b, FStar_Pervasives_Native.None)
               | d -> d  in
             let hs =
-              let uu____5089 =
-                let uu____5092 =
-                  let uu____5095 =
+              let uu____5173 =
+                let uu____5176 =
+                  let uu____5179 =
                     FStar_All.pipe_right prefix1 (FStar_List.map uncaption)
                      in
-                  FStar_All.pipe_right uu____5095 pp_no_cap  in
-                FStar_All.pipe_right uu____5092
+                  FStar_All.pipe_right uu____5179 pp_no_cap  in
+                FStar_All.pipe_right uu____5176
                   (FStar_List.filter (fun s  -> s <> ""))
                  in
-              FStar_All.pipe_right uu____5089 (FStar_String.concat "\n")  in
-            let uu____5114 =
-              let uu____5117 = FStar_Util.digest_of_string hs  in
-              FStar_Pervasives_Native.Some uu____5117  in
-            ((Prims.strcat ps (Prims.strcat "\n" ss)), uu____5114)
+              FStar_All.pipe_right uu____5173 (FStar_String.concat "\n")  in
+            let uu____5198 =
+              let uu____5201 = FStar_Util.digest_of_string hs  in
+              FStar_Pervasives_Native.Some uu____5201  in
+            ((Prims.strcat ps (Prims.strcat "\n" ss)), uu____5198)
       else
-        (let uu____5121 =
-           let uu____5122 =
+        (let uu____5205 =
+           let uu____5206 =
              FStar_List.map (FStar_SMTEncoding_Term.declToSmt options) theory
               in
-           FStar_All.pipe_right uu____5122 (FStar_String.concat "\n")  in
-         (uu____5121, FStar_Pervasives_Native.None))
+           FStar_All.pipe_right uu____5206 (FStar_String.concat "\n")  in
+         (uu____5205, FStar_Pervasives_Native.None))
        in
-    match uu____4918 with
+    match uu____5002 with
     | (r,hash) ->
-        ((let uu____5142 = FStar_Options.log_queries ()  in
-          if uu____5142 then query_logging.write_to_log r else ());
+        ((let uu____5226 = FStar_Options.log_queries ()  in
+          if uu____5226 then query_logging.write_to_log r else ());
          (r, hash))
   
 type cb = z3result -> unit[@@deriving show]
@@ -1155,10 +1157,10 @@ let (cache_hit :
   fun cache  ->
     fun qhash  ->
       fun cb  ->
-        let uu____5176 =
+        let uu____5260 =
           (FStar_Options.use_hints ()) && (FStar_Options.use_hint_hashes ())
            in
-        if uu____5176
+        if uu____5260
         then
           match qhash with
           | FStar_Pervasives_Native.Some x when qhash = cache ->
@@ -1172,7 +1174,7 @@ let (cache_hit :
                     z3result_query_hash = qhash
                   }  in
                 cb result; true))
-          | uu____5187 -> false
+          | uu____5271 -> false
         else false
   
 let (ask_1_core :
@@ -1192,22 +1194,22 @@ let (ask_1_core :
           fun qry  ->
             fun cb  ->
               let theory =
-                let uu____5245 = FStar_ST.op_Bang bg_scope  in
-                FStar_List.append uu____5245
+                let uu____5329 = FStar_ST.op_Bang bg_scope  in
+                FStar_List.append uu____5329
                   (FStar_List.append [FStar_SMTEncoding_Term.Push]
                      (FStar_List.append qry [FStar_SMTEncoding_Term.Pop]))
                  in
-              let uu____5275 = filter_theory theory  in
-              match uu____5275 with
+              let uu____5359 = filter_theory theory  in
+              match uu____5359 with
               | (theory1,used_unsat_core) ->
-                  let uu____5282 = mk_input theory1  in
-                  (match uu____5282 with
+                  let uu____5366 = mk_input theory1  in
+                  (match uu____5366 with
                    | (input,qhash) ->
                        (FStar_ST.op_Colon_Equals bg_scope [];
-                        (let uu____5323 =
-                           let uu____5324 = cache_hit cache qhash cb  in
-                           Prims.op_Negation uu____5324  in
-                         if uu____5323
+                        (let uu____5407 =
+                           let uu____5408 = cache_hit cache qhash cb  in
+                           Prims.op_Negation uu____5408  in
+                         if uu____5407
                          then
                            run_job
                              {
@@ -1236,30 +1238,30 @@ let (ask_n_cores :
             fun scope  ->
               fun cb  ->
                 let theory =
-                  let uu____5393 =
+                  let uu____5477 =
                     match scope with
                     | FStar_Pervasives_Native.Some s -> FStar_List.rev s
                     | FStar_Pervasives_Native.None  ->
                         (FStar_ST.op_Colon_Equals bg_scope [];
-                         (let uu____5433 = FStar_ST.op_Bang fresh_scope  in
-                          FStar_List.rev uu____5433))
+                         (let uu____5517 = FStar_ST.op_Bang fresh_scope  in
+                          FStar_List.rev uu____5517))
                      in
-                  FStar_List.flatten uu____5393  in
+                  FStar_List.flatten uu____5477  in
                 let theory1 =
                   FStar_List.append theory
                     (FStar_List.append [FStar_SMTEncoding_Term.Push]
                        (FStar_List.append qry [FStar_SMTEncoding_Term.Pop]))
                    in
-                let uu____5466 = filter_theory theory1  in
-                match uu____5466 with
+                let uu____5558 = filter_theory theory1  in
+                match uu____5558 with
                 | (theory2,used_unsat_core) ->
-                    let uu____5473 = mk_input theory2  in
-                    (match uu____5473 with
+                    let uu____5565 = mk_input theory2  in
+                    (match uu____5565 with
                      | (input,qhash) ->
-                         let uu____5486 =
-                           let uu____5487 = cache_hit cache qhash cb  in
-                           Prims.op_Negation uu____5487  in
-                         if uu____5486
+                         let uu____5578 =
+                           let uu____5579 = cache_hit cache qhash cb  in
+                           Prims.op_Negation uu____5579  in
+                         if uu____5578
                          then
                            enqueue
                              {
@@ -1287,10 +1289,10 @@ let (ask :
           fun qry  ->
             fun scope  ->
               fun cb  ->
-                let uu____5555 =
-                  let uu____5556 = FStar_Options.n_cores ()  in
-                  uu____5556 = (Prims.parse_int "1")  in
-                if uu____5555
+                let uu____5647 =
+                  let uu____5648 = FStar_Options.n_cores ()  in
+                  uu____5648 = (Prims.parse_int "1")  in
+                if uu____5647
                 then ask_1_core r filter1 cache label_messages qry cb
                 else ask_n_cores r filter1 cache label_messages qry scope cb
   
