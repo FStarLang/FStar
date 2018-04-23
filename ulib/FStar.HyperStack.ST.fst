@@ -350,12 +350,10 @@ let is_eternal_region (r:rid) :prop
 (**
 //    Pushes a new empty frame on the stack
 //    *)
-#set-options "--z3rlimit 20"
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
   = let m0 = gst_get () in
     let m1 = HS.hs_push_frame m0 in
     gst_put m1
-#set-options "--z3rlimit 5"
 
 (**
 //    Removes old frame from the stack
@@ -376,7 +374,6 @@ let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
     HS.fresh_ref s m0 m1                /\  //it's a fresh reference in the top frame
     m1 == HyperStack.upd m0 s init  //and it's been initialized
 
-#set-options "--z3rlimit 200"
 private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
   :StackInline (mreference a rel)
   (requires (fun m       -> is_stack_region m.tip))
@@ -389,7 +386,6 @@ private let salloc_common (#a:Type) (#rel:preorder a) (init:a) (mm:bool)
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred (HS.frameOf r));
     r
-#set-options "--z3rlimit 5"
 
 (**
 //      Allocates on the top-most stack frame
@@ -417,7 +413,6 @@ let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
 
-#set-options "--z3rlimit 20"
 let new_region (r0:rid)
   :ST rid
       (requires (fun m        -> is_eternal_region r0))
@@ -435,11 +430,9 @@ let new_region (r0:rid)
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
-#set-options "--z3rlimit 5"
 
 let is_eternal_color = HS.is_eternal_color
 
-#set-options "--z3rlimit 20"
 let new_colored_region (r0:rid) (c:int)
   :ST rid
       (requires (fun m       -> is_eternal_color c /\ is_eternal_region r0))
@@ -457,9 +450,7 @@ let new_colored_region (r0:rid) (c:int)
     gst_put m1;
     gst_witness (region_contains_pred new_rid);
     new_rid
-#set-options "--z3rlimit 5"
 
-#set-options "--z3rlimit 20"
 unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
                        (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
     let region_i = Map.sel m0.h i in
@@ -467,9 +458,7 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
     i `is_in` m0.h                     /\
     i = frameOf x                      /\
     m1 == upd m0 x init                      
-#set-options "--z3rlimit 5"
 
-#set-options "--z3rlimit 20"
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
       (requires (fun m       -> is_eternal_region i))
@@ -483,7 +472,6 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred i);
     r
-#set-options "--z3rlimit 5"
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
@@ -529,7 +517,6 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) m0
 //    Assigns, provided that the reference exists.
 //    Guaranties the strongest low-level effect: Stack
 //    *)
-#set-options "--z3rlimit 50"
 let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit
        (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
@@ -541,7 +528,6 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();    
     gst_put m1
-#set-options "--z3rlimit 5"
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
   m1 == m0 /\ m0 `contains` r /\ x == HyperStack.sel m0 r
@@ -587,12 +573,10 @@ let recall_region (i:rid{is_eternal_region i})
               (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
   = if i <> HS.root then gst_recall (region_contains_pred i)
 
-#set-options "--z3rlimit 20"
 let witness_region (i:rid)
   :Stack unit (requires (fun m0      -> is_eternal_color (color i) ==> i `is_in` m0.h))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
   = gst_witness (region_contains_pred i)
-#set-options "--z3rlimit 5"
 
 let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
   :ST unit (fun h0      -> h0 `HS.contains` r)
@@ -614,7 +598,6 @@ unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
   = forall h0 h1.{:pattern (p h0); b (HS.sel h0 r) (HS.sel h1 r)}
             (p h0 /\ b (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
-#set-options "--z3rlimit 20"
 let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
@@ -627,7 +610,6 @@ let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
     in
     gst_witness (p_pred m p);
     lemma_functoriality (p_pred m p) p
-#set-options "--z3rlimit 5"
 
 let weaken_witness
   (p q:mem_predicate)
