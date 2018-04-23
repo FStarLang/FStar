@@ -3610,7 +3610,7 @@ and (trans_F_ :
                                              let uu____9720 =
                                                print_implicit q'  in
                                              FStar_Util.format2
-                                               "Incoherent implicit qualifiers %b %b\n"
+                                               "Incoherent implicit qualifiers %s %s\n"
                                                uu____9719 uu____9720
                                               in
                                            (FStar_Errors.Warning_IncoherentImplicitQualifier,

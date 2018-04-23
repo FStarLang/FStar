@@ -363,49 +363,53 @@ let (lazy_chooser :
       | FStar_Syntax_Syntax.Lazy_proofstate  ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
   
-let main : 'Auu____613 . unit -> 'Auu____613 =
-  fun uu____618  ->
+let (setup_hooks : unit -> unit) =
+  fun uu____613  ->
+    FStar_ST.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
+      (FStar_Pervasives_Native.Some lazy_chooser);
+    FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f
+      (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
+    FStar_ST.op_Colon_Equals FStar_TypeChecker_Normalize.unembed_binder_knot
+      (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder)
+  
+let (handle_error : Prims.exn -> unit) =
+  fun e  ->
+    if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
+    (let uu____738 = FStar_Options.trace_error ()  in
+     if uu____738
+     then
+       let uu____739 = FStar_Util.message_of_exn e  in
+       let uu____740 = FStar_Util.trace_of_exn e  in
+       FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____739
+         uu____740
+     else
+       if Prims.op_Negation (FStar_Errors.handleable e)
+       then
+         (let uu____742 = FStar_Util.message_of_exn e  in
+          FStar_Util.print1_error
+            "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
+            uu____742)
+       else ());
+    cleanup ();
+    report_errors []
+  
+let main : 'Auu____757 . unit -> 'Auu____757 =
+  fun uu____762  ->
     try
-      FStar_ST.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
-        (FStar_Pervasives_Native.Some lazy_chooser);
-      FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f
-        (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
-      FStar_ST.op_Colon_Equals
-        FStar_TypeChecker_Normalize.unembed_binder_knot
-        (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder);
-      (let uu____746 = FStar_Util.record_time go  in
-       match uu____746 with
-       | (uu____751,time) ->
-           ((let uu____754 = FStar_Options.query_stats ()  in
-             if uu____754
+      setup_hooks ();
+      (let uu____772 = FStar_Util.record_time go  in
+       match uu____772 with
+       | (uu____777,time) ->
+           ((let uu____780 = FStar_Options.query_stats ()  in
+             if uu____780
              then
-               let uu____755 = FStar_Util.string_of_int time  in
-               let uu____756 =
-                 let uu____757 = FStar_Getopt.cmdline ()  in
-                 FStar_String.concat " " uu____757  in
-               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____755 uu____756
+               let uu____781 = FStar_Util.string_of_int time  in
+               let uu____782 =
+                 let uu____783 = FStar_Getopt.cmdline ()  in
+                 FStar_String.concat " " uu____783  in
+               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____781 uu____782
              else ());
             cleanup ();
             FStar_All.exit (Prims.parse_int "0")))
-    with
-    | e ->
-        let trace = FStar_Util.trace_of_exn e  in
-        (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____774 = FStar_Options.trace_error ()  in
-          if uu____774
-          then
-            let uu____775 = FStar_Util.message_of_exn e  in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____775
-              trace
-          else
-            if Prims.op_Negation (FStar_Errors.handleable e)
-            then
-              (let uu____777 = FStar_Util.message_of_exn e  in
-               FStar_Util.print1_error
-                 "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____777)
-            else ());
-         cleanup ();
-         report_errors [];
-         FStar_All.exit (Prims.parse_int "1"))
+    with | e -> (handle_error e; FStar_All.exit (Prims.parse_int "1"))
   
