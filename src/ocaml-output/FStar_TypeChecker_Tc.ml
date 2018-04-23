@@ -4197,7 +4197,7 @@ let (get_fail_se :
     Prims.int Prims.list FStar_Pervasives_Native.option)
   =
   fun se  ->
-    FStar_List.tryPick (FStar_ToSyntax_ToSyntax.get_fail_attr false)
+    FStar_List.tryPick (FStar_ToSyntax_ToSyntax.get_fail_attr true)
       se.FStar_Syntax_Syntax.sigattrs
   
 let list_of_option :

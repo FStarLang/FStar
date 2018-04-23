@@ -2355,7 +2355,7 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
   let attrs = mk_comment_attr d :: attrs in
   env, List.mapi (fun i sigelt -> if i = 0
                                   then { sigelt with sigattrs = attrs }
-                                  else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr true at)) attrs })
+                                  else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
                  sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =

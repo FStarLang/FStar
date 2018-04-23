@@ -1021,7 +1021,7 @@ let z3_reset_options (en:env) :env =
 
 
 let get_fail_se (se:sigelt) : option<list<int>> =
-    List.tryPick (ToSyntax.get_fail_attr false) se.sigattrs
+    List.tryPick (ToSyntax.get_fail_attr true) se.sigattrs
 
 let list_of_option = function
     | None -> []

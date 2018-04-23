@@ -6668,7 +6668,7 @@ and (desugar_decl :
                       let uu____20732 =
                         FStar_List.filter
                           (fun at1  ->
-                             let uu____20738 = get_fail_attr true at1  in
+                             let uu____20738 = get_fail_attr false at1  in
                              FStar_Option.isNone uu____20738) attrs2
                          in
                       {
