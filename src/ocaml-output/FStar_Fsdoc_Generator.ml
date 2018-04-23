@@ -1,8 +1,8 @@
 open Prims
-let (one_toplevel :
+let one_toplevel :
   FStar_Parser_AST.decl Prims.list ->
     (FStar_Parser_AST.decl,FStar_Parser_AST.decl Prims.list)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
   fun decls  ->
     let uu____18 =
@@ -21,21 +21,21 @@ let (one_toplevel :
 type mforest =
   | Leaf of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 
   | Branch of mforest FStar_Util.smap [@@deriving show]
-let (uu___is_Leaf : mforest -> Prims.bool) =
+let uu___is_Leaf : mforest -> Prims.bool =
   fun projectee  ->
     match projectee with | Leaf _0 -> true | uu____102 -> false
   
-let (__proj__Leaf__item___0 :
-  mforest -> (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2) =
+let __proj__Leaf__item___0 :
+  mforest -> (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | Leaf _0 -> _0 
-let (uu___is_Branch : mforest -> Prims.bool) =
+let uu___is_Branch : mforest -> Prims.bool =
   fun projectee  ->
     match projectee with | Branch _0 -> true | uu____130 -> false
   
-let (__proj__Branch__item___0 : mforest -> mforest FStar_Util.smap) =
+let __proj__Branch__item___0 : mforest -> mforest FStar_Util.smap =
   fun projectee  -> match projectee with | Branch _0 -> _0 
-let (htree : mforest FStar_Util.smap) =
-  FStar_Util.smap_create (Prims.parse_int "50") 
+let htree : mforest FStar_Util.smap =
+  FStar_Util.smap_create (Prims.lift_native_int (50)) 
 let string_of_optiont :
   'Auu____156 'Auu____157 .
     ('Auu____156 -> 'Auu____157) ->
@@ -49,11 +49,11 @@ let string_of_optiont :
         | FStar_Pervasives_Native.Some x -> f x
         | FStar_Pervasives_Native.None  -> y
   
-let (string_of_fsdoco :
+let string_of_fsdoco :
   (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
                   Prims.list)
     FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option ->
-    Prims.string)
+    Prims.string
   =
   fun d  ->
     string_of_optiont
@@ -63,12 +63,12 @@ let (string_of_fsdoco :
            Prims.strcat uu____236 "*)"  in
          Prims.strcat "(*" uu____235) "" d
   
-let (string_of_termo :
-  FStar_Parser_AST.term FStar_Pervasives_Native.option -> Prims.string) =
+let string_of_termo :
+  FStar_Parser_AST.term FStar_Pervasives_Native.option -> Prims.string =
   fun t  -> string_of_optiont FStar_Parser_AST.term_to_string "" t 
-let (code_wrap : Prims.string -> Prims.string) =
+let code_wrap : Prims.string -> Prims.string =
   fun s  -> Prims.strcat "```fsharp\n" (Prims.strcat s "\n```\n") 
-let (string_of_tycon : FStar_Parser_AST.tycon -> Prims.string) =
+let string_of_tycon : FStar_Parser_AST.tycon -> Prims.string =
   fun tycon  ->
     match tycon with
     | FStar_Parser_AST.TyconAbstract uu____256 -> "abstract"
@@ -121,7 +121,7 @@ let (string_of_tycon : FStar_Parser_AST.tycon -> Prims.string) =
           Prims.strcat " = " uu____447  in
         Prims.strcat id1.FStar_Ident.idText uu____446
   
-let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
+let string_of_decl' : FStar_Parser_AST.decl' -> Prims.string =
   fun d  ->
     match d with
     | FStar_Parser_AST.TopLevelModule l ->
@@ -195,7 +195,7 @@ let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
         Prims.strcat "splice " uu____776
     | FStar_Parser_AST.Fsdoc (comm,uu____778) -> comm
   
-let (decl_documented : FStar_Parser_AST.decl -> Prims.bool) =
+let decl_documented : FStar_Parser_AST.decl -> Prims.bool =
   fun d  ->
     let tycon_documented tt =
       let tyconvars_documented tycon =
@@ -229,8 +229,7 @@ let (decl_documented : FStar_Parser_AST.decl -> Prims.bool) =
          | FStar_Parser_AST.Tycon (uu____1017,ty) -> tycon_documented ty
          | uu____1035 -> false)
   
-let (document_decl : (Prims.string -> unit) -> FStar_Parser_AST.decl -> unit)
-  =
+let document_decl : (Prims.string -> unit) -> FStar_Parser_AST.decl -> unit =
   fun w  ->
     fun d  ->
       if decl_documented d
@@ -284,7 +283,7 @@ let document_toplevel :
           FStar_Errors.raise_err
             (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
   
-let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
+let document_module : FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____1214 =
       match m with
@@ -335,7 +334,7 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
                (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1327)  in
              FStar_Errors.raise_err uu____1322)
   
-let (generate : Prims.string Prims.list -> unit) =
+let generate : Prims.string Prims.list -> unit =
   fun files  ->
     let modules =
       FStar_List.map

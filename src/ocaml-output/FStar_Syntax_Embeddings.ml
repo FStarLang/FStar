@@ -65,14 +65,14 @@ let mk_emb :
     'a raw_embedder ->
       'a raw_unembedder' -> FStar_Syntax_Syntax.typ -> 'a embedding
   = fun em  -> fun un  -> fun typ  -> { em; un; typ } 
-let (e_any : FStar_Syntax_Syntax.term embedding) =
+let e_any : FStar_Syntax_Syntax.term embedding =
   let em r t = t  in
   let un b t = FStar_Pervasives_Native.Some t  in
   let typ = FStar_Syntax_Syntax.t_term  in mk_emb em un typ 
-let (mk_any_emb :
-  FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term embedding) =
+let mk_any_emb :
+  FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term embedding =
   fun typ  -> { em = (e_any.em); un = (e_any.un); typ } 
-let (e_unit : unit embedding) =
+let e_unit : unit embedding =
   let em rng u =
     let uu___50_418 = FStar_Syntax_Util.exp_unit  in
     {
@@ -98,7 +98,7 @@ let (e_unit : unit embedding) =
          FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_unit 
-let (e_bool : Prims.bool embedding) =
+let e_bool : Prims.bool embedding =
   let em rng b =
     let t =
       if b
@@ -128,7 +128,7 @@ let (e_bool : Prims.bool embedding) =
          FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_bool 
-let (e_char : FStar_Char.char embedding) =
+let e_char : FStar_Char.char embedding =
   let em rng c =
     let t = FStar_Syntax_Util.exp_char c  in
     let uu___52_517 = t  in
@@ -155,7 +155,7 @@ let (e_char : FStar_Char.char embedding) =
          FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_char 
-let (e_int : FStar_BigInt.t embedding) =
+let e_int : FStar_BigInt.t embedding =
   let em rng i =
     let t =
       let uu____566 = FStar_BigInt.string_of_big_int i  in
@@ -186,7 +186,7 @@ let (e_int : FStar_BigInt.t embedding) =
          FStar_Pervasives_Native.None)
      in
   mk_emb em un FStar_Syntax_Syntax.t_int 
-let (e_string : Prims.string embedding) =
+let e_string : Prims.string embedding =
   let em rng s =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (s, rng)))
@@ -482,7 +482,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
       FStar_Syntax_Syntax.t_list_of uu____1571  in
     mk_emb em un uu____1570
   
-let (e_string_list : Prims.string Prims.list embedding) = e_list e_string 
+let e_string_list : Prims.string Prims.list embedding = e_list e_string 
 type norm_step =
   | Simpl 
   | Weak 
@@ -494,72 +494,71 @@ type norm_step =
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of FStar_Syntax_Syntax.attribute [@@deriving show]
-let (uu___is_Simpl : norm_step -> Prims.bool) =
+let uu___is_Simpl : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Simpl  -> true | uu____1602 -> false
   
-let (uu___is_Weak : norm_step -> Prims.bool) =
+let uu___is_Weak : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Weak  -> true | uu____1608 -> false
   
-let (uu___is_HNF : norm_step -> Prims.bool) =
+let uu___is_HNF : norm_step -> Prims.bool =
   fun projectee  -> match projectee with | HNF  -> true | uu____1614 -> false 
-let (uu___is_Primops : norm_step -> Prims.bool) =
+let uu___is_Primops : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Primops  -> true | uu____1620 -> false
   
-let (uu___is_Delta : norm_step -> Prims.bool) =
+let uu___is_Delta : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Delta  -> true | uu____1626 -> false
   
-let (uu___is_Zeta : norm_step -> Prims.bool) =
+let uu___is_Zeta : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Zeta  -> true | uu____1632 -> false
   
-let (uu___is_Iota : norm_step -> Prims.bool) =
+let uu___is_Iota : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Iota  -> true | uu____1638 -> false
   
-let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
+let uu___is_UnfoldOnly : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldOnly _0 -> true | uu____1647 -> false
   
-let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
+let __proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
-let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
+let uu___is_UnfoldFully : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldFully _0 -> true | uu____1669 -> false
   
-let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
+let __proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list =
   fun projectee  -> match projectee with | UnfoldFully _0 -> _0 
-let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
+let uu___is_UnfoldAttr : norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | UnfoldAttr _0 -> true | uu____1689 -> false
   
-let (__proj__UnfoldAttr__item___0 :
-  norm_step -> FStar_Syntax_Syntax.attribute) =
-  fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
-let (steps_Simpl : FStar_Syntax_Syntax.term) =
+let __proj__UnfoldAttr__item___0 : norm_step -> FStar_Syntax_Syntax.attribute
+  = fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
+let steps_Simpl : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_simpl 
-let (steps_Weak : FStar_Syntax_Syntax.term) =
+let steps_Weak : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_weak 
-let (steps_HNF : FStar_Syntax_Syntax.term) =
+let steps_HNF : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_hnf 
-let (steps_Primops : FStar_Syntax_Syntax.term) =
+let steps_Primops : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_primops 
-let (steps_Delta : FStar_Syntax_Syntax.term) =
+let steps_Delta : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_delta 
-let (steps_Zeta : FStar_Syntax_Syntax.term) =
+let steps_Zeta : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_zeta 
-let (steps_Iota : FStar_Syntax_Syntax.term) =
+let steps_Iota : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_iota 
-let (steps_UnfoldOnly : FStar_Syntax_Syntax.term) =
+let steps_UnfoldOnly : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldonly 
-let (steps_UnfoldFully : FStar_Syntax_Syntax.term) =
+let steps_UnfoldFully : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldonly 
-let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
+let steps_UnfoldAttr : FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldattr 
-let (e_norm_step : norm_step embedding) =
+let e_norm_step : norm_step embedding =
   let em rng n1 =
     match n1 with
     | Simpl  -> steps_Simpl
@@ -675,7 +674,7 @@ let (e_norm_step : norm_step embedding) =
               FStar_Pervasives_Native.None))
      in
   mk_emb em un FStar_Syntax_Syntax.t_norm_step 
-let (e_range : FStar_Range.range embedding) =
+let e_range : FStar_Range.range embedding =
   let em rng r =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r))

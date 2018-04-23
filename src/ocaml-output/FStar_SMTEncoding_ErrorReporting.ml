@@ -1,23 +1,23 @@
 open Prims
 exception Not_a_wp_implication of Prims.string 
-let (uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool) =
+let uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with
     | Not_a_wp_implication uu____10 -> true
     | uu____11 -> false
   
-let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
+let __proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string =
   fun projectee  ->
     match projectee with | Not_a_wp_implication uu____18 -> uu____18
   
 type label = FStar_SMTEncoding_Term.error_label[@@deriving show]
 type labels = FStar_SMTEncoding_Term.error_labels[@@deriving show]
-let (sort_labels :
+let sort_labels :
   (FStar_SMTEncoding_Term.error_label,Prims.bool)
     FStar_Pervasives_Native.tuple2 Prims.list ->
     ((FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
        FStar_Pervasives_Native.tuple3,Prims.bool)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun l  ->
     FStar_List.sortWith
@@ -27,10 +27,10 @@ let (sort_labels :
            | (((uu____110,uu____111,r1),uu____113),((uu____114,uu____115,r2),uu____117))
                -> FStar_Range.compare r1 r2) l
   
-let (remove_dups :
+let remove_dups :
   labels ->
     (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list)
+      FStar_Pervasives_Native.tuple3 Prims.list
   =
   fun l  ->
     FStar_Util.remove_dups
@@ -45,13 +45,13 @@ type msg = (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
 type ranges =
   (Prims.string FStar_Pervasives_Native.option,FStar_Range.range)
     FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
-let (fresh_label :
+let fresh_label :
   Prims.string ->
     FStar_Range.range ->
       FStar_SMTEncoding_Term.term ->
-        (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)
+        (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
   =
-  let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
+  let ctr = FStar_Util.mk_ref (Prims.lift_native_int (0))  in
   fun message  ->
     fun range  ->
       fun t  ->
@@ -68,11 +68,11 @@ let (fresh_label :
         let lt1 = FStar_SMTEncoding_Term.mkOr (lterm, t) range  in
         (label, lt1)
   
-let (label_goals :
+let label_goals :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_Range.range ->
       FStar_SMTEncoding_Term.term ->
-        (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)
+        (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
   =
   fun use_env_msg  ->
     fun r  ->
@@ -428,7 +428,7 @@ let (label_goals :
                                                (FStar_SMTEncoding_Term.Forall,
                                                  [[p]],
                                                  (FStar_Pervasives_Native.Some
-                                                    (Prims.parse_int "0")),
+                                                    (Prims.lift_native_int (0))),
                                                  sorts, uu____1236)
                                                 in
                                              FStar_SMTEncoding_Term.Quant
@@ -704,12 +704,12 @@ let (label_goals :
             aux "assertion failed" FStar_Pervasives_Native.None
               FStar_Pervasives_Native.None [] q
   
-let (detail_errors :
+let detail_errors :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       labels ->
         (FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Z3.z3result) ->
-          unit)
+          unit
   =
   fun hint_replay  ->
     fun env  ->
@@ -720,8 +720,8 @@ let (detail_errors :
               let uu____2076 =
                 let uu____2077 = FStar_TypeChecker_Env.get_range env  in
                 FStar_Range.string_of_range uu____2077  in
-              let uu____2078 = FStar_Util.string_of_int (Prims.parse_int "5")
-                 in
+              let uu____2078 =
+                FStar_Util.string_of_int (Prims.lift_native_int (5))  in
               let uu____2079 =
                 FStar_Util.string_of_int (FStar_List.length all_labels)  in
               FStar_Util.format4
@@ -811,7 +811,7 @@ let (detail_errors :
              in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
-            (FStar_Options.Int (Prims.parse_int "5"));
+            (FStar_Options.Int (Prims.lift_native_int (5)));
           (let res = linear_check [] [] all_labels  in
            FStar_Util.print_string "\n";
            FStar_All.pipe_right res (FStar_List.iter print_result))

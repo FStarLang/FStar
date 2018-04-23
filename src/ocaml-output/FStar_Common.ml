@@ -1,13 +1,13 @@
 open Prims
-let (has_cygpath : Prims.bool) =
+let has_cygpath : Prims.bool =
   try
     let uu____7 = FStar_Util.run_proc "which" "cygpath" ""  in
     match uu____7 with
     | (uu____14,t_out,uu____16) ->
         (FStar_Util.trim_string t_out) = "/usr/bin/cygpath"
   with | uu____20 -> false 
-let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
-  let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
+let try_convert_file_name_to_mixed : Prims.string -> Prims.string =
+  let cache = FStar_Util.smap_create (Prims.lift_native_int (20))  in
   fun s  ->
     if has_cygpath && (FStar_Util.starts_with s "/")
     then

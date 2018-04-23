@@ -254,13 +254,25 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
+exception PSMap_Found
 type 'value psmap = (string, 'value) BatMap.t
 let psmap_empty (_: unit) : 'value psmap = BatMap.empty
 let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
 let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  try BatMap.find key map with Not_found -> dflt
+  BatMap.find_default dflt key map
 let psmap_try_find (map: 'value psmap) (key: string) =
-  try Some (BatMap.find key map) with Not_found -> None
+  BatMap.Exceptionless.find key map
+let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
+let psmap_find_map (m:'value psmap) f =
+  let res = ref None in
+  let upd k v =
+    let r = f k v in
+    if r <> None then (res := r; raise PSMap_Found) in
+  (try BatMap.iter upd m with PSMap_Found -> ());
+  !res
+let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
+  BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
+
 
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
@@ -280,9 +292,10 @@ type 'value pimap = (Z.t, 'value) BatMap.t
 let pimap_empty (_: unit) : 'value pimap = BatMap.empty
 let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
 let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  try BatMap.find key map with Not_found -> dflt
+  BatMap.find_default dflt key map
 let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  try Some (BatMap.find key map) with Not_found -> None
+  BatMap.Exceptionless.find key map
+let pimap_fold (m:'value pimap) f a = BatMap.foldi f m a
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -406,8 +419,8 @@ let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) c1 c2 =
-  let b = bytes_of_string s in
-  string_of_bytes (BatArray.map (fun x -> if x = c1 then c2 else x) b)
+  let c1, c2 = BatUChar.chr c1, BatUChar.chr c2 in
+  BatUTF8.map (fun x -> if x = c1 then c2 else x) s
 let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
@@ -528,7 +541,7 @@ let rec find_map l f =
      | None -> find_map tl f
      | y -> y
 
-let try_find f l = try Some (List.find f l) with Not_found -> None
+let try_find f l = BatList.find_opt f l
 
 let try_find_index f l =
   let rec aux i = function
@@ -800,18 +813,9 @@ let get_oreader (filename:string) : oReader = {
   close = (fun _ -> ());
 }
 
-let getcwd = Unix.getcwd
+let getcwd = Sys.getcwd
 
-let readdir dir =
-  let handle = Unix.opendir dir in
-  let files = ref [] in
-  try
-    while true do
-      files := Unix.readdir handle :: !files
-    done;
-    assert false
-  with End_of_file ->
-    !files
+let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
 
 let file_exists = Sys.file_exists
 let basename = Filename.basename
@@ -821,20 +825,24 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out
-    fname
-    (fun f ->
-      BatPervasives.output_value f value)
+  (* BatFile.with_file_out uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
+  let channel = open_out_bin fname in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel -> output_value channel value)
+    channel
 
 let load_value_from_file (fname:string) =
+  (* BatFile.with_file_in uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
   try
-    BatFile.with_file_in
-      fname
-      (fun f ->
-        Some (BatPervasives.input_value f))
-  with
-  | _ ->
-    None
+    let channel = open_in_bin fname in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel -> Some (input_value channel))
+      channel
+  with | _ -> None
 
 let print_exn e =
   Printexc.to_string e

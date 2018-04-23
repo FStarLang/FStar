@@ -1,8 +1,8 @@
 open Prims
-let (find_deps_if_needed :
+let find_deps_if_needed :
   Prims.string Prims.list ->
     (Prims.string Prims.list,FStar_Parser_Dep.deps)
-      FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2
   =
   fun files  ->
     let uu____16 = FStar_Parser_Dep.collect files  in
