@@ -1132,7 +1132,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
           //AR: here we were just setting lc.res_typ to be t, but that's not sufficient, since what matters is the res_typ in its comp
           //if lid_equals env.curmodule C.prims_lid then e, { lc with res_typ = t }, g  //AR: in prims, if we force lcomp, that crashes
           //else
-          e, U.set_result_typ_lc lc t, g
+          e, { lc with res_typ = t }, g
 
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
