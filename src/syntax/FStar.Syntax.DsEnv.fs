@@ -561,9 +561,12 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false, se.sigattrs))
                  end
             else None
-          | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
-          | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
-          | _ -> None
+            | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+            | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
+            | Sig_splice (lids, t) ->
+                // TODO: This depth is probably wrong
+                Some (Term_name (S.fvar source_lid (Delta_defined_at_level 1) None, false, []))
+            | _ -> None
         end in
 
   let k_local_binding r = let (t, mut) = found_local_binding (range_of_lid lid) r in Some (Term_name (t, mut, []))
@@ -714,12 +717,15 @@ let try_lookup_doc (env: env) (l:lid) =
   BU.smap_try_find env.docs l.str
 
 let try_lookup_datacon env (lid:lident) =
-  let k_global_def lid = function
+  let k_global_def lid se =
+      match se with
       | ({ sigel = Sig_declare_typ(_, _, _); sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid Delta_constant None)
         else None
-      | ({ sigel = Sig_datacon _ }, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
+      | ({ sigel = Sig_datacon _ }, _) ->
+         let qual = fv_qual_of_se (fst se) in
+         Some (lid_as_fv lid Delta_constant qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 

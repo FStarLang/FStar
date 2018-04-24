@@ -115,7 +115,7 @@ add_hs_and_hst()
 
 help()
 {
-    echo "Usage: renamings.sh <rename_hyperheap | rename_mrref | add_hs_and_hst | replace <arg1> <arg2>"
+    echo "Usage: renamings.sh <rename_hyperheap | rename_mrref | add_hs_and_hst | replace <arg1> <arg2> | all>, where all is for applying all known upgrades"
 }
 
 if [ "$#" -eq 0 ]; then
@@ -144,6 +144,17 @@ case $CMD in
 	    exit 1
 	fi
 	replace $2 $3
+	;;
+    all)
+	echo "renaming hyperheap"
+	rename_hyperheap
+	echo "renaming mrref"
+	rename_mrref
+	# echo "adding hs and hst"
+	# add_hs_and_hst
+	echo "replacing HS.is_eternal_region"
+	replace "HS\.is_eternal_region" "is_eternal_region"
+	exit 0
 	;;
     *)
 	help

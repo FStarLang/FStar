@@ -130,3 +130,14 @@ assume val l' : nat -> unit -> Lemma p1
 let _ =
     assert_by_tactic p1
                      (fun () -> apply_lemma (quote (l' 5)))
+
+(* Testing pointwise over matches *)
+noeq
+type tt =
+    | CC : int -> bool -> tt
+    | BB : tt
+
+let pwtest x =
+    assert_by_tactic
+        (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
+        (fun () -> pointwise trefl)

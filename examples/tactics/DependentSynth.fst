@@ -18,7 +18,7 @@ let t () : Tac unit =
   let body = mk_if test e_true e_false in
   let res = pack (Tv_Abs (mk_binder test') body) in
   // should print: function true -> 3 | false -> ()
-  //print (term_to_string res);
+  //debug (term_to_string res);
   t_exact true res
 
 let f : ((b: bool) -> Tot (myty b)) = synth_by_tactic t

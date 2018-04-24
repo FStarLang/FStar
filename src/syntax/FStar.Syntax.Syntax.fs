@@ -405,7 +405,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
-  | Sig_splice         of term
+  | Sig_splice         of list<lident> * term
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -650,6 +650,7 @@ let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
 let t_term      = tconst PC.term_lid
+let t_order     = tconst PC.order_lid
 let t_decls     = tabbrev PC.decls_lid
 let t_binder    = tconst PC.binder_lid
 let t_binders   = tconst PC.binders_lid

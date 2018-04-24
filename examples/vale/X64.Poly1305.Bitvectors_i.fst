@@ -7,7 +7,7 @@ open FStar.Mul
 open FStar.UInt
 
 // tweak options?
-#reset-options "--smtencoding.elim_box true"
+#reset-options "--smtencoding.elim_box true --__temp_fast_implicits"
 
 let lemma_shr2 x =
    assert_by_tactic (shift_right #64 x 2 == udiv #64 x 4) bv_tac
@@ -56,7 +56,7 @@ let lemma_bv128_64_64_and x x0 x1 y y0 y1 z z0 z1 =
 // TODO
   admit()
 
-#reset-options "--smtencoding.elim_box true --z3cliopt smt.case_split=3"
+#reset-options "--smtencoding.elim_box true --z3cliopt smt.case_split=3 --__temp_fast_implicits"
 let lemma_bytes_shift_constants0 x =
   assert_by_tactic (shift_left #64 0 3 == (0 <: uint_t 64)) bv_tac;
   assert_by_tactic (shift_left #64 1 0 == (0x1 <: uint_t 64)) bv_tac

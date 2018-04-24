@@ -95,6 +95,9 @@ val psmap_empty: unit -> psmap<'value> // GH-1161
 val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
 val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
 val psmap_try_find: psmap<'value> -> string -> option<'value>
+val psmap_fold: psmap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
+val psmap_find_map: psmap<'value> -> (string -> 'value -> option<'a>) -> option<'a>
+val psmap_modify: psmap<'value> -> string -> (option<'value> -> 'value) -> psmap<'value>
 
 (* not relying on representation *)
 type imap<'value>
@@ -117,6 +120,7 @@ val pimap_empty: unit -> pimap<'value> // GH-1161
 val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
 val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
 val pimap_try_find: pimap<'value> -> int -> option<'value>
+val pimap_fold: pimap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -192,6 +196,7 @@ val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
+val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)

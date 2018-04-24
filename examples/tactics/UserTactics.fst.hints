@@ -1,5 +1,5 @@
 [
-  "0³,·ÖÞÛÐ\u0011œµ*Ä\f€\r",
+  "ußéPü”¢¾P+Ýii®¯ÿ",
   [
     [
       "UserTactics.test_print_goal",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c3b74131d61a37c94a6f736255d732cf"
+      "c18bf7b23399ad01de2926a017766589"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "30b43b648786925ee0c4f0c993087628"
+      "9c63c7398aa886b0c69a0a825207be83"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ab4b5fefc4f217d109a3066ca9589f01"
+      "f4381e519bc1b2a927ff528fb9067146"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "43c03af2d7a1ccfdcc6be3422b75a184"
+      "df7862995bb5a7bf0282627dff72e3dc"
     ],
     [
       "UserTactics.sqintro",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "48798d2bac590d915bce3ef3753ac4ea"
+      "dcced3c1bf4b0f1a3a66d804963564f7"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -60,7 +60,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "0b043115a059893205e01ed1a53ad44d"
+      "dd51221f3f60eeb29fd09acaa5ed1724"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -69,7 +69,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "1900cae1b27298ba20e05f7a78a14c04"
+      "7537fb7cc2536168238d09fb91f20de4"
     ],
     [
       "UserTactics.f",
@@ -82,7 +82,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "c73ccdfd037debe57c049038b7b0794d"
+      "377ed69cb29219e264a64738e5db69b9"
     ],
     [
       "UserTactics.sqintro",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "a4f049dcc8f579a9fd40f984adaec330"
+      "186200039bad91d9bedb4b35951347a5"
     ]
   ]
 ]

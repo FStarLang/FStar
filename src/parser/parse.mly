@@ -173,8 +173,8 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
-  | SPLICE t=term
-      { Splice t }
+  | SPLICE LBRACK ids=separated_list(SEMICOLON, lidentOrOperator) RBRACK t=atomicTerm
+      { Splice (ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
@@ -990,7 +990,7 @@ warn_error:
 
 flag:
   | op=OPINFIX1
-    { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
+    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
   | op=OPINFIX2
     { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
   | MINUS

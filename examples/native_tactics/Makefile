@@ -13,7 +13,8 @@ TAC_MODULES=Print\
     Simple\
     SimpleTactic\
     Evens\
-    Embeddings
+    Embeddings\
+    Plugins
 
 # Tests for which the native tatics are declared and used in the same module
 ALL=Apply\

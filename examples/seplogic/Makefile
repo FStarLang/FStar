@@ -3,16 +3,15 @@ include ../Makefile.include
 
 all:uall
 
-uall: deep examples shallow
-
-deep: FStar.SL.Monotonic.Heap.uver FStar.SL.Heap.uver Lang.uver SL.Tactics.uver
+uall: shallow examples
 
 shallow: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver SL.Shallow.uver
 
-#not worrying about two phases or extracted interfaces right now
+#not worrying about extracted interfaces right now
 examples:
-	$(FSTAR) --use_two_phase_tc false --record_hints --use_hints SL.Examples.fst
-	$(FSTAR) --use_two_phase_tc false --record_hints --use_hints SL.ExamplesAuto.fst
+	$(FSTAR) --use_two_phase_tc false Examples.fst
+	$(FSTAR) --record_hints --use_hints SL.Examples.fst
+	$(FSTAR) --record_hints --use_hints SL.ExamplesAuto.fst
 
 OTHERFLAGS+=--include ../tactics
 

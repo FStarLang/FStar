@@ -1,5 +1,5 @@
 [
-  "}ŠÍ¿#ZiÃÜ2ýƒx\u0014Î™",
+  "„ofTÙ~|D|1’*¡.É¸",
   [
     [
       "Clear.l2",
@@ -19,11 +19,27 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "af35d1904275abaadc9f753939c496b8"
+      "5417a702ef3bc95d271ec25920988766"
     ],
     [
       "Clear.l2",
       2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int",
+        "data_elim_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
+      ],
+      0,
+      "c016363abbbe436bd42f38f1b5382074"
+    ],
+    [
+      "Clear.l2",
+      3,
       2,
       1,
       [
@@ -32,16 +48,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "7b3ad7662761ad79b804c39668bfd963"
-    ],
-    [
-      "Clear.l2",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9573c3b940b3988aaf19fc046a819ec5"
+      "77e6ca1cbfe520d70b8c2251d351dadb"
     ]
   ]
 ]

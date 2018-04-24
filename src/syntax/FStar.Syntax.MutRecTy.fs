@@ -129,11 +129,11 @@ let disentangle_abbrevs_from_bundle
         (* Start unfolding in a type abbreviation that has not occurred before. *)
         and unfold_abbrev (x: sigelt) = match x.sigel with
             | Sig_let ((false, [lb]), _) ->
-	        (* eliminate some qualifiers for definitions *)
-	        let quals = x.sigquals |> List.filter begin function
-	        | Noeq -> false
-	        | _ -> true
-	        end in
+                (* eliminate some qualifiers for definitions *)
+                let quals = x.sigquals |> List.filter begin function
+                | Noeq -> false
+                | _ -> true
+                end in
                 let lid = match lb.lbname with
                     | Inr fv -> fv.fv_name.v
                     | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"

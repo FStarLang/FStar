@@ -155,7 +155,7 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Tot prop
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
 assume type has_type : #a:Type -> a -> Type -> Tot prop
 
-(* forall (x:a). p x : specialized to Type#0 *)
+(* forall (x:a). p x : specialized to prop *)
 [@ "tac_opaque"]
 type l_Forall (#a:Type) (p:a -> GTot prop) : prop = squash (x:a -> GTot (p x))
 
@@ -166,9 +166,9 @@ unopteq type dtuple2 (a:Type)
             -> _2:b _1
             -> dtuple2 a b
 
-(* exists (x:a). p x : specialized to Type#0 *)
+(* exists (x:a). p x : specialized to prop *)
 [@ "tac_opaque"]
-type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
+type l_Exists (#a:Type) (p:a -> GTot prop) = squash (x:a & p x)
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
@@ -375,64 +375,10 @@ let abs (x:int) : Tot int = if x >= 0 then x else -x
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
 
-
-
-(*********************************************************************************)
-(* Marking terms for normalization *)
-(*********************************************************************************)
-abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (p:prop) : prop = p
-
-abstract
-noeq type norm_step =
-  | Simpl
-  | Weak
-  | HNF
-  | Primops
-  | Delta
-  | Zeta
-  | Iota
-  | UnfoldAttr:#t:Type0 -> a:t -> norm_step
-  | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
-
-// Helpers, so we don't expose the actual inductive
-abstract let simplify : norm_step = Simpl
-abstract let weak     : norm_step = Weak
-abstract let hnf      : norm_step = HNF
-abstract let primops  : norm_step = Primops
-abstract let delta    : norm_step = Delta
-abstract let zeta     : norm_step = Zeta
-abstract let iota     : norm_step = Iota
-abstract let delta_only (s:list string) : norm_step = UnfoldOnly s
-abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
-
-// Normalization marker
-abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
-
-abstract val assert_norm : p:prop -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
-let assert_norm p = ()
-
 irreducible let labeled (r:range) (msg:string) (b:prop) : prop = b
 
-(*
- * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
- * the return type is not unit and the head symbol is not marked irreducible.
- * To circumvent this behavior, singleton can be used.
- * See the example usage in ulib/FStar.Algebra.Monoid.fst.
- *)
-irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
-
-(*
- * `with_type t e` is just an identity function, but it receives special treatment
- *  in the SMT encoding, where in addition to being an identity function, we have
- *  an SMT axiom:
- *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
- *)
-let with_type (#t:Type) (e:t) = e
-
-let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
-let normalize_spec (a: prop) : Lemma (normalize a == a) = ()
-let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
+assume val fail : attribute
+assume val fail_errs : list int -> Tot attribute
 
 // TODO: we might add a coercion to convert sub-singletons to prop,
 //       here are some not-yet-working attempts

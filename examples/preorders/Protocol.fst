@@ -8,8 +8,6 @@ open FStar.ST
 
 open MonotonicArray
 
-#set-options "--use_two_phase_tc false"
-
 (***** an unstable sequence proof *****)
 
 let lemma_seq_append_unstable (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
@@ -112,6 +110,18 @@ let recall_connection_liveness (c:connection)
     | S _ es_ref         -> ST.recall es_ref
     | R _ es_ref ctr_ref -> ST.recall es_ref; ST.recall ctr_ref
 
+let lemma_sel_entries_equals_sel_tot_entries (c:connection) (h:heap)
+  :Lemma (requires (h `live_connection` c))
+         (ensures  (sel_tot h (entries_of c) == sel h (entries_of c)))
+	 [SMTPat (sel_tot h (entries_of c))]
+  = Heap.lemma_sel_equals_sel_tot_for_contained_refs h (entries_of c)
+
+let lemma_sel_ctr_ref_equals_sel_tot_ctr_ref (c:connection{R? c}) (h:heap)
+  :Lemma (requires (h `live_connection` c))
+         (ensures  (let R _ _ ctr_ref = c in sel_tot h ctr_ref == sel h ctr_ref))
+	 [SMTPat (sel_tot h (R?.ctr c))]
+  = Heap.lemma_sel_equals_sel_tot_for_contained_refs h (R?.ctr c)
+
 (* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap{h `live_connection` c}) :Tot (seq message) =
   ArrayUtils.seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
@@ -125,9 +135,8 @@ let lemma_prefix_entries_implies_prefix_log
 
 (* current counter for the connection *)
 let ctr (c:connection) (h:heap{h `live_connection` c}) :Tot nat =
-  match c with
-  | S _ es_ref    -> length (sel_tot h es_ref)
-  | R _ _ ctr_ref -> sel_tot h ctr_ref
+  if S? c then length (sel_tot h (entries_of c))
+  else sel_tot h (R?.ctr c)
 
 (* recall_counter, as mentioned in the paper *)
 let recall_counter (c:connection)
@@ -282,7 +291,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
         Some len
       else
         None
-#reset-options "--use_two_phase_tc false"
+#reset-options
 
 (***** sender and receiver *****)
 
@@ -296,9 +305,9 @@ let lemma_is_prefix_of_slice
 (*****)
 
 (*
- * assuming a flattening function that flattens a sequence of messages into sequence of bytes
- * and a couple of associated lemmas
- *)
+//  * assuming a flattening function that flattens a sequence of messages into sequence of bytes
+//  * and a couple of associated lemmas
+//  *)
 assume val flatten (s:seq message) :Tot (seq byte)
 
 assume val lemma_flatten_snoc (s:seq message) (m:message)
@@ -383,7 +392,7 @@ let lemma_sender_connection_ctr_equals_length_log
   :Lemma (ctr c h == Seq.length (log c h))
   = ()
 
-#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0 --use_two_phase_tc false"
+#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0"
 val send_aux 
           (#n:nat) 
           (file:iarray byte n) 
@@ -402,7 +411,7 @@ val send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_bytes (as_initialized_seq file h0) c from (ctr c h1) h1))
-#reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0 --use_two_phase_tc false"
+#reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0"
 let rec send_aux #n file c from pos
       = if pos = n then ()
         else
@@ -524,6 +533,7 @@ let extend_initialization #a #n (f:array a n) (pos:nat) (next:nat{pos+next <= n}
     in
     FStar.Classical.forall_intro aux
 
+#set-options "--use_two_phase_tc false"
 let rec receive_aux #n file c h_init from pos
    = let h0 = ST.get() in
      let filled0 = prefix file pos in
@@ -562,6 +572,7 @@ let rec receive_aux #n file c h_init from pos
          then receive_aux file c h_init from (pos + k)
          else None
 
+#set-options "--use_two_phase_tc true"
 val receive_file (#n:nat{fragment_size <= n})
             (file:array byte n)
             (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
@@ -600,7 +611,7 @@ let receive_file #n file c =
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
   ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
 
-#reset-options "--z3rlimit 100 --use_two_phase_tc false"
+#reset-options "--z3rlimit 100"
 let lemma_partial_length_hiding
   (#n:nat) (#m:nat)
   (c0:connection{sender c0}) (c1:connection{sender c1})

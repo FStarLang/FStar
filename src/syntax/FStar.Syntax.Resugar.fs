@@ -1177,8 +1177,8 @@ let resugar_sigelt' env se : option<A.decl> =
       in
       Some (decl'_to_decl se (A.Val (lid.ident,t')))
 
-  | Sig_splice t ->
-    Some (decl'_to_decl se (A.Splice (resugar_term' env t)))
+  | Sig_splice (ids, t) ->
+    Some (decl'_to_decl se (A.Splice (List.map (fun l -> l.ident) ids, resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

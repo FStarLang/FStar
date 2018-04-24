@@ -321,4 +321,17 @@ let inline_let : unit = ()
 irreducible
 let plugin : unit = ()
 
+(*
+ * we now erase all pure and ghost functions with unit return type to unit
+ * this creates a small issue with abstract types. consider a module that
+ * defines an abstract type t whose (internal) definition is unit and it also
+ * defines a function f: int -> t.
+ * with this new scheme, f would be erased to be just () inside the module
+ * while the client calls to f would not, since t is abstract.
+ * to get around this, when extracting interfaces, if we encounter an abstract type,
+ * we will tag it with this attribute, so that extraction can treat it specially.
+ *)
+irreducible
+let must_erase_for_extraction :unit = ()
+
 let dm4f_bind_range : unit = ()
