@@ -30,7 +30,7 @@ unfold let length s = strlen s
  Otherwise, the left disjunct reduces partially but the right disjunct
  remains as is, allowing to keep `strlen s <= n` in the context.
 *)
-unfold let maxlen s n = b2t (normalize_term (strlen s <= n)) \/ strlen s <= n
+unfold let maxlen s n = b2p (normalize_term (strlen s <= n)) \/ strlen s <= n
 
 val make: l:nat -> char -> Tot (s:string {length s = l})
 val split:   list char -> string -> Tot (list string)
