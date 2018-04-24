@@ -64,7 +64,7 @@ Should this actually be moved to examples/paradoxes?
 https://coq.inria.fr/library/Coq.Logic.Berardi.html
 https://github.com/FStarLang/FStar/issues/360
 ** FStar.Ref.fst (new admit in write; assertion failed)
-* TODO P1 Fix Z3 errors related to reshuffling in prims:
+* DONE P1 Fix Z3 errors related to reshuffling in prims:
 <dummy>(0,0-0,0): (Warning 276) Prims: Unexpected output from Z3:
 (error "line 1370 column 4: unknown function/constant Prims.hasEq")
 (error "line 1569 column 4: unknown function/constant Prims.hasEq")

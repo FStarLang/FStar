@@ -693,6 +693,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                fst (List.hd b), f
             | _ -> failwith "impossible" in
 
+        let bt = x.sort in
         let base_t, decls = encode_term x.sort env in
         let x, xtm, env' = gen_term_var env x in
         let refinement, decls' = encode_formula f env' in
@@ -765,7 +766,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @[tdecl;
                               t_kinding;
                               // t_valid;
-                              t_interp;t_haseq] in
+                              t_interp] @ (if is_type bt then [] else [t_haseq]) in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
               t, t_decls
