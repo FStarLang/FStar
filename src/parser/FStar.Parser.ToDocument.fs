@@ -442,7 +442,7 @@ let with_comment printer tm tmrange =
   group (comments ^^ printed_e)
 
 (* [place_comments_until_pos k lbegin pos doc] appends to doc all the comments present in *)
-(* [comment_stack] whose range is before pos and separate each comments by as much lines *)
+(* [comment_stack] whose range is before pos and separate each comments by as many lines *)
 (* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
 (* [doc] in the original document. Between 2 comments [k] is set to [1] *)
 let rec place_comments_until_pos k lbegin pos_end doc =
@@ -450,11 +450,16 @@ let rec place_comments_until_pos k lbegin pos_end doc =
   | (comment, crange) :: cs when range_before_pos crange pos_end ->
     comment_stack := cs ;
     let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
+    let lnum = min 2 lnum in
     let doc = doc ^^ repeat lnum hardline ^^ str comment in
     place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end doc
   | _ ->
-    let lnum = max 1 (line_of_pos pos_end - lbegin) in
-    doc ^^ repeat lnum hardline
+    if doc = empty then
+      empty
+    else
+      let lnum = max 1 (line_of_pos pos_end - lbegin) in
+      let lnum = min 2 lnum in
+      doc ^^ repeat lnum hardline
 
 (* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
 (*                                                                            *)
@@ -529,9 +534,8 @@ let rec p_decl d =
 and p_attributes attrs =
     match attrs with
     | [] -> empty
-    | _ -> flow empty [(lbracket ^^ str "@ ");
-                       (align (flow break1 (List.map p_atomicTerm attrs)));
-                       rbracket] ^^ hardline
+    | _ -> lbracket ^^ str "@ " ^^
+             align ((flow break1 (List.map p_atomicTerm attrs)) ^^ rbracket) ^^ hardline
 
 and p_fsdoc (doc, kwd_args) =
   let kwd_args_doc =
@@ -773,7 +777,7 @@ and p_qualifier = function
 and p_qualifiers qs =
   match qs with
   | [] -> empty
-  | _ -> flow break1 (List.map p_qualifier qs) ^/^ hardline
+  | _ -> flow break1 (List.map p_qualifier qs) ^^ hardline
 
 (* Skipping focus since it cannot be recoverred at printing *)
 
@@ -898,10 +902,11 @@ and p_refinement aqual_opt binder t phi =
   (* If t is atomic, don't put a space between t and phi
    * If t can be displayed on a single line, tightly surround it with braces,
    * otherwise pad with a space. *)
-  optional p_aqual aqual_opt ^^ binder ^^ colon ^/^
-    p_appTerm t ^^ (if is_t_atomic then empty else break1) ^^
-      group ((ifflat
-        (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi)))
+  let jump_break = if is_t_atomic then 0 else 1 in
+  (optional p_aqual aqual_opt ^^ binder ^^ colon) ^/^
+    (p_appTerm t ^^
+      (jump 2 jump_break (group ((ifflat
+        (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi))))))
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
@@ -1087,7 +1092,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
 and p_attrs_opt = function
   | None -> empty
   | Some terms ->
-    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]") ^^ break1
+    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
 
 and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 
