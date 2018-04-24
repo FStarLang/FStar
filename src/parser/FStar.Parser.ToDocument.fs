@@ -511,10 +511,20 @@ let separate_map_with_comments_kw prefix sep f xs extract_range =
 (* ****************************************************************************)
 
 let rec p_decl d =
-    optional p_fsdoc d.doc ^^
-    p_attributes d.attrs ^^
-    p_qualifiers d.quals ^^
-    p_rawDecl d
+  let qualifiers =
+    (* Don't push 'assume' on a new line when it used as a keyword *)
+    match (d.quals, d.d) with
+    | ([Assumption], Assume(id, _)) ->
+      if char_at id.idText 0 |> is_upper then
+        p_qualifier Assumption ^^ space
+      else
+        p_qualifiers d.quals
+    | _ -> p_qualifiers d.quals
+  in
+  optional p_fsdoc d.doc ^^
+  p_attributes d.attrs ^^
+  qualifiers ^^
+  p_rawDecl d
 
 and p_attributes attrs =
     match attrs with
@@ -576,7 +586,7 @@ and p_rawDecl d = match d.d with
       then empty
       else str "val" ^^ space
     in
-    decl_keyword ^^ p_ident id ^^ space ^^ group (colon ^^ space ^^ (p_typ false false t))
+    decl_keyword ^^ p_ident id ^^ group (colon ^^ space ^^ (p_typ false false t))
   | Exception(uid, t_opt) ->
     str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> break1 ^^ str "of" ^/+^ p_typ false false t) t_opt
   | NewEffect(ne) ->
@@ -1111,7 +1121,7 @@ and p_disjunctivePats pats =
     separate_map (str "\\/") p_conjunctivePats pats
 
 and p_conjunctivePats pats =
-    group (separate_map semi p_appTerm pats)
+    group (separate_map (semi ^^ break1) p_appTerm pats)
 
 and p_simpleTerm ps pb e = match e.tm with
     | Abs(pats, e) ->
