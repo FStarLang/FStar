@@ -75,7 +75,7 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
 (* Marking terms for normalization *)
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:Type0) :Type0 = a
+abstract let normalize (a:prop) :prop = a
 
 abstract
 noeq type norm_step =
@@ -105,11 +105,11 @@ abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
-abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+abstract val assert_norm : p:prop -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
 
 let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
-let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
+let normalize_spec (a: prop) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
 
 (*

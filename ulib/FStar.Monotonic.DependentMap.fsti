@@ -56,52 +56,52 @@ val upd (#a:_) (#b:_)
     (ensures (fun r' -> repr r' == DM.upd (repr r) x (Some v)))
 
 /// `imap a b inv` further augments a map with an invariant on its repr
-let imap (a:eqtype) (b: a -> Type) (inv:DM.t a (opt b) -> Type) =
+let imap (a:eqtype) (b: a -> Type) (inv:DM.t a (opt b) -> prop) =
     r:map a b{inv (repr r)}
 
 /// `grows r1 r2` is an abstract preorder on `imap`
-val grows (#a:_) (#b:_) (#inv:DM.t a (opt b) -> Type)
+val grows (#a:_) (#b:_) (#inv:DM.t a (opt b) -> prop)
   : FStar.Preorder.preorder (imap a b inv)
 
 /// And, finally, the main type of this module:
 ///
 /// `t r a b inv` is a mutable, imap stored in region `r` constrained
 ///               to evolve according to `grows`
-let t (r:HST.erid) (a:eqtype) (b:a -> Type) (inv:DM.t a (opt b) -> Type) =
+let t (r:HST.erid) (a:eqtype) (b:a -> Type) (inv:DM.t a (opt b) -> prop) =
     m_rref r (imap a b inv) grows
 
 /// `defined t x h`: In state `h`, map `t` is defined at point `x`.
-///     - We define these in `Type` rather than `bool`
+///     - We define these in `prop` rather than `bool`
 ///       since it is typical for client code to use `defined`
-///       as a stable heap predicate, which requires a `heap -> Type`
+///       as a stable heap predicate, which requires a `heap -> prop`
 let defined
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (h:HS.mem)
-  : GTot Type
+  : GTot prop
   = Some? (sel (HS.sel h t) x)
 
 /// `fresh t x h`: The map is not defined at point `x`
 let fresh
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (h:HS.mem)
-  : GTot Type0
+  : GTot prop
   = ~ (defined t x h)
 
 /// `value_of t x h`: Get the value of `x` in the map `t` in state `h`
 let value_of
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
@@ -113,13 +113,13 @@ let value_of
 let contains
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
     (y:b x)
     (h:HS.mem)
-  : GTot Type0
+  : GTot prop
   = defined t x h /\
     value_of t x h == y
 
@@ -127,7 +127,7 @@ let contains
 val contains_stable
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
@@ -140,7 +140,7 @@ val contains_stable
 val defined_stable
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
@@ -151,7 +151,7 @@ val defined_stable
 ////////////////////////////////////////////////////////////////////////////////
 
 /// `alloc ()`: Allocating a new `t` requires proving the `inv` of the empty map
-val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
+val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> prop) (#r:HST.erid)
     (_:unit{inv (repr empty)})
   : ST (t r a b inv)
        (requires (fun h -> HyperStack.ST.witnessed (region_contains_pred r)))
@@ -168,7 +168,7 @@ val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
 val extend
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
@@ -191,7 +191,7 @@ val extend
 val lookup
     (#a:eqtype)
     (#b:a -> Type)
-    (#inv:DM.t a (opt b) -> Type)
+    (#inv:DM.t a (opt b) -> prop)
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
@@ -206,8 +206,8 @@ val lookup
             contains t x v h1 /\
             witnessed (contains t x v))))
  
-let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
-             (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
+let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> prop) (#r:HST.erid)
+             (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> prop)
   = forall (x:a).{:pattern (sel (HS.sel h t) x) \/ (DM.sel (repr (HS.sel h t)) x)}
             defined t x h ==> pred x (Some?.v (sel (HS.sel h t) x))
 
@@ -221,7 +221,7 @@ val mmap_f (#a:eqtype) (#b #c:a -> Type) (m:map a b) (f: (x:a) -> b x -> c x)
   :Tot (m':(map a c){repr m' == DM.map (f_opt f) (repr m)})
 
 val map_f (#a:eqtype) (#b #c:a -> Type)
-          (#inv:DM.t a (opt b) -> Type) (#inv':DM.t a (opt c) -> Type)
+          (#inv:DM.t a (opt b) -> prop) (#inv':DM.t a (opt c) -> prop)
 	  (#r #r':HST.erid)
           (m:t r a b inv) (f: (x:a) -> b x -> c x)
 	  :ST (t r' a c inv')

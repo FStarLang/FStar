@@ -374,19 +374,19 @@ val unused_in
   (#value: typ)
   (p: pointer value)
   (h: HS.mem)
-: GTot Type0
+: GTot prop
 
 val live
   (#value: typ)
   (h: HS.mem)
   (p: pointer value)
-: GTot Type0
+: GTot prop
 
 val nlive
   (#value: typ)
   (h: HS.mem)
   (p: npointer value)
-: GTot Type0
+: GTot prop
 
 val live_nlive
   (#value: typ)
@@ -737,7 +737,7 @@ val readable
   (#a: typ)
   (h: HS.mem)
   (b: pointer a)
-: GTot Type0
+: GTot prop
 
 val readable_live
   (#a: typ)
@@ -790,7 +790,7 @@ val readable_struct_fields
   (h: HS.mem)
   (p: pointer (TStruct l))
   (s: list string)
-: GTot Type0
+: GTot prop
 
 val readable_struct_fields_nil
   (#l: struct_typ)
@@ -862,7 +862,7 @@ val is_active_union_field
   (h: HS.mem)
   (p: pointer (TUnion l))
   (fd: struct_field l)
-: GTot Type0
+: GTot prop
 
 val is_active_union_live
   (#l: union_typ)
@@ -926,7 +926,7 @@ val is_active_union_field_includes_readable
   (ensures (is_active_union_field h p fd))
 
 (* Equality predicate on struct contents, without quantifiers *)
-let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
+let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot prop =
   (live h b ==> live h' b') /\ (
     readable h b ==> (
       readable h' b' /\
@@ -990,7 +990,7 @@ val buffer_live
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-: GTot Type0
+: GTot prop
 
 val buffer_live_gsingleton_buffer_of_pointer
   (#t: typ)
@@ -1014,7 +1014,7 @@ val buffer_unused_in
   (#t: typ)
   (b: buffer t)
   (h: HS.mem)
-: GTot Type0
+: GTot prop
 
 val buffer_live_not_unused_in
   (#t: typ)
@@ -1428,7 +1428,7 @@ val buffer_readable
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-: GTot Type0
+: GTot prop
 
 val buffer_readable_buffer_live
   (#t: typ)
@@ -1553,7 +1553,7 @@ val loc_regions
 
 val loc_includes
   (s1 s2: loc)
-: GTot Type0
+: GTot prop
 
 val loc_includes_refl
   (s: loc)
@@ -1715,7 +1715,7 @@ val loc_includes_region_union_l
 
 val loc_disjoint
   (s1 s2: loc)
-: GTot Type0
+: GTot prop
 
 val loc_disjoint_sym
   (s1 s2: loc)
@@ -1939,7 +1939,7 @@ val loc_disjoint_regions
 val modifies
   (s: loc)
   (h1 h2: HS.mem)
-: GTot Type0
+: GTot prop
 
 val modifies_loc_regions_intro
   (rs: Set.set HS.rid)
@@ -2070,10 +2070,10 @@ val modifies_trans
   (ensures (modifies (loc_union s12 s23) h1 h3))
   [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
 
-let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
+let modifies_0 (h0 h1: HS.mem) : GTot prop =
   modifies (loc_addresses h0.HS.tip Set.empty) h0 h1
 
-let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
+let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot prop =
   modifies (loc_pointer p) h0 h1
 
 (** Concrete allocators, getters and setters *)
@@ -2426,7 +2426,7 @@ val buffer_idx_gsub_buffer
 val buffer_includes
   (#t: typ)
   (blarge bsmall: buffer t)
-: GTot Type0
+: GTot prop
 
 val buffer_includes_refl
   (#t: typ)

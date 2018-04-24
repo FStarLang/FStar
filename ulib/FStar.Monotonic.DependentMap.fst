@@ -31,7 +31,7 @@ let upd #a #b r x v = (|x, v|)::r
 
 /// `grows'` and `grows`: a preorder of invariant-respeting maps
 ///    - Needs to be introduced in 2 steps because of an F* limitation
-let grows' (#a:eqtype) (#b:a -> Type) (#inv:(partial_dependent_map a b -> Type))
+let grows' (#a:eqtype) (#b:a -> Type) (#inv:(partial_dependent_map a b -> prop))
            (m1:imap a b inv) (m2:imap a b inv) =
     forall x.{:pattern (Some? (sel m1 x))}
            Some? (sel m1 x) ==>

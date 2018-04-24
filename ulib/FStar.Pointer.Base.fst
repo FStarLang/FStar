@@ -1196,7 +1196,7 @@ let rec path_includes_ind
       (#to2: typ) ->
       (p1: path from to1) ->
       (p2: path from to2 {path_includes p1 p2} ) ->
-      GTot Type0))
+      GTot prop))
   (h_step:
    ((#through: typ) ->
     (#to: typ) ->
@@ -1320,7 +1320,7 @@ let path_concat_includes
   (phi: (
     (#to: typ) ->
     (p': path from to) ->
-    Ghost Type0
+    Ghost prop
     (requires (path_includes p p'))
     (ensures (fun _ -> True))
   ))
@@ -1468,7 +1468,7 @@ let path_disjoint
   (#value2: typ)
   (p1: path from value1)
   (p2: path from value2)
-: GTot Type0
+: GTot prop
 = squash (path_disjoint_t p1 p2)
 
 let path_disjoint_ind
@@ -1478,7 +1478,7 @@ let path_disjoint_ind
     (#value2: typ) ->
     (p1: path from value1) ->
     (p2: path from value2 {path_disjoint p1 p2} ) ->
-    GTot Type))
+    GTot prop))
   (h_step:
    ((#through: typ) ->
     (#to1: typ) ->
@@ -1971,7 +1971,7 @@ let live
   (#value: typ)
   (h: HS.mem)
   (p: pointer value)
-: GTot Type0
+: GTot prop
 = let rel = Heap.trivial_preorder pointer_ref_contents in
   let (Pointer from contents _) = p in (
     HS.aref_live_at h contents pointer_ref_contents rel /\ (
@@ -1983,7 +1983,7 @@ let nlive
   (#value: typ)
   (h: HS.mem)
   (p: npointer value)
-: GTot Type0
+: GTot prop
 = if g_is_null p
   then True
   else live h p
@@ -2293,7 +2293,7 @@ let includes_ind
       (#value2: typ) ->
       (p1: pointer value1) ->
       (p2: pointer value2 {includes p1 p2} ) ->
-      GTot Type0))
+      GTot prop))
   (h_field:
    ((l: struct_typ) ->
     (p: pointer (TStruct l)) ->
@@ -2390,7 +2390,7 @@ let readable
   (#a: typ)
   (h: HS.mem)
   (b: pointer a)
-: GTot Type0
+: GTot prop
 = let () = () in // necessary to somehow remove the `logic` qualifier
   live h b /\ (
     let content = greference_of b in
@@ -2459,7 +2459,7 @@ let rec readable_struct_fields'
   (h: HS.mem)
   (p: pointer (TStruct l))
   (s: list string)
-: GTot Type0
+: GTot prop
   (decreases s)
 = match s with
   | [] -> True
@@ -2530,7 +2530,7 @@ let is_active_union_field
   (h: HS.mem)
   (p: pointer (TUnion l))
   (fd: struct_field l)
-: GTot Type0
+: GTot prop
 = let () = () in // necessary to somehow remove the `logic` qualifier
   live h p /\ (
     let content = greference_of p in
@@ -2591,7 +2591,7 @@ let is_active_union_field_includes_readable
   let phi
     (#t': typ)
     (pt': path from t')
-  : Ghost Type0
+  : Ghost prop
     (requires (path_includes pf pt'))
     (ensures (fun _ -> True))
   = (~ (path_sel c pt' == none_ovalue t')) ==> is_active_union_field h p fd
@@ -3031,7 +3031,7 @@ let disjoint
   (#value2: typ)
   (p1: pointer value1)
   (p2: pointer value2)
-: GTot Type0
+: GTot prop
 = if
     frameOf p1 = frameOf p2 &&
     as_addr p1 = as_addr p2
@@ -3108,7 +3108,7 @@ let disjoint_ind
     (#value2: typ) ->
     (p1: pointer value1) ->
     (p2: pointer value2 {disjoint p1 p2} ) ->
-    GTot Type0))
+    GTot prop))
   (h_root:
    ((#value1: typ) ->
     (#value2: typ) ->
@@ -3272,7 +3272,7 @@ let rec loc_aux_in_addr
   (l: loc_aux)
   (r: HS.rid)
   (n: nat)
-: GTot Type0
+: GTot prop
   (decreases l)
 = match l with
   | LocUnion l1 l2 -> loc_aux_in_addr l1 r n /\ loc_aux_in_addr l2 r n
@@ -3449,7 +3449,7 @@ let loc_regions r =
 
 let rec loc_aux_syntactically_includes
   (s1 s2: loc_aux)
-: GTot Type0
+: GTot prop
   (decreases s1)
 = s1 == s2 \/ (
     match s1 with
@@ -3502,7 +3502,7 @@ let rec loc_aux_includes_pointer
   (s: loc_aux)
   (#t: typ)
   (p: pointer t)
-: GTot Type0
+: GTot prop
 = match s with
   | LocPointer p' -> 
     p' `includes` p
@@ -3591,7 +3591,7 @@ let loc_aux_includes_buffer
 let rec loc_aux_includes
   (s: loc_aux)
   (s2: loc_aux)
-: GTot Type0
+: GTot prop
   (decreases s2)
 = match s2 with
   | LocUnion s2l s2r ->
@@ -3771,14 +3771,14 @@ let loc_includes_refl s =
   let pre
     (r: HS.rid)
     (n: nat)
-  : GTot Type0
+  : GTot prop
   = Set.mem r (Ghost.reveal (Loc?.aux_regions s)) /\
     Set.mem n (Loc?.aux_addrs s r)
   in
   let post
     (r: HS.rid)
     (n: nat)
-  : GTot Type0
+  : GTot prop
   = pre r n /\
     loc_aux_includes (Loc?.aux s r n) (Loc?.aux s r n)
   in
@@ -3865,12 +3865,12 @@ let loc_includes_gsub_buffer_r l #t b i len =
       (loc_aux_includes (LocBuffer b) (LocBuffer g))
     = let pre
         (j: UInt32.t)
-      : GTot Type0
+      : GTot prop
       = UInt32.v j < UInt32.v len
       in
       let post
         (j: UInt32.t)
-      : GTot Type0
+      : GTot prop
       = pre j /\
         loc_aux_includes_pointer (LocBuffer b) (gpointer_of_buffer_cell g j)
       in
@@ -3895,10 +3895,10 @@ let loc_includes_gsub_buffer_l #t b i1 len1 i2 len2 =
   then
     loc_includes_none (loc_buffer g1)
   else begin
-    let pre (j: UInt32.t) : GTot Type0 =
+    let pre (j: UInt32.t) : GTot prop =
       UInt32.v j < UInt32.v (buffer_length g2)
     in
-    let post (j: UInt32.t) : GTot Type0 =
+    let post (j: UInt32.t) : GTot prop =
       pre j /\
       buffer_includes_pointer g1 (gpointer_of_buffer_cell g2 j)
     in
@@ -3942,7 +3942,7 @@ let rec loc_aux_disjoint_pointer
   (l: loc_aux)
   (#t: typ)
   (p: pointer t)
-: GTot Type0
+: GTot prop
   (decreases l)
 = match l with
   | LocUnion ll lr ->
@@ -3954,7 +3954,7 @@ let loc_aux_disjoint_buffer
   (l: loc_aux)
   (#t: typ)
   (b: buffer t)
-: GTot Type0
+: GTot prop
 = forall (i: UInt32.t) . UInt32.v i < UInt32.v (buffer_length b) ==> loc_aux_disjoint_pointer l (gpointer_of_buffer_cell b i)
 
 let loc_aux_disjoint_buffer_sym
@@ -3975,7 +3975,7 @@ let loc_aux_disjoint_pointer_buffer_sym
 
 let rec loc_aux_disjoint
   (l1 l2: loc_aux)
-: GTot Type0
+: GTot prop
   (decreases l2)
 = match l2 with
   | LocUnion ll lr ->
@@ -4073,7 +4073,7 @@ let regions_of_loc_monotonic
 
 let loc_disjoint'
   (l1 l2: loc)
-: GTot Type0
+: GTot prop
 = Set.subset (Set.intersect (regions_of_loc l1) (Ghost.reveal (Loc?.whole_regions l2))) Set.empty /\
   Set.subset (Set.intersect (regions_of_loc l2) (Ghost.reveal (Loc?.whole_regions l1))) Set.empty /\
   (forall (r: HS.rid) .
@@ -4183,13 +4183,13 @@ let loc_disjoint_includes p1 p2 p1' p2' =
     (fun r n ->
       Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
       Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r))
-    <: Tot ((r:HS.rid) -> (n:nat) -> GTot Type0)
+    <: Tot ((r:HS.rid) -> (n:nat) -> GTot prop)
   in
   let post =
     (fun r n ->
        pre r n /\
        loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
-    <: Tot ((r:HS.rid) -> (n:nat) -> GTot Type0)
+    <: Tot ((r:HS.rid) -> (n:nat) -> GTot prop)
   in
   let f
     (r: HS.rid)
@@ -4246,7 +4246,7 @@ let loc_disjoint_regions rs1 rs2 = ()
 let modifies'
   (s: loc)
   (h1 h2: HS.mem)
-: GTot Type0
+: GTot prop
 = HS.modifies (regions_of_loc s) h1 h2 /\ (
     forall r . (
       HS.live_region h1 r /\
@@ -4327,12 +4327,12 @@ let modifies_buffer_elim' #t1 b p h h' =
     assert (n > 0);
     let pre
       (i: UInt32.t)
-    : GTot Type0
+    : GTot prop
     = UInt32.v i < n
     in
     let post
       (i: UInt32.t)
-    : GTot Type0
+    : GTot prop
     = pre i /\ (
 	  let q = gpointer_of_buffer_cell b i in
 	  equal_values h q h' q

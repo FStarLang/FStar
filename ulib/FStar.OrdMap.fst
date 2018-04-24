@@ -70,7 +70,7 @@ let choose (#k:eqtype) (#v:Type) #f m =
 
 let size (#k:eqtype) (#v:Type) #f m = OrdSet.size (Mk_map?.d m)
 
-abstract type equal (#k:eqtype) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
+abstract type equal (#k:eqtype) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) : prop =
   (forall x. select #k #v #f x m1 == select #k #v #f x m2)
 
 

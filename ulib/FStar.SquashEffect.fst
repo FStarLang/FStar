@@ -29,7 +29,7 @@ assume val unsquash : #p:Type -> squash p -> Sq p
 // The post-condition of a Squash is really about the inhabitant,
 // but we can't allow that to escape into the non-squash world
 
-assume val resquash : #p:Type -> #pre:pure_pre -> #post:(p -> GTot Type0) ->
+assume val resquash : #p:Type -> #pre:pure_pre -> #post:(p -> GTot prop) ->
                       (unit -> Squash p pre post) ->
                       Pure (squash p) (requires pre) (ensures (fun _ -> True))
 // Note: using `pure_post p` for the type of #post above fails with

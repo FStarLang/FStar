@@ -48,6 +48,7 @@ let excluded_middle (p:prop) = map_squash (join_squash (get_proof (p \/ (~p)))) 
 
 val excluded_middle_squash : p:prop -> GTot (p \/ ~p)
 let excluded_middle_squash p =
+  admit(); (* CH :TODO *)
   bind_squash (excluded_middle p) (fun x ->
   if x then
     map_squash (get_proof p) Left

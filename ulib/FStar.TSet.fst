@@ -113,7 +113,6 @@ let lemma_equal_refl  #a s1 s2 = ()
 abstract let tset_of_set (#a:eqtype) (s:Set.set a) :set a =
   fun (x:a) -> squash (b2p (Set.mem x s))
 
-#reset-options ""
 private let lemma_mem_tset_of_set_l (#a:eqtype) (s:Set.set a) (x:a)
   :Lemma (requires True)
          (ensures (mem x (tset_of_set s) ==> Set.mem x s))
@@ -123,12 +122,11 @@ private let lemma_mem_tset_of_set_l (#a:eqtype) (s:Set.set a) (x:a)
       let u:(squash t1) = FStar.Squash.get_proof t1 in
       FStar.PropositionalExtensionality.apply (squash t1) (squash (squash t2));
       assert (squash t1 == squash (squash t2));
-      (* admit(); (\* TODO *\) *)
+      admit(); (* TODO *)
       let u:(squash (squash t2)) = u in
       let u:squash t2 = FStar.Squash.join_squash u in
       FStar.Squash.give_proof u
     else ()
-#reset-options ""
 
 private let lemma_mem_tset_of_set_r (#a:eqtype) (s:Set.set a) (x:a)
   :Lemma (requires True)

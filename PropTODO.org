@@ -59,7 +59,7 @@ for porting more examples without lots of pain
 - IndexAppend caused some bogus assertion failed
 ** FStar.DependentMap (used lax for 2 definitions)
 ** FStar.Monotonic.Heap.fst (admit in aref_live_at_aref_of)
-** FStar.SquashProperties.fst (3 new admits)
+** FStar.SquashProperties.fst (4 new admits)
 Should this actually be moved to examples/paradoxes?
 https://coq.inria.fr/library/Coq.Logic.Berardi.html
 https://github.com/FStarLang/FStar/issues/360
