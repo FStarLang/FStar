@@ -1,1 +1,23 @@
-[ "À\u001dþƒE¾fç*ÔYjk9i\t", [] ]
+[
+  "À\u001dþƒE¾fç*ÔYjk9i\t",
+  [
+    [
+      "Bug398.foo",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "38fc017bfbc57fc5cc5b2232bca85ed7"
+    ],
+    [
+      "Bug398.bar",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dec8199dddfda5dc5089b39b2ea1ad07"
+    ]
+  ]
+]

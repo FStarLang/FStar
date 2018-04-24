@@ -321,7 +321,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0f0f8e6af1796eacf06bfbddf29ef57d"
+      "f980747b2bd3b1408a9a93efa2dadf19"
     ],
     [
       "Bug173.step",
@@ -350,7 +350,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "4abb9cce222ed07f08ce2a88cd46683c"
+      "ab9c1ced6ba9f2a9679ecff334f068d4"
     ],
     [
       "Bug173.op_type",
@@ -365,7 +365,7 @@
         "disc_equation_Bug173.Times", "fuel_guarded_inversion_Bug173.binop"
       ],
       0,
-      "bf7095a18df65b180da05c5c0b69d512"
+      "a67ac23af26831b3a867862f7175dae4"
     ],
     [
       "Bug173.typing_val",
@@ -377,7 +377,7 @@
         "disc_equation_Bug173.VInt", "fuel_guarded_inversion_Bug173.value"
       ],
       0,
-      "3dbfc6badb00bfa4a352f117f834cfa2"
+      "df9514cbd9efb8fe1c09b5c07a3a92ec"
     ],
     [
       "Bug173.typing_exp",
@@ -394,7 +394,7 @@
         "subterm_ordering_Bug173.Op"
       ],
       0,
-      "4986417972396e20ab0b588467aa8dc6"
+      "25d5bbada6dcd56440f4f7974b38e0b1"
     ],
     [
       "Bug173.typing",
@@ -421,7 +421,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "db41c8a7bbf7352dd4999bb9aa5b2864"
+      "e4972e7817be7fdeaa50e145842907b2"
     ],
     [
       "Bug173.typed_heap",
