@@ -244,7 +244,7 @@ let print_graph (graph:dependence_graph) =
           let deps = fst (must (deps_try_find graph k)) in
           let r s = replace_char s '.' '_' in
           let print dep =
-            Util.format2 " %s -> %s"
+            Util.format2 "  \"%s\" -> \"%s\""
                 (r k)
                 (r (module_name_of_dep dep))
           in
