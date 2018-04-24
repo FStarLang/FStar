@@ -40,8 +40,8 @@ let replace_point (#a:Type) (m:monoid a) (rhs:exp a) =
 let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool * int) =
   let m_mult = norm_term [delta] (quote (Monoid?.mult m)) in
   let m_unit = norm_term [delta] (quote (Monoid?.unit m)) in
-  // print "should_rewrite: ";
-  // print (term_to_string t);
+  // debug "should_rewrite: ";
+  // debug (term_to_string t);
   if is_reifiable m_mult m_unit t
   then true, (if everywhere then 1 else 2)
   else false, 0
@@ -51,7 +51,7 @@ let rewrite_monoid (#a:Type) (m:monoid a) () : Tac unit =
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) lhs _ ->
-      print (term_to_string g);
+      debug (term_to_string g);
       if term_eq t (quote a) then
         // let _ = dump "Trying canon ... " in
         let lhs_exp : exp a = reification m lhs in

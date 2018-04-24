@@ -3,8 +3,6 @@ module Printers
 open FStar.Tactics
 module TD = FStar.Tactics.Derived
 
-#set-options "--use_two_phase_tc false"
-
 let print_Prims_string : string -> Tot string = fun s -> "\"" ^ s ^ "\""
 let print_Prims_int : int -> Tot string = string_of_int
 

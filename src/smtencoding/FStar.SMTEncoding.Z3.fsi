@@ -34,6 +34,8 @@ type z3status =
     | KILLED
 val status_string_and_errors : z3status -> string * error_labels
 type z3statistics = BU.smap<string>
+val set_z3_options : string -> unit
+
 type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
@@ -42,7 +44,8 @@ type z3result = {
 }
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
-val ask: filter:(decls_t -> decls_t * bool)
+val ask: r:Range.range
+       -> filter:(decls_t -> decls_t * bool)
        -> cache:(option<string>) // hash
        -> label_messages:error_labels
        -> qry:list<decl>

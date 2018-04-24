@@ -36,6 +36,8 @@ module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Env = FStar.Syntax.DsEnv
 module P = FStar.Syntax.Print
+module EMB = FStar.Syntax.Embeddings
+module SS = FStar.Syntax.Subst
 
 let desugar_disjunctive_pattern pats when_opt branch =
     pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
@@ -259,6 +261,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Bind _
   | Quote _
   | VQuote _
+  | Antiquote _
   | Seq _ -> []
 
 let head_and_args t =
@@ -530,13 +533,12 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | true, _ ->
           raise_error (Errors.Fatal_LetMutableForVariablesOnly, "let-mutable is for variables only") p.prange
   end;
-  let push_bv_maybe_mut = if is_mut then push_bv_mutable else push_bv in
 
   let resolvex (l:lenv_t) e x =
     match l |> BU.find_opt (fun y -> y.ppname.idText=x.idText) with
       | Some y -> l, e, y
       | _ ->
-        let e, x = push_bv_maybe_mut e x in
+        let e, x = if is_mut then push_bv_mutable e x else push_bv e x in
         (x::l), e, x
   in
   let rec aux' (top:bool) (loc:lenv_t) env (p:pattern) =
@@ -2060,6 +2062,20 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
+let get_fail_attr warn (at : S.term) : option<list<int>> =
+    let hd, args = U.head_and_args at in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_errs_attr ->
+        BU.map_opt (EMB.unembed (EMB.e_list EMB.e_int) a1) (List.map FStar.BigInt.to_int_fs)
+    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_errs_attr ->
+        if warn then
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail_errs, did you forget to use parentheses?");
+        None
+    | _ ->
+        if U.attr_eq at U.fail_attr
+        then Some []
+        else None
+
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
     // qualified with effect name
@@ -2344,12 +2360,16 @@ and mk_comment_attr (d: decl) =
 and desugar_decl env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
+  // Not for the `fail` attribute though! We only keep that one on the first
+  // new decl.
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
   let attrs = mk_comment_attr d :: attrs in
-  let s = List.fold_left (fun s a -> s ^ "; " ^ (Print.term_to_string a)) "" attrs in
-  env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
+  env, List.mapi (fun i sigelt -> if i = 0
+                                  then { sigelt with sigattrs = attrs }
+                                  else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
+                 sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
@@ -2583,13 +2603,14 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [] } in
     env, [se]
 
-  | Splice t ->
+  | Splice (ids, t) ->
     let t = desugar_term env t in
-    let se = { sigel = Sig_splice(t);
+    let se = { sigel = Sig_splice(List.map (qualify env) ids, t);
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta;
                sigattrs = [] } in
+    let env = push_sigelt env se in
     env, [se]
 
 let desugar_decls env decls =
@@ -2624,6 +2645,70 @@ let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
      AST.mk_decl (AST.Open C.all_lid) Range.dummyRange]
 
+(*
+ * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
+ *)
+let generalize_annotated_univs (s:sigelt) :sigelt =
+  let bs_univnames (bs:binders) :BU.set<univ_name> =
+    bs |> List.fold_left (fun uvs ( { sort = t }, _) -> BU.set_union uvs (Free.univnames t)) (BU.new_set Syntax.order_univ_name)
+  in
+  let empty_set = BU.new_set Syntax.order_univ_name in
+
+  match s.sigel with
+  | Sig_inductive_typ _
+  | Sig_datacon _ -> failwith "Impossible: collect_annotated_universes: bare data/type constructor"
+  | Sig_bundle (sigs, lids) ->
+    let uvs = sigs |> List.fold_left (fun uvs se ->
+      let se_univs =
+        match se.sigel with
+        | Sig_inductive_typ (_, _, bs, t, _, _) -> BU.set_union (bs_univnames bs) (Free.univnames t)
+        | Sig_datacon (_, _, t, _, _, _) -> Free.univnames t
+        | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
+      in
+      BU.set_union uvs se_univs) empty_set |> BU.set_elements
+    in
+    let usubst = Subst.univ_var_closing uvs in
+    { s with sigel = Sig_bundle (sigs |> List.map (fun se ->
+      match se.sigel with
+      | Sig_inductive_typ (lid, _, bs, t, lids1, lids2) ->
+        { se with sigel = Sig_inductive_typ (lid, uvs, Subst.subst_binders usubst bs, Subst.subst (Subst.shift_subst (List.length bs) usubst) t, lids1, lids2) }
+      | Sig_datacon (lid, _, t, tlid, n, lids) ->
+        { se with sigel = Sig_datacon (lid, uvs, Subst.subst usubst t, tlid, n, lids) }
+      | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
+      ), lids) }
+  | Sig_declare_typ (lid, _, t) ->
+    let uvs = Free.univnames t |> BU.set_elements in
+    { s with sigel = Sig_declare_typ (lid, uvs, Subst.close_univ_vars uvs t) }
+  | Sig_let ((b, lbs), lids) ->
+    let lb_univnames (lb:letbinding) :BU.set<univ_name> =
+      BU.set_union (Free.univnames lb.lbtyp)
+      (match lb.lbdef.n with
+       | Tm_abs (bs, e, _) ->
+         let uvs1 = bs_univnames bs in
+         let uvs2 =
+           match e.n with
+           | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
+           | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
+           | _ -> empty_set
+         in
+         BU.set_union uvs1 uvs2
+       | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
+       | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
+       | _ -> empty_set)
+    in
+    let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
+    let usubst = Subst.univ_var_closing all_lb_univs in
+    { s with sigel = Sig_let ((b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp })), lids) }
+  | Sig_assume (lid, _, fml) ->
+    let uvs = Free.univnames fml |> BU.set_elements in
+    { s with sigel = Sig_assume (lid, uvs, Subst.close_univ_vars uvs fml) }
+  | Sig_effect_abbrev (lid, _, bs, c, flags) ->
+    let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
+    let usubst = Subst.univ_var_closing uvs in
+    { s with sigel = Sig_effect_abbrev (lid, uvs, Subst.subst_binders usubst bs, Subst.subst_comp usubst c, flags) }
+  | _ -> s
+    
+
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
@@ -2644,6 +2729,8 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
     | Module(mname, decls) ->
       Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false in
   let env, sigelts = desugar_decls env decls in
+  //generalize sigelts using annotated universes
+  let sigelts = sigelts |> List.map generalize_annotated_univs in
   let modul = {
     name = mname;
     declarations = sigelts;

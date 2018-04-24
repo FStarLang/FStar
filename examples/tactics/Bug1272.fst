@@ -21,4 +21,4 @@ let _ =
                    (fun () ->
                      admit ();
                      let x = quote 1 in
-                     print (term_to_string (norm_term [] x)))
+                     debug (term_to_string (norm_term [] x)))

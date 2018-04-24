@@ -4,23 +4,18 @@ VERFILES=
 FSTAR_HOME=../..
 include ../Makefile.include
 
-NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
-	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
-	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.Positivity.fst \
-         NegativeTests.RefineWithType.fst \
-         NegativeTests.ZZImplicitFalse.fst #this one needs to be last, since it contains an unrecoverable error (implicit arg could not be resolved)
 
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
-NEGTESTS=39
+NEGTESTS=41
 else
 NEGTESTS=3
 endif
 
 all: uall
 
-uall: all-pos all-neg
+uall: all-pos
 
 all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver \
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
@@ -29,15 +24,15 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.uver \
 	 Pruning.uver NormVsSMT.uver Unit1.TopLevelPats.uver AssumeRequires.uver TwoPhaseTC.uver \
 	 IntNormalization.uver Subtyping.uver Test.HyperStack.uver Raising.uver RangeStep.uver \
-	 WPExtensionality.uver
+	 WPExtensionality.uver UnifyMatch.uver \
+	 NegativeTests.BST.uver     NegativeTests.Heap.uver  NegativeTests.ShortCircuiting.uver \
+	 NegativeTests.Bug260.uver  NegativeTests.Neg.uver   NegativeTests.Termination.uver \
+	 NegativeTests.False.uver   NegativeTests.Set.uver   NegativeTests.Positivity.uver \
+	 NegativeTests.ZZImplicitFalse.uver StableErr.uver
 	#TestHasEq.uver #temporarily removed from mac_universes branch
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
-
-all-neg: $(NEGFILES)
-	-$(FSTAR) $^ 2>&1 | tee fstar_log
-	@FAILC=`egrep "^[0-9]* errors were reported" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
 mac2: mac2.fst
 	$(FSTAR) --explicit_deps $(STDLIB) FStar.Seq.fst mac2.fst

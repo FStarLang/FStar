@@ -1,4 +1,4 @@
-* DONE P0 Give squash a definition (workaround now applied)
+* TODO P0 Give squash a definition (workaround no longer working)
 
 - couldn't add a `prop` type annotation on squash (see below), so
   originally assumed squash
@@ -38,8 +38,9 @@ for porting more examples without lots of pain
 - Nik had a first implementation of this that we then had to revert though
 
 * DONE P0 Replace the `logic` qualifier with `prop`
-
 * TODO P0 Get rid of all the newly introduced admits:
+** prims.fst (a couple)
+** FStar.TSet.fst (one)
 ** FStar.Algebra.Monoid.fst (8 admits)
 - first 5 are post removing logical and stuff
 - last 3 are from the original prop changes
@@ -170,3 +171,59 @@ Need more unfolding in maybe_coerce_bool_to_prop,
 but not for prop itself
 
 * TODO Minimize prims to end once we've defined GTot
+* DONE Some severe performance degradation in FStar.Array.fst
+Z3 takes 6GB+ of RAM here!
+Verified module: FStar.UInt128 (215850 milliseconds)
+
+Performance degradation also in
+- FStar.HyperStack.ST.fst
+Verified module: FStar.HyperStack.ST (328484 milliseconds)
+- FStar.Buffer.fst
+Verified module: FStar.Buffer (3420364 milliseconds)
+
+[hritcu@resurrected ulib]$ /home/hritcu/Projects/fstar/pub/bin/fstar.exe --use_two_phase_tc true --use_extracted_interfaces --use_hints --use_hint_hashes --cache_checked_modules --odir _output FStar.Buffer.fst --z3rlimit_factor 4
+FStar.Buffer.fst(0,0-0,0): (Warning 241) Absent cache file FStar.Buffer.fst.checked; will recheck FStar.Buffer.fst and all subsequent files
+FStar.Buffer.fst(308,10-308,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(314,10-314,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(320,10-320,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(326,10-326,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(332,10-332,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(338,10-338,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(344,10-344,41): (Error 19) could not prove post-condition
+FStar.Buffer.fst(350,10-350,45): (Error 19) could not prove post-condition
+FStar.Buffer.fst(356,10-356,50): (Error 19) could not prove post-condition
+FStar.Buffer.fst(612,11-612,31): (Error 19) could not prove post-condition
+FStar.Buffer.fst(618,11-618,33): (Error 19) could not prove post-condition
+FStar.Buffer.fst(624,12-624,35): (Error 19) could not prove post-condition
+FStar.Buffer.fst(643,11-643,38): (Error 19) could not prove post-condition
+FStar.Buffer.fst(652,11-652,36): (Error 19) could not prove post-condition
+FStar.Buffer.fst(674,13-674,22): (Error 19) could not prove post-condition
+FStar.Buffer.fst(680,12-680,34): (Error 19) could not prove post-condition
+FStar.Buffer.fst(686,12-686,30): (Error 19) could not prove post-condition
+FStar.Buffer.fst(696,35-696,54): (Error 19) assertion failed (see also FStar.Buffer.fst(307,19-307,45))
+FStar.Buffer.fst(704,12-704,34): (Error 19) could not prove post-condition
+FStar.Buffer.fst(718,12-718,34): (Error 19) could not prove post-condition
+FStar.Buffer.fst(731,12-731,35): (Error 19) could not prove post-condition
+FStar.Buffer.fst(750,12-750,35): (Error 19) could not prove post-condition
+FStar.Buffer.fst(762,12-762,37): (Error 19) could not prove post-condition
+FStar.Buffer.fst(861,3-864,4): (Error 19) assertion failed(Also see: FStar.HyperStack.ST.fst(75,24-75,36))
+FStar.Buffer.fst(1095,8-1095,11): (Error 19) could not prove post-condition (see also FStar.Buffer.fst(1094,6-1094,60))
+FStar.Buffer.fst(1096,2-1102,11): (Error 19) assertion failed(Also see: FStar.HyperStack.ST.fst(75,24-75,36))
+FStar.Buffer.fst(1147,8-1147,12): (Error 19) could not prove post-condition (see also FStar.Buffer.fst(1140,82-1140,100))
+FStar.Buffer.fst(1148,2-1148,24): (Error 19) assertion failed(Also see: FStar.HyperStack.ST.fst(75,24-75,36))
+FStar.Buffer.fst(1174,2-1174,24): (Error 19) assertion failed(Also see: FStar.HyperStack.ST.fst(75,24-75,36))
+FStar.Buffer.fst(1249,12-1249,35): (Error 19) could not prove post-condition
+FStar.Buffer.fst(1293,12-1293,34): (Error 19) could not prove post-condition
+Verified module: FStar.Buffer (21260890 milliseconds)
+31 errors were reported (see above)
+
+With double encoding only for squash: 46s
+
+With only fix to #1059
+
+F# version with default timeouts:
+Verified module: FStar.Buffer (8550198 milliseconds)
+175 errors were reported (see above)
+
+OCaml version with 4x timeouts:
+... results still pending for more than one hour ...

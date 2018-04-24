@@ -39,6 +39,7 @@ module N  = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
+module TcUtil = FStar.TypeChecker.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -231,7 +232,7 @@ let extract_bundle env se =
         | _ -> failwith "Unexpected signature element"
 
 (* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
-   is extracted along with an invocation to FStar.Tactics.Native.register_tactic,
+   is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
 let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
@@ -404,24 +405,35 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let g, ml_lbs' =
                 List.fold_left2
                     (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
-                        // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                        let lb_lid = (right lbname).fv_name.v in
-                        let flags'' =
-                            match (SS.compress t).n with
-                            | Tm_arrow (_, { n = Comp { effect_name = e }})
-                                when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
-                                [ StackInline ]
-                            | _ ->
-                                []
-                        in
-                        let meta = flags @ flags' @ flags'' in
-                        let ml_lb = { ml_lb with mllb_meta = meta } in
-                        let g, ml_lb =
-                            if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                            then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                                let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                                env, {ml_lb with mllb_name=snd mname }
-                            else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                        if ml_lb.mllb_meta |> List.contains Erased
+                        then env, ml_lbs
+                        else
+                            // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                            let lb_lid = (right lbname).fv_name.v in
+                            let flags'' =
+                                match (SS.compress t).n with
+                                | Tm_arrow (_, { n = Comp { effect_name = e }})
+                                    when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                                    [ StackInline ]
+                                | _ ->
+                                    []
+                            in
+                            let meta = flags @ flags' @ flags'' in
+                            let ml_lb = { ml_lb with mllb_meta = meta } in
+                            let g, ml_lb =
+                                if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                                then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
+                                     let env, _ =
+                                         UEnv.extend_fv'
+                                                env
+                                                (right lbname)
+                                                mname
+                                                (must ml_lb.mllb_tysc)
+                                                ml_lb.mllb_add_unit
+                                                false
+                                     in
+                                     env, {ml_lb with mllb_name=snd mname }
+                                else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                         g, ml_lb::ml_lbs)
                 (g, [])
                 bindings
@@ -438,6 +450,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
+         && not (TcUtil.must_erase_for_extraction g.tcenv t)
          then let always_fail =
                   let imp = match U.arrow_formals t with
                     | [], t ->
@@ -468,6 +481,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                           g, mlm //in all other cases, generate mlm, a stub that always fails
                     end
          else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
+                    //or, it must be erased
 
        | Sig_main(e) ->
          let ml_main, _, _ = Term.term_as_mlexpr g e in

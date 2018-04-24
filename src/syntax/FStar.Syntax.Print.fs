@@ -234,7 +234,8 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_uinst _ -> "Tm_uinst"
   | Tm_constant _ -> "Tm_constant"
   | Tm_type _ -> "Tm_type"
-  | Tm_quoted _ -> "Tm_quoted"
+  | Tm_quoted (_, {qkind=Quote_static}) -> "Tm_quoted (static)"
+  | Tm_quoted (_, {qkind=Quote_dynamic}) -> "Tm_quoted (dynamic)"
   | Tm_abs _ -> "Tm_abs"
   | Tm_arrow _ -> "Tm_arrow"
   | Tm_refine _ -> "Tm_refine"
@@ -659,7 +660,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_assume(lid, _, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
-      | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+      | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
       | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
       | Sig_sub_effect (se) ->
@@ -684,8 +685,8 @@ let rec sigelt_to_string (x: sigelt) =
                 | _ -> failwith "impossible" in
              U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
-      | Sig_splice t ->
-        U.format1 "splice (%s)" (term_to_string t)
+      | Sig_splice (lids, t) ->
+        U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)
       in
       match x.sigattrs with
       | [] -> basic

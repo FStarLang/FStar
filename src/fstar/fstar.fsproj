@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--admit_smt_queries true --cache_checked_modules Bane.Test.fst</StartArguments>
+    <StartArguments>--codegen OCaml A.fst --debug yes --trace_error --debug A --debug_level Extraction</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\test2\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
