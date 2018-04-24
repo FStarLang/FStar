@@ -3849,7 +3849,7 @@ let tc_lex_t :
                                                                FStar_Syntax_Syntax.sigel
                                                                  =
                                                                  FStar_Syntax_Syntax.Sig_datacon
-                                                                 (lex_top1,uu____4519,_t_top,_lex_t_top,_0_18,uu____4522);
+                                                                 (lex_top1,uu____4519,_t_top,_lex_t_top,_0_17,uu____4522);
                                                                FStar_Syntax_Syntax.sigrng
                                                                  = r1;
                                                                FStar_Syntax_Syntax.sigquals
@@ -3860,14 +3860,14 @@ let tc_lex_t :
                                                                  = uu____4525;_}::
                {
                  FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                   (lex_cons,uu____4527,_t_cons,_lex_t_cons,_0_19,uu____4530);
+                   (lex_cons,uu____4527,_t_cons,_lex_t_cons,_0_18,uu____4530);
                  FStar_Syntax_Syntax.sigrng = r2;
                  FStar_Syntax_Syntax.sigquals = [];
                  FStar_Syntax_Syntax.sigmeta = uu____4532;
                  FStar_Syntax_Syntax.sigattrs = uu____4533;_}::[]
                when
-               ((_0_18 = (Prims.parse_int "0")) &&
-                  (_0_19 = (Prims.parse_int "0")))
+               ((_0_17 = (Prims.parse_int "0")) &&
+                  (_0_18 = (Prims.parse_int "0")))
                  &&
                  (((FStar_Ident.lid_equals lex_t1
                       FStar_Parser_Const.lex_t_lid)

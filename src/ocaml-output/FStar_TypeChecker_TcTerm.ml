@@ -377,8 +377,8 @@ let (value_check_expected_typ :
                               then FStar_Pervasives_Native.None
                               else
                                 FStar_All.pipe_left
-                                  (fun _0_18  ->
-                                     FStar_Pervasives_Native.Some _0_18)
+                                  (fun _0_17  ->
+                                     FStar_Pervasives_Native.Some _0_17)
                                   (FStar_TypeChecker_Err.subtyping_failed env
                                      t1 t')
                                in
@@ -5532,9 +5532,9 @@ and (tc_eqn :
                                                FStar_Syntax_Util.exp_true_bool
                                               in
                                            FStar_All.pipe_left
-                                             (fun _0_19  ->
+                                             (fun _0_18  ->
                                                 FStar_Pervasives_Native.Some
-                                                  _0_19) uu____13340
+                                                  _0_18) uu____13340
                                         in
                                      let uu____13343 =
                                        let eqs =
@@ -6453,8 +6453,8 @@ and (check_inner_let :
                                 e11
                                in
                             FStar_All.pipe_left
-                              (fun _0_20  ->
-                                 FStar_TypeChecker_Common.NonTrivial _0_20)
+                              (fun _0_19  ->
+                                 FStar_TypeChecker_Common.NonTrivial _0_19)
                               uu____14414
                              in
                           let g21 =
@@ -6576,8 +6576,8 @@ and (check_top_level_let_rec :
                                             lb.FStar_Syntax_Syntax.lbname))
                                    in
                                 FStar_All.pipe_right uu____14566
-                                  (fun _0_21  ->
-                                     FStar_Pervasives_Native.Some _0_21)
+                                  (fun _0_20  ->
+                                     FStar_Pervasives_Native.Some _0_20)
                                  in
                               let lbs4 =
                                 if

@@ -96,7 +96,7 @@ let (e_proofstate :
         i.FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate ->
         let uu____90 = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
         FStar_All.pipe_left
-          (fun _0_18  -> FStar_Pervasives_Native.Some _0_18) uu____90
+          (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____90
     | uu____93 ->
         (if w
          then

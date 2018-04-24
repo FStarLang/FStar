@@ -718,7 +718,7 @@ let rec e_tactic_0' :
          fun t  ->
            let uu____1864 = unembed_tactic_0 er t  in
            FStar_All.pipe_left
-             (fun _0_18  -> FStar_Pervasives_Native.Some _0_18) uu____1864)
+             (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____1864)
       FStar_Syntax_Syntax.t_unit
 
 and e_tactic_1 :
@@ -1798,7 +1798,7 @@ and unembed_tactic_0' :
   fun eb  ->
     fun embedded_tac_b  ->
       let uu____3090 = unembed_tactic_0 eb embedded_tac_b  in
-      FStar_All.pipe_left (fun _0_19  -> FStar_Pervasives_Native.Some _0_19)
+      FStar_All.pipe_left (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
         uu____3090
 
 let (report_implicits :

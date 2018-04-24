@@ -60,7 +60,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "44bfb753a40f477a4b5d1a3ea294b238"
+      "87fb7098674cff1dbdef991873c95099"
     ],
     [
       "FStar.Classical.gtot_to_lemma",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "85203526f9643ed7115224f08ac2f502"
+      "e145d0cf26f04156f3d85110a003e600"
     ],
     [
       "FStar.Classical.exists_intro",

@@ -3913,7 +3913,7 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                 if uu____15051
                 then
                   FStar_All.pipe_right (id_edge i)
-                    (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
+                    (fun _0_17  -> FStar_Pervasives_Native.Some _0_17)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt

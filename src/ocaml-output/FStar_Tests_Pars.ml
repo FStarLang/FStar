@@ -203,7 +203,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
       let uu____347 =
         let uu____348 =
           FStar_All.pipe_left
-            (fun _0_18  -> FStar_Parser_ParseIt.Fragment _0_18)
+            (fun _0_17  -> FStar_Parser_ParseIt.Fragment _0_17)
             (frag_of_text s)
            in
         FStar_Parser_ParseIt.parse uu____348  in

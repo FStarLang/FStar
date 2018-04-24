@@ -826,7 +826,7 @@ let (run_repl_transaction :
                        let uu____2013 =
                          run_repl_task st.repl_curmod env2 task  in
                        FStar_All.pipe_left
-                         (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
+                         (fun _0_17  -> FStar_Pervasives_Native.Some _0_17)
                          uu____2013)
                    in
                 match uu____1999 with
@@ -1623,19 +1623,19 @@ let (alist_of_symbol_lookup_result :
       let uu____3725 =
         let uu____3732 =
           let uu____3737 =
-            json_of_opt (fun _0_19  -> FStar_Util.JsonStr _0_19) lr.slr_typ
+            json_of_opt (fun _0_18  -> FStar_Util.JsonStr _0_18) lr.slr_typ
              in
           ("type", uu____3737)  in
         let uu____3738 =
           let uu____3745 =
             let uu____3750 =
-              json_of_opt (fun _0_20  -> FStar_Util.JsonStr _0_20) lr.slr_doc
+              json_of_opt (fun _0_19  -> FStar_Util.JsonStr _0_19) lr.slr_doc
                in
             ("documentation", uu____3750)  in
           let uu____3751 =
             let uu____3758 =
               let uu____3763 =
-                json_of_opt (fun _0_21  -> FStar_Util.JsonStr _0_21)
+                json_of_opt (fun _0_20  -> FStar_Util.JsonStr _0_20)
                   lr.slr_def
                  in
               ("definition", uu____3763)  in
@@ -1650,10 +1650,10 @@ let (alist_of_protocol_info :
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum  in
   let js_features =
     let uu____3796 =
-      FStar_List.map (fun _0_22  -> FStar_Util.JsonStr _0_22)
+      FStar_List.map (fun _0_21  -> FStar_Util.JsonStr _0_21)
         interactive_protocol_features
        in
-    FStar_All.pipe_left (fun _0_23  -> FStar_Util.JsonList _0_23) uu____3796
+    FStar_All.pipe_left (fun _0_22  -> FStar_Util.JsonList _0_22) uu____3796
      in
   [("version", js_version); ("features", js_features)] 
 type fstar_option_permission_level =
@@ -1857,7 +1857,7 @@ let (alist_of_fstar_option :
           let uu____4194 =
             let uu____4201 =
               let uu____4206 =
-                json_of_opt (fun _0_24  -> FStar_Util.JsonStr _0_24)
+                json_of_opt (fun _0_23  -> FStar_Util.JsonStr _0_23)
                   opt.opt_documentation
                  in
               ("documentation", uu____4206)  in
@@ -1922,7 +1922,7 @@ let (json_of_message : Prims.string -> FStar_Util.json -> FStar_Util.json) =
           let uu____4348 =
             let uu____4353 =
               let uu____4354 = FStar_ST.op_Bang repl_current_qid  in
-              json_of_opt (fun _0_25  -> FStar_Util.JsonStr _0_25) uu____4354
+              json_of_opt (fun _0_24  -> FStar_Util.JsonStr _0_24) uu____4354
                in
             ("query-id", uu____4353)  in
           [uu____4348;
@@ -1946,7 +1946,7 @@ let (json_of_hello : FStar_Util.json) =
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum  in
   let js_features =
     let uu____4436 =
-      FStar_List.map (fun _0_26  -> FStar_Util.JsonStr _0_26)
+      FStar_List.map (fun _0_25  -> FStar_Util.JsonStr _0_25)
         interactive_protocol_features
        in
     FStar_Util.JsonList uu____4436  in
@@ -2067,7 +2067,7 @@ let (json_of_repl_state : repl_state -> FStar_Util.json) =
           let uu____4635 =
             let uu____4638 =
               FStar_List.concatMap filenames st.repl_deps_stack  in
-            FStar_List.map (fun _0_27  -> FStar_Util.JsonStr _0_27)
+            FStar_List.map (fun _0_26  -> FStar_Util.JsonStr _0_26)
               uu____4638
              in
           FStar_Util.JsonList uu____4635  in
@@ -2200,7 +2200,7 @@ let run_segment :
           (fun uu____4976  ->
              let uu____4977 = collect_decls ()  in
              FStar_All.pipe_left
-               (fun _0_28  -> FStar_Pervasives_Native.Some _0_28) uu____4977)
+               (fun _0_27  -> FStar_Pervasives_Native.Some _0_27) uu____4977)
          in
       match uu____4967 with
       | FStar_Pervasives_Native.None  ->
@@ -2222,7 +2222,7 @@ let run_segment :
             FStar_Util.JsonAssoc uu____5031  in
           let js_decls =
             let uu____5053 = FStar_List.map json_of_decl decls  in
-            FStar_All.pipe_left (fun _0_29  -> FStar_Util.JsonList _0_29)
+            FStar_All.pipe_left (fun _0_28  -> FStar_Util.JsonList _0_28)
               uu____5053
              in
           ((QueryOK, (FStar_Util.JsonAssoc [("decls", js_decls)])),
@@ -2272,7 +2272,7 @@ let (load_deps :
            let uu____5218 = deps_and_repl_ld_tasks_of_our_file st.repl_fname
               in
            FStar_All.pipe_left
-             (fun _0_30  -> FStar_Pervasives_Native.Some _0_30) uu____5218)
+             (fun _0_29  -> FStar_Pervasives_Native.Some _0_29) uu____5218)
        in
     match uu____5192 with
     | FStar_Pervasives_Native.None  -> FStar_Util.Inr st
@@ -2908,7 +2908,7 @@ let run_module_autocomplete :
           let mods_and_nss =
             FStar_Interactive_CompletionTable.autocomplete_mod_or_ns
               st.repl_names needle
-              (fun _0_31  -> FStar_Pervasives_Native.Some _0_31)
+              (fun _0_30  -> FStar_Pervasives_Native.Some _0_30)
              in
           let json =
             FStar_List.map
@@ -3019,7 +3019,7 @@ let run_and_rewind :
       let results =
         try
           let uu____7413 = task st  in
-          FStar_All.pipe_left (fun _0_32  -> FStar_Util.Inl _0_32) uu____7413
+          FStar_All.pipe_left (fun _0_31  -> FStar_Util.Inl _0_31) uu____7413
         with | e -> FStar_Util.Inr e  in
       pop env' "#compute";
       (match results with
