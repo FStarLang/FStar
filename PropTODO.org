@@ -217,3 +217,14 @@ FStar.Buffer.fst(1249,12-1249,35): (Error 19) could not prove post-condition
 FStar.Buffer.fst(1293,12-1293,34): (Error 19) could not prove post-condition
 Verified module: FStar.Buffer (21260890 milliseconds)
 31 errors were reported (see above)
+
+With double encoding only for squash: 46s
+
+With only fix to #1059
+
+F# version with default timeouts:
+Verified module: FStar.Buffer (8550198 milliseconds)
+175 errors were reported (see above)
+
+OCaml version with 4x timeouts:
+... results still pending ...
