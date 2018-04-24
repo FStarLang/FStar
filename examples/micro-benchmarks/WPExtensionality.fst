@@ -96,3 +96,8 @@ let neg_indirect_2 ()
                    if term_eq tm' (`(wp2 (fun (_:int) (_:unit) -> False)))
                    then ()
                    else fail "failed")
+
+// Bug reported by Jay
+[@Prims.fail]
+let bug () : Lemma False =
+   ((if true then () else ()); ())
