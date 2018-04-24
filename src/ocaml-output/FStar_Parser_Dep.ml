@@ -457,7 +457,7 @@ let (print_graph : dependence_graph -> unit) =
                     FStar_Pervasives_Native.fst uu____1107  in
                   let r s = FStar_Util.replace_char s 46 95  in
                   let print7 dep1 =
-                    FStar_Util.format2 " %s -> %s" (r k)
+                    FStar_Util.format2 "  \"%s\" -> \"%s\"" (r k)
                       (r (module_name_of_dep dep1))
                      in
                   FStar_List.map print7 deps) uu____1095
