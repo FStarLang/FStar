@@ -1105,7 +1105,7 @@ and p_quantifier e = match e.tm with
 and p_trigger = function
     | [] -> empty
     | pats ->
-        group (lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^/^ rbrace)
+        group (lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^^ rbrace)
 
 and p_disjunctivePats pats =
     separate_map (str "\\/") p_conjunctivePats pats
@@ -1173,8 +1173,8 @@ and p_tmArrow p_Tm e =
   match List.length terms with
   | 1 -> List.hd terms
   | _ -> group (ifflat (separate (space ^^ rarrow ^^ break1) terms)
-         (group ((ifflat ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op)
-                  (jump2 ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op)))) ^^ (jump2 <| List.hd last)))
+             (prefix2 (group ((ifflat ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op)
+                  (jump2 ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op))))) (List.hd last)))
 
 and p_tmArrow' p_Tm e = match e.tm with
   | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
