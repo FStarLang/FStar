@@ -21,6 +21,8 @@ val list_of_string : string -> Tot (list char)
 val string_of_list : list char -> Tot string
 
 (* Not much in here; we should extend and refine this interface *)
+
+noextract
 let strlen s = List.length (list_of_string s)
 unfold let length s = strlen s
 
