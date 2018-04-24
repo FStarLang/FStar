@@ -201,10 +201,11 @@ let dummy : option<binder> * closure = None,Dummy
 
 
 type debug_switches = {
-    gen : bool;
-    primop : bool;
-    b380 : bool;
-    norm_delayed : bool;
+    gen              : bool;
+    primop           : bool;
+    b380             : bool;
+    wpe              : bool;
+    norm_delayed     : bool;
     print_normalized : bool;
 }
 
@@ -2047,19 +2048,22 @@ and maybe_simplify_aux cfg env stack tm =
         | _, _ -> false
     in
     let is_applied (bs:binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        if cfg.debug.wpe then
+            BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         let hd, args = U.head_and_args' t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
-            (* BU.print3 "GG got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n" *)
-            (*             (Print.term_to_string t) *)
-            (*             (Print.bv_to_string bv) *)
-            (*             (Print.term_to_string hd); *)
+            if cfg.debug.wpe then
+                BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                            (Print.term_to_string t)
+                            (Print.bv_to_string bv)
+                            (Print.term_to_string hd);
             Some bv
         | _ -> None
     in
     let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        if cfg.debug.wpe then
+            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
         | Some (_, t') -> is_applied bs t'
         | _ -> begin match is_auto_squash t with
@@ -2075,10 +2079,16 @@ and maybe_simplify_aux cfg env stack tm =
     let is_quantified_const (bv:bv) (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
+            if cfg.debug.wpe then
+                BU.print2 "WPE> p = (%s); q = (%s)\n"
+                        (Print.term_to_string p)
+                        (Print.term_to_string q);
             begin match U.destruct_typ_as_formula p with
             // Case 1)
             | None -> begin match (SS.compress p).n with
                       | Tm_bvar bv' when S.bv_eq bv bv' ->
+                            if cfg.debug.wpe then
+                                BU.print_string "WPE> Case 1\n";
                             Some (SS.subst [NT (bv, U.t_true)] q)
                       | _ -> None
                       end
@@ -2087,6 +2097,8 @@ and maybe_simplify_aux cfg env stack tm =
             | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
                 begin match (SS.compress p).n with
                 | Tm_bvar bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 2\n";
                         Some (SS.subst [NT (bv, U.t_false)] q)
                 | _ -> None
                 end
@@ -2097,6 +2109,8 @@ and maybe_simplify_aux cfg env stack tm =
                     begin match is_applied_maybe_squashed bs phi with
                     // Case 3)
                     | Some bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 3\n";
                         let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
                         Some (SS.subst [NT (bv, ftrue)] q)
                     | _ ->
@@ -2106,6 +2120,8 @@ and maybe_simplify_aux cfg env stack tm =
                     begin match is_applied_maybe_squashed bs p with
                     // Case 4)
                     | Some bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 4\n";
                         let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
                         Some (SS.subst [NT (bv, ffalse)] q)
                     | _ ->
@@ -2121,7 +2137,9 @@ and maybe_simplify_aux cfg env stack tm =
     in
     let is_forall_const (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
-        | Some (QAll ([(bv, _)], pats, phi')) ->
+        | Some (QAll ([(bv, _)], _, phi')) ->
+            if cfg.debug.wpe then
+                BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string bv) (Print.term_to_string phi');
             is_quantified_const bv phi'
         | _ -> None
     in
@@ -2178,7 +2196,10 @@ and maybe_simplify_aux cfg env stack tm =
     let simplify arg = (simp_t (fst arg), arg) in
     match is_forall_const tm with
     (* We need to recurse, and maybe reduce further! *)
-    | Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
+    | Some tm' ->
+        if cfg.debug.wpe then
+            BU.print2 "WPE> %s ~> %s\n" (Print.term_to_string tm) (Print.term_to_string tm');
+        maybe_simplify_aux cfg env stack (norm cfg env [] tm')
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
@@ -2627,6 +2648,7 @@ let config' psteps s e =
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; primop = Env.debug e (Options.Other "Primops")
              ; b380 = Env.debug e (Options.Other "380")
+             ; wpe  = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
