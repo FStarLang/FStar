@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2dee7dee83279ccb1162e4088866f899"
+      "48b702954e48f6fc534c5ccc4df19d5a"
     ],
     [
       "Normalization.test2",
@@ -145,7 +145,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "05c0f5689a368abd681805356ade118b"
+      "bda8d18c6b75e51b87b644378e392eb7"
     ],
     [
       "Normalization.pow2_values",
@@ -154,7 +154,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e33d744f9723b25bf36c8852523c18ab"
+      "a13a9a1da72bd74b57768658c1525ccc"
     ]
   ]
 ]

@@ -715,7 +715,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4b8adb2d02ff88a3deca54ae851c1608"
+      "98aa75b45e0d7afc0e4f1b01c9c2b168"
     ],
     [
       "FStar.List.Tot.Properties.rev_acc_rev'",
@@ -1210,7 +1210,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "c9b7f17b8e8f7c5e54d21e21c93d4b86"
+      "03879e62d3dcce04e6c803715bfd6309"
     ],
     [
       "FStar.List.Tot.Properties.append_sorted",
@@ -2456,7 +2456,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e0d892d1def46e9c724e467ed5997fc8"
+      "cb54f262c13e3fbf4dee39a0e41599a5"
     ],
     [
       "FStar.List.Tot.Properties.map_lemma",
@@ -2534,7 +2534,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "a464cdd28a88a20a186e99306ecfb4ee"
+      "af5a1baffff97c28d884f7740e66549d"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_sorted",

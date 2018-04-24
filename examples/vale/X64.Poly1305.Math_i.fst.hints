@@ -75,7 +75,7 @@
         "refinement_interpretation_X64.Machine_s_Tm_refine_a958d176a23ad3ddcb306d485b43c341"
       ],
       0,
-      "d95ced68142150c28208cfd75e020bb8"
+      "6b660cf740f4484ec255cfb82c4a10d8"
     ],
     [
       "X64.Poly1305.Math_i.heapletTo128_all_preserved",
@@ -127,7 +127,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "06bb6f8ad564e7b2634a312f8a5d5971"
+      "d55b69a39d5305c647f0c4c74995d96d"
     ],
     [
       "X64.Poly1305.Math_i.reveal_poly1305_heap_blocks",
@@ -840,7 +840,7 @@
         "refinement_interpretation_X64.Machine_s_Tm_refine_a958d176a23ad3ddcb306d485b43c341"
       ],
       0,
-      "5cede067529888b5690dbccaa8b8b5f3"
+      "beb506dc62b388ef3762f0ec3f00beeb"
     ],
     [
       "X64.Poly1305.Math_i.heapletTo128",
@@ -880,7 +880,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cf9dd90ea08e92e98d927f4cd68d37dd"
+      "f4d66d970fbecc1e270031b1b6d70932"
     ],
     [
       "X64.Poly1305.Math_i.poly1305_heap_blocks",

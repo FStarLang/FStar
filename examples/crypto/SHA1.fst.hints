@@ -13,13 +13,22 @@
       "f1c371109e0b2d5ed4232d4a2031c32a"
     ],
     [
+      "SHA1.sample",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "67ef0e09dbf6d778c755df440d744f03"
+    ],
+    [
       "SHA1.sha1",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ac3440f2ddc67707cdee671fd36ec400"
+      "ac242c189289673c771c8dbe9dc1aa60"
     ],
     [
       "SHA1.sha1",
@@ -31,7 +40,7 @@
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
       ],
       0,
-      "37753f0eb81d0d1f98d65e63accb0092"
+      "1e81a7c0d6b5e67c433557581535d98a"
     ],
     [
       "SHA1.hmac_sha1",
@@ -43,7 +52,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d6db51c2cc996e25d1418a37f54382ed"
+      "535d9882d479b170c25a0f9c4de4aeea"
     ]
   ]
 ]

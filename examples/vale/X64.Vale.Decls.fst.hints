@@ -86,7 +86,7 @@
         "fuel_guarded_inversion_X64.Machine_s.operand"
       ],
       0,
-      "bb2786d6b0872187d5beef712cbb5b47"
+      "ad0ee50493f217fd3dfe77421d3fb72a"
     ],
     [
       "X64.Vale.Decls.va_ensure",
@@ -265,7 +265,7 @@
       0,
       [ "@query" ],
       0,
-      "7489090ba8cd580854f2c3eff1bd645c"
+      "b8a2d2655a000ddac841e595d9b291f5"
     ],
     [
       "X64.Vale.Decls.va_lemma_whileTrue",
@@ -2583,7 +2583,7 @@
         "fuel_guarded_inversion_X64.Machine_s.operand"
       ],
       0,
-      "4ef3a36367e63bdd3706498ede886936"
+      "3bd1a826be637be2fde7ee44fcf18be2"
     ],
     [
       "X64.Vale.Decls.va_ensure",
@@ -2680,7 +2680,7 @@
         "int_typing"
       ],
       0,
-      "56585a3ac0a6d91e245e8613ccb7465d"
+      "db691740b22de595d200b754ad553da0"
     ],
     [
       "X64.Vale.Decls.va_lemma_whileFalse",

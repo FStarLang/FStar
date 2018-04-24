@@ -185,7 +185,7 @@
         "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "a843d82b36a9581459c3718429a4fcf6"
+      "5f8a781e73da3147d25c9486546c7f04"
     ],
     [
       "Ex07a.step",
@@ -205,7 +205,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "9ca3e8f627555b7a9e7101dc266760e4"
+      "9dd8fee9ff06825c4a0b17edf15375c0"
     ],
     [
       "Ex07a.extend",
@@ -240,7 +240,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "d9069316bd65556c6a22ab81d5f21ec4"
+      "552d665d7f41319fd7f982baefbde5a3"
     ],
     [
       "Ex07a.progress",
@@ -326,7 +326,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "085a6c46836f8bc04aa827e3a04d7eae"
+      "d337c0079a6c969f7ac2c7824b8da916"
     ],
     [
       "Ex07a.free_in_context",
@@ -842,7 +842,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "db432a4cbf94b984c87bf0e52b3abd7a"
+      "571e9a7ed4fb40aeab8375ac684049d3"
     ],
     [
       "Ex07a.step",
@@ -862,7 +862,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "10487d0bf530e1c438839b3bd3ccd75c"
+      "8cfc4ef8b544a78030a210a56dfe5566"
     ],
     [
       "Ex07a.extend",
@@ -897,7 +897,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "98727f5d549ba1cfc3d4b69b8158fab8"
+      "84faff4fd851335fc2876fa7956d259a"
     ],
     [
       "Ex07a.appears_free_in",
@@ -916,7 +916,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "81119d2138bf82785f4b4fcb83002ea8"
+      "f0ca3b6d25a9008c6c556dceaf18ed47"
     ],
     [
       "Ex07a.equal",

@@ -69,7 +69,7 @@
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_21289dc55e15f9aa09f9343c2dd9dd86"
       ],
       0,
-      "2e32c43d9e6a9ff50ebc760d562ebf2c"
+      "68eec9662ccb2d7345402c1705ff0bcd"
     ],
     [
       "FStar.DM4F.Heap.upd_tot",
@@ -141,7 +141,7 @@
         "token_correspondence_FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory"
       ],
       0,
-      "6c8e01d82574f5699a4717a032accb80"
+      "9155aac6ab47f6f9b20d11d1d5071940"
     ],
     [
       "FStar.DM4F.Heap.alloc",

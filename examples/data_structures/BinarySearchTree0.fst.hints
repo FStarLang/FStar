@@ -68,7 +68,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "1f574c601f9fda5bc2d07da54e7f2135"
+      "a4835c7a9a91a661854f72a0a6b8a4f7"
     ],
     [
       "BinarySearchTree0.insert",
@@ -86,7 +86,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "5f0fcae2734ad9593827d09cc85c0cc0"
+      "7273aa29e45341ec0c08afc6aea7566b"
     ],
     [
       "BinarySearchTree0.tree",
@@ -155,7 +155,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "1c29b232d40eaa3dc3b91c89e19afa0a"
+      "4d5e0ce0007b7c8f2edae414df2324d8"
     ],
     [
       "BinarySearchTree0.insert",
@@ -173,7 +173,7 @@
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "9dab14a920dd0d8d248f25b0f8d68472"
+      "ca2aae71e40c3b64ee90d1a7008332db"
     ]
   ]
 ]

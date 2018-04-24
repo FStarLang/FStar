@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "9e537f3c81ae00422da1b785ae7bb226"
+      "bcdd7f09cb5180e731d8e34ba2441023"
     ],
     [
       "IntSort.test_sorted",
@@ -158,7 +158,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "d309e9ab930f4b46547e22386ec1de03"
+      "71a64411865620e744006837c6442802"
     ],
     [
       "IntSort.test_sorted",

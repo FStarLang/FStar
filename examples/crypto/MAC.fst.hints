@@ -38,7 +38,7 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "255d45bfb19dec318a304736974f9cc1"
+      "def48674552cc06f543370d6854e9b6c"
     ],
     [
       "MAC.mac",
@@ -77,7 +77,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "8ebd5ff75ddb26d8a9ffd4dda4598712"
+      "3465fa8d359fe1ddee9a35e94c38116e"
     ],
     [
       "MAC.verify",
@@ -103,7 +103,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "8f1c2203895ac941e01e9901afa492d8"
+      "303a86e67b14db9ce642bab02990a6a6"
     ]
   ]
 ]

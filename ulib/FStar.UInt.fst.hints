@@ -919,7 +919,7 @@
         "typing_FStar.UInt.fits", "well-founded-ordering-on-nat"
       ],
       0,
-      "6f960dd22b7d2556db1dbafbd93e2b70"
+      "8f92ae16a9e20df64bb78e006a2673b0"
     ],
     [
       "FStar.UInt.from_vec",
@@ -954,7 +954,7 @@
         "typing_FStar.UInt.max_int", "well-founded-ordering-on-nat"
       ],
       0,
-      "50d0da1cc426203bfad221c250aa56a1"
+      "721e18385c9ff47a753b7dfc2d182964"
     ],
     [
       "FStar.UInt.to_vec_lemma_1",
@@ -6523,7 +6523,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "10e99952c11fcd4e57f96c4e6900230e"
+      "a9f2d49dcdcacaf3152a941947aff381"
     ],
     [
       "FStar.UInt.zero",
@@ -7062,7 +7062,7 @@
         "typing_FStar.UInt.fits", "well-founded-ordering-on-nat"
       ],
       0,
-      "c045958707a2f27bd19c05d19775eeb2"
+      "db78238debfc8d2d133b17dcfd4ed139"
     ],
     [
       "FStar.UInt.from_vec",
@@ -7097,7 +7097,7 @@
         "typing_Prims.pow2", "well-founded-ordering-on-nat"
       ],
       0,
-      "7e1fb9075567a3be78c309cfcce55870"
+      "9c88861639b8c76d959f7429ccf605b5"
     ],
     [
       "FStar.UInt.to_vec_lemma_1",

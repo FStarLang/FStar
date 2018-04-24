@@ -150,7 +150,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cdb266bb15093ebe794a2500c8bec143"
+      "fb2f6fe9502d9c77b229cedbed1a8970"
     ],
     [
       "QuickSort.Seq.partition",
@@ -276,7 +276,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5872d129b5f0ad74d2f9349c34647a6b"
+      "fe7649b6140a12dbc3bd4b7ccc0fb8af"
     ]
   ]
 ]
