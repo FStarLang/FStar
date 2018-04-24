@@ -39,7 +39,6 @@ let set_nonempty
 noeq
 type loc' : Type =
   | Loc:
-      (whole_regions: Ghost.erased (Set.set HS.rid)) ->
       (addr_regions: Ghost.erased (Set.set HS.rid)) ->
       (addrs: (
 	(r: HS.rid) ->
@@ -70,7 +69,6 @@ type loc' : Type =
 let loc = loc'
 
 let loc_none = Loc
-  (Ghost.hide (Set.empty))
   (Ghost.hide (Set.empty))
   (fun _ -> Set.empty)
   (Ghost.hide (Set.empty))
@@ -127,7 +125,6 @@ let loc_union s1 s2 =
     | _, Some l2 -> l2
   in
   Loc
-    (Ghost.hide (Set.union (Ghost.reveal (Loc?.whole_regions s1)) (Ghost.reveal (Loc?.whole_regions s2))))
     (Ghost.hide addr_regions)
     addrs
     (Ghost.hide aux_regions)
@@ -139,7 +136,6 @@ let loc_union_idem s = ()
 let loc_buffer #t b =
     Loc
       (Ghost.hide Set.empty)
-      (Ghost.hide Set.empty)
       (fun _ -> Set.empty)
       (Ghost.hide (Set.singleton (B.frameOf b)))
       (fun _ -> Set.singleton (B.as_addr b))
@@ -147,7 +143,6 @@ let loc_buffer #t b =
 
 let loc_addresses r n =
   Loc
-    (Ghost.hide Set.empty)
     (Ghost.hide (Set.singleton r))
     (fun _ -> n)
     (Ghost.hide Set.empty)
@@ -157,8 +152,7 @@ let loc_addresses r n =
 let loc_regions r =
   Loc
     (Ghost.hide r)
-    (Ghost.hide Set.empty)
-    (fun _ -> Set.empty)
+    (fun r' -> if Set.mem r' r then Set.complement Set.empty else Set.empty)
     (Ghost.hide Set.empty)
     (fun _ -> Set.empty)
     (fun _ _ -> false_elim ())
@@ -278,9 +272,7 @@ let addrs_of_loc_weak
   (l: loc)
   (r: HS.rid)
 : GTot (Set.set nat)
-= if Set.mem r (Ghost.reveal (Loc?.whole_regions l))
-  then Set.complement Set.empty
-  else if Set.mem r (Ghost.reveal (Loc?.addr_regions l))
+= if Set.mem r (Ghost.reveal (Loc?.addr_regions l))
   then Loc?.addrs l r
   else Set.empty
 
@@ -309,15 +301,12 @@ let addrs_of_loc_union
 = assert (Set.equal (addrs_of_loc (loc_union l1 l2) r) (Set.union (addrs_of_loc l1 r) (addrs_of_loc l2 r)))
 
 let loc_includes s1 s2 =
-  let whole_regions1 = Ghost.reveal (Loc?.whole_regions s1) in
-  let whole_regions2 = Ghost.reveal (Loc?.whole_regions s2) in
   let addr_regions1 = Ghost.reveal (Loc?.addr_regions s1) in
   let addr_regions2 = Ghost.reveal (Loc?.addr_regions s2) in (
-    Set.subset whole_regions2 whole_regions1 /\
-    Set.subset addr_regions2 (Set.union whole_regions1 addr_regions1) /\
+    Set.subset addr_regions2 addr_regions1 /\
     (
       forall (r: HS.rid) .
-      (Set.mem r addr_regions2 /\ (~ (Set.mem r whole_regions1))) ==>
+      (Set.mem r addr_regions2) ==>
       Set.subset (Loc?.addrs s2 r) (Loc?.addrs s1 r)
     ) /\ (
       forall (r: HS.rid) .
@@ -398,7 +387,11 @@ let loc_includes_region_addresses s r a = ()
 
 let loc_includes_region_region s1 s2 = ()
 
+#set-options "--z3rlimit 16"
+
 let loc_includes_region_union_l l s1 s2 = ()
+
+#reset-options
 
 
 (* Disjointness of two memory locations *)
@@ -484,11 +477,8 @@ let regions_of_loc
   (s: loc)
 : GTot (Set.set HS.rid)
 = Set.union
-    (Ghost.reveal (Loc?.whole_regions s))
-    (Set.union
-      (Ghost.reveal (Loc?.addr_regions s))
-      (Ghost.reveal (Loc?.aux_regions s))
-    )
+    (Ghost.reveal (Loc?.addr_regions s))
+    (Ghost.reveal (Loc?.aux_regions s))
 
 let regions_of_loc_loc_union
   (s1 s2: loc)
@@ -507,9 +497,7 @@ let regions_of_loc_monotonic
 let loc_disjoint'
   (l1 l2: loc)
 : GTot Type0
-= Set.subset (Set.intersect (regions_of_loc l1) (Ghost.reveal (Loc?.whole_regions l2))) Set.empty /\
-  Set.subset (Set.intersect (regions_of_loc l2) (Ghost.reveal (Loc?.whole_regions l1))) Set.empty /\
-  (forall (r: HS.rid) .
+= (forall (r: HS.rid) .
       Set.subset (Set.intersect (addrs_of_loc_weak l1 r) (addrs_of_loc l2 r)) Set.empty /\
       Set.subset (Set.intersect (addrs_of_loc l1 r) (addrs_of_loc_weak l2 r)) Set.empty
   ) /\
@@ -732,9 +720,8 @@ let restrict_to_regions
   (l: loc)
   (rs: Set.set HS.rid)
 : GTot loc
-= let (Loc whole_regions addr_regions addrs aux_regions aux_addrs aux) = l in
+= let (Loc addr_regions addrs aux_regions aux_addrs aux) = l in
   Loc
-    (Ghost.hide (Set.intersect (Ghost.reveal whole_regions) rs))
     (Ghost.hide (Set.intersect (Ghost.reveal addr_regions) rs))
     (fun r -> addrs r)
     (Ghost.hide (Set.intersect (Ghost.reveal aux_regions) rs))
