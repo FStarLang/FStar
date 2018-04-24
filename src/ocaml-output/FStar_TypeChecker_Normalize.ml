@@ -7332,12 +7332,6 @@ and (maybe_simplify_aux :
              let simplify1 arg =
                let uu____18327 = simp_t (FStar_Pervasives_Native.fst arg)  in
                (uu____18327, arg)  in
-             let uu____18336 = is_quantified_const tm1  in
-             match uu____18336 with
-             | FStar_Pervasives_Native.Some tm2 ->
-                 let uu____18340 = norm cfg env [] tm2  in
-                 maybe_simplify_aux cfg env stack uu____18340
-             | FStar_Pervasives_Native.None  ->
                  let uu____18341 =
                    let uu____18342 = FStar_Syntax_Subst.compress tm1  in
                    uu____18342.FStar_Syntax_Syntax.n  in
