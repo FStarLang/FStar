@@ -1,25 +1,27 @@
 module Arrows
 
 abstract
-val op_At_Bar: #a:Type -> s1:array a -> s2:array a ->
+val op_At_Bar: #a: Type -> s1: array a -> s2: array a ->
   ST (array a)
     (requires (fun h -> contains h s1 /\ contains h s2))
-    (ensures  (fun h0 s h1 ->
-                  contains h0 s1 /\ contains h0 s2 /\ contains h1 s /\
-                  sel h1 s == Seq.append (sel h0 s1) (sel h0 s2) /\ modifies Set.empty h0 h1))
+    (ensures
+      (fun h0 s h1 ->
+          contains h0 s1 /\ contains h0 s2 /\ contains h1 s /\
+          sel h1 s == Seq.append (sel h0 s1) (sel h0 s2) /\ modifies Set.empty h0 h1))
 
-let op_At_Bar: #a:Type -> s1:array a -> s2:array a ->
+let op_At_Bar: #a: Type -> s1: array a -> s2: array a ->
   ST (array a)
     (requires (fun h -> contains h s1 /\ contains h s2))
-    (ensures  (fun h0 s h1 ->
-                  contains h0 s1 /\ contains h0 s2 /\ contains h1 s /\
-                  sel h1 s == Seq.append (sel h0 s1) (sel h0 s2) /\ modifies Set.empty h0 h1)) =
+    (ensures
+      (fun h0 s h1 ->
+          contains h0 s1 /\ contains h0 s2 /\ contains h1 s /\
+          sel h1 s == Seq.append (sel h0 s1) (sel h0 s2) /\ modifies Set.empty h0 h1)) =
   let s1' = !s1 in
   let s2' = !s2 in
   ST.alloc (Seq.append s1' s2')
 
 [@ "substitute"]
-val hmac_part2:
+val hmac_part2: 
   mac: uint8_p{length mac = v Hash.size_hash} ->
   s5: uint8_p{length s5 = v Hash.size_block /\ disjoint s5 mac} ->
   s4: uint8_p{length s4 = v Hash.size_hash /\ disjoint s4 mac /\ disjoint s4 s5} ->
@@ -34,7 +36,7 @@ val hmac_part2:
               ))))
 
 [@ "substitute"]
-let hmac_part2:
+let hmac_part2: 
   mac: uint8_p{length mac = v Hash.size_hash} ->
   s5: uint8_p{length s5 = v Hash.size_block /\ disjoint s5 mac} ->
   s4: uint8_p{length s4 = v Hash.size_hash /\ disjoint s4 mac /\ disjoint s4 s5} ->
@@ -49,3 +51,4 @@ let hmac_part2:
               )))) = def
 
 val last: a: int -> b: int -> Tot (array a)
+

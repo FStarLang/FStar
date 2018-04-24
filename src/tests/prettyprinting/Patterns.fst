@@ -29,3 +29,4 @@ let f =
     true
   | B -> true
   | C -> false
+

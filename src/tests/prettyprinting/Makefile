@@ -1,6 +1,6 @@
 FSTAR_HOME = ../../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
-EXCLUDED_FILES=Ex1.fst Typest.fst
+EXCLUDED_FILES=
 
 all: $(addsuffix .test, $(filter-out $(EXCLUDED_FILES), $(wildcard *.fst)))
 
