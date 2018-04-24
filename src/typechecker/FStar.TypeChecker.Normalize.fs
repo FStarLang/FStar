@@ -2168,11 +2168,11 @@ and maybe_simplify_aux cfg env stack tm =
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
-    match is_quantified_const tm with
-    (* We need to recurse, and maybe reduce further! *)
-    | Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
-    (* Otherwise try to simplify this point *)
-    | None ->
+    //match is_quantified_const tm with
+    //(* We need to recurse, and maybe reduce further! *)
+    //| Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
+    //(* Otherwise try to simplify this point *)
+    //| None ->
     match (SS.compress tm).n with
     | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
     | Tm_app({n=Tm_fvar fv}, args) ->
