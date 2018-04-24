@@ -308,7 +308,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | _ -> failwith "Unexpected repr type" in
 
         let bind_repr =
-            let r = S.lid_as_fv PC.range_0 Delta_constant None |> S.fv_to_tm in
+            let r = S.lid_as_fv PC.range_0 delta_constant None |> S.fv_to_tm in
             let b, wp_b = fresh_effect_signature () in
             let a_wp_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
             let wp_f = S.gen_bv "wp_f" None wp_a in
@@ -412,8 +412,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               (Print.term_to_string act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
-          let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act_defn in
-          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
+          let act_defn = N.normalize [ N.UnfoldUntil S.delta_constant ] env act_defn in
+          let act_typ = N.normalize [ N.UnfoldUntil S.delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
           // 2) This implies that [action_typ] has Type(k): good for us!
 
           // 3) Unify [action_typ] against [expected_k], because we also need
@@ -698,7 +698,7 @@ let cps_and_elaborate env ed =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv PC.range_lid (S.Delta_defined_at_level 1) None in
+        let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -724,7 +724,7 @@ let cps_and_elaborate env ed =
       if Options.debug_any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
       // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_as_fv l' Delta_equational None)
+      fv_to_tm (lid_as_fv l' delta_equational None)
       end
     | None ->
       let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
@@ -914,7 +914,7 @@ let tc_lex_t env ses quals lids =
                    sigattrs = [] } in
 
         let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
                           sigquals = [];
@@ -927,8 +927,8 @@ let tc_lex_t env ses quals lids =
         let lex_cons_t =
             let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) Delta_constant None, [U_name ucons2])) None r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) None r2) in
+            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
@@ -1806,7 +1806,7 @@ let extract_interface (en:env) (m:modul) :modul =
 
   let val_of_lb (s:sigelt) (lid:lident) ((uvs, t): (univ_names * typ)) (lbdef:term) :sigelt =
     let attrs =
-      if TcUtil.must_erase_for_extraction en lbdef then (lid_as_fv PC.must_erase_for_extraction_attr Delta_constant None |> fv_to_tm)::s.sigattrs
+      if TcUtil.must_erase_for_extraction en lbdef then (lid_as_fv PC.must_erase_for_extraction_attr delta_constant None |> fv_to_tm)::s.sigattrs
       else s.sigattrs
     in
     { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals); sigattrs = attrs }
@@ -2016,7 +2016,7 @@ let check_module env m =
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids) ->
-            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }

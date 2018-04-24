@@ -55,7 +55,7 @@ let debug g f =
     then f ()
 
 // TODO delete
-let mkFvvar (l: lident) (t:typ) : fv = lid_as_fv l Delta_constant None
+let mkFvvar (l: lident) (t:typ) : fv = lid_as_fv l delta_constant None
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice.
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
@@ -315,7 +315,7 @@ let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
    let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
-   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
+   extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false false |> fst
 
 let monad_op_name (ed:Syntax.eff_decl) nm =
     (* Extract bind and return of effects as (unqualified) projectors of that effect, *)

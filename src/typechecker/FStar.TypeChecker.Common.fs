@@ -75,19 +75,17 @@ let mk_by_tactic tac f =
     S.mk_Tm_app t_by_tactic [S.iarg t_unit; S.as_arg tac; S.as_arg f] None Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
-    | Delta_constant, _ -> false
-    | Delta_equational, _ -> true
-    | _, Delta_equational -> false
-    | Delta_defined_at_level i, Delta_defined_at_level j -> i > j
-    | Delta_defined_at_level _, Delta_constant -> true
+    | Delta_constant_at_level 0, _ -> false
+    | Delta_equational_at_level _, _ -> true
+    | _, Delta_equational_at_level _ -> false
+    | Delta_constant_at_level i, Delta_constant_at_level j -> i > j
     | Delta_abstract d, _ -> delta_depth_greater_than d m
     | _, Delta_abstract d -> delta_depth_greater_than l d
 
 let rec decr_delta_depth = function
-    | Delta_constant
-    | Delta_equational -> None
-    | Delta_defined_at_level 1 -> Some Delta_constant
-    | Delta_defined_at_level i -> Some (Delta_defined_at_level (i - 1))
+    | Delta_constant_at_level 0
+    | Delta_equational_at_level _ -> None
+    | Delta_constant_at_level i -> Some (Delta_constant_at_level (i - 1))
     | Delta_abstract d -> decr_delta_depth d
 
 (***********************************************************************************)

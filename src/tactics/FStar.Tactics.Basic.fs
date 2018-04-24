@@ -437,7 +437,7 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
            end))
 
 let istrivial (e:env) (t:term) : bool =
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
+    let steps = [N.Reify; N.UnfoldUntil delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
     let t = normalize steps e t in
     is_true t
 
@@ -1451,7 +1451,7 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
          * we use the original one as the new goal. This is sometimes needed
          * since the unifier has some bugs. *)
         let steps =
-            [N.Reify; N.UnfoldUntil Delta_constant;
+            [N.Reify; N.UnfoldUntil delta_constant;
              N.AllowUnboundUniverses;
              N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
         let ng  = normalize steps g.context g.goal_ty in

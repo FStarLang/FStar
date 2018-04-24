@@ -475,7 +475,7 @@ let js_pushkind s : push_kind = match js_str s with
 
 let js_reductionrule s = match js_str s with
   | "beta" -> FStar.TypeChecker.Normalize.Beta
-  | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
+  | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.delta_constant
   | "iota" -> FStar.TypeChecker.Normalize.Iota
   | "zeta" -> FStar.TypeChecker.Normalize.Zeta
   | "reify" -> FStar.TypeChecker.Normalize.Reify
@@ -1223,7 +1223,7 @@ let run_compute st term rules =
      | None -> [FStar.TypeChecker.Normalize.Beta;
                FStar.TypeChecker.Normalize.Iota;
                FStar.TypeChecker.Normalize.Zeta;
-               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
+               FStar.TypeChecker.Normalize.UnfoldUntil SS.delta_constant])
     @ [FStar.TypeChecker.Normalize.Inlining;
        FStar.TypeChecker.Normalize.Eager_unfolding;
        FStar.TypeChecker.Normalize.Primops] in

@@ -765,7 +765,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  | _ -> None
     in
     let list_of_string' rng (s:string) : term =
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
+        let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
         let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
@@ -1066,17 +1066,17 @@ let is_norm_request hd args =
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
     | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil Delta_constant]
+    | EMB.Delta ->   [UnfoldUntil delta_constant]
     | EMB.Simpl ->   [Simplify]
     | EMB.Weak ->    [Weak]
     | EMB.HNF  ->    [HNF]
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
-        [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
     | EMB.UnfoldFully names ->
-        [UnfoldUntil Delta_constant; UnfoldFully (List.map I.lid_of_str names)]
+        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
     | EMB.UnfoldAttr t ->
-        [UnfoldUntil Delta_constant; UnfoldAttr t]
+        [UnfoldUntil delta_constant; UnfoldAttr t]
 
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
@@ -1090,7 +1090,7 @@ let get_norm_request (full_norm:term -> term) args =
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
-      let s = [Beta; Zeta; Iota; Primops; UnfoldUntil Delta_constant; Reify] in
+      let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (s, tm)
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if List.contains z s then s else Exclude z :: s in
@@ -1205,7 +1205,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_lazy _
 
-          | Tm_fvar( {fv_delta=Delta_constant} )
+          | Tm_fvar( {fv_delta=Delta_constant_at_level 0} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
@@ -1221,7 +1221,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
                                                          ; unfold_fully = None
                                                          ; do_not_unfold_pure_lets = false };
-                                  delta_level=[Unfold Delta_constant];
+                                  delta_level=[Unfold delta_constant];
                                   normalize_pure_lets=true} in
             begin
             match get_norm_request (norm cfg' env []) args with
@@ -1238,7 +1238,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             | Some (s, tm) ->
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
-                then [Unfold Delta_constant]
+                then [Unfold delta_constant]
                 else [NoDelta] in
               let cfg' = {cfg with steps = ({ to_fsteps s with in_full_norm_request=true})
                                ; delta_level = delta_level
@@ -1328,7 +1328,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                       ; simplify     = false
                                       ; unfold_only  = None
                                       ; unfold_fully = None
-                                      ; unfold_until = Some Delta_constant } }
+                                      ; unfold_until = Some delta_constant } }
                         else stack, cfg
                      in
                      do_unfold_fv cfg env stack t qninfo fv
@@ -1672,7 +1672,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
-           if cfg.steps.unfold_until = Some Delta_constant
+           if cfg.steps.unfold_until = Some delta_constant
             && not cfg.steps.unfold_tac
            //we're really trying to compute here; no point propagating range information
            //which can be expensive (except for tactics: it matters for tracing!)
@@ -2673,7 +2673,7 @@ let normalize_universe env u = norm_universe (config [] env) [] u
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses] env in
+    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
@@ -2695,7 +2695,7 @@ let ghost_to_pure env c =
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-    let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+    let cfg = config [Eager_unfolding; UnfoldUntil delta_constant; EraseUniverses; AllowUnboundUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
     && non_info lc.res_typ
@@ -2736,7 +2736,7 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil Delta_constant; Beta] env t
+let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])

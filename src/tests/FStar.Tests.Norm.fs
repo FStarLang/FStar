@@ -41,8 +41,8 @@ let mk_let x e e' : term =
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange
-let znat_l = S.lid_as_fv (lid "Z") Delta_constant (Some Data_ctor)
-let snat_l = S.lid_as_fv (lid "S") Delta_constant (Some Data_ctor)
+let znat_l = S.lid_as_fv (lid "Z") delta_constant (Some Data_ctor)
+let snat_l = S.lid_as_fv (lid "S") delta_constant (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) None dummyRange
@@ -85,7 +85,7 @@ let run i r expected =
     BU.print1 "%s: ... \n" (BU.string_of_int i);
     let tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
-    let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops] tcenv r in
+    let x = N.normalize [N.Beta; N.UnfoldUntil delta_constant; N.Primops] tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
