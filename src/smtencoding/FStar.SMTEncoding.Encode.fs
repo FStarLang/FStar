@@ -234,32 +234,32 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-    let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let xx = ("x", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let x = mkFreeV xx in
-        let l_forall_a_b = mkApp(for_all, [a;b]) in
-        let valid = mkApp("Valid", [l_forall_a_b]) in
-        let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-        [Util.mkAssume(mkForall([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-                     Some "forall interpretation",
-                     "forall-interp")] in
-    let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let xx = ("x", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let x = mkFreeV xx in
-        let l_exists_a_b = mkApp(for_some, [a;b]) in
-        let valid = mkApp("Valid", [l_exists_a_b]) in
-        let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-        [Util.mkAssume(mkForall([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-                     Some "exists interpretation",
-                     "exists-interp")] in
+    // let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
+    //     let aa = ("a", Term_sort) in
+    //     let bb = ("b", Term_sort) in
+    //     let xx = ("x", Term_sort) in
+    //     let a = mkFreeV aa in
+    //     let b = mkFreeV bb in
+    //     let x = mkFreeV xx in
+    //     let l_forall_a_b = mkApp(for_all, [a;b]) in
+    //     let valid = mkApp("Valid", [l_forall_a_b]) in
+    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
+    //     [Util.mkAssume(mkForall([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
+    //                  Some "forall interpretation",
+    //                  "forall-interp")] in
+    // let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
+    //     let aa = ("a", Term_sort) in
+    //     let bb = ("b", Term_sort) in
+    //     let xx = ("x", Term_sort) in
+    //     let a = mkFreeV aa in
+    //     let b = mkFreeV bb in
+    //     let x = mkFreeV xx in
+    //     let l_exists_a_b = mkApp(for_some, [a;b]) in
+    //     let valid = mkApp("Valid", [l_exists_a_b]) in
+    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
+    //     [Util.mkAssume(mkForall([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
+    //                  Some "exists interpretation",
+    //                  "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
@@ -318,8 +318,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
-                 (Const.forall_lid, mk_forall_interp);
-                 (Const.exists_lid, mk_exists_interp);
+                 // (Const.forall_lid, mk_forall_interp);
+                 // (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
                  (Const.with_type_lid, mk_with_type_axiom)
