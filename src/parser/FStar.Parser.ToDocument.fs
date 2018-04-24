@@ -1084,9 +1084,17 @@ and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 and p_typ' ps pb e = match e.tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
-      prefix2
-        (soft_surround 2 0 (p_quantifier e ^^ space) (p_binders true bs) dot)
-        (p_trigger trigger ^^ p_noSeqTerm ps pb e1)
+      let binders_doc = p_binders true bs in
+      let term_doc = p_noSeqTerm ps pb e1 in
+      //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
+      (match trigger with
+       | [] ->
+         prefix2
+          (soft_surround 2 0 (p_quantifier e ^^ space) binders_doc dot) term_doc
+       | pats ->
+         prefix2 (group (prefix2
+           (soft_surround 2 0 (p_quantifier e ^^ space) binders_doc dot)
+            (p_trigger trigger))) term_doc)
   | _ -> p_simpleTerm ps pb e
 
 and p_quantifier e = match e.tm with
@@ -1097,7 +1105,7 @@ and p_quantifier e = match e.tm with
 and p_trigger = function
     | [] -> empty
     | pats ->
-        lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^/^ rbrace ^^ break1
+        group (lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^/^ rbrace)
 
 and p_disjunctivePats pats =
     separate_map (str "\\/") p_conjunctivePats pats
