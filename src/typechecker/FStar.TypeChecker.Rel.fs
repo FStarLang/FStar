@@ -887,7 +887,30 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let fail r = (r, None) in
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
+
+        let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
+          let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+          let t1, t2 = if d1_greater_than_d2
+                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
+                            t1', t2
+                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
+                            t1, t2' in
+          aux retry (n_delta + 1) t1 t2
+        in
+
+        let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
+          match Common.decr_delta_depth d with
+          | None -> fail r
+          | Some d ->
+            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
+            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
+            aux retry (n_delta + 1) t1 t2
+        in
+
         match r with
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when i <> j ->
+              reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
+
             | MisMatch(Some (Delta_equational_at_level _), _)
             | MisMatch(_, Some (Delta_equational_at_level _)) ->
               if not retry then fail r
@@ -899,24 +922,10 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                    end
 
             | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
-              begin match Common.decr_delta_depth d1 with
-                | None ->
-                  fail r
-
-                | Some d ->
-                  let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
-                  let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
-                  aux retry (n_delta + 1) t1 t2
-              end
-
+              reduce_both_and_try_again d1 r
+ 
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
-              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-              let t1, t2 = if d1_greater_than_d2
-                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
-                                t1', t2
-                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
-                                t1, t2' in
-              aux retry (n_delta + 1) t1 t2
+              reduce_one_and_try_again d1 d2
 
             | MisMatch _ -> fail r
 
