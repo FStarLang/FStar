@@ -2448,7 +2448,7 @@ let (fvar_const :
       let uu____6111 =
         let uu____6112 = FStar_TypeChecker_Env.get_range env  in
         FStar_Ident.set_lid_range lid uu____6112  in
-      FStar_Syntax_Syntax.fvar uu____6111 FStar_Syntax_Syntax.Delta_constant
+      FStar_Syntax_Syntax.fvar uu____6111 FStar_Syntax_Syntax.delta_constant
         FStar_Pervasives_Native.None
   
 let (bind_cases :
@@ -2707,7 +2707,7 @@ let (maybe_coerce_bool_to_type :
                     e.FStar_Syntax_Syntax.pos
                    in
                 FStar_Syntax_Syntax.fvar uu____6745
-                  (FStar_Syntax_Syntax.Delta_defined_at_level
+                  (FStar_Syntax_Syntax.Delta_constant_at_level
                      (Prims.parse_int "1")) FStar_Pervasives_Native.None
                  in
               let lc1 =
@@ -2924,8 +2924,8 @@ let (weaken_result_typ :
                               let uu____6979 =
                                 let uu____6984 =
                                   FStar_All.pipe_left
-                                    (fun _0_17  ->
-                                       FStar_Pervasives_Native.Some _0_17)
+                                    (fun _0_18  ->
+                                       FStar_Pervasives_Native.Some _0_18)
                                     (FStar_TypeChecker_Err.subtyping_failed
                                        env lc.FStar_Syntax_Syntax.res_typ t)
                                    in
@@ -3125,7 +3125,7 @@ let (pure_or_ghost_pre_and_post :
                                       FStar_Parser_Const.as_requires r
                                      in
                                   FStar_Syntax_Syntax.fvar uu____7313
-                                    FStar_Syntax_Syntax.Delta_equational
+                                    FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None
                                    in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu____7312
@@ -3138,7 +3138,7 @@ let (pure_or_ghost_pre_and_post :
                                       FStar_Parser_Const.as_ensures r
                                      in
                                   FStar_Syntax_Syntax.fvar uu____7316
-                                    FStar_Syntax_Syntax.Delta_equational
+                                    FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None
                                    in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu____7315
@@ -3364,8 +3364,8 @@ let (maybe_instantiate :
                 | (bs1,c1) ->
                     let rec aux subst1 inst_n bs2 =
                       match (inst_n, bs2) with
-                      | (FStar_Pervasives_Native.Some _0_18,uu____8052) when
-                          _0_18 = (Prims.parse_int "0") ->
+                      | (FStar_Pervasives_Native.Some _0_19,uu____8052) when
+                          _0_19 = (Prims.parse_int "0") ->
                           ([], bs2, subst1,
                             FStar_TypeChecker_Rel.trivial_guard)
                       | (uu____8095,(x,FStar_Pervasives_Native.Some
@@ -3932,9 +3932,9 @@ let (gen :
                                                  env
                                                 in
                                              FStar_All.pipe_left
-                                               (fun _0_19  ->
+                                               (fun _0_20  ->
                                                   FStar_Pervasives_Native.Some
-                                                    _0_19) uu____10165
+                                                    _0_20) uu____10165
                                               in
                                            FStar_Syntax_Syntax.new_bv
                                              uu____10162 kres
@@ -4172,7 +4172,7 @@ let (check_and_ascribe :
                    let uu____11151 = FStar_TypeChecker_Rel.apply_guard f e
                       in
                    FStar_All.pipe_left
-                     (fun _0_20  -> FStar_Pervasives_Native.Some _0_20)
+                     (fun _0_21  -> FStar_Pervasives_Native.Some _0_21)
                      uu____11151)
              in
           let is_var e1 =
@@ -4396,27 +4396,27 @@ let (short_circuit :
       let op_and_e e =
         let uu____11368 = FStar_Syntax_Util.b2t e  in
         FStar_All.pipe_right uu____11368
-          (fun _0_21  -> FStar_TypeChecker_Common.NonTrivial _0_21)
+          (fun _0_22  -> FStar_TypeChecker_Common.NonTrivial _0_22)
          in
       let op_or_e e =
         let uu____11379 =
           let uu____11382 = FStar_Syntax_Util.b2t e  in
           FStar_Syntax_Util.mk_neg uu____11382  in
         FStar_All.pipe_right uu____11379
-          (fun _0_22  -> FStar_TypeChecker_Common.NonTrivial _0_22)
+          (fun _0_23  -> FStar_TypeChecker_Common.NonTrivial _0_23)
          in
       let op_and_t t =
         FStar_All.pipe_right t
-          (fun _0_23  -> FStar_TypeChecker_Common.NonTrivial _0_23)
+          (fun _0_24  -> FStar_TypeChecker_Common.NonTrivial _0_24)
          in
       let op_or_t t =
         let uu____11397 = FStar_All.pipe_right t FStar_Syntax_Util.mk_neg  in
         FStar_All.pipe_right uu____11397
-          (fun _0_24  -> FStar_TypeChecker_Common.NonTrivial _0_24)
+          (fun _0_25  -> FStar_TypeChecker_Common.NonTrivial _0_25)
          in
       let op_imp_t t =
         FStar_All.pipe_right t
-          (fun _0_25  -> FStar_TypeChecker_Common.NonTrivial _0_25)
+          (fun _0_26  -> FStar_TypeChecker_Common.NonTrivial _0_26)
          in
       let short_op_ite uu___87_11415 =
         match uu___87_11415 with
@@ -4426,7 +4426,7 @@ let (short_circuit :
         | _then::(guard,uu____11442)::[] ->
             let uu____11471 = FStar_Syntax_Util.mk_neg guard  in
             FStar_All.pipe_right uu____11471
-              (fun _0_26  -> FStar_TypeChecker_Common.NonTrivial _0_26)
+              (fun _0_27  -> FStar_TypeChecker_Common.NonTrivial _0_27)
         | uu____11476 -> failwith "Unexpected args to ITE"  in
       let table =
         let uu____11487 =
@@ -5043,7 +5043,7 @@ let (must_erase_for_extraction :
             FStar_TypeChecker_Normalize.Weak;
             FStar_TypeChecker_Normalize.HNF;
             FStar_TypeChecker_Normalize.UnfoldUntil
-              FStar_Syntax_Syntax.Delta_constant;
+              FStar_Syntax_Syntax.delta_constant;
             FStar_TypeChecker_Normalize.Beta;
             FStar_TypeChecker_Normalize.AllowUnboundUniverses;
             FStar_TypeChecker_Normalize.Zeta;

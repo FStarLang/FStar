@@ -930,7 +930,7 @@ let rec (go :
                              match (uu____3846, uu____3847) with
                              | ((cd1,ns1,uu____3874),(cd2,ns2,uu____3877)) ->
                                  (match FStar_String.compare cd1 cd2 with
-                                  | _0_17 when _0_17 = (Prims.parse_int "0")
+                                  | _0_18 when _0_18 = (Prims.parse_int "0")
                                       -> FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches
                        in

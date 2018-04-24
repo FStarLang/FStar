@@ -1346,7 +1346,7 @@ let rec (resugar_term' :
             | FStar_Syntax_Syntax.Mutable_rval  ->
                 let fv =
                   FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.sread_lid
-                    FStar_Syntax_Syntax.Delta_constant
+                    FStar_Syntax_Syntax.delta_constant
                     FStar_Pervasives_Native.None
                    in
                 let uu____4887 =

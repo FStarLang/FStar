@@ -276,7 +276,7 @@
         "subterm_ordering_FStar.Pointer.Base.TUnion"
       ],
       0,
-      "1babebafa5933876214aa7e4942ff588"
+      "ddfec12d8e88652e9aea2fecc3aa5d1a"
     ],
     [
       "FStar.Pointer.Base.typ_depth",
@@ -292,7 +292,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a5511d1567f412c3b2f8dee05b315620"
+      "10a97f9d48b4a98a2466d8a51b852776"
     ],
     [
       "FStar.Pointer.Base.typ_depth_typ_of_struct_field",
@@ -398,7 +398,7 @@
         "fuel_guarded_inversion_FStar.Pointer.Base.base_typ", "unit_typing"
       ],
       0,
-      "e117e166da19b81541e80e80f3d0db8e"
+      "77c2bd4e4c73c761d07c29aa435ba836"
     ],
     [
       "FStar.Pointer.Base.array",
@@ -476,7 +476,7 @@
         "subterm_ordering_FStar.Pointer.Base.TUnion"
       ],
       0,
-      "e97c829d50499ec22928d585bcffafbc"
+      "9197672aa242b0333f073ea872062aa3"
     ],
     [
       "FStar.Pointer.Base.type_of_typ_array",

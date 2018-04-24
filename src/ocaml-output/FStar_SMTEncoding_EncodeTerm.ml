@@ -163,7 +163,7 @@ let (trivial_post : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
       let uu____372 = FStar_Syntax_Syntax.null_binder t  in [uu____372]  in
     let uu____373 =
       FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
-        FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None
+        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
        in
     FStar_Syntax_Util.abs uu____371 uu____373 FStar_Pervasives_Native.None
   

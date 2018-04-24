@@ -377,8 +377,8 @@ let (value_check_expected_typ :
                               then FStar_Pervasives_Native.None
                               else
                                 FStar_All.pipe_left
-                                  (fun _0_17  ->
-                                     FStar_Pervasives_Native.Some _0_17)
+                                  (fun _0_18  ->
+                                     FStar_Pervasives_Native.Some _0_18)
                                   (FStar_TypeChecker_Err.subtyping_failed env
                                      t1 t')
                                in
@@ -3140,7 +3140,7 @@ and (tc_comp :
       | FStar_Syntax_Syntax.Comp c1 ->
           let head1 =
             FStar_Syntax_Syntax.fvar c1.FStar_Syntax_Syntax.effect_name
-              FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None
+              FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
              in
           let head2 =
             match c1.FStar_Syntax_Syntax.comp_univs with
@@ -5532,9 +5532,9 @@ and (tc_eqn :
                                                FStar_Syntax_Util.exp_true_bool
                                               in
                                            FStar_All.pipe_left
-                                             (fun _0_18  ->
+                                             (fun _0_19  ->
                                                 FStar_Pervasives_Native.Some
-                                                  _0_18) uu____13340
+                                                  _0_19) uu____13340
                                         in
                                      let uu____13343 =
                                        let eqs =
@@ -5749,7 +5749,7 @@ and (tc_eqn :
                                                          let disc =
                                                            FStar_Syntax_Syntax.fvar
                                                              discriminator
-                                                             FStar_Syntax_Syntax.Delta_equational
+                                                             FStar_Syntax_Syntax.delta_equational
                                                              FStar_Pervasives_Native.None
                                                             in
                                                          let disc1 =
@@ -5971,7 +5971,7 @@ and (tc_eqn :
                                                                      in
                                                                     FStar_Syntax_Syntax.fvar
                                                                     uu____13892
-                                                                    FStar_Syntax_Syntax.Delta_equational
+                                                                    FStar_Syntax_Syntax.delta_equational
                                                                     FStar_Pervasives_Native.None
                                                                      in
                                                                     let uu____13893
@@ -6453,8 +6453,8 @@ and (check_inner_let :
                                 e11
                                in
                             FStar_All.pipe_left
-                              (fun _0_19  ->
-                                 FStar_TypeChecker_Common.NonTrivial _0_19)
+                              (fun _0_20  ->
+                                 FStar_TypeChecker_Common.NonTrivial _0_20)
                               uu____14414
                              in
                           let g21 =
@@ -6576,8 +6576,8 @@ and (check_top_level_let_rec :
                                             lb.FStar_Syntax_Syntax.lbname))
                                    in
                                 FStar_All.pipe_right uu____14566
-                                  (fun _0_20  ->
-                                     FStar_Pervasives_Native.Some _0_20)
+                                  (fun _0_21  ->
+                                     FStar_Pervasives_Native.Some _0_21)
                                  in
                               let lbs4 =
                                 if
@@ -7863,7 +7863,7 @@ let (level_of_type :
                 let t2 =
                   FStar_TypeChecker_Normalize.normalize
                     [FStar_TypeChecker_Normalize.UnfoldUntil
-                       FStar_Syntax_Syntax.Delta_constant] env t1
+                       FStar_Syntax_Syntax.delta_constant] env t1
                    in
                 aux false t2
               else
@@ -8244,7 +8244,7 @@ let rec (universe_of_aux :
                let t1 =
                  FStar_TypeChecker_Normalize.normalize
                    [FStar_TypeChecker_Normalize.UnfoldUntil
-                      FStar_Syntax_Syntax.Delta_constant] env t
+                      FStar_Syntax_Syntax.delta_constant] env t
                   in
                let uu____17655 = FStar_Syntax_Util.arrow_formals_comp t1  in
                (match uu____17655 with

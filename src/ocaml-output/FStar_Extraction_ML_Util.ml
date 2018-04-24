@@ -77,7 +77,7 @@ let (mlexpr_of_range :
             (uu____133, FStar_Pervasives_Native.None)  in
           FStar_Extraction_ML_Syntax.MLC_Int uu____122  in
         FStar_All.pipe_right uu____121
-          (fun _0_18  -> FStar_Extraction_ML_Syntax.MLE_Const _0_18)
+          (fun _0_19  -> FStar_Extraction_ML_Syntax.MLE_Const _0_19)
          in
       FStar_All.pipe_right uu____120
         (FStar_Extraction_ML_Syntax.with_ty
@@ -86,7 +86,7 @@ let (mlexpr_of_range :
     let cstr s =
       let uu____150 =
         FStar_All.pipe_right (FStar_Extraction_ML_Syntax.MLC_String s)
-          (fun _0_19  -> FStar_Extraction_ML_Syntax.MLE_Const _0_19)
+          (fun _0_20  -> FStar_Extraction_ML_Syntax.MLE_Const _0_20)
          in
       FStar_All.pipe_right uu____150
         (FStar_Extraction_ML_Syntax.with_ty
@@ -422,8 +422,8 @@ let rec (type_leq_c :
                            let uu____738 =
                              let uu____741 = mk_fun xs body  in
                              FStar_All.pipe_left
-                               (fun _0_20  ->
-                                  FStar_Pervasives_Native.Some _0_20)
+                               (fun _0_21  ->
+                                  FStar_Pervasives_Native.Some _0_21)
                                uu____741
                               in
                            type_leq_c unfold_ty uu____738 t2 t2'  in
@@ -812,7 +812,7 @@ let (interpret_plugin_as_term_fun :
               [FStar_TypeChecker_Normalize.EraseUniverses;
               FStar_TypeChecker_Normalize.AllowUnboundUniverses;
               FStar_TypeChecker_Normalize.UnfoldUntil
-                FStar_Syntax_Syntax.Delta_constant] tcenv t
+                FStar_Syntax_Syntax.delta_constant] tcenv t
              in
           let w =
             FStar_Extraction_ML_Syntax.with_ty
@@ -1022,7 +1022,7 @@ let (interpret_plugin_as_term_fun :
                                let head2 =
                                  mk_basic_embedding loc_embedding nm  in
                                (match t_arity with
-                                | _0_21 when _0_21 = (Prims.parse_int "0") ->
+                                | _0_22 when _0_22 = (Prims.parse_int "0") ->
                                     head2
                                 | n1 ->
                                     FStar_All.pipe_left w

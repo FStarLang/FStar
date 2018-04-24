@@ -79,12 +79,12 @@ let (lid : Prims.string -> FStar_Ident.lident) =
   fun x1  -> FStar_Ident.lid_of_path [x1] FStar_Range.dummyRange 
 let (znat_l : FStar_Syntax_Syntax.fv) =
   let uu____86 = lid "Z"  in
-  FStar_Syntax_Syntax.lid_as_fv uu____86 FStar_Syntax_Syntax.Delta_constant
+  FStar_Syntax_Syntax.lid_as_fv uu____86 FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
 let (snat_l : FStar_Syntax_Syntax.fv) =
   let uu____87 = lid "S"  in
-  FStar_Syntax_Syntax.lid_as_fv uu____87 FStar_Syntax_Syntax.Delta_constant
+  FStar_Syntax_Syntax.lid_as_fv uu____87 FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
 let (tm_fv :
@@ -274,7 +274,7 @@ let (run :
             FStar_TypeChecker_Normalize.normalize
               [FStar_TypeChecker_Normalize.Beta;
               FStar_TypeChecker_Normalize.UnfoldUntil
-                FStar_Syntax_Syntax.Delta_constant;
+                FStar_Syntax_Syntax.delta_constant;
               FStar_TypeChecker_Normalize.Primops] tcenv r
              in
           FStar_Options.init ();

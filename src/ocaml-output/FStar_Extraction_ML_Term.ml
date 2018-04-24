@@ -268,7 +268,7 @@ let rec (is_arity :
               [FStar_TypeChecker_Normalize.AllowUnboundUniverses;
               FStar_TypeChecker_Normalize.EraseUniverses;
               FStar_TypeChecker_Normalize.UnfoldUntil
-                FStar_Syntax_Syntax.Delta_constant]
+                FStar_Syntax_Syntax.delta_constant]
               env.FStar_Extraction_ML_UEnv.tcenv t1
              in
           let uu____568 =
@@ -719,7 +719,7 @@ let rec (translate_term_to_mlty :
                  let fvty1 =
                    FStar_TypeChecker_Normalize.normalize
                      [FStar_TypeChecker_Normalize.UnfoldUntil
-                        FStar_Syntax_Syntax.Delta_constant]
+                        FStar_Syntax_Syntax.delta_constant]
                      g1.FStar_Extraction_ML_UEnv.tcenv fvty
                     in
                  FStar_Syntax_Util.arrow_formals fvty1
@@ -905,7 +905,7 @@ let rec (translate_term_to_mlty :
            let t =
              FStar_TypeChecker_Normalize.normalize
                ((FStar_TypeChecker_Normalize.UnfoldUntil
-                   FStar_Syntax_Syntax.Delta_constant) :: basic_norm_steps)
+                   FStar_Syntax_Syntax.delta_constant) :: basic_norm_steps)
                g.FStar_Extraction_ML_UEnv.tcenv t0
               in
            aux g t
@@ -1851,7 +1851,7 @@ and (term_as_mlexpr' :
                let uu____5795 =
                  FStar_Syntax_Syntax.lid_as_fv
                    FStar_Parser_Const.failwith_lid
-                   FStar_Syntax_Syntax.Delta_constant
+                   FStar_Syntax_Syntax.delta_constant
                    FStar_Pervasives_Native.None
                   in
                FStar_Extraction_ML_UEnv.lookup_fv g uu____5795  in
@@ -1897,7 +1897,7 @@ and (term_as_mlexpr' :
                          let uu____5930 =
                            FStar_Syntax_Syntax.lid_as_fv
                              FStar_Parser_Const.failwith_lid
-                             FStar_Syntax_Syntax.Delta_constant
+                             FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None
                             in
                          FStar_Extraction_ML_UEnv.lookup_fv g uu____5930  in
@@ -3405,7 +3405,7 @@ and (term_as_mlexpr' :
                                      let uu____11471 =
                                        FStar_Syntax_Syntax.lid_as_fv
                                          FStar_Parser_Const.failwith_lid
-                                         FStar_Syntax_Syntax.Delta_constant
+                                         FStar_Syntax_Syntax.delta_constant
                                          FStar_Pervasives_Native.None
                                         in
                                      FStar_Extraction_ML_UEnv.lookup_fv g
