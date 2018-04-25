@@ -1175,12 +1175,33 @@ and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * 
         | _ ->
           encode_term t env
     in
+    let rec check_pattern_ok (t:term) =
+        match t.tm with
+        | Integer _
+        | BoundV _
+        | FreeV _ -> true
+        | Let(tms, tm) -> BU.for_all check_pattern_ok (tm::tms)
+        | App(Var _, terms) -> BU.for_all check_pattern_ok terms
+        | App _
+        | Labeled _
+        | Quant _
+        | LblPos _ -> false
+    in
     List.fold_right (fun pats (pats_l, decls) ->
         let pats, decls =
             List.fold_right
                 (fun (p, _) (pats, decls) ->
                     let t, d = encode_smt_pattern p in
-                    t::pats, d@decls)
+                    if check_pattern_ok t
+                    then t::pats, d@decls
+                    else begin
+                         Errors.log_issue
+                            p.pos
+                            (Errors.Warning_SMTPatternMissingBoundVar,
+                             BU.format1 "Pattern %s contains illegal symbols; dropping it"
+                                        (Print.term_to_string p));
+                         pats, d@decls
+                    end)
                 pats ([], decls)
         in
         pats::pats_l, decls)
