@@ -803,72 +803,6 @@ let destruct_flex_t t : flex_t =
 (* </variable ops>                                  *)
 (* ------------------------------------------------ *)
 
-
-(* ------------------------------------------------ *)
-(* <decomposition> of a type/kind with its binders  *)
-(* ------------------------------------------------ *)
-(* ///////////////////////////////////////////////////
-   A summary of type decomposition
-   ///////////////////////////////////////////////////
-
-   It simplifies the unification algorithm to view every F* term
-   as either a lambda, a variable, or the application of a constructor to some arguments.
-
-   For the built-in term formers, i.e., Tm_arrow and Tm_refine,
-   we need a way to decompose them into their sub-terms so that they
-   appear in the form (C arg1 ... argn), for some constructor C.
-
-   Question: What about let and match?
-         let is a redex that can always take a step---so it is not handled here
-
-         match can be stuck at the head, but its decomposition
-         is very specialized. We must handle it separately.
-
-   We call this operation 'decomposition'.
-
-   To illustrate, consider decompose has the type:
-
-   val decompose: env
-               -> term
-               -> (list<either<term, comp>> -> term)
-                    * (term -> bool)
-                    * list<(option<binder> * variance * either<term, comp>)>
-
-   let recompose, matches, components = decompose_typ env t
-
-        1. The components are the immediate sub-terms of t,
-           with their contexts provided as a binders
-
-           For example: if t = x1:t1 -> ... -> xn:tn -> C
-           the components are ([(Some x1,  CONTRAVARIANT, t1);
-                                ...;
-                                ([Some xn, CONTRAVARIANT, tn);
-                                ([None,    COVARIANT, C)]
-
-        2. recompose is a function that rebuilds a t-like type from new subterms
-
-           In our example, rebuild [s1;...;sn; C'] builds
-                           x1:s1 -> ... -> xn:sn -> C'
-
-           The shape of the argument to rebuild must match the shape of the components of t
-
-           Also, the free names of {s1..sn, C'} should match the x1..xn of the original term,
-           if they are to be scoped properly after recomposition.
-
-        3. matches is function which decides whether or not
-           a given type t' could be structurally similar to t (modulo reduction). It serves
-           as a proxy for the constructor of the original type t
-
-           For example, any Typ_fun head matches t
-                        any Uvar    head matches t
-                        any Typ_lam head matches t
-                        any (t1 t2) head matches t, if t1 matches t
-
-           where t matches t'
-              if t head matches t'
-              or t full matches t'
-*)
-
 type match_result =
   | MisMatch of option<delta_depth> * option<delta_depth>
   | HeadMatch
@@ -1292,9 +1226,12 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
             | [] -> None //seems ill-typed at this point
             | _ -> aux pat_binders more_formals t_res args
             end
-        in
-        let formals, t_res = U.arrow_formals t_hd in
-        aux [] formals t_res args
+    in
+    match args with
+    | [] -> Some ([], t_hd) //this really a pattern, not a quasi_pattern
+    | _ ->
+      let formals, t_res = U.arrow_formals t_hd in
+      aux [] formals t_res args
 
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
@@ -1394,7 +1331,7 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solut
 //(******************************************************************************************************)
 //(* The case where t1 < u, ..., tn < u: we solve this by taking u=t1\/...\/tn                          *)
 //(******************************************************************************************************)
-//and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<worklist> =
+// and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<worklist> =
 //    if Env.debug env <| Options.Other "RelCheck"
 //    then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
 //    let u, args = U.head_and_args tp.rhs in
@@ -1776,7 +1713,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
         let t_lhs, u_lhs, _lhs_args = lhs in
-        let lhs', lhs'_last_arg, _wl = //FIXME! dropping the wl here
+        let lhs', lhs'_last_arg, wl = //FIXME! dropping the wl here
               let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
               let _, lhs', wl = copy_uvar u_lhs (U.arrow [S.null_binder t_last_arg] (S.mk_Total t_res_lhs)) wl in
