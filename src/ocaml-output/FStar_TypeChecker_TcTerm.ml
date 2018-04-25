@@ -3140,7 +3140,7 @@ and (tc_comp :
       | FStar_Syntax_Syntax.Comp c1 ->
           let head1 =
             FStar_Syntax_Syntax.fvar c1.FStar_Syntax_Syntax.effect_name
-              FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None
+              FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
              in
           let head2 =
             match c1.FStar_Syntax_Syntax.comp_univs with
@@ -5749,7 +5749,7 @@ and (tc_eqn :
                                                          let disc =
                                                            FStar_Syntax_Syntax.fvar
                                                              discriminator
-                                                             FStar_Syntax_Syntax.Delta_equational
+                                                             FStar_Syntax_Syntax.delta_equational
                                                              FStar_Pervasives_Native.None
                                                             in
                                                          let disc1 =
@@ -5971,7 +5971,7 @@ and (tc_eqn :
                                                                      in
                                                                     FStar_Syntax_Syntax.fvar
                                                                     uu____13892
-                                                                    FStar_Syntax_Syntax.Delta_equational
+                                                                    FStar_Syntax_Syntax.delta_equational
                                                                     FStar_Pervasives_Native.None
                                                                      in
                                                                     let uu____13893
@@ -7863,7 +7863,7 @@ let (level_of_type :
                 let t2 =
                   FStar_TypeChecker_Normalize.normalize
                     [FStar_TypeChecker_Normalize.UnfoldUntil
-                       FStar_Syntax_Syntax.Delta_constant] env t1
+                       FStar_Syntax_Syntax.delta_constant] env t1
                    in
                 aux false t2
               else
@@ -8244,7 +8244,7 @@ let rec (universe_of_aux :
                let t1 =
                  FStar_TypeChecker_Normalize.normalize
                    [FStar_TypeChecker_Normalize.UnfoldUntil
-                      FStar_Syntax_Syntax.Delta_constant] env t
+                      FStar_Syntax_Syntax.delta_constant] env t
                   in
                let uu____17655 = FStar_Syntax_Util.arrow_formals_comp t1  in
                (match uu____17655 with

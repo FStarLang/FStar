@@ -2169,7 +2169,7 @@ let (encode_top_level_let :
                                   FStar_TypeChecker_Normalize.Exclude
                                     FStar_TypeChecker_Normalize.Zeta;
                                   FStar_TypeChecker_Normalize.UnfoldUntil
-                                    FStar_Syntax_Syntax.Delta_constant;
+                                    FStar_Syntax_Syntax.delta_constant;
                                   FStar_TypeChecker_Normalize.EraseUniverses]
                                   env.FStar_SMTEncoding_Env.tcenv t_norm1
                                  in
@@ -3442,7 +3442,7 @@ and (encode_sigelt' :
           else
             (let fv =
                FStar_Syntax_Syntax.lid_as_fv lid
-                 FStar_Syntax_Syntax.Delta_constant
+                 FStar_Syntax_Syntax.delta_constant
                  FStar_Pervasives_Native.None
                 in
              let uu____9512 =
@@ -5468,7 +5468,7 @@ let (encode_env_bindings :
                  let t_norm = FStar_SMTEncoding_EncodeTerm.whnf env1 t  in
                  let fv =
                    FStar_Syntax_Syntax.lid_as_fv x
-                     FStar_Syntax_Syntax.Delta_constant
+                     FStar_Syntax_Syntax.delta_constant
                      FStar_Pervasives_Native.None
                     in
                  let uu____12957 = encode_free_var false env1 fv t t_norm []

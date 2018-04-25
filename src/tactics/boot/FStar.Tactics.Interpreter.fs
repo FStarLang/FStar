@@ -472,7 +472,7 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
     // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
-    let steps = [N.Weak; N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops; N.Unascribe] in
+    let steps = [N.Weak; N.Reify; N.UnfoldUntil delta_constant; N.UnfoldTac; N.Primops; N.Unascribe] in
     if Env.debug proof_state.main_context (Options.Other "TacVerbose") then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
@@ -740,7 +740,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         Dual ({t with n = tn}, p', gs@gs')
 
 let getprop (e:env) (t:term) : option<term> =
-    let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil Delta_constant] e t in
+    let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant] e t in
     U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
@@ -778,7 +778,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
     (env, t', FStar.Options.peek ()) :: gs
 
 let reify_tactic (a : term) : term =
-    let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv PC.reify_tactic_lid Delta_equational None)) [U_zero] in
+    let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv PC.reify_tactic_lid delta_equational None)) [U_zero] in
     mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
@@ -800,7 +800,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("splice left open goals")) typ.pos;
 
     // Fully normalize the witness
-    let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil Delta_constant;
+    let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
                          N.Primops; N.Unascribe; N.Unmeta] env w in
 
     // Unembed it, this must work if things are well-typed

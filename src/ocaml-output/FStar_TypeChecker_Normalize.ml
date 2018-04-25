@@ -3030,7 +3030,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
     let name l =
       let uu____7254 =
         let uu____7255 =
-          FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
+          FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
             FStar_Pervasives_Native.None
            in
         FStar_Syntax_Syntax.Tm_fvar uu____7255  in
@@ -3906,7 +3906,7 @@ let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
     | FStar_Syntax_Embeddings.Zeta  -> [Zeta]
     | FStar_Syntax_Embeddings.Iota  -> [Iota]
     | FStar_Syntax_Embeddings.Delta  ->
-        [UnfoldUntil FStar_Syntax_Syntax.Delta_constant]
+        [UnfoldUntil FStar_Syntax_Syntax.delta_constant]
     | FStar_Syntax_Embeddings.Simpl  -> [Simplify]
     | FStar_Syntax_Embeddings.Weak  -> [Weak]
     | FStar_Syntax_Embeddings.HNF  -> [HNF]
@@ -3918,7 +3918,7 @@ let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
                in
             UnfoldOnly uu____10673  in
           [uu____10672]  in
-        (UnfoldUntil FStar_Syntax_Syntax.Delta_constant) :: uu____10669
+        (UnfoldUntil FStar_Syntax_Syntax.delta_constant) :: uu____10669
     | FStar_Syntax_Embeddings.UnfoldFully names1 ->
         let uu____10679 =
           let uu____10682 =
@@ -3926,9 +3926,9 @@ let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
                in
             UnfoldFully uu____10683  in
           [uu____10682]  in
-        (UnfoldUntil FStar_Syntax_Syntax.Delta_constant) :: uu____10679
+        (UnfoldUntil FStar_Syntax_Syntax.delta_constant) :: uu____10679
     | FStar_Syntax_Embeddings.UnfoldAttr t ->
-        [UnfoldUntil FStar_Syntax_Syntax.Delta_constant; UnfoldAttr t]
+        [UnfoldUntil FStar_Syntax_Syntax.delta_constant; UnfoldAttr t]
   
 let (tr_norm_steps :
   FStar_Syntax_Embeddings.norm_step Prims.list -> step Prims.list) =
@@ -3962,7 +3962,7 @@ let get_norm_request :
             Zeta;
             Iota;
             Primops;
-            UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
+            UnfoldUntil FStar_Syntax_Syntax.delta_constant;
             Reify]  in
           FStar_Pervasives_Native.Some (s, tm)
       | (tm,uu____10819)::[] ->
@@ -3971,7 +3971,7 @@ let get_norm_request :
             Zeta;
             Iota;
             Primops;
-            UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
+            UnfoldUntil FStar_Syntax_Syntax.delta_constant;
             Reify]  in
           FStar_Pervasives_Native.Some (s, tm)
       | (steps,uu____10840)::uu____10841::(tm,uu____10843)::[] ->
@@ -4136,9 +4136,9 @@ let rec (norm :
            | FStar_Syntax_Syntax.Tm_fvar
                { FStar_Syntax_Syntax.fv_name = uu____11802;
                  FStar_Syntax_Syntax.fv_delta =
-                   FStar_Syntax_Syntax.Delta_constant ;
+                   FStar_Syntax_Syntax.Delta_constant_at_level _0_18;
                  FStar_Syntax_Syntax.fv_qual = uu____11803;_}
-               -> rebuild cfg env stack t1
+               when _0_18 = (Prims.parse_int "0") -> rebuild cfg env stack t1
            | FStar_Syntax_Syntax.Tm_fvar
                { FStar_Syntax_Syntax.fv_name = uu____11806;
                  FStar_Syntax_Syntax.fv_delta = uu____11807;
@@ -4204,7 +4204,7 @@ let rec (norm :
                    debug = (uu___147_11856.debug);
                    delta_level =
                      [FStar_TypeChecker_Env.Unfold
-                        FStar_Syntax_Syntax.Delta_constant];
+                        FStar_Syntax_Syntax.delta_constant];
                    primitive_steps = (uu___147_11856.primitive_steps);
                    strong = (uu___147_11856.strong);
                    memoize_lazy = (uu___147_11856.memoize_lazy);
@@ -4260,7 +4260,7 @@ let rec (norm :
                       if uu____12054
                       then
                         [FStar_TypeChecker_Env.Unfold
-                           FStar_Syntax_Syntax.Delta_constant]
+                           FStar_Syntax_Syntax.delta_constant]
                       else [FStar_TypeChecker_Env.NoDelta]  in
                     let cfg'1 =
                       let uu___149_12072 = cfg  in
@@ -4473,7 +4473,7 @@ let rec (norm :
                                           (uu___152_12360.do_not_unfold_pure_lets);
                                         unfold_until =
                                           (FStar_Pervasives_Native.Some
-                                             FStar_Syntax_Syntax.Delta_constant);
+                                             FStar_Syntax_Syntax.delta_constant);
                                         unfold_only =
                                           FStar_Pervasives_Native.None;
                                         unfold_fully =
@@ -6109,7 +6109,7 @@ and (do_unfold_fv :
                       if
                         ((cfg.steps).unfold_until =
                            (FStar_Pervasives_Native.Some
-                              FStar_Syntax_Syntax.Delta_constant))
+                              FStar_Syntax_Syntax.delta_constant))
                           && (Prims.op_Negation (cfg.steps).unfold_tac)
                       then t
                       else
@@ -6922,7 +6922,7 @@ and (norm_comp :
                | FStar_Pervasives_Native.Some u ->
                    let uu____17248 = norm_universe cfg env u  in
                    FStar_All.pipe_left
-                     (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
+                     (fun _0_19  -> FStar_Pervasives_Native.Some _0_19)
                      uu____17248
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
@@ -6943,7 +6943,7 @@ and (norm_comp :
                | FStar_Pervasives_Native.Some u ->
                    let uu____17271 = norm_universe cfg env u  in
                    FStar_All.pipe_left
-                     (fun _0_19  -> FStar_Pervasives_Native.Some _0_19)
+                     (fun _0_20  -> FStar_Pervasives_Native.Some _0_20)
                      uu____17271
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
@@ -8922,7 +8922,7 @@ let (ghost_to_pure :
     fun c  ->
       let cfg =
         config
-          [UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
+          [UnfoldUntil FStar_Syntax_Syntax.delta_constant;
           AllowUnboundUniverses;
           EraseUniverses] env
          in
@@ -9016,7 +9016,7 @@ let (ghost_to_pure_lcomp :
       let cfg =
         config
           [Eager_unfolding;
-          UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
+          UnfoldUntil FStar_Syntax_Syntax.delta_constant;
           EraseUniverses;
           AllowUnboundUniverses] env
          in
@@ -9120,7 +9120,7 @@ let (unfold_whnf :
         [Primops;
         Weak;
         HNF;
-        UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
+        UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         Beta] env t
   
 let (reduce_or_remove_uvar_solutions :

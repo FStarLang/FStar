@@ -1737,7 +1737,7 @@ and unembed_tactic_0 :
              [FStar_TypeChecker_Normalize.Weak;
              FStar_TypeChecker_Normalize.Reify;
              FStar_TypeChecker_Normalize.UnfoldUntil
-               FStar_Syntax_Syntax.Delta_constant;
+               FStar_Syntax_Syntax.delta_constant;
              FStar_TypeChecker_Normalize.UnfoldTac;
              FStar_TypeChecker_Normalize.Primops;
              FStar_TypeChecker_Normalize.Unascribe]  in
@@ -2576,7 +2576,7 @@ let (getprop :
           [FStar_TypeChecker_Normalize.Weak;
           FStar_TypeChecker_Normalize.HNF;
           FStar_TypeChecker_Normalize.UnfoldUntil
-            FStar_Syntax_Syntax.Delta_constant] e t
+            FStar_Syntax_Syntax.delta_constant] e t
          in
       FStar_Syntax_Util.un_squash tn
   
@@ -2693,7 +2693,7 @@ let (reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
       let uu____5501 =
         let uu____5502 =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.reify_tactic_lid
-            FStar_Syntax_Syntax.Delta_equational FStar_Pervasives_Native.None
+            FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None
            in
         FStar_Syntax_Syntax.fv_to_tm uu____5502  in
       FStar_Syntax_Syntax.mk_Tm_uinst uu____5501 [FStar_Syntax_Syntax.U_zero]
@@ -2779,7 +2779,7 @@ let (splice :
                  [FStar_TypeChecker_Normalize.Weak;
                  FStar_TypeChecker_Normalize.HNF;
                  FStar_TypeChecker_Normalize.UnfoldUntil
-                   FStar_Syntax_Syntax.Delta_constant;
+                   FStar_Syntax_Syntax.delta_constant;
                  FStar_TypeChecker_Normalize.Primops;
                  FStar_TypeChecker_Normalize.Unascribe;
                  FStar_TypeChecker_Normalize.Unmeta] env w

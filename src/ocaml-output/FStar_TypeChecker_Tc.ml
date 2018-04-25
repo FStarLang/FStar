@@ -1084,7 +1084,7 @@ let (tc_eff_decl :
                                           let uu____1354 =
                                             FStar_Syntax_Syntax.lid_as_fv
                                               FStar_Parser_Const.range_0
-                                              FStar_Syntax_Syntax.Delta_constant
+                                              FStar_Syntax_Syntax.delta_constant
                                               FStar_Pervasives_Native.None
                                              in
                                           FStar_All.pipe_right uu____1354
@@ -1820,13 +1820,13 @@ let (tc_eff_decl :
                                                          let act_defn1 =
                                                            FStar_TypeChecker_Normalize.normalize
                                                              [FStar_TypeChecker_Normalize.UnfoldUntil
-                                                                FStar_Syntax_Syntax.Delta_constant]
+                                                                FStar_Syntax_Syntax.delta_constant]
                                                              env3 act_defn
                                                             in
                                                          let act_typ2 =
                                                            FStar_TypeChecker_Normalize.normalize
                                                              [FStar_TypeChecker_Normalize.UnfoldUntil
-                                                                FStar_Syntax_Syntax.Delta_constant;
+                                                                FStar_Syntax_Syntax.delta_constant;
                                                              FStar_TypeChecker_Normalize.Eager_unfolding;
                                                              FStar_TypeChecker_Normalize.Beta]
                                                              env3 act_typ1
@@ -2920,7 +2920,7 @@ let (cps_and_elaborate :
                                                let r =
                                                  FStar_Syntax_Syntax.lid_as_fv
                                                    FStar_Parser_Const.range_lid
-                                                   (FStar_Syntax_Syntax.Delta_defined_at_level
+                                                   (FStar_Syntax_Syntax.Delta_constant_at_level
                                                       (Prims.parse_int "1"))
                                                    FStar_Pervasives_Native.None
                                                   in
@@ -3024,7 +3024,7 @@ let (cps_and_elaborate :
                                                 (let uu____3312 =
                                                    FStar_Syntax_Syntax.lid_as_fv
                                                      l'
-                                                     FStar_Syntax_Syntax.Delta_equational
+                                                     FStar_Syntax_Syntax.delta_equational
                                                      FStar_Pervasives_Native.None
                                                     in
                                                  FStar_Syntax_Syntax.fv_to_tm
@@ -3916,7 +3916,7 @@ let tc_lex_t :
                              FStar_Parser_Const.lex_t_lid r1
                             in
                          FStar_Syntax_Syntax.fvar uu____4608
-                           FStar_Syntax_Syntax.Delta_constant
+                           FStar_Syntax_Syntax.delta_constant
                            FStar_Pervasives_Native.None
                           in
                        (uu____4607, [FStar_Syntax_Syntax.U_name utop])  in
@@ -3973,7 +3973,7 @@ let tc_lex_t :
                                  FStar_Parser_Const.lex_t_lid r2
                                 in
                              FStar_Syntax_Syntax.fvar uu____4647
-                               FStar_Syntax_Syntax.Delta_constant
+                               FStar_Syntax_Syntax.delta_constant
                                FStar_Pervasives_Native.None
                               in
                            (uu____4646, [FStar_Syntax_Syntax.U_name ucons2])
@@ -3994,7 +3994,7 @@ let tc_lex_t :
                                FStar_Parser_Const.lex_t_lid r2
                               in
                            FStar_Syntax_Syntax.fvar uu____4672
-                             FStar_Syntax_Syntax.Delta_constant
+                             FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None
                             in
                          (uu____4671,
@@ -6992,7 +6992,7 @@ let (extract_interface :
                   let uu____10003 =
                     FStar_Syntax_Syntax.lid_as_fv
                       FStar_Parser_Const.must_erase_for_extraction_attr
-                      FStar_Syntax_Syntax.Delta_constant
+                      FStar_Syntax_Syntax.delta_constant
                       FStar_Pervasives_Native.None
                      in
                   FStar_All.pipe_right uu____10003
@@ -7932,7 +7932,7 @@ let (check_module :
                          FStar_TypeChecker_Normalize.Inlining;
                          FStar_TypeChecker_Normalize.Primops;
                          FStar_TypeChecker_Normalize.UnfoldUntil
-                           FStar_Syntax_Syntax.Delta_constant;
+                           FStar_Syntax_Syntax.delta_constant;
                          FStar_TypeChecker_Normalize.AllowUnboundUniverses]
                         in
                      let update lb =

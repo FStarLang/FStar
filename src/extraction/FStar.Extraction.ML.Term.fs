@@ -169,7 +169,7 @@ let rec is_arity env t =
     | Tm_arrow(_, c) ->
       is_arity env (FStar.Syntax.Util.comp_result c)
     | Tm_fvar _ ->
-      let t = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.UnfoldUntil Delta_constant] env.tcenv t in
+      let t = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.UnfoldUntil delta_constant] env.tcenv t in
       begin match (SS.compress t).n with
         | Tm_fvar _ -> false
         | _ -> is_arity env t
@@ -478,7 +478,7 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
         else
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid g.tcenv fv.fv_name.v in
-                let fvty = N.normalize [N.UnfoldUntil Delta_constant] g.tcenv fvty in
+                let fvty = N.normalize [N.UnfoldUntil delta_constant] g.tcenv fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -584,7 +584,7 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
     else let mlt = aux g t0 in
          if is_top_ty mlt
          then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
-              let t = N.normalize (N.UnfoldUntil Delta_constant::basic_norm_steps) g.tcenv t0 in
+              let t = N.normalize (N.UnfoldUntil delta_constant::basic_norm_steps) g.tcenv t0 in
               aux g t
     else mlt
 
@@ -893,7 +893,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
+          let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
           E_PURE,
           ml_int_ty
@@ -906,7 +906,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               term_as_mlexpr g tm
 
             | Some (true, tm) ->
-              let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
+              let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
               with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
               E_PURE,
               ml_int_ty
@@ -1389,7 +1389,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
+                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty

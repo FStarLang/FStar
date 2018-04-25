@@ -1021,7 +1021,7 @@ let (js_reductionrule : FStar_Util.json -> FStar_TypeChecker_Normalize.step)
     | "beta" -> FStar_TypeChecker_Normalize.Beta
     | "delta" ->
         FStar_TypeChecker_Normalize.UnfoldUntil
-          FStar_Syntax_Syntax.Delta_constant
+          FStar_Syntax_Syntax.delta_constant
     | "iota" -> FStar_TypeChecker_Normalize.Iota
     | "zeta" -> FStar_TypeChecker_Normalize.Zeta
     | "reify" -> FStar_TypeChecker_Normalize.Reify
@@ -3246,7 +3246,7 @@ let run_compute :
                  FStar_TypeChecker_Normalize.Iota;
                  FStar_TypeChecker_Normalize.Zeta;
                  FStar_TypeChecker_Normalize.UnfoldUntil
-                   FStar_Syntax_Syntax.Delta_constant])
+                   FStar_Syntax_Syntax.delta_constant])
             [FStar_TypeChecker_Normalize.Inlining;
             FStar_TypeChecker_Normalize.Eager_unfolding;
             FStar_TypeChecker_Normalize.Primops]

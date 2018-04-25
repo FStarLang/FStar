@@ -773,7 +773,9 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-            fv.fv_delta=Delta_equational
+            (match fv.fv_delta with
+             | Delta_equational_at_level _ -> true
+             | _ -> false)
             //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
@@ -917,7 +919,7 @@ let build_lattice env se = match se.sigel with
     (* For debug purpose... *)
     let print_mlift l =
       (* A couple of bogus constants, just for printing *)
-      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) Delta_constant None) in
+      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
       let arg = bogus_term "ARG" in
       let wp = bogus_term "WP" in
       let e = bogus_term "COMP" in

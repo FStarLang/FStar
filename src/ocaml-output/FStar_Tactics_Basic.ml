@@ -1075,7 +1075,7 @@ let (istrivial : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
       let steps =
         [FStar_TypeChecker_Normalize.Reify;
         FStar_TypeChecker_Normalize.UnfoldUntil
-          FStar_Syntax_Syntax.Delta_constant;
+          FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Normalize.Primops;
         FStar_TypeChecker_Normalize.Simplify;
         FStar_TypeChecker_Normalize.UnfoldTac;
@@ -4419,7 +4419,7 @@ let (change : FStar_Reflection_Data.typ -> unit tac) =
                                      (let steps =
                                         [FStar_TypeChecker_Normalize.Reify;
                                         FStar_TypeChecker_Normalize.UnfoldUntil
-                                          FStar_Syntax_Syntax.Delta_constant;
+                                          FStar_Syntax_Syntax.delta_constant;
                                         FStar_TypeChecker_Normalize.AllowUnboundUniverses;
                                         FStar_TypeChecker_Normalize.Primops;
                                         FStar_TypeChecker_Normalize.Simplify;

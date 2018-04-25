@@ -491,7 +491,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
        let steps =
          if should_delta
-         then [N.Weak; N.HNF; N.UnfoldUntil Delta_constant]
+         then [N.Weak; N.HNF; N.UnfoldUntil delta_constant]
          else [N.Weak; N.HNF] in
        N.normalize_refinement steps env t
    in
@@ -815,10 +815,10 @@ let fv_delta_depth env fv = match fv.fv_delta with
       if env.curmodule.str = fv.fv_name.v.nsstr && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
                                                                      //    a better way would be create new fvs with appripriate delta_depth at extraction time
       then d //we're in the defining module
-      else Delta_constant
-    | Delta_defined_at_level _ ->
-      begin match Env.lookup_definition [Unfold Delta_constant] env fv.fv_name.v with
-            | None -> Delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
+      else delta_constant
+    | Delta_constant_at_level i when i > 0 ->
+      begin match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
+            | None -> delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
             | _ -> fv.fv_delta
       end
     | d ->
@@ -844,7 +844,7 @@ let rec delta_depth_of_term env t =
     | Tm_type _
     | Tm_arrow _
     | Tm_quoted _
-    | Tm_abs _ -> Some Delta_constant
+    | Tm_abs _ -> Some delta_constant
     | Tm_fvar fv -> Some (fv_delta_depth env fv)
 
 
@@ -887,9 +887,32 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let fail r = (r, None) in
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
+
+        let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
+          let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+          let t1, t2 = if d1_greater_than_d2
+                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
+                            t1', t2
+                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
+                            t1, t2' in
+          aux retry (n_delta + 1) t1 t2
+        in
+
+        let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
+          match Common.decr_delta_depth d with
+          | None -> fail r
+          | Some d ->
+            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
+            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
+            aux retry (n_delta + 1) t1 t2
+        in
+
         match r with
-            | MisMatch(Some Delta_equational, _)
-            | MisMatch(_, Some Delta_equational) ->
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 1 || j > 1) && i <> j ->
+              reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
+
+            | MisMatch(Some (Delta_equational_at_level _), _)
+            | MisMatch(_, Some (Delta_equational_at_level _)) ->
               if not retry then fail r
               else begin match maybe_inline t1, maybe_inline t2 with
                    | None, None -> fail r
@@ -899,34 +922,21 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                    end
 
             | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
-              begin match Common.decr_delta_depth d1 with
-                | None ->
-                  fail r
-
-                | Some d ->
-                  let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
-                  let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
-                  aux retry (n_delta + 1) t1 t2
-              end
-
+              reduce_both_and_try_again d1 r
+ 
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
-              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-              let t1, t2 = if d1_greater_than_d2
-                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
-                                t1', t2
-                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
-                                t1, t2' in
-              aux retry (n_delta + 1) t1 t2
+              reduce_one_and_try_again d1 d2
 
             | MisMatch _ -> fail r
 
             | _ -> success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
-        BU.print3 "head_matches (%s, %s) = %s\n"
+        BU.print4 "head_matches (%s, %s) = %s (%s)\n"
             (Print.term_to_string t1)
             (Print.term_to_string t2)
-            (string_of_match_result (fst r));
+            (string_of_match_result (fst r))
+            (if snd r = None then "None" else snd r |> must |> (fun (t1, t2) -> Print.term_to_string t1 ^ "; " ^ Print.term_to_string t2));
     r
 
 type tc =
@@ -1444,10 +1454,10 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
                 | _ ->
                   let head1, _ = U.head_and_args t1 in
                   begin match (U.un_uinst head1).n with
-                    | Tm_fvar {fv_delta=Delta_defined_at_level i} ->
+                    | Tm_fvar {fv_delta=Delta_constant_at_level i} when i > 0 ->
                       let prev = if i > 1
-                                 then Delta_defined_at_level (i - 1)
-                                 else Delta_constant in
+                                 then Delta_constant_at_level (i - 1)
+                                 else Delta_constant_at_level 0 in
                       let t1 = N.normalize [N.Weak; N.HNF; N.UnfoldUntil prev] env t1 in
                       let t2 = N.normalize [N.Weak; N.HNF; N.UnfoldUntil prev] env t2 in
                       disjoin t1 t2
@@ -1689,7 +1699,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     match (SS.compress head).n with
                     | Tm_name _
                     | Tm_match _ -> true
-                    | Tm_fvar ({fv_delta=Delta_equational}) ->
+                    | Tm_fvar ({fv_delta=Delta_equational_at_level _}) ->
                       true
                     | Tm_fvar ({fv_delta=Delta_abstract _}) ->
                       //these may be relatable via a logical theory
@@ -1723,7 +1733,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
             | (_, None) -> //head1 matches head1, without delta
                 if debug env <| Options.Other "Rel"
-                then BU.print4 "Head matches: %s (%s) and %s (%s)\n"
+                then BU.print4 "Head matches after call to head_matches_delta: %s (%s) and %s (%s)\n"
                     (Print.term_to_string t1) (Print.tag_of_term t1)
                     (Print.term_to_string t2) (Print.tag_of_term t2);
                 let head1, args1 = U.head_and_args t1 in
@@ -1758,6 +1768,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                 | UDeferred wl -> solve env (defer "universe constraints" orig wl)
                                 | USolved wl ->
                                     let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
+                                    if debug env <| Options.Other "Rel" then
+                                    BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
                                     let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
                                     let wl = solve_prob orig (Some formula) [] wl in
                                     solve env (attempt subprobs wl)
@@ -2299,8 +2311,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let _ =
         if debug env (Options.Other "RelCheck")
         then BU.print3 "Attempting %s (%s - %s)\n" (string_of_int problem.pid)
-                            (Print.tag_of_term t1)
-                            (Print.tag_of_term t2)
+                            (Print.term_to_string t1)
+                            (Print.term_to_string t2)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with
@@ -2404,8 +2416,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
           && (match head_matches env x1.sort x2.sort with
               | MisMatch(Some d1, Some d2) ->
                 let is_unfoldable = function
-                    | Delta_constant
-                    | Delta_defined_at_level _ -> true
+                    | Delta_constant_at_level _ -> true
                     | _ -> false
                 in
                 is_unfoldable d1 && is_unfoldable d2
@@ -2671,11 +2682,11 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
-                           N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
+                           N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
                        in
                        let c2_repr =
-                           N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
+                           N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
                        let prob =

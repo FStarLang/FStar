@@ -5,7 +5,7 @@ let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l  ->
     let uu____15 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
+      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
         FStar_Pervasives_Native.None
        in
     FStar_All.pipe_right uu____15 FStar_Syntax_Syntax.fv_to_tm
@@ -17,7 +17,7 @@ let (mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
 let (lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l  ->
     let uu____27 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
+      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
         (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
        in
     FStar_Syntax_Syntax.fv_to_tm uu____27
