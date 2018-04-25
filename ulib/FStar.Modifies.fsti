@@ -449,6 +449,10 @@ val modifies_0_modifies
 : Lemma
   (requires (B.modifies_0 h1 h2))
   (ensures (modifies loc_none h1 h2))
+  [SMTPatOr [
+    [SMTPat (B.modifies_0 h1 h2)];
+    [SMTPat (modifies loc_none h1 h2)];
+  ]]
 
 val modifies_1_modifies
   (#a: Type)
