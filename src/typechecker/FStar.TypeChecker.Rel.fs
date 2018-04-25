@@ -1258,6 +1258,10 @@ let meet_or_join op ts env wl =
                     Some ([TProb p], wl)
           else None
 
+        | Tm_type _, Tm_type _ ->
+          let p, wl = new_problem wl env t1 EQ t2 None t1.pos "meet/join refinements" in
+          Some ([TProb p], wl)
+
         | _ -> None
     in
     let pairwise t1 t2 wl =
@@ -1329,6 +1333,8 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
             then solve_t' env tp probs
             else if probs.defer_ok
             then solve env (defer "deferring subtyping or flex_flex" hd probs)
+            else if rank=flex_flex && tp.relation <> EQ
+            then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
             else if tp.relation <> EQ
             then solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
             else solve_t' env tp probs //flex_flex eq
