@@ -1,5 +1,5 @@
 FSTAR_HOME=../..
-KREMLIN_HOME=$(FSTAR_HOME)/../Kremlin
+KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
 INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
 EXCLUDED_FSTAR_FILES=Launch.fst CanonCommSemiring.fst WeakVsHNF.fst \
 		     Test.Math.Lemmas.fst CanonDeep.fst

@@ -1870,7 +1870,7 @@ and check_top_level_let env e =
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  let _ = Rel.force_trivial_guard env g1 in
-                 let c = lcomp_comp c1 |> N.normalize_comp [N.Beta; N.NoFullNorm] env in
+                 let c = lcomp_comp c1 |> N.normalize_comp [N.Beta; N.NoFullNorm; N.DoNotUnfoldPureLets] env in
                  let e2 = if Util.is_pure_comp c
                           then e2
                           else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
