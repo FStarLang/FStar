@@ -1027,7 +1027,7 @@ let maybe_return_e2_and_bind
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
-let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
+let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (bool -> lcomp))>) : lcomp =
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
@@ -1107,7 +1107,7 @@ let maybe_coerce_bool_to_prop env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         when S.fv_eq_lid fv C.bool_lid
           && (is_prop t || is_type t) ->
       let _ = Env.lookup_lid env C.b2p_lid in  //check that we have Prims.b2p in the context
-      let b2p = fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_defined_at_level 1) None in
+      let b2p = S.fvar (Ident.set_lid_range C.b2p_lid e.pos) (Delta_constant_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (if is_prop t then U.kprop else U.ktype0)) in
       let e = mk_Tm_app b2p [S.as_arg e] None e.pos in
       e, lc
@@ -1219,8 +1219,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let us_r, _ = fst <| Env.lookup_lid env C.as_requires in
                               let us_e, _ = fst <| Env.lookup_lid env C.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) Delta_equational None) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) Delta_equational None) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
@@ -1906,7 +1906,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
         let t = N.normalize [N.Primops;
                              N.Weak;
                              N.HNF;
-                             N.UnfoldUntil Delta_constant;
+                             N.UnfoldUntil delta_constant;
                              N.Beta;
                              N.AllowUnboundUniverses;
                              N.Zeta;

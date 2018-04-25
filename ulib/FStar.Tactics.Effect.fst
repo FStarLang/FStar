@@ -64,6 +64,7 @@ reifiable reflectable new_effect {
 effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
 effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (nor type safety!)
 
+unfold
 let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
     fun ps p -> wp (fun x -> p (Success x ps))
 

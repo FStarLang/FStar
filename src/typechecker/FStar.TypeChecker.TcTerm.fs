@@ -882,7 +882,7 @@ and tc_comp env c : comp                                      (* checked version
       mk_GTotal' t (Some u), u, g
 
     | Comp c ->
-      let head = S.fvar c.effect_name Delta_constant None in
+      let head = S.fvar c.effect_name delta_constant None in
       let head = match c.comp_univs with
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) None c0.pos in
@@ -1741,7 +1741,7 @@ and tc_eqn scrutinee env branch
                     match Env.try_lookup_lid env discriminator with
                         | None -> []  // We don't use the discriminator if we are typechecking it
                         | _ ->
-                            let disc = S.fvar discriminator Delta_equational None in
+                            let disc = S.fvar discriminator delta_equational None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
                             [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
@@ -1780,7 +1780,7 @@ and tc_eqn scrutinee env branch
                             match Env.try_lookup_lid env projector with
                              | None -> []
                              | _ ->
-                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
+                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) delta_equational None) [as_arg scrutinee_tm] None f.p in
                                 build_branch_guard sub_term ei) |> List.flatten in
                          discriminate scrutinee_tm f @ sub_term_guards
                 | _ -> [] //a non-pattern sub-term: must be from a dot pattern
@@ -2294,7 +2294,7 @@ let level_of_type env e t =
         | Tm_type u -> u
         | _ ->
           if retry
-          then let t = Normalize.normalize [N.UnfoldUntil Delta_constant] env t in
+          then let t = Normalize.normalize [N.UnfoldUntil delta_constant] env t in
                aux false t
           else let t_u, u = U.type_u() in
                let env = {env with lax=true} in
@@ -2418,7 +2418,7 @@ let rec universe_of_aux env e =
           t, args
      in
      let t, args = type_of_head true hd args in
-     let t = N.normalize [N.UnfoldUntil Delta_constant] env t in
+     let t = N.normalize [N.UnfoldUntil delta_constant] env t in
      let bs, res = U.arrow_formals_comp t in
      let res = U.comp_result res in
      if List.length bs = List.length args

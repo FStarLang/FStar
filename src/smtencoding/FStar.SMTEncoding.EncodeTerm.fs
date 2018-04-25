@@ -103,7 +103,7 @@ let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it w
 
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]
-             (Syntax.fvar Const.true_lid Delta_constant None)
+             (Syntax.fvar Const.true_lid delta_constant None)
              None
 
 let mk_Apply e vars =

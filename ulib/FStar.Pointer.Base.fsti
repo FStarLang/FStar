@@ -256,7 +256,7 @@ let type_of_typ_array
 let type_of_struct_field
   (l: struct_typ)
 : Tot (struct_field l -> Tot Type0)
-= type_of_struct_field' l type_of_typ
+= type_of_struct_field' l (fun (x:typ{x << l}) -> type_of_typ x)
 
 let type_of_typ_struct
   (l: struct_typ)

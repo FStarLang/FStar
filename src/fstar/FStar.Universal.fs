@@ -282,7 +282,7 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
           let (tcmod, tcmod_iface_opt, env), time =
-            FStar.Util.record_time (fun () -> Tc.check_module env fmod) in
+            FStar.Util.record_time (fun () -> Tc.check_module env fmod (is_some pre_fn)) in
           (tcmod, time), tcmod_iface_opt, env
       in
       let tcmod, tcmod_iface_opt, env =

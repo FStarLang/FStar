@@ -566,7 +566,7 @@ let encode_top_level_let :
               let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
                                         N.Exclude N.Zeta;
-                                        N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm
+                                        N.UnfoldUntil delta_constant; N.EraseUniverses] env.tcenv t_norm
               in
                 aux true t_norm
 
@@ -931,7 +931,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             | _ -> false)) in
         if will_encode_definition
         then [], env //nothing to do at the declaration; wait to encode the definition
-        else let fv = S.lid_as_fv lid Delta_constant None in
+        else let fv = S.lid_as_fv lid delta_constant None in
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
@@ -1313,7 +1313,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
         | Env.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
-            let fv = S.lid_as_fv x Delta_constant None in
+            let fv = S.lid_as_fv x delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
