@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7fdde0d490b156d03b69597d3d3ac220"
+      "f201a0bfba1f522a06f80494e66fe857"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1b5e1d33156a0a47acca6bbbc196b628"
+      "ab9aeed451a7e57e0bdab791184b0be5"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -47,7 +47,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "19a7c0073744e59c34dfbc7513cdb73f"
+      "6082baf9bde4d5ed9d8af5da3c7d7360"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -67,7 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "30b962597ced71c491e14741b4e26ae1"
+      "b081f7e267f57003444af4d3d8d807af"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -98,7 +98,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "e947cd9366d88f14ebd94d31c6daf722"
+      "5adc13096c2037818599a60bc6108637"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -110,7 +110,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c6a63da45004260cb16fc3387155342d"
+      "28ccb7ea6c093763b0189e868659405f"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -137,7 +137,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "e128d433b80e5dfe303c7c463d7dde37"
+      "6e28520822daf2f82f8cf803db8287d0"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -157,7 +157,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "eaa72b4ab17b54e4037a8611d9367b37"
+      "c5c615ee962f2ce2b905d1588f238f44"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -188,7 +188,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "a85d462c41c7c0373a9680d4c36794ee"
+      "3f7e7c527712c2dbce9913d6d701e89a"
     ]
   ]
 ]

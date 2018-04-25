@@ -107,6 +107,7 @@ type fsteps = {
     unmeta : bool;
     unascribe : bool;
     in_full_norm_request: bool;
+    weakly_reduce_scrutinee:bool;
 }
 
 let default_steps : fsteps = {
@@ -133,6 +134,7 @@ let default_steps : fsteps = {
     unmeta = false;
     unascribe = false;
     in_full_norm_request = false;
+    weakly_reduce_scrutinee = true
 }
 
 let fstep_add_one s fs =
@@ -199,10 +201,11 @@ let dummy : option<binder> * closure = None,Dummy
 
 
 type debug_switches = {
-    gen : bool;
-    primop : bool;
-    b380 : bool;
-    norm_delayed : bool;
+    gen              : bool;
+    primop           : bool;
+    b380             : bool;
+    wpe              : bool;
+    norm_delayed     : bool;
     print_normalized : bool;
 }
 
@@ -1147,18 +1150,13 @@ let rec maybe_weakly_reduced tm :  bool =
       | Tm_let _
       | Tm_abs _
       | Tm_arrow _
-      | Tm_refine _ ->
+      | Tm_refine _
+      | Tm_match _ ->
         true
 
       | Tm_app(t, args) ->
         maybe_weakly_reduced t
         || (args |> BU.for_some (fun (a, _) -> maybe_weakly_reduced a))
-
-      | Tm_match(t, pats) ->
-        maybe_weakly_reduced t
-        || (pats |> BU.for_some (fun (_, wopt, t) ->
-                 (match wopt with None -> false | Some t -> maybe_weakly_reduced t)
-                 || maybe_weakly_reduced t))
 
       | Tm_ascribed(t1, asc, _) ->
         maybe_weakly_reduced t1
@@ -1499,6 +1497,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let stack = Match(env, branches, cfg, t.pos)::stack in
             let cfg =
                 if cfg.steps.iota
+                && cfg.steps.weakly_reduce_scrutinee
+                && not cfg.steps.weak
                 then { cfg with steps={cfg.steps with weak=true} }
                 else cfg in
             norm cfg env stack head
@@ -2048,19 +2048,22 @@ and maybe_simplify_aux cfg env stack tm =
         | _, _ -> false
     in
     let is_applied (bs:binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        if cfg.debug.wpe then
+            BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         let hd, args = U.head_and_args' t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
-            (* BU.print3 "GG got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n" *)
-            (*             (Print.term_to_string t) *)
-            (*             (Print.bv_to_string bv) *)
-            (*             (Print.term_to_string hd); *)
+            if cfg.debug.wpe then
+                BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                            (Print.term_to_string t)
+                            (Print.bv_to_string bv)
+                            (Print.term_to_string hd);
             Some bv
         | _ -> None
     in
     let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        if cfg.debug.wpe then
+            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
         | Some (_, t') -> is_applied bs t'
         | _ -> begin match is_auto_squash t with
@@ -2069,24 +2072,34 @@ and maybe_simplify_aux cfg env stack tm =
                end
     in
     // A very F*-specific optimization:
-    //  1)                        (p ==> E[p])     ~>     E[True]
-    //  2)                       (~p ==> E[p])     ~>     E[False]
-    //  3)  (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
-    //  4)  (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
-    let is_quantified_const (phi : term) : option<term> =
+    //  1)  forall p.                       (p ==> E[p])     ~>     E[True]
+    //  2)  forall p.                      (~p ==> E[p])     ~>     E[False]
+    //  3)  forall p. (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
+    //  4)  forall p. (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
+    let is_quantified_const (bv:bv) (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
+            if cfg.debug.wpe then
+                BU.print2 "WPE> p = (%s); q = (%s)\n"
+                        (Print.term_to_string p)
+                        (Print.term_to_string q);
             begin match U.destruct_typ_as_formula p with
             // Case 1)
             | None -> begin match (SS.compress p).n with
-                      | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_true)] q)
+                      | Tm_bvar bv' when S.bv_eq bv bv' ->
+                            if cfg.debug.wpe then
+                                BU.print_string "WPE> Case 1\n";
+                            Some (SS.subst [NT (bv, U.t_true)] q)
                       | _ -> None
                       end
 
             // Case 2)
             | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
                 begin match (SS.compress p).n with
-                | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_false)] q)
+                | Tm_bvar bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 2\n";
+                        Some (SS.subst [NT (bv, U.t_false)] q)
                 | _ -> None
                 end
 
@@ -2095,16 +2108,20 @@ and maybe_simplify_aux cfg env stack tm =
                 | None ->
                     begin match is_applied_maybe_squashed bs phi with
                     // Case 3)
-                    | Some bv ->
+                    | Some bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 3\n";
                         let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
                         Some (SS.subst [NT (bv, ftrue)] q)
-                    | None ->
+                    | _ ->
                         None
                     end
                 | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
                     begin match is_applied_maybe_squashed bs p with
                     // Case 4)
-                    | Some bv ->
+                    | Some bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 4\n";
                         let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
                         Some (SS.subst [NT (bv, ffalse)] q)
                     | _ ->
@@ -2116,6 +2133,14 @@ and maybe_simplify_aux cfg env stack tm =
 
             | _ -> None
             end
+        | _ -> None
+    in
+    let is_forall_const (phi : term) : option<term> =
+        match U.destruct_typ_as_formula phi with
+        | Some (QAll ([(bv, _)], _, phi')) ->
+            if cfg.debug.wpe then
+                BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string bv) (Print.term_to_string phi');
+            is_quantified_const bv phi'
         | _ -> None
     in
     let is_const_match (phi : term) : option<bool> =
@@ -2169,9 +2194,12 @@ and maybe_simplify_aux cfg env stack tm =
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
-    match is_quantified_const tm with
+    match is_forall_const tm with
     (* We need to recurse, and maybe reduce further! *)
-    | Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
+    | Some tm' ->
+        if cfg.debug.wpe then
+            BU.print2 "WPE> %s ~> %s\n" (Print.term_to_string tm) (Print.term_to_string tm');
+        maybe_simplify_aux cfg env stack (norm cfg env [] tm')
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
@@ -2503,8 +2531,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.steps.iota
         && (not cfg.steps.weak)
         && (not cfg.steps.compress_uvars)
+        && cfg.steps.weakly_reduce_scrutinee
         && maybe_weakly_reduced scrutinee
-        then norm cfg scrutinee_env [] scrutinee //scrutinee was only reduced to wnf; reduce it fully
+        then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
+                  scrutinee_env
+                  []
+                  scrutinee //scrutinee was only reduced to wnf; reduce it fully
         else scrutinee
       in
       rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
@@ -2616,6 +2648,7 @@ let config' psteps s e =
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; primop = Env.debug e (Options.Other "Primops")
              ; b380 = Env.debug e (Options.Other "380")
+             ; wpe  = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;

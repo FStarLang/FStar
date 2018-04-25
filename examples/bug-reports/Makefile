@@ -29,7 +29,8 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug836.fst bug844.fst bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
   bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1362.fst \
-  bug1347.fst bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst bug1392.fst bug1414.fst
+  bug1347.fst bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst bug1392.fst bug1414.fst \
+  unfold.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
@@ -65,7 +66,7 @@ SHOULD_NOT_VERIFY_CLOSED=bug035.fst bug043.fst bug044.fst bug063.fst bug120.fst 
   bug319.fst bug320.fst bug362.fst bug379.fst bug406.fst bug446.fst bug612.fst bug623.fst bug655.fst\
   bug769.fst bug769b.fst bug769d.fst bug1017.fst bug1043.fst bug1043b.fst bug1106.fst bug1106b.fst bug174.fst\
   bug193.fst bug208.fst bug208.fst bug378.fst bug696.fst bug1090.fst bug1187.fst bug380_1.fst bug380_2.fst \
-  bug1404.fst bug367.fst
+  bug1404.fst bug367.fst bug1389a.fst bug1389b.fst bug1389c.fst
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.

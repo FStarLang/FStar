@@ -434,7 +434,7 @@ and primitive_steps () : list<N.primitive_step> =
 
       mktac2 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term;
       mktac2 "unify"         unify RE.e_term RE.e_term e_bool;
-      mktac3 "launch_process" launch_process e_string e_string e_string e_string;
+      mktac3 "launch_process" launch_process e_string (e_list e_string) e_string e_string;
 
       mktac2 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv;
       mktac1 "change"          change RE.e_term e_unit;

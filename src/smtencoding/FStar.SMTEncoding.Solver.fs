@@ -33,6 +33,7 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
+module Env = FStar.TypeChecker.Env
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -248,7 +249,8 @@ let detail_hint_replay settings z3result =
          | _failed ->
            let ask_z3 label_assumptions =
                let res = BU.mk_ref None in
-               Z3.ask (filter_assertions settings.query_env settings.query_hint)
+               Z3.ask settings.query_range
+                      (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
@@ -274,7 +276,8 @@ let report_errors settings : unit =
          in
          let ask_z3 label_assumptions =
             let res = BU.mk_ref None in
-            Z3.ask (filter_facts_without_core settings.query_env)
+            Z3.ask  settings.query_range
+                    (filter_facts_without_core settings.query_env)
                     settings.query_hash
                     settings.query_all_labels
                     (with_fuel_and_diagnostics initial_fuel label_assumptions)
@@ -471,7 +474,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let check_one_config config (k:z3result -> unit) : unit =
           if used_hint config || Options.z3_refresh() then Z3.refresh();
-          Z3.ask (filter_assertions config.query_env config.query_hint)
+          Z3.ask config.query_range
+                  (filter_assertions config.query_env config.query_hint)
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])

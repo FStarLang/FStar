@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "9ec2ea54951698fe2134bd75a726b9df"
+      "1e57476ac649a87fdb6880b8f52fafb4"
     ],
     [
       "Ex12a1.Cap.issue",
@@ -18,7 +18,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Ex12a1.Cap.UTF8_inj", "bool_inversion",
+        "assumption_Ex12a1.Cap.UTF8_inj", "bool_inversion", "bool_typing",
         "equation_Ex12.MAC.key_entry", "equation_Ex12.MAC.key_prop",
         "equation_Ex12.MAC.pkey", "equation_Ex12.MAC.pred_to_dec_ghost",
         "equation_Ex12.SHA1.text", "equation_Ex12a.ACLs.canRead",
@@ -28,19 +28,18 @@
         "function_token_typing_Ex12a1.Cap.k",
         "function_token_typing_Platform.Bytes.bytes",
         "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
-        "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
         "refinement_interpretation_Ex12a1.Cap_Tm_refine_47fc00d9af5452fdc3a5434abc5c3970",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
-        "string_inversion", "token_correspondence_Ex12a1.Cap.capRead",
-        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12a.ACLs.canRead",
-        "typing_Ex12a1.Cap.capRead",
+        "string_inversion", "typing_Ex12.MAC.pred_to_dec_ghost",
+        "typing_Ex12a.ACLs.canRead", "typing_Ex12a1.Cap.capRead",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "6b33d8aa12807d2502ffc25708ceffbc"
+      "a3efe435cd47c3921f94879bf240bb4b"
     ],
     [
       "Ex12a1.Cap.redeem",
@@ -54,7 +53,7 @@
         "string_inversion"
       ],
       0,
-      "680aab0b2fd9c67f2d680822fb596f5d"
+      "eecadd17b6f826c98572d7b884db94c6"
     ],
     [
       "Ex12a1.Cap.capRead",
@@ -63,7 +62,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "3dcc7a1c61dee5d7363722b2def87a2c"
+      "64c693d3b17df609beb1cd2a0df3351b"
     ]
   ]
 ]

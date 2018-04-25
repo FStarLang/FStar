@@ -27,10 +27,15 @@ let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (retu
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 val forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Tot (squash (forall (x:a). p x))
-let forall_intro_gtot #a #p $f = return_squash #(forall (x:a). p x) ()
+let forall_intro_gtot #a #p $f = 
+    let id (#a:Type) (x:a) = x in
+    let h : (x:a -> GTot (id (p x))) = fun x -> f x in
+    return_squash #(forall (x:a). id (p x)) ()
 
 val lemma_forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Lemma (forall (x:a). p x)
-let lemma_forall_intro_gtot #a #p $f = forall_intro_gtot #a #p f
+let lemma_forall_intro_gtot #a #p $f = 
+    let aux () : u:unit{forall x. p x} = forall_intro_gtot #a #p f in
+    aux ()
 
 val gtot_to_lemma  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> x:a -> Lemma (p x)
 let gtot_to_lemma #a #p $f x = give_proof #(p x) (return_squash (f x))
@@ -53,7 +58,9 @@ let forall_intro_squash_gtot_join #a #p $f =
 	      (fun f -> lemma_forall_intro_gtot #a #p f))
 
 val forall_intro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
+let forall_intro #a #p $f = 
+    let aux () : (u:unit{forall x. p x}) = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f) in
+    aux ()
 
 val forall_intro'  : #a:Type -> #p:(a -> GTot Type) -> f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro' #a #p f = forall_intro f
@@ -164,5 +171,5 @@ let or_elim
 ////////////////////////////////////////////////////////////////////////////////
 (* the most standard variant of excluded middle is provable by SMT *)
 val excluded_middle : p:Type -> Lemma (requires (True))
-                                       (ensures (p \/ ~p))
+                                     (ensures (p \/ ~p))
 let excluded_middle (p:Type) = ()

@@ -38,8 +38,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-exception ExitREPL of int
-
 (** Checkpoint the current (typechecking and desugaring) environment **)
 let push env msg =
   let res = push_context env msg in
@@ -66,9 +64,9 @@ let set_check_kind env check_kind =
   { env with lax = (check_kind = LaxCheck);
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
-let with_captured_errors' env f =
+let with_captured_errors' env sigint_handler f =
   try
-    f env
+    Util.with_sigint_handler sigint_handler (fun _ -> f env)
   with
   | Failure (msg) ->
     let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
@@ -80,7 +78,10 @@ let with_captured_errors' env f =
     Errors.log_issue (TcEnv.get_range env) (Errors.Error_IDEAssertionFailure, msg);
     None
 
-  | Error(e, msg, r) ->
+  | Util.SigInt ->
+    Util.print_string "Interrupted"; None
+
+  | Error (e, msg, r) ->
     TcErr.add_errors env [(e, msg, r)];
     None
 
@@ -91,9 +92,9 @@ let with_captured_errors' env f =
   | Stop ->
     None
 
-let with_captured_errors env f =
+let with_captured_errors env sigint_handler f =
   if Options.trace_error () then f env
-  else with_captured_errors' env f
+  else with_captured_errors' env sigint_handler f
 
 (*************************)
 (* REPL tasks and states *)
@@ -149,19 +150,20 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
 and repl_stack_t = list<completed_repl_task>
 and completed_repl_task = repl_task * repl_state
 
+let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
 let repl_stack: ref<repl_stack_t> = Util.mk_ref []
 
 let pop_repl st =
   match !repl_stack with
   | [] -> failwith "Too many pops"
   | (_, st') :: stack ->
-    pop st.repl_env "#pop";
+    pop st.repl_env "REPL pop_repl";
     repl_stack := stack;
     st'
 
 let push_repl push_kind task st =
   repl_stack := (task, st) :: !repl_stack;
-  push (set_check_kind st.repl_env push_kind) ""
+  push (set_check_kind st.repl_env push_kind) "REPL push_repl"
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -334,7 +336,7 @@ let deps_and_repl_ld_tasks_of_our_file filename
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format message [our_mod_name; mods_str]));
       [] in
 
   let tasks =
@@ -362,10 +364,19 @@ let run_repl_transaction st push_kind must_rollback task =
   let check_success () =
     get_err_count () = 0 && not must_rollback in
 
+  let sigint_handler =
+    // Ideally we'd want everything to be interruptible, but in practice the
+    // code in Typechecker.Tc does not ensure that each ‘push_context’ in
+    // ‘finish_partial_modul’ is always followed by a corresponding
+    // ‘pop_context’ (that's only true if no exceptions occur).
+    match task with
+    | PushFragment _ -> Util.sigint_raise
+    | _ -> Util.sigint_ignore in
+
   // Run the task (and capture errors)
   let curmod, env, success =
-    match with_captured_errors env
-            (fun env -> Some <| run_repl_task st.repl_curmod env task) with
+    match with_captured_errors env sigint_handler
+              (fun env -> Some <| run_repl_task st.repl_curmod env task) with
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
 
@@ -390,8 +401,11 @@ current file's interface comes last.
 The original value of the ``repl_deps_stack`` field in ``st`` is used to skip
 already completed tasks.
 
-This function is stateful: it uses ``push_repl`` and ``pop_repl``. **)
-let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
+This function is stateful: it uses ``push_repl`` and ``pop_repl``.
+
+`progress_callback` is called once per task, right before the task is run. **)
+let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
+                             (progress_callback: repl_task -> unit) =
   let debug verb task =
     if Options.debug_any () then
       Util.print2 "%s %s" verb (string_of_repl_task task) in
@@ -418,6 +432,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
     // run ``task`` and record the updated dependency stack in ``st``.
     | task :: tasks, [] ->
       debug "Loading" task;
+      progress_callback task;
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
       let push_kind = if Options.lax () then LaxCheck else FullCheck in
@@ -442,7 +457,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
 (* Reading queries and writing responses *)
 (*****************************************)
 
-let json_to_str = function
+let json_debug = function
   | JsonNull -> "null"
   | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
   | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
@@ -560,7 +575,7 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"; "tactic-ranges"]
+   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -571,7 +586,7 @@ let try_assoc key a =
 let wrap_js_failure qid expected got =
   { qid = qid;
     qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
-                            expected (json_to_str got)) }
+                            expected (json_debug got)) }
 
 let unpack_interactive_query json =
   let assoc errloc key a =
@@ -626,17 +641,22 @@ let unpack_interactive_query json =
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
-let read_interactive_query stream : query =
+let deserialize_interactive_query js_query =
   try
-    match Util.read_line stream with
-    | None -> raise (ExitREPL 0)
-    | Some line ->
-      match Util.json_of_string line with
-      | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-      | Some request -> unpack_interactive_query request
+    unpack_interactive_query js_query
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
+
+let parse_interactive_query query_str : query =
+  match Util.json_of_string query_str with
+  | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
+  | Some request -> deserialize_interactive_query request
+
+let read_interactive_query stream : query =
+  match Util.read_line stream with
+  | None -> exit 0
+  | Some line -> parse_interactive_query line
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
@@ -755,26 +775,36 @@ let write_json json =
   Util.print_raw (Util.string_of_json json);
   Util.print_raw "\n"
 
-let write_response qid status response =
+let json_of_response qid status response =
   let qid = JsonStr qid in
   let status = match status with
                | QueryOK -> JsonStr "success"
                | QueryNOK -> JsonStr "failure"
                | QueryViolatesProtocol -> JsonStr "protocol-violation" in
-  write_json (JsonAssoc [("kind", JsonStr "response");
-                         ("query-id", qid);
-                         ("status", status);
-                         ("response", response)])
+  JsonAssoc [("kind", JsonStr "response");
+             ("query-id", qid);
+             ("status", status);
+             ("response", response)]
 
-let write_message level contents =
-  write_json (JsonAssoc [("kind", JsonStr "message");
-                         ("level", JsonStr level);
-                         ("contents", contents)])
+let write_response qid status response =
+  write_json (json_of_response qid status response)
 
-let write_hello () =
+let json_of_message level js_contents =
+  JsonAssoc [("kind", JsonStr "message");
+             ("query-id", json_of_opt JsonStr !repl_current_qid);
+             ("level", JsonStr level);
+             ("contents", js_contents)]
+
+let forward_message callback level contents =
+  callback (json_of_message level contents)
+
+let json_of_hello =
   let js_version = JsonInt interactive_protocol_vernum in
   let js_features = JsonList (List.map JsonStr interactive_protocol_features) in
-  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info))
+  JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info)
+
+let write_hello () =
+  write_json json_of_hello
 
 (*****************)
 (* Options cache *)
@@ -882,7 +912,8 @@ let run_segment (st: repl_state) (code: string) =
     | Parser.Driver.Modul (Parser.AST.Module (_, decls))
     | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
 
-  match with_captured_errors st.repl_env (fun _ -> Some <| collect_decls ()) with
+  match with_captured_errors st.repl_env Util.sigint_ignore
+            (fun _ -> Some <| collect_decls ()) with
     | None ->
       let errors = collect_errors () |> List.map json_of_issue in
       ((QueryNOK, JsonList errors), Inl st)
@@ -905,19 +936,31 @@ let run_pop st =
     let st' = pop_repl st in
     ((QueryOK, JsonNull), Inl st')
 
+let write_progress stage contents_alist =
+  let stage = match stage with Some s -> JsonStr s | None -> JsonNull in
+  let js_contents = ("stage", stage) :: contents_alist in
+  write_json (json_of_message "progress" (JsonAssoc js_contents))
+
+let write_repl_ld_task_progress task =
+  match task with
+  | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
+    let modname = Parser.Dep.module_name_of_file tf.tf_fname in
+    write_progress (Some "loading-dependency") [("modname", JsonStr modname)]
+  | PushFragment frag -> ()
+
 (** Compute and load all dependencies of `filename`.
 
 Return an new REPL state wrapped in ``Inr`` in case of failure, and a new REPL
 plus with a list of completed tasks wrapped in ``Inl`` in case of success. **)
 let load_deps st =
-  match with_captured_errors st.repl_env
+  match with_captured_errors st.repl_env Util.sigint_ignore
           (fun _env -> Some <| deps_and_repl_ld_tasks_of_our_file st.repl_fname) with
   | None -> Inr st
   | Some (deps, tasks, dep_graph) ->
     let st = {st with repl_env=FStar.TypeChecker.Env.set_dep_graph st.repl_env dep_graph} in
-    match run_repl_ld_transactions st tasks with
-    | Inr st -> Inr st
-    | Inl st -> Inl (st, deps)
+    match run_repl_ld_transactions st tasks write_repl_ld_task_progress with
+    | Inr st -> write_progress None []; Inr st
+    | Inl st -> write_progress None []; Inl (st, deps)
 
 let rephrase_dependency_error issue =
   { issue with issue_message =
@@ -1145,10 +1188,13 @@ let run_autocomplete st search_term context =
 //        (k ^ ": " ^ (sigelt_to_string v)) :: acc) []
 //   |> Util.concat_l "\n"
 
-let run_and_rewind st task =
-  let env' = push st.repl_env "#compute" in
-  let results = try Inl <| task st with e -> Inr e in
-  pop env' "#compute";
+let run_and_rewind st sigint_default task =
+  let env' = push st.repl_env "REPL run_and_rewind" in
+  let results =
+    try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
+    with | Util.SigInt -> Inl sigint_default
+         | e -> Inr e in
+  pop env' "REPL run_and_rewind";
   match results with
   | Inl results -> (results, Inl ({ st with repl_env = env' }))
   | Inr e -> raise e
@@ -1176,7 +1222,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
-  run_and_rewind st (fun st ->
+  run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->
     let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
     match st.repl_curmod with
@@ -1198,9 +1244,9 @@ let run_with_parsed_and_tc_term st term line column continuation =
           aux ()
         else
           try aux ()
-          with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                 | None -> raise e)))
+          with | e -> (match FStar.Errors.issue_of_exn e with
+                      | Some issue -> (QueryNOK, JsonStr (FStar.Errors.format_issue issue))
+                      | None -> raise e))
 
 let run_compute st term rules =
   let rules =
@@ -1322,7 +1368,7 @@ let run_search st search_str =
   (results, Inl st)
 
 let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
-  match q with // First handle queries that support both partial and full states…
+  match q with
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
@@ -1346,19 +1392,47 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-let rec go st : int =
-  let rec loop st : int =
-    let query = validate_query st (read_interactive_query st.repl_stdin) in
-    let (status, response), state_opt = run_query st query.qq in
-    write_response query.qid status response;
-    match state_opt with
-    | Inl st' -> loop st'
-    | Inr exitcode -> raise (ExitREPL exitcode) in
+let validate_and_run_query st query =
+  let query = validate_query st query in
+  repl_current_qid := Some query.qid;
+  run_query st query.qq
 
-  if Options.trace_error () then
-    loop st
-  else
-    try loop st with ExitREPL n -> n
+(** This is the body of the JavaScript port's main loop. **)
+let js_repl_eval st query =
+  let (status, response), st_opt = validate_and_run_query st query in
+  let js_response = json_of_response query.qid status response in
+  js_response, st_opt
+
+let js_repl_eval_js st query_js =
+  js_repl_eval st (deserialize_interactive_query query_js)
+
+let js_repl_eval_str st query_str =
+  let js_response, st_opt =
+    js_repl_eval st (parse_interactive_query query_str) in
+  (Util.string_of_json js_response), st_opt
+
+(** This too is called from FStar.js **)
+let js_repl_init_opts () =
+  let res, fnames = Options.parse_cmd_line () in
+  match res with
+  | Getopt.Error msg -> failwith ("repl_init: " ^ msg)
+  | Getopt.Help -> failwith "repl_init: --help unexpected"
+  | Getopt.Success ->
+    match fnames with
+    | [] ->
+      failwith "repl_init: No file name given in --ide invocation"
+    | h :: _ :: _ ->
+      failwith "repl_init: Too many file names given in --ide invocation"
+    | _ -> ()
+
+(** This is the main loop for the desktop version **)
+let rec go st : int =
+  let query = read_interactive_query st.repl_stdin in
+  let (status, response), state_opt = validate_and_run_query st query in
+  write_response query.qid status response;
+  match state_opt with
+  | Inl st' -> go st'
+  | Inr exitcode -> exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
@@ -1371,26 +1445,31 @@ let interactive_error_handler = // No printing here — collect everything for f
     eh_report = report;
     eh_clear = clear }
 
-let interactive_printer =
-  { printer_prinfo = (fun s -> write_message "info" (JsonStr s));
-    printer_prwarning = (fun s -> write_message "warning" (JsonStr s));
-    printer_prerror = (fun s -> write_message "error" (JsonStr s));
-    printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
+let interactive_printer printer =
+  { printer_prinfo = (fun s -> forward_message printer "info" (JsonStr s));
+    printer_prwarning = (fun s -> forward_message printer "warning" (JsonStr s));
+    printer_prerror = (fun s -> forward_message printer "error" (JsonStr s));
+    printer_prgeneric = (fun label get_string get_json ->
+                         forward_message printer label (get_json ())) }
+
+let install_ide_mode_hooks printer =
+  FStar.Util.set_printer (interactive_printer printer);
+  FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
-let interactive_mode' (filename: string): unit =
-  write_hello ();
-
+let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-  let init_st =
-    { repl_line = 1; repl_column = 0; repl_fname = filename;
-      repl_curmod = None; repl_env = env; repl_deps_stack = [];
-      repl_stdin = open_stdin ();
-      repl_names = CompletionTable.empty } in
+  { repl_line = 1; repl_column = 0; repl_fname = filename;
+    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+    repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty }
+
+let interactive_mode' init_st =
+  write_hello ();
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
@@ -1400,18 +1479,21 @@ let interactive_mode' (filename: string): unit =
   exit exit_code
 
 let interactive_mode (filename:string): unit =
-  FStar.Util.set_printer interactive_printer;
+  install_ide_mode_hooks write_json;
+
+  // Ignore unexpected interrupts (some methods override this handler)
+  Util.set_sigint_handler Util.sigint_ignore;
 
   if Option.isSome (Options.codegen ()) then
     Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
+  let init = build_initial_repl_state filename in
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces
-    interactive_mode' filename
+    interactive_mode' init
   else
     try
-      FStar.Errors.set_handler interactive_error_handler;
-      interactive_mode' filename
+      interactive_mode' init
     with
     | e -> (// Revert to default handler since we won't have an opportunity to
            // print errors ourselves.

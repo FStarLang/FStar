@@ -3030,13 +3030,14 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 then begin
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options Options.Set "--no_tactics";
-                        env.solver.preprocess env vc
+                        let vcs = env.solver.preprocess env vc in
+                        vcs |> List.map (fun (env, goal, opts) ->
+                        env, N.normalize [N.Simplify; N.Primops] env goal, opts)
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
             vcs |> List.iter (fun (env, goal, opts) ->
-                    let goal = N.normalize [N.Simplify; N.Primops] env goal in
                     match check_trivial goal with
                     | Trivial ->
                         if debug
@@ -3089,10 +3090,10 @@ let resolve_implicits' must_total forcelax g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let g = 
-                 try 
+               let g =
+                 try
                    env.check_type_of must_total env tm k
-                 with | e ->
+                 with e when Errors.handleable e ->
                     Errors.add_errors [Error_BadImplicit,
                                        BU.format2 "Failed while checking implicit %s set to %s"
                                                (Print.uvar_to_string u)

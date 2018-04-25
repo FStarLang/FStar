@@ -826,9 +826,9 @@ let rec arrow_formals_comp k =
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            if is_tot_or_gtot_comp c
+            if is_total_comp c
             then let bs', k = arrow_formals_comp (comp_result c) in
-                bs@bs', k
+                 bs@bs', k
             else bs, c
         | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
@@ -1011,6 +1011,7 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
+let fail_attr = fvar_const PC.fail_attr
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -1832,4 +1833,3 @@ and unbound_variables_comp c =
     | Comp ct ->
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
-

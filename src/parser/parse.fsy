@@ -2744,7 +2744,7 @@ warn_error:
 flag:
   OPINFIX1
     {let op = $1 in
-    ( if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op))}
+    ( if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op))}
 | OPINFIX2
     {let op = $1 in
     ( if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op))}
