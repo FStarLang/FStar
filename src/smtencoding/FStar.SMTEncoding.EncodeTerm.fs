@@ -496,6 +496,16 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
     let env = {env with encoding_quantifier=true} in
     let tm, decls = encode_term t env in
     let vars = Term.free_variables tm in
+    let tm =
+        match tm.tm with
+        | App(_, [{tm=FreeV _}; {tm=FreeV _}]) ->
+          Term.mk_id_wrapper tm
+          //DO not encode (forall x. p x) as l_forall x p
+          //since its interpretation will match all quantifiers in the context
+          //Instead, generate (id_wrapper (l_forall x p)) and trigger on it
+        | _ ->
+          tm
+    in
     let valid_tm = mk_Valid tm in
     let key = mkForall([], vars, valid_tm) in
     let tkey_hash = hash_of_term key in
@@ -504,22 +514,14 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
       tm, decls
 
     | _ ->
-      match tm.tm with
-      | App(_, [{tm=FreeV _}; {tm=FreeV _}]) ->
-        FStar.Errors.log_issue t.pos
-                              (Errors.Warning_QuantifierWithoutPattern,
-                               "Not encoding deeply embedded, unguarded quantifier to SMT");
-        tm, decls
-
-      | _ ->
-        let phi, decls' = encode_formula t env in
-        let interp =
+      let phi, decls' = encode_formula t env in
+      let interp =
                 match vars with
                 | [] -> mkIff(mk_Valid tm, phi)
                 | _ -> mkForall([[valid_tm]], vars, mkIff(mk_Valid tm, phi))
-        in
-        let ax = mkAssume(interp,
-                                Some "Interpretation of deeply embedded quantifier",
+      in
+      let ax = mkAssume(interp,
+                        Some "Interpretation of deeply embedded quantifier",
                                 varops.mk_unique "l_quant_interp") in
         BU.smap_add env.cache tkey_hash (mk_cache_entry env "" [] [ax]);
         tm, decls@decls'@[ax]

@@ -234,6 +234,7 @@ val n_fuel: int -> term
 
 val mk_haseq: term -> term
 val kick_partial_app: term -> term
+val mk_id_wrapper:term -> term
 
 val op_to_string: op -> string
 val print_smt_term: term -> string

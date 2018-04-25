@@ -730,8 +730,10 @@ and mkPrelude z3options =
                 (declare-fun __uu__PartialApp () Term)\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n\
-                (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))"
-   in
+                (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n\
+                (declare-fun __id_wrapper (Term) Term)\n\
+                (assert (forall ((x Term)) (! (= (__id_wrapper x) x) :pattern ((__id_wrapper x)))))\n"
+in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
@@ -862,6 +864,7 @@ let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
+let mk_id_wrapper t = mkApp("__id_wrapper", [t]) t.rng
 let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
 let mk_Precedes x1 x2 r = mkApp("Precedes", [x1;x2])  r|> mk_Valid
 let mk_LexCons x1 x2 r  = mkApp("LexCons", [x1;x2]) r
