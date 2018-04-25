@@ -107,25 +107,27 @@ let start_process (id:string) (prog:string) (args: list<string>) (cond:string ->
     startInfo.Arguments <- quote_args args;
     startInfo.UseShellExecute <- false;
     startInfo.RedirectStandardOutput <- true;
+    startInfo.RedirectStandardError <- true;
     startInfo.RedirectStandardInput <- true;
     proc.EnableRaisingEvents <- true;
-    proc.OutputDataReceived.AddHandler(
-            DataReceivedEventHandler(
-                fun _ args ->
-                    if !killed then ()
-                    else
-                        ignore <| driverOutput.Append(args.Data);
-                        ignore <| driverOutput.Append("\n");
-                        if null = args.Data
-                            then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-                        if null = args.Data || cond args.Data
-                        then
-                            System.Threading.Monitor.Enter(signal);
-                            ignore (proc_wrapper.outbuf.Clear());
-                            ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
-                            ignore (driverOutput.Clear());
-                            System.Threading.Monitor.Pulse(signal);
-                            System.Threading.Monitor.Exit(signal)));
+    let handler _ (args:DataReceivedEventArgs) =
+        if !killed then ()
+        else
+            ignore <| driverOutput.Append(args.Data);
+            ignore <| driverOutput.Append("\n");
+            if null = args.Data
+                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+            if null = args.Data || cond args.Data
+            then
+                System.Threading.Monitor.Enter(signal);
+                ignore (proc_wrapper.outbuf.Clear());
+                ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
+                ignore (driverOutput.Clear());
+                System.Threading.Monitor.Pulse(signal);
+                System.Threading.Monitor.Exit(signal);
+    in
+    proc.OutputDataReceived.AddHandler(DataReceivedEventHandler handler);
+    proc.ErrorDataReceived.AddHandler(DataReceivedEventHandler handler);
     proc.Exited.AddHandler(
             EventHandler(fun _ _ ->
             if !killed then ()
@@ -139,6 +141,7 @@ let start_process (id:string) (prog:string) (args: list<string>) (cond:string ->
     proc.StartInfo <- startInfo;
     proc.Start() |> ignore;
     proc.BeginOutputReadLine();
+    proc.BeginErrorReadLine();
     all_procs := proc_wrapper::!all_procs;
 //        Printf.printf "Started process %s\n" (proc.id);
     proc_wrapper
@@ -184,7 +187,7 @@ let run_process (id: string) (prog: string) (args: list<string>) (stdin: option<
   (match stdin with Some s -> proc.StandardInput.Write(s) | None -> ());
   let stdout = proc.StandardOutput.ReadToEnd() in
   let stderr = proc.StandardError.ReadToEnd() in
-  stdout
+  stdout ^ stderr
 
 let get_file_extension (fn: string) :string = (Path.GetExtension fn).[1..]
 let is_path_absolute p = System.IO.Path.IsPathRooted(p)
