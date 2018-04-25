@@ -44,7 +44,7 @@ let parse_mod mod_name dsenv =
 let add_mods mod_names dsenv env =
   List.fold_left (fun (dsenv,env) mod_name ->
       let dsenv, string_mod = parse_mod mod_name dsenv in
-      let _mod, _, env = Tc.check_module env string_mod in
+      let _mod, _, env = Tc.check_module env string_mod false in
       (dsenv, env)
   ) (dsenv,env) mod_names
 
@@ -61,7 +61,7 @@ let init_once () : unit =
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in
-  let _prims_mod, _, env = Tc.check_module env prims_mod in
+  let _prims_mod, _, env = Tc.check_module env prims_mod false in
 // only needed by normalization test #24, probably quite expensive otherwise
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
 

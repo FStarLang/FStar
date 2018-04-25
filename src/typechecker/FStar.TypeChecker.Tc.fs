@@ -1923,16 +1923,22 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, exports, env
 
-let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
+let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * option<modul> * env) =
   let msg = "Internals for " ^ m.name.str in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
-  finish_partial_modul false env modul non_private_decls
+  finish_partial_modul false iface_exists env modul non_private_decls
 
-and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
+and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
-  if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
+  let should_extract_interface =
+    (not loading_from_cache)            &&
+    (not iface_exists)                  &&
+    Options.use_extracted_interfaces () &&
+    (not m.is_interface)
+  in
+  if should_extract_interface then begin //if we are using extracted interfaces and this is not already an interface
     //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
     let modul_iface = extract_interface en m in
     if Env.debug en <| Options.Low then
@@ -1955,7 +1961,8 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
       else en0
     in
 
-    let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
+    //AR: the third flag 'true' is for iface_exists for the current file, since it's an iface already, pass true
+    let modul_iface, must_be_none, env = tc_modul en0 modul_iface true in
     if must_be_none <> None then failwith "Impossible! finish_partial_module: expected the second component to be None"
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
@@ -1999,15 +2006,16 @@ let load_checked_module (en:env) (m:modul) :env =
              m.declarations in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  let _, _, env = finish_partial_modul true env m m.exports in
+  //the second true flag is for iface_exists, used to determine whether should extract interface or not
+  let _, _, env = finish_partial_modul true true env m m.exports in
   env
 
-let check_module env m =
+let check_module env m b =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
 
   let env = {env with lax=not (Options.should_verify m.name.str)} in
-  let m, m_iface_opt, env = tc_modul env m in
+  let m, m_iface_opt, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module m.name.str
