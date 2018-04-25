@@ -908,8 +908,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         in
 
         match r with
-            //| MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when i <> j ->
-            //  reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 1 || j > 1) && i <> j ->
+              reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
 
             | MisMatch(Some (Delta_equational_at_level _), _)
             | MisMatch(_, Some (Delta_equational_at_level _)) ->
@@ -932,10 +932,11 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
             | _ -> success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
-        BU.print3 "head_matches (%s, %s) = %s\n"
+        BU.print4 "head_matches (%s, %s) = %s (%s)\n"
             (Print.term_to_string t1)
             (Print.term_to_string t2)
-            (string_of_match_result (fst r));
+            (string_of_match_result (fst r))
+            (if snd r = None then "None" else snd r |> must |> (fun (t1, t2) -> Print.term_to_string t1 ^ "; " ^ Print.term_to_string t2));
     r
 
 type tc =
@@ -1732,7 +1733,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
             | (_, None) -> //head1 matches head1, without delta
                 if debug env <| Options.Other "Rel"
-                then BU.print4 "Head matches: %s (%s) and %s (%s)\n"
+                then BU.print4 "Head matches after call to head_matches_delta: %s (%s) and %s (%s)\n"
                     (Print.term_to_string t1) (Print.tag_of_term t1)
                     (Print.term_to_string t2) (Print.tag_of_term t2);
                 let head1, args1 = U.head_and_args t1 in
@@ -1767,6 +1768,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                 | UDeferred wl -> solve env (defer "universe constraints" orig wl)
                                 | USolved wl ->
                                     let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
+                                    if debug env <| Options.Other "Rel" then
+                                    BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
                                     let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
                                     let wl = solve_prob orig (Some formula) [] wl in
                                     solve env (attempt subprobs wl)
@@ -2308,8 +2311,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let _ =
         if debug env (Options.Other "RelCheck")
         then BU.print3 "Attempting %s (%s - %s)\n" (string_of_int problem.pid)
-                            (Print.tag_of_term t1)
-                            (Print.tag_of_term t2)
+                            (Print.term_to_string t1)
+                            (Print.term_to_string t2)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with

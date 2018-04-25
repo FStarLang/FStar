@@ -75,7 +75,7 @@ let mk_by_tactic tac f =
     S.mk_Tm_app t_by_tactic [S.iarg t_unit; S.as_arg tac; S.as_arg f] None Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
-    | Delta_equational_at_level i, Delta_equational_at_level j 
+    | Delta_equational_at_level i, Delta_equational_at_level j -> i > 1 && i > j
     | Delta_constant_at_level i, Delta_constant_at_level j     -> i > j
     | Delta_equational_at_level _, _                           -> true
     | _, Delta_equational_at_level _                           -> false
