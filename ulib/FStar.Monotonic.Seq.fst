@@ -102,7 +102,7 @@ let i_at_least_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (n:nat) (x:a) (m:
   : Lemma (ensures stable_on_t m (i_at_least n x m))
   = ()
 
-let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:mem) : Type0 =
+let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:mem) : prop =
   x < Seq.length (HS.sel h is)
 
 let int_at_most_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (is:i_seq r a p) (k:int)
@@ -113,17 +113,17 @@ let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
   : GTot (s:seq a{p s})
   = HS.sel h m
 
-let i_read (#a:Type) (#p:Seq.seq a -> Type) (#r:rid) (m:i_seq r a p)
+let i_read (#a:Type) (#p:Seq.seq a -> prop) (#r:rid) (m:i_seq r a p)
   : ST (s:seq a{p s})
        (requires (fun h -> True))
        (ensures (fun h0 x h1 -> h0==h1 /\ x == i_sel h0 m))
   = !m
 
 let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
-  : GTot Type0
+  : GTot prop
   = HS.contains h m
 
-let i_write_at_end (#a:Type) (#p:seq a -> Type) (#rgn:rid) (r:i_seq rgn a p) (x:a)
+let i_write_at_end (#a:Type) (#p:seq a -> prop) (#rgn:rid) (r:i_seq rgn a p) (x:a)
   : ST unit
        (requires (fun h -> p (Seq.snoc (i_sel h r) x)))
        (ensures (fun h0 _ h1 ->
@@ -167,7 +167,7 @@ let itest r a k =
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   mr_witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
-private let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
+private let test_alloc (#a:Type0) (p:seq a -> prop) (r:rid) (init:seq a{p init})
                : ST unit (requires (fun _ -> HST.witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
   let is = alloc_mref_iseq p r init in
   let h = get () in
@@ -352,7 +352,7 @@ type log_t (i:rid) (a:Type) = m_rref i (seq a) grows
 let increases (x:int) (y:int) = b2p (x <= y)
 
 let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
-    : mem -> GTot Type0
+    : mem -> GTot prop
     = fun h -> x <= Seq.length (HS.sel h log)
 
 //Note: we may want int seqn, instead of nat seqn

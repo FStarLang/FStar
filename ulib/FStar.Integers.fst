@@ -52,7 +52,7 @@ let int_t (s:signedness) (w:width) : Tot Type0 =
   | Signed, W128 -> FStar.Int128.t
 
 abstract
-let nat_size (x:int) : Type =
+let nat_size (x:int) : prop =
   x >= 0
 let reveal_nat_size x
   : Lemma (nat_size x <==> x >= 0)
@@ -60,7 +60,7 @@ let reveal_nat_size x
   = ()
 
 abstract
-let uint_size (x:int) (n:nat) : Type =
+let uint_size (x:int) (n:nat) : prop =
     FStar.UInt.size x n
 let reveal_uint_size x n
   : Lemma (uint_size x n <==> FStar.UInt.size x n)
@@ -68,14 +68,14 @@ let reveal_uint_size x n
   = ()
 
 abstract
-let int_size (x:int) (n:pos) : Type =
+let int_size (x:int) (n:pos) : prop =
     FStar.Int.size x n
 let reveal_int_size x n
   : Lemma (int_size x n <==> FStar.Int.size x n)
           [SMTPat (int_size x n)]
   = ()
 
-let within_bounds (s:signedness) (w:width) (x:int) =
+let within_bounds (s:signedness) (w:width) (x:int) : prop =
   match s, nat_of_width w with
   | Signed,   None   -> True
   | Unsigned, None   -> nat_size x

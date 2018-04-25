@@ -2,7 +2,7 @@ module FStar.Seq.Sorted
 
 open FStar.Seq
 
-type sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a) : Type0 =
+type sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a) : prop =
   forall (i j: (k:nat{k<length s})). i <= j ==> f (index s i) (index s j)
 
 val sorted_pred_tail :

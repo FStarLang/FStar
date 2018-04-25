@@ -97,13 +97,13 @@ type exp : Type =
 
 type decls = list sigelt
 
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+let rec forall_list (p:'a -> prop) (l:list 'a) : prop =
     match l with
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
-val smaller : term_view -> term -> Type0
+val smaller : term_view -> term -> prop
 let smaller tv t =
     match tv with
     | Tv_App l r ->
@@ -136,7 +136,7 @@ let smaller tv t =
     | Tv_Uvar _ _
     | Tv_FVar _ -> True
 
-val smaller_comp : comp_view -> comp -> Type0
+val smaller_comp : comp_view -> comp -> prop
 let smaller_comp cv c =
     match cv with
     | C_Total t md ->
@@ -146,10 +146,10 @@ let smaller_comp cv c =
     | C_Unknown ->
         True
 
-val smaller_bv : bv_view -> bv -> Type0
+val smaller_bv : bv_view -> bv -> prop
 let smaller_bv bvv bv =
     bvv.bv_sort << bv
 
-val smaller_binder : binder -> (bv * aqualv) -> Type0
+val smaller_binder : binder -> (bv * aqualv) -> prop
 let smaller_binder b (bv, _) =
     bv << b

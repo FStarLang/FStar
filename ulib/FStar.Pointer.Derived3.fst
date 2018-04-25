@@ -9,7 +9,7 @@ let fill_buffer_precond'
   (#t: typ)
   (b: buffer t) (* destination *)
   (h: HS.mem)
-: GTot Type0
+: GTot prop
 = buffer_live h b
 
 private
@@ -19,7 +19,7 @@ let fill_buffer_postcond'
   (v: type_of_typ t)
   (h: HS.mem)
   (h' : HS.mem)
-: GTot Type0
+: GTot prop
 = fill_buffer_precond' b h /\
   modifies (loc_buffer b) h h' /\
   buffer_readable h' b /\
@@ -33,7 +33,7 @@ let fill_buffer_inv
   (v: type_of_typ t)
   (h: HS.mem)
   (h' : HS.mem)
-: GTot Type0
+: GTot prop
 = fill_buffer_precond' b h /\
   modifies (loc_buffer b) h h' /\
   UInt32.v len' <= UInt32.v (buffer_length b) /\

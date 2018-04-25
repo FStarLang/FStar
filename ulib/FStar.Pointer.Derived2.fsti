@@ -14,7 +14,7 @@ let copy_buffer_contents_precond
   (idx_b: UInt32.t)
   (len: UInt32.t)
   (h: HS.mem)
-: GTot Type0
+: GTot prop
 = UInt32.v idx_a + UInt32.v len <= UInt32.v (buffer_length a) /\
   UInt32.v idx_b + UInt32.v len <= UInt32.v (buffer_length b) /\
   buffer_live h (gsub_buffer b idx_b len) /\
@@ -30,7 +30,7 @@ let copy_buffer_contents_postcond
   (len: UInt32.t)
   (h: HS.mem)
   (h' : HS.mem)
-: GTot Type0
+: GTot prop
 = copy_buffer_contents_precond a idx_a b idx_b len h /\
   modifies (loc_buffer (gsub_buffer b idx_b len)) h h' /\
   buffer_readable h' (gsub_buffer b idx_b len) /\

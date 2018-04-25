@@ -8,7 +8,7 @@ type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2
 let st2_Pre = st_pre_h heap2
-let st2_Post' (a:Type) (pre:Type) = st_post_h' heap2 a pre
+let st2_Post' (a:Type) (pre:prop) = st_post_h' heap2 a pre
 let st2_Post  (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a
 effect ST2 (a:Type) (pre:st2_Pre) (post: (h:heap2 -> Tot (st2_Post' a (pre h)))) =
@@ -51,10 +51,10 @@ let compose2_self #a #b #wp f x = compose2 #a #b #wp #a #b #wp f f x
    the left side of C is equivalent to the left side of A and
    the right side of C is equivalent to the right side of B *)
 assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
-                -> #p:(heap2 -> Type)
-                -> #p':(heap2 -> Type)
-                -> #q:(heap2 -> rel a b -> heap2 -> Type)
-                -> #q':(heap2 -> rel c d -> heap2 -> Type)
+                -> #p:(heap2 -> prop)
+                -> #p':(heap2 -> prop)
+                -> #q:(heap2 -> rel a b -> heap2 -> prop)
+                -> #q':(heap2 -> rel c d -> heap2 -> prop)
                 -> $c1:(double unit -> ST2 (rel a b)
                                            (requires (fun h -> p h))
                                            (ensures (fun h1 r h2 -> q h1 r h2)))
@@ -97,5 +97,3 @@ assume val project_r : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> $c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x))
                     -> x:a1
                     -> STATE b1 (decomp_r a0 a1 b0 b1 x wp)
-
-

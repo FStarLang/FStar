@@ -75,7 +75,7 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
 (* Marking terms for normalization *)
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:prop) :prop = a
+abstract let normalize (a:prop) : prop = a
 
 abstract
 noeq type norm_step =

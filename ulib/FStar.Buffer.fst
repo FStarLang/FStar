@@ -886,7 +886,7 @@ let rcreate #a r init len = rcreate_common r init len false
     consume it should be `rfree.` Rationale: a buffer can be `rfree`d
     only if it is the result of `rcreate_mm`. Subbuffers should not. *)
 abstract
-let freeable (#a: Type) (b: buffer a) : GTot Type0 =
+let freeable (#a: Type) (b: buffer a) : GTot prop =
   is_mm b.content /\ is_eternal_region (frameOf b) /\ idx b == 0
 
 (** This function allocates a buffer into a manually-managed buffer in a heap

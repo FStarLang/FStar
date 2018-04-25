@@ -34,11 +34,11 @@ let buffer
 = P.buffer t
 
 unfold
-let live (#a: typ) (h: HS.mem) (b: buffer a) : GTot Type0 = 
+let live (#a: typ) (h: HS.mem) (b: buffer a) : GTot prop = 
   P.buffer_readable h b
 
 unfold
-let unused_in (#a: typ) (b: buffer a) (h: HS.mem) : GTot Type0 =
+let unused_in (#a: typ) (b: buffer a) (h: HS.mem) : GTot prop =
   P.buffer_unused_in b h
 
 unfold
@@ -58,14 +58,14 @@ let as_seq (#a: typ) (h: HS.mem) (b: buffer a) : GTot (s: Seq.seq (P.type_of_typ
   P.buffer_as_seq h b
 
 unfold
-let equal (#a: typ) (h: HS.mem) (b: buffer a) (h' : HS.mem) (b' : buffer a) : GTot Type0 =
+let equal (#a: typ) (h: HS.mem) (b: buffer a) (h' : HS.mem) (b' : buffer a) : GTot prop =
   as_seq h b == as_seq h' b'
 
 unfold
 let includes
   (#a: typ)
   (x y: buffer a)
-: GTot Type0
+: GTot prop
 = P.buffer_includes x y
 
 let includes_live
@@ -90,7 +90,7 @@ let includes_trans #a (x y z: buffer a)
 = P.buffer_includes_trans x y z
 
 unfold
-let disjoint (#a #a' : typ) (x: buffer a) (y: buffer a') : GTot Type0 =
+let disjoint (#a #a' : typ) (x: buffer a) (y: buffer a') : GTot prop =
   P.loc_disjoint (P.loc_buffer x) (P.loc_buffer y)
 
 (* Disjointness is symmetric *)
@@ -142,11 +142,11 @@ let create #a init len =
   let content = P.screate (P.TArray len a) (Some (Seq.create (UInt32.v len) init)) in
   P.buffer_of_array_pointer content
 
-unfold let p (#a:typ) (init:list (P.type_of_typ a)) : GTot Type0 =
+unfold let p (#a:typ) (init:list (P.type_of_typ a)) : GTot prop =
   normalize (0 < FStar.List.Tot.length init) /\
   normalize (FStar.List.Tot.length init < UInt.max_int 32)
 
-unfold let q (#a:typ) (len:nat) (buf:buffer a) : GTot Type0 =
+unfold let q (#a:typ) (len:nat) (buf:buffer a) : GTot prop =
   normalize (length buf == len)
 
 val createL

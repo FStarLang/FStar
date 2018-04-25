@@ -10,7 +10,7 @@ let copy_buffer_contents_precond'
   (a: buffer t) (* source *)
   (b: buffer t) (* destination *)
   (h: HS.mem)
-: GTot Type0
+: GTot prop
 = buffer_live h b /\
   buffer_readable h a /\
   buffer_length b == buffer_length a /\
@@ -23,7 +23,7 @@ let copy_buffer_contents_postcond'
   (b: buffer t) (* destination *)
   (h: HS.mem)
   (h' : HS.mem)
-: GTot Type0
+: GTot prop
 = copy_buffer_contents_precond' a b h /\
   modifies (loc_buffer b) h h' /\
   buffer_readable h' b /\
@@ -37,7 +37,7 @@ let copy_buffer_contents_inv
   (len' : UInt32.t)
   (h: HS.mem)
   (h' : HS.mem)
-: GTot Type0
+: GTot prop
 = copy_buffer_contents_precond' a b h /\
   modifies (loc_buffer b) h h' /\
   UInt32.v len' <= UInt32.v (buffer_length a) /\
