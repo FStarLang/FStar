@@ -222,7 +222,8 @@ let rec (delta_depth_greater_than :
     fun m  ->
       match (l, m) with
       | (FStar_Syntax_Syntax.Delta_equational_at_level
-         i,FStar_Syntax_Syntax.Delta_equational_at_level j) -> i > j
+         i,FStar_Syntax_Syntax.Delta_equational_at_level j) ->
+          (i > (Prims.parse_int "1")) && (i > j)
       | (FStar_Syntax_Syntax.Delta_constant_at_level
          i,FStar_Syntax_Syntax.Delta_constant_at_level j) -> i > j
       | (FStar_Syntax_Syntax.Delta_equational_at_level uu____708,uu____709)
