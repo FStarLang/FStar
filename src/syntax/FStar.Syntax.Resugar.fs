@@ -702,7 +702,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 | _ -> failwith "mutable_alloc should have let term with no qualifier"
               end
           | Mutable_rval ->
-              let fv = S.lid_as_fv C.sread_lid Delta_constant None in
+              let fv = S.lid_as_fv C.sread_lid delta_constant None in
               begin match (SS.compress e).n with
                 | Tm_app({n=Tm_fvar fv}, [(term, _)])-> resugar_term' env term
                 | _ -> failwith "mutable_rval should have app term"

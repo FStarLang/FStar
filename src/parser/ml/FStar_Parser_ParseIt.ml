@@ -52,7 +52,7 @@ let read_physical_file (filename: string) =
   (* BatFile.with_file_in uses Unix.openfile (which isn't available in
      js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
   try
-    let channel = open_in filename in
+    let channel = open_in_bin filename in
     BatPervasives.finally
       (fun () -> close_in channel)
       (fun channel -> really_input_string channel (in_channel_length channel))
@@ -143,7 +143,7 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r) ->
       ParseError (e, msg, r)
 
-    | e ->
+    | Parsing.Parse_error as e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
       ParseError (Fatal_SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)

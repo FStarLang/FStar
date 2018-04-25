@@ -317,7 +317,7 @@
         "typing_Effects.Def.lift_ex_stexn", "unit_typing"
       ],
       0,
-      "e5ae20b4a84f18e38e6493d385f955c0"
+      "c529a6c865908310aa256d3779c45b16"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",

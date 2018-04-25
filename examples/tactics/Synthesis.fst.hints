@@ -2,16 +2,16 @@
   "\u0005\u0015Æ–\u001cÏ•u6\u0016‹µ\u001b„èê",
   [
     [
-      "Synthesis.uu___33",
+      "Synthesis.uu___34",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "8b3b7e45a6a24a905b70b6c70a5b6fbf"
+      "cdf0d4d6e8955d13b636a298ad00f9f3"
     ],
     [
-      "Synthesis.uu___34",
+      "Synthesis.uu___35",
       1,
       2,
       1,
@@ -20,25 +20,16 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "10f7743f3c6108dd83958147943ee6df"
-    ],
-    [
-      "Synthesis.uu___35",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Synthesis.fn8" ],
-      0,
-      "5dc826a5b4bcec092961135d8be57467"
+      "9dcc888c9024177dd09341bd59e7de0a"
     ],
     [
       "Synthesis.uu___36",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Synthesis.iszero" ],
+      [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "58fb311f74d04f8be70586a44dc30427"
+      "3be9dc80b971e2c5733ada56d57d3b77"
     ],
     [
       "Synthesis.uu___37",
@@ -47,7 +38,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Synthesis.iszero" ],
       0,
-      "3521efe8cb33b174fcd12a811744a150"
+      "0c19b09de161db019a81961be3b731d4"
     ],
     [
       "Synthesis.uu___38",
@@ -59,10 +50,22 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "36df04d57d6121513a7e20c4835efd5b"
+      "da990fff4ab3e46089846f465cf36b84"
     ],
     [
       "Synthesis.uu___39",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Synthesis.iszero",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "80471efb91169d56f27cd5607508d913"
+    ],
+    [
+      "Synthesis.uu___40",
       1,
       2,
       1,
@@ -75,7 +78,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "889d4b7ae9aa55e304fd2ea7f1f9acbb"
+      "102b3b0fe9ddcc651f7cfdfefdc0f1a4"
     ],
     [
       "Synthesis.f3",
@@ -89,16 +92,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "07ac1bda6a94d7bc19c43b8c46a90837"
+      "7c82ad2e0bb3d61c9a90093b7cfbdf7a"
     ],
     [
-      "Synthesis.uu___40",
+      "Synthesis.uu___41",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "72948a164ad157d48697c3eee66bb1b1"
+      "e359f9e5e8c1c4e1cfc96d7d492df597"
     ],
     [
       "Synthesis.f3",
@@ -112,7 +115,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "362a61a3c702bfdeafb05ecba40009e3"
+      "70f22ce341e17c0e637328f752f4acae"
     ]
   ]
 ]

@@ -234,32 +234,32 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-    let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let xx = ("x", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let x = mkFreeV xx in
-        let l_forall_a_b = mkApp(for_all, [a;b]) in
-        let valid = mkApp("Valid", [l_forall_a_b]) in
-        let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-        [Util.mkAssume(mkForall([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-                     Some "forall interpretation",
-                     "forall-interp")] in
-    let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let xx = ("x", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let x = mkFreeV xx in
-        let l_exists_a_b = mkApp(for_some, [a;b]) in
-        let valid = mkApp("Valid", [l_exists_a_b]) in
-        let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-        [Util.mkAssume(mkForall([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-                     Some "exists interpretation",
-                     "exists-interp")] in
+    // let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
+    //     let aa = ("a", Term_sort) in
+    //     let bb = ("b", Term_sort) in
+    //     let xx = ("x", Term_sort) in
+    //     let a = mkFreeV aa in
+    //     let b = mkFreeV bb in
+    //     let x = mkFreeV xx in
+    //     let l_forall_a_b = mkApp(for_all, [a;b]) in
+    //     let valid = mkApp("Valid", [l_forall_a_b]) in
+    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
+    //     [Util.mkAssume(mkForall([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
+    //                  Some "forall interpretation",
+    //                  "forall-interp")] in
+    // let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
+    //     let aa = ("a", Term_sort) in
+    //     let bb = ("b", Term_sort) in
+    //     let xx = ("x", Term_sort) in
+    //     let a = mkFreeV aa in
+    //     let b = mkFreeV bb in
+    //     let x = mkFreeV xx in
+    //     let l_exists_a_b = mkApp(for_some, [a;b]) in
+    //     let valid = mkApp("Valid", [l_exists_a_b]) in
+    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
+    //     [Util.mkAssume(mkForall([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
+    //                  Some "exists interpretation",
+    //                  "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
@@ -318,8 +318,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
-                 (Const.forall_lid, mk_forall_interp);
-                 (Const.exists_lid, mk_exists_interp);
+                 // (Const.forall_lid, mk_forall_interp);
+                 // (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
                  (Const.with_type_lid, mk_with_type_axiom)
@@ -564,7 +564,7 @@ let encode_top_level_let :
               let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
                                         N.Exclude N.Zeta;
-                                        N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm
+                                        N.UnfoldUntil delta_constant; N.EraseUniverses] env.tcenv t_norm
               in
                 aux true t_norm
 
@@ -911,7 +911,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             | _ -> false)) in
         if will_encode_definition
         then [], env //nothing to do at the declaration; wait to encode the definition
-        else let fv = S.lid_as_fv lid Delta_constant None in
+        else let fv = S.lid_as_fv lid delta_constant None in
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
@@ -1292,7 +1292,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
         | Env.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
-            let fv = S.lid_as_fv x Delta_constant None in
+            let fv = S.lid_as_fv x delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
@@ -1316,7 +1316,7 @@ let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
                                    fvar_bindings=BU.psmap_empty ();
                                    tcenv=tcenv; warn=true; depth=0;
                                    cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
-                                   encode_non_total_function_typ=true;
+                                   encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"

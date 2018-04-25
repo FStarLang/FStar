@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.parse_int "1") 
+let (cache_version_number : Prims.int) = (Prims.parse_int "2") 
 let (module_or_interface_name :
   FStar_Syntax_Syntax.modul ->
     (Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2)
@@ -807,7 +807,8 @@ let (tc_one_file :
                    let uu____1662 =
                      FStar_Util.record_time
                        (fun uu____1684  ->
-                          FStar_TypeChecker_Tc.check_module env2 fmod)
+                          FStar_TypeChecker_Tc.check_module env2 fmod
+                            (FStar_Util.is_some pre_fn))
                       in
                    match uu____1662 with
                    | ((tcmod,tcmod_iface_opt,env3),time) ->

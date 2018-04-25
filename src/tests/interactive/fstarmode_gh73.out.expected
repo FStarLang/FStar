@@ -1,4 +1,4 @@
-{"kind": "[...]"}
+{"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "Expected expression of type \"int\"; got expression \"\"A\"\" of type \"string\"", "ranges": [{"beg": [4, 50], "end": [4, 51], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Expected expression of type \"int\"; got expression \"\"A\"\" of type \"string\"", "ranges": [{"beg": [4, 50], "end": [4, 51], "fname": "<input>"}]}], "status": "failure"}
