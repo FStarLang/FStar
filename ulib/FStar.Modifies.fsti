@@ -515,3 +515,79 @@ val buffer_live_mreference_unused_in_disjoint
   (requires (B.live h b1 /\ HS.unused_in b2 h))
   (ensures (loc_disjoint (loc_buffer b1) (loc_mreference b2)))
   [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
+
+(** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
+
+val does_not_contain_addr
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: GTot Type0
+
+val not_live_region_does_not_contain_addr
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: Lemma
+  (requires (~ (HS.live_region h (fst ra))))
+  (ensures (h `does_not_contain_addr` ra))
+
+val unused_in_does_not_contain_addr
+  (h: HS.mem)
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (h `does_not_contain_addr` (HS.frameOf r, HS.as_addr r)))
+
+val addr_unused_in_does_not_contain_addr
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: Lemma
+  (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (Map.sel h.HS.h (fst ra))))
+  (ensures (h `does_not_contain_addr` ra))
+
+val free_does_not_contain_addr
+  (#a: Type0)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel)
+  (m: HS.mem)
+  (x: HS.rid * nat)
+: Lemma
+  (requires (
+    HS.is_mm r /\
+    m `HS.contains` r /\
+    fst x == HS.frameOf r /\
+    snd x == HS.as_addr r
+  ))
+  (ensures (
+    HS.free r m `does_not_contain_addr` x
+  ))
+  [SMTPat (HS.free r m `does_not_contain_addr` x)]
+
+val does_not_contain_addr_elim
+  (#a: Type0)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel)
+  (m: HS.mem)
+  (x: HS.rid * nat)
+: Lemma
+  (requires (
+    m `does_not_contain_addr` x /\
+    HS.frameOf r == fst x /\
+    HS.as_addr r == snd x
+  ))
+  (ensures (~ (m `HS.contains` r)))
+
+(** END TODO *)
+
+val modifies_only_live_addresses
+  (r: HS.rid)
+  (a: Set.set nat)
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_addresses r a) l) h h' /\
+    (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
+  ))
+  (ensures (modifies l h h'))
