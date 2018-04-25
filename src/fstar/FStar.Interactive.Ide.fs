@@ -64,9 +64,9 @@ let set_check_kind env check_kind =
   { env with lax = (check_kind = LaxCheck);
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
-let with_captured_errors' env f =
+let with_captured_errors' env sigint_handler f =
   try
-    f env
+    Util.with_sigint_handler sigint_handler (fun _ -> f env)
   with
   | Failure (msg) ->
     let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
@@ -78,7 +78,10 @@ let with_captured_errors' env f =
     Errors.log_issue (TcEnv.get_range env) (Errors.Error_IDEAssertionFailure, msg);
     None
 
-  | Error(e, msg, r) ->
+  | Util.SigInt ->
+    Util.print_string "Interrupted"; None
+
+  | Error (e, msg, r) ->
     TcErr.add_errors env [(e, msg, r)];
     None
 
@@ -89,9 +92,9 @@ let with_captured_errors' env f =
   | Stop ->
     None
 
-let with_captured_errors env f =
+let with_captured_errors env sigint_handler f =
   if Options.trace_error () then f env
-  else with_captured_errors' env f
+  else with_captured_errors' env sigint_handler f
 
 (*************************)
 (* REPL tasks and states *)
@@ -154,13 +157,13 @@ let pop_repl st =
   match !repl_stack with
   | [] -> failwith "Too many pops"
   | (_, st') :: stack ->
-    pop st.repl_env "#pop";
+    pop st.repl_env "REPL pop_repl";
     repl_stack := stack;
     st'
 
 let push_repl push_kind task st =
   repl_stack := (task, st) :: !repl_stack;
-  push (set_check_kind st.repl_env push_kind) ""
+  push (set_check_kind st.repl_env push_kind) "REPL push_repl"
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -361,10 +364,19 @@ let run_repl_transaction st push_kind must_rollback task =
   let check_success () =
     get_err_count () = 0 && not must_rollback in
 
+  let sigint_handler =
+    // Ideally we'd want everything to be interruptible, but in practice the
+    // code in Typechecker.Tc does not ensure that each ‘push_context’ in
+    // ‘finish_partial_modul’ is always followed by a corresponding
+    // ‘pop_context’ (that's only true if no exceptions occur).
+    match task with
+    | PushFragment _ -> Util.sigint_raise
+    | _ -> Util.sigint_ignore in
+
   // Run the task (and capture errors)
   let curmod, env, success =
-    match with_captured_errors env
-            (fun env -> Some <| run_repl_task st.repl_curmod env task) with
+    match with_captured_errors env sigint_handler
+              (fun env -> Some <| run_repl_task st.repl_curmod env task) with
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
 
@@ -389,8 +401,11 @@ current file's interface comes last.
 The original value of the ``repl_deps_stack`` field in ``st`` is used to skip
 already completed tasks.
 
-This function is stateful: it uses ``push_repl`` and ``pop_repl``. **)
-let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
+This function is stateful: it uses ``push_repl`` and ``pop_repl``.
+
+`progress_callback` is called once per task, right before the task is run. **)
+let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
+                             (progress_callback: repl_task -> unit) =
   let debug verb task =
     if Options.debug_any () then
       Util.print2 "%s %s" verb (string_of_repl_task task) in
@@ -417,6 +432,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
     // run ``task`` and record the updated dependency stack in ``st``.
     | task :: tasks, [] ->
       debug "Loading" task;
+      progress_callback task;
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
       let push_kind = if Options.lax () then LaxCheck else FullCheck in
@@ -559,7 +575,7 @@ let interactive_protocol_features =
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"; "segment";
-   "vfs-add"; "tactic-ranges"]
+   "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -896,7 +912,8 @@ let run_segment (st: repl_state) (code: string) =
     | Parser.Driver.Modul (Parser.AST.Module (_, decls))
     | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
 
-  match with_captured_errors st.repl_env (fun _ -> Some <| collect_decls ()) with
+  match with_captured_errors st.repl_env Util.sigint_ignore
+            (fun _ -> Some <| collect_decls ()) with
     | None ->
       let errors = collect_errors () |> List.map json_of_issue in
       ((QueryNOK, JsonList errors), Inl st)
@@ -919,19 +936,31 @@ let run_pop st =
     let st' = pop_repl st in
     ((QueryOK, JsonNull), Inl st')
 
+let write_progress stage contents_alist =
+  let stage = match stage with Some s -> JsonStr s | None -> JsonNull in
+  let js_contents = ("stage", stage) :: contents_alist in
+  write_json (json_of_message "progress" (JsonAssoc js_contents))
+
+let write_repl_ld_task_progress task =
+  match task with
+  | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
+    let modname = Parser.Dep.module_name_of_file tf.tf_fname in
+    write_progress (Some "loading-dependency") [("modname", JsonStr modname)]
+  | PushFragment frag -> ()
+
 (** Compute and load all dependencies of `filename`.
 
 Return an new REPL state wrapped in ``Inr`` in case of failure, and a new REPL
 plus with a list of completed tasks wrapped in ``Inl`` in case of success. **)
 let load_deps st =
-  match with_captured_errors st.repl_env
+  match with_captured_errors st.repl_env Util.sigint_ignore
           (fun _env -> Some <| deps_and_repl_ld_tasks_of_our_file st.repl_fname) with
   | None -> Inr st
   | Some (deps, tasks, dep_graph) ->
     let st = {st with repl_env=FStar.TypeChecker.Env.set_dep_graph st.repl_env dep_graph} in
-    match run_repl_ld_transactions st tasks with
-    | Inr st -> Inr st
-    | Inl st -> Inl (st, deps)
+    match run_repl_ld_transactions st tasks write_repl_ld_task_progress with
+    | Inr st -> write_progress None []; Inr st
+    | Inl st -> write_progress None []; Inl (st, deps)
 
 let rephrase_dependency_error issue =
   { issue with issue_message =
@@ -1159,10 +1188,13 @@ let run_autocomplete st search_term context =
 //        (k ^ ": " ^ (sigelt_to_string v)) :: acc) []
 //   |> Util.concat_l "\n"
 
-let run_and_rewind st task =
-  let env' = push st.repl_env "#compute" in
-  let results = try Inl <| task st with e -> Inr e in
-  pop env' "#compute";
+let run_and_rewind st sigint_default task =
+  let env' = push st.repl_env "REPL run_and_rewind" in
+  let results =
+    try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
+    with | Util.SigInt -> Inl sigint_default
+         | e -> Inr e in
+  pop env' "REPL run_and_rewind";
   match results with
   | Inl results -> (results, Inl ({ st with repl_env = env' }))
   | Inr e -> raise e
@@ -1190,7 +1222,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
-  run_and_rewind st (fun st ->
+  run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->
     let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
     match st.repl_curmod with
@@ -1212,9 +1244,9 @@ let run_with_parsed_and_tc_term st term line column continuation =
           aux ()
         else
           try aux ()
-          with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                 | None -> raise e)))
+          with | e -> (match FStar.Errors.issue_of_exn e with
+                      | Some issue -> (QueryNOK, JsonStr (FStar.Errors.format_issue issue))
+                      | None -> raise e))
 
 let run_compute st term rules =
   let rules =
@@ -1448,6 +1480,9 @@ let interactive_mode' init_st =
 
 let interactive_mode (filename:string): unit =
   install_ide_mode_hooks write_json;
+
+  // Ignore unexpected interrupts (some methods override this handler)
+  Util.set_sigint_handler Util.sigint_ignore;
 
   if Option.isSome (Options.codegen ()) then
     Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");

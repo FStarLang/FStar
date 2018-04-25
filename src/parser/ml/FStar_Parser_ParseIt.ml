@@ -143,7 +143,7 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r) ->
       ParseError (e, msg, r)
 
-    | e ->
+    | Parsing.Parse_error as e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
       ParseError (Fatal_SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)

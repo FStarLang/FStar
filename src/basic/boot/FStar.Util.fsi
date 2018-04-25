@@ -219,15 +219,20 @@ val string_builder_append: string_builder -> string -> unit
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
+exception SigInt
+type sigint_handler
+val sigint_ignore: sigint_handler
+val sigint_raise: sigint_handler
+val set_sigint_handler: sigint_handler -> unit
+val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
+
 (* not relying on representation *)
 type proc
-val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
-val ask_process: proc -> string -> string
+val run_process : string -> string -> list<string> -> option<string> -> string
+val start_process: string -> string -> list<string> -> (string -> bool) -> proc
+val ask_process: proc -> string -> (unit -> string) -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
-
-val run_proc : string -> string -> string -> (bool * string * string)
 
 val get_file_extension: string -> string
 val is_path_absolute: string -> bool
@@ -394,6 +399,7 @@ val monitor_enter: 'a -> unit
 val monitor_exit:  'a -> unit
 val monitor_wait: 'a -> unit
 val monitor_pulse:  'a -> unit
+val with_monitor: 'a -> ('b -> 'c) -> 'b -> 'c
 val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
