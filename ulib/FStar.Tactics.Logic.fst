@@ -9,7 +9,7 @@ open FStar.Reflection.Formula
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
                             x:a -> squash (b x)
-let revert_squash #a #b s x = let x : (_:unit{forall x. b x}) = s in ()
+let revert_squash #a #b s x = ()
 
 let l_revert () : Tac unit =
     revert ();
