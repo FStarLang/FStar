@@ -1041,157 +1041,157 @@ let rec (p_decl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
     let qualifiers =
       match ((d.FStar_Parser_AST.quals), (d.FStar_Parser_AST.d)) with
       | ((FStar_Parser_AST.Assumption )::[],FStar_Parser_AST.Assume
-         (id1,uu____3513)) ->
-          let uu____3516 =
-            let uu____3517 =
+         (id1,uu____3515)) ->
+          let uu____3518 =
+            let uu____3519 =
               FStar_Util.char_at id1.FStar_Ident.idText (Prims.parse_int "0")
                in
-            FStar_All.pipe_right uu____3517 FStar_Util.is_upper  in
-          if uu____3516
+            FStar_All.pipe_right uu____3519 FStar_Util.is_upper  in
+          if uu____3518
           then
-            let uu____3518 = p_qualifier FStar_Parser_AST.Assumption  in
-            FStar_Pprint.op_Hat_Hat uu____3518 FStar_Pprint.space
+            let uu____3520 = p_qualifier FStar_Parser_AST.Assumption  in
+            FStar_Pprint.op_Hat_Hat uu____3520 FStar_Pprint.space
           else p_qualifiers d.FStar_Parser_AST.quals
-      | uu____3520 -> p_qualifiers d.FStar_Parser_AST.quals  in
-    let uu____3525 = FStar_Pprint.optional p_fsdoc d.FStar_Parser_AST.doc  in
-    let uu____3526 =
-      let uu____3527 = p_attributes d.FStar_Parser_AST.attrs  in
-      let uu____3528 =
-        let uu____3529 = p_rawDecl d  in
-        FStar_Pprint.op_Hat_Hat qualifiers uu____3529  in
-      FStar_Pprint.op_Hat_Hat uu____3527 uu____3528  in
-    FStar_Pprint.op_Hat_Hat uu____3525 uu____3526
+      | uu____3522 -> p_qualifiers d.FStar_Parser_AST.quals  in
+    let uu____3527 = FStar_Pprint.optional p_fsdoc d.FStar_Parser_AST.doc  in
+    let uu____3528 =
+      let uu____3529 = p_attributes d.FStar_Parser_AST.attrs  in
+      let uu____3530 =
+        let uu____3531 = p_rawDecl d  in
+        FStar_Pprint.op_Hat_Hat qualifiers uu____3531  in
+      FStar_Pprint.op_Hat_Hat uu____3529 uu____3530  in
+    FStar_Pprint.op_Hat_Hat uu____3527 uu____3528
 
 and (p_attributes : FStar_Parser_AST.attributes_ -> FStar_Pprint.document) =
   fun attrs  ->
     match attrs with
     | [] -> FStar_Pprint.empty
-    | uu____3531 ->
-        let uu____3532 =
-          let uu____3533 = str "@ "  in
-          let uu____3534 =
-            let uu____3535 =
-              let uu____3536 =
-                let uu____3537 =
-                  let uu____3538 = FStar_List.map p_atomicTerm attrs  in
-                  FStar_Pprint.flow break1 uu____3538  in
-                FStar_Pprint.op_Hat_Hat uu____3537 FStar_Pprint.rbracket  in
-              FStar_Pprint.align uu____3536  in
-            FStar_Pprint.op_Hat_Hat uu____3535 FStar_Pprint.hardline  in
-          FStar_Pprint.op_Hat_Hat uu____3533 uu____3534  in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.lbracket uu____3532
+    | uu____3533 ->
+        let uu____3534 =
+          let uu____3535 = str "@ "  in
+          let uu____3536 =
+            let uu____3537 =
+              let uu____3538 =
+                let uu____3539 =
+                  let uu____3540 = FStar_List.map p_atomicTerm attrs  in
+                  FStar_Pprint.flow break1 uu____3540  in
+                FStar_Pprint.op_Hat_Hat uu____3539 FStar_Pprint.rbracket  in
+              FStar_Pprint.align uu____3538  in
+            FStar_Pprint.op_Hat_Hat uu____3537 FStar_Pprint.hardline  in
+          FStar_Pprint.op_Hat_Hat uu____3535 uu____3536  in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.lbracket uu____3534
 
 and (p_fsdoc : FStar_Parser_AST.fsdoc -> FStar_Pprint.document) =
-  fun uu____3541  ->
-    match uu____3541 with
+  fun uu____3543  ->
+    match uu____3543 with
     | (doc1,kwd_args) ->
         let kwd_args_doc =
           match kwd_args with
           | [] -> FStar_Pprint.empty
           | kwd_args1 ->
-              let process_kwd_arg uu____3575 =
-                match uu____3575 with
+              let process_kwd_arg uu____3577 =
+                match uu____3577 with
                 | (kwd,arg) ->
-                    let uu____3582 = str "@"  in
-                    let uu____3583 =
-                      let uu____3584 = str kwd  in
-                      let uu____3585 =
-                        let uu____3586 = str arg  in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3586
+                    let uu____3584 = str "@"  in
+                    let uu____3585 =
+                      let uu____3586 = str kwd  in
+                      let uu____3587 =
+                        let uu____3588 = str arg  in
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3588
                          in
-                      FStar_Pprint.op_Hat_Hat uu____3584 uu____3585  in
-                    FStar_Pprint.op_Hat_Hat uu____3582 uu____3583
+                      FStar_Pprint.op_Hat_Hat uu____3586 uu____3587  in
+                    FStar_Pprint.op_Hat_Hat uu____3584 uu____3585
                  in
-              let uu____3587 =
-                let uu____3588 =
+              let uu____3589 =
+                let uu____3590 =
                   FStar_Pprint.separate_map FStar_Pprint.hardline
                     process_kwd_arg kwd_args1
                    in
-                FStar_Pprint.op_Hat_Hat uu____3588 FStar_Pprint.hardline  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu____3587
+                FStar_Pprint.op_Hat_Hat uu____3590 FStar_Pprint.hardline  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu____3589
            in
-        let uu____3593 =
-          let uu____3594 =
-            let uu____3595 =
-              let uu____3596 =
-                let uu____3597 = str doc1  in
-                let uu____3598 =
-                  let uu____3599 =
-                    let uu____3600 =
+        let uu____3595 =
+          let uu____3596 =
+            let uu____3597 =
+              let uu____3598 =
+                let uu____3599 = str doc1  in
+                let uu____3600 =
+                  let uu____3601 =
+                    let uu____3602 =
                       FStar_Pprint.op_Hat_Hat FStar_Pprint.rparen
                         FStar_Pprint.hardline
                        in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.star uu____3600  in
-                  FStar_Pprint.op_Hat_Hat kwd_args_doc uu____3599  in
-                FStar_Pprint.op_Hat_Hat uu____3597 uu____3598  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.star uu____3596  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.star uu____3595  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____3594  in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu____3593
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.star uu____3602  in
+                  FStar_Pprint.op_Hat_Hat kwd_args_doc uu____3601  in
+                FStar_Pprint.op_Hat_Hat uu____3599 uu____3600  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.star uu____3598  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.star uu____3597  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____3596  in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu____3595
 
 and (p_justSig : FStar_Parser_AST.decl -> FStar_Pprint.document) =
   fun d  ->
     match d.FStar_Parser_AST.d with
     | FStar_Parser_AST.Val (lid,t) ->
-        let uu____3604 =
-          let uu____3605 = str "val"  in
-          let uu____3606 =
-            let uu____3607 =
-              let uu____3608 = p_lident lid  in
-              let uu____3609 =
+        let uu____3606 =
+          let uu____3607 = str "val"  in
+          let uu____3608 =
+            let uu____3609 =
+              let uu____3610 = p_lident lid  in
+              let uu____3611 =
                 FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.colon
                  in
-              FStar_Pprint.op_Hat_Hat uu____3608 uu____3609  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3607  in
-          FStar_Pprint.op_Hat_Hat uu____3605 uu____3606  in
-        let uu____3610 = p_typ false false t  in
-        FStar_Pprint.op_Hat_Hat uu____3604 uu____3610
-    | FStar_Parser_AST.TopLevelLet (uu____3611,lbs) ->
+              FStar_Pprint.op_Hat_Hat uu____3610 uu____3611  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3609  in
+          FStar_Pprint.op_Hat_Hat uu____3607 uu____3608  in
+        let uu____3612 = p_typ false false t  in
+        FStar_Pprint.op_Hat_Hat uu____3606 uu____3612
+    | FStar_Parser_AST.TopLevelLet (uu____3613,lbs) ->
         FStar_Pprint.separate_map FStar_Pprint.hardline
           (fun lb  ->
-             let uu____3636 =
-               let uu____3637 = str "let"  in p_letlhs uu____3637 lb  in
-             FStar_Pprint.group uu____3636) lbs
-    | uu____3638 -> FStar_Pprint.empty
+             let uu____3638 =
+               let uu____3639 = str "let"  in p_letlhs uu____3639 lb  in
+             FStar_Pprint.group uu____3638) lbs
+    | uu____3640 -> FStar_Pprint.empty
 
 and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
   fun d  ->
     match d.FStar_Parser_AST.d with
     | FStar_Parser_AST.Open uid ->
-        let uu____3641 =
-          let uu____3642 = str "open"  in
-          let uu____3643 = p_quident uid  in
-          FStar_Pprint.op_Hat_Slash_Hat uu____3642 uu____3643  in
-        FStar_Pprint.group uu____3641
+        let uu____3643 =
+          let uu____3644 = str "open"  in
+          let uu____3645 = p_quident uid  in
+          FStar_Pprint.op_Hat_Slash_Hat uu____3644 uu____3645  in
+        FStar_Pprint.group uu____3643
     | FStar_Parser_AST.Include uid ->
-        let uu____3645 =
-          let uu____3646 = str "include"  in
-          let uu____3647 = p_quident uid  in
-          FStar_Pprint.op_Hat_Slash_Hat uu____3646 uu____3647  in
-        FStar_Pprint.group uu____3645
+        let uu____3647 =
+          let uu____3648 = str "include"  in
+          let uu____3649 = p_quident uid  in
+          FStar_Pprint.op_Hat_Slash_Hat uu____3648 uu____3649  in
+        FStar_Pprint.group uu____3647
     | FStar_Parser_AST.ModuleAbbrev (uid1,uid2) ->
-        let uu____3650 =
-          let uu____3651 = str "module"  in
-          let uu____3652 =
-            let uu____3653 =
-              let uu____3654 = p_uident uid1  in
-              let uu____3655 =
+        let uu____3652 =
+          let uu____3653 = str "module"  in
+          let uu____3654 =
+            let uu____3655 =
+              let uu____3656 = p_uident uid1  in
+              let uu____3657 =
                 FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                   FStar_Pprint.equals
                  in
-              FStar_Pprint.op_Hat_Hat uu____3654 uu____3655  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3653  in
-          FStar_Pprint.op_Hat_Hat uu____3651 uu____3652  in
-        let uu____3656 = p_quident uid2  in
-        op_Hat_Slash_Plus_Hat uu____3650 uu____3656
+              FStar_Pprint.op_Hat_Hat uu____3656 uu____3657  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3655  in
+          FStar_Pprint.op_Hat_Hat uu____3653 uu____3654  in
+        let uu____3658 = p_quident uid2  in
+        op_Hat_Slash_Plus_Hat uu____3652 uu____3658
     | FStar_Parser_AST.TopLevelModule uid ->
-        let uu____3658 =
-          let uu____3659 = str "module"  in
-          let uu____3660 =
-            let uu____3661 = p_quident uid  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3661  in
-          FStar_Pprint.op_Hat_Hat uu____3659 uu____3660  in
-        FStar_Pprint.group uu____3658
+        let uu____3660 =
+          let uu____3661 = str "module"  in
+          let uu____3662 =
+            let uu____3663 = p_quident uid  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3663  in
+          FStar_Pprint.op_Hat_Hat uu____3661 uu____3662  in
+        FStar_Pprint.group uu____3660
     | FStar_Parser_AST.Tycon
         (true
          ,(FStar_Parser_AST.TyconAbbrev
@@ -1199,151 +1199,151 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
            )::[])
         ->
         let effect_prefix_doc =
-          let uu____3694 = str "effect"  in
-          let uu____3695 =
-            let uu____3696 = p_uident uid  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3696  in
-          FStar_Pprint.op_Hat_Hat uu____3694 uu____3695  in
-        let uu____3697 =
-          let uu____3698 = p_typars tpars  in
+          let uu____3696 = str "effect"  in
+          let uu____3697 =
+            let uu____3698 = p_uident uid  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3698  in
+          FStar_Pprint.op_Hat_Hat uu____3696 uu____3697  in
+        let uu____3699 =
+          let uu____3700 = p_typars tpars  in
           FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
-            effect_prefix_doc uu____3698 FStar_Pprint.equals
+            effect_prefix_doc uu____3700 FStar_Pprint.equals
            in
-        let uu____3699 = p_typ false false t  in
-        op_Hat_Slash_Plus_Hat uu____3697 uu____3699
+        let uu____3701 = p_typ false false t  in
+        op_Hat_Slash_Plus_Hat uu____3699 uu____3701
     | FStar_Parser_AST.Tycon (false ,tcdefs) ->
-        let uu____3717 =
-          let uu____3718 = str "type"  in
-          let uu____3719 = FStar_List.hd tcdefs  in
-          p_fsdocTypeDeclPairs uu____3718 uu____3719  in
-        let uu____3732 =
-          let uu____3733 = FStar_List.tl tcdefs  in
+        let uu____3719 =
+          let uu____3720 = str "type"  in
+          let uu____3721 = FStar_List.hd tcdefs  in
+          p_fsdocTypeDeclPairs uu____3720 uu____3721  in
+        let uu____3734 =
+          let uu____3735 = FStar_List.tl tcdefs  in
           FStar_All.pipe_left
             (FStar_Pprint.concat_map
                (fun x  ->
-                  let uu____3771 =
-                    let uu____3772 = str "and"  in
-                    p_fsdocTypeDeclPairs uu____3772 x  in
-                  FStar_Pprint.op_Hat_Hat break1 uu____3771)) uu____3733
+                  let uu____3773 =
+                    let uu____3774 = str "and"  in
+                    p_fsdocTypeDeclPairs uu____3774 x  in
+                  FStar_Pprint.op_Hat_Hat break1 uu____3773)) uu____3735
            in
-        FStar_Pprint.op_Hat_Hat uu____3717 uu____3732
+        FStar_Pprint.op_Hat_Hat uu____3719 uu____3734
     | FStar_Parser_AST.TopLevelLet (q,lbs) ->
         let let_doc =
-          let uu____3788 = str "let"  in
-          let uu____3789 = p_letqualifier q  in
-          FStar_Pprint.op_Hat_Hat uu____3788 uu____3789  in
-        let uu____3790 = str "and"  in
-        separate_map_with_comments_kw let_doc uu____3790 p_letbinding lbs
-          (fun uu____3798  ->
-             match uu____3798 with
+          let uu____3790 = str "let"  in
+          let uu____3791 = p_letqualifier q  in
+          FStar_Pprint.op_Hat_Hat uu____3790 uu____3791  in
+        let uu____3792 = str "and"  in
+        separate_map_with_comments_kw let_doc uu____3792 p_letbinding lbs
+          (fun uu____3800  ->
+             match uu____3800 with
              | (p,t) ->
                  FStar_Range.union_ranges p.FStar_Parser_AST.prange
                    t.FStar_Parser_AST.range)
     | FStar_Parser_AST.Val (lid,t) ->
-        let uu____3807 = str "val"  in
-        let uu____3808 =
-          let uu____3809 =
-            let uu____3810 = p_lident lid  in
-            let uu____3811 =
-              let uu____3812 =
-                let uu____3813 =
-                  let uu____3814 = p_typ false false t  in
-                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3814  in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____3813  in
-              FStar_Pprint.group uu____3812  in
-            FStar_Pprint.op_Hat_Hat uu____3810 uu____3811  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3809  in
-        FStar_Pprint.op_Hat_Hat uu____3807 uu____3808
+        let uu____3809 = str "val"  in
+        let uu____3810 =
+          let uu____3811 =
+            let uu____3812 = p_lident lid  in
+            let uu____3813 =
+              let uu____3814 =
+                let uu____3815 =
+                  let uu____3816 = p_typ false false t  in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3816  in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____3815  in
+              FStar_Pprint.group uu____3814  in
+            FStar_Pprint.op_Hat_Hat uu____3812 uu____3813  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3811  in
+        FStar_Pprint.op_Hat_Hat uu____3809 uu____3810
     | FStar_Parser_AST.Assume (id1,t) ->
         let decl_keyword =
-          let uu____3818 =
-            let uu____3819 =
+          let uu____3820 =
+            let uu____3821 =
               FStar_Util.char_at id1.FStar_Ident.idText (Prims.parse_int "0")
                in
-            FStar_All.pipe_right uu____3819 FStar_Util.is_upper  in
-          if uu____3818
+            FStar_All.pipe_right uu____3821 FStar_Util.is_upper  in
+          if uu____3820
           then FStar_Pprint.empty
           else
-            (let uu____3821 = str "val"  in
-             FStar_Pprint.op_Hat_Hat uu____3821 FStar_Pprint.space)
+            (let uu____3823 = str "val"  in
+             FStar_Pprint.op_Hat_Hat uu____3823 FStar_Pprint.space)
            in
-        let uu____3822 =
-          let uu____3823 = p_ident id1  in
-          let uu____3824 =
-            let uu____3825 =
-              let uu____3826 =
-                let uu____3827 = p_typ false false t  in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3827  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____3826  in
-            FStar_Pprint.group uu____3825  in
-          FStar_Pprint.op_Hat_Hat uu____3823 uu____3824  in
-        FStar_Pprint.op_Hat_Hat decl_keyword uu____3822
+        let uu____3824 =
+          let uu____3825 = p_ident id1  in
+          let uu____3826 =
+            let uu____3827 =
+              let uu____3828 =
+                let uu____3829 = p_typ false false t  in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3829  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____3828  in
+            FStar_Pprint.group uu____3827  in
+          FStar_Pprint.op_Hat_Hat uu____3825 uu____3826  in
+        FStar_Pprint.op_Hat_Hat decl_keyword uu____3824
     | FStar_Parser_AST.Exception (uid,t_opt) ->
-        let uu____3834 = str "exception"  in
-        let uu____3835 =
-          let uu____3836 =
-            let uu____3837 = p_uident uid  in
-            let uu____3838 =
+        let uu____3836 = str "exception"  in
+        let uu____3837 =
+          let uu____3838 =
+            let uu____3839 = p_uident uid  in
+            let uu____3840 =
               FStar_Pprint.optional
                 (fun t  ->
-                   let uu____3842 =
-                     let uu____3843 = str "of"  in
-                     let uu____3844 = p_typ false false t  in
-                     op_Hat_Slash_Plus_Hat uu____3843 uu____3844  in
-                   FStar_Pprint.op_Hat_Hat break1 uu____3842) t_opt
+                   let uu____3844 =
+                     let uu____3845 = str "of"  in
+                     let uu____3846 = p_typ false false t  in
+                     op_Hat_Slash_Plus_Hat uu____3845 uu____3846  in
+                   FStar_Pprint.op_Hat_Hat break1 uu____3844) t_opt
                in
-            FStar_Pprint.op_Hat_Hat uu____3837 uu____3838  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3836  in
-        FStar_Pprint.op_Hat_Hat uu____3834 uu____3835
+            FStar_Pprint.op_Hat_Hat uu____3839 uu____3840  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3838  in
+        FStar_Pprint.op_Hat_Hat uu____3836 uu____3837
     | FStar_Parser_AST.NewEffect ne ->
-        let uu____3846 = str "new_effect"  in
-        let uu____3847 =
-          let uu____3848 = p_newEffect ne  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3848  in
-        FStar_Pprint.op_Hat_Hat uu____3846 uu____3847
+        let uu____3848 = str "new_effect"  in
+        let uu____3849 =
+          let uu____3850 = p_newEffect ne  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3850  in
+        FStar_Pprint.op_Hat_Hat uu____3848 uu____3849
     | FStar_Parser_AST.SubEffect se ->
-        let uu____3850 = str "sub_effect"  in
-        let uu____3851 =
-          let uu____3852 = p_subEffect se  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3852  in
-        FStar_Pprint.op_Hat_Hat uu____3850 uu____3851
+        let uu____3852 = str "sub_effect"  in
+        let uu____3853 =
+          let uu____3854 = p_subEffect se  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3854  in
+        FStar_Pprint.op_Hat_Hat uu____3852 uu____3853
     | FStar_Parser_AST.Pragma p -> p_pragma p
     | FStar_Parser_AST.Fsdoc doc1 ->
-        let uu____3855 = p_fsdoc doc1  in
-        FStar_Pprint.op_Hat_Hat uu____3855 FStar_Pprint.hardline
-    | FStar_Parser_AST.Main uu____3856 ->
+        let uu____3857 = p_fsdoc doc1  in
+        FStar_Pprint.op_Hat_Hat uu____3857 FStar_Pprint.hardline
+    | FStar_Parser_AST.Main uu____3858 ->
         failwith "*Main declaration* : Is that really still in use ??"
-    | FStar_Parser_AST.Tycon (true ,uu____3857) ->
+    | FStar_Parser_AST.Tycon (true ,uu____3859) ->
         failwith
           "Effect abbreviation is expected to be defined by an abbreviation"
     | FStar_Parser_AST.Splice t ->
-        let uu____3875 = str "%splice"  in
-        let uu____3876 =
-          let uu____3877 = p_term false false t  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3877  in
-        FStar_Pprint.op_Hat_Hat uu____3875 uu____3876
+        let uu____3877 = str "%splice"  in
+        let uu____3878 =
+          let uu____3879 = p_term false false t  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3879  in
+        FStar_Pprint.op_Hat_Hat uu____3877 uu____3878
 
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
-  fun uu___53_3878  ->
-    match uu___53_3878 with
+  fun uu___53_3880  ->
+    match uu___53_3880 with
     | FStar_Parser_AST.SetOptions s ->
-        let uu____3880 = str "#set-options"  in
-        let uu____3881 =
-          let uu____3882 =
-            let uu____3883 = str s  in FStar_Pprint.dquotes uu____3883  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3882  in
-        FStar_Pprint.op_Hat_Hat uu____3880 uu____3881
+        let uu____3882 = str "#set-options"  in
+        let uu____3883 =
+          let uu____3884 =
+            let uu____3885 = str s  in FStar_Pprint.dquotes uu____3885  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3884  in
+        FStar_Pprint.op_Hat_Hat uu____3882 uu____3883
     | FStar_Parser_AST.ResetOptions s_opt ->
-        let uu____3887 = str "#reset-options"  in
-        let uu____3888 =
+        let uu____3889 = str "#reset-options"  in
+        let uu____3890 =
           FStar_Pprint.optional
             (fun s  ->
-               let uu____3892 =
-                 let uu____3893 = str s  in FStar_Pprint.dquotes uu____3893
+               let uu____3894 =
+                 let uu____3895 = str s  in FStar_Pprint.dquotes uu____3895
                   in
-               FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3892) s_opt
+               FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3894) s_opt
            in
-        FStar_Pprint.op_Hat_Hat uu____3887 uu____3888
+        FStar_Pprint.op_Hat_Hat uu____3889 uu____3890
     | FStar_Parser_AST.LightOff  ->
         (FStar_ST.op_Colon_Equals should_print_fs_typ_app true;
          str "#light \"off\"")
@@ -1358,14 +1358,14 @@ and (p_fsdocTypeDeclPairs :
       FStar_Pervasives_Native.tuple2 -> FStar_Pprint.document)
   =
   fun kw  ->
-    fun uu____3918  ->
-      match uu____3918 with
+    fun uu____3920  ->
+      match uu____3920 with
       | (typedecl,fsdoc_opt) ->
-          let uu____3931 = p_typeDecl (kw, fsdoc_opt) typedecl  in
-          (match uu____3931 with
+          let uu____3933 = p_typeDecl (kw, fsdoc_opt) typedecl  in
+          (match uu____3933 with
            | (decl,body) ->
-               let uu____3946 = body ()  in
-               FStar_Pprint.op_Hat_Hat decl uu____3946)
+               let uu____3948 = body ()  in
+               FStar_Pprint.op_Hat_Hat decl uu____3948)
 
 and (p_typeDecl :
   (FStar_Pprint.document,FStar_Parser_AST.fsdoc
@@ -1376,62 +1376,62 @@ and (p_typeDecl :
         FStar_Pervasives_Native.tuple2)
   =
   fun pre  ->
-    fun uu___54_3948  ->
-      match uu___54_3948 with
+    fun uu___54_3950  ->
+      match uu___54_3950 with
       | FStar_Parser_AST.TyconAbstract (lid,bs,typ_opt) ->
-          let empty' uu____3975 = FStar_Pprint.empty  in
-          let uu____3976 = p_typeDeclPrefix pre false lid bs typ_opt  in
-          (uu____3976, empty')
+          let empty' uu____3977 = FStar_Pprint.empty  in
+          let uu____3978 = p_typeDeclPrefix pre false lid bs typ_opt  in
+          (uu____3978, empty')
       | FStar_Parser_AST.TyconAbbrev (lid,bs,typ_opt,t) ->
-          let f uu____3994 =
-            let uu____3995 = p_typ false false t  in jump2 uu____3995  in
-          let uu____3996 = p_typeDeclPrefix pre true lid bs typ_opt  in
-          (uu____3996, f)
+          let f uu____3996 =
+            let uu____3997 = p_typ false false t  in jump2 uu____3997  in
+          let uu____3998 = p_typeDeclPrefix pre true lid bs typ_opt  in
+          (uu____3998, f)
       | FStar_Parser_AST.TyconRecord (lid,bs,typ_opt,record_field_decls) ->
-          let p_recordFieldAndComments ps uu____4045 =
-            match uu____4045 with
+          let p_recordFieldAndComments ps uu____4047 =
+            match uu____4047 with
             | (lid1,t,doc_opt) ->
-                let uu____4061 =
+                let uu____4063 =
                   FStar_Range.extend_to_end_of_line t.FStar_Parser_AST.range
                    in
                 with_comment (p_recordFieldDecl ps) (lid1, t, doc_opt)
-                  uu____4061
+                  uu____4063
              in
-          let p_fields uu____4075 =
-            let uu____4076 =
-              let uu____4077 =
-                let uu____4078 =
+          let p_fields uu____4077 =
+            let uu____4078 =
+              let uu____4079 =
+                let uu____4080 =
                   FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1  in
-                separate_map_last uu____4078 p_recordFieldAndComments
+                separate_map_last uu____4080 p_recordFieldAndComments
                   record_field_decls
                  in
-              braces_with_nesting uu____4077  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4076  in
-          let uu____4087 = p_typeDeclPrefix pre true lid bs typ_opt  in
-          (uu____4087, p_fields)
+              braces_with_nesting uu____4079  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4078  in
+          let uu____4089 = p_typeDeclPrefix pre true lid bs typ_opt  in
+          (uu____4089, p_fields)
       | FStar_Parser_AST.TyconVariant (lid,bs,typ_opt,ct_decls) ->
-          let p_constructorBranchAndComments uu____4145 =
-            match uu____4145 with
+          let p_constructorBranchAndComments uu____4147 =
+            match uu____4147 with
             | (uid,t_opt,doc_opt,use_of) ->
                 let range =
-                  let uu____4171 =
-                    let uu____4172 =
+                  let uu____4173 =
+                    let uu____4174 =
                       FStar_Util.map_opt t_opt
                         (fun t  -> t.FStar_Parser_AST.range)
                        in
-                    FStar_Util.dflt uid.FStar_Ident.idRange uu____4172  in
-                  FStar_Range.extend_to_end_of_line uu____4171  in
+                    FStar_Util.dflt uid.FStar_Ident.idRange uu____4174  in
+                  FStar_Range.extend_to_end_of_line uu____4173  in
                 with_comment p_constructorBranch
                   (uid, t_opt, doc_opt, use_of) range
              in
-          let datacon_doc uu____4196 =
+          let datacon_doc uu____4198 =
             FStar_Pprint.separate_map FStar_Pprint.hardline
               p_constructorBranchAndComments ct_decls
              in
-          let uu____4209 = p_typeDeclPrefix pre true lid bs typ_opt  in
-          (uu____4209,
-            ((fun uu____4214  ->
-                let uu____4215 = datacon_doc ()  in jump2 uu____4215)))
+          let uu____4211 = p_typeDeclPrefix pre true lid bs typ_opt  in
+          (uu____4211,
+            ((fun uu____4216  ->
+                let uu____4217 = datacon_doc ()  in jump2 uu____4217)))
 
 and (p_typeDeclPrefix :
   (FStar_Pprint.document,FStar_Parser_AST.fsdoc
@@ -1443,31 +1443,31 @@ and (p_typeDeclPrefix :
           FStar_Parser_AST.knd FStar_Pervasives_Native.option ->
             FStar_Pprint.document)
   =
-  fun uu____4216  ->
+  fun uu____4218  ->
     fun eq1  ->
       fun lid  ->
         fun bs  ->
           fun typ_opt  ->
-            match uu____4216 with
+            match uu____4218 with
             | (kw,fsdoc_opt) ->
                 let maybe_with_fsdoc cont =
                   let lid_doc = p_ident lid  in
                   let kw_lid =
-                    let uu____4248 = FStar_Pprint.op_Hat_Slash_Hat kw lid_doc
+                    let uu____4250 = FStar_Pprint.op_Hat_Slash_Hat kw lid_doc
                        in
-                    FStar_Pprint.group uu____4248  in
+                    FStar_Pprint.group uu____4250  in
                   match fsdoc_opt with
                   | FStar_Pervasives_Native.None  -> cont kw_lid
                   | FStar_Pervasives_Native.Some fsdoc ->
-                      let uu____4250 =
-                        let uu____4253 =
-                          let uu____4256 = p_fsdoc fsdoc  in
-                          let uu____4257 =
-                            let uu____4260 = cont lid_doc  in [uu____4260]
+                      let uu____4252 =
+                        let uu____4255 =
+                          let uu____4258 = p_fsdoc fsdoc  in
+                          let uu____4259 =
+                            let uu____4262 = cont lid_doc  in [uu____4262]
                              in
-                          uu____4256 :: uu____4257  in
-                        kw :: uu____4253  in
-                      FStar_Pprint.separate FStar_Pprint.hardline uu____4250
+                          uu____4258 :: uu____4259  in
+                        kw :: uu____4255  in
+                      FStar_Pprint.separate FStar_Pprint.hardline uu____4252
                    in
                 let typ =
                   let maybe_eq =
@@ -1476,14 +1476,14 @@ and (p_typeDeclPrefix :
                   match typ_opt with
                   | FStar_Pervasives_Native.None  -> maybe_eq
                   | FStar_Pervasives_Native.Some t ->
-                      let uu____4265 =
-                        let uu____4266 =
-                          let uu____4267 = p_typ false false t  in
-                          FStar_Pprint.op_Hat_Slash_Hat uu____4267 maybe_eq
+                      let uu____4267 =
+                        let uu____4268 =
+                          let uu____4269 = p_typ false false t  in
+                          FStar_Pprint.op_Hat_Slash_Hat uu____4269 maybe_eq
                            in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4266
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4268
                          in
-                      FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4265
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4267
                    in
                 if bs = []
                 then maybe_with_fsdoc (fun n1  -> prefix2 n1 typ)
@@ -1491,11 +1491,11 @@ and (p_typeDeclPrefix :
                   (let binders = p_binders_list true bs  in
                    maybe_with_fsdoc
                      (fun n1  ->
-                        let uu____4282 =
-                          let uu____4283 = FStar_Pprint.flow break1 binders
+                        let uu____4284 =
+                          let uu____4285 = FStar_Pprint.flow break1 binders
                              in
-                          prefix2 n1 uu____4283  in
-                        prefix2 uu____4282 typ))
+                          prefix2 n1 uu____4285  in
+                        prefix2 uu____4284 typ))
 
 and (p_recordFieldDecl :
   Prims.bool ->
@@ -1504,53 +1504,53 @@ and (p_recordFieldDecl :
       FStar_Pervasives_Native.tuple3 -> FStar_Pprint.document)
   =
   fun ps  ->
-    fun uu____4285  ->
-      match uu____4285 with
+    fun uu____4287  ->
+      match uu____4287 with
       | (lid,t,doc_opt) ->
-          let uu____4301 =
-            let uu____4302 = FStar_Pprint.optional p_fsdoc doc_opt  in
-            let uu____4303 =
-              let uu____4304 = p_lident lid  in
-              let uu____4305 =
-                let uu____4306 = p_typ ps false t  in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4306  in
-              FStar_Pprint.op_Hat_Hat uu____4304 uu____4305  in
-            FStar_Pprint.op_Hat_Hat uu____4302 uu____4303  in
-          FStar_Pprint.group uu____4301
+          let uu____4303 =
+            let uu____4304 = FStar_Pprint.optional p_fsdoc doc_opt  in
+            let uu____4305 =
+              let uu____4306 = p_lident lid  in
+              let uu____4307 =
+                let uu____4308 = p_typ ps false t  in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4308  in
+              FStar_Pprint.op_Hat_Hat uu____4306 uu____4307  in
+            FStar_Pprint.op_Hat_Hat uu____4304 uu____4305  in
+          FStar_Pprint.group uu____4303
 
 and (p_constructorBranch :
   (FStar_Ident.ident,FStar_Parser_AST.term FStar_Pervasives_Native.option,
     FStar_Parser_AST.fsdoc FStar_Pervasives_Native.option,Prims.bool)
     FStar_Pervasives_Native.tuple4 -> FStar_Pprint.document)
   =
-  fun uu____4307  ->
-    match uu____4307 with
+  fun uu____4309  ->
+    match uu____4309 with
     | (uid,t_opt,doc_opt,use_of) ->
         let sep = if use_of then str "of" else FStar_Pprint.colon  in
         let uid_doc =
-          let uu____4335 =
-            let uu____4336 =
-              let uu____4337 = p_uident uid  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4337  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____4336  in
-          FStar_Pprint.group uu____4335  in
-        let uu____4338 = FStar_Pprint.optional p_fsdoc doc_opt  in
-        let uu____4339 =
+          let uu____4337 =
+            let uu____4338 =
+              let uu____4339 = p_uident uid  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4339  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____4338  in
+          FStar_Pprint.group uu____4337  in
+        let uu____4340 = FStar_Pprint.optional p_fsdoc doc_opt  in
+        let uu____4341 =
           default_or_map uid_doc
             (fun t  ->
-               let uu____4343 =
-                 let uu____4344 =
-                   let uu____4345 =
-                     let uu____4346 =
-                       let uu____4347 = p_typ false false t  in
-                       FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4347
+               let uu____4345 =
+                 let uu____4346 =
+                   let uu____4347 =
+                     let uu____4348 =
+                       let uu____4349 = p_typ false false t  in
+                       FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4349
                         in
-                     FStar_Pprint.op_Hat_Hat sep uu____4346  in
-                   FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4345  in
-                 FStar_Pprint.op_Hat_Hat uid_doc uu____4344  in
-               FStar_Pprint.group uu____4343) t_opt
+                     FStar_Pprint.op_Hat_Hat sep uu____4348  in
+                   FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4347  in
+                 FStar_Pprint.op_Hat_Hat uid_doc uu____4346  in
+               FStar_Pprint.group uu____4345) t_opt
            in
-        FStar_Pprint.op_Hat_Hat uu____4338 uu____4339
+        FStar_Pprint.op_Hat_Hat uu____4340 uu____4341
 
 and (p_letlhs :
   FStar_Pprint.document ->
@@ -1558,74 +1558,74 @@ and (p_letlhs :
       FStar_Pervasives_Native.tuple2 -> FStar_Pprint.document)
   =
   fun kw  ->
-    fun uu____4349  ->
-      match uu____4349 with
-      | (pat,uu____4355) ->
-          let uu____4356 =
+    fun uu____4351  ->
+      match uu____4351 with
+      | (pat,uu____4357) ->
+          let uu____4358 =
             match pat.FStar_Parser_AST.pat with
             | FStar_Parser_AST.PatAscribed
                 (pat1,(t,FStar_Pervasives_Native.None )) ->
-                let uu____4375 =
-                  let uu____4376 =
-                    let uu____4377 =
-                      let uu____4378 = p_tmArrow p_tmNoEq t  in
-                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4378
+                let uu____4377 =
+                  let uu____4378 =
+                    let uu____4379 =
+                      let uu____4380 = p_tmArrow p_tmNoEq t  in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4380
                        in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4377  in
-                  FStar_Pprint.group uu____4376  in
-                (pat1, uu____4375)
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4379  in
+                  FStar_Pprint.group uu____4378  in
+                (pat1, uu____4377)
             | FStar_Parser_AST.PatAscribed
                 (pat1,(t,FStar_Pervasives_Native.Some tac)) ->
-                let uu____4390 =
-                  let uu____4391 =
-                    let uu____4392 =
-                      let uu____4393 =
-                        let uu____4394 = p_tmArrow p_tmNoEq t  in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4394
+                let uu____4392 =
+                  let uu____4393 =
+                    let uu____4394 =
+                      let uu____4395 =
+                        let uu____4396 = p_tmArrow p_tmNoEq t  in
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4396
                          in
-                      FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4393
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____4395
                        in
-                    FStar_Pprint.group uu____4392  in
-                  let uu____4395 =
-                    let uu____4396 =
-                      let uu____4397 = str "by"  in
-                      let uu____4398 =
-                        let uu____4399 = p_atomicTerm tac  in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4399
+                    FStar_Pprint.group uu____4394  in
+                  let uu____4397 =
+                    let uu____4398 =
+                      let uu____4399 = str "by"  in
+                      let uu____4400 =
+                        let uu____4401 = p_atomicTerm tac  in
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4401
                          in
-                      FStar_Pprint.op_Hat_Hat uu____4397 uu____4398  in
-                    FStar_Pprint.group uu____4396  in
-                  FStar_Pprint.op_Hat_Hat uu____4391 uu____4395  in
-                (pat1, uu____4390)
-            | uu____4400 -> (pat, FStar_Pprint.empty)  in
-          (match uu____4356 with
+                      FStar_Pprint.op_Hat_Hat uu____4399 uu____4400  in
+                    FStar_Pprint.group uu____4398  in
+                  FStar_Pprint.op_Hat_Hat uu____4393 uu____4397  in
+                (pat1, uu____4392)
+            | uu____4402 -> (pat, FStar_Pprint.empty)  in
+          (match uu____4358 with
            | (pat1,ascr_doc) ->
                (match pat1.FStar_Parser_AST.pat with
                 | FStar_Parser_AST.PatApp
                     ({
                        FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                         (x,uu____4404);
-                       FStar_Parser_AST.prange = uu____4405;_},pats)
+                         (x,uu____4406);
+                       FStar_Parser_AST.prange = uu____4407;_},pats)
                     ->
-                    let uu____4415 =
-                      let uu____4416 =
-                        let uu____4417 =
-                          let uu____4418 = p_lident x  in
-                          FStar_Pprint.op_Hat_Slash_Hat kw uu____4418  in
-                        FStar_Pprint.group uu____4417  in
-                      let uu____4419 =
+                    let uu____4417 =
+                      let uu____4418 =
+                        let uu____4419 =
+                          let uu____4420 = p_lident x  in
+                          FStar_Pprint.op_Hat_Slash_Hat kw uu____4420  in
+                        FStar_Pprint.group uu____4419  in
+                      let uu____4421 =
                         FStar_Pprint.flow_map break1 p_atomicPattern pats  in
-                      prefix2 uu____4416 uu____4419  in
-                    prefix2_nonempty uu____4415 ascr_doc
-                | uu____4420 ->
-                    let uu____4421 =
-                      let uu____4422 =
-                        let uu____4423 =
-                          let uu____4424 = p_tuplePattern pat1  in
-                          FStar_Pprint.op_Hat_Slash_Hat kw uu____4424  in
-                        FStar_Pprint.group uu____4423  in
-                      FStar_Pprint.op_Hat_Hat uu____4422 ascr_doc  in
-                    FStar_Pprint.group uu____4421))
+                      prefix2 uu____4418 uu____4421  in
+                    prefix2_nonempty uu____4417 ascr_doc
+                | uu____4422 ->
+                    let uu____4423 =
+                      let uu____4424 =
+                        let uu____4425 =
+                          let uu____4426 = p_tuplePattern pat1  in
+                          FStar_Pprint.op_Hat_Slash_Hat kw uu____4426  in
+                        FStar_Pprint.group uu____4425  in
+                      FStar_Pprint.op_Hat_Hat uu____4424 ascr_doc  in
+                    FStar_Pprint.group uu____4423))
 
 and (p_letbinding :
   FStar_Pprint.document ->
@@ -1633,29 +1633,29 @@ and (p_letbinding :
       FStar_Pervasives_Native.tuple2 -> FStar_Pprint.document)
   =
   fun kw  ->
-    fun uu____4426  ->
-      match uu____4426 with
+    fun uu____4428  ->
+      match uu____4428 with
       | (pat,e) ->
           let doc_pat = p_letlhs kw (pat, e)  in
           let doc_expr = p_term false false e  in
-          let uu____4435 =
-            let uu____4436 =
-              FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals doc_expr  in
-            FStar_Pprint.op_Hat_Slash_Hat doc_pat uu____4436  in
           let uu____4437 =
             let uu____4438 =
-              let uu____4439 =
-                let uu____4440 =
-                  let uu____4441 = jump2 doc_expr  in
-                  FStar_Pprint.op_Hat_Hat FStar_Pprint.equals uu____4441  in
-                FStar_Pprint.group uu____4440  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4439  in
-            FStar_Pprint.op_Hat_Hat doc_pat uu____4438  in
-          FStar_Pprint.ifflat uu____4435 uu____4437
+              FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals doc_expr  in
+            FStar_Pprint.op_Hat_Slash_Hat doc_pat uu____4438  in
+          let uu____4439 =
+            let uu____4440 =
+              let uu____4441 =
+                let uu____4442 =
+                  let uu____4443 = jump2 doc_expr  in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.equals uu____4443  in
+                FStar_Pprint.group uu____4442  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4441  in
+            FStar_Pprint.op_Hat_Hat doc_pat uu____4440  in
+          FStar_Pprint.ifflat uu____4437 uu____4439
 
 and (p_newEffect : FStar_Parser_AST.effect_decl -> FStar_Pprint.document) =
-  fun uu___55_4442  ->
-    match uu___55_4442 with
+  fun uu___55_4444  ->
+    match uu___55_4444 with
     | FStar_Parser_AST.RedefineEffect (lid,bs,t) ->
         p_effectRedefinition lid bs t
     | FStar_Parser_AST.DefineEffect (lid,bs,t,eff_decls) ->
@@ -1669,13 +1669,13 @@ and (p_effectRedefinition :
   fun uid  ->
     fun bs  ->
       fun t  ->
-        let uu____4467 = p_uident uid  in
-        let uu____4468 = p_binders true bs  in
-        let uu____4469 =
-          let uu____4470 = p_simpleTerm false false t  in
-          prefix2 FStar_Pprint.equals uu____4470  in
+        let uu____4469 = p_uident uid  in
+        let uu____4470 = p_binders true bs  in
+        let uu____4471 =
+          let uu____4472 = p_simpleTerm false false t  in
+          prefix2 FStar_Pprint.equals uu____4472  in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
-          uu____4467 uu____4468 uu____4469
+          uu____4469 uu____4470 uu____4471
 
 and (p_effectDefinition :
   FStar_Ident.ident ->
@@ -1687,27 +1687,27 @@ and (p_effectDefinition :
     fun bs  ->
       fun t  ->
         fun eff_decls  ->
-          let uu____4479 =
-            let uu____4480 =
-              let uu____4481 =
-                let uu____4482 = p_uident uid  in
-                let uu____4483 = p_binders true bs  in
-                let uu____4484 =
-                  let uu____4485 = p_typ false false t  in
-                  prefix2 FStar_Pprint.colon uu____4485  in
+          let uu____4481 =
+            let uu____4482 =
+              let uu____4483 =
+                let uu____4484 = p_uident uid  in
+                let uu____4485 = p_binders true bs  in
+                let uu____4486 =
+                  let uu____4487 = p_typ false false t  in
+                  prefix2 FStar_Pprint.colon uu____4487  in
                 FStar_Pprint.surround (Prims.parse_int "2")
-                  (Prims.parse_int "1") uu____4482 uu____4483 uu____4484
+                  (Prims.parse_int "1") uu____4484 uu____4485 uu____4486
                  in
-              FStar_Pprint.group uu____4481  in
-            let uu____4486 =
-              let uu____4487 = str "with"  in
-              let uu____4488 =
+              FStar_Pprint.group uu____4483  in
+            let uu____4488 =
+              let uu____4489 = str "with"  in
+              let uu____4490 =
                 separate_break_map_last FStar_Pprint.semi p_effectDecl
                   eff_decls
                  in
-              prefix2 uu____4487 uu____4488  in
-            FStar_Pprint.op_Hat_Slash_Hat uu____4480 uu____4486  in
-          braces_with_nesting uu____4479
+              prefix2 uu____4489 uu____4490  in
+            FStar_Pprint.op_Hat_Slash_Hat uu____4482 uu____4488  in
+          braces_with_nesting uu____4481
 
 and (p_effectDecl :
   Prims.bool -> FStar_Parser_AST.decl -> FStar_Pprint.document) =
@@ -1720,22 +1720,22 @@ and (p_effectDecl :
              (lid,[],FStar_Pervasives_Native.None ,e),FStar_Pervasives_Native.None
              )::[])
           ->
-          let uu____4519 =
-            let uu____4520 = p_lident lid  in
-            let uu____4521 =
+          let uu____4521 =
+            let uu____4522 = p_lident lid  in
+            let uu____4523 =
               FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals
                in
-            FStar_Pprint.op_Hat_Hat uu____4520 uu____4521  in
-          let uu____4522 = p_simpleTerm ps false e  in
-          prefix2 uu____4519 uu____4522
-      | uu____4523 ->
-          let uu____4524 =
-            let uu____4525 = FStar_Parser_AST.decl_to_string d  in
+            FStar_Pprint.op_Hat_Hat uu____4522 uu____4523  in
+          let uu____4524 = p_simpleTerm ps false e  in
+          prefix2 uu____4521 uu____4524
+      | uu____4525 ->
+          let uu____4526 =
+            let uu____4527 = FStar_Parser_AST.decl_to_string d  in
             FStar_Util.format1
               "Not a declaration of an effect member... or at least I hope so : %s"
-              uu____4525
+              uu____4527
              in
-          failwith uu____4524
+          failwith uu____4526
 
 and (p_subEffect : FStar_Parser_AST.lift -> FStar_Pprint.document) =
   fun lift  ->
@@ -1746,37 +1746,37 @@ and (p_subEffect : FStar_Parser_AST.lift -> FStar_Pprint.document) =
         | FStar_Parser_AST.ReifiableLift (t1,t2) ->
             [("lift_wp", t1); ("lift", t2)]
         | FStar_Parser_AST.LiftForFree t -> [("lift", t)]  in
-      let p_lift ps uu____4583 =
-        match uu____4583 with
+      let p_lift ps uu____4585 =
+        match uu____4585 with
         | (kwd,t) ->
-            let uu____4590 =
-              let uu____4591 = str kwd  in
-              let uu____4592 =
+            let uu____4592 =
+              let uu____4593 = str kwd  in
+              let uu____4594 =
                 FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                   FStar_Pprint.equals
                  in
-              FStar_Pprint.op_Hat_Hat uu____4591 uu____4592  in
-            let uu____4593 = p_simpleTerm ps false t  in
-            prefix2 uu____4590 uu____4593
+              FStar_Pprint.op_Hat_Hat uu____4593 uu____4594  in
+            let uu____4595 = p_simpleTerm ps false t  in
+            prefix2 uu____4592 uu____4595
          in
       separate_break_map_last FStar_Pprint.semi p_lift lifts  in
-    let uu____4598 =
-      let uu____4599 =
-        let uu____4600 = p_quident lift.FStar_Parser_AST.msource  in
-        let uu____4601 =
-          let uu____4602 = str "~>"  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4602  in
-        FStar_Pprint.op_Hat_Hat uu____4600 uu____4601  in
-      let uu____4603 = p_quident lift.FStar_Parser_AST.mdest  in
-      prefix2 uu____4599 uu____4603  in
-    let uu____4604 =
-      let uu____4605 = braces_with_nesting lift_op_doc  in
-      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4605  in
-    FStar_Pprint.op_Hat_Hat uu____4598 uu____4604
+    let uu____4600 =
+      let uu____4601 =
+        let uu____4602 = p_quident lift.FStar_Parser_AST.msource  in
+        let uu____4603 =
+          let uu____4604 = str "~>"  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4604  in
+        FStar_Pprint.op_Hat_Hat uu____4602 uu____4603  in
+      let uu____4605 = p_quident lift.FStar_Parser_AST.mdest  in
+      prefix2 uu____4601 uu____4605  in
+    let uu____4606 =
+      let uu____4607 = braces_with_nesting lift_op_doc  in
+      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4607  in
+    FStar_Pprint.op_Hat_Hat uu____4600 uu____4606
 
 and (p_qualifier : FStar_Parser_AST.qualifier -> FStar_Pprint.document) =
-  fun uu___56_4606  ->
-    match uu___56_4606 with
+  fun uu___56_4608  ->
+    match uu___56_4608 with
     | FStar_Parser_AST.Private  -> str "private"
     | FStar_Parser_AST.Abstract  -> str "abstract"
     | FStar_Parser_AST.Noeq  -> str "noeq"
@@ -1801,27 +1801,27 @@ and (p_qualifiers : FStar_Parser_AST.qualifiers -> FStar_Pprint.document) =
   fun qs  ->
     match qs with
     | [] -> FStar_Pprint.empty
-    | uu____4608 ->
-        let uu____4609 =
-          let uu____4610 = FStar_List.map p_qualifier qs  in
-          FStar_Pprint.flow break1 uu____4610  in
-        FStar_Pprint.op_Hat_Hat uu____4609 FStar_Pprint.hardline
+    | uu____4610 ->
+        let uu____4611 =
+          let uu____4612 = FStar_List.map p_qualifier qs  in
+          FStar_Pprint.flow break1 uu____4612  in
+        FStar_Pprint.op_Hat_Hat uu____4611 FStar_Pprint.hardline
 
 and (p_letqualifier :
   FStar_Parser_AST.let_qualifier -> FStar_Pprint.document) =
-  fun uu___57_4613  ->
-    match uu___57_4613 with
+  fun uu___57_4615  ->
+    match uu___57_4615 with
     | FStar_Parser_AST.Rec  ->
-        let uu____4614 = str "rec"  in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4614
+        let uu____4616 = str "rec"  in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4616
     | FStar_Parser_AST.Mutable  ->
-        let uu____4615 = str "mutable"  in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4615
+        let uu____4617 = str "mutable"  in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4617
     | FStar_Parser_AST.NoLetQualifier  -> FStar_Pprint.empty
 
 and (p_aqual : FStar_Parser_AST.arg_qualifier -> FStar_Pprint.document) =
-  fun uu___58_4616  ->
-    match uu___58_4616 with
+  fun uu___58_4618  ->
+    match uu___58_4618 with
     | FStar_Parser_AST.Implicit  -> str "#"
     | FStar_Parser_AST.Equality  -> str "$"
 
@@ -1830,25 +1830,25 @@ and (p_disjunctivePattern :
   fun p  ->
     match p.FStar_Parser_AST.pat with
     | FStar_Parser_AST.PatOr pats ->
-        let uu____4621 =
-          let uu____4622 =
-            let uu____4623 =
+        let uu____4623 =
+          let uu____4624 =
+            let uu____4625 =
               FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.space  in
-            FStar_Pprint.op_Hat_Hat break1 uu____4623  in
-          FStar_Pprint.separate_map uu____4622 p_tuplePattern pats  in
-        FStar_Pprint.group uu____4621
-    | uu____4624 -> p_tuplePattern p
+            FStar_Pprint.op_Hat_Hat break1 uu____4625  in
+          FStar_Pprint.separate_map uu____4624 p_tuplePattern pats  in
+        FStar_Pprint.group uu____4623
+    | uu____4626 -> p_tuplePattern p
 
 and (p_tuplePattern : FStar_Parser_AST.pattern -> FStar_Pprint.document) =
   fun p  ->
     match p.FStar_Parser_AST.pat with
     | FStar_Parser_AST.PatTuple (pats,false ) ->
-        let uu____4631 =
-          let uu____4632 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
+        let uu____4633 =
+          let uu____4634 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
              in
-          FStar_Pprint.separate_map uu____4632 p_constructorPattern pats  in
-        FStar_Pprint.group uu____4631
-    | uu____4633 -> p_constructorPattern p
+          FStar_Pprint.separate_map uu____4634 p_constructorPattern pats  in
+        FStar_Pprint.group uu____4633
+    | uu____4635 -> p_constructorPattern p
 
 and (p_constructorPattern :
   FStar_Parser_AST.pattern -> FStar_Pprint.document) =
@@ -1856,23 +1856,23 @@ and (p_constructorPattern :
     match p.FStar_Parser_AST.pat with
     | FStar_Parser_AST.PatApp
         ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatName maybe_cons_lid;
-           FStar_Parser_AST.prange = uu____4636;_},hd1::tl1::[])
+           FStar_Parser_AST.prange = uu____4638;_},hd1::tl1::[])
         when
         FStar_Ident.lid_equals maybe_cons_lid FStar_Parser_Const.cons_lid ->
-        let uu____4641 =
+        let uu____4643 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.colon FStar_Pprint.colon  in
-        let uu____4642 = p_constructorPattern hd1  in
-        let uu____4643 = p_constructorPattern tl1  in
-        infix0 uu____4641 uu____4642 uu____4643
+        let uu____4644 = p_constructorPattern hd1  in
+        let uu____4645 = p_constructorPattern tl1  in
+        infix0 uu____4643 uu____4644 uu____4645
     | FStar_Parser_AST.PatApp
         ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatName uid;
-           FStar_Parser_AST.prange = uu____4645;_},pats)
+           FStar_Parser_AST.prange = uu____4647;_},pats)
         ->
-        let uu____4651 = p_quident uid  in
-        let uu____4652 =
+        let uu____4653 = p_quident uid  in
+        let uu____4654 =
           FStar_Pprint.separate_map break1 p_atomicPattern pats  in
-        prefix2 uu____4651 uu____4652
-    | uu____4653 -> p_atomicPattern p
+        prefix2 uu____4653 uu____4654
+    | uu____4655 -> p_atomicPattern p
 
 and (p_atomicPattern : FStar_Parser_AST.pattern -> FStar_Pprint.document) =
   fun p  ->
@@ -1881,92 +1881,92 @@ and (p_atomicPattern : FStar_Parser_AST.pattern -> FStar_Pprint.document) =
         (match ((pat.FStar_Parser_AST.pat), (t.FStar_Parser_AST.tm)) with
          | (FStar_Parser_AST.PatVar (lid,aqual),FStar_Parser_AST.Refine
             ({ FStar_Parser_AST.b = FStar_Parser_AST.Annotated (lid',t1);
-               FStar_Parser_AST.brange = uu____4669;
-               FStar_Parser_AST.blevel = uu____4670;
-               FStar_Parser_AST.aqual = uu____4671;_},phi))
+               FStar_Parser_AST.brange = uu____4671;
+               FStar_Parser_AST.blevel = uu____4672;
+               FStar_Parser_AST.aqual = uu____4673;_},phi))
              when lid.FStar_Ident.idText = lid'.FStar_Ident.idText ->
-             let uu____4677 =
-               let uu____4678 = p_ident lid  in
-               p_refinement aqual uu____4678 t1 phi  in
-             soft_parens_with_nesting uu____4677
+             let uu____4679 =
+               let uu____4680 = p_ident lid  in
+               p_refinement aqual uu____4680 t1 phi  in
+             soft_parens_with_nesting uu____4679
          | (FStar_Parser_AST.PatWild ,FStar_Parser_AST.Refine
             ({ FStar_Parser_AST.b = FStar_Parser_AST.NoName t1;
-               FStar_Parser_AST.brange = uu____4680;
-               FStar_Parser_AST.blevel = uu____4681;
-               FStar_Parser_AST.aqual = uu____4682;_},phi))
+               FStar_Parser_AST.brange = uu____4682;
+               FStar_Parser_AST.blevel = uu____4683;
+               FStar_Parser_AST.aqual = uu____4684;_},phi))
              ->
-             let uu____4684 =
+             let uu____4686 =
                p_refinement FStar_Pervasives_Native.None
                  FStar_Pprint.underscore t1 phi
                 in
-             soft_parens_with_nesting uu____4684
-         | uu____4685 ->
-             let uu____4690 =
-               let uu____4691 = p_tuplePattern pat  in
-               let uu____4692 =
-                 let uu____4693 = p_tmEqNoRefinement t  in
-                 FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____4693
+             soft_parens_with_nesting uu____4686
+         | uu____4687 ->
+             let uu____4692 =
+               let uu____4693 = p_tuplePattern pat  in
+               let uu____4694 =
+                 let uu____4695 = p_tmEqNoRefinement t  in
+                 FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____4695
                   in
-               FStar_Pprint.op_Hat_Hat uu____4691 uu____4692  in
-             soft_parens_with_nesting uu____4690)
+               FStar_Pprint.op_Hat_Hat uu____4693 uu____4694  in
+             soft_parens_with_nesting uu____4692)
     | FStar_Parser_AST.PatList pats ->
-        let uu____4697 =
+        let uu____4699 =
           separate_break_map FStar_Pprint.semi p_tuplePattern pats  in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "0")
-          FStar_Pprint.lbracket uu____4697 FStar_Pprint.rbracket
+          FStar_Pprint.lbracket uu____4699 FStar_Pprint.rbracket
     | FStar_Parser_AST.PatRecord pats ->
-        let p_recordFieldPat uu____4712 =
-          match uu____4712 with
+        let p_recordFieldPat uu____4714 =
+          match uu____4714 with
           | (lid,pat) ->
-              let uu____4719 = p_qlident lid  in
-              let uu____4720 = p_tuplePattern pat  in
-              infix2 FStar_Pprint.equals uu____4719 uu____4720
+              let uu____4721 = p_qlident lid  in
+              let uu____4722 = p_tuplePattern pat  in
+              infix2 FStar_Pprint.equals uu____4721 uu____4722
            in
-        let uu____4721 =
+        let uu____4723 =
           separate_break_map FStar_Pprint.semi p_recordFieldPat pats  in
-        soft_braces_with_nesting uu____4721
+        soft_braces_with_nesting uu____4723
     | FStar_Parser_AST.PatTuple (pats,true ) ->
-        let uu____4731 =
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen FStar_Pprint.bar  in
-        let uu____4732 =
-          separate_break_map FStar_Pprint.comma p_constructorPattern pats  in
         let uu____4733 =
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen FStar_Pprint.bar  in
+        let uu____4734 =
+          separate_break_map FStar_Pprint.comma p_constructorPattern pats  in
+        let uu____4735 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rparen  in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
-          uu____4731 uu____4732 uu____4733
+          uu____4733 uu____4734 uu____4735
     | FStar_Parser_AST.PatTvar (tv,arg_qualifier_opt) -> p_tvar tv
     | FStar_Parser_AST.PatOp op ->
-        let uu____4744 =
-          let uu____4745 =
-            let uu____4746 = str (FStar_Ident.text_of_id op)  in
-            let uu____4747 =
+        let uu____4746 =
+          let uu____4747 =
+            let uu____4748 = str (FStar_Ident.text_of_id op)  in
+            let uu____4749 =
               FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.rparen
                in
-            FStar_Pprint.op_Hat_Hat uu____4746 uu____4747  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4745  in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____4744
+            FStar_Pprint.op_Hat_Hat uu____4748 uu____4749  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____4747  in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____4746
     | FStar_Parser_AST.PatWild  -> FStar_Pprint.underscore
     | FStar_Parser_AST.PatConst c -> p_constant c
     | FStar_Parser_AST.PatVar (lid,aqual) ->
-        let uu____4755 = FStar_Pprint.optional p_aqual aqual  in
-        let uu____4756 = p_lident lid  in
-        FStar_Pprint.op_Hat_Hat uu____4755 uu____4756
+        let uu____4757 = FStar_Pprint.optional p_aqual aqual  in
+        let uu____4758 = p_lident lid  in
+        FStar_Pprint.op_Hat_Hat uu____4757 uu____4758
     | FStar_Parser_AST.PatName uid -> p_quident uid
-    | FStar_Parser_AST.PatOr uu____4758 -> failwith "Inner or pattern !"
+    | FStar_Parser_AST.PatOr uu____4760 -> failwith "Inner or pattern !"
     | FStar_Parser_AST.PatApp
-        ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatName uu____4761;
-           FStar_Parser_AST.prange = uu____4762;_},uu____4763)
+        ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatName uu____4763;
+           FStar_Parser_AST.prange = uu____4764;_},uu____4765)
         ->
-        let uu____4768 = p_tuplePattern p  in
-        soft_parens_with_nesting uu____4768
-    | FStar_Parser_AST.PatTuple (uu____4769,false ) ->
-        let uu____4774 = p_tuplePattern p  in
-        soft_parens_with_nesting uu____4774
-    | uu____4775 ->
-        let uu____4776 =
-          let uu____4777 = FStar_Parser_AST.pat_to_string p  in
-          FStar_Util.format1 "Invalid pattern %s" uu____4777  in
-        failwith uu____4776
+        let uu____4770 = p_tuplePattern p  in
+        soft_parens_with_nesting uu____4770
+    | FStar_Parser_AST.PatTuple (uu____4771,false ) ->
+        let uu____4776 = p_tuplePattern p  in
+        soft_parens_with_nesting uu____4776
+    | uu____4777 ->
+        let uu____4778 =
+          let uu____4779 = FStar_Parser_AST.pat_to_string p  in
+          FStar_Util.format1 "Invalid pattern %s" uu____4779  in
+        failwith uu____4778
 
 and (p_binder :
   Prims.bool -> FStar_Parser_AST.binder -> FStar_Pprint.document) =
@@ -1974,72 +1974,72 @@ and (p_binder :
     fun b  ->
       match b.FStar_Parser_AST.b with
       | FStar_Parser_AST.Variable lid ->
-          let uu____4781 =
+          let uu____4783 =
             FStar_Pprint.optional p_aqual b.FStar_Parser_AST.aqual  in
-          let uu____4782 = p_lident lid  in
-          FStar_Pprint.op_Hat_Hat uu____4781 uu____4782
+          let uu____4784 = p_lident lid  in
+          FStar_Pprint.op_Hat_Hat uu____4783 uu____4784
       | FStar_Parser_AST.TVariable lid -> p_lident lid
       | FStar_Parser_AST.Annotated (lid,t) ->
           let doc1 =
             match t.FStar_Parser_AST.tm with
             | FStar_Parser_AST.Refine
                 ({ FStar_Parser_AST.b = FStar_Parser_AST.Annotated (lid',t1);
-                   FStar_Parser_AST.brange = uu____4789;
-                   FStar_Parser_AST.blevel = uu____4790;
-                   FStar_Parser_AST.aqual = uu____4791;_},phi)
+                   FStar_Parser_AST.brange = uu____4791;
+                   FStar_Parser_AST.blevel = uu____4792;
+                   FStar_Parser_AST.aqual = uu____4793;_},phi)
                 when lid.FStar_Ident.idText = lid'.FStar_Ident.idText ->
-                let uu____4793 = p_ident lid  in
-                p_refinement b.FStar_Parser_AST.aqual uu____4793 t1 phi
-            | uu____4794 ->
-                let uu____4795 =
+                let uu____4795 = p_lident lid  in
+                p_refinement b.FStar_Parser_AST.aqual uu____4795 t1 phi
+            | uu____4796 ->
+                let uu____4797 =
                   FStar_Pprint.optional p_aqual b.FStar_Parser_AST.aqual  in
-                let uu____4796 =
-                  let uu____4797 = p_lident lid  in
-                  let uu____4798 =
-                    let uu____4799 = p_tmFormula t  in
+                let uu____4798 =
+                  let uu____4799 = p_lident lid  in
+                  let uu____4800 =
+                    let uu____4801 = p_tmFormula t  in
                     FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon
-                      uu____4799
+                      uu____4801
                      in
-                  FStar_Pprint.op_Hat_Hat uu____4797 uu____4798  in
-                FStar_Pprint.op_Hat_Hat uu____4795 uu____4796
+                  FStar_Pprint.op_Hat_Hat uu____4799 uu____4800  in
+                FStar_Pprint.op_Hat_Hat uu____4797 uu____4798
              in
           if is_atomic
           then
-            let uu____4800 =
-              let uu____4801 =
+            let uu____4802 =
+              let uu____4803 =
                 FStar_Pprint.op_Hat_Hat doc1 FStar_Pprint.rparen  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____4801  in
-            FStar_Pprint.group uu____4800
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____4803  in
+            FStar_Pprint.group uu____4802
           else FStar_Pprint.group doc1
-      | FStar_Parser_AST.TAnnotated uu____4803 ->
+      | FStar_Parser_AST.TAnnotated uu____4805 ->
           failwith "Is this still used ?"
       | FStar_Parser_AST.NoName t ->
           (match t.FStar_Parser_AST.tm with
            | FStar_Parser_AST.Refine
                ({ FStar_Parser_AST.b = FStar_Parser_AST.NoName t1;
-                  FStar_Parser_AST.brange = uu____4810;
-                  FStar_Parser_AST.blevel = uu____4811;
-                  FStar_Parser_AST.aqual = uu____4812;_},phi)
+                  FStar_Parser_AST.brange = uu____4812;
+                  FStar_Parser_AST.blevel = uu____4813;
+                  FStar_Parser_AST.aqual = uu____4814;_},phi)
                ->
                if is_atomic
                then
-                 let uu____4814 =
-                   let uu____4815 =
-                     let uu____4816 =
+                 let uu____4816 =
+                   let uu____4817 =
+                     let uu____4818 =
                        p_refinement b.FStar_Parser_AST.aqual
                          FStar_Pprint.underscore t1 phi
                         in
-                     FStar_Pprint.op_Hat_Hat uu____4816 FStar_Pprint.rparen
+                     FStar_Pprint.op_Hat_Hat uu____4818 FStar_Pprint.rparen
                       in
-                   FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____4815  in
-                 FStar_Pprint.group uu____4814
+                   FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____4817  in
+                 FStar_Pprint.group uu____4816
                else
-                 (let uu____4818 =
+                 (let uu____4820 =
                     p_refinement b.FStar_Parser_AST.aqual
                       FStar_Pprint.underscore t1 phi
                      in
-                  FStar_Pprint.group uu____4818)
-           | uu____4819 -> if is_atomic then p_atomicTerm t else p_appTerm t)
+                  FStar_Pprint.group uu____4820)
+           | uu____4821 -> if is_atomic then p_atomicTerm t else p_appTerm t)
 
 and (p_refinement :
   FStar_Parser_AST.arg_qualifier FStar_Pervasives_Native.option ->
@@ -2052,33 +2052,33 @@ and (p_refinement :
         fun phi  ->
           let is_t_atomic =
             match t.FStar_Parser_AST.tm with
-            | FStar_Parser_AST.Construct uu____4828 -> false
-            | FStar_Parser_AST.App uu____4839 -> false
-            | FStar_Parser_AST.Op uu____4846 -> false
-            | uu____4853 -> true  in
+            | FStar_Parser_AST.Construct uu____4830 -> false
+            | FStar_Parser_AST.App uu____4841 -> false
+            | FStar_Parser_AST.Op uu____4848 -> false
+            | uu____4855 -> true  in
           let phi1 = p_noSeqTerm false false phi  in
           let jump_break =
             if is_t_atomic
             then (Prims.parse_int "0")
             else (Prims.parse_int "1")  in
-          let uu____4857 =
-            let uu____4858 = FStar_Pprint.optional p_aqual aqual_opt  in
-            let uu____4859 =
+          let uu____4859 =
+            let uu____4860 = FStar_Pprint.optional p_aqual aqual_opt  in
+            let uu____4861 =
               FStar_Pprint.op_Hat_Hat binder FStar_Pprint.colon  in
-            FStar_Pprint.op_Hat_Hat uu____4858 uu____4859  in
-          let uu____4860 =
-            let uu____4861 = p_appTerm t  in
-            let uu____4862 =
-              let uu____4863 =
-                let uu____4864 =
-                  let uu____4865 = soft_braces_with_nesting_tight phi1  in
-                  let uu____4866 = soft_braces_with_nesting phi1  in
-                  FStar_Pprint.ifflat uu____4865 uu____4866  in
-                FStar_Pprint.group uu____4864  in
-              FStar_Pprint.jump (Prims.parse_int "2") jump_break uu____4863
+            FStar_Pprint.op_Hat_Hat uu____4860 uu____4861  in
+          let uu____4862 =
+            let uu____4863 = p_appTerm t  in
+            let uu____4864 =
+              let uu____4865 =
+                let uu____4866 =
+                  let uu____4867 = soft_braces_with_nesting_tight phi1  in
+                  let uu____4868 = soft_braces_with_nesting phi1  in
+                  FStar_Pprint.ifflat uu____4867 uu____4868  in
+                FStar_Pprint.group uu____4866  in
+              FStar_Pprint.jump (Prims.parse_int "2") jump_break uu____4865
                in
-            FStar_Pprint.op_Hat_Hat uu____4861 uu____4862  in
-          FStar_Pprint.op_Hat_Slash_Hat uu____4857 uu____4860
+            FStar_Pprint.op_Hat_Hat uu____4863 uu____4864  in
+          FStar_Pprint.op_Hat_Slash_Hat uu____4859 uu____4862
 
 and (p_binders_list :
   Prims.bool ->
@@ -2090,34 +2090,43 @@ and (p_binders :
   =
   fun is_atomic  ->
     fun bs  ->
-      let uu____4877 = p_binders_list is_atomic bs  in
-      separate_or_flow break1 uu____4877
+      let uu____4879 = p_binders_list is_atomic bs  in
+      separate_or_flow break1 uu____4879
+
+and (text_of_id_or_underscore : FStar_Ident.ident -> FStar_Pprint.document) =
+  fun lid  ->
+    if
+      FStar_Util.starts_with lid.FStar_Ident.idText
+        FStar_Ident.reserved_prefix
+    then FStar_Pprint.underscore
+    else str (FStar_Ident.text_of_id lid)
+
+and (text_of_lid_or_underscore : FStar_Ident.lident -> FStar_Pprint.document)
+  =
+  fun lid  ->
+    if
+      FStar_Util.starts_with (lid.FStar_Ident.ident).FStar_Ident.idText
+        FStar_Ident.reserved_prefix
+    then FStar_Pprint.underscore
+    else str (FStar_Ident.text_of_lid lid)
 
 and (p_qlident : FStar_Ident.lid -> FStar_Pprint.document) =
-  fun lid  -> str (FStar_Ident.text_of_lid lid)
+  fun lid  -> text_of_lid_or_underscore lid
 
 and (p_quident : FStar_Ident.lid -> FStar_Pprint.document) =
-  fun lid  -> str (FStar_Ident.text_of_lid lid)
+  fun lid  -> text_of_lid_or_underscore lid
 
 and (p_ident : FStar_Ident.ident -> FStar_Pprint.document) =
-  fun lid  -> str (FStar_Ident.text_of_id lid)
+  fun lid  -> text_of_id_or_underscore lid
 
 and (p_lident : FStar_Ident.ident -> FStar_Pprint.document) =
-  fun lid  -> str (FStar_Ident.text_of_id lid)
+  fun lid  -> text_of_id_or_underscore lid
 
 and (p_uident : FStar_Ident.ident -> FStar_Pprint.document) =
-  fun lid  -> str (FStar_Ident.text_of_id lid)
+  fun lid  -> text_of_id_or_underscore lid
 
 and (p_tvar : FStar_Ident.ident -> FStar_Pprint.document) =
-  fun lid  -> str (FStar_Ident.text_of_id lid)
-
-and (p_lidentOrUnderscore : FStar_Ident.ident -> FStar_Pprint.document) =
-  fun id1  ->
-    if
-      FStar_Util.starts_with FStar_Ident.reserved_prefix
-        id1.FStar_Ident.idText
-    then FStar_Pprint.underscore
-    else p_lident id1
+  fun lid  -> text_of_id_or_underscore lid
 
 and (paren_if : Prims.bool -> FStar_Pprint.document -> FStar_Pprint.document)
   = fun b  -> if b then soft_parens_with_nesting else (fun x  -> x)
@@ -2130,37 +2139,37 @@ and (p_term :
       fun e  ->
         match e.FStar_Parser_AST.tm with
         | FStar_Parser_AST.Seq (e1,e2) ->
-            let uu____4898 =
-              let uu____4899 =
-                let uu____4900 = p_noSeqTerm true false e1  in
-                FStar_Pprint.op_Hat_Hat uu____4900 FStar_Pprint.semi  in
-              FStar_Pprint.group uu____4899  in
-            let uu____4901 = p_term ps pb e2  in
-            FStar_Pprint.op_Hat_Slash_Hat uu____4898 uu____4901
+            let uu____4902 =
+              let uu____4903 =
+                let uu____4904 = p_noSeqTerm true false e1  in
+                FStar_Pprint.op_Hat_Hat uu____4904 FStar_Pprint.semi  in
+              FStar_Pprint.group uu____4903  in
+            let uu____4905 = p_term ps pb e2  in
+            FStar_Pprint.op_Hat_Slash_Hat uu____4902 uu____4905
         | FStar_Parser_AST.Bind (x,e1,e2) ->
-            let uu____4905 =
-              let uu____4906 =
-                let uu____4907 =
-                  let uu____4908 = p_lident x  in
-                  let uu____4909 =
+            let uu____4909 =
+              let uu____4910 =
+                let uu____4911 =
+                  let uu____4912 = p_lident x  in
+                  let uu____4913 =
                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                       FStar_Pprint.long_left_arrow
                      in
-                  FStar_Pprint.op_Hat_Hat uu____4908 uu____4909  in
-                let uu____4910 =
-                  let uu____4911 = p_noSeqTerm true false e1  in
-                  let uu____4912 =
+                  FStar_Pprint.op_Hat_Hat uu____4912 uu____4913  in
+                let uu____4914 =
+                  let uu____4915 = p_noSeqTerm true false e1  in
+                  let uu____4916 =
                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                       FStar_Pprint.semi
                      in
-                  FStar_Pprint.op_Hat_Hat uu____4911 uu____4912  in
-                op_Hat_Slash_Plus_Hat uu____4907 uu____4910  in
-              FStar_Pprint.group uu____4906  in
-            let uu____4913 = p_term ps pb e2  in
-            FStar_Pprint.op_Hat_Slash_Hat uu____4905 uu____4913
-        | uu____4914 ->
-            let uu____4915 = p_noSeqTerm ps pb e  in
-            FStar_Pprint.group uu____4915
+                  FStar_Pprint.op_Hat_Hat uu____4915 uu____4916  in
+                op_Hat_Slash_Plus_Hat uu____4911 uu____4914  in
+              FStar_Pprint.group uu____4910  in
+            let uu____4917 = p_term ps pb e2  in
+            FStar_Pprint.op_Hat_Slash_Hat uu____4909 uu____4917
+        | uu____4918 ->
+            let uu____4919 = p_noSeqTerm ps pb e  in
+            FStar_Pprint.group uu____4919
 
 and (p_noSeqTerm :
   Prims.bool -> Prims.bool -> FStar_Parser_AST.term -> FStar_Pprint.document)
@@ -2177,228 +2186,228 @@ and (p_noSeqTerm' :
       fun e  ->
         match e.FStar_Parser_AST.tm with
         | FStar_Parser_AST.Ascribed (e1,t,FStar_Pervasives_Native.None ) ->
-            let uu____4926 =
-              let uu____4927 = p_tmIff e1  in
-              let uu____4928 =
-                let uu____4929 =
-                  let uu____4930 = p_typ ps pb t  in
-                  FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____4930
+            let uu____4930 =
+              let uu____4931 = p_tmIff e1  in
+              let uu____4932 =
+                let uu____4933 =
+                  let uu____4934 = p_typ ps pb t  in
+                  FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____4934
                    in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.langle uu____4929  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____4927 uu____4928  in
-            FStar_Pprint.group uu____4926
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.langle uu____4933  in
+              FStar_Pprint.op_Hat_Slash_Hat uu____4931 uu____4932  in
+            FStar_Pprint.group uu____4930
         | FStar_Parser_AST.Ascribed (e1,t,FStar_Pervasives_Native.Some tac)
             ->
-            let uu____4936 =
-              let uu____4937 = p_tmIff e1  in
-              let uu____4938 =
-                let uu____4939 =
-                  let uu____4940 =
-                    let uu____4941 = p_typ false false t  in
-                    let uu____4942 =
-                      let uu____4943 = str "by"  in
-                      let uu____4944 = p_typ ps pb tac  in
-                      FStar_Pprint.op_Hat_Slash_Hat uu____4943 uu____4944  in
-                    FStar_Pprint.op_Hat_Slash_Hat uu____4941 uu____4942  in
-                  FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____4940
+            let uu____4940 =
+              let uu____4941 = p_tmIff e1  in
+              let uu____4942 =
+                let uu____4943 =
+                  let uu____4944 =
+                    let uu____4945 = p_typ false false t  in
+                    let uu____4946 =
+                      let uu____4947 = str "by"  in
+                      let uu____4948 = p_typ ps pb tac  in
+                      FStar_Pprint.op_Hat_Slash_Hat uu____4947 uu____4948  in
+                    FStar_Pprint.op_Hat_Slash_Hat uu____4945 uu____4946  in
+                  FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____4944
                    in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.langle uu____4939  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____4937 uu____4938  in
-            FStar_Pprint.group uu____4936
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.langle uu____4943  in
+              FStar_Pprint.op_Hat_Slash_Hat uu____4941 uu____4942  in
+            FStar_Pprint.group uu____4940
         | FStar_Parser_AST.Op
             ({ FStar_Ident.idText = ".()<-";
-               FStar_Ident.idRange = uu____4945;_},e1::e2::e3::[])
+               FStar_Ident.idRange = uu____4949;_},e1::e2::e3::[])
             ->
-            let uu____4951 =
-              let uu____4952 =
-                let uu____4953 =
-                  let uu____4954 = p_atomicTermNotQUident e1  in
-                  let uu____4955 =
-                    let uu____4956 =
-                      let uu____4957 =
-                        let uu____4958 = p_term false false e2  in
-                        soft_parens_with_nesting uu____4958  in
-                      let uu____4959 =
+            let uu____4955 =
+              let uu____4956 =
+                let uu____4957 =
+                  let uu____4958 = p_atomicTermNotQUident e1  in
+                  let uu____4959 =
+                    let uu____4960 =
+                      let uu____4961 =
+                        let uu____4962 = p_term false false e2  in
+                        soft_parens_with_nesting uu____4962  in
+                      let uu____4963 =
                         FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                           FStar_Pprint.larrow
                          in
-                      FStar_Pprint.op_Hat_Hat uu____4957 uu____4959  in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____4956  in
-                  FStar_Pprint.op_Hat_Hat uu____4954 uu____4955  in
-                FStar_Pprint.group uu____4953  in
-              let uu____4960 =
-                let uu____4961 = p_noSeqTerm ps pb e3  in jump2 uu____4961
+                      FStar_Pprint.op_Hat_Hat uu____4961 uu____4963  in
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____4960  in
+                  FStar_Pprint.op_Hat_Hat uu____4958 uu____4959  in
+                FStar_Pprint.group uu____4957  in
+              let uu____4964 =
+                let uu____4965 = p_noSeqTerm ps pb e3  in jump2 uu____4965
                  in
-              FStar_Pprint.op_Hat_Hat uu____4952 uu____4960  in
-            FStar_Pprint.group uu____4951
+              FStar_Pprint.op_Hat_Hat uu____4956 uu____4964  in
+            FStar_Pprint.group uu____4955
         | FStar_Parser_AST.Op
             ({ FStar_Ident.idText = ".[]<-";
-               FStar_Ident.idRange = uu____4962;_},e1::e2::e3::[])
+               FStar_Ident.idRange = uu____4966;_},e1::e2::e3::[])
             ->
-            let uu____4968 =
-              let uu____4969 =
-                let uu____4970 =
-                  let uu____4971 = p_atomicTermNotQUident e1  in
-                  let uu____4972 =
-                    let uu____4973 =
-                      let uu____4974 =
-                        let uu____4975 = p_term false false e2  in
-                        soft_brackets_with_nesting uu____4975  in
-                      let uu____4976 =
+            let uu____4972 =
+              let uu____4973 =
+                let uu____4974 =
+                  let uu____4975 = p_atomicTermNotQUident e1  in
+                  let uu____4976 =
+                    let uu____4977 =
+                      let uu____4978 =
+                        let uu____4979 = p_term false false e2  in
+                        soft_brackets_with_nesting uu____4979  in
+                      let uu____4980 =
                         FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                           FStar_Pprint.larrow
                          in
-                      FStar_Pprint.op_Hat_Hat uu____4974 uu____4976  in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____4973  in
-                  FStar_Pprint.op_Hat_Hat uu____4971 uu____4972  in
-                FStar_Pprint.group uu____4970  in
-              let uu____4977 =
-                let uu____4978 = p_noSeqTerm ps pb e3  in jump2 uu____4978
+                      FStar_Pprint.op_Hat_Hat uu____4978 uu____4980  in
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____4977  in
+                  FStar_Pprint.op_Hat_Hat uu____4975 uu____4976  in
+                FStar_Pprint.group uu____4974  in
+              let uu____4981 =
+                let uu____4982 = p_noSeqTerm ps pb e3  in jump2 uu____4982
                  in
-              FStar_Pprint.op_Hat_Hat uu____4969 uu____4977  in
-            FStar_Pprint.group uu____4968
+              FStar_Pprint.op_Hat_Hat uu____4973 uu____4981  in
+            FStar_Pprint.group uu____4972
         | FStar_Parser_AST.Requires (e1,wtf) ->
-            let uu____4988 =
-              let uu____4989 = str "requires"  in
-              let uu____4990 = p_typ ps pb e1  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____4989 uu____4990  in
-            FStar_Pprint.group uu____4988
+            let uu____4992 =
+              let uu____4993 = str "requires"  in
+              let uu____4994 = p_typ ps pb e1  in
+              FStar_Pprint.op_Hat_Slash_Hat uu____4993 uu____4994  in
+            FStar_Pprint.group uu____4992
         | FStar_Parser_AST.Ensures (e1,wtf) ->
-            let uu____5000 =
-              let uu____5001 = str "ensures"  in
-              let uu____5002 = p_typ ps pb e1  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____5001 uu____5002  in
-            FStar_Pprint.group uu____5000
+            let uu____5004 =
+              let uu____5005 = str "ensures"  in
+              let uu____5006 = p_typ ps pb e1  in
+              FStar_Pprint.op_Hat_Slash_Hat uu____5005 uu____5006  in
+            FStar_Pprint.group uu____5004
         | FStar_Parser_AST.Attributes es ->
-            let uu____5006 =
-              let uu____5007 = str "attributes"  in
-              let uu____5008 =
+            let uu____5010 =
+              let uu____5011 = str "attributes"  in
+              let uu____5012 =
                 FStar_Pprint.separate_map break1 p_atomicTerm es  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____5007 uu____5008  in
-            FStar_Pprint.group uu____5006
+              FStar_Pprint.op_Hat_Slash_Hat uu____5011 uu____5012  in
+            FStar_Pprint.group uu____5010
         | FStar_Parser_AST.If (e1,e2,e3) ->
             if is_unit e3
             then
-              let uu____5012 =
-                let uu____5013 =
-                  let uu____5014 = str "if"  in
-                  let uu____5015 = p_noSeqTerm false false e1  in
-                  op_Hat_Slash_Plus_Hat uu____5014 uu____5015  in
-                let uu____5016 =
-                  let uu____5017 = str "then"  in
-                  let uu____5018 = p_noSeqTerm ps pb e2  in
-                  op_Hat_Slash_Plus_Hat uu____5017 uu____5018  in
-                FStar_Pprint.op_Hat_Slash_Hat uu____5013 uu____5016  in
-              FStar_Pprint.group uu____5012
+              let uu____5016 =
+                let uu____5017 =
+                  let uu____5018 = str "if"  in
+                  let uu____5019 = p_noSeqTerm false false e1  in
+                  op_Hat_Slash_Plus_Hat uu____5018 uu____5019  in
+                let uu____5020 =
+                  let uu____5021 = str "then"  in
+                  let uu____5022 = p_noSeqTerm ps pb e2  in
+                  op_Hat_Slash_Plus_Hat uu____5021 uu____5022  in
+                FStar_Pprint.op_Hat_Slash_Hat uu____5017 uu____5020  in
+              FStar_Pprint.group uu____5016
             else
               (let e2_doc =
                  match e2.FStar_Parser_AST.tm with
-                 | FStar_Parser_AST.If (uu____5021,uu____5022,e31) when
+                 | FStar_Parser_AST.If (uu____5025,uu____5026,e31) when
                      is_unit e31 ->
-                     let uu____5024 = p_noSeqTerm false false e2  in
-                     soft_parens_with_nesting uu____5024
-                 | uu____5025 -> p_noSeqTerm false false e2  in
-               let uu____5026 =
-                 let uu____5027 =
-                   let uu____5028 = str "if"  in
-                   let uu____5029 = p_noSeqTerm false false e1  in
-                   op_Hat_Slash_Plus_Hat uu____5028 uu____5029  in
-                 let uu____5030 =
-                   let uu____5031 =
-                     let uu____5032 = str "then"  in
-                     op_Hat_Slash_Plus_Hat uu____5032 e2_doc  in
-                   let uu____5033 =
-                     let uu____5034 = str "else"  in
-                     let uu____5035 = p_noSeqTerm ps pb e3  in
-                     op_Hat_Slash_Plus_Hat uu____5034 uu____5035  in
-                   FStar_Pprint.op_Hat_Slash_Hat uu____5031 uu____5033  in
-                 FStar_Pprint.op_Hat_Slash_Hat uu____5027 uu____5030  in
-               FStar_Pprint.group uu____5026)
+                     let uu____5028 = p_noSeqTerm false false e2  in
+                     soft_parens_with_nesting uu____5028
+                 | uu____5029 -> p_noSeqTerm false false e2  in
+               let uu____5030 =
+                 let uu____5031 =
+                   let uu____5032 = str "if"  in
+                   let uu____5033 = p_noSeqTerm false false e1  in
+                   op_Hat_Slash_Plus_Hat uu____5032 uu____5033  in
+                 let uu____5034 =
+                   let uu____5035 =
+                     let uu____5036 = str "then"  in
+                     op_Hat_Slash_Plus_Hat uu____5036 e2_doc  in
+                   let uu____5037 =
+                     let uu____5038 = str "else"  in
+                     let uu____5039 = p_noSeqTerm ps pb e3  in
+                     op_Hat_Slash_Plus_Hat uu____5038 uu____5039  in
+                   FStar_Pprint.op_Hat_Slash_Hat uu____5035 uu____5037  in
+                 FStar_Pprint.op_Hat_Slash_Hat uu____5031 uu____5034  in
+               FStar_Pprint.group uu____5030)
         | FStar_Parser_AST.TryWith (e1,branches) ->
-            let uu____5058 =
-              let uu____5059 =
-                let uu____5060 =
-                  let uu____5061 = str "try"  in
-                  let uu____5062 = p_noSeqTerm false false e1  in
-                  prefix2 uu____5061 uu____5062  in
-                let uu____5063 =
-                  let uu____5064 = str "with"  in
-                  let uu____5065 =
+            let uu____5062 =
+              let uu____5063 =
+                let uu____5064 =
+                  let uu____5065 = str "try"  in
+                  let uu____5066 = p_noSeqTerm false false e1  in
+                  prefix2 uu____5065 uu____5066  in
+                let uu____5067 =
+                  let uu____5068 = str "with"  in
+                  let uu____5069 =
                     separate_map_last FStar_Pprint.hardline p_patternBranch
                       branches
                      in
-                  FStar_Pprint.op_Hat_Slash_Hat uu____5064 uu____5065  in
-                FStar_Pprint.op_Hat_Slash_Hat uu____5060 uu____5063  in
-              FStar_Pprint.group uu____5059  in
-            let uu____5074 = paren_if (ps || pb)  in uu____5074 uu____5058
+                  FStar_Pprint.op_Hat_Slash_Hat uu____5068 uu____5069  in
+                FStar_Pprint.op_Hat_Slash_Hat uu____5064 uu____5067  in
+              FStar_Pprint.group uu____5063  in
+            let uu____5078 = paren_if (ps || pb)  in uu____5078 uu____5062
         | FStar_Parser_AST.Match (e1,branches) ->
-            let uu____5099 =
-              let uu____5100 =
-                let uu____5101 =
-                  let uu____5102 = str "match"  in
-                  let uu____5103 = p_noSeqTerm false false e1  in
-                  let uu____5104 = str "with"  in
-                  FStar_Pprint.surround (Prims.parse_int "2")
-                    (Prims.parse_int "1") uu____5102 uu____5103 uu____5104
-                   in
+            let uu____5103 =
+              let uu____5104 =
                 let uu____5105 =
+                  let uu____5106 = str "match"  in
+                  let uu____5107 = p_noSeqTerm false false e1  in
+                  let uu____5108 = str "with"  in
+                  FStar_Pprint.surround (Prims.parse_int "2")
+                    (Prims.parse_int "1") uu____5106 uu____5107 uu____5108
+                   in
+                let uu____5109 =
                   separate_map_last FStar_Pprint.hardline p_patternBranch
                     branches
                    in
-                FStar_Pprint.op_Hat_Slash_Hat uu____5101 uu____5105  in
-              FStar_Pprint.group uu____5100  in
-            let uu____5114 = paren_if (ps || pb)  in uu____5114 uu____5099
+                FStar_Pprint.op_Hat_Slash_Hat uu____5105 uu____5109  in
+              FStar_Pprint.group uu____5104  in
+            let uu____5118 = paren_if (ps || pb)  in uu____5118 uu____5103
         | FStar_Parser_AST.LetOpen (uid,e1) ->
-            let uu____5119 =
-              let uu____5120 =
-                let uu____5121 =
-                  let uu____5122 = str "let open"  in
-                  let uu____5123 = p_quident uid  in
-                  let uu____5124 = str "in"  in
+            let uu____5123 =
+              let uu____5124 =
+                let uu____5125 =
+                  let uu____5126 = str "let open"  in
+                  let uu____5127 = p_quident uid  in
+                  let uu____5128 = str "in"  in
                   FStar_Pprint.surround (Prims.parse_int "2")
-                    (Prims.parse_int "1") uu____5122 uu____5123 uu____5124
+                    (Prims.parse_int "1") uu____5126 uu____5127 uu____5128
                    in
-                let uu____5125 = p_term false pb e1  in
-                FStar_Pprint.op_Hat_Slash_Hat uu____5121 uu____5125  in
-              FStar_Pprint.group uu____5120  in
-            let uu____5126 = paren_if ps  in uu____5126 uu____5119
+                let uu____5129 = p_term false pb e1  in
+                FStar_Pprint.op_Hat_Slash_Hat uu____5125 uu____5129  in
+              FStar_Pprint.group uu____5124  in
+            let uu____5130 = paren_if ps  in uu____5130 uu____5123
         | FStar_Parser_AST.Let (q,lbs,e1) ->
-            let p_lb q1 uu____5182 is_last =
-              match uu____5182 with
+            let p_lb q1 uu____5186 is_last =
+              match uu____5186 with
               | (a,(pat,e2)) ->
                   let attrs = p_attrs_opt a  in
                   let doc_let_or_and =
                     match q1 with
                     | FStar_Pervasives_Native.Some (FStar_Parser_AST.Rec ) ->
-                        let uu____5215 =
-                          let uu____5216 = str "let"  in
-                          let uu____5217 = str "rec"  in
-                          FStar_Pprint.op_Hat_Slash_Hat uu____5216 uu____5217
+                        let uu____5219 =
+                          let uu____5220 = str "let"  in
+                          let uu____5221 = str "rec"  in
+                          FStar_Pprint.op_Hat_Slash_Hat uu____5220 uu____5221
                            in
-                        FStar_Pprint.group uu____5215
+                        FStar_Pprint.group uu____5219
                     | FStar_Pervasives_Native.Some
                         (FStar_Parser_AST.NoLetQualifier ) -> str "let"
-                    | uu____5218 -> str "and"  in
+                    | uu____5222 -> str "and"  in
                   let doc_pat = p_letlhs doc_let_or_and (pat, e2)  in
                   let doc_expr = p_term false false e2  in
-                  let uu____5223 =
+                  let uu____5227 =
                     if is_last
                     then
-                      let uu____5224 =
+                      let uu____5228 =
                         FStar_Pprint.flow break1
                           [doc_pat; FStar_Pprint.equals]
                          in
-                      let uu____5225 = str "in"  in
+                      let uu____5229 = str "in"  in
                       FStar_Pprint.surround (Prims.parse_int "2")
-                        (Prims.parse_int "1") uu____5224 doc_expr uu____5225
+                        (Prims.parse_int "1") uu____5228 doc_expr uu____5229
                     else
-                      (let uu____5227 =
+                      (let uu____5231 =
                          FStar_Pprint.flow break1
                            [doc_pat; FStar_Pprint.equals; doc_expr]
                           in
-                       FStar_Pprint.hang (Prims.parse_int "2") uu____5227)
+                       FStar_Pprint.hang (Prims.parse_int "2") uu____5231)
                      in
-                  FStar_Pprint.op_Hat_Hat attrs uu____5223
+                  FStar_Pprint.op_Hat_Hat attrs uu____5227
                in
             let l = FStar_List.length lbs  in
             let lbs_docs =
@@ -2407,89 +2416,89 @@ and (p_noSeqTerm' :
                    fun lb  ->
                      if i = (Prims.parse_int "0")
                      then
-                       let uu____5273 =
+                       let uu____5277 =
                          p_lb (FStar_Pervasives_Native.Some q) lb
                            (i = (l - (Prims.parse_int "1")))
                           in
-                       FStar_Pprint.group uu____5273
+                       FStar_Pprint.group uu____5277
                      else
-                       (let uu____5281 =
+                       (let uu____5285 =
                           p_lb FStar_Pervasives_Native.None lb
                             (i = (l - (Prims.parse_int "1")))
                            in
-                        FStar_Pprint.group uu____5281)) lbs
+                        FStar_Pprint.group uu____5285)) lbs
                in
             let lbs_doc =
-              let uu____5289 = FStar_Pprint.separate break1 lbs_docs  in
-              FStar_Pprint.group uu____5289  in
-            let uu____5290 =
-              let uu____5291 =
-                let uu____5292 =
-                  let uu____5293 = p_term false pb e1  in
-                  FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu____5293
+              let uu____5293 = FStar_Pprint.separate break1 lbs_docs  in
+              FStar_Pprint.group uu____5293  in
+            let uu____5294 =
+              let uu____5295 =
+                let uu____5296 =
+                  let uu____5297 = p_term false pb e1  in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu____5297
                    in
-                FStar_Pprint.op_Hat_Hat lbs_doc uu____5292  in
-              FStar_Pprint.group uu____5291  in
-            let uu____5294 = paren_if ps  in uu____5294 uu____5290
+                FStar_Pprint.op_Hat_Hat lbs_doc uu____5296  in
+              FStar_Pprint.group uu____5295  in
+            let uu____5298 = paren_if ps  in uu____5298 uu____5294
         | FStar_Parser_AST.Abs
             ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatVar (x,typ_opt);
-               FStar_Parser_AST.prange = uu____5299;_}::[],{
+               FStar_Parser_AST.prange = uu____5303;_}::[],{
                                                              FStar_Parser_AST.tm
                                                                =
                                                                FStar_Parser_AST.Match
                                                                (maybe_x,branches);
                                                              FStar_Parser_AST.range
-                                                               = uu____5302;
+                                                               = uu____5306;
                                                              FStar_Parser_AST.level
-                                                               = uu____5303;_})
+                                                               = uu____5307;_})
             when matches_var maybe_x x ->
-            let uu____5330 =
-              let uu____5331 =
-                let uu____5332 = str "function"  in
-                let uu____5333 =
+            let uu____5334 =
+              let uu____5335 =
+                let uu____5336 = str "function"  in
+                let uu____5337 =
                   separate_map_last FStar_Pprint.hardline p_patternBranch
                     branches
                    in
-                FStar_Pprint.op_Hat_Slash_Hat uu____5332 uu____5333  in
-              FStar_Pprint.group uu____5331  in
-            let uu____5342 = paren_if (ps || pb)  in uu____5342 uu____5330
+                FStar_Pprint.op_Hat_Slash_Hat uu____5336 uu____5337  in
+              FStar_Pprint.group uu____5335  in
+            let uu____5346 = paren_if (ps || pb)  in uu____5346 uu____5334
         | FStar_Parser_AST.Quote (e1,FStar_Parser_AST.Dynamic ) ->
-            let uu____5346 =
-              let uu____5347 = str "quote"  in
-              let uu____5348 = p_noSeqTerm ps pb e1  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____5347 uu____5348  in
-            FStar_Pprint.group uu____5346
-        | FStar_Parser_AST.Quote (e1,FStar_Parser_AST.Static ) ->
             let uu____5350 =
-              let uu____5351 = str "`"  in
+              let uu____5351 = str "quote"  in
               let uu____5352 = p_noSeqTerm ps pb e1  in
-              FStar_Pprint.op_Hat_Hat uu____5351 uu____5352  in
+              FStar_Pprint.op_Hat_Slash_Hat uu____5351 uu____5352  in
             FStar_Pprint.group uu____5350
-        | FStar_Parser_AST.VQuote e1 ->
+        | FStar_Parser_AST.Quote (e1,FStar_Parser_AST.Static ) ->
             let uu____5354 =
-              let uu____5355 = str "%`"  in
+              let uu____5355 = str "`"  in
               let uu____5356 = p_noSeqTerm ps pb e1  in
               FStar_Pprint.op_Hat_Hat uu____5355 uu____5356  in
             FStar_Pprint.group uu____5354
-        | uu____5357 -> p_typ ps pb e
+        | FStar_Parser_AST.VQuote e1 ->
+            let uu____5358 =
+              let uu____5359 = str "%`"  in
+              let uu____5360 = p_noSeqTerm ps pb e1  in
+              FStar_Pprint.op_Hat_Hat uu____5359 uu____5360  in
+            FStar_Pprint.group uu____5358
+        | uu____5361 -> p_typ ps pb e
 
 and (p_attrs_opt :
   FStar_Parser_AST.term Prims.list FStar_Pervasives_Native.option ->
     FStar_Pprint.document)
   =
-  fun uu___59_5358  ->
-    match uu___59_5358 with
+  fun uu___59_5362  ->
+    match uu___59_5362 with
     | FStar_Pervasives_Native.None  -> FStar_Pprint.empty
     | FStar_Pervasives_Native.Some terms ->
-        let uu____5370 =
-          let uu____5371 = str "[@"  in
-          let uu____5372 =
-            let uu____5373 =
+        let uu____5374 =
+          let uu____5375 = str "[@"  in
+          let uu____5376 =
+            let uu____5377 =
               FStar_Pprint.separate_map break1 p_atomicTerm terms  in
-            let uu____5374 = str "]"  in
-            FStar_Pprint.op_Hat_Slash_Hat uu____5373 uu____5374  in
-          FStar_Pprint.op_Hat_Slash_Hat uu____5371 uu____5372  in
-        FStar_Pprint.group uu____5370
+            let uu____5378 = str "]"  in
+            FStar_Pprint.op_Hat_Slash_Hat uu____5377 uu____5378  in
+          FStar_Pprint.op_Hat_Slash_Hat uu____5375 uu____5376  in
+        FStar_Pprint.group uu____5374
 
 and (p_typ :
   Prims.bool -> Prims.bool -> FStar_Parser_AST.term -> FStar_Pprint.document)
@@ -2510,108 +2519,108 @@ and (p_typ' :
             let term_doc = p_noSeqTerm ps pb e1  in
             (match trigger with
              | [] ->
-                 let uu____5400 =
-                   let uu____5401 =
-                     let uu____5402 = p_quantifier e  in
-                     FStar_Pprint.op_Hat_Hat uu____5402 FStar_Pprint.space
+                 let uu____5404 =
+                   let uu____5405 =
+                     let uu____5406 = p_quantifier e  in
+                     FStar_Pprint.op_Hat_Hat uu____5406 FStar_Pprint.space
                       in
                    FStar_Pprint.soft_surround (Prims.parse_int "2")
-                     (Prims.parse_int "0") uu____5401 binders_doc
+                     (Prims.parse_int "0") uu____5405 binders_doc
                      FStar_Pprint.dot
                     in
-                 prefix2 uu____5400 term_doc
+                 prefix2 uu____5404 term_doc
              | pats ->
-                 let uu____5408 =
-                   let uu____5409 =
-                     let uu____5410 =
-                       let uu____5411 =
-                         let uu____5412 = p_quantifier e  in
-                         FStar_Pprint.op_Hat_Hat uu____5412
+                 let uu____5412 =
+                   let uu____5413 =
+                     let uu____5414 =
+                       let uu____5415 =
+                         let uu____5416 = p_quantifier e  in
+                         FStar_Pprint.op_Hat_Hat uu____5416
                            FStar_Pprint.space
                           in
                        FStar_Pprint.soft_surround (Prims.parse_int "2")
-                         (Prims.parse_int "0") uu____5411 binders_doc
+                         (Prims.parse_int "0") uu____5415 binders_doc
                          FStar_Pprint.dot
                         in
-                     let uu____5413 = p_trigger trigger  in
-                     prefix2 uu____5410 uu____5413  in
-                   FStar_Pprint.group uu____5409  in
-                 prefix2 uu____5408 term_doc)
+                     let uu____5417 = p_trigger trigger  in
+                     prefix2 uu____5414 uu____5417  in
+                   FStar_Pprint.group uu____5413  in
+                 prefix2 uu____5412 term_doc)
         | FStar_Parser_AST.QExists (bs,trigger,e1) ->
             let binders_doc = p_binders true bs  in
             let term_doc = p_noSeqTerm ps pb e1  in
             (match trigger with
              | [] ->
-                 let uu____5433 =
-                   let uu____5434 =
-                     let uu____5435 = p_quantifier e  in
-                     FStar_Pprint.op_Hat_Hat uu____5435 FStar_Pprint.space
+                 let uu____5437 =
+                   let uu____5438 =
+                     let uu____5439 = p_quantifier e  in
+                     FStar_Pprint.op_Hat_Hat uu____5439 FStar_Pprint.space
                       in
                    FStar_Pprint.soft_surround (Prims.parse_int "2")
-                     (Prims.parse_int "0") uu____5434 binders_doc
+                     (Prims.parse_int "0") uu____5438 binders_doc
                      FStar_Pprint.dot
                     in
-                 prefix2 uu____5433 term_doc
+                 prefix2 uu____5437 term_doc
              | pats ->
-                 let uu____5441 =
-                   let uu____5442 =
-                     let uu____5443 =
-                       let uu____5444 =
-                         let uu____5445 = p_quantifier e  in
-                         FStar_Pprint.op_Hat_Hat uu____5445
+                 let uu____5445 =
+                   let uu____5446 =
+                     let uu____5447 =
+                       let uu____5448 =
+                         let uu____5449 = p_quantifier e  in
+                         FStar_Pprint.op_Hat_Hat uu____5449
                            FStar_Pprint.space
                           in
                        FStar_Pprint.soft_surround (Prims.parse_int "2")
-                         (Prims.parse_int "0") uu____5444 binders_doc
+                         (Prims.parse_int "0") uu____5448 binders_doc
                          FStar_Pprint.dot
                         in
-                     let uu____5446 = p_trigger trigger  in
-                     prefix2 uu____5443 uu____5446  in
-                   FStar_Pprint.group uu____5442  in
-                 prefix2 uu____5441 term_doc)
-        | uu____5447 -> p_simpleTerm ps pb e
+                     let uu____5450 = p_trigger trigger  in
+                     prefix2 uu____5447 uu____5450  in
+                   FStar_Pprint.group uu____5446  in
+                 prefix2 uu____5445 term_doc)
+        | uu____5451 -> p_simpleTerm ps pb e
 
 and (p_quantifier : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
-    | FStar_Parser_AST.QForall uu____5449 -> str "forall"
-    | FStar_Parser_AST.QExists uu____5462 -> str "exists"
-    | uu____5475 ->
+    | FStar_Parser_AST.QForall uu____5453 -> str "forall"
+    | FStar_Parser_AST.QExists uu____5466 -> str "exists"
+    | uu____5479 ->
         failwith "Imposible : p_quantifier called on a non-quantifier term"
 
 and (p_trigger :
   FStar_Parser_AST.term Prims.list Prims.list -> FStar_Pprint.document) =
-  fun uu___60_5476  ->
-    match uu___60_5476 with
+  fun uu___60_5480  ->
+    match uu___60_5480 with
     | [] -> FStar_Pprint.empty
     | pats ->
-        let uu____5488 =
-          let uu____5489 =
-            let uu____5490 =
-              let uu____5491 = str "pattern"  in
-              let uu____5492 =
-                let uu____5493 =
-                  let uu____5494 = p_disjunctivePats pats  in
-                  jump2 uu____5494  in
-                FStar_Pprint.op_Hat_Hat uu____5493 FStar_Pprint.rbrace  in
-              FStar_Pprint.op_Hat_Slash_Hat uu____5491 uu____5492  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____5490  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace uu____5489  in
-        FStar_Pprint.group uu____5488
+        let uu____5492 =
+          let uu____5493 =
+            let uu____5494 =
+              let uu____5495 = str "pattern"  in
+              let uu____5496 =
+                let uu____5497 =
+                  let uu____5498 = p_disjunctivePats pats  in
+                  jump2 uu____5498  in
+                FStar_Pprint.op_Hat_Hat uu____5497 FStar_Pprint.rbrace  in
+              FStar_Pprint.op_Hat_Slash_Hat uu____5495 uu____5496  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____5494  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace uu____5493  in
+        FStar_Pprint.group uu____5492
 
 and (p_disjunctivePats :
   FStar_Parser_AST.term Prims.list Prims.list -> FStar_Pprint.document) =
   fun pats  ->
-    let uu____5500 = str "\\/"  in
-    FStar_Pprint.separate_map uu____5500 p_conjunctivePats pats
+    let uu____5504 = str "\\/"  in
+    FStar_Pprint.separate_map uu____5504 p_conjunctivePats pats
 
 and (p_conjunctivePats :
   FStar_Parser_AST.term Prims.list -> FStar_Pprint.document) =
   fun pats  ->
-    let uu____5506 =
-      let uu____5507 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1  in
-      FStar_Pprint.separate_map uu____5507 p_appTerm pats  in
-    FStar_Pprint.group uu____5506
+    let uu____5510 =
+      let uu____5511 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1  in
+      FStar_Pprint.separate_map uu____5511 p_appTerm pats  in
+    FStar_Pprint.group uu____5510
 
 and (p_simpleTerm :
   Prims.bool -> Prims.bool -> FStar_Parser_AST.term -> FStar_Pprint.document)
@@ -2621,20 +2630,20 @@ and (p_simpleTerm :
       fun e  ->
         match e.FStar_Parser_AST.tm with
         | FStar_Parser_AST.Abs (pats,e1) ->
-            let uu____5517 =
-              let uu____5518 =
-                let uu____5519 = str "fun"  in
-                let uu____5520 =
-                  let uu____5521 =
+            let uu____5521 =
+              let uu____5522 =
+                let uu____5523 = str "fun"  in
+                let uu____5524 =
+                  let uu____5525 =
                     FStar_Pprint.separate_map break1 p_atomicPattern pats  in
-                  FStar_Pprint.op_Hat_Slash_Hat uu____5521
+                  FStar_Pprint.op_Hat_Slash_Hat uu____5525
                     FStar_Pprint.rarrow
                    in
-                op_Hat_Slash_Plus_Hat uu____5519 uu____5520  in
-              let uu____5522 = p_term false pb e1  in
-              op_Hat_Slash_Plus_Hat uu____5518 uu____5522  in
-            let uu____5523 = paren_if ps  in uu____5523 uu____5517
-        | uu____5526 -> p_tmIff e
+                op_Hat_Slash_Plus_Hat uu____5523 uu____5524  in
+              let uu____5526 = p_term false pb e1  in
+              op_Hat_Slash_Plus_Hat uu____5522 uu____5526  in
+            let uu____5527 = paren_if ps  in uu____5527 uu____5521
+        | uu____5530 -> p_tmIff e
 
 and (p_maybeFocusArrow : Prims.bool -> FStar_Pprint.document) =
   fun b  -> if b then str "~>" else FStar_Pprint.rarrow
@@ -2646,106 +2655,106 @@ and (p_patternBranch :
       FStar_Pervasives_Native.tuple3 -> FStar_Pprint.document)
   =
   fun pb  ->
-    fun uu____5530  ->
-      match uu____5530 with
+    fun uu____5534  ->
+      match uu____5534 with
       | (pat,when_opt,e) ->
           let one_pattern_branch p =
             let branch =
               match when_opt with
               | FStar_Pervasives_Native.None  ->
-                  let uu____5551 =
-                    let uu____5552 =
-                      let uu____5553 =
-                        let uu____5554 = p_tuplePattern p  in
-                        let uu____5555 =
+                  let uu____5555 =
+                    let uu____5556 =
+                      let uu____5557 =
+                        let uu____5558 = p_tuplePattern p  in
+                        let uu____5559 =
                           FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                             FStar_Pprint.rarrow
                            in
-                        FStar_Pprint.op_Hat_Hat uu____5554 uu____5555  in
-                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5553
+                        FStar_Pprint.op_Hat_Hat uu____5558 uu____5559  in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5557
                        in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____5552  in
-                  FStar_Pprint.group uu____5551
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____5556  in
+                  FStar_Pprint.group uu____5555
               | FStar_Pervasives_Native.Some f ->
-                  let uu____5557 =
-                    let uu____5558 =
-                      let uu____5559 =
-                        let uu____5560 =
-                          let uu____5561 =
-                            let uu____5562 = p_tuplePattern p  in
-                            let uu____5563 = str "when"  in
-                            FStar_Pprint.op_Hat_Slash_Hat uu____5562
-                              uu____5563
-                             in
-                          FStar_Pprint.group uu____5561  in
+                  let uu____5561 =
+                    let uu____5562 =
+                      let uu____5563 =
                         let uu____5564 =
                           let uu____5565 =
-                            let uu____5568 = p_tmFormula f  in
-                            [uu____5568; FStar_Pprint.rarrow]  in
-                          FStar_Pprint.flow break1 uu____5565  in
-                        FStar_Pprint.op_Hat_Slash_Hat uu____5560 uu____5564
+                            let uu____5566 = p_tuplePattern p  in
+                            let uu____5567 = str "when"  in
+                            FStar_Pprint.op_Hat_Slash_Hat uu____5566
+                              uu____5567
+                             in
+                          FStar_Pprint.group uu____5565  in
+                        let uu____5568 =
+                          let uu____5569 =
+                            let uu____5572 = p_tmFormula f  in
+                            [uu____5572; FStar_Pprint.rarrow]  in
+                          FStar_Pprint.flow break1 uu____5569  in
+                        FStar_Pprint.op_Hat_Slash_Hat uu____5564 uu____5568
                          in
-                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5559
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5563
                        in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____5558  in
-                  FStar_Pprint.hang (Prims.parse_int "2") uu____5557
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____5562  in
+                  FStar_Pprint.hang (Prims.parse_int "2") uu____5561
                in
-            let uu____5569 =
-              let uu____5570 = p_term false pb e  in
-              op_Hat_Slash_Plus_Hat branch uu____5570  in
-            FStar_Pprint.group uu____5569  in
+            let uu____5573 =
+              let uu____5574 = p_term false pb e  in
+              op_Hat_Slash_Plus_Hat branch uu____5574  in
+            FStar_Pprint.group uu____5573  in
           (match pat.FStar_Parser_AST.pat with
            | FStar_Parser_AST.PatOr pats ->
                (match FStar_List.rev pats with
                 | hd1::tl1 ->
                     let last_pat_branch = one_pattern_branch hd1  in
-                    let uu____5579 =
-                      let uu____5580 =
-                        let uu____5581 =
-                          let uu____5582 =
-                            let uu____5583 =
-                              let uu____5584 =
+                    let uu____5583 =
+                      let uu____5584 =
+                        let uu____5585 =
+                          let uu____5586 =
+                            let uu____5587 =
+                              let uu____5588 =
                                 FStar_Pprint.op_Hat_Hat FStar_Pprint.bar
                                   FStar_Pprint.space
                                  in
-                              FStar_Pprint.op_Hat_Hat break1 uu____5584  in
-                            FStar_Pprint.separate_map uu____5583
+                              FStar_Pprint.op_Hat_Hat break1 uu____5588  in
+                            FStar_Pprint.separate_map uu____5587
                               p_tuplePattern (FStar_List.rev tl1)
                              in
-                          FStar_Pprint.op_Hat_Slash_Hat uu____5582
+                          FStar_Pprint.op_Hat_Slash_Hat uu____5586
                             last_pat_branch
                            in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5581
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5585
                          in
-                      FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____5580  in
-                    FStar_Pprint.group uu____5579
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.bar uu____5584  in
+                    FStar_Pprint.group uu____5583
                 | [] ->
                     failwith "Impossible: disjunctive pattern can't be empty")
-           | uu____5585 -> one_pattern_branch pat)
+           | uu____5589 -> one_pattern_branch pat)
 
 and (p_tmIff : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Op
-        ({ FStar_Ident.idText = "<==>"; FStar_Ident.idRange = uu____5587;_},e1::e2::[])
+        ({ FStar_Ident.idText = "<==>"; FStar_Ident.idRange = uu____5591;_},e1::e2::[])
         ->
-        let uu____5592 = str "<==>"  in
-        let uu____5593 = p_tmImplies e1  in
-        let uu____5594 = p_tmIff e2  in
-        infix0 uu____5592 uu____5593 uu____5594
-    | uu____5595 -> p_tmImplies e
+        let uu____5596 = str "<==>"  in
+        let uu____5597 = p_tmImplies e1  in
+        let uu____5598 = p_tmIff e2  in
+        infix0 uu____5596 uu____5597 uu____5598
+    | uu____5599 -> p_tmImplies e
 
 and (p_tmImplies : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Op
-        ({ FStar_Ident.idText = "==>"; FStar_Ident.idRange = uu____5597;_},e1::e2::[])
+        ({ FStar_Ident.idText = "==>"; FStar_Ident.idRange = uu____5601;_},e1::e2::[])
         ->
-        let uu____5602 = str "==>"  in
-        let uu____5603 = p_tmArrow p_tmFormula e1  in
-        let uu____5604 = p_tmImplies e2  in
-        infix0 uu____5602 uu____5603 uu____5604
-    | uu____5605 -> p_tmArrow p_tmFormula e
+        let uu____5606 = str "==>"  in
+        let uu____5607 = p_tmArrow p_tmFormula e1  in
+        let uu____5608 = p_tmImplies e2  in
+        infix0 uu____5606 uu____5607 uu____5608
+    | uu____5609 -> p_tmArrow p_tmFormula e
 
 and (p_tmArrow :
   (FStar_Parser_AST.term -> FStar_Pprint.document) ->
@@ -2754,11 +2763,11 @@ and (p_tmArrow :
   fun p_Tm  ->
     fun e  ->
       let terms = p_tmArrow' p_Tm e  in
-      let uu____5613 =
+      let uu____5617 =
         FStar_List.splitAt
           ((FStar_List.length terms) - (Prims.parse_int "1")) terms
          in
-      match uu____5613 with
+      match uu____5617 with
       | (terms',last1) ->
           let last_op =
             if (FStar_List.length terms) > (Prims.parse_int "1")
@@ -2767,50 +2776,50 @@ and (p_tmArrow :
             else FStar_Pprint.empty  in
           (match FStar_List.length terms with
            | _0_31 when _0_31 = (Prims.parse_int "1") -> FStar_List.hd terms
-           | uu____5634 ->
-               let uu____5635 =
-                 let uu____5636 =
-                   let uu____5637 =
-                     let uu____5638 =
+           | uu____5638 ->
+               let uu____5639 =
+                 let uu____5640 =
+                   let uu____5641 =
+                     let uu____5642 =
                        FStar_Pprint.op_Hat_Hat FStar_Pprint.rarrow break1  in
-                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5638
+                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5642
                       in
-                   FStar_Pprint.separate uu____5637 terms  in
-                 let uu____5639 =
-                   let uu____5640 =
-                     let uu____5641 =
-                       let uu____5642 =
-                         let uu____5643 =
-                           let uu____5644 =
-                             let uu____5645 =
-                               FStar_Pprint.op_Hat_Hat FStar_Pprint.rarrow
-                                 break1
-                                in
-                             FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-                               uu____5645
-                              in
-                           FStar_Pprint.separate uu____5644 terms'  in
-                         FStar_Pprint.op_Hat_Hat uu____5643 last_op  in
+                   FStar_Pprint.separate uu____5641 terms  in
+                 let uu____5643 =
+                   let uu____5644 =
+                     let uu____5645 =
                        let uu____5646 =
                          let uu____5647 =
                            let uu____5648 =
                              let uu____5649 =
-                               let uu____5650 =
+                               FStar_Pprint.op_Hat_Hat FStar_Pprint.rarrow
+                                 break1
+                                in
+                             FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                               uu____5649
+                              in
+                           FStar_Pprint.separate uu____5648 terms'  in
+                         FStar_Pprint.op_Hat_Hat uu____5647 last_op  in
+                       let uu____5650 =
+                         let uu____5651 =
+                           let uu____5652 =
+                             let uu____5653 =
+                               let uu____5654 =
                                  FStar_Pprint.op_Hat_Hat FStar_Pprint.rarrow
                                    break1
                                   in
                                FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-                                 uu____5650
+                                 uu____5654
                                 in
-                             FStar_Pprint.separate uu____5649 terms'  in
-                           FStar_Pprint.op_Hat_Hat uu____5648 last_op  in
-                         jump2 uu____5647  in
-                       FStar_Pprint.ifflat uu____5642 uu____5646  in
-                     FStar_Pprint.group uu____5641  in
-                   let uu____5651 = FStar_List.hd last1  in
-                   prefix2 uu____5640 uu____5651  in
-                 FStar_Pprint.ifflat uu____5636 uu____5639  in
-               FStar_Pprint.group uu____5635)
+                             FStar_Pprint.separate uu____5653 terms'  in
+                           FStar_Pprint.op_Hat_Hat uu____5652 last_op  in
+                         jump2 uu____5651  in
+                       FStar_Pprint.ifflat uu____5646 uu____5650  in
+                     FStar_Pprint.group uu____5645  in
+                   let uu____5655 = FStar_List.hd last1  in
+                   prefix2 uu____5644 uu____5655  in
+                 FStar_Pprint.ifflat uu____5640 uu____5643  in
+               FStar_Pprint.group uu____5639)
 
 and (p_tmArrow' :
   (FStar_Parser_AST.term -> FStar_Pprint.document) ->
@@ -2820,23 +2829,23 @@ and (p_tmArrow' :
     fun e  ->
       match e.FStar_Parser_AST.tm with
       | FStar_Parser_AST.Product (bs,tgt) ->
-          let uu____5664 = FStar_List.map (fun b  -> p_binder false b) bs  in
-          let uu____5669 = p_tmArrow' p_Tm tgt  in
-          FStar_List.append uu____5664 uu____5669
-      | uu____5672 -> let uu____5673 = p_Tm e  in [uu____5673]
+          let uu____5668 = FStar_List.map (fun b  -> p_binder false b) bs  in
+          let uu____5673 = p_tmArrow' p_Tm tgt  in
+          FStar_List.append uu____5668 uu____5673
+      | uu____5676 -> let uu____5677 = p_Tm e  in [uu____5677]
 
 and (p_tmFormula : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     let conj =
-      let uu____5676 =
-        let uu____5677 = str "/\\"  in
-        FStar_Pprint.op_Hat_Hat uu____5677 break1  in
-      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5676  in
+      let uu____5680 =
+        let uu____5681 = str "/\\"  in
+        FStar_Pprint.op_Hat_Hat uu____5681 break1  in
+      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5680  in
     let disj =
-      let uu____5679 =
-        let uu____5680 = str "\\/"  in
-        FStar_Pprint.op_Hat_Hat uu____5680 break1  in
-      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5679  in
+      let uu____5683 =
+        let uu____5684 = str "\\/"  in
+        FStar_Pprint.op_Hat_Hat uu____5684 break1  in
+      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5683  in
     let formula = p_tmDisjunction e  in
     FStar_Pprint.flow_map disj
       (fun d  ->
@@ -2848,25 +2857,25 @@ and (p_tmDisjunction :
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Op
-        ({ FStar_Ident.idText = "\\/"; FStar_Ident.idRange = uu____5699;_},e1::e2::[])
+        ({ FStar_Ident.idText = "\\/"; FStar_Ident.idRange = uu____5703;_},e1::e2::[])
         ->
-        let uu____5704 = p_tmDisjunction e1  in
-        let uu____5709 = let uu____5714 = p_tmConjunction e2  in [uu____5714]
+        let uu____5708 = p_tmDisjunction e1  in
+        let uu____5713 = let uu____5718 = p_tmConjunction e2  in [uu____5718]
            in
-        FStar_List.append uu____5704 uu____5709
-    | uu____5723 -> let uu____5724 = p_tmConjunction e  in [uu____5724]
+        FStar_List.append uu____5708 uu____5713
+    | uu____5727 -> let uu____5728 = p_tmConjunction e  in [uu____5728]
 
 and (p_tmConjunction :
   FStar_Parser_AST.term -> FStar_Pprint.document Prims.list) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Op
-        ({ FStar_Ident.idText = "/\\"; FStar_Ident.idRange = uu____5734;_},e1::e2::[])
+        ({ FStar_Ident.idText = "/\\"; FStar_Ident.idRange = uu____5738;_},e1::e2::[])
         ->
-        let uu____5739 = p_tmConjunction e1  in
-        let uu____5742 = let uu____5745 = p_tmTuple e2  in [uu____5745]  in
-        FStar_List.append uu____5739 uu____5742
-    | uu____5746 -> let uu____5747 = p_tmTuple e  in [uu____5747]
+        let uu____5743 = p_tmConjunction e1  in
+        let uu____5746 = let uu____5749 = p_tmTuple e2  in [uu____5749]  in
+        FStar_List.append uu____5743 uu____5746
+    | uu____5750 -> let uu____5751 = p_tmTuple e  in [uu____5751]
 
 and (p_tmTuple : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  -> with_comment p_tmTuple' e e.FStar_Parser_AST.range
@@ -2875,12 +2884,12 @@ and (p_tmTuple' : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Construct (lid,args) when is_tuple_constructor lid ->
-        let uu____5764 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
+        let uu____5768 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
            in
-        FStar_Pprint.separate_map uu____5764
-          (fun uu____5772  ->
-             match uu____5772 with | (e1,uu____5778) -> p_tmEq e1) args
-    | uu____5779 -> p_tmEq e
+        FStar_Pprint.separate_map uu____5768
+          (fun uu____5776  ->
+             match uu____5776 with | (e1,uu____5782) -> p_tmEq e1) args
+    | uu____5783 -> p_tmEq e
 
 and (paren_if_gt :
   Prims.int -> Prims.int -> FStar_Pprint.document -> FStar_Pprint.document) =
@@ -2890,11 +2899,11 @@ and (paren_if_gt :
         if mine <= curr
         then doc1
         else
-          (let uu____5784 =
-             let uu____5785 =
+          (let uu____5788 =
+             let uu____5789 =
                FStar_Pprint.op_Hat_Hat doc1 FStar_Pprint.rparen  in
-             FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____5785  in
-           FStar_Pprint.group uu____5784)
+             FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____5789  in
+           FStar_Pprint.group uu____5788)
 
 and (p_tmEqWith :
   (FStar_Parser_AST.term -> FStar_Pprint.document) ->
@@ -2923,38 +2932,38 @@ and (p_tmEqWith' :
               || ((FStar_Ident.text_of_id op) = "|>")
             ->
             let op1 = FStar_Ident.text_of_id op  in
-            let uu____5848 = levels op1  in
-            (match uu____5848 with
+            let uu____5852 = levels op1  in
+            (match uu____5852 with
              | (left1,mine,right1) ->
-                 let uu____5858 =
-                   let uu____5859 = FStar_All.pipe_left str op1  in
-                   let uu____5860 = p_tmEqWith' p_X left1 e1  in
-                   let uu____5861 = p_tmEqWith' p_X right1 e2  in
-                   infix0 uu____5859 uu____5860 uu____5861  in
-                 paren_if_gt curr mine uu____5858)
+                 let uu____5862 =
+                   let uu____5863 = FStar_All.pipe_left str op1  in
+                   let uu____5864 = p_tmEqWith' p_X left1 e1  in
+                   let uu____5865 = p_tmEqWith' p_X right1 e2  in
+                   infix0 uu____5863 uu____5864 uu____5865  in
+                 paren_if_gt curr mine uu____5862)
         | FStar_Parser_AST.Op
-            ({ FStar_Ident.idText = ":="; FStar_Ident.idRange = uu____5862;_},e1::e2::[])
+            ({ FStar_Ident.idText = ":="; FStar_Ident.idRange = uu____5866;_},e1::e2::[])
             ->
-            let uu____5867 =
-              let uu____5868 = p_tmEqWith p_X e1  in
-              let uu____5869 =
-                let uu____5870 =
-                  let uu____5871 =
-                    let uu____5872 = p_tmEqWith p_X e2  in
-                    op_Hat_Slash_Plus_Hat FStar_Pprint.equals uu____5872  in
-                  FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____5871  in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5870  in
-              FStar_Pprint.op_Hat_Hat uu____5868 uu____5869  in
-            FStar_Pprint.group uu____5867
+            let uu____5871 =
+              let uu____5872 = p_tmEqWith p_X e1  in
+              let uu____5873 =
+                let uu____5874 =
+                  let uu____5875 =
+                    let uu____5876 = p_tmEqWith p_X e2  in
+                    op_Hat_Slash_Plus_Hat FStar_Pprint.equals uu____5876  in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu____5875  in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____5874  in
+              FStar_Pprint.op_Hat_Hat uu____5872 uu____5873  in
+            FStar_Pprint.group uu____5871
         | FStar_Parser_AST.Op
-            ({ FStar_Ident.idText = "-"; FStar_Ident.idRange = uu____5873;_},e1::[])
+            ({ FStar_Ident.idText = "-"; FStar_Ident.idRange = uu____5877;_},e1::[])
             ->
-            let uu____5877 = levels "-"  in
-            (match uu____5877 with
+            let uu____5881 = levels "-"  in
+            (match uu____5881 with
              | (left1,mine,right1) ->
-                 let uu____5887 = p_tmEqWith' p_X mine e1  in
-                 FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.minus uu____5887)
-        | uu____5888 -> p_tmNoEqWith p_X e
+                 let uu____5891 = p_tmEqWith' p_X mine e1  in
+                 FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.minus uu____5891)
+        | uu____5892 -> p_tmNoEqWith p_X e
 
 and (p_tmNoEqWith :
   (FStar_Parser_AST.term -> FStar_Pprint.document) ->
@@ -2975,70 +2984,70 @@ and (p_tmNoEqWith' :
       fun e  ->
         match e.FStar_Parser_AST.tm with
         | FStar_Parser_AST.Construct
-            (lid,(e1,uu____5959)::(e2,uu____5961)::[]) when
+            (lid,(e1,uu____5963)::(e2,uu____5965)::[]) when
             (FStar_Ident.lid_equals lid FStar_Parser_Const.cons_lid) &&
-              (let uu____5981 = is_list e  in Prims.op_Negation uu____5981)
+              (let uu____5985 = is_list e  in Prims.op_Negation uu____5985)
             ->
             let op = "::"  in
-            let uu____5983 = levels op  in
-            (match uu____5983 with
+            let uu____5987 = levels op  in
+            (match uu____5987 with
              | (left1,mine,right1) ->
-                 let uu____5993 =
-                   let uu____5994 = str op  in
-                   let uu____5995 = p_tmNoEqWith' p_X left1 e1  in
-                   let uu____5996 = p_tmNoEqWith' p_X right1 e2  in
-                   infix0 uu____5994 uu____5995 uu____5996  in
-                 paren_if_gt curr mine uu____5993)
+                 let uu____5997 =
+                   let uu____5998 = str op  in
+                   let uu____5999 = p_tmNoEqWith' p_X left1 e1  in
+                   let uu____6000 = p_tmNoEqWith' p_X right1 e2  in
+                   infix0 uu____5998 uu____5999 uu____6000  in
+                 paren_if_gt curr mine uu____5997)
         | FStar_Parser_AST.Sum (binders,res) ->
             let op = "&"  in
-            let uu____6004 = levels op  in
-            (match uu____6004 with
+            let uu____6008 = levels op  in
+            (match uu____6008 with
              | (left1,mine,right1) ->
                  let p_dsumfst b =
-                   let uu____6018 = p_binder false b  in
-                   let uu____6019 =
-                     let uu____6020 =
-                       let uu____6021 = str op  in
-                       FStar_Pprint.op_Hat_Hat uu____6021 break1  in
-                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____6020
+                   let uu____6022 = p_binder false b  in
+                   let uu____6023 =
+                     let uu____6024 =
+                       let uu____6025 = str op  in
+                       FStar_Pprint.op_Hat_Hat uu____6025 break1  in
+                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____6024
                       in
-                   FStar_Pprint.op_Hat_Hat uu____6018 uu____6019  in
-                 let uu____6022 =
-                   let uu____6023 = FStar_Pprint.concat_map p_dsumfst binders
+                   FStar_Pprint.op_Hat_Hat uu____6022 uu____6023  in
+                 let uu____6026 =
+                   let uu____6027 = FStar_Pprint.concat_map p_dsumfst binders
                       in
-                   let uu____6024 = p_tmNoEqWith' p_X right1 res  in
-                   FStar_Pprint.op_Hat_Hat uu____6023 uu____6024  in
-                 paren_if_gt curr mine uu____6022)
+                   let uu____6028 = p_tmNoEqWith' p_X right1 res  in
+                   FStar_Pprint.op_Hat_Hat uu____6027 uu____6028  in
+                 paren_if_gt curr mine uu____6026)
         | FStar_Parser_AST.Op (op,e1::e2::[]) when is_operatorInfix34 op ->
             let op1 = FStar_Ident.text_of_id op  in
-            let uu____6031 = levels op1  in
-            (match uu____6031 with
+            let uu____6035 = levels op1  in
+            (match uu____6035 with
              | (left1,mine,right1) ->
-                 let uu____6041 =
-                   let uu____6042 = str op1  in
-                   let uu____6043 = p_tmNoEqWith' p_X left1 e1  in
-                   let uu____6044 = p_tmNoEqWith' p_X right1 e2  in
-                   infix0 uu____6042 uu____6043 uu____6044  in
-                 paren_if_gt curr mine uu____6041)
+                 let uu____6045 =
+                   let uu____6046 = str op1  in
+                   let uu____6047 = p_tmNoEqWith' p_X left1 e1  in
+                   let uu____6048 = p_tmNoEqWith' p_X right1 e2  in
+                   infix0 uu____6046 uu____6047 uu____6048  in
+                 paren_if_gt curr mine uu____6045)
         | FStar_Parser_AST.Record (with_opt,record_fields) ->
-            let uu____6063 =
-              let uu____6064 =
+            let uu____6067 =
+              let uu____6068 =
                 default_or_map FStar_Pprint.empty p_with_clause with_opt  in
-              let uu____6065 =
-                let uu____6066 =
+              let uu____6069 =
+                let uu____6070 =
                   FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1  in
-                separate_map_last uu____6066 p_simpleDef record_fields  in
-              FStar_Pprint.op_Hat_Hat uu____6064 uu____6065  in
-            braces_with_nesting uu____6063
+                separate_map_last uu____6070 p_simpleDef record_fields  in
+              FStar_Pprint.op_Hat_Hat uu____6068 uu____6069  in
+            braces_with_nesting uu____6067
         | FStar_Parser_AST.Op
-            ({ FStar_Ident.idText = "~"; FStar_Ident.idRange = uu____6071;_},e1::[])
+            ({ FStar_Ident.idText = "~"; FStar_Ident.idRange = uu____6075;_},e1::[])
             ->
-            let uu____6075 =
-              let uu____6076 = str "~"  in
-              let uu____6077 = p_atomicTerm e1  in
-              FStar_Pprint.op_Hat_Hat uu____6076 uu____6077  in
-            FStar_Pprint.group uu____6075
-        | uu____6078 -> p_X e
+            let uu____6079 =
+              let uu____6080 = str "~"  in
+              let uu____6081 = p_atomicTerm e1  in
+              FStar_Pprint.op_Hat_Hat uu____6080 uu____6081  in
+            FStar_Pprint.group uu____6079
+        | uu____6082 -> p_X e
 
 and (p_tmEqNoRefinement : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  -> p_tmEqWith p_appTerm e
@@ -3053,25 +3062,25 @@ and (p_tmRefinement : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.NamedTyp (lid,e1) ->
-        let uu____6085 =
-          let uu____6086 = p_lidentOrUnderscore lid  in
-          let uu____6087 =
-            let uu____6088 = p_appTerm e1  in
-            FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____6088  in
-          FStar_Pprint.op_Hat_Slash_Hat uu____6086 uu____6087  in
-        FStar_Pprint.group uu____6085
+        let uu____6089 =
+          let uu____6090 = p_lident lid  in
+          let uu____6091 =
+            let uu____6092 = p_appTerm e1  in
+            FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu____6092  in
+          FStar_Pprint.op_Hat_Slash_Hat uu____6090 uu____6091  in
+        FStar_Pprint.group uu____6089
     | FStar_Parser_AST.Refine (b,phi) -> p_refinedBinder b phi
-    | uu____6091 -> p_appTerm e
+    | uu____6095 -> p_appTerm e
 
 and (p_with_clause : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
-    let uu____6093 = p_appTerm e  in
-    let uu____6094 =
-      let uu____6095 =
-        let uu____6096 = str "with"  in
-        FStar_Pprint.op_Hat_Hat uu____6096 break1  in
-      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____6095  in
-    FStar_Pprint.op_Hat_Hat uu____6093 uu____6094
+    let uu____6097 = p_appTerm e  in
+    let uu____6098 =
+      let uu____6099 =
+        let uu____6100 = str "with"  in
+        FStar_Pprint.op_Hat_Hat uu____6100 break1  in
+      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____6099  in
+    FStar_Pprint.op_Hat_Hat uu____6097 uu____6098
 
 and (p_refinedBinder :
   FStar_Parser_AST.binder -> FStar_Parser_AST.term -> FStar_Pprint.document)
@@ -3080,34 +3089,34 @@ and (p_refinedBinder :
     fun phi  ->
       match b.FStar_Parser_AST.b with
       | FStar_Parser_AST.Annotated (lid,t) ->
-          let uu____6101 = p_lident lid  in
-          p_refinement b.FStar_Parser_AST.aqual uu____6101 t phi
-      | FStar_Parser_AST.TAnnotated uu____6102 ->
+          let uu____6105 = p_lident lid  in
+          p_refinement b.FStar_Parser_AST.aqual uu____6105 t phi
+      | FStar_Parser_AST.TAnnotated uu____6106 ->
           failwith "Is this still used ?"
-      | FStar_Parser_AST.Variable uu____6107 ->
-          let uu____6108 =
-            let uu____6109 = FStar_Parser_AST.binder_to_string b  in
+      | FStar_Parser_AST.Variable uu____6111 ->
+          let uu____6112 =
+            let uu____6113 = FStar_Parser_AST.binder_to_string b  in
             FStar_Util.format1
               "Imposible : a refined binder ought to be annotated %s"
-              uu____6109
+              uu____6113
              in
-          failwith uu____6108
-      | FStar_Parser_AST.TVariable uu____6110 ->
-          let uu____6111 =
-            let uu____6112 = FStar_Parser_AST.binder_to_string b  in
+          failwith uu____6112
+      | FStar_Parser_AST.TVariable uu____6114 ->
+          let uu____6115 =
+            let uu____6116 = FStar_Parser_AST.binder_to_string b  in
             FStar_Util.format1
               "Imposible : a refined binder ought to be annotated %s"
-              uu____6112
+              uu____6116
              in
-          failwith uu____6111
-      | FStar_Parser_AST.NoName uu____6113 ->
-          let uu____6114 =
-            let uu____6115 = FStar_Parser_AST.binder_to_string b  in
+          failwith uu____6115
+      | FStar_Parser_AST.NoName uu____6117 ->
+          let uu____6118 =
+            let uu____6119 = FStar_Parser_AST.binder_to_string b  in
             FStar_Util.format1
               "Imposible : a refined binder ought to be annotated %s"
-              uu____6115
+              uu____6119
              in
-          failwith uu____6114
+          failwith uu____6118
 
 and (p_simpleDef :
   Prims.bool ->
@@ -3115,93 +3124,93 @@ and (p_simpleDef :
       FStar_Pprint.document)
   =
   fun ps  ->
-    fun uu____6117  ->
-      match uu____6117 with
+    fun uu____6121  ->
+      match uu____6121 with
       | (lid,e) ->
-          let uu____6124 =
-            let uu____6125 = p_qlident lid  in
-            let uu____6126 =
-              let uu____6127 = p_noSeqTerm ps false e  in
-              FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals uu____6127
+          let uu____6128 =
+            let uu____6129 = p_qlident lid  in
+            let uu____6130 =
+              let uu____6131 = p_noSeqTerm ps false e  in
+              FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals uu____6131
                in
-            FStar_Pprint.op_Hat_Slash_Hat uu____6125 uu____6126  in
-          FStar_Pprint.group uu____6124
+            FStar_Pprint.op_Hat_Slash_Hat uu____6129 uu____6130  in
+          FStar_Pprint.group uu____6128
 
 and (p_appTerm : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
-    | FStar_Parser_AST.App uu____6129 when is_general_application e ->
-        let uu____6136 = head_and_args e  in
-        (match uu____6136 with
+    | FStar_Parser_AST.App uu____6133 when is_general_application e ->
+        let uu____6140 = head_and_args e  in
+        (match uu____6140 with
          | (head1,args) ->
-             let uu____6161 =
-               let uu____6172 = FStar_ST.op_Bang should_print_fs_typ_app  in
-               if uu____6172
+             let uu____6165 =
+               let uu____6176 = FStar_ST.op_Bang should_print_fs_typ_app  in
+               if uu____6176
                then
-                 let uu____6202 =
+                 let uu____6206 =
                    FStar_Util.take
-                     (fun uu____6226  ->
-                        match uu____6226 with
-                        | (uu____6231,aq) -> aq = FStar_Parser_AST.FsTypApp)
+                     (fun uu____6230  ->
+                        match uu____6230 with
+                        | (uu____6235,aq) -> aq = FStar_Parser_AST.FsTypApp)
                      args
                     in
-                 match uu____6202 with
+                 match uu____6206 with
                  | (fs_typ_args,args1) ->
-                     let uu____6269 =
-                       let uu____6270 = p_indexingTerm head1  in
-                       let uu____6271 =
-                         let uu____6272 =
+                     let uu____6273 =
+                       let uu____6274 = p_indexingTerm head1  in
+                       let uu____6275 =
+                         let uu____6276 =
                            FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
                             in
                          soft_surround_map_or_flow (Prims.parse_int "2")
                            (Prims.parse_int "0") FStar_Pprint.empty
-                           FStar_Pprint.langle uu____6272 FStar_Pprint.rangle
+                           FStar_Pprint.langle uu____6276 FStar_Pprint.rangle
                            p_fsTypArg fs_typ_args
                           in
-                       FStar_Pprint.op_Hat_Hat uu____6270 uu____6271  in
-                     (uu____6269, args1)
+                       FStar_Pprint.op_Hat_Hat uu____6274 uu____6275  in
+                     (uu____6273, args1)
                else
-                 (let uu____6284 = p_indexingTerm head1  in
-                  (uu____6284, args))
+                 (let uu____6288 = p_indexingTerm head1  in
+                  (uu____6288, args))
                 in
-             (match uu____6161 with
+             (match uu____6165 with
               | (head_doc,args1) ->
-                  let uu____6305 =
-                    let uu____6306 =
+                  let uu____6309 =
+                    let uu____6310 =
                       FStar_Pprint.op_Hat_Hat head_doc FStar_Pprint.space  in
                     soft_surround_map_or_flow (Prims.parse_int "2")
-                      (Prims.parse_int "0") head_doc uu____6306 break1
+                      (Prims.parse_int "0") head_doc uu____6310 break1
                       FStar_Pprint.empty p_argTerm args1
                      in
-                  FStar_Pprint.group uu____6305))
+                  FStar_Pprint.group uu____6309))
     | FStar_Parser_AST.Construct (lid,args) when
         (is_general_construction e) &&
-          (let uu____6326 = is_dtuple_constructor lid  in
-           Prims.op_Negation uu____6326)
+          (let uu____6330 = is_dtuple_constructor lid  in
+           Prims.op_Negation uu____6330)
         ->
         (match args with
          | [] -> p_quident lid
          | arg::[] ->
-             let uu____6344 =
-               let uu____6345 = p_quident lid  in
-               let uu____6346 = p_argTerm arg  in
-               FStar_Pprint.op_Hat_Slash_Hat uu____6345 uu____6346  in
-             FStar_Pprint.group uu____6344
+             let uu____6348 =
+               let uu____6349 = p_quident lid  in
+               let uu____6350 = p_argTerm arg  in
+               FStar_Pprint.op_Hat_Slash_Hat uu____6349 uu____6350  in
+             FStar_Pprint.group uu____6348
          | hd1::tl1 ->
-             let uu____6363 =
-               let uu____6364 =
-                 let uu____6365 =
-                   let uu____6366 = p_quident lid  in
-                   let uu____6367 = p_argTerm hd1  in
-                   prefix2 uu____6366 uu____6367  in
-                 FStar_Pprint.group uu____6365  in
+             let uu____6367 =
                let uu____6368 =
                  let uu____6369 =
+                   let uu____6370 = p_quident lid  in
+                   let uu____6371 = p_argTerm hd1  in
+                   prefix2 uu____6370 uu____6371  in
+                 FStar_Pprint.group uu____6369  in
+               let uu____6372 =
+                 let uu____6373 =
                    FStar_Pprint.separate_map break1 p_argTerm tl1  in
-                 jump2 uu____6369  in
-               FStar_Pprint.op_Hat_Hat uu____6364 uu____6368  in
-             FStar_Pprint.group uu____6363)
-    | uu____6374 -> p_indexingTerm e
+                 jump2 uu____6373  in
+               FStar_Pprint.op_Hat_Hat uu____6368 uu____6372  in
+             FStar_Pprint.group uu____6367)
+    | uu____6378 -> p_indexingTerm e
 
 and (p_argTerm :
   (FStar_Parser_AST.term,FStar_Parser_AST.imp) FStar_Pervasives_Native.tuple2
@@ -3214,21 +3223,21 @@ and (p_argTerm :
         (FStar_Errors.log_issue e.FStar_Parser_AST.range
            (FStar_Errors.Warning_UnexpectedFsTypApp,
              "Unexpected FsTypApp, output might not be formatted correctly.");
-         (let uu____6383 = p_indexingTerm e  in
+         (let uu____6387 = p_indexingTerm e  in
           FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
-            FStar_Pprint.langle uu____6383 FStar_Pprint.rangle))
+            FStar_Pprint.langle uu____6387 FStar_Pprint.rangle))
     | (e,FStar_Parser_AST.Hash ) ->
-        let uu____6385 = str "#"  in
-        let uu____6386 = p_indexingTerm e  in
-        FStar_Pprint.op_Hat_Hat uu____6385 uu____6386
+        let uu____6389 = str "#"  in
+        let uu____6390 = p_indexingTerm e  in
+        FStar_Pprint.op_Hat_Hat uu____6389 uu____6390
     | (e,FStar_Parser_AST.Nothing ) -> p_indexingTerm e
 
 and (p_fsTypArg :
   (FStar_Parser_AST.term,FStar_Parser_AST.imp) FStar_Pervasives_Native.tuple2
     -> FStar_Pprint.document)
   =
-  fun uu____6388  ->
-    match uu____6388 with | (e,uu____6394) -> p_indexingTerm e
+  fun uu____6392  ->
+    match uu____6392 with | (e,uu____6398) -> p_indexingTerm e
 
 and (p_indexingTerm_aux :
   (FStar_Parser_AST.term -> FStar_Pprint.document) ->
@@ -3238,30 +3247,30 @@ and (p_indexingTerm_aux :
     fun e  ->
       match e.FStar_Parser_AST.tm with
       | FStar_Parser_AST.Op
-          ({ FStar_Ident.idText = ".()"; FStar_Ident.idRange = uu____6399;_},e1::e2::[])
+          ({ FStar_Ident.idText = ".()"; FStar_Ident.idRange = uu____6403;_},e1::e2::[])
           ->
-          let uu____6404 =
-            let uu____6405 = p_indexingTerm_aux p_atomicTermNotQUident e1  in
-            let uu____6406 =
-              let uu____6407 =
-                let uu____6408 = p_term false false e2  in
-                soft_parens_with_nesting uu____6408  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6407  in
-            FStar_Pprint.op_Hat_Hat uu____6405 uu____6406  in
-          FStar_Pprint.group uu____6404
+          let uu____6408 =
+            let uu____6409 = p_indexingTerm_aux p_atomicTermNotQUident e1  in
+            let uu____6410 =
+              let uu____6411 =
+                let uu____6412 = p_term false false e2  in
+                soft_parens_with_nesting uu____6412  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6411  in
+            FStar_Pprint.op_Hat_Hat uu____6409 uu____6410  in
+          FStar_Pprint.group uu____6408
       | FStar_Parser_AST.Op
-          ({ FStar_Ident.idText = ".[]"; FStar_Ident.idRange = uu____6409;_},e1::e2::[])
+          ({ FStar_Ident.idText = ".[]"; FStar_Ident.idRange = uu____6413;_},e1::e2::[])
           ->
-          let uu____6414 =
-            let uu____6415 = p_indexingTerm_aux p_atomicTermNotQUident e1  in
-            let uu____6416 =
-              let uu____6417 =
-                let uu____6418 = p_term false false e2  in
-                soft_brackets_with_nesting uu____6418  in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6417  in
-            FStar_Pprint.op_Hat_Hat uu____6415 uu____6416  in
-          FStar_Pprint.group uu____6414
-      | uu____6419 -> exit1 e
+          let uu____6418 =
+            let uu____6419 = p_indexingTerm_aux p_atomicTermNotQUident e1  in
+            let uu____6420 =
+              let uu____6421 =
+                let uu____6422 = p_term false false e2  in
+                soft_brackets_with_nesting uu____6422  in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6421  in
+            FStar_Pprint.op_Hat_Hat uu____6419 uu____6420  in
+          FStar_Pprint.group uu____6418
+      | uu____6423 -> exit1 e
 
 and (p_indexingTerm : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  -> p_indexingTerm_aux p_atomicTerm e
@@ -3270,19 +3279,19 @@ and (p_atomicTerm : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.LetOpen (lid,e1) ->
-        let uu____6424 = p_quident lid  in
-        let uu____6425 =
-          let uu____6426 =
-            let uu____6427 = p_term false false e1  in
-            soft_parens_with_nesting uu____6427  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6426  in
-        FStar_Pprint.op_Hat_Hat uu____6424 uu____6425
+        let uu____6428 = p_quident lid  in
+        let uu____6429 =
+          let uu____6430 =
+            let uu____6431 = p_term false false e1  in
+            soft_parens_with_nesting uu____6431  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6430  in
+        FStar_Pprint.op_Hat_Hat uu____6428 uu____6429
     | FStar_Parser_AST.Name lid -> p_quident lid
     | FStar_Parser_AST.Op (op,e1::[]) when is_general_prefix_op op ->
-        let uu____6433 = str (FStar_Ident.text_of_id op)  in
-        let uu____6434 = p_atomicTerm e1  in
-        FStar_Pprint.op_Hat_Hat uu____6433 uu____6434
-    | uu____6435 -> p_atomicTermNotQUident e
+        let uu____6437 = str (FStar_Ident.text_of_id op)  in
+        let uu____6438 = p_atomicTerm e1  in
+        FStar_Pprint.op_Hat_Hat uu____6437 uu____6438
+    | uu____6439 -> p_atomicTermNotQUident e
 
 and (p_atomicTermNotQUident : FStar_Parser_AST.term -> FStar_Pprint.document)
   =
@@ -3296,330 +3305,330 @@ and (p_atomicTermNotQUident : FStar_Parser_AST.term -> FStar_Pprint.document)
     | FStar_Parser_AST.Const c ->
         (match c with
          | FStar_Const.Const_char x when x = 10 -> str "0x0Az"
-         | uu____6442 -> p_constant c)
+         | uu____6446 -> p_constant c)
     | FStar_Parser_AST.Name lid when
         FStar_Ident.lid_equals lid FStar_Parser_Const.true_lid -> str "True"
     | FStar_Parser_AST.Name lid when
         FStar_Ident.lid_equals lid FStar_Parser_Const.false_lid ->
         str "False"
     | FStar_Parser_AST.Op (op,e1::[]) when is_general_prefix_op op ->
-        let uu____6449 = str (FStar_Ident.text_of_id op)  in
-        let uu____6450 = p_atomicTermNotQUident e1  in
-        FStar_Pprint.op_Hat_Hat uu____6449 uu____6450
+        let uu____6453 = str (FStar_Ident.text_of_id op)  in
+        let uu____6454 = p_atomicTermNotQUident e1  in
+        FStar_Pprint.op_Hat_Hat uu____6453 uu____6454
     | FStar_Parser_AST.Op (op,[]) ->
-        let uu____6454 =
-          let uu____6455 =
-            let uu____6456 = str (FStar_Ident.text_of_id op)  in
-            let uu____6457 =
+        let uu____6458 =
+          let uu____6459 =
+            let uu____6460 = str (FStar_Ident.text_of_id op)  in
+            let uu____6461 =
               FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.rparen
                in
-            FStar_Pprint.op_Hat_Hat uu____6456 uu____6457  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____6455  in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____6454
+            FStar_Pprint.op_Hat_Hat uu____6460 uu____6461  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____6459  in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu____6458
     | FStar_Parser_AST.Construct (lid,args) when is_dtuple_constructor lid ->
-        let uu____6472 =
+        let uu____6476 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen FStar_Pprint.bar  in
-        let uu____6473 =
-          let uu____6474 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
+        let uu____6477 =
+          let uu____6478 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
              in
-          let uu____6475 = FStar_List.map FStar_Pervasives_Native.fst args
+          let uu____6479 = FStar_List.map FStar_Pervasives_Native.fst args
              in
-          FStar_Pprint.separate_map uu____6474 p_tmEq uu____6475  in
-        let uu____6482 =
+          FStar_Pprint.separate_map uu____6478 p_tmEq uu____6479  in
+        let uu____6486 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rparen  in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
-          uu____6472 uu____6473 uu____6482
+          uu____6476 uu____6477 uu____6486
     | FStar_Parser_AST.Project (e1,lid) ->
-        let uu____6485 =
-          let uu____6486 = p_atomicTermNotQUident e1  in
-          let uu____6487 =
-            let uu____6488 = p_qlident lid  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6488  in
+        let uu____6489 =
+          let uu____6490 = p_atomicTermNotQUident e1  in
+          let uu____6491 =
+            let uu____6492 = p_qlident lid  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6492  in
           FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "0")
-            uu____6486 uu____6487
+            uu____6490 uu____6491
            in
-        FStar_Pprint.group uu____6485
-    | uu____6489 -> p_projectionLHS e
+        FStar_Pprint.group uu____6489
+    | uu____6493 -> p_projectionLHS e
 
 and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Var lid -> p_qlident lid
     | FStar_Parser_AST.Projector (constr_lid,field_lid) ->
-        let uu____6494 = p_quident constr_lid  in
-        let uu____6495 =
-          let uu____6496 =
-            let uu____6497 = p_lident field_lid  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6497  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.qmark uu____6496  in
-        FStar_Pprint.op_Hat_Hat uu____6494 uu____6495
+        let uu____6498 = p_quident constr_lid  in
+        let uu____6499 =
+          let uu____6500 =
+            let uu____6501 = p_lident field_lid  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6501  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.qmark uu____6500  in
+        FStar_Pprint.op_Hat_Hat uu____6498 uu____6499
     | FStar_Parser_AST.Discrim constr_lid ->
-        let uu____6499 = p_quident constr_lid  in
-        FStar_Pprint.op_Hat_Hat uu____6499 FStar_Pprint.qmark
+        let uu____6503 = p_quident constr_lid  in
+        FStar_Pprint.op_Hat_Hat uu____6503 FStar_Pprint.qmark
     | FStar_Parser_AST.Paren e1 ->
-        let uu____6501 = p_term false false e1  in
-        soft_parens_with_nesting uu____6501
-    | uu____6502 when is_array e ->
+        let uu____6505 = p_term false false e1  in
+        soft_parens_with_nesting uu____6505
+    | uu____6506 when is_array e ->
         let es = extract_from_list e  in
-        let uu____6506 =
+        let uu____6510 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.lbracket FStar_Pprint.bar  in
-        let uu____6507 =
-          let uu____6508 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1
+        let uu____6511 =
+          let uu____6512 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1
              in
-          separate_map_or_flow_last uu____6508
+          separate_map_or_flow_last uu____6512
             (fun ps  -> p_noSeqTerm ps false) es
            in
-        let uu____6511 =
+        let uu____6515 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rbracket  in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "0")
-          uu____6506 uu____6507 uu____6511
-    | uu____6512 when is_list e ->
-        let uu____6513 =
-          let uu____6514 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1
+          uu____6510 uu____6511 uu____6515
+    | uu____6516 when is_list e ->
+        let uu____6517 =
+          let uu____6518 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1
              in
-          let uu____6515 = extract_from_list e  in
-          separate_map_or_flow_last uu____6514
-            (fun ps  -> p_noSeqTerm ps false) uu____6515
+          let uu____6519 = extract_from_list e  in
+          separate_map_or_flow_last uu____6518
+            (fun ps  -> p_noSeqTerm ps false) uu____6519
            in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "0")
-          FStar_Pprint.lbracket uu____6513 FStar_Pprint.rbracket
-    | uu____6520 when is_lex_list e ->
-        let uu____6521 =
+          FStar_Pprint.lbracket uu____6517 FStar_Pprint.rbracket
+    | uu____6524 when is_lex_list e ->
+        let uu____6525 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.percent FStar_Pprint.lbracket
            in
-        let uu____6522 =
-          let uu____6523 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1
+        let uu____6526 =
+          let uu____6527 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1
              in
-          let uu____6524 = extract_from_list e  in
-          separate_map_or_flow_last uu____6523
-            (fun ps  -> p_noSeqTerm ps false) uu____6524
+          let uu____6528 = extract_from_list e  in
+          separate_map_or_flow_last uu____6527
+            (fun ps  -> p_noSeqTerm ps false) uu____6528
            in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
-          uu____6521 uu____6522 FStar_Pprint.rbracket
-    | uu____6529 when is_ref_set e ->
+          uu____6525 uu____6526 FStar_Pprint.rbracket
+    | uu____6533 when is_ref_set e ->
         let es = extract_from_ref_set e  in
-        let uu____6533 =
+        let uu____6537 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.bang FStar_Pprint.lbrace  in
-        let uu____6534 =
-          let uu____6535 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
+        let uu____6538 =
+          let uu____6539 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1
              in
-          separate_map_or_flow uu____6535 p_appTerm es  in
+          separate_map_or_flow uu____6539 p_appTerm es  in
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "0")
-          uu____6533 uu____6534 FStar_Pprint.rbrace
+          uu____6537 uu____6538 FStar_Pprint.rbrace
     | FStar_Parser_AST.Labeled (e1,s,b) ->
-        let uu____6539 = str (Prims.strcat "(*" (Prims.strcat s "*)"))  in
-        let uu____6540 = p_term false false e1  in
-        FStar_Pprint.op_Hat_Slash_Hat uu____6539 uu____6540
+        let uu____6543 = str (Prims.strcat "(*" (Prims.strcat s "*)"))  in
+        let uu____6544 = p_term false false e1  in
+        FStar_Pprint.op_Hat_Slash_Hat uu____6543 uu____6544
     | FStar_Parser_AST.Op (op,args) when
-        let uu____6547 = handleable_op op args  in
-        Prims.op_Negation uu____6547 ->
-        let uu____6548 =
-          let uu____6549 =
-            let uu____6550 =
-              let uu____6551 =
-                let uu____6552 =
+        let uu____6551 = handleable_op op args  in
+        Prims.op_Negation uu____6551 ->
+        let uu____6552 =
+          let uu____6553 =
+            let uu____6554 =
+              let uu____6555 =
+                let uu____6556 =
                   FStar_Util.string_of_int (FStar_List.length args)  in
-                Prims.strcat uu____6552
+                Prims.strcat uu____6556
                   " arguments couldn't be handled by the pretty printer"
                  in
-              Prims.strcat " with " uu____6551  in
-            Prims.strcat (FStar_Ident.text_of_id op) uu____6550  in
-          Prims.strcat "Operation " uu____6549  in
-        failwith uu____6548
-    | FStar_Parser_AST.Uvar uu____6553 ->
+              Prims.strcat " with " uu____6555  in
+            Prims.strcat (FStar_Ident.text_of_id op) uu____6554  in
+          Prims.strcat "Operation " uu____6553  in
+        failwith uu____6552
+    | FStar_Parser_AST.Uvar uu____6557 ->
         failwith "Unexpected universe variable out of universe context"
     | FStar_Parser_AST.Wild  ->
-        let uu____6554 = p_term false false e  in
-        soft_parens_with_nesting uu____6554
-    | FStar_Parser_AST.Const uu____6555 ->
-        let uu____6556 = p_term false false e  in
-        soft_parens_with_nesting uu____6556
-    | FStar_Parser_AST.Op uu____6557 ->
-        let uu____6564 = p_term false false e  in
-        soft_parens_with_nesting uu____6564
-    | FStar_Parser_AST.Tvar uu____6565 ->
-        let uu____6566 = p_term false false e  in
-        soft_parens_with_nesting uu____6566
-    | FStar_Parser_AST.Var uu____6567 ->
+        let uu____6558 = p_term false false e  in
+        soft_parens_with_nesting uu____6558
+    | FStar_Parser_AST.Const uu____6559 ->
+        let uu____6560 = p_term false false e  in
+        soft_parens_with_nesting uu____6560
+    | FStar_Parser_AST.Op uu____6561 ->
         let uu____6568 = p_term false false e  in
         soft_parens_with_nesting uu____6568
-    | FStar_Parser_AST.Name uu____6569 ->
+    | FStar_Parser_AST.Tvar uu____6569 ->
         let uu____6570 = p_term false false e  in
         soft_parens_with_nesting uu____6570
-    | FStar_Parser_AST.Construct uu____6571 ->
-        let uu____6582 = p_term false false e  in
-        soft_parens_with_nesting uu____6582
-    | FStar_Parser_AST.Abs uu____6583 ->
-        let uu____6590 = p_term false false e  in
-        soft_parens_with_nesting uu____6590
-    | FStar_Parser_AST.App uu____6591 ->
-        let uu____6598 = p_term false false e  in
-        soft_parens_with_nesting uu____6598
-    | FStar_Parser_AST.Let uu____6599 ->
-        let uu____6620 = p_term false false e  in
-        soft_parens_with_nesting uu____6620
-    | FStar_Parser_AST.LetOpen uu____6621 ->
-        let uu____6626 = p_term false false e  in
-        soft_parens_with_nesting uu____6626
-    | FStar_Parser_AST.Seq uu____6627 ->
-        let uu____6632 = p_term false false e  in
-        soft_parens_with_nesting uu____6632
-    | FStar_Parser_AST.Bind uu____6633 ->
-        let uu____6640 = p_term false false e  in
-        soft_parens_with_nesting uu____6640
-    | FStar_Parser_AST.If uu____6641 ->
-        let uu____6648 = p_term false false e  in
-        soft_parens_with_nesting uu____6648
-    | FStar_Parser_AST.Match uu____6649 ->
-        let uu____6664 = p_term false false e  in
-        soft_parens_with_nesting uu____6664
-    | FStar_Parser_AST.TryWith uu____6665 ->
-        let uu____6680 = p_term false false e  in
-        soft_parens_with_nesting uu____6680
-    | FStar_Parser_AST.Ascribed uu____6681 ->
-        let uu____6690 = p_term false false e  in
-        soft_parens_with_nesting uu____6690
-    | FStar_Parser_AST.Record uu____6691 ->
-        let uu____6704 = p_term false false e  in
-        soft_parens_with_nesting uu____6704
-    | FStar_Parser_AST.Project uu____6705 ->
-        let uu____6710 = p_term false false e  in
-        soft_parens_with_nesting uu____6710
-    | FStar_Parser_AST.Product uu____6711 ->
-        let uu____6718 = p_term false false e  in
-        soft_parens_with_nesting uu____6718
-    | FStar_Parser_AST.Sum uu____6719 ->
-        let uu____6726 = p_term false false e  in
-        soft_parens_with_nesting uu____6726
-    | FStar_Parser_AST.QForall uu____6727 ->
-        let uu____6740 = p_term false false e  in
-        soft_parens_with_nesting uu____6740
-    | FStar_Parser_AST.QExists uu____6741 ->
-        let uu____6754 = p_term false false e  in
-        soft_parens_with_nesting uu____6754
-    | FStar_Parser_AST.Refine uu____6755 ->
-        let uu____6760 = p_term false false e  in
-        soft_parens_with_nesting uu____6760
-    | FStar_Parser_AST.NamedTyp uu____6761 ->
-        let uu____6766 = p_term false false e  in
-        soft_parens_with_nesting uu____6766
-    | FStar_Parser_AST.Requires uu____6767 ->
-        let uu____6774 = p_term false false e  in
-        soft_parens_with_nesting uu____6774
-    | FStar_Parser_AST.Ensures uu____6775 ->
-        let uu____6782 = p_term false false e  in
-        soft_parens_with_nesting uu____6782
-    | FStar_Parser_AST.Attributes uu____6783 ->
+    | FStar_Parser_AST.Var uu____6571 ->
+        let uu____6572 = p_term false false e  in
+        soft_parens_with_nesting uu____6572
+    | FStar_Parser_AST.Name uu____6573 ->
+        let uu____6574 = p_term false false e  in
+        soft_parens_with_nesting uu____6574
+    | FStar_Parser_AST.Construct uu____6575 ->
+        let uu____6586 = p_term false false e  in
+        soft_parens_with_nesting uu____6586
+    | FStar_Parser_AST.Abs uu____6587 ->
+        let uu____6594 = p_term false false e  in
+        soft_parens_with_nesting uu____6594
+    | FStar_Parser_AST.App uu____6595 ->
+        let uu____6602 = p_term false false e  in
+        soft_parens_with_nesting uu____6602
+    | FStar_Parser_AST.Let uu____6603 ->
+        let uu____6624 = p_term false false e  in
+        soft_parens_with_nesting uu____6624
+    | FStar_Parser_AST.LetOpen uu____6625 ->
+        let uu____6630 = p_term false false e  in
+        soft_parens_with_nesting uu____6630
+    | FStar_Parser_AST.Seq uu____6631 ->
+        let uu____6636 = p_term false false e  in
+        soft_parens_with_nesting uu____6636
+    | FStar_Parser_AST.Bind uu____6637 ->
+        let uu____6644 = p_term false false e  in
+        soft_parens_with_nesting uu____6644
+    | FStar_Parser_AST.If uu____6645 ->
+        let uu____6652 = p_term false false e  in
+        soft_parens_with_nesting uu____6652
+    | FStar_Parser_AST.Match uu____6653 ->
+        let uu____6668 = p_term false false e  in
+        soft_parens_with_nesting uu____6668
+    | FStar_Parser_AST.TryWith uu____6669 ->
+        let uu____6684 = p_term false false e  in
+        soft_parens_with_nesting uu____6684
+    | FStar_Parser_AST.Ascribed uu____6685 ->
+        let uu____6694 = p_term false false e  in
+        soft_parens_with_nesting uu____6694
+    | FStar_Parser_AST.Record uu____6695 ->
+        let uu____6708 = p_term false false e  in
+        soft_parens_with_nesting uu____6708
+    | FStar_Parser_AST.Project uu____6709 ->
+        let uu____6714 = p_term false false e  in
+        soft_parens_with_nesting uu____6714
+    | FStar_Parser_AST.Product uu____6715 ->
+        let uu____6722 = p_term false false e  in
+        soft_parens_with_nesting uu____6722
+    | FStar_Parser_AST.Sum uu____6723 ->
+        let uu____6730 = p_term false false e  in
+        soft_parens_with_nesting uu____6730
+    | FStar_Parser_AST.QForall uu____6731 ->
+        let uu____6744 = p_term false false e  in
+        soft_parens_with_nesting uu____6744
+    | FStar_Parser_AST.QExists uu____6745 ->
+        let uu____6758 = p_term false false e  in
+        soft_parens_with_nesting uu____6758
+    | FStar_Parser_AST.Refine uu____6759 ->
+        let uu____6764 = p_term false false e  in
+        soft_parens_with_nesting uu____6764
+    | FStar_Parser_AST.NamedTyp uu____6765 ->
+        let uu____6770 = p_term false false e  in
+        soft_parens_with_nesting uu____6770
+    | FStar_Parser_AST.Requires uu____6771 ->
+        let uu____6778 = p_term false false e  in
+        soft_parens_with_nesting uu____6778
+    | FStar_Parser_AST.Ensures uu____6779 ->
         let uu____6786 = p_term false false e  in
         soft_parens_with_nesting uu____6786
-    | FStar_Parser_AST.Quote uu____6787 ->
-        let uu____6792 = p_term false false e  in
-        soft_parens_with_nesting uu____6792
-    | FStar_Parser_AST.VQuote uu____6793 ->
-        let uu____6794 = p_term false false e  in
-        soft_parens_with_nesting uu____6794
+    | FStar_Parser_AST.Attributes uu____6787 ->
+        let uu____6790 = p_term false false e  in
+        soft_parens_with_nesting uu____6790
+    | FStar_Parser_AST.Quote uu____6791 ->
+        let uu____6796 = p_term false false e  in
+        soft_parens_with_nesting uu____6796
+    | FStar_Parser_AST.VQuote uu____6797 ->
+        let uu____6798 = p_term false false e  in
+        soft_parens_with_nesting uu____6798
 
 and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
-  fun uu___63_6795  ->
-    match uu___63_6795 with
+  fun uu___63_6799  ->
+    match uu___63_6799 with
     | FStar_Const.Const_effect  -> str "Effect"
     | FStar_Const.Const_unit  -> str "()"
     | FStar_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
     | FStar_Const.Const_float x -> str (FStar_Util.string_of_float x)
     | FStar_Const.Const_char x ->
-        let uu____6799 = FStar_Pprint.doc_of_char x  in
-        FStar_Pprint.squotes uu____6799
-    | FStar_Const.Const_string (s,uu____6801) ->
-        let uu____6802 = str s  in FStar_Pprint.dquotes uu____6802
-    | FStar_Const.Const_bytearray (bytes,uu____6804) ->
-        let uu____6809 =
-          let uu____6810 = str (FStar_Util.string_of_bytes bytes)  in
-          FStar_Pprint.dquotes uu____6810  in
-        let uu____6811 = str "B"  in
-        FStar_Pprint.op_Hat_Hat uu____6809 uu____6811
+        let uu____6803 = FStar_Pprint.doc_of_char x  in
+        FStar_Pprint.squotes uu____6803
+    | FStar_Const.Const_string (s,uu____6805) ->
+        let uu____6806 = str s  in FStar_Pprint.dquotes uu____6806
+    | FStar_Const.Const_bytearray (bytes,uu____6808) ->
+        let uu____6813 =
+          let uu____6814 = str (FStar_Util.string_of_bytes bytes)  in
+          FStar_Pprint.dquotes uu____6814  in
+        let uu____6815 = str "B"  in
+        FStar_Pprint.op_Hat_Hat uu____6813 uu____6815
     | FStar_Const.Const_int (repr,sign_width_opt) ->
-        let signedness uu___61_6829 =
-          match uu___61_6829 with
+        let signedness uu___61_6833 =
+          match uu___61_6833 with
           | FStar_Const.Unsigned  -> str "u"
           | FStar_Const.Signed  -> FStar_Pprint.empty  in
-        let width uu___62_6833 =
-          match uu___62_6833 with
+        let width uu___62_6837 =
+          match uu___62_6837 with
           | FStar_Const.Int8  -> str "y"
           | FStar_Const.Int16  -> str "s"
           | FStar_Const.Int32  -> str "l"
           | FStar_Const.Int64  -> str "L"  in
         let ending =
           default_or_map FStar_Pprint.empty
-            (fun uu____6844  ->
-               match uu____6844 with
+            (fun uu____6848  ->
+               match uu____6848 with
                | (s,w) ->
-                   let uu____6851 = signedness s  in
-                   let uu____6852 = width w  in
-                   FStar_Pprint.op_Hat_Hat uu____6851 uu____6852)
+                   let uu____6855 = signedness s  in
+                   let uu____6856 = width w  in
+                   FStar_Pprint.op_Hat_Hat uu____6855 uu____6856)
             sign_width_opt
            in
-        let uu____6853 = str repr  in
-        FStar_Pprint.op_Hat_Hat uu____6853 ending
+        let uu____6857 = str repr  in
+        FStar_Pprint.op_Hat_Hat uu____6857 ending
     | FStar_Const.Const_range_of  -> str "range_of"
     | FStar_Const.Const_set_range_of  -> str "set_range_of"
     | FStar_Const.Const_range r ->
-        let uu____6855 = FStar_Range.string_of_range r  in str uu____6855
+        let uu____6859 = FStar_Range.string_of_range r  in str uu____6859
     | FStar_Const.Const_reify  -> str "reify"
     | FStar_Const.Const_reflect lid ->
-        let uu____6857 = p_quident lid  in
-        let uu____6858 =
-          let uu____6859 =
-            let uu____6860 = str "reflect"  in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6860  in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.qmark uu____6859  in
-        FStar_Pprint.op_Hat_Hat uu____6857 uu____6858
+        let uu____6861 = p_quident lid  in
+        let uu____6862 =
+          let uu____6863 =
+            let uu____6864 = str "reflect"  in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu____6864  in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.qmark uu____6863  in
+        FStar_Pprint.op_Hat_Hat uu____6861 uu____6862
 
 and (p_universe : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun u  ->
-    let uu____6862 = str "u#"  in
-    let uu____6863 = p_atomicUniverse u  in
-    FStar_Pprint.op_Hat_Hat uu____6862 uu____6863
+    let uu____6866 = str "u#"  in
+    let uu____6867 = p_atomicUniverse u  in
+    FStar_Pprint.op_Hat_Hat uu____6866 uu____6867
 
 and (p_universeFrom : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun u  ->
     match u.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Op
-        ({ FStar_Ident.idText = "+"; FStar_Ident.idRange = uu____6865;_},u1::u2::[])
+        ({ FStar_Ident.idText = "+"; FStar_Ident.idRange = uu____6869;_},u1::u2::[])
         ->
-        let uu____6870 =
-          let uu____6871 = p_universeFrom u1  in
-          let uu____6872 =
-            let uu____6873 = p_universeFrom u2  in
-            FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.plus uu____6873  in
-          FStar_Pprint.op_Hat_Slash_Hat uu____6871 uu____6872  in
-        FStar_Pprint.group uu____6870
-    | FStar_Parser_AST.App uu____6874 ->
-        let uu____6881 = head_and_args u  in
-        (match uu____6881 with
+        let uu____6874 =
+          let uu____6875 = p_universeFrom u1  in
+          let uu____6876 =
+            let uu____6877 = p_universeFrom u2  in
+            FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.plus uu____6877  in
+          FStar_Pprint.op_Hat_Slash_Hat uu____6875 uu____6876  in
+        FStar_Pprint.group uu____6874
+    | FStar_Parser_AST.App uu____6878 ->
+        let uu____6885 = head_and_args u  in
+        (match uu____6885 with
          | (head1,args) ->
              (match head1.FStar_Parser_AST.tm with
               | FStar_Parser_AST.Var maybe_max_lid when
                   FStar_Ident.lid_equals maybe_max_lid
                     FStar_Parser_Const.max_lid
                   ->
-                  let uu____6907 =
-                    let uu____6908 = p_qlident FStar_Parser_Const.max_lid  in
-                    let uu____6909 =
+                  let uu____6911 =
+                    let uu____6912 = p_qlident FStar_Parser_Const.max_lid  in
+                    let uu____6913 =
                       FStar_Pprint.separate_map FStar_Pprint.space
-                        (fun uu____6917  ->
-                           match uu____6917 with
-                           | (u1,uu____6923) -> p_atomicUniverse u1) args
+                        (fun uu____6921  ->
+                           match uu____6921 with
+                           | (u1,uu____6927) -> p_atomicUniverse u1) args
                        in
-                    op_Hat_Slash_Plus_Hat uu____6908 uu____6909  in
-                  FStar_Pprint.group uu____6907
-              | uu____6924 ->
-                  let uu____6925 =
-                    let uu____6926 = FStar_Parser_AST.term_to_string u  in
+                    op_Hat_Slash_Plus_Hat uu____6912 uu____6913  in
+                  FStar_Pprint.group uu____6911
+              | uu____6928 ->
+                  let uu____6929 =
+                    let uu____6930 = FStar_Parser_AST.term_to_string u  in
                     FStar_Util.format1 "Invalid term in universe context %s"
-                      uu____6926
+                      uu____6930
                      in
-                  failwith uu____6925))
-    | uu____6927 -> p_atomicUniverse u
+                  failwith uu____6929))
+    | uu____6931 -> p_atomicUniverse u
 
 and (p_atomicUniverse : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun u  ->
@@ -3629,22 +3638,22 @@ and (p_atomicUniverse : FStar_Parser_AST.term -> FStar_Pprint.document) =
         p_constant (FStar_Const.Const_int (r, sw))
     | FStar_Parser_AST.Uvar id1 -> str (FStar_Ident.text_of_id id1)
     | FStar_Parser_AST.Paren u1 ->
-        let uu____6951 = p_universeFrom u1  in
-        soft_parens_with_nesting uu____6951
+        let uu____6955 = p_universeFrom u1  in
+        soft_parens_with_nesting uu____6955
     | FStar_Parser_AST.Op
-        ({ FStar_Ident.idText = "+"; FStar_Ident.idRange = uu____6952;_},uu____6953::uu____6954::[])
+        ({ FStar_Ident.idText = "+"; FStar_Ident.idRange = uu____6956;_},uu____6957::uu____6958::[])
         ->
-        let uu____6957 = p_universeFrom u  in
-        soft_parens_with_nesting uu____6957
-    | FStar_Parser_AST.App uu____6958 ->
-        let uu____6965 = p_universeFrom u  in
-        soft_parens_with_nesting uu____6965
-    | uu____6966 ->
-        let uu____6967 =
-          let uu____6968 = FStar_Parser_AST.term_to_string u  in
-          FStar_Util.format1 "Invalid term in universe context %s" uu____6968
+        let uu____6961 = p_universeFrom u  in
+        soft_parens_with_nesting uu____6961
+    | FStar_Parser_AST.App uu____6962 ->
+        let uu____6969 = p_universeFrom u  in
+        soft_parens_with_nesting uu____6969
+    | uu____6970 ->
+        let uu____6971 =
+          let uu____6972 = FStar_Parser_AST.term_to_string u  in
+          FStar_Util.format1 "Invalid term in universe context %s" uu____6972
            in
-        failwith uu____6967
+        failwith uu____6971
 
 let (term_to_document : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e  -> p_term false false e 
@@ -3661,9 +3670,16 @@ let (modul_to_document : FStar_Parser_AST.modul -> FStar_Pprint.document) =
     FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
     (let res =
        match m with
-       | FStar_Parser_AST.Module (uu____7008,decls) -> FStar_Pprint.empty
-       | FStar_Parser_AST.Interface (uu____7014,decls,uu____7016) ->
-           FStar_Pprint.empty
+       | FStar_Parser_AST.Module (uu____7012,decls) ->
+           let uu____7018 =
+             FStar_All.pipe_right decls (FStar_List.map decl_to_document)  in
+           FStar_All.pipe_right uu____7018
+             (FStar_Pprint.separate FStar_Pprint.hardline)
+       | FStar_Parser_AST.Interface (uu____7027,decls,uu____7029) ->
+           let uu____7034 =
+             FStar_All.pipe_right decls (FStar_List.map decl_to_document)  in
+           FStar_All.pipe_right uu____7034
+             (FStar_Pprint.separate FStar_Pprint.hardline)
         in
      FStar_ST.op_Colon_Equals should_print_fs_typ_app false; res)
   
@@ -3673,8 +3689,8 @@ let (comments_to_document :
   =
   fun comments  ->
     FStar_Pprint.separate_map FStar_Pprint.hardline
-      (fun uu____7063  ->
-         match uu____7063 with | (comment,range) -> str comment) comments
+      (fun uu____7085  ->
+         match uu____7085 with | (comment,range) -> str comment) comments
   
 let (modul_with_comments_to_document :
   FStar_Parser_AST.modul ->
@@ -3688,39 +3704,39 @@ let (modul_with_comments_to_document :
     fun comments  ->
       let decls =
         match m with
-        | FStar_Parser_AST.Module (uu____7103,decls) -> decls
-        | FStar_Parser_AST.Interface (uu____7109,decls,uu____7111) -> decls
+        | FStar_Parser_AST.Module (uu____7125,decls) -> decls
+        | FStar_Parser_AST.Interface (uu____7131,decls,uu____7133) -> decls
          in
       FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
       (match decls with
        | [] -> (FStar_Pprint.empty, comments)
        | d::ds ->
-           let uu____7156 =
+           let uu____7178 =
              match ds with
              | {
                  FStar_Parser_AST.d = FStar_Parser_AST.Pragma
                    (FStar_Parser_AST.LightOff );
-                 FStar_Parser_AST.drange = uu____7169;
-                 FStar_Parser_AST.doc = uu____7170;
-                 FStar_Parser_AST.quals = uu____7171;
-                 FStar_Parser_AST.attrs = uu____7172;_}::uu____7173 ->
+                 FStar_Parser_AST.drange = uu____7191;
+                 FStar_Parser_AST.doc = uu____7192;
+                 FStar_Parser_AST.quals = uu____7193;
+                 FStar_Parser_AST.attrs = uu____7194;_}::uu____7195 ->
                  let d0 = FStar_List.hd ds  in
-                 let uu____7179 =
-                   let uu____7182 =
-                     let uu____7185 = FStar_List.tl ds  in d :: uu____7185
+                 let uu____7201 =
+                   let uu____7204 =
+                     let uu____7207 = FStar_List.tl ds  in d :: uu____7207
                       in
-                   d0 :: uu____7182  in
-                 (uu____7179, (d0.FStar_Parser_AST.drange))
-             | uu____7190 -> ((d :: ds), (d.FStar_Parser_AST.drange))  in
-           (match uu____7156 with
+                   d0 :: uu____7204  in
+                 (uu____7201, (d0.FStar_Parser_AST.drange))
+             | uu____7212 -> ((d :: ds), (d.FStar_Parser_AST.drange))  in
+           (match uu____7178 with
             | (decls1,first_range) ->
                 let extract_decl_range d1 = d1.FStar_Parser_AST.drange  in
                 (FStar_ST.op_Colon_Equals comment_stack comments;
                  (let initial_comment =
-                    let uu____7248 = FStar_Range.start_of_range first_range
+                    let uu____7270 = FStar_Range.start_of_range first_range
                        in
                     place_comments_until_pos (Prims.parse_int "0")
-                      (Prims.parse_int "1") uu____7248 FStar_Pprint.empty
+                      (Prims.parse_int "1") uu____7270 FStar_Pprint.empty
                      in
                   let doc1 =
                     separate_map_with_comments FStar_Pprint.empty
@@ -3730,7 +3746,7 @@ let (modul_with_comments_to_document :
                   let comments1 = FStar_ST.op_Bang comment_stack  in
                   FStar_ST.op_Colon_Equals comment_stack [];
                   FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
-                  (let uu____7344 =
+                  (let uu____7366 =
                      FStar_Pprint.op_Hat_Hat initial_comment doc1  in
-                   (uu____7344, comments1))))))
+                   (uu____7366, comments1))))))
   

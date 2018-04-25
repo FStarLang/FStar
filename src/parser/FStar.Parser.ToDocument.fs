@@ -863,14 +863,13 @@ and p_atomicPattern p = match p.pat with
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
 (* is_atomic is true if the binder must be parsed atomically *)
-(* TODO : try to print refinement with the compact form if possible *)
 and p_binder is_atomic b = match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
   | TVariable lid -> p_lident lid
   | Annotated (lid, t) ->
       let doc = match t.tm with
         | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
-          p_refinement b.aqual (p_ident lid) t phi
+          p_refinement b.aqual (p_lident lid) t phi
         | _ ->
           optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^/^ p_tmFormula t
       in
@@ -922,30 +921,33 @@ and p_binders (is_atomic: bool) (bs: list binder): document = separate_or_flow b
 (*                                                                            *)
 (* ****************************************************************************)
 
-(* TODO : should add some defensive checks *)
+and text_of_id_or_underscore lid =
+  if starts_with lid.idText reserved_prefix
+  then underscore
+  else str (text_of_id lid)
+
+and text_of_lid_or_underscore lid =
+  if starts_with lid.ident.idText reserved_prefix
+  then underscore
+  else str (text_of_lid lid)
 
 and p_qlident lid =
-  str (text_of_lid lid)
+  text_of_lid_or_underscore lid
 
 and p_quident lid =
-  str (text_of_lid lid)
+  text_of_lid_or_underscore lid
 
 and p_ident lid =
-  str (text_of_id lid)
+  text_of_id_or_underscore lid
 
 and p_lident lid =
-  str (text_of_id lid)
+  text_of_id_or_underscore lid
 
 and p_uident lid =
-  str (text_of_id lid)
+  text_of_id_or_underscore lid
 
 and p_tvar lid =
-  str (text_of_id lid)
-
-and p_lidentOrUnderscore id =
-  if starts_with reserved_prefix id.idText
-  then underscore
-  else p_lident id
+  text_of_id_or_underscore lid
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1276,7 +1278,7 @@ and p_tmNoEq e = p_tmNoEqWith p_tmRefinement e
 
 and p_tmRefinement e = match e.tm with
   | NamedTyp(lid, e) ->
-      group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
+      group (p_lident lid ^/^ colon ^/^ p_appTerm e)
   | Refine(b, phi) ->
       p_refinedBinder b phi
   | _ -> p_appTerm e

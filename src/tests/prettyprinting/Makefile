@@ -8,7 +8,7 @@ all_text: $(addsuffix .test_text, $(wildcard *.fst))
 
 %.fst.test: %.fst
 	$(FSTAR) --indent $^ > $@
-	diff -q $^ $@
+	diff $^ $@
 
 # Eliminate empty lines before diffing
 %.fst.test_text: %.fst
