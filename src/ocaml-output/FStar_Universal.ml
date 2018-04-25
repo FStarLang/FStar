@@ -807,7 +807,8 @@ let (tc_one_file :
                    let uu____1662 =
                      FStar_Util.record_time
                        (fun uu____1684  ->
-                          FStar_TypeChecker_Tc.check_module env2 fmod)
+                          FStar_TypeChecker_Tc.check_module env2 fmod
+                            (FStar_Util.is_some pre_fn))
                       in
                    match uu____1662 with
                    | ((tcmod,tcmod_iface_opt,env3),time) ->

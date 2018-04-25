@@ -73,6 +73,7 @@ let (add_mods :
                     | (dsenv3,string_mod) ->
                         let uu____208 =
                           FStar_TypeChecker_Tc.check_module env1 string_mod
+                            false
                            in
                         (match uu____208 with
                          | (_mod,uu____222,env2) -> (dsenv3, env2))))
@@ -173,7 +174,8 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.dep_graph =
                (uu___53_246.FStar_TypeChecker_Env.dep_graph)
            }  in
-         let uu____247 = FStar_TypeChecker_Tc.check_module env1 prims_mod  in
+         let uu____247 =
+           FStar_TypeChecker_Tc.check_module env1 prims_mod false  in
          (match uu____247 with
           | (_prims_mod,uu____257,env2) ->
               let env3 =
