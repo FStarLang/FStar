@@ -1190,9 +1190,8 @@ and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * 
                       Errors.log_issue
                             p.pos
                             (Errors.Warning_SMTPatternMissingBoundVar,
-                             BU.format3 "Pattern %s encoded to %s contains illegal sub-term (%s); dropping it"
+                             BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
                                         (Print.term_to_string p)
-                                        (Print.term_to_string t)
                                         (Term.print_smt_term illegal_subterm));
                          pats, d@decls)
                 pats ([], decls)
