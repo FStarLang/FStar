@@ -165,6 +165,12 @@ let separate_map_or_flow_last sep f l =
 
 let separate_or_flow sep l = separate_map_or_flow sep id l
 
+let surround_maybe_empty n b doc1 doc2 doc3 =
+  if doc2 = empty then
+    group (doc1 ^/^ doc3)
+  else
+    surround n b doc1 doc2 doc3
+
 let soft_surround_separate_map n b void_ opening sep closing f xs =
   if xs = []
   then void_
@@ -717,13 +723,13 @@ and p_newEffect = function
     p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
-    surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm false false t))
+    surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm false false t))
 
 and p_effectDefinition uid bs t eff_decls =
+  let binders = p_binders true bs in
   braces_with_nesting (
-    group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ false false t))) ^/^
-    prefix2 (str "with") (separate_break_map_last semi p_effectDecl eff_decls)
-    )
+    group (surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (prefix2 colon (p_typ false false t))) ^/^
+    (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls))
 
 and p_effectDecl ps d = match d.d with
   | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
@@ -1122,7 +1128,7 @@ and p_quantifier e = match e.tm with
 and p_trigger = function
     | [] -> empty
     | pats ->
-        group (lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^^ rbrace)
+        group (lbrace ^^ colon ^^ str "pattern" ^/^ jump 2 0 (p_disjunctivePats pats) ^^ rbrace)
 
 and p_disjunctivePats pats =
     separate_map (str "\\/") p_conjunctivePats pats
