@@ -350,12 +350,73 @@ let mkCases t r = match t with
   | [] -> failwith "Impos"
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
 
-let mkQuant (qop, pats, wopt, vars, body) r =
-  if List.length vars = 0 then body
-  else
-    match body.tm with
-    | App(TrueOp, _) -> body
-    | _ -> mk (Quant(qop,pats,wopt,vars,body)) r
+
+let rec check_pattern_ok (t:term) =
+    match t.tm with
+    | Integer _
+    | BoundV _
+    | FreeV _ -> true
+    | Let(tms, tm) -> BU.for_all check_pattern_ok (tm::tms)
+    | App(head, terms) ->
+        let head_ok =
+            match head with
+            | Var _ -> true
+            | TrueOp
+            | FalseOp -> true
+            | Not
+            | And
+            | Or
+            | Imp
+            | Iff
+            | Eq -> false
+            | LT
+            | LTE
+            | GT
+            | GTE
+            | Add
+            | Sub
+            | Div
+            | Mul
+            | Minus
+            | Mod -> true
+            | BvAnd
+            | BvXor
+            | BvOr
+            | BvAdd
+            | BvSub
+            | BvShl
+            | BvShr
+            | BvUdiv
+            | BvMod
+            | BvMul
+            | BvUlt
+            | BvUext _
+            | NatToBv _
+            | BvToNat
+            | ITE -> false
+        in
+        head_ok  &&
+        BU.for_all check_pattern_ok terms
+    | Labeled _
+    | Quant _
+    | LblPos _ -> false
+let mkQuant r check_pats (qop, pats, wopt, vars, body) =
+    let all_pats_ok pats =
+        if not check_pats then pats else
+        if BU.for_all (BU.for_all check_pattern_ok) pats
+        then pats
+        else begin
+            Errors.log_issue
+                    r
+                    (Errors.Warning_SMTPatternMissingBoundVar,
+                     "Pattern contains illegal symbols; dropping it");
+            []
+        end
+    in
+    if List.length vars = 0 then body
+    else match body.tm with
+         | App(TrueOp, _) -> body
+         | _ -> mk (Quant(qop, all_pats_ok pats, wopt, vars, body)) r
 
 let mkLet (es, body) r =
   if List.length es = 0 then body
@@ -387,7 +448,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
         | LblPos(t, r) -> mk (LblPos(aux ix t, r)) t.rng
         | Quant(qop, pats, wopt, vars, body) ->
           let n = List.length vars in
-          mkQuant(qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body) t.rng
+          mkQuant t.rng false (qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body)
         | Let (es, body) ->
           let ix, es_rev = List.fold_left (fun (ix, l) e -> ix+1, aux ix e::l) (ix, []) es in
           mkLet (List.rev es_rev, aux ix body) t.rng
@@ -411,7 +472,7 @@ let inst tms t =
     | Quant(qop, pats, wopt, vars, body) ->
       let m = List.length vars in
       let shift = shift + m in
-      mkQuant(qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body) t.rng
+      mkQuant t.rng false (qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body)
     | Let (es, body) ->
       let shift, es_rev = List.fold_left (fun (ix, es) e -> shift+1, aux shift e::es) (shift, []) es in
       mkLet (List.rev es_rev, aux shift body) t.rng
@@ -419,13 +480,18 @@ let inst tms t =
   aux 0 t
 
 let subst (t:term) (fv:fv) (s:term) = inst [s] (abstr [fv] t)
-let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
-let mkForall'' (pats, wopt, sorts, body) r = mkQuant (Forall, pats, wopt, sorts, body) r
-let mkForall' (pats, wopt, vars, body) r = mkQuant' (Forall, pats, wopt, vars, body) r
+let mkQuant' r (qop, pats, wopt, vars, body) =
+    mkQuant r true (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
 
 //these are the external facing functions for building quantifiers
-let mkForall (pats, vars, body) r = mkQuant' (Forall, pats, None, vars, body) r
-let mkExists (pats, vars, body) r = mkQuant' (Exists, pats, None, vars, body) r
+let mkForall r (pats, vars, body) =
+    mkQuant' r (Forall, pats, None, vars, body)
+let mkForall'' r (pats, wopt, sorts, body) =
+    mkQuant r true (Forall, pats, wopt, sorts, body)
+let mkForall' r (pats, wopt, vars, body) =
+    mkQuant' r (Forall, pats, wopt, vars, body)
+let mkExists r (pats, vars, body) =
+    mkQuant' r (Exists, pats, None, vars, body)
 
 let mkLet' (bindings, body) r =
   let vars, es = List.split bindings in
@@ -444,7 +510,7 @@ let fresh_token (tok_name, sort) id =
              assumption_fact_ids=[]} in
     Assume a
 
-let fresh_constructor (name, arg_sorts, sort, id) =
+let fresh_constructor rng (name, arg_sorts, sort, id) =
   let id = string_of_int id in
   let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV("x_" ^ string_of_int i, s) norng) in
   let bvar_names = List.map fv_of_term bvars in
@@ -454,12 +520,12 @@ let fresh_constructor (name, arg_sorts, sort, id) =
   let a = {
     assumption_name=a_name;
     assumption_caption=Some "Consrtructor distinct";
-    assumption_term=mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng;
+    assumption_term=mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng);
     assumption_fact_ids=[]
   } in
   Assume a
 
-let injective_constructor (name, fields, sort) =
+let injective_constructor rng (name, fields, sort) =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
@@ -475,18 +541,18 @@ let injective_constructor (name, fields, sort) =
             then let a = {
                     assumption_name = "projection_inverse_"^name;
                     assumption_caption = Some "Projection inverse";
-                    assumption_term = mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng;
+                    assumption_term = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng);
                     assumption_fact_ids = []
                  } in
                  [proj_name; Assume a]
             else [proj_name])
     |> List.flatten
 
-let constructor_to_decl (name, fields, sort, id, injective) =
+let constructor_to_decl rng (name, fields, sort, id, injective) =
     let injective = injective || true in
     let field_sorts = fields |> List.map (fun (_, sort, _) -> sort) in
     let cdecl = DeclFun(name, field_sorts, sort, Some "Constructor") in
-    let cid = fresh_constructor (name, field_sorts, sort, id) in
+    let cid = fresh_constructor rng (name, field_sorts, sort, id) in
     let disc =
         let disc_name = "is-"^name in
         let xfv = ("x", sort) in
@@ -504,7 +570,7 @@ let constructor_to_decl (name, fields, sort, id, injective) =
         let disc_inv_body = mkEq(xx, mkApp(name, proj_terms) norng) norng in
         let disc_inv_body = match ex_vars with
             | [] -> disc_inv_body
-            | _ -> mkExists ([], ex_vars, disc_inv_body) norng in
+            | _ -> mkExists norng ([], ex_vars, disc_inv_body) in
         let disc_ax = mkAnd(disc_eq, disc_inv_body) norng in
         let def = mkDefineFun(disc_name, [xfv], Bool_sort,
                     disc_ax,
@@ -512,7 +578,7 @@ let constructor_to_decl (name, fields, sort, id, injective) =
         def in
     let projs =
         if injective
-        then injective_constructor (name, fields, sort)
+        then injective_constructor rng (name, fields, sort)
         else [] in
     Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
 
@@ -740,7 +806,7 @@ and mkPrelude z3options =
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
-   let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
+   let bcons = constrs |> List.collect (constructor_to_decl norng) |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
                        (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
@@ -758,7 +824,7 @@ and mkPrelude z3options =
 let mkBvConstructor (sz : int) =
     (fst (boxBitVecFun sz),
         [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
-    |> constructor_to_decl
+    |> constructor_to_decl norng
 
 let __range_c = BU.mk_ref 0
 let mk_Range_const () =

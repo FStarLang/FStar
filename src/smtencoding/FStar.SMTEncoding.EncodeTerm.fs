@@ -47,8 +47,8 @@ open FStar.SMTEncoding.Env
 (*---------------------------------------------------------------------------------*)
 (* <Utilities> *)
 
-let mkForall_fuel' n (pats, vars, body) =
-    let fallback () = mkForall(pats, vars, body) in
+let mkForall_fuel' r n (pats, vars, body) =
+    let fallback () = mkForall r (pats, vars, body) in
     if (Options.unthrottle_inductives())
     then fallback ()
     else let fsym, fterm = fresh_fvar "f" Fuel_sort in
@@ -65,9 +65,9 @@ let mkForall_fuel' n (pats, vars, body) =
               mkImp(guard,body')
             | _ -> body in
          let vars = (fsym, Fuel_sort)::vars in
-         mkForall(pats, vars, body)
+         mkForall r (pats, vars, body)
 
-let mkForall_fuel = mkForall_fuel' 1
+let mkForall_fuel r = mkForall_fuel' r 1
 
 let head_normal env t =
    let t = U.unmeta t in
@@ -497,7 +497,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
     let tm, decls = encode_term t env in
     let vars = Term.free_variables tm in
     let valid_tm = mk_Valid tm in
-    let key = mkForall([], vars, valid_tm) in
+    let key = mkForall t.pos ([], vars, valid_tm) in
     let tkey_hash = hash_of_term key in
     match BU.smap_try_find env.cache tkey_hash with
     | Some _ ->
@@ -516,7 +516,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
         let interp =
                 match vars with
                 | [] -> mkIff(mk_Valid tm, phi)
-                | _ -> mkForall([[valid_tm]], vars, mkIff(mk_Valid tm, phi))
+                | _ -> mkForall t.pos ([[valid_tm]], vars, mkIff(mk_Valid tm, phi))
         in
         let ax = mkAssume(interp,
                                 Some "Interpretation of deeply embedded quantifier",
@@ -616,12 +616,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let guard, decls0 = encode_formula pre env' in
                   mk_and_l (guard::guards), decls0  in
              let t_interp =
-                       mkForall([[app]],
+                       mkForall t.pos
+                               ([[app]],
                                 vars,
                                 mkImp(guards, res_pred)) in
 
              let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
-             let tkey = mkForall([], fsym::cvars, t_interp) in
+             let tkey = mkForall t.pos ([], fsym::cvars, t_interp) in
              let tkey_hash = hash_of_term tkey in
              begin match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
@@ -643,22 +644,23 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
                   let k_assumption =
                     let a_name = "kinding_"^tsym in
-                    Util.mkAssume(mkForall([[t_has_kind]], cvars, t_has_kind), Some a_name, a_name) in
+                    Util.mkAssume (mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind), Some a_name, a_name) in
 
                   let f_has_t = mk_HasType f t in
                   let f_has_t_z = mk_HasTypeZ f t in
                   let pre_typing =
                     let a_name = "pre_typing_"^tsym in
-                    Util.mkAssume(mkForall_fuel([[f_has_t]], fsym::cvars,
+                    Util.mkAssume(mkForall_fuel t0.pos ([[f_has_t]], fsym::cvars,
                                 mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
                                 Some "pre-typing for functions",
                                 module_name ^ "_" ^ a_name) in
                   let t_interp =
                     let a_name = "interpretation_"^tsym in
-                    Util.mkAssume(mkForall([[f_has_t_z]], fsym::cvars,
-                                mkIff(f_has_t_z, t_interp)),
-                                Some a_name,
-                                module_name ^ "_" ^ a_name) in
+                    Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
+                                                    fsym::cvars,
+                                                    mkIff(f_has_t_z, t_interp)),
+                                  Some a_name,
+                                  module_name ^ "_" ^ a_name) in
 
                   let t_decls = tdecl::decls@decls'@guard_decls@[k_assumption; pre_typing; t_interp] in
                   BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
@@ -678,9 +680,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let f_has_t = mk_HasType f t in
              let t_interp =
                  let a_name = "pre_typing_" ^tsym in
-                 Util.mkAssume(mkForall_fuel([[f_has_t]], [fsym],
-                                            mkImp(f_has_t,
-                                                  mk_tester "Tm_arrow" (mk_PreType f))),
+                 Util.mkAssume(mkForall_fuel t0.pos ([[f_has_t]],
+                                                     [fsym],
+                                                     mkImp(f_has_t,
+                                                           mk_tester "Tm_arrow" (mk_PreType f))),
                              Some a_name,
                              module_name ^ "_" ^ a_name) in
 
@@ -712,7 +715,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let xfv = (x, Term_sort) in
         let ffv = (fsym, Fuel_sort) in
-        let tkey = mkForall([], ffv::xfv::cvars, encoding) in
+        let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
         begin match BU.smap_try_find env.cache tkey_hash with
             | Some cache_entry ->
@@ -737,7 +740,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let t_haseq_ref = mk_haseq t in
 
               let t_haseq =
-                Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
                               "haseq" ^ tsym) in
               // let t_valid =
@@ -751,12 +754,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
               let t_kinding =
                 //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
-                Util.mkAssume(mkForall([[t_has_kind]], cvars, t_has_kind),
+                Util.mkAssume(mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind),
                               Some "refinement kinding",
                               "refinement_kinding_" ^tsym)
               in
               let t_interp =
-                Util.mkAssume(mkForall([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
+                Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
                               Some "refinement_interpretation",
                               "refinement_interpretation_"^tsym) in
 
@@ -837,7 +840,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let ty = U.arrow rest c |> SS.subst subst in
                     let has_type, decls'' = encode_term_pred None ty env app_tm in
                     let cvars = Term.free_variables has_type in
-                    let e_typing = Util.mkAssume(mkForall([[has_type]], cvars, has_type),
+                    let e_typing = Util.mkAssume(mkForall t0.pos ([[has_type]], cvars, has_type),
                                                 Some "Partial app typing",
                                                 varops.mk_unique ("partial_app_typing_" ^
                                                     (BU.digest_of_string (Term.hash_of_term app_tm)))) in
@@ -945,7 +948,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let t, decls = encode_term tfun env in
                     Some t, decls
                 in
-                let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                let key_body = mkForall t0.pos ([], vars, mkImp(mk_and_l guards, body)) in
                 let cvars = Term.free_variables key_body in
                 //adding free variables of the return type also to cvars
                 let cvars =
@@ -953,7 +956,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   | None   -> cvars
                   | Some t -> BU.remove_dups fv_eq (Term.free_variables t @ cvars)
                 in
-                let tkey = mkForall([], cvars, key_body) in
+                let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
@@ -981,11 +984,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       | Some t ->
                         let f_has_t = mk_HasTypeWithFuel None f t in
                         let a_name = "typing_"^fsym in
-                        [Util.mkAssume(mkForall([[f]], cvars, f_has_t), Some a_name, a_name)]
+                        [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
                     in
                     let interp_f =
                       let a_name = "interpretation_" ^fsym in
-                      Util.mkAssume(mkForall([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
+                      Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
                     let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash (mk_cache_entry env fsym cvar_sorts f_decls);
@@ -1158,7 +1161,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let pre, decls'' = encode_formula (U.unmeta pre) env in
     let post, decls''' = encode_formula (U.unmeta post) env in
     let decls = decls@decls'@decls''@decls''' in
-    mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
+    mkForall t.pos (pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
 
 and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * list<decl> =
     let env = {env with use_zfuel_name=true} in
@@ -1174,18 +1177,6 @@ and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * 
 
         | _ ->
           encode_term t env
-    in
-    let rec check_pattern_ok (t:term) =
-        match t.tm with
-        | Integer _
-        | BoundV _
-        | FreeV _ -> true
-        | Let(tms, tm) -> BU.for_all check_pattern_ok (tm::tms)
-        | App(Var _, terms) -> BU.for_all check_pattern_ok terms
-        | App _
-        | Labeled _
-        | Quant _
-        | LblPos _ -> false
     in
     List.fold_right (fun pats (pats_l, decls) ->
         let pats, decls =
@@ -1352,13 +1343,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Some (U.QAll(vars, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
-          let tm = Term.mkForall(pats, vars, mkImp(guard, body)) phi.pos in
+          let tm = mkForall phi.pos (pats, vars, mkImp(guard, body)) in
           tm, decls
 
         | Some (U.QEx(vars, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
-          Term.mkExists(pats, vars, mkAnd(guard, body)) phi.pos, decls
+          mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)
