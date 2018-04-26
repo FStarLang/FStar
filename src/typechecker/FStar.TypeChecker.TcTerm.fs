@@ -1389,7 +1389,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                                (Print.term_to_string e))) e.pos in
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
-            if debug env Options.Extreme then  BU.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
+            if debug env Options.Extreme
+            then printfn "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
+                           (Print.bv_to_string x)
+                           (Print.term_to_string x.sort)
+                           (Print.term_to_string e)
+                           (Print.subst_to_string subst)
+                           (Print.term_to_string targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ env targ in
             let env = {env with use_eq=is_eq aqual} in
@@ -1402,6 +1408,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             if U.is_tot_or_gtot_lcomp c //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
             || TcUtil.is_pure_or_ghost_effect env c.eff_name
             then let subst = maybe_extend_subst subst (List.hd bs) e in
+                 let _ =
+                    if debug env Options.Extreme
+                    then printfn "\tExtended subst to %s" (Print.subst_to_string subst) in
                  tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, fvs) rest rest'
             else tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, x::fvs) rest rest'
 
@@ -1432,7 +1441,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 | _ when not solve ->
                     let ghead = Rel.solve_deferred_constraints env ghead in
                     aux norm solve ghead tres
-                
+
                 | _ ->
                     raise_error (Errors.Fatal_ToManyArgumentToFunction,
                                         BU.format3 "Too many arguments to function of type %s; got %s arguments, remaining type is %s"
@@ -1474,6 +1483,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
             let head_info = head, chead, ghead, U.lcomp_of_comp c in
+            if Env.debug env Options.Extreme
+            then printfn "######tc_args of head %s @ %s with formals=%s and result type=%s"
+                                  (Print.term_to_string head)
+                                  (Print.term_to_string tf)
+                                  (Print.binders_to_string ", " bs)
+                                  (Print.comp_to_string c);
             tc_args head_info ([], [], [], guard, []) bs args
 
         | Tm_refine (bv,_) ->

@@ -338,8 +338,8 @@ let def_scope_wf msg rng r =
 
 let p_scope prob =
    let r = match prob with
-   | TProb p -> p.scope
-   | CProb p -> p.scope
+   | TProb p -> (snd p.logical_guard_uvar).ctx_uvar_binders @ (fst p.logical_guard_uvar)
+   | CProb p -> (snd p.logical_guard_uvar).ctx_uvar_binders @ (fst p.logical_guard_uvar)
    in
    def_scope_wf "p_scope" (p_loc prob) r;
    r
@@ -367,7 +367,7 @@ let mk_eq2 wl prob t1 t2 =
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma (p_scope prob) t_type false in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma [] t_type false in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -379,14 +379,20 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
+    let guard_ty = U.arrow scope (S.mk_Total U.ktype0) in
     let ctx_uvar, lg, wl =
         new_uvar ("mk_problem: logical guard for " ^ reason)
                  wl
                  Range.dummyRange
                  wl.tcenv.gamma
-                 scope
-                 U.ktype0
+                 (Env.all_binders wl.tcenv)
+                 guard_ty
                  false
+    in
+    let lg =
+        match scope with
+        | [] -> lg
+        | _ -> S.mk_Tm_app lg (List.map (fun (x, i) -> S.bv_to_name x, i) scope) None lg.pos
     in
     //logical guards are always squashed;
     //their range is intentionally dummy
@@ -397,11 +403,10 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
          rhs=rhs;
          element=elt;
          logical_guard=lg;
-         logical_guard_uvar=(None, ctx_uvar);
+         logical_guard_uvar=(scope, ctx_uvar);
          reason=reason::p_reason orig;
          loc=p_loc orig;
          rank=None;
-         scope=scope;
     },
     wl
 
@@ -415,11 +420,13 @@ let mk_c_problem wl scope orig lhs rel rhs elt reason =
 
 let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
   let scope = Env.all_binders env in
-  let lg_ty, elt =
+  let bs, lg_ty, elt =
     match subject with
-    | None -> U.ktype0, None
+    | None -> [], U.ktype0, None
     | Some x ->
-      U.arrow [S.mk_binder x] (S.mk_Total U.ktype0),
+      let bs = [S.mk_binder x] in
+      bs,
+      U.arrow bs (S.mk_Total U.ktype0),
       Some (S.bv_to_name x)
   in
   let ctx_uvar, lg, wl =
@@ -443,11 +450,10 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
     rhs=rhs;
     element=elt;
     logical_guard=lg;
-    logical_guard_uvar=(subject, ctx_uvar);
+    logical_guard_uvar=(bs, ctx_uvar);
     reason=[reason];
     loc=loc;
     rank=None;
-    scope=scope;
    },
    wl
 
@@ -462,7 +468,6 @@ let problem_using_guard orig lhs rel rhs elt reason = {
      reason=reason::p_reason orig;
      loc=p_loc orig;
      rank=None;
-     scope=p_scope orig;
 }
 let guard_on_element wl problem x phi =
     match problem.element with
@@ -656,7 +661,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
       | None -> U.t_true
       | Some phi -> phi in
-    let xopt, uv = p_guard_uvar prob in
+    let xs, uv = p_guard_uvar prob in
     let _ = match Unionfind.find uv.ctx_uvar_head with
         | None ->
           if Env.debug wl.tcenv <| Options.Other "Rel"
@@ -664,10 +669,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (string_of_int (p_pid prob))
                             (print_ctx_uvar uv)
                             (Print.term_to_string phi);
-          let phi =
-            match xopt with
-            | None -> phi
-            | Some x -> U.abs [S.mk_binder x] phi (Some (U.residual_tot U.ktype0)) in
+          let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
           def_check_closed (p_loc prob) "solve_prob'" phi;
           U.set_uvar uv.ctx_uvar_head phi
         | Some _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
@@ -1238,75 +1240,64 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
       aux [] formals t_res args
 
 let meet_or_join op ts env wl =
-    let base_types_match t1 t2 wl : option<(list<prob> * worklist)> =
-        let h1, args1 = U.head_and_args t1 in
-        let h2, _ = U.head_and_args t2 in
-        match h1.n, h2.n with
-        | Tm_fvar tc1, Tm_fvar tc2 ->
-          if S.fv_eq tc1 tc2
-          then if List.length args1 = 0
-               then Some ([], wl)
-               else let p, wl = new_problem wl env t1 EQ t2 None t1.pos "meet/join refinements" in
-                    Some ([TProb p], wl)
-          else None
-
-        | Tm_name a, Tm_name b ->
-          if S.bv_eq a b
-          then if List.length args1 = 0
-               then Some ([], wl)
-               else let p, wl = new_problem wl env t1 EQ t2 None t1.pos "meet/join refinements" in
-                    Some ([TProb p], wl)
-          else None
-
-        | Tm_type _, Tm_type _ ->
-          let p, wl = new_problem wl env t1 EQ t2 None t1.pos "meet/join refinements" in
-          Some ([TProb p], wl)
-
-        | _ -> None
+    let eq_prob t1 t2 wl =
+        let p, wl =
+        new_problem wl env t1 EQ t2 None t1.pos
+                    "join/meet refinements"
+        in
+        TProb p, wl
     in
     let pairwise t1 t2 wl =
-        match t1.n, t2.n with
-        | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
-            let m = base_types_match x.sort y.sort wl in
-            begin match m with
-            | None -> None
-            | Some (probs, wl) ->
-                let x = freshen_bv x in
-                let subst = [DB(0, x)] in
-                let phi1 = SS.subst subst phi1 in
-                let phi2 = SS.subst subst phi2 in
-                Some (U.refine x (op phi1 phi2), probs, wl)
-            end
+        let mr, ts = head_matches_delta env () t1 t2 in
+        match mr with
+        | MisMatch _ ->
+          let p, wl = eq_prob t1 t2 wl in
+          (t1, [p], wl)
 
-        | _, Tm_refine(y, _) ->
-            let m = base_types_match t1 y.sort wl in
-            begin match m with
-            | None -> None
-            | Some (probs, wl) -> Some (t2, probs, wl)
-            end
+        | FullMatch ->
+          begin
+          match ts with
+          | None ->
+            (t1, [], wl)
+          | Some (t1, t2) ->
+            (t1, [], wl)
+          end
 
-        | Tm_refine(x, _), _ ->
-            let m = base_types_match x.sort t2 wl in
-            begin match m with
-            | None -> None
-            | Some (probs, wl) -> Some (t1, probs, wl)
-            end
+        | HeadMatch ->
+          let t1, t2 =
+              match ts with
+              | Some (t1, t2) -> SS.compress t1, SS.compress t2
+              | None -> SS.compress t1, SS.compress t2
+          in
+          begin
+          match t1, t2 with
+          | {n=Tm_refine(x, phi1)}, {n=Tm_refine(y, phi2)} ->
+            let p, wl = eq_prob x.sort y.sort wl in
+            let x = freshen_bv x in
+            let subst = [DB(0, x)] in
+            let phi1 = SS.subst subst phi1 in
+            let phi2 = SS.subst subst phi2 in
+            (U.refine x (op phi1 phi2), [p], wl)
 
-        | _ ->
-            let m = base_types_match t1 t2 wl in
-            begin match m with
-            | None -> None
-            | Some (probs, wl) -> Some (t1, probs, wl)
-            end
+          | t, {n=Tm_refine(x, phi)}
+          | {n=Tm_refine(x, phi)}, t ->
+            let p, wl = eq_prob x.sort t wl in
+            let x = freshen_bv x in
+            let subst = [DB(0, x)] in
+            let phi = SS.subst subst phi in
+            (U.refine x (op U.t_true phi), [p], wl)
+
+          | _ ->
+            let p, wl = eq_prob t1 t2 wl in
+            (t1, [p], wl)
+          end
     in
     let rec aux (out, probs, wl) ts =
         match ts with
-        | [] -> Some (out, probs, wl)
+        | [] -> (out, probs, wl)
         | t::ts ->
-          match pairwise out t wl with
-          | None -> None
-          | Some (out, probs', wl) ->
-            aux (out, probs@probs', wl) ts
+          let out, probs', wl = pairwise out t wl in
+         aux (out, probs@probs', wl) ts
     in
     aux (List.hd ts, [], wl) (List.tl ts)
 let conjoin = meet_or_join U.mk_conj
@@ -1432,62 +1423,58 @@ and solve_rigid_flex_or_flex_rigid_subtyping
     begin
     match (SS.compress u).n with
     | Tm_uvar ctx_uvar ->
-     let equiv t =
+      let equiv t =
          let u', _ = U.head_and_args t in
          match (whnf env u').n with
          | Tm_uvar ctx_uvar' ->
            UF.equiv ctx_uvar.ctx_uvar_head ctx_uvar'.ctx_uvar_head
          | _ -> false
-     in
-    //find all other constraints of the form t <: u, or if flipped, u <: t
-     let bounds_probs, rest =
-       wl.attempting |> List.partition
-       (function
-         | TProb tp ->
-           let tp = maybe_invert tp in
-           begin
-           match tp.rank with
-           | Some rank' when rank=rank' ->
-             if flip then equiv tp.lhs else equiv tp.rhs
+      in
+     //find all other constraints of the form t <: u, or if flipped, u <: t
+      let bounds_probs, rest =
+          wl.attempting |> List.partition
+         (function
+          | TProb tp ->
+            let tp = maybe_invert tp in
+            begin
+            match tp.rank with
+            | Some rank' when rank=rank' ->
+              if flip then equiv tp.lhs else equiv tp.rhs
 
-           | _ -> false
-           end
+            | _ -> false
+            end
 
-          | _ -> false)
-     in
-
-     let bounds_typs =
-         whnf env this_rigid
-         :: List.collect (function
-                          | TProb p -> [(if flip
+           | _ -> false)
+      in
+      let bounds_typs =
+          whnf env this_rigid
+          :: List.collect (function
+                           | TProb p -> [(if flip
                                          then whnf env (maybe_invert p).rhs
                                          else whnf env (maybe_invert p).lhs)]
-                          | _ -> [])
+                           | _ -> [])
                           bounds_probs
-     in
-
-     begin
-     match meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl with
-     | None ->
-       giveup env "join/meet doesn't exist" (TProb tp)
-
-     | Some (bound, sub_probs, wl) ->
-       let eq_prob, wl =
+      in
+      let (bound, sub_probs, wl) =
+          meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
+      in
+      let eq_prob, wl =
             new_problem wl env bound EQ this_flex None tp.loc
                 (if flip then "joining refinements" else "meeting refinements")
-       in
-       let _ = if Env.debug env <| Options.Other "RelCheck"
-               then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
-                    BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
-       match solve_t env eq_prob ({wl with attempting=sub_probs}) with
-       | Success _ ->
+      in
+      let _ = if Env.debug env <| Options.Other "RelCheck"
+              then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
+                   BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
+      begin
+      match solve_t env eq_prob ({wl with attempting=sub_probs}) with
+      | Success _ ->
          let wl = {wl with attempting=rest} in
          let wl = solve_prob' false (TProb tp) None [] wl in
          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
          solve env wl
-       | Failed (p, msg) ->
+      | Failed (p, msg) ->
          giveup env ("failed to solve sub-problems: " ^msg) (TProb tp)
-     end
+      end
 
     | _ when flip -> failwith (BU.format1 "Impossible: Not a flex-rigid: %s" (prob_to_string env (TProb tp)))
     | _ -> failwith (BU.format1 "Impossible: Not a rigid-flex: %s" (prob_to_string env (TProb tp)))
@@ -1540,7 +1527,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               let lhs' = U.arrow bs c' in
               let sol = TERM (u_lhs, U.abs bs_lhs lhs' (Some (U.residual_tot t_res_lhs))) in
               let sub_prob, wl =
-                  mk_t_problem wl (p_scope orig) orig lhs' rel arrow None "arrow imitation"
+                  mk_t_problem wl [] orig lhs' rel arrow None "arrow imitation"
               in
               //printfn "Arrow imitation: %s =?= %s" (Print.term_to_string lhs') (Print.term_to_string rhs);
               solve env (attempt [sub_prob] (solve_prob orig None [sol] wl))
@@ -1594,8 +1581,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
 
         | _ -> Inr "arity or argument-qualifier mismatch", wl in
 
-   let scope = p_scope orig in //Env.bound_vars env |> List.map S.mk_binder in
-   match aux wl scope env [] bs1 bs2 with
+   match aux wl [] env [] bs1 bs2 with
    | Inr msg, wl -> giveup env msg orig
    | Inl (sub_probs, phi), wl ->
      let wl = solve_prob orig (Some phi) [] wl in
@@ -1664,8 +1650,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                                             (Some (U.residual_tot t_res_lhs)))]
         in
         let sub_probs, wl =
-            let p1, wl = mk_t_problem wl (p_scope orig) orig lhs' EQ rhs' None "first-order lhs" in
-            let p2, wl = mk_t_problem wl (p_scope orig) orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
+            let p1, wl = mk_t_problem wl [] orig lhs' EQ rhs' None "first-order lhs" in
+            let p2, wl = mk_t_problem wl [] orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
             [p1; p2], wl
         in
         solve env (attempt sub_probs (solve_prob orig None sol wl))
@@ -1778,7 +1764,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
              let sub_prob, wl =
                 //is it strictly necessary to add this sub problem?
                 //we don't in other cases
-                  mk_t_problem wl (p_scope orig) orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
+                  mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
              in
              let ctx_w, (ctx_l, ctx_r) =
                 maximal_prefix u_lhs.ctx_uvar_binders
@@ -1897,7 +1883,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             let subprobs, wl =
                                 List.fold_right2
                                 (fun (a, _) (a', _) (subprobs, wl) ->
-                                    let p, wl = mk_t_problem wl (p_scope orig) orig a EQ a' None "index" in
+                                    let p, wl = mk_t_problem wl [] orig a EQ a' None "index" in
                                     p::subprobs, wl)
                                 args1
                                 args2
@@ -2048,7 +2034,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let x1, phi1 = as_refinement should_delta env wl t1 in
         let x2, phi2 = as_refinement should_delta env wl t2 in
         let base_prob, wl =
-          mk_t_problem wl (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
+          mk_t_problem wl [] orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
         let subst = [DB(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
@@ -2065,7 +2051,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             solve env (attempt [base_prob] wl) in
         if problem.relation = EQ
         then let ref_prob, wl =
-                 mk_t_problem wl (p_scope orig @ [mk_binder x1]) orig phi1 EQ phi2 None "refinement formula" in
+                 mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula" in
              begin
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed _ -> fallback()
@@ -2126,8 +2112,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let y' = {y with sort = t1} in
                     let impl = guard_on_element wl problem y' phi in
                     let base_prob, wl =
-                        mk_t_problem wl problem.scope orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
-                    let guard = U.mk_conj (p_guard base_prob) impl in
+                        mk_t_problem wl [] orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
+                    let guard = U.mk_conj (p_guard base_prob) impl in //FIXME! does y' escape?
                     let wl = solve_prob orig (Some guard) [] wl in
                     solve env (attempt [base_prob] wl)
                  end
@@ -2149,7 +2135,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         solve_t env ({problem with lhs=t1}) wl
 
       | Tm_match (t1, brs1), Tm_match (t2, brs2) ->
-        let sc_prob, wl = mk_t_problem wl (p_scope orig) orig t1 EQ t2 None "match scrutinee" in
+        let sc_prob, wl = mk_t_problem wl [] orig t1 EQ t2 None "match scrutinee" in
         let rec solve_branches wl brs1 brs2 : option<(list<prob> * worklist)> =
             match brs1, brs2 with
             | br1::rs1, br2::rs2 ->
@@ -2164,7 +2150,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let w2 = BU.map_opt w2 (SS.subst s) in
                     let e2 = SS.subst s e2 in
 
-                    let scope = p_scope orig @ (List.map S.mk_binder <| S.pat_bvs p1) in
+                    let scope = List.map S.mk_binder <| S.pat_bvs p1 in
 
                     (* Subproblem for then `when` clause *)
                     BU.bind_opt (
@@ -2251,7 +2237,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     let c2 = problem.rhs in
     let orig = CProb problem in
     let sub_prob : worklist -> term -> rel -> term -> string -> prob * worklist =
-        fun wl t1 rel t2 reason -> mk_t_problem wl (p_scope orig) orig t1 rel t2 None reason in
+        fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
     let solve_eq c1_comp c2_comp =
         let _ = if Env.debug env <| Options.Other "EQ"
