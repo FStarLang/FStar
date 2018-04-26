@@ -618,15 +618,9 @@ let termToSmt
       in
       aux 0 0 [] t
 
-
 let caption_to_string = function
     | None -> ""
-    | Some c ->
-        let hd, suffix = match BU.splitlines c with
-            | [] -> failwith "Impossible"
-            | [hd] -> hd, ""
-            | hd::_ -> hd, "..." in
-        format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
+    | Some c -> ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
 
 let rec declToSmt' print_ranges z3options decl =
   let escape (s:string) = BU.replace_char s '\'' '_' in

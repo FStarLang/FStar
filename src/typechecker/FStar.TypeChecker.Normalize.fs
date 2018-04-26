@@ -201,10 +201,11 @@ let dummy : option<binder> * closure = None,Dummy
 
 
 type debug_switches = {
-    gen : bool;
-    primop : bool;
-    b380 : bool;
-    norm_delayed : bool;
+    gen              : bool;
+    primop           : bool;
+    b380             : bool;
+    wpe              : bool;
+    norm_delayed     : bool;
     print_normalized : bool;
 }
 
@@ -764,7 +765,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  | _ -> None
     in
     let list_of_string' rng (s:string) : term =
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
+        let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
         let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
@@ -1065,17 +1066,17 @@ let is_norm_request hd args =
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
     | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil Delta_constant]
+    | EMB.Delta ->   [UnfoldUntil delta_constant]
     | EMB.Simpl ->   [Simplify]
     | EMB.Weak ->    [Weak]
     | EMB.HNF  ->    [HNF]
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
-        [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
     | EMB.UnfoldFully names ->
-        [UnfoldUntil Delta_constant; UnfoldFully (List.map I.lid_of_str names)]
+        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
     | EMB.UnfoldAttr t ->
-        [UnfoldUntil Delta_constant; UnfoldAttr t]
+        [UnfoldUntil delta_constant; UnfoldAttr t]
 
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
@@ -1089,7 +1090,7 @@ let get_norm_request (full_norm:term -> term) args =
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
-      let s = [Beta; Zeta; Iota; Primops; UnfoldUntil Delta_constant; Reify] in
+      let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (s, tm)
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if List.contains z s then s else Exclude z :: s in
@@ -1204,7 +1205,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_lazy _
 
-          | Tm_fvar( {fv_delta=Delta_constant} )
+          | Tm_fvar( {fv_delta=Delta_constant_at_level 0} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
@@ -1220,7 +1221,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
                                                          ; unfold_fully = None
                                                          ; do_not_unfold_pure_lets = false };
-                                  delta_level=[Unfold Delta_constant];
+                                  delta_level=[Unfold delta_constant];
                                   normalize_pure_lets=true} in
             begin
             match get_norm_request (norm cfg' env []) args with
@@ -1237,7 +1238,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             | Some (s, tm) ->
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
-                then [Unfold Delta_constant]
+                then [Unfold delta_constant]
                 else [NoDelta] in
               let cfg' = {cfg with steps = ({ to_fsteps s with in_full_norm_request=true})
                                ; delta_level = delta_level
@@ -1327,7 +1328,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                       ; simplify     = false
                                       ; unfold_only  = None
                                       ; unfold_fully = None
-                                      ; unfold_until = Some Delta_constant } }
+                                      ; unfold_until = Some delta_constant } }
                         else stack, cfg
                      in
                      do_unfold_fv cfg env stack t qninfo fv
@@ -1671,7 +1672,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
-           if cfg.steps.unfold_until = Some Delta_constant
+           if cfg.steps.unfold_until = Some delta_constant
             && not cfg.steps.unfold_tac
            //we're really trying to compute here; no point propagating range information
            //which can be expensive (except for tactics: it matters for tracing!)
@@ -2047,19 +2048,22 @@ and maybe_simplify_aux cfg env stack tm =
         | _, _ -> false
     in
     let is_applied (bs:binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        if cfg.debug.wpe then
+            BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         let hd, args = U.head_and_args' t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
-            (* BU.print3 "GG got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n" *)
-            (*             (Print.term_to_string t) *)
-            (*             (Print.bv_to_string bv) *)
-            (*             (Print.term_to_string hd); *)
+            if cfg.debug.wpe then
+                BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                            (Print.term_to_string t)
+                            (Print.bv_to_string bv)
+                            (Print.term_to_string hd);
             Some bv
         | _ -> None
     in
     let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
-        (* BU.print2 "GG is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t); *)
+        if cfg.debug.wpe then
+            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
         | Some (_, t') -> is_applied bs t'
         | _ -> begin match is_auto_squash t with
@@ -2068,24 +2072,34 @@ and maybe_simplify_aux cfg env stack tm =
                end
     in
     // A very F*-specific optimization:
-    //  1)                        (p ==> E[p])     ~>     E[True]
-    //  2)                       (~p ==> E[p])     ~>     E[False]
-    //  3)  (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
-    //  4)  (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
-    let is_quantified_const (phi : term) : option<term> =
+    //  1)  forall p.                       (p ==> E[p])     ~>     E[True]
+    //  2)  forall p.                      (~p ==> E[p])     ~>     E[False]
+    //  3)  forall p. (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
+    //  4)  forall p. (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
+    let is_quantified_const (bv:bv) (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
+            if cfg.debug.wpe then
+                BU.print2 "WPE> p = (%s); q = (%s)\n"
+                        (Print.term_to_string p)
+                        (Print.term_to_string q);
             begin match U.destruct_typ_as_formula p with
             // Case 1)
             | None -> begin match (SS.compress p).n with
-                      | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_true)] q)
+                      | Tm_bvar bv' when S.bv_eq bv bv' ->
+                            if cfg.debug.wpe then
+                                BU.print_string "WPE> Case 1\n";
+                            Some (SS.subst [NT (bv, U.t_true)] q)
                       | _ -> None
                       end
 
             // Case 2)
             | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
                 begin match (SS.compress p).n with
-                | Tm_bvar bv -> Some (SS.subst [NT (bv, U.t_false)] q)
+                | Tm_bvar bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 2\n";
+                        Some (SS.subst [NT (bv, U.t_false)] q)
                 | _ -> None
                 end
 
@@ -2094,16 +2108,20 @@ and maybe_simplify_aux cfg env stack tm =
                 | None ->
                     begin match is_applied_maybe_squashed bs phi with
                     // Case 3)
-                    | Some bv ->
+                    | Some bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 3\n";
                         let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
                         Some (SS.subst [NT (bv, ftrue)] q)
-                    | None ->
+                    | _ ->
                         None
                     end
                 | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
                     begin match is_applied_maybe_squashed bs p with
                     // Case 4)
-                    | Some bv ->
+                    | Some bv' when S.bv_eq bv bv' ->
+                        if cfg.debug.wpe then
+                            BU.print_string "WPE> Case 4\n";
                         let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
                         Some (SS.subst [NT (bv, ffalse)] q)
                     | _ ->
@@ -2115,6 +2133,14 @@ and maybe_simplify_aux cfg env stack tm =
 
             | _ -> None
             end
+        | _ -> None
+    in
+    let is_forall_const (phi : term) : option<term> =
+        match U.destruct_typ_as_formula phi with
+        | Some (QAll ([(bv, _)], _, phi')) ->
+            if cfg.debug.wpe then
+                BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string bv) (Print.term_to_string phi');
+            is_quantified_const bv phi'
         | _ -> None
     in
     let is_const_match (phi : term) : option<bool> =
@@ -2168,9 +2194,12 @@ and maybe_simplify_aux cfg env stack tm =
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
-    match is_quantified_const tm with
+    match is_forall_const tm with
     (* We need to recurse, and maybe reduce further! *)
-    | Some tm -> maybe_simplify_aux cfg env stack (norm cfg env [] tm)
+    | Some tm' ->
+        if cfg.debug.wpe then
+            BU.print2 "WPE> %s ~> %s\n" (Print.term_to_string tm) (Print.term_to_string tm');
+        maybe_simplify_aux cfg env stack (norm cfg env [] tm')
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
@@ -2619,6 +2648,7 @@ let config' psteps s e =
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; primop = Env.debug e (Options.Other "Primops")
              ; b380 = Env.debug e (Options.Other "380")
+             ; wpe  = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps=to_fsteps s;
@@ -2643,7 +2673,7 @@ let normalize_universe env u = norm_universe (config [] env) [] u
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil Delta_constant; AllowUnboundUniverses; EraseUniverses] env in
+    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
@@ -2665,7 +2695,7 @@ let ghost_to_pure env c =
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-    let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+    let cfg = config [Eager_unfolding; UnfoldUntil delta_constant; EraseUniverses; AllowUnboundUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
     && non_info lc.res_typ
@@ -2706,7 +2736,7 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil Delta_constant; Beta] env t
+let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])

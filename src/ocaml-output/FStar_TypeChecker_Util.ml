@@ -2448,7 +2448,7 @@ let (fvar_const :
       let uu____6111 =
         let uu____6112 = FStar_TypeChecker_Env.get_range env  in
         FStar_Ident.set_lid_range lid uu____6112  in
-      FStar_Syntax_Syntax.fvar uu____6111 FStar_Syntax_Syntax.Delta_constant
+      FStar_Syntax_Syntax.fvar uu____6111 FStar_Syntax_Syntax.delta_constant
         FStar_Pervasives_Native.None
   
 let (bind_cases :
@@ -2707,7 +2707,7 @@ let (maybe_coerce_bool_to_type :
                     e.FStar_Syntax_Syntax.pos
                    in
                 FStar_Syntax_Syntax.fvar uu____6745
-                  (FStar_Syntax_Syntax.Delta_defined_at_level
+                  (FStar_Syntax_Syntax.Delta_constant_at_level
                      (Prims.parse_int "1")) FStar_Pervasives_Native.None
                  in
               let lc1 =
@@ -3125,7 +3125,7 @@ let (pure_or_ghost_pre_and_post :
                                       FStar_Parser_Const.as_requires r
                                      in
                                   FStar_Syntax_Syntax.fvar uu____7313
-                                    FStar_Syntax_Syntax.Delta_equational
+                                    FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None
                                    in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu____7312
@@ -3138,7 +3138,7 @@ let (pure_or_ghost_pre_and_post :
                                       FStar_Parser_Const.as_ensures r
                                      in
                                   FStar_Syntax_Syntax.fvar uu____7316
-                                    FStar_Syntax_Syntax.Delta_equational
+                                    FStar_Syntax_Syntax.delta_equational
                                     FStar_Pervasives_Native.None
                                    in
                                 FStar_Syntax_Syntax.mk_Tm_uinst uu____7315
@@ -5043,7 +5043,7 @@ let (must_erase_for_extraction :
             FStar_TypeChecker_Normalize.Weak;
             FStar_TypeChecker_Normalize.HNF;
             FStar_TypeChecker_Normalize.UnfoldUntil
-              FStar_Syntax_Syntax.Delta_constant;
+              FStar_Syntax_Syntax.delta_constant;
             FStar_TypeChecker_Normalize.Beta;
             FStar_TypeChecker_Normalize.AllowUnboundUniverses;
             FStar_TypeChecker_Normalize.Zeta;

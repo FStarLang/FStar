@@ -26,8 +26,8 @@ let vargs :
   =
   fun args  ->
     FStar_List.filter
-      (fun uu___65_130  ->
-         match uu___65_130 with
+      (fun uu___55_130  ->
+         match uu___55_130 with
          | (FStar_Util.Inl uu____139,uu____140) -> false
          | uu____145 -> true) args
   
@@ -38,14 +38,14 @@ let (mk_term_projector_name :
   fun lid  ->
     fun a  ->
       let a1 =
-        let uu___72_172 = a  in
+        let uu___57_172 = a  in
         let uu____173 =
           FStar_Syntax_Util.unmangle_field_name a.FStar_Syntax_Syntax.ppname
            in
         {
           FStar_Syntax_Syntax.ppname = uu____173;
-          FStar_Syntax_Syntax.index = (uu___72_172.FStar_Syntax_Syntax.index);
-          FStar_Syntax_Syntax.sort = (uu___72_172.FStar_Syntax_Syntax.sort)
+          FStar_Syntax_Syntax.index = (uu___57_172.FStar_Syntax_Syntax.index);
+          FStar_Syntax_Syntax.sort = (uu___57_172.FStar_Syntax_Syntax.sort)
         }  in
       let uu____174 =
         FStar_Util.format2 "%s_%s" lid.FStar_Ident.str
@@ -308,13 +308,13 @@ let (varops : varops_t) =
   } 
 let (unmangle : FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv) =
   fun x  ->
-    let uu___73_1871 = x  in
+    let uu___58_1871 = x  in
     let uu____1872 =
       FStar_Syntax_Util.unmangle_field_name x.FStar_Syntax_Syntax.ppname  in
     {
       FStar_Syntax_Syntax.ppname = uu____1872;
-      FStar_Syntax_Syntax.index = (uu___73_1871.FStar_Syntax_Syntax.index);
-      FStar_Syntax_Syntax.sort = (uu___73_1871.FStar_Syntax_Syntax.sort)
+      FStar_Syntax_Syntax.index = (uu___58_1871.FStar_Syntax_Syntax.index);
+      FStar_Syntax_Syntax.sort = (uu___58_1871.FStar_Syntax_Syntax.sort)
     }
   
 type fvar_binding =
@@ -371,29 +371,10 @@ let (__proj__Mkfvar_binding__item__smt_fuel_partial_app :
         smt_fuel_partial_app = __fname__smt_fuel_partial_app;_} ->
         __fname__smt_fuel_partial_app
   
-type binding =
-  | Binding_var of (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
-  FStar_Pervasives_Native.tuple2 
-  | Binding_fvar of fvar_binding [@@deriving show]
-let (uu___is_Binding_var : binding -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | Binding_var _0 -> true | uu____2004 -> false
-  
-let (__proj__Binding_var__item___0 :
-  binding ->
-    (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Binding_var _0 -> _0 
-let (uu___is_Binding_fvar : binding -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | Binding_fvar _0 -> true | uu____2030 -> false
-  
-let (__proj__Binding_fvar__item___0 : binding -> fvar_binding) =
-  fun projectee  -> match projectee with | Binding_fvar _0 -> _0 
 let binder_of_eithervar :
-  'Auu____2044 'Auu____2045 .
-    'Auu____2044 ->
-      ('Auu____2044,'Auu____2045 FStar_Pervasives_Native.option)
+  'Auu____1986 'Auu____1987 .
+    'Auu____1986 ->
+      ('Auu____1986,'Auu____1987 FStar_Pervasives_Native.option)
         FStar_Pervasives_Native.tuple2
   = fun v1  -> (v1, FStar_Pervasives_Native.None) 
 type cache_entry =
@@ -448,7 +429,11 @@ let (__proj__Mkcache_entry__item__cache_symbol_assumption_names :
   
 type env_t =
   {
-  bindings: binding Prims.list ;
+  bvar_bindings:
+    (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 FStar_Util.pimap FStar_Util.psmap
+    ;
+  fvar_bindings: fvar_binding FStar_Util.psmap ;
   depth: Prims.int ;
   tcenv: FStar_TypeChecker_Env.env ;
   warn: Prims.bool ;
@@ -456,119 +441,171 @@ type env_t =
   nolabels: Prims.bool ;
   use_zfuel_name: Prims.bool ;
   encode_non_total_function_typ: Prims.bool ;
-  current_module_name: Prims.string }[@@deriving show]
-let (__proj__Mkenv_t__item__bindings : env_t -> binding Prims.list) =
+  current_module_name: Prims.string ;
+  encoding_quantifier: Prims.bool }[@@deriving show]
+let (__proj__Mkenv_t__item__bvar_bindings :
+  env_t ->
+    (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 FStar_Util.pimap FStar_Util.psmap)
+  =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
-        __fname__bindings
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__bvar_bindings
+  
+let (__proj__Mkenv_t__item__fvar_bindings :
+  env_t -> fvar_binding FStar_Util.psmap) =
+  fun projectee  ->
+    match projectee with
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__fvar_bindings
   
 let (__proj__Mkenv_t__item__depth : env_t -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__depth
   
 let (__proj__Mkenv_t__item__tcenv : env_t -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__tcenv
   
 let (__proj__Mkenv_t__item__warn : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__warn
   
 let (__proj__Mkenv_t__item__cache : env_t -> cache_entry FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__cache
   
 let (__proj__Mkenv_t__item__nolabels : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__nolabels
   
 let (__proj__Mkenv_t__item__use_zfuel_name : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__use_zfuel_name
   
 let (__proj__Mkenv_t__item__encode_non_total_function_typ :
   env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__encode_non_total_function_typ
   
 let (__proj__Mkenv_t__item__current_module_name : env_t -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { bindings = __fname__bindings; depth = __fname__depth;
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
         tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
         nolabels = __fname__nolabels;
         use_zfuel_name = __fname__use_zfuel_name;
         encode_non_total_function_typ =
           __fname__encode_non_total_function_typ;
-        current_module_name = __fname__current_module_name;_} ->
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
         __fname__current_module_name
   
+let (__proj__Mkenv_t__item__encoding_quantifier : env_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__encoding_quantifier
+  
 let mk_cache_entry :
-  'Auu____2386 .
-    'Auu____2386 ->
+  'Auu____2508 .
+    'Auu____2508 ->
       Prims.string ->
         FStar_SMTEncoding_Term.sort Prims.list ->
           FStar_SMTEncoding_Term.decl Prims.list -> cache_entry
@@ -580,11 +617,11 @@ let mk_cache_entry :
           let names1 =
             FStar_All.pipe_right t_decls1
               (FStar_List.collect
-                 (fun uu___66_2424  ->
-                    match uu___66_2424 with
+                 (fun uu___56_2546  ->
+                    match uu___56_2546 with
                     | FStar_SMTEncoding_Term.Assume a ->
                         [a.FStar_SMTEncoding_Term.assumption_name]
-                    | uu____2428 -> []))
+                    | uu____2550 -> []))
              in
           {
             cache_symbol_name = tsym;
@@ -601,37 +638,81 @@ let (use_cache_entry : cache_entry -> FStar_SMTEncoding_Term.decl Prims.list)
   
 let (print_env : env_t -> Prims.string) =
   fun e  ->
-    let uu____2441 =
-      FStar_All.pipe_right e.bindings
-        (FStar_List.map
-           (fun uu___67_2451  ->
-              match uu___67_2451 with
-              | Binding_var (x,uu____2453) ->
-                  FStar_Syntax_Print.bv_to_string x
-              | Binding_fvar fvb ->
-                  FStar_Syntax_Print.lid_to_string fvb.fvar_lid))
+    let bvars =
+      FStar_Util.psmap_fold e.bvar_bindings
+        (fun _k  ->
+           fun pi  ->
+             fun acc  ->
+               FStar_Util.pimap_fold pi
+                 (fun _i  ->
+                    fun uu____2601  ->
+                      fun acc1  ->
+                        match uu____2601 with
+                        | (x,_term) ->
+                            let uu____2613 =
+                              FStar_Syntax_Print.bv_to_string x  in
+                            uu____2613 :: acc1) acc) []
        in
-    FStar_All.pipe_right uu____2441 (FStar_String.concat ", ")
+    let allvars =
+      FStar_Util.psmap_fold e.fvar_bindings
+        (fun _k  ->
+           fun fvb  ->
+             fun acc  ->
+               let uu____2628 = FStar_Syntax_Print.lid_to_string fvb.fvar_lid
+                  in
+               uu____2628 :: acc) bvars
+       in
+    FStar_String.concat ", " allvars
   
-let lookup_binding :
-  'Auu____2463 .
-    env_t ->
-      (binding -> 'Auu____2463 FStar_Pervasives_Native.option) ->
-        'Auu____2463 FStar_Pervasives_Native.option
-  = fun env  -> fun f  -> FStar_Util.find_map env.bindings f 
-let (caption_t :
+let (lookup_bvar_binding :
   env_t ->
-    FStar_Syntax_Syntax.term -> Prims.string FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.bv ->
+      (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
+        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
   =
   fun env  ->
-    fun t  ->
-      let uu____2497 =
-        FStar_TypeChecker_Env.debug env.tcenv FStar_Options.Low  in
-      if uu____2497
-      then
-        let uu____2500 = FStar_Syntax_Print.term_to_string t  in
-        FStar_Pervasives_Native.Some uu____2500
-      else FStar_Pervasives_Native.None
+    fun bv  ->
+      let uu____2645 =
+        FStar_Util.psmap_try_find env.bvar_bindings
+          (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+         in
+      match uu____2645 with
+      | FStar_Pervasives_Native.Some bvs ->
+          FStar_Util.pimap_try_find bvs bv.FStar_Syntax_Syntax.index
+      | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+  
+let (lookup_fvar_binding :
+  env_t -> FStar_Ident.lident -> fvar_binding FStar_Pervasives_Native.option)
+  =
+  fun env  ->
+    fun lid  ->
+      FStar_Util.psmap_try_find env.fvar_bindings lid.FStar_Ident.str
+  
+let add_bvar_binding :
+  'Auu____2711 .
+    (FStar_Syntax_Syntax.bv,'Auu____2711) FStar_Pervasives_Native.tuple2 ->
+      (FStar_Syntax_Syntax.bv,'Auu____2711) FStar_Pervasives_Native.tuple2
+        FStar_Util.pimap FStar_Util.psmap ->
+        (FStar_Syntax_Syntax.bv,'Auu____2711) FStar_Pervasives_Native.tuple2
+          FStar_Util.pimap FStar_Util.psmap
+  =
+  fun bvb  ->
+    fun bvbs  ->
+      FStar_Util.psmap_modify bvbs
+        ((FStar_Pervasives_Native.fst bvb).FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+        (fun pimap_opt  ->
+           let uu____2771 =
+             let uu____2778 = FStar_Util.pimap_empty ()  in
+             FStar_Util.dflt uu____2778 pimap_opt  in
+           FStar_Util.pimap_add uu____2771
+             (FStar_Pervasives_Native.fst bvb).FStar_Syntax_Syntax.index bvb)
+  
+let (add_fvar_binding :
+  fvar_binding ->
+    fvar_binding FStar_Util.psmap -> fvar_binding FStar_Util.psmap)
+  =
+  fun fvb  ->
+    fun fvbs  -> FStar_Util.psmap_add fvbs (fvb.fvar_lid).FStar_Ident.str fvb
   
 let (fresh_fvar :
   Prims.string ->
@@ -642,8 +723,8 @@ let (fresh_fvar :
   fun x  ->
     fun s  ->
       let xsym = varops.fresh x  in
-      let uu____2517 = FStar_SMTEncoding_Util.mkFreeV (xsym, s)  in
-      (xsym, uu____2517)
+      let uu____2830 = FStar_SMTEncoding_Util.mkFreeV (xsym, s)  in
+      (xsym, uu____2830)
   
 let (gen_term_var :
   env_t ->
@@ -658,20 +739,24 @@ let (gen_term_var :
         FStar_SMTEncoding_Util.mkFreeV
           (ysym, FStar_SMTEncoding_Term.Term_sort)
          in
-      (ysym, y,
-        (let uu___74_2537 = env  in
-         {
-           bindings = ((Binding_var (x, y)) :: (env.bindings));
-           depth = (env.depth + (Prims.parse_int "1"));
-           tcenv = (uu___74_2537.tcenv);
-           warn = (uu___74_2537.warn);
-           cache = (uu___74_2537.cache);
-           nolabels = (uu___74_2537.nolabels);
-           use_zfuel_name = (uu___74_2537.use_zfuel_name);
-           encode_non_total_function_typ =
-             (uu___74_2537.encode_non_total_function_typ);
-           current_module_name = (uu___74_2537.current_module_name)
-         }))
+      let uu____2849 =
+        let uu___59_2850 = env  in
+        let uu____2851 = add_bvar_binding (x, y) env.bvar_bindings  in
+        {
+          bvar_bindings = uu____2851;
+          fvar_bindings = (uu___59_2850.fvar_bindings);
+          depth = (env.depth + (Prims.parse_int "1"));
+          tcenv = (uu___59_2850.tcenv);
+          warn = (uu___59_2850.warn);
+          cache = (uu___59_2850.cache);
+          nolabels = (uu___59_2850.nolabels);
+          use_zfuel_name = (uu___59_2850.use_zfuel_name);
+          encode_non_total_function_typ =
+            (uu___59_2850.encode_non_total_function_typ);
+          current_module_name = (uu___59_2850.current_module_name);
+          encoding_quantifier = (uu___59_2850.encoding_quantifier)
+        }  in
+      (ysym, y, uu____2849)
   
 let (new_term_constant :
   env_t ->
@@ -686,20 +771,24 @@ let (new_term_constant :
           x.FStar_Syntax_Syntax.index
          in
       let y = FStar_SMTEncoding_Util.mkApp (ysym, [])  in
-      (ysym, y,
-        (let uu___75_2559 = env  in
-         {
-           bindings = ((Binding_var (x, y)) :: (env.bindings));
-           depth = (uu___75_2559.depth);
-           tcenv = (uu___75_2559.tcenv);
-           warn = (uu___75_2559.warn);
-           cache = (uu___75_2559.cache);
-           nolabels = (uu___75_2559.nolabels);
-           use_zfuel_name = (uu___75_2559.use_zfuel_name);
-           encode_non_total_function_typ =
-             (uu___75_2559.encode_non_total_function_typ);
-           current_module_name = (uu___75_2559.current_module_name)
-         }))
+      let uu____2880 =
+        let uu___60_2881 = env  in
+        let uu____2882 = add_bvar_binding (x, y) env.bvar_bindings  in
+        {
+          bvar_bindings = uu____2882;
+          fvar_bindings = (uu___60_2881.fvar_bindings);
+          depth = (uu___60_2881.depth);
+          tcenv = (uu___60_2881.tcenv);
+          warn = (uu___60_2881.warn);
+          cache = (uu___60_2881.cache);
+          nolabels = (uu___60_2881.nolabels);
+          use_zfuel_name = (uu___60_2881.use_zfuel_name);
+          encode_non_total_function_typ =
+            (uu___60_2881.encode_non_total_function_typ);
+          current_module_name = (uu___60_2881.current_module_name);
+          encoding_quantifier = (uu___60_2881.encoding_quantifier)
+        }  in
+      (ysym, y, uu____2880)
   
 let (new_term_constant_from_string :
   env_t ->
@@ -713,67 +802,66 @@ let (new_term_constant_from_string :
       fun str  ->
         let ysym = varops.mk_unique str  in
         let y = FStar_SMTEncoding_Util.mkApp (ysym, [])  in
-        (ysym, y,
-          (let uu___76_2586 = env  in
-           {
-             bindings = ((Binding_var (x, y)) :: (env.bindings));
-             depth = (uu___76_2586.depth);
-             tcenv = (uu___76_2586.tcenv);
-             warn = (uu___76_2586.warn);
-             cache = (uu___76_2586.cache);
-             nolabels = (uu___76_2586.nolabels);
-             use_zfuel_name = (uu___76_2586.use_zfuel_name);
-             encode_non_total_function_typ =
-               (uu___76_2586.encode_non_total_function_typ);
-             current_module_name = (uu___76_2586.current_module_name)
-           }))
+        let uu____2916 =
+          let uu___61_2917 = env  in
+          let uu____2918 = add_bvar_binding (x, y) env.bvar_bindings  in
+          {
+            bvar_bindings = uu____2918;
+            fvar_bindings = (uu___61_2917.fvar_bindings);
+            depth = (uu___61_2917.depth);
+            tcenv = (uu___61_2917.tcenv);
+            warn = (uu___61_2917.warn);
+            cache = (uu___61_2917.cache);
+            nolabels = (uu___61_2917.nolabels);
+            use_zfuel_name = (uu___61_2917.use_zfuel_name);
+            encode_non_total_function_typ =
+              (uu___61_2917.encode_non_total_function_typ);
+            current_module_name = (uu___61_2917.current_module_name);
+            encoding_quantifier = (uu___61_2917.encoding_quantifier)
+          }  in
+        (ysym, y, uu____2916)
   
 let (push_term_var :
   env_t -> FStar_Syntax_Syntax.bv -> FStar_SMTEncoding_Term.term -> env_t) =
   fun env  ->
     fun x  ->
       fun t  ->
-        let uu___77_2602 = env  in
+        let uu___62_2942 = env  in
+        let uu____2943 = add_bvar_binding (x, t) env.bvar_bindings  in
         {
-          bindings = ((Binding_var (x, t)) :: (env.bindings));
-          depth = (uu___77_2602.depth);
-          tcenv = (uu___77_2602.tcenv);
-          warn = (uu___77_2602.warn);
-          cache = (uu___77_2602.cache);
-          nolabels = (uu___77_2602.nolabels);
-          use_zfuel_name = (uu___77_2602.use_zfuel_name);
+          bvar_bindings = uu____2943;
+          fvar_bindings = (uu___62_2942.fvar_bindings);
+          depth = (uu___62_2942.depth);
+          tcenv = (uu___62_2942.tcenv);
+          warn = (uu___62_2942.warn);
+          cache = (uu___62_2942.cache);
+          nolabels = (uu___62_2942.nolabels);
+          use_zfuel_name = (uu___62_2942.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___77_2602.encode_non_total_function_typ);
-          current_module_name = (uu___77_2602.current_module_name)
+            (uu___62_2942.encode_non_total_function_typ);
+          current_module_name = (uu___62_2942.current_module_name);
+          encoding_quantifier = (uu___62_2942.encoding_quantifier)
         }
   
 let (lookup_term_var :
   env_t -> FStar_Syntax_Syntax.bv -> FStar_SMTEncoding_Term.term) =
   fun env  ->
     fun a  ->
-      let aux a' =
-        lookup_binding env
-          (fun uu___68_2632  ->
-             match uu___68_2632 with
-             | Binding_var (b,t) when FStar_Syntax_Syntax.bv_eq b a' ->
-                 FStar_Pervasives_Native.Some (b, t)
-             | uu____2645 -> FStar_Pervasives_Native.None)
-         in
-      let uu____2650 = aux a  in
-      match uu____2650 with
+      let uu____2962 = lookup_bvar_binding env a  in
+      match uu____2962 with
       | FStar_Pervasives_Native.None  ->
           let a2 = unmangle a  in
-          let uu____2662 = aux a2  in
-          (match uu____2662 with
+          let uu____2974 = lookup_bvar_binding env a2  in
+          (match uu____2974 with
            | FStar_Pervasives_Native.None  ->
-               let uu____2673 =
-                 let uu____2674 = FStar_Syntax_Print.bv_to_string a2  in
-                 let uu____2675 = print_env env  in
+               let uu____2985 =
+                 let uu____2986 = FStar_Syntax_Print.bv_to_string a2  in
+                 let uu____2987 = print_env env  in
                  FStar_Util.format2
                    "Bound term variable not found (after unmangling): %s in environment: %s"
-                   uu____2674 uu____2675
+                   uu____2986 uu____2987
                   in
-               failwith uu____2673
+               failwith uu____2985
            | FStar_Pervasives_Native.Some (b,t) -> t)
       | FStar_Pervasives_Native.Some (b,t) -> t
   
@@ -814,56 +902,35 @@ let (new_term_constant_and_tok_from_lid :
           mk_fvb x fname arity (FStar_Pervasives_Native.Some ftok)
             FStar_Pervasives_Native.None
            in
-        (fname, ftok_name,
-          (let uu___78_2749 = env  in
-           {
-             bindings = ((Binding_fvar fvb) :: (env.bindings));
-             depth = (uu___78_2749.depth);
-             tcenv = (uu___78_2749.tcenv);
-             warn = (uu___78_2749.warn);
-             cache = (uu___78_2749.cache);
-             nolabels = (uu___78_2749.nolabels);
-             use_zfuel_name = (uu___78_2749.use_zfuel_name);
-             encode_non_total_function_typ =
-               (uu___78_2749.encode_non_total_function_typ);
-             current_module_name = (uu___78_2749.current_module_name)
-           }))
-  
-let (try_lookup_lid :
-  env_t -> FStar_Ident.lident -> fvar_binding FStar_Pervasives_Native.option)
-  =
-  fun env  ->
-    fun a  ->
-      lookup_binding env
-        (fun uu___69_2764  ->
-           match uu___69_2764 with
-           | Binding_fvar fvb when FStar_Ident.lid_equals fvb.fvar_lid a ->
-               FStar_Pervasives_Native.Some fvb
-           | uu____2768 -> FStar_Pervasives_Native.None)
-  
-let (contains_name : env_t -> Prims.string -> Prims.bool) =
-  fun env  ->
-    fun s  ->
-      let uu____2779 =
-        lookup_binding env
-          (fun uu___70_2784  ->
-             match uu___70_2784 with
-             | Binding_fvar fvb when (fvb.fvar_lid).FStar_Ident.str = s ->
-                 FStar_Pervasives_Native.Some ()
-             | uu____2788 -> FStar_Pervasives_Native.None)
-         in
-      FStar_All.pipe_right uu____2779 FStar_Option.isSome
+        let uu____3060 =
+          let uu___63_3061 = env  in
+          let uu____3062 = add_fvar_binding fvb env.fvar_bindings  in
+          {
+            bvar_bindings = (uu___63_3061.bvar_bindings);
+            fvar_bindings = uu____3062;
+            depth = (uu___63_3061.depth);
+            tcenv = (uu___63_3061.tcenv);
+            warn = (uu___63_3061.warn);
+            cache = (uu___63_3061.cache);
+            nolabels = (uu___63_3061.nolabels);
+            use_zfuel_name = (uu___63_3061.use_zfuel_name);
+            encode_non_total_function_typ =
+              (uu___63_3061.encode_non_total_function_typ);
+            current_module_name = (uu___63_3061.current_module_name);
+            encoding_quantifier = (uu___63_3061.encoding_quantifier)
+          }  in
+        (fname, ftok_name, uu____3060)
   
 let (lookup_lid : env_t -> FStar_Ident.lident -> fvar_binding) =
   fun env  ->
     fun a  ->
-      let uu____2801 = try_lookup_lid env a  in
-      match uu____2801 with
+      let uu____3075 = lookup_fvar_binding env a  in
+      match uu____3075 with
       | FStar_Pervasives_Native.None  ->
-          let uu____2804 =
-            let uu____2805 = FStar_Syntax_Print.lid_to_string a  in
-            FStar_Util.format1 "Name not found: %s" uu____2805  in
-          failwith uu____2804
+          let uu____3078 =
+            let uu____3079 = FStar_Syntax_Print.lid_to_string a  in
+            FStar_Util.format1 "Name not found: %s" uu____3079  in
+          failwith uu____3078
       | FStar_Pervasives_Native.Some s -> s
   
 let (push_free_var :
@@ -880,18 +947,21 @@ let (push_free_var :
           fun ftok  ->
             let fvb = mk_fvb x fname arity ftok FStar_Pervasives_Native.None
                in
-            let uu___79_2837 = env  in
+            let uu___64_3111 = env  in
+            let uu____3112 = add_fvar_binding fvb env.fvar_bindings  in
             {
-              bindings = ((Binding_fvar fvb) :: (env.bindings));
-              depth = (uu___79_2837.depth);
-              tcenv = (uu___79_2837.tcenv);
-              warn = (uu___79_2837.warn);
-              cache = (uu___79_2837.cache);
-              nolabels = (uu___79_2837.nolabels);
-              use_zfuel_name = (uu___79_2837.use_zfuel_name);
+              bvar_bindings = (uu___64_3111.bvar_bindings);
+              fvar_bindings = uu____3112;
+              depth = (uu___64_3111.depth);
+              tcenv = (uu___64_3111.tcenv);
+              warn = (uu___64_3111.warn);
+              cache = (uu___64_3111.cache);
+              nolabels = (uu___64_3111.nolabels);
+              use_zfuel_name = (uu___64_3111.use_zfuel_name);
               encode_non_total_function_typ =
-                (uu___79_2837.encode_non_total_function_typ);
-              current_module_name = (uu___79_2837.current_module_name)
+                (uu___64_3111.encode_non_total_function_typ);
+              current_module_name = (uu___64_3111.current_module_name);
+              encoding_quantifier = (uu___64_3111.encoding_quantifier)
             }
   
 let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
@@ -901,28 +971,31 @@ let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
       fun f  ->
         let fvb = lookup_lid env x  in
         let t3 =
-          let uu____2855 =
-            let uu____2862 =
-              let uu____2865 = FStar_SMTEncoding_Util.mkApp ("ZFuel", [])  in
-              [uu____2865]  in
-            (f, uu____2862)  in
-          FStar_SMTEncoding_Util.mkApp uu____2855  in
+          let uu____3132 =
+            let uu____3139 =
+              let uu____3142 = FStar_SMTEncoding_Util.mkApp ("ZFuel", [])  in
+              [uu____3142]  in
+            (f, uu____3139)  in
+          FStar_SMTEncoding_Util.mkApp uu____3132  in
         let fvb1 =
           mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token
             (FStar_Pervasives_Native.Some t3)
            in
-        let uu___80_2871 = env  in
+        let uu___65_3148 = env  in
+        let uu____3149 = add_fvar_binding fvb1 env.fvar_bindings  in
         {
-          bindings = ((Binding_fvar fvb1) :: (env.bindings));
-          depth = (uu___80_2871.depth);
-          tcenv = (uu___80_2871.tcenv);
-          warn = (uu___80_2871.warn);
-          cache = (uu___80_2871.cache);
-          nolabels = (uu___80_2871.nolabels);
-          use_zfuel_name = (uu___80_2871.use_zfuel_name);
+          bvar_bindings = (uu___65_3148.bvar_bindings);
+          fvar_bindings = uu____3149;
+          depth = (uu___65_3148.depth);
+          tcenv = (uu___65_3148.tcenv);
+          warn = (uu___65_3148.warn);
+          cache = (uu___65_3148.cache);
+          nolabels = (uu___65_3148.nolabels);
+          use_zfuel_name = (uu___65_3148.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___80_2871.encode_non_total_function_typ);
-          current_module_name = (uu___80_2871.current_module_name)
+            (uu___65_3148.encode_non_total_function_typ);
+          current_module_name = (uu___65_3148.current_module_name);
+          encoding_quantifier = (uu___65_3148.encoding_quantifier)
         }
   
 let (try_lookup_free_var :
@@ -932,44 +1005,44 @@ let (try_lookup_free_var :
   =
   fun env  ->
     fun l  ->
-      let uu____2884 = try_lookup_lid env l  in
-      match uu____2884 with
+      let uu____3164 = lookup_fvar_binding env l  in
+      match uu____3164 with
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some fvb ->
           (match fvb.smt_fuel_partial_app with
            | FStar_Pervasives_Native.Some f when env.use_zfuel_name ->
                FStar_Pervasives_Native.Some f
-           | uu____2893 ->
+           | uu____3173 ->
                (match fvb.smt_token with
                 | FStar_Pervasives_Native.Some t ->
                     (match t.FStar_SMTEncoding_Term.tm with
-                     | FStar_SMTEncoding_Term.App (uu____2901,fuel::[]) ->
-                         let uu____2905 =
-                           let uu____2906 =
-                             let uu____2907 =
+                     | FStar_SMTEncoding_Term.App (uu____3181,fuel::[]) ->
+                         let uu____3185 =
+                           let uu____3186 =
+                             let uu____3187 =
                                FStar_SMTEncoding_Term.fv_of_term fuel  in
-                             FStar_All.pipe_right uu____2907
+                             FStar_All.pipe_right uu____3187
                                FStar_Pervasives_Native.fst
                               in
-                           FStar_Util.starts_with uu____2906 "fuel"  in
-                         if uu____2905
+                           FStar_Util.starts_with uu____3186 "fuel"  in
+                         if uu____3185
                          then
-                           let uu____2910 =
-                             let uu____2911 =
+                           let uu____3190 =
+                             let uu____3191 =
                                FStar_SMTEncoding_Util.mkFreeV
                                  ((fvb.smt_id),
                                    FStar_SMTEncoding_Term.Term_sort)
                                 in
-                             FStar_SMTEncoding_Term.mk_ApplyTF uu____2911
+                             FStar_SMTEncoding_Term.mk_ApplyTF uu____3191
                                fuel
                               in
                            FStar_All.pipe_left
                              (fun _0_17  ->
                                 FStar_Pervasives_Native.Some _0_17)
-                             uu____2910
+                             uu____3190
                          else FStar_Pervasives_Native.Some t
-                     | uu____2915 -> FStar_Pervasives_Native.Some t)
-                | uu____2916 -> FStar_Pervasives_Native.None))
+                     | uu____3195 -> FStar_Pervasives_Native.Some t)
+                | uu____3196 -> FStar_Pervasives_Native.None))
   
 let (lookup_free_var :
   env_t ->
@@ -978,15 +1051,15 @@ let (lookup_free_var :
   =
   fun env  ->
     fun a  ->
-      let uu____2933 = try_lookup_free_var env a.FStar_Syntax_Syntax.v  in
-      match uu____2933 with
+      let uu____3213 = try_lookup_free_var env a.FStar_Syntax_Syntax.v  in
+      match uu____3213 with
       | FStar_Pervasives_Native.Some t -> t
       | FStar_Pervasives_Native.None  ->
-          let uu____2937 =
-            let uu____2938 =
+          let uu____3217 =
+            let uu____3218 =
               FStar_Syntax_Print.lid_to_string a.FStar_Syntax_Syntax.v  in
-            FStar_Util.format1 "Name not found: %s" uu____2938  in
-          failwith uu____2937
+            FStar_Util.format1 "Name not found: %s" uu____3218  in
+          failwith uu____3217
   
 let (lookup_free_var_name :
   env_t ->
@@ -1010,11 +1083,11 @@ let (lookup_free_var_sym :
       match fvb.smt_fuel_partial_app with
       | FStar_Pervasives_Native.Some
           { FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (g,zf);
-            FStar_SMTEncoding_Term.freevars = uu____2991;
-            FStar_SMTEncoding_Term.rng = uu____2992;_}
+            FStar_SMTEncoding_Term.freevars = uu____3271;
+            FStar_SMTEncoding_Term.rng = uu____3272;_}
           when env.use_zfuel_name ->
           (g, zf, (fvb.smt_arity + (Prims.parse_int "1")))
-      | uu____3007 ->
+      | uu____3287 ->
           (match fvb.smt_token with
            | FStar_Pervasives_Native.None  ->
                ((FStar_SMTEncoding_Term.Var (fvb.smt_id)), [],
@@ -1023,7 +1096,7 @@ let (lookup_free_var_sym :
                (match sym.FStar_SMTEncoding_Term.tm with
                 | FStar_SMTEncoding_Term.App (g,fuel::[]) ->
                     (g, [fuel], (fvb.smt_arity + (Prims.parse_int "1")))
-                | uu____3035 ->
+                | uu____3315 ->
                     ((FStar_SMTEncoding_Term.Var (fvb.smt_id)), [],
                       (fvb.smt_arity))))
   
@@ -1034,9 +1107,10 @@ let (tok_of_name :
   =
   fun env  ->
     fun nm  ->
-      FStar_Util.find_map env.bindings
-        (fun uu___71_3052  ->
-           match uu___71_3052 with
-           | Binding_fvar fvb when fvb.smt_id = nm -> fvb.smt_token
-           | uu____3056 -> FStar_Pervasives_Native.None)
+      FStar_Util.psmap_find_map env.fvar_bindings
+        (fun uu____3332  ->
+           fun fvb  ->
+             if fvb.smt_id = nm
+             then fvb.smt_token
+             else FStar_Pervasives_Native.None)
   

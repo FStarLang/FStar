@@ -812,7 +812,7 @@ let (interpret_plugin_as_term_fun :
               [FStar_TypeChecker_Normalize.EraseUniverses;
               FStar_TypeChecker_Normalize.AllowUnboundUniverses;
               FStar_TypeChecker_Normalize.UnfoldUntil
-                FStar_Syntax_Syntax.Delta_constant] tcenv t
+                FStar_Syntax_Syntax.delta_constant] tcenv t
              in
           let w =
             FStar_Extraction_ML_Syntax.with_ty

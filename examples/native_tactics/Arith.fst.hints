@@ -12,7 +12,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "020297904c955b0e748a9141a91daa37"
+      "3e72ba3b02e9d4b022480519fef32f13"
     ],
     [
       "Arith.lem1",
@@ -30,7 +30,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "72054bf3a033fc09b2f8e6e5ae5d46c8"
+      "a815d768f72e84501f58a3ae019db151"
     ],
     [
       "Arith.lem1",
@@ -43,7 +43,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "657deaffa7b32b2ada492c003ff0dac9"
+      "38fe17c8fc8201e01810cf385a0ca903"
     ],
     [
       "Arith.lem2",
@@ -56,7 +56,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d255c0c5f8bae4642918525f6ec85caa"
+      "ed323aabd2298bb3c157e6ea376f2c45"
     ],
     [
       "Arith.lem2",
@@ -74,7 +74,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "1454283699c2f18430be55d02b0d3278"
+      "feb677fea64eb5425ecec8e7eb4ca3cc"
     ],
     [
       "Arith.lem3",
@@ -89,7 +89,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "db5f4a9a7a23456321add25cceadc305"
+      "ad2f3e0f29a3132f8ae0175bdc6ae218"
     ],
     [
       "Arith.lem3",
@@ -104,7 +104,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "62b88528cd3e7067d47bc089a1bfefe3"
+      "ae4f229d3316c37b538e3a77016524e9"
     ],
     [
       "Arith.lem3",
@@ -114,6 +114,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
@@ -128,7 +129,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "0437262e4033313b055384f421c2ef31"
+      "00dd45cb21df2e22fd48b9f8dbb094ff"
     ],
     [
       "Arith.lem3",
@@ -143,7 +144,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a0821c25a6546c162c161c6227e1308c"
+      "6a63bbfca8ee284d9de56b6eaec97f08"
     ],
     [
       "Arith.lem4",
@@ -158,7 +159,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "9e6591bdd02ccc118c4437f0f37a914b"
+      "d854e9c53eb1cb8c1659b9d7a0b20556"
     ],
     [
       "Arith.lem4",
@@ -173,7 +174,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "bc1dec86c25380d356faf9afc5e6ed48"
+      "2048907614694e0f60ea932413bf889e"
     ],
     [
       "Arith.lem4",
@@ -188,7 +189,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "a9ffc6d609e99793ff0fc0ff11b2627b"
+      "8f1d2f82352dc02d6849bb79a9a204b4"
     ],
     [
       "Arith.lem4",
@@ -203,7 +204,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "d04a2cea3e8dd11072c4b55fbdcd1ab5"
+      "767f0b0337f56a6c9eb7d9982a9d3bb8"
     ],
     [
       "Arith.lem4",
@@ -218,7 +219,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "0e33737890c145a5d362f49bbb8f2323"
+      "2539d0f9a4100903adea5f6db77024ea"
     ],
     [
       "Arith.lem4",
@@ -228,22 +229,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
-        "bool_inversion", "bool_typing", "equation_FStar.UInt32.n",
-        "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.squash", "forall-interp",
-        "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_Arith_Tm_abs_150975883dce5a712ce9875f696c2a76",
-        "interpretation_Arith_Tm_abs_37007ab544d5f6aa8821b4f58451d0ea",
-        "interpretation_Arith_Tm_abs_7de12b313dab3d63d9e908ea75216b8c",
-        "l_and-interp", "l_imp-interp", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxBool_proj_0",
+        "equation_Prims.l_and", "equation_Prims.squash", "l_and-interp",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "b62cae410de14e9f88a4ff817628cf3c"
+      "4ba2d645a4e4fe357f26c81f5fb47199"
     ],
     [
       "Arith.lem4",
@@ -253,15 +247,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
-        "b2t_def", "equation_Prims.l_Forall", "equation_Prims.squash",
-        "forall-interp", "int_inversion",
-        "interpretation_Arith_Tm_abs_7de12b313dab3d63d9e908ea75216b8c",
-        "primitive_Prims.op_GreaterThan",
-        "projection_inverse_BoxBool_proj_0",
+        "equation_Prims.l_Forall", "equation_Prims.squash", "int_inversion",
+        "l_quant_interp__6914",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "1261ee8226f04c511499636fefb0f916"
+      "858f3aa97eb4657540d5d7ec6361cb9c"
     ],
     [
       "Arith.lem4",
@@ -271,6 +262,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
@@ -285,7 +277,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "4e46052a82f611687d67265a99c0b52a"
+      "be6ddc5962ad1208e0b534020a984a55"
     ],
     [
       "Arith.lem4",
@@ -293,18 +285,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
-        "b2t_def", "equation_Prims.l_Forall", "equation_Prims.squash",
-        "forall-interp", "int_inversion", "int_typing",
-        "interpretation_Arith_Tm_abs_7de12b313dab3d63d9e908ea75216b8c",
-        "primitive_Prims.op_GreaterThan",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "int_typing", "l_quant_interp__6930",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "4f7c9f02d5e4d07e9e3fcc5e481ffd09"
+      "65b768f44dfdbade2a62c25de9d9e294"
     ]
   ]
 ]

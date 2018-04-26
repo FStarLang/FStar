@@ -50,7 +50,7 @@ let (pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv) =
        in
     let uu____51 = FStar_Parser_Const.p2l ns  in
     FStar_Syntax_Syntax.lid_as_fv uu____51
-      (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "999"))
+      (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "999"))
       attr
   
 let rec last : 'a . 'a Prims.list -> 'a =

@@ -1045,7 +1045,8 @@ and (translate_decl :
           failwith "todo: translate_decl [MLM_Top]"
       | FStar_Extraction_ML_Syntax.MLM_Exn (m,uu____3752) ->
           (FStar_Util.print1_warning
-             "Skipping the translation of exception: %s\n" m;
+             "Not extracting exception %s to KreMLin (exceptions unsupported)\n"
+             m;
            [])
 
 and (translate_let :
@@ -1130,7 +1131,7 @@ and (translate_let :
                             FStar_Extraction_ML_Syntax.string_of_mlpath name1
                              in
                           FStar_Util.print1_warning
-                            "No writing anything for %s (polymorphic assume)\n"
+                            "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n"
                             uu____3920);
                          FStar_Pervasives_Native.None))
                    else
@@ -1151,8 +1152,8 @@ and (translate_let :
                                     name1
                                    in
                                 FStar_Util.format2
-                                  "Writing a stub for %s (%s)\n" uu____3959
-                                  msg
+                                  "Error while extracting %s to KreMLin (%s)\n"
+                                  uu____3959 msg
                                  in
                               (FStar_Errors.Warning_FunctionNotExtacted,
                                 uu____3958)
@@ -1246,7 +1247,7 @@ and (translate_let :
                             FStar_Extraction_ML_Syntax.string_of_mlpath name1
                              in
                           FStar_Util.print1_warning
-                            "No writing anything for %s (polymorphic assume)\n"
+                            "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n"
                             uu____4126);
                          FStar_Pervasives_Native.None))
                    else
@@ -1267,8 +1268,8 @@ and (translate_let :
                                     name1
                                    in
                                 FStar_Util.format2
-                                  "Writing a stub for %s (%s)\n" uu____4165
-                                  msg
+                                  "Error while extracting %s to KreMLin (%s)\n"
+                                  uu____4165 msg
                                  in
                               (FStar_Errors.Warning_FunctionNotExtacted,
                                 uu____4164)
@@ -1315,8 +1316,8 @@ and (translate_let :
                             in
                          let uu____4242 = FStar_Util.print_exn e  in
                          FStar_Util.format2
-                           "Not translating definition for %s (%s)\n"
-                           uu____4241 uu____4242
+                           "Error extracting %s to KreMLin (%s)\n" uu____4241
+                           uu____4242
                           in
                        (FStar_Errors.Warning_DefinitionNotTranslated,
                          uu____4240)
@@ -1333,8 +1334,7 @@ and (translate_let :
             FStar_Extraction_ML_Syntax.print_typ = uu____4256;_} ->
             ((let uu____4260 =
                 let uu____4265 =
-                  FStar_Util.format1 "Not translating definition for %s\n"
-                    name
+                  FStar_Util.format1 "Not extracting %s to KreMLin\n" name
                    in
                 (FStar_Errors.Warning_DefinitionNotTranslated, uu____4265)
                  in
@@ -1367,7 +1367,8 @@ and (translate_type_decl :
           then
             let name2 = FStar_Extraction_ML_Syntax.string_of_mlpath name1  in
             (FStar_Util.print1_warning
-               "Not translating type definition (assumed) for %s\n" name2;
+               "Not extracting type definition %s to KreMLin (assumed type)\n"
+               name2;
              FStar_Pervasives_Native.None)
           else
             (let uu____4311 =
@@ -1432,8 +1433,8 @@ and (translate_type_decl :
       | (uu____4715,name,_mangled_name,uu____4718,uu____4719,uu____4720) ->
           ((let uu____4730 =
               let uu____4735 =
-                FStar_Util.format1 "Not translating type definition for %s\n"
-                  name
+                FStar_Util.format1
+                  "Error extracting type definition %s to KreMLin\n" name
                  in
               (FStar_Errors.Warning_DefinitionNotTranslated, uu____4735)  in
             FStar_Errors.log_issue FStar_Range.dummyRange uu____4730);

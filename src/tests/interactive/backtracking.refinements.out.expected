@@ -1,4 +1,4 @@
-{"kind": "[...]"}
+{"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Syntax error: Parsing.Parse_error", "ranges": [{"beg": [3, 6], "end": [3, 6], "fname": "<input>"}]}], "status": "success"}

@@ -24,7 +24,7 @@ module BU = FStar.Util
 
 let has_cygpath =
     try
-        let _, t_out, _ = BU.run_proc "which" "cygpath" "" in
+        let t_out = BU.run_process "has_cygpath" "which" ["cygpath"] None in
         BU.trim_string t_out = "/usr/bin/cygpath"
     with
     | _ -> false
@@ -43,8 +43,8 @@ let try_convert_file_name_to_mixed =
       | Some s ->
           s
       | None ->
-          let _, out, _ = BU.run_proc "cygpath" ("-m " ^ s) "" in
-          let out = BU.trim_string out in
+          let label = "try_convert_file_name_to_mixed" in
+          let out = BU.run_process label "cygpath" ["-m"; s] None |> BU.trim_string in
           BU.smap_add cache s out;
           out
     else
