@@ -1475,7 +1475,7 @@ and p_constant = function
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
   | Const_float x -> str (Util.string_of_float x)
-  | Const_char x -> squotes (doc_of_char x )
+  | Const_char x -> doc_of_char x
   | Const_string(s, _) -> dquotes (str s)
   | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
   | Const_int (repr, sign_width_opt) ->
