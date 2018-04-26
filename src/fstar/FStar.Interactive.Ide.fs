@@ -1225,28 +1225,25 @@ let run_with_parsed_and_tc_term st term line column continuation =
   run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->
     let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
-    match st.repl_curmod with
-    | None -> (QueryNOK, JsonStr "Current module unset")
-    | _ ->
-      match parse frag with
-      | None -> (QueryNOK, JsonStr "Could not parse this term")
-      | Some decls ->
-        let aux () =
-          let decls = desugar tcenv decls in
-          let ses = typecheck tcenv decls in
-          match find_let_body ses with
-          | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
-          | Some (univs, def) ->
-            let univs, def = Syntax.Subst.open_univ_vars univs def in
-            let tcenv = TcEnv.push_univ_vars tcenv univs in
-            continuation tcenv def in
-        if Options.trace_error () then
-          aux ()
-        else
-          try aux ()
-          with | e -> (match FStar.Errors.issue_of_exn e with
-                      | Some issue -> (QueryNOK, JsonStr (FStar.Errors.format_issue issue))
-                      | None -> raise e))
+    match parse frag with
+    | None -> (QueryNOK, JsonStr "Could not parse this term")
+    | Some decls ->
+      let aux () =
+        let decls = desugar tcenv decls in
+        let ses = typecheck tcenv decls in
+        match find_let_body ses with
+        | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
+        | Some (univs, def) ->
+          let univs, def = Syntax.Subst.open_univ_vars univs def in
+          let tcenv = TcEnv.push_univ_vars tcenv univs in
+          continuation tcenv def in
+      if Options.trace_error () then
+        aux ()
+      else
+        try aux ()
+        with | e -> (match FStar.Errors.issue_of_exn e with
+                    | Some issue -> (QueryNOK, JsonStr (FStar.Errors.format_issue issue))
+                    | None -> raise e))
 
 let run_compute st term rules =
   let rules =
