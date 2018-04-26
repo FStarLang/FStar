@@ -1473,7 +1473,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
      | Some (bound, sub_probs, wl) ->
        let eq_prob, wl =
-            new_problem wl env bound EQ tp.rhs None tp.loc
+            new_problem wl env bound EQ this_flex None tp.loc
                 (if flip then "joining refinements" else "meeting refinements")
        in
        let _ = if Env.debug env <| Options.Other "RelCheck"

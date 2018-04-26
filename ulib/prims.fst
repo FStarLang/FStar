@@ -304,7 +304,7 @@ assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p)
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible
-let unsafe_coerce (#a:Type) (#b: Type) (x:a) : b = admit #unit (); x
+let unsafe_coerce (#a:Type) (#b: Type) (x:a) : b = admit (); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
