@@ -1247,27 +1247,42 @@ and p_tmEqWith' p_X curr e = match e.tm with
 and p_tmNoEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
   let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in
-  p_tmNoEqWith' p_X n e
+  p_tmNoEqWith' false p_X n e
 
-and p_tmNoEqWith' p_X curr e = match e.tm with
+and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
   | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid && not (is_list e) ->
       let op = "::" in
       let left, mine, right = levels op in
-      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' p_X left e1) (p_tmNoEqWith' p_X right e2))
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
       let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
-      paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' p_X right res)
+      paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
+  | Op({idText = "*"}, [e1; e2]) ->
+      let op = "*" in
+      let left, mine, right = levels op in
+      (match inside_tuple with
+       | false ->
+           paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
+       | true ->
+           infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
   | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
-      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' p_X left e1) (p_tmNoEqWith' p_X right e2))
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
                             separate_map_last (semi ^^ break1) p_simpleDef record_fields )
   | Op({idText = "~"}, [e]) ->
       group (str "~" ^^ p_atomicTerm e)
+  | Paren p when inside_tuple ->
+      (match p.tm with
+       | Op({idText = "*"}, [e1; e2]) ->
+           let op = "*" in
+           let left, mine, right = levels op in
+           paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
+       | _ -> p_X e)
   | _ -> p_X e
 
 and p_tmEqNoRefinement e = p_tmEqWith p_appTerm e
