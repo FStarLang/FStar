@@ -351,67 +351,95 @@ let mkCases t r = match t with
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
 
 
-let rec check_pattern_ok (t:term) =
-    match t.tm with
-    | Integer _
-    | BoundV _
-    | FreeV _ -> true
-    | Let(tms, tm) -> BU.for_all check_pattern_ok (tm::tms)
-    | App(head, terms) ->
-        let head_ok =
-            match head with
-            | Var _ -> true
-            | TrueOp
-            | FalseOp -> true
-            | Not
-            | And
-            | Or
-            | Imp
-            | Iff
-            | Eq -> false
-            | LT
-            | LTE
-            | GT
-            | GTE
-            | Add
-            | Sub
-            | Div
-            | Mul
-            | Minus
-            | Mod -> true
-            | BvAnd
-            | BvXor
-            | BvOr
-            | BvAdd
-            | BvSub
-            | BvShl
-            | BvShr
-            | BvUdiv
-            | BvMod
-            | BvMul
-            | BvUlt
-            | BvUext _
-            | NatToBv _
-            | BvToNat
-            | ITE -> false
-        in
-        head_ok  &&
-        BU.for_all check_pattern_ok terms
-    | Labeled _
-    | Quant _
-    | LblPos _ -> false
+let check_pattern_ok (t:term) : option<term> =
+    let rec aux t =
+        match t.tm with
+        | Integer _
+        | BoundV _
+        | FreeV _ -> None
+        | Let(tms, tm) ->
+          aux_l (tm::tms)
+        | App(head, terms) ->
+            let head_ok =
+                match head with
+                | Var _ -> true
+                | TrueOp
+                | FalseOp -> true
+                | Not
+                | And
+                | Or
+                | Imp
+                | Iff
+                | Eq -> false
+                | LT
+                | LTE
+                | GT
+                | GTE
+                | Add
+                | Sub
+                | Div
+                | Mul
+                | Minus
+                | Mod -> true
+                | BvAnd
+                | BvXor
+                | BvOr
+                | BvAdd
+                | BvSub
+                | BvShl
+                | BvShr
+                | BvUdiv
+                | BvMod
+                | BvMul
+                | BvUlt
+                | BvUext _
+                | NatToBv _
+                | BvToNat
+                | ITE -> false
+            in
+            if not head_ok then Some t
+            else aux_l terms
+        | Labeled(t, _, _) ->
+          aux t
+        | Quant _
+        | LblPos _ -> Some t
+    and aux_l ts =
+        match ts with
+        | [] -> None
+        | t::ts ->
+          match aux t with
+          | Some t -> Some t
+          | None -> aux_l ts
+    in
+    aux t
+ let rec print_smt_term (t:term) :string = match t.tm with
+  | Integer n               -> BU.format1 "(Integer %s)" n
+  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
+  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
+  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
+  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
+  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
+  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
+
+and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
+
+and print_smt_term_list_list (l:list<list<term>>) :string =
+    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
+
 let mkQuant r check_pats (qop, pats, wopt, vars, body) =
     let all_pats_ok pats =
         if not check_pats then pats else
-        if BU.for_all (BU.for_all check_pattern_ok) pats
-        then pats
-        else begin
+        match BU.find_map pats (fun x -> BU.find_map x check_pattern_ok) with
+        | None -> pats
+        | Some p ->
+          begin
             Errors.log_issue
                     r
                     (Errors.Warning_SMTPatternMissingBoundVar,
-                     "Pattern contains illegal symbols; dropping it");
+                     BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
             []
-        end
+           end
     in
     if List.length vars = 0 then body
     else match body.tm with
@@ -864,22 +892,6 @@ let unboxTerm sort t = match sort with
   | String_sort -> unboxString t
   | BitVec_sort sz -> unboxBitVec sz t
   | _ -> raise Impos
-
-
- let rec print_smt_term (t:term) :string = match t.tm with
-  | Integer n               -> BU.format1 "(Integer %s)" n
-  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
-  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
-  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
-  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
-  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
-  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
-  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
-
-and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
-
-and print_smt_term_list_list (l:list<list<term>>) :string =
-    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
 
 let getBoxedInteger (t:term) =
   match t.tm with

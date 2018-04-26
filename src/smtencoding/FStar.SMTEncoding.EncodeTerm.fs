@@ -1183,16 +1183,17 @@ and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * 
             List.fold_right
                 (fun (p, _) (pats, decls) ->
                     let t, d = encode_smt_pattern p in
-                    if check_pattern_ok t
-                    then t::pats, d@decls
-                    else begin
-                         Errors.log_issue
+                    match check_pattern_ok t with
+                    | None ->
+                      t::pats, d@decls
+                    | Some illegal_subterm ->
+                      Errors.log_issue
                             p.pos
                             (Errors.Warning_SMTPatternMissingBoundVar,
-                             BU.format1 "Pattern %s contains illegal symbols; dropping it"
-                                        (Print.term_to_string p));
-                         pats, d@decls
-                    end)
+                             BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
+                                        (Print.term_to_string p)
+                                        (Term.print_smt_term illegal_subterm));
+                         pats, d@decls)
                 pats ([], decls)
         in
         pats::pats_l, decls)

@@ -179,7 +179,7 @@ val mkBvMul   : (int -> (term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term
-val check_pattern_ok: term -> bool
+val check_pattern_ok: term -> option<term>
 val mkForall:  Range.range -> (list<list<pat>> * fvs * term) -> term
 val mkForall': Range.range -> (list<list<pat>> * option<int> * fvs * term)  -> term
 val mkForall'': Range.range -> (list<list<pat>> * option<int> * list<sort> * term) -> term
