@@ -80,7 +80,10 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
         let (reason, term, ctx_u, range, should_check) = i in
         if not should_check then i
         else match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
-        | Some _ -> i //already solved; nothing to do
+        | Some _ ->
+          if Env.debug env <| Options.Other "Rel"
+          then printfn "%s already solved; nothing to do" (Print.ctx_uvar_to_string ctx_u);
+          i //already solved; nothing to do
         | None ->
           begin
           match BU.prefix_until (function Binding_var _ -> true | _ -> false) ctx_u.ctx_uvar_gamma with
@@ -94,7 +97,8 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
               let ctx_v, t_v = new_implicit_var_aux reason range gamma_tail binders_pfx typ in
               let sol = S.mk_Tm_app t_v [S.as_arg (S.bv_to_name x)] None range in
               if Env.debug env <| Options.Other "Rel"
-              then BU.print2 "Closing implicits %s to %s"
+              then BU.print3 "Closing implicit %s with binder %s to %s\n"
+                            (Print.bv_to_string x)
                             (Print.ctx_uvar_to_string ctx_u)
                             (Print.term_to_string sol);
               Unionfind.change ctx_u.ctx_uvar_head sol;
@@ -108,12 +112,20 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     in
     let g = Rel.solve_deferred_constraints env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
+    if Env.debug env <| Options.Other "Rel"
+    then BU.print1 "Starting to close implicits with binders {%s}\n"
+                        (Print.binders_to_string ", " xs);
+
     let is =
-      List.fold_left (fun is (x, _) -> List.map (aux x) is) g.implicits xs
+      List.fold_right (fun (x, _) is ->
+         if Env.debug env <| Options.Other "Rel"
+         then BU.print1 "Considering closing %s\n" (Print.bv_to_string x);
+         List.map (aux x) is) xs g.implicits
     in
     let g = {g with implicits=is} in
     if Env.debug env <| Options.Other "Rel"
-    then BU.print1 "Closed implicits, guard is\n\t%s\n"
+    then BU.print2 "Closed implicits with binders {%s}; guard is\n\t%s\n"
+                           (Print.binders_to_string ", " xs)
                            (guard_to_string env g);
     g
 
