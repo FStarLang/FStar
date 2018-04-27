@@ -1036,12 +1036,12 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) =
         bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
     in
     let r, p = rank tcenv p in
-    if r <> rigid_flex
-    && r <> flex_rigid
-    && r <> flex_flex
-    then false
+    if r = rigid_rigid
+    || r = flex_rigid_eq
+    then true
     else match p with
-         | CProb _ -> false
+         | CProb _ ->
+           failwith "Impossible"
          | TProb p ->
            if r=flex_flex
            then flex_will_be_closed p.lhs || flex_will_be_closed p.rhs

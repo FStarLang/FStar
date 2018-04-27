@@ -520,7 +520,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
-    if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
+    if debug env Options.High
+    then BU.print3 "(%s) Checking app %s, expected type is %s\n"
+                    (Range.string_of_range top.pos)
+                    (Print.term_to_string top)
+                    (Env.expected_typ env0 |> (function None -> "none" | Some t -> Print.term_to_string t));
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
