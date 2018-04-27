@@ -30,6 +30,12 @@ let guard_to_string g = match g with
     | NonTrivial f ->
       N.term_to_string (tcenv()) f
 
+let success = BU.mk_ref true
+
+let fail msg =
+    BU.print_string msg;
+    success := false
+
 let guard_eq i g g' =
     let b, g, g' = match g, g' with
         | Trivial, Trivial -> true, g, g'
@@ -38,12 +44,11 @@ let guard_eq i g g' =
           let f' = N.normalize [N.EraseUniverses] (tcenv()) f' in
           term_eq f f', NonTrivial f, NonTrivial f'
         | _ -> false, g, g' in
-    if not b then
-    let msg =
-        BU.format3 "Test %s failed:\n\t\
+    if not b
+    then fail <| BU.format3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
-                        Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g) in
-    raise_error (Errors.Fatal_UnexpectedGuard, msg) Range.dummyRange
+                        Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g);
+    success := !success && b
 
 let unify i x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
@@ -58,7 +63,7 @@ let should_fail x y =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
-            | Trivial -> failwith (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
+            | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
     with Error(e, msg, r) -> BU.print1 "%s\n" msg
 
@@ -199,4 +204,6 @@ let run_all () =
 
     Options.__clear_unit_tests();
 
-    BU.print_string "Unifier ok\n"
+    if !success
+    then BU.print_string "Unifier ok\n";
+    !success

@@ -1319,16 +1319,15 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
             solve_c env (maybe_invert cp) probs
 
       | TProb tp ->
-            if (tp.relation = EQ && rank <> flex_flex)
+            if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
+            if tp.relation = EQ
             || rank=rigid_rigid
             then solve_t' env tp probs
             else if probs.defer_ok
-            then solve env (defer "deferring subtyping or flex_flex" hd probs)
-            else if rank=flex_flex && tp.relation <> EQ
+            then solve env (defer "deferring flex_rigid or flex_flex subtyping" hd probs)
+            else if rank=flex_flex
             then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
-            else if tp.relation <> EQ
-            then solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
-            else solve_t' env tp probs //flex_flex eq
+            else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
       end
 
     | None, _, _ ->
@@ -1907,7 +1906,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     if BU.physical_equality problem.lhs problem.rhs then solve env (solve_prob orig None [] wl) else
     let t1 = problem.lhs in
     let t2 = problem.rhs in
-    if BU.physical_equality t1 t2 then solve env (solve_prob orig None [] wl) else
     let _ =
         if debug env (Options.Other "RelCheck")
         then BU.print3 "Attempting (%s - %s)\n%s\n"
