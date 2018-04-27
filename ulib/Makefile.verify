@@ -12,7 +12,7 @@ FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 # and then follow its order, which is not related to this one.
 #EXPENSIVE=FStar.Pointer.Base.fst
 
-FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
+FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))  $(wildcard LowStar.*.fst LowStar.*.fsti)
 
 extra: $(addsuffix -ver, $(EXTRA))
 
