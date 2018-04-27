@@ -1402,8 +1402,6 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solut
 and solve_rigid_flex_or_flex_rigid_subtyping
     (rank:int)
     (env:Env.env) (tp:tprob) (wl:worklist) : solution =
-  if Env.debug env <| Options.Other "RelCheck"
-  then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
   let flip = rank = flex_rigid in
   let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
   begin
@@ -1414,10 +1412,14 @@ and solve_rigid_flex_or_flex_rigid_subtyping
     match quasi_pattern env flex with
     | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
     | Some (flex_bs, flex_t) ->
+      if Env.debug env <| Options.Other "RelCheck"
+      then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
       imitate_arrow (TProb tp) env wl flex flex_bs flex_t tp.relation this_rigid
     end
 
   | _ ->
+    if Env.debug env <| Options.Other "RelCheck"
+    then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, _args = U.head_and_args this_flex in
     begin
     match (SS.compress u).n with
@@ -1485,9 +1487,10 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   (rel:rel)
                   (arrow:term)
         : solution =
+        let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
         let _, u_lhs, _ = lhs in
         let imitate_comp bs bs_terms c wl =
-            let imitate_tot_or_gtot t uopt f wl =
+           let imitate_tot_or_gtot t uopt f wl =
               let k, univ =
                   match uopt with
                   | None ->
@@ -1495,8 +1498,8 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   | Some univ ->
                     S.mk (Tm_type univ) None t.pos, univ
               in
-              let _, u, wl = copy_uvar u_lhs (U.arrow bs (S.mk_Total k)) wl in
-              f (S.mk_Tm_app u bs_terms None c.pos) (Some univ), wl
+              let _, u, wl = copy_uvar u_lhs (U.arrow (bs_lhs@bs) (S.mk_Total k)) wl in
+              f (S.mk_Tm_app u (bs_lhs_args@bs_terms) None c.pos) (Some univ), wl
            in
            match c.n with
            | Total (t, uopt) ->
@@ -1532,8 +1535,8 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               solve env (attempt [sub_prob] (solve_prob orig None [sol] wl))
 
             | (x, imp)::formals ->
-              let ctx_u_x, u_x, wl = copy_uvar u_lhs (U.arrow bs (S.mk_Total (U.type_u() |> fst))) wl in
-              let t_y = S.mk_Tm_app u_x bs_terms None x.sort.pos in
+              let _ctx_u_x, u_x, wl = copy_uvar u_lhs (U.arrow (bs_lhs@bs) (S.mk_Total (U.type_u() |> fst))) wl in
+              let t_y = S.mk_Tm_app u_x (bs_lhs_args@bs_terms) None x.sort.pos in
               //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) t_y in
               aux (bs@[y, imp]) (bs_terms@[S.bv_to_name y, imp]) formals wl
@@ -1634,15 +1637,18 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
         : solution =
+        let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
         let t_lhs, u_lhs, _lhs_args = lhs in
-        let lhs', lhs'_last_arg, wl = //FIXME! dropping the wl here
+        let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
-              let _, lhs', wl = copy_uvar u_lhs (U.arrow [S.null_binder t_last_arg] (S.mk_Total t_res_lhs)) wl in
-              let _, lhs'_last_arg, wl = copy_uvar u_lhs t_last_arg wl in
+              let _, u_lhs', wl = copy_uvar u_lhs (U.arrow (bs_lhs@[S.null_binder t_last_arg]) (S.mk_Total t_res_lhs)) wl in
+              let lhs' = S.mk_Tm_app u_lhs' bs_lhs_args None t_lhs.pos in
+              let _, u_lhs'_last_arg, wl = copy_uvar u_lhs (U.arrow bs_lhs (S.mk_Total t_last_arg)) wl in
+              let lhs'_last_arg = S.mk_Tm_app u_lhs'_last_arg bs_lhs_args None t_lhs.pos in
               lhs', lhs'_last_arg, wl
         in
         let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
@@ -2596,9 +2602,12 @@ let try_solve_deferred_constraints defer_ok env (g:guard_t) =
    in
    let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok} in
    if Env.debug env <| Options.Other "RelCheck"
-   then BU.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n"
+   then begin
+         BU.print3 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+                  (BU.string_of_bool defer_ok)
                   (wl_to_string wl)
-                  (string_of_int (List.length g.implicits));
+                  (string_of_int (List.length g.implicits))
+   end;
    let g =
      match solve_and_commit env wl fail with
      | Some (_::_, _) when not defer_ok ->
