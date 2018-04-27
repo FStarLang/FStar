@@ -239,17 +239,17 @@ let rec (term_eq' :
   
 let (term_eq :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.term -> Prims.bool)
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.bool)
   =
   fun t1  ->
     fun t2  ->
       let b = term_eq' t1 t2  in
       if Prims.op_Negation b
       then
-        (let uu____1419 = FStar_Syntax_Print.term_to_string t1  in
-         let uu____1420 = FStar_Syntax_Print.term_to_string t2  in
+        (let uu____1423 = FStar_Syntax_Print.term_to_string t1  in
+         let uu____1424 = FStar_Syntax_Print.term_to_string t2  in
          FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
-           uu____1419 uu____1420)
+           uu____1423 uu____1424)
       else ();
       b
   

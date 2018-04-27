@@ -38,7 +38,7 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
           "Impossible: parsing a Toplevel always results in an ASTFragment"
   
 let (parse_file :
-  FStar_Parser_ParseIt.filename ->
+  Prims.string ->
     (FStar_Parser_AST.file,(Prims.string,FStar_Range.range)
                              FStar_Pervasives_Native.tuple2 Prims.list)
       FStar_Pervasives_Native.tuple2)

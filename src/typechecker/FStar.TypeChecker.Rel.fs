@@ -1017,10 +1017,10 @@ let rank tcenv pr : rank_t    //the rank
     | CProb cp ->
       Rigid_rigid, {cp with rank=Some Rigid_rigid} |> CProb
 
-let next_prob wl : option<(prob          //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
-                          * list<prob>    //all the other problems in wl
-                          * rank_t)>      //the rank of the first problem, or the minimum rank in the wl
-                 =
+let next_prob wl : option<(prob * list<prob> * rank_t)> =
+                  //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
+                  //all the other problems in wl
+                  //the rank of the first problem, or the minimum rank in the wl
     let rec aux (min_rank, min, out) probs =
         match probs with
         | [] ->

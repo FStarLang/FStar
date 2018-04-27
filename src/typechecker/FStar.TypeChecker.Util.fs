@@ -82,7 +82,7 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
         else match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
         | Some _ ->
           if Env.debug env <| Options.Other "Rel"
-          then printfn "%s already solved; nothing to do" (Print.ctx_uvar_to_string ctx_u);
+          then BU.print1 "%s already solved; nothing to do" (Print.ctx_uvar_to_string ctx_u);
           i //already solved; nothing to do
         | None ->
           begin

@@ -960,14 +960,14 @@ let rec (go :
                     | ((env1,curmod1),stack1) ->
                         go line_col filename stack1 curmod1 env1 ts))
               | Push (lax1,l,c) ->
-                  let uu____3972 =
+                  let uu____4002 =
                     if (FStar_List.length stack) = (FStar_List.length ts)
                     then
-                      let uu____4021 =
+                      let uu____4039 =
                         update_deps filename curmod stack env ts  in
-                      (true, uu____4021)
+                      (true, uu____4039)
                     else (false, (stack, env, ts))  in
-                  (match uu____3972 with
+                  (match uu____4002 with
                    | (restore_cmd_line_options1,(stack1,env1,ts1)) ->
                        let stack2 = (env1, curmod) :: stack1  in
                        let env2 =

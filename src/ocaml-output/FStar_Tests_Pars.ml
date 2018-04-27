@@ -16,7 +16,7 @@ let (test_mod_ref :
        })
   
 let (parse_mod :
-  FStar_Parser_ParseIt.filename ->
+  Prims.string ->
     FStar_Syntax_DsEnv.env ->
       (FStar_Syntax_DsEnv.env,FStar_Syntax_Syntax.modul)
         FStar_Pervasives_Native.tuple2)
@@ -54,7 +54,7 @@ let (parse_mod :
             "Impossible: parsing a Filename always results in an ASTFragment"
   
 let (add_mods :
-  FStar_Parser_ParseIt.filename Prims.list ->
+  Prims.string Prims.list ->
     FStar_Syntax_DsEnv.env ->
       FStar_TypeChecker_Env.env ->
         (FStar_Syntax_DsEnv.env,FStar_TypeChecker_Env.env)

@@ -21,7 +21,7 @@ INCLUDE_PATHS = \
 	typechecker \
 	tests
 
-CACHE_DIR=../cache_fsharp
+CACHE_DIR?=../cache_fsharp
 
 FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules	        	\
         --lax --MLish --no_location_info              \
@@ -89,6 +89,7 @@ ocaml-output/%.ml:
 		   $(EXTRACT)		      \
 		   --codegen OCaml > ._depend
 	mv ._depend .depend
+        mkdir -p $(CACHE_DIR)
 
 depend: .depend
 
