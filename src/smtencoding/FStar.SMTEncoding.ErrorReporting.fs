@@ -235,8 +235,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(BvAnd, _)
         | App(BvXor, _)
         | App(BvOr, _)
-	| App(BvAdd, _)
-	| App(BvSub, _)
+        | App(BvAdd, _)
+        | App(BvSub, _)
         | App(BvShl, _)
         | App(BvShr, _)
         | App(BvUdiv, _)
@@ -291,10 +291,14 @@ let detail_errors hint_replay
 
     let print_result ((_, msg, r), success) =
         if success
-        then BU.print1 "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
+        then BU.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
         else if hint_replay
-        then FStar.Errors.log_issue r (Errors.Warning_HintFailedToReplayProof, ("Hint failed to replay this sub-proof: " ^ msg))
-        else FStar.Errors.log_issue r (Errors.Error_ProofObligationFailed, (BU.format2 "XX: proof obligation at %s failed\n\t%s\n" (Range.string_of_range r) msg))
+        then FStar.Errors.log_issue r (Errors.Warning_HintFailedToReplayProof,
+                                       "Hint failed to replay this sub-proof: " ^ msg)
+        else FStar.Errors.log_issue r (Errors.Error_ProofObligationFailed,
+                                       BU.format2 "XX: proof obligation at %s failed\n\t%s\n"
+                                                  (Range.string_of_range r)
+                                                  msg)
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
@@ -320,17 +324,19 @@ let detail_errors hint_replay
             sort_labels results
 
         | hd::tl ->
-	      BU.print1 "%s, " (BU.string_of_int (List.length active));
-	      let decls = elim <| (eliminated @ errors @ tl) in
+              BU.print1 "%s, " (BU.string_of_int (List.length active));
+              let decls = elim <| (eliminated @ errors @ tl) in
           let result = askZ3 decls in //hd is the only thing to prove
           match result.z3result_status with
           | Z3.UNSAT _ -> //hd is provable
             linear_check (hd::eliminated) errors tl
-          | _ -> linear_check eliminated (hd::errors) tl in
+          | _ -> linear_check eliminated (hd::errors) tl
+    in
 
     print_banner ();
     Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
     BU.print_string "\n";
-    res |> List.iter print_result
-
+    res |> List.iter print_result;
+    if BU.for_all snd res
+    then BU.print_string "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"
