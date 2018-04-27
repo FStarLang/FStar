@@ -982,36 +982,46 @@ let compress_prob tcenv p =
 
 
 let rank tcenv pr : rank_t    //the rank
-                 * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
-                 =
+                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
+                  =
    let prob = compress_prob tcenv pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
       let lh, lhs_args = U.head_and_args tp.lhs in
       let rh, rhs_args = U.head_and_args tp.rhs in
-      let rank = begin
+      let rank, tp =
         match lh.n, rh.n with
         | Tm_uvar _, Tm_uvar _ ->
           begin
           match lhs_args, rhs_args with
           | [], [] when tp.relation=EQ ->
-            Flex_flex_pattern_eq
-          | _ -> Flex_flex
+            Flex_flex_pattern_eq, tp
+          | _ -> Flex_flex, tp
           end
 
         | Tm_uvar _, _
         | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) ->
-          Flex_rigid_eq
+          Flex_rigid_eq, tp
 
-        | Tm_uvar _, _ ->
-          Flex_rigid
+        | Tm_uvar _, Tm_type _
+        | Tm_type _, Tm_uvar _ ->
+          //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
+          //besides, in the case of arrows, if we delay it, the arity of various terms built by the unifier goes awry
+          //so, don't delay!
+          Flex_rigid_eq, {tp with relation=EQ}
 
         | _, Tm_uvar _ ->
-          Rigid_flex
+          Rigid_flex, tp
+
+        | Tm_uvar _, _ ->
+          Flex_rigid, tp
+
+        | _, Tm_uvar _ ->
+          Rigid_flex, tp
 
         | _, _ ->
-          Rigid_rigid
-      end in
+          Rigid_rigid, tp
+      in
       rank, {tp with rank=Some rank} |> TProb
 
     | CProb cp ->
@@ -1033,13 +1043,13 @@ let next_prob wl : option<(prob * list<prob> * rank_t)> =
           let rank, hd = rank wl.tcenv hd in
           if rank_leq rank Flex_rigid_eq
           then match min with
-            | None -> Some (hd, out@tl, rank)
-            | Some m -> Some (hd, out@m::tl, rank)
+               | None -> Some (hd, out@tl, rank)
+               | Some m -> Some (hd, out@m::tl, rank)
           else if min_rank = None
-          || rank_leq rank (Option.get min_rank)
+               || rank_leq rank (Option.get min_rank)
           then match min with
-                | None -> aux (Some rank, Some hd, out) tl
-                | Some m -> aux (Some rank, Some hd, m::out) tl
+               | None -> aux (Some rank, Some hd, out) tl
+               | Some m -> aux (Some rank, Some hd, m::out) tl
           else aux (min_rank, min, hd::out) tl
     in
     aux (None, None, []) wl.attempting
