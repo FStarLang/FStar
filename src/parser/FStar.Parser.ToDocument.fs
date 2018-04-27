@@ -630,7 +630,7 @@ and p_pragma = function
       str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
-and p_typars (bs: list binder): document = p_binders true bs
+and p_typars (bs: list<binder>): document = p_binders true bs
 
 and p_fsdocTypeDeclPairs kw (typedecl, fsdoc_opt) =
   let decl, body = p_typeDecl (kw, fsdoc_opt) typedecl in
@@ -923,9 +923,9 @@ and p_refinement aqual_opt binder t phi =
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 (* Note: also skipping multiBinder here. *)
-and p_binders_list (is_atomic: bool) (bs: list binder): list document = List.map (p_binder is_atomic) bs
+and p_binders_list (is_atomic: bool) (bs: list<binder>): list<document> = List.map (p_binder is_atomic) bs
 
-and p_binders (is_atomic: bool) (bs: list binder): document = separate_or_flow break1 (p_binders_list is_atomic bs)
+and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow break1 (p_binders_list is_atomic bs)
 
 
 (* ****************************************************************************)
